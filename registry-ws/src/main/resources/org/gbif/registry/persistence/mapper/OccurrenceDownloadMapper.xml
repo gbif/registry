@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
+  
+  <!-- Auto-mapping -->
+  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download" autoMapping="true">
+    <id property="key" column="key"/>      
+    <result property="request.creator" column="created_by" />
+    <result property="totalRecords" column="total_records"/>
+    <result property="request.notificationAddressesAsString" column="notification_addresses"/>
+    <result property="request.predicate" column="filter" typeHandler="PredicateTypeHandler"/>
+    <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
+  </resultMap>
+
+  <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
+    key,filter,status,download_link,size,total_records,notification_addresses,created_by,created,modified
+  </sql>
+  
+  
+  <select id="COUNT_DATASETS" resultType="Integer">
+    SELECT COUNT(*) FROM dataset_occurrence_download WHERE download_key = #{key,jdbcType=VARCHAR}
+  </select>
+  
+  <!-- 
+    Only the status can be updated
+   -->
+  <sql id="OCCURRENCE_DOWNLOAD_UPDATE_STATUS">  	
+    status = #{status,jdbcType=OTHER},
+    size = #{size,jdbcType=BIGINT},
+    total_records = #{totalRecords,jdbcType=INTEGER},   
+    modified = now()
+  </sql>
+  
+  <sql id="OCCURRENCE_DOWNLOAD_FIELD_TYPES">
+    #{key,jdbcType=VARCHAR},
+  	#{request.predicate,jdbcType=VARCHAR},
+    #{status,jdbcType=OTHER},
+    #{downloadLink,jdbcType=VARCHAR},
+    #{size,jdbcType=BIGINT},
+    #{totalRecords,jdbcType=INTEGER},
+    #{request.notificationAddressesAsString,jdbcType=VARCHAR},
+    #{request.creator,jdbcType=VARCHAR},
+    now(), <!-- created -->
+    now() <!-- modified -->    
+  </sql>
+  
+  <select id="get" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download 
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </select>  
+  
+  <insert id="create" parameterType="Download">
+    INSERT INTO occurrence_download(<include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>)
+    VALUES(<include refid="OCCURRENCE_DOWNLOAD_FIELD_TYPES"/>)
+  </insert>  
+  
+  <update id="update" parameterType="Download">
+    UPDATE occurrence_download
+    SET <include refid="OCCURRENCE_DOWNLOAD_UPDATE_STATUS"/>
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </update>    
+  
+  <!-- Append safe ordering -->
+  <select id="listByUser" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download  
+    WHERE created_by = #{creator,jdbcType=VARCHAR}
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>  
+
+  <select id="countByUser" resultType="Integer">
+    SELECT COUNT(*)
+    FROM occurrence_download  
+    WHERE created_by = #{creator,jdbcType=VARCHAR}
+  </select>	
+  
+  <!-- Append safe ordering -->
+  <select id="list" resultType="Download">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download      
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>  
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM occurrence_download
+  </select>	
+
+</mapper>

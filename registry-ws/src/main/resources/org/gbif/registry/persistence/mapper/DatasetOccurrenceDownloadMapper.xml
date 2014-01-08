@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper">
+  
+  <resultMap id="DATASET_OCCURRENCE_DOWNLOAD_MAP" type="DatasetOccurrenceDownload" autoMapping="false">  	
+    <id property="downloadKey" column="download_key"/>
+    <id property="datasetKey" column="dataset_key"/>
+    <result property="numberRecords" column="number_records"/>
+  	<association property="download" javaType="Download" resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
+  </resultMap>
+  
+  <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
+    download_key,dataset_key, number_records,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
+  </sql>  
+    
+  <insert id="create" parameterType="DatasetOccurrenceDownload">
+    INSERT INTO dataset_occurrence_download(download_key,dataset_key,number_records)
+    VALUES(
+     #{downloadKey,jdbcType=VARCHAR},
+     #{datasetKey,jdbcType=OTHER},
+     #{numberRecords,jdbcType=INTEGER}
+    )
+  </insert>
+  
+  <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="Pageable">
+    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  
+  <select id="countByDataset" resultType="Integer">
+    SELECT COUNT(*)
+    FROM dataset_occurrence_download
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+</mapper>

@@ -1,0 +1,56 @@
+[
+  {
+    "description": "",
+    "name": "EML",
+    "overviewURL": "",
+    "key": "16000"
+  },
+  {
+    "description": "",
+    "name": "RSS",
+    "overviewURL": "",
+    "key": "16010"
+  },
+  {
+    "description": "",
+    "name": "DIGIR",
+    "overviewURL": "",
+    "key": "16100"
+  },
+  {
+    "description": "",
+    "name": "MANISDIGIR",
+    "overviewURL": "",
+    "key": "16110"
+  },
+  {
+    "description": "",
+    "name": "TAPIR",
+    "overviewURL": "",
+    "key": "16120"
+  },
+  {
+    "description": "",
+    "name": "BIOCASE",
+    "overviewURL": "",
+    "key": "16130"
+  },
+  {
+    "description": "",
+    "name": "DWC-ARCHIVE-CHECKLIST",
+    "overviewURL": "",
+    "key": "16160"
+  },
+  {
+    "description": "",
+    "name": "DWC-ARCHIVE-OCCURRENCE",
+    "overviewURL": "",
+    "key": "16170"
+  },
+  {
+    "description": "",
+    "name": "OTHER",
+    "overviewURL": "",
+    "key": "16180"
+  }
+]
