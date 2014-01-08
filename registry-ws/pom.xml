@@ -324,7 +324,7 @@
        -->
       <id>jenkins</id>
       <properties>
-        <registry-it.db.url>jdbc:postgresql://builds2.gbif.org/registry-IT</registry-it.db.url>
+        <registry-it.db.url>jdbc:postgresql://builds2.gbif.org/registry</registry-it.db.url>
         <registry-it.db.username>registry</registry-it.db.username>
       </properties>
     </profile>
