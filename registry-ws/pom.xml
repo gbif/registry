@@ -288,9 +288,41 @@
   <profiles>
     <profile>
       <!--
+         A uat deploy profile missing the following passwords:
+         <registry.db.password>
+         <registry.messaging.password>
+         <drupal.db.password>
+      -->
+      <id>uat</id>
+      <properties>
+        <registry.db.url>jdbc:postgresql://uat.gbif.org/registry</registry.db.url>
+        <registry.db.username>registry</registry.db.username>
+        <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
+        <registry.messaging.port>5672</registry.messaging.port>
+        <registry.messaging.virtualhost>/uat</registry.messaging.virtualhost>
+        <registry.messaging.username>uat-registry</registry.messaging.username>
+        <!-- The application keys used by the devapp server when it deploys -->
+        <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
+        <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
+        <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
+        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_devel?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
+        <drupal.db.username>drupal_devel</drupal.db.username>
+        <!-- Configures the Registry to use sandbox mode -->
+        <sandboxmode.enabled>false</sandboxmode.enabled>
+        <!-- email properties -->
+        <mail.devemail.enabled>true</mail.devemail.enabled>
+        <mail.smtp.host>smtp.gbif.org</mail.smtp.host>
+        <mail.cc>helpdesk@gbif.org</mail.cc>
+        <mail.from>registry@gbif.org</mail.from>
+      </properties>
+    </profile>
+    <profile>
+      <!--
          A dev deploy profile missing the following passwords:
-         <registry.db.password></registry.db.password>
-         <drupal.db.password></drupal.db.password>
+         <registry.db.password>
+         <registry-it.db.password>
+         <registry.messaging.password>
+         <drupal.db.password>
       -->
       <id>dev</id>
       <properties>
@@ -300,7 +332,6 @@
         <registry.messaging.port>5672</registry.messaging.port>
         <registry.messaging.virtualhost>/appdev</registry.messaging.virtualhost>
         <registry.messaging.username>appdev-registry</registry.messaging.username>
-        <registry.messaging.password>appdev-registry</registry.messaging.password>
         <!-- The application keys used by the devapp server when it deploys -->
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
