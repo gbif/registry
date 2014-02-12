@@ -295,7 +295,7 @@
       -->
       <id>uat</id>
       <properties>
-        <registry.db.url>jdbc:postgresql://appuat.gbif.org/registry</registry.db.url>
+        <registry.db.url>jdbc:postgresql://apps.gbif-uat.org/registry</registry.db.url>
         <registry.db.username>registry</registry.db.username>
         <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
         <registry.messaging.port>5672</registry.messaging.port>
@@ -305,8 +305,8 @@
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
         <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
-        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_devel?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
-        <drupal.db.username>drupal_devel</drupal.db.username>
+        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_uat?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
+        <drupal.db.username>drupal_uat</drupal.db.username>
         <!-- Configures the Registry to use sandbox mode -->
         <sandboxmode.enabled>false</sandboxmode.enabled>
         <!-- email properties -->
