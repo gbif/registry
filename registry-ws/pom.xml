@@ -301,7 +301,7 @@
         <registry.messaging.port>5672</registry.messaging.port>
         <registry.messaging.virtualhost>/uat</registry.messaging.virtualhost>
         <registry.messaging.username>uat-registry</registry.messaging.username>
-        <!-- The application keys used by the devapp server when it deploys -->
+        <!-- The application keys used by the uat server when it deploys -->
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
         <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
@@ -351,7 +351,7 @@
     <profile>
       <!--
         integration test profile for jenkins missing the following password secret:
-        <registry-it.db.password></registry-it.db.password>
+        <registry-it.db.password></registry-it.db.passwohahard>
        -->
       <id>jenkins</id>
       <properties>

@@ -69,7 +69,7 @@
     <commons-digester.version>3.2</commons-digester.version>
     <gbif-api.version>0.12-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.14</gbif-common.version>
-    <gbif-common-ws.version>0.11</gbif-common-ws.version>
+    <gbif-common-ws.version>0.14-SNAPSHOT</gbif-common-ws.version>
     <gbif-common-mybatis.version>0.9</gbif-common-mybatis.version>
     <gbif-common-test.version>0.6</gbif-common-test.version>
     <gbif-common-service.version>0.8</gbif-common-service.version>
