@@ -326,12 +326,12 @@
       -->
       <id>dev</id>
       <properties>
-        <registry.db.url>jdbc:postgresql://appdev.gbif.org/registry</registry.db.url>
+        <registry.db.url>jdbc:postgresql://apps.gbif-dev.org/registry</registry.db.url>
         <registry.db.username>registry</registry.db.username>
         <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
         <registry.messaging.port>5672</registry.messaging.port>
-        <registry.messaging.virtualhost>/appdev</registry.messaging.virtualhost>
-        <registry.messaging.username>appdev-registry</registry.messaging.username>
+        <registry.messaging.virtualhost>/dev</registry.messaging.virtualhost>
+        <registry.messaging.username>dev-registry</registry.messaging.username>
         <!-- The application keys used by the devapp server when it deploys -->
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
