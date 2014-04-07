@@ -1,6 +1,6 @@
 package org.gbif.registry.metadata.parse.converter;
 
-import org.gbif.common.parsers.ParseResult;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParseUtils;
 
 import java.util.Date;

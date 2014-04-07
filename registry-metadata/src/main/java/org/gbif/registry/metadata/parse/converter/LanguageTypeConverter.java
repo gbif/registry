@@ -1,7 +1,8 @@
 package org.gbif.registry.metadata.parse.converter;
 
 import org.gbif.api.vocabulary.Language;
-import org.gbif.common.parsers.language.InterpretedLanguageParser;
+import org.gbif.common.parsers.LanguageParser;
+
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion
@@ -13,6 +14,6 @@ public class LanguageTypeConverter extends AbstractGbifParserConvert<Language> {
    * Construct a <b>LanguageTypeConverter</b> <i>Converter</i>.
    */
   public LanguageTypeConverter() {
-    super(Language.class, InterpretedLanguageParser.getInstance());
+    super(Language.class, LanguageParser.getInstance());
   }
 }

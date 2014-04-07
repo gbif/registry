@@ -1,7 +1,8 @@
 package org.gbif.registry.metadata.parse.converter;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.countryname.InterpretedCountryParser;
+import org.gbif.common.parsers.CountryParser;
+
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion
@@ -13,7 +14,7 @@ public class CountryTypeConverter extends AbstractGbifParserConvert<Country> {
    * Construct a <b>CountryTypeConverter</b> <i>Converter</i>.
    */
   public CountryTypeConverter() {
-    super(Country.class, InterpretedCountryParser.getInstance());
+    super(Country.class, CountryParser.getInstance());
   }
 
 }

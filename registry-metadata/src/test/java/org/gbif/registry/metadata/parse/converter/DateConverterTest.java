@@ -12,14 +12,13 @@ public class DateConverterTest {
   private DateConverter converter = new DateConverter();
 
   @Test
-  public void parseLanguages() throws Throwable {
-    assertLang(2000, 10, 20, "2000-20-10");
+  public void parseDates() throws Throwable {
+    assertLang(2000, 10, 20, "2000-10-20");
     assertLang(2000, 10, 20, "20.10.2000");
   }
 
   private void assertLang(Integer year, Integer month, Integer day, String value) throws Throwable {
     Date d = (Date) converter.convertToType(Date.class, value);
-    System.out.println(d);
 
     Calendar cal = Calendar.getInstance();
     cal.setTime(d);

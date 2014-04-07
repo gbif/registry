@@ -1,6 +1,5 @@
 package org.gbif.registry.metadata.parse;
 
-import org.gbif.api.model.common.InterpretedEnum;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -15,16 +14,16 @@ import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.curatorial.CuratorialUnitComposite;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.PreservationMethodType;
-import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.common.parsers.ParseResult;
-import org.gbif.common.parsers.rank.InterpretedRankParser;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.PreservationMethodType;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.common.parsers.RankParser;
+import org.gbif.common.parsers.core.ParseResult;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -435,7 +434,7 @@ public class DatasetWrapper {
   }
 
   private Rank toRank(String rank) {
-    ParseResult<InterpretedEnum<String, Rank>> result = InterpretedRankParser.getInstance().parse(rank);
-    return result.getStatus() == ParseResult.STATUS.SUCCESS ? result.getPayload().getInterpreted() : null;
+    ParseResult<Rank> result = RankParser.getInstance().parse(rank);
+    return result.getStatus() == ParseResult.STATUS.SUCCESS ? result.getPayload() : null;
   }
 }
