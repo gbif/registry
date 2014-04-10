@@ -310,7 +310,7 @@
         <!-- Configures the Registry to use sandbox mode -->
         <sandboxmode.enabled>false</sandboxmode.enabled>
         <!-- email properties -->
-        <mail.devemail.enabled>true</mail.devemail.enabled>
+        <mail.devemail.enabled>false</mail.devemail.enabled>
         <mail.smtp.host>smtp.gbif.org</mail.smtp.host>
         <mail.cc>helpdesk@gbif.org</mail.cc>
         <mail.from>registry@gbif.org</mail.from>
