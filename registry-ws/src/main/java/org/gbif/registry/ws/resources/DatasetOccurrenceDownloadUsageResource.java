@@ -9,6 +9,7 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.security.RolesAllowed;
@@ -23,12 +24,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
+
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData;
 
 /**
  * Occurrence download resource/web service.
@@ -40,6 +44,9 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrenceDownloadUsageService {
 
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+
+  @Context
+  private SecurityContext securityContext;
 
   @Inject
   public DatasetOccurrenceDownloadUsageResource(DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
@@ -62,9 +69,10 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
     @PathParam("datasetKey") UUID datasetKey, @Context Pageable page) {
+    List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDataset(datasetKey, page);
+    clearSensitiveData(securityContext, usages);
     return new PagingResponse<DatasetOccurrenceDownloadUsage>(page,
-      (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey),
-      datasetOccurrenceDownloadMapper.listByDataset(datasetKey, page));
+      (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
   }
 
 }

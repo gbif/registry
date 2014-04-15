@@ -22,10 +22,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Preconditions;
@@ -33,10 +31,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
+import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData;
 
 /**
  * Occurrence download resource/web service.
@@ -48,8 +46,6 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
-
-  private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
 
   @Context
   private SecurityContext securityContext;
@@ -76,7 +72,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @NullToNotFound
   @Override
   public Download get(@PathParam("key") String key) {
-    return occurrenceDownloadMapper.get(key);
+    Download download = occurrenceDownloadMapper.get(key);
+    clearSensitiveData(securityContext, download);
+    return download;
   }
 
   /**
@@ -94,7 +92,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Path("user/{user}")
   @NullToNotFound
   public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page) {
-    checkUserIsInSecurityContext(user);
+    checkUserIsInSecurityContext(user, securityContext);
     return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByUser(user),
       occurrenceDownloadMapper.listByUser(user, page));
   }
@@ -107,20 +105,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
-    checkUserIsInSecurityContext(currentDownload.getRequest().getCreator());
+    checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
     occurrenceDownloadMapper.update(download);
-  }
-
-  /**
-   * Checks if the user has the ADMIN_ROLE or is the same user in the current context.
-   */
-  private void checkUserIsInSecurityContext(String user) {
-    // A null securityContext means that the class is executed locally
-    if (!(securityContext == null || securityContext.isUserInRole(ADMIN_ROLE)
-    || securityContext.getUserPrincipal().getName().equals(user))) {
-      LOG.warn(String.format("Unauthorized access detected, authenticated user %s, requested user %s",
-        securityContext.getUserPrincipal().getName(), user));
-      throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-    }
   }
 }
