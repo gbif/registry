@@ -68,7 +68,7 @@
     <bonecp.version>0.7.1.RELEASE</bonecp.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
-    <gbif-api.version>0.12</gbif-api.version>
+    <gbif-api.version>0.13-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.15</gbif-common.version>
     <gbif-common-ws.version>0.13</gbif-common-ws.version>
     <gbif-common-mybatis.version>0.10</gbif-common-mybatis.version>
