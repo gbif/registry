@@ -172,4 +172,8 @@
       </fragmentsBuilder>
     </highlighting>
   </searchComponent>
+  
+  <queryResponseWriter name="json" class="solr.JSONResponseWriter">
+    <bool name="useJsonContentType">true</bool>
+  </queryResponseWriter>
 </config>
