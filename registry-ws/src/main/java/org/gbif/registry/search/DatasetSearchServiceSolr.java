@@ -30,7 +30,6 @@ public class DatasetSearchServiceSolr extends SolrSearchSuggestService
   @Inject
   public DatasetSearchServiceSolr(@Named("Dataset") SolrServer server) {
     super(server, DatasetSearchResult.class, SolrAnnotatedDataset.class, DatasetSearchParameter.class,
-      PRIMARY_SORT_ORDER, true // use the enum value, not the ordinal, since the index was built this way
-    );
+      PRIMARY_SORT_ORDER);
   }
 }

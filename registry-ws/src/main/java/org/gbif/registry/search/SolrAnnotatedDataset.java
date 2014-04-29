@@ -15,10 +15,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-
-import com.google.common.base.Enums;
-
 import com.google.common.collect.Sets;
 import org.apache.solr.client.solrj.beans.Field;
 
@@ -41,39 +37,30 @@ import org.apache.solr.client.solrj.beans.Field;
     @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 10.0d,
       partialMatchScore = 1.0d),
     @FullTextSearchField(field = "keyword", partialMatching = WildcardPadding.NONE, exactMatchScore = 4.0d),
-    @FullTextSearchField(field = "country", partialMatching = WildcardPadding.NONE, exactMatchScore = 3.0d),
-    @FullTextSearchField(field = "publishing_country", partialMatching = WildcardPadding.NONE, exactMatchScore = 1.0d),
     @FullTextSearchField(field = "owning_organization_title", highlightField = "owning_organization_title",
       partialMatching = WildcardPadding.NONE, exactMatchScore = 2.0d),
     @FullTextSearchField(field = "hosting_organization_title", partialMatching = WildcardPadding.NONE,
       exactMatchScore = 2.0d),
     @FullTextSearchField(field = "description", partialMatching = WildcardPadding.NONE),
-    @FullTextSearchField(field = "full_text", partialMatching = WildcardPadding.NONE, exactMatchScore = 0.5d)
+    @FullTextSearchField(field = "metadata", partialMatching = WildcardPadding.NONE, exactMatchScore = 0.5d)
   })
 @SuggestMapping(field = "dataset_title_ngram", phraseQueryField = "dataset_title_nedge")
 public class SolrAnnotatedDataset extends DatasetSearchResult {
 
   @Field("country")
-  public void setCountryCoverage(List<String> isoCountryCodes) {
+  public void setCountryCoverage(List<Integer> countryOrdinals) {
     Set<Country> countries = Sets.newHashSet();
-    for (String iso : isoCountryCodes) {
-      Country c = Country.fromIsoCode(iso);
-      if (c != null) {
-        countries.add(c);
+    for (Integer ordinal: countryOrdinals) {
+      if (ordinal != null) {
+        countries.add(Country.values()[ordinal]);
       }
     }
     super.setCountryCoverage(countries);
   }
 
   @Field("publishing_country")
-  public void setPublishingCountry(String iso) {
-    Country c = Country.fromIsoCode(iso);
-    if (c == null) {
-      //tries parse the country by name
-      Optional<Country> optCountry = Enums.getIfPresent(Country.class, iso);
-      c = optCountry.isPresent()? optCountry.get() : Country.UNKNOWN;
-    }
-    super.setPublishingCountry(c);
+  public void setPublishingCountry(Integer countryOrdinal) {
+    super.setPublishingCountry(countryOrdinal == null ? Country.UNKNOWN : Country.values()[countryOrdinal]);
   }
 
   @Field("decade")
@@ -88,10 +75,10 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
     super.setDescription(description);
   }
 
-  @Field("full_text")
+  @Field("metadata")
   @Override
-  public void setFullText(String fullText) {
-    super.setFullText(fullText);
+  public void setFullText(String metadata) {
+    super.setFullText(metadata);
   }
 
   @Field("hosting_organization_key")
@@ -129,8 +116,8 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
   }
 
   @Field("dataset_subtype")
-  public void setSubtype(String datasetSubtype) {
-    setSubtype(DatasetSubtype.valueOf(datasetSubtype));
+  public void setSubtype(Integer datasetSubtypeOrdinal) {
+    setSubtype(datasetSubtypeOrdinal == null ? null : DatasetSubtype.values()[datasetSubtypeOrdinal]);
   }
 
   @Field("dataset_title")
@@ -140,7 +127,7 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
   }
 
   @Field("dataset_type")
-  public void setType(String datasetType) {
-    setType(DatasetType.valueOf(datasetType));
+  public void setType(Integer datasetTypeOrdinal) {
+    setType(datasetTypeOrdinal == null ? null : DatasetType.values()[datasetTypeOrdinal]);
   }
 }

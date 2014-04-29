@@ -1,5 +1,26 @@
 package org.gbif.registry.search;
 
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.Tag;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.events.ChangedComponentEvent;
+import org.gbif.registry.events.CreateEvent;
+import org.gbif.registry.events.DeleteEvent;
+import org.gbif.registry.events.UpdateEvent;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -10,24 +31,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.solr.client.solrj.SolrServer;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.*;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.events.ChangedComponentEvent;
-import org.gbif.registry.events.CreateEvent;
-import org.gbif.registry.events.DeleteEvent;
-import org.gbif.registry.events.UpdateEvent;
+import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The index updater will asynchronously keep the provided SOLR index up to date with dataset changes and those cascaded
@@ -39,7 +45,7 @@ public class DatasetIndexUpdateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexUpdateListener.class);
   private final SolrServer solrServer;
-  private final SolrAnnotatedDatasetBuilder sadBuilder;
+  private final DatasetDocConverter docConverter;
 
   // Used to build a new index before consuming if required
   private final DatasetIndexBuilder indexBuilder;
@@ -69,7 +75,7 @@ public class DatasetIndexUpdateListener {
     this.indexBuilder = indexBuilder;
     this.performIndexSync = performIndexSync;
     this.solrServer = solrServer;
-    this.sadBuilder = new SolrAnnotatedDatasetBuilder(organizationService, installationService);
+    this.docConverter = new DatasetDocConverter(organizationService, installationService, datasetService);
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
@@ -247,9 +253,9 @@ public class DatasetIndexUpdateListener {
 
     private void createOrReplaceDataset(Dataset dataset) {
       if (dataset != null) {
-        SolrAnnotatedDataset sad = sadBuilder.build(dataset);
+        SolrInputDocument doc = docConverter.build(dataset);
         try {
-          solrServer.addBean(sad);
+          solrServer.add(doc);
           solrServer.commit();
         } catch (Exception e) {
           LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
@@ -259,12 +265,12 @@ public class DatasetIndexUpdateListener {
 
     private void updateDatasets(List<Dataset> datasets) {
       LOG.debug("Batch updating {} datasets in SOLR", datasets.size());
-      List<SolrAnnotatedDataset> sads = Lists.newArrayList();
+      List<SolrInputDocument> docs = Lists.newArrayList();
       for (Dataset d : datasets) {
-        sads.add(sadBuilder.build(d));
+        docs.add(docConverter.build(d));
       }
       try {
-        solrServer.addBeans(sads);
+        solrServer.add(docs);
         solrServer.commit();
       } catch (Exception e) {
         LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);

@@ -37,6 +37,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +49,11 @@ import org.slf4j.LoggerFactory;
 public class DatasetIndexBuilder {
 
   // controls how many results we request while paging over the WS
-  private static final int WS_PAGE_SIZE = 100;
+  private static final int WS_PAGE_SIZE = 10; // 100
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexBuilder.class);
   private final SolrServer solrServer;
   private final DatasetService datasetService;
-  private final SolrAnnotatedDatasetBuilder sadBuilder;
+  private final DatasetDocConverter docConverter;
 
   @Inject
   public DatasetIndexBuilder(@Named("Dataset") SolrServer solrServer, DatasetService datasetService,
@@ -60,9 +61,9 @@ public class DatasetIndexBuilder {
     this.solrServer = solrServer;
     this.datasetService = datasetService;
     // We can use a cache at startup
-    this.sadBuilder =
-      new SolrAnnotatedDatasetBuilder(new CachingNetworkEntityService<Organization>(organizationService),
-        new CachingNetworkEntityService<Installation>(installationService));
+    this.docConverter =
+      new DatasetDocConverter(new CachingNetworkEntityService<Organization>(organizationService),
+        new CachingNetworkEntityService<Installation>(installationService), datasetService);
   }
 
   public void build() throws SolrServerException, IOException {
@@ -84,12 +85,12 @@ public class DatasetIndexBuilder {
       LOG.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
       response = datasetService.list(page);
       // Batching updates to SOLR proves quicker with batches of 100 - 1000 showing similar performance
-      List<SolrAnnotatedDataset> batch = Lists.newArrayList();
+      List<SolrInputDocument> batch = Lists.newArrayList();
       for (Dataset ds : response.getResults()) {
-        batch.add(sadBuilder.build(ds));
+        batch.add(docConverter.build(ds));
       }
       if (!batch.isEmpty()) {
-        solrServer.addBeans(batch);
+        solrServer.add(batch);
         solrServer.commit(); // to allow eager users (or impatient developers) to see search data on startup quickly
       }
       page.nextPage();
@@ -99,7 +100,7 @@ public class DatasetIndexBuilder {
 
   /**
    * A lightweight cache to help improve performance of the builder.
-   * 
+   *
    * @param <T> The type of entity being wrapped
    */
   private static class CachingNetworkEntityService<T> implements NetworkEntityService<T> {
