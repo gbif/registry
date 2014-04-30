@@ -71,7 +71,7 @@
          <#if dataset.language??>xml:lang="${dataset.language.getIso2LetterCode()}"</#if>>
 
 <dataset>
-  <#list dataset.identifiers as altid>
+  <#list dataset.identifiers![] as altid>
     <#if altid.identifier?has_content>
     <alternateIdentifier<#if altid.type??> system="${altid.type}"</#if>>${altid.identifier}</alternateIdentifier>
     </#if>
@@ -85,7 +85,7 @@
 <metadataProvider>
   <@contact ct=eml.metadataProvider! />
 </metadataProvider>
-<#list eml.associatedParties as associatedParty>
+<#list eml.associatedParties![] as associatedParty>
 <associatedParty>
   <@contact ct=associatedParty withRole=true />
 </associatedParty>
@@ -102,10 +102,10 @@
   <para>${dataset.description!}</para>
 </abstract>
 <#-- Zero or more sets of keywords and an associated thesaurus for each. -->
-<#list dataset.keywordCollections as ks>
+<#list dataset.keywordCollections![] as ks>
   <#if ks.keywords?has_content>
   <keywordSet>
-    <#list ks.keywords as k>
+    <#list ks.keywords![] as k>
       <keyword>${k!}</keyword>
     </#list>
     <#if ks.thesaurus?has_content>
@@ -135,7 +135,7 @@
   </#if>
   <#if dataset.geographicCoverages?has_content || dataset.taxonomicCoverages?has_content || dataset.temporalCoverages?has_content>
   <coverage>
-    <#list dataset.geographicCoverages as geocoverage>
+    <#list dataset.geographicCoverages![] as geocoverage>
       <geographicCoverage>
         <#if geocoverage.description?has_content>
           <geographicDescription>${geocoverage.description}</geographicDescription>
@@ -150,7 +150,7 @@
         </#if>
       </geographicCoverage>
     </#list>
-    <#list dataset.temporalCoverages as tempcoverage>
+    <#list dataset.temporalCoverages![] as tempcoverage>
       <temporalCoverage>
         <#if tempcoverage.start?has_content>
           <rangeOfDates>
@@ -170,13 +170,13 @@
         </#if>
       </temporalCoverage>
     </#list>
-    <#list dataset.taxonomicCoverages as taxoncoverage>
+    <#list dataset.taxonomicCoverages![] as taxoncoverage>
       <#if taxoncoverage.coverages?has_content>
         <taxonomicCoverage>
           <#if taxoncoverage.description?has_content>
             <generalTaxonomicCoverage>${taxoncoverage.description}</generalTaxonomicCoverage>
           </#if>
-          <#list taxoncoverage.coverages as tk>
+          <#list taxoncoverage.coverages![] as tk>
             <taxonomicClassification>
               <#if tk.rank?has_content>
                 <taxonRankName><@interpretedEnum tk.rank/></taxonRankName>
@@ -204,7 +204,7 @@
   </#if>
   <#if dataset.samplingDescription??>
   <methods>
-    <#list dataset.samplingDescription.methodSteps as methodStep>
+    <#list dataset.samplingDescription.methodSteps![] as methodStep>
       <methodStep>
         <description>
           <para>${methodStep!}</para>
@@ -233,32 +233,32 @@
   </methods>
   </#if>
 
-  <#if dataset.project?? && dataset.project.title?has_content>
-  <project>
-    <title>${dataset.project.title}</title>
-    <#list dataset.project.contacts as c>
-    <personnel>
-      <@contact ct=c />
-    </personnel>
-    </#list>
-    <funding>
-      <para>${dataset.project.funding!}</para>
-    </funding>
-  <#if dataset.project.studyAreaDescription?has_content>
-    <studyAreaDescription>
-      <descriptor name="description">
-        <descriptorValue>${dataset.project.studyAreaDescription}</descriptorValue>
-      </descriptor>
-    </studyAreaDescription>
-  </#if>
-  <#if dataset.project.designDescription?has_content>
-    <designDescription>
-      <description>
-        <para>${dataset.project.designDescription}</para>
-      </description>
-    </designDescription>
-  </#if>
-  </project>
+  <#if dataset.project??>
+    <project>
+      <title>${dataset.project.title!}</title>
+      <#list dataset.project.contacts![] as c>
+      <personnel>
+        <@contact ct=c />
+      </personnel>
+      </#list>
+      <funding>
+        <para>${dataset.project.funding!}</para>
+      </funding>
+    <#if dataset.project.studyAreaDescription?has_content>
+      <studyAreaDescription>
+        <descriptor name="description">
+          <descriptorValue>${dataset.project.studyAreaDescription}</descriptorValue>
+        </descriptor>
+      </studyAreaDescription>
+    </#if>
+    <#if dataset.project.designDescription?has_content>
+      <designDescription>
+        <description>
+          <para>${dataset.project.designDescription}</para>
+        </description>
+      </designDescription>
+    </#if>
+    </project>
   </#if>
 </dataset>
 
@@ -280,27 +280,25 @@
           </#list>
         </bibliography>
       </#if>
-      <#if dataset.dataDescriptions?has_content>
-        <#list dataset.dataDescriptions as pdata>
-          <physical>
-            <objectName>${pdata.name!}</objectName>
-            <characterEncoding>${pdata.charset!}</characterEncoding>
-            <dataFormat>
-              <externallyDefinedFormat>
-                <formatName>${pdata.format!}</formatName>
-                <#if pdata.formatVersion?has_content>
-                  <formatVersion>${pdata.formatVersion}</formatVersion>
-                </#if>
-              </externallyDefinedFormat>
-            </dataFormat>
-            <distribution>
-              <online>
-                <url function="download">${pdata.url!}</url>
-              </online>
-            </distribution>
-          </physical>
-        </#list>
-      </#if>
+      <#list dataset.dataDescriptions![] as pdata>
+        <physical>
+          <objectName>${pdata.name!}</objectName>
+          <characterEncoding>${pdata.charset!}</characterEncoding>
+          <dataFormat>
+            <externallyDefinedFormat>
+              <formatName>${pdata.format!}</formatName>
+              <#if pdata.formatVersion?has_content>
+                <formatVersion>${pdata.formatVersion}</formatVersion>
+              </#if>
+            </externallyDefinedFormat>
+          </dataFormat>
+          <distribution>
+            <online>
+              <url function="download">${pdata.url!}</url>
+            </online>
+          </distribution>
+        </physical>
+      </#list>
       <#if dataset.logoUrl?has_content>
         <resourceLogoUrl>${dataset.logoUrl}</resourceLogoUrl>
       </#if>
@@ -313,19 +311,19 @@
           <collectionName>${col.collectionName!}</collectionName>
         </collection>
       </#if>
-      <#list eml.formationPeriods! as p>
+      <#list eml.formationPeriods![] as p>
         <formationPeriod>${p.period!}</formationPeriod>
       </#list>
-      <#list dataset.collections! as col>
+      <#list dataset.collections![] as col>
        <#if col.specimenPreservationMethod??>
         <specimenPreservationMethod>${col.specimenPreservationMethod}</specimenPreservationMethod>
        </#if>
       </#list>
-      <#list eml.livingTimePeriods! as p>
+      <#list eml.livingTimePeriods![] as p>
         <livingTimePeriod>${p.period!}</livingTimePeriod>
       </#list>
-      <#list dataset.collections! as col>
-        <#list col.curatorialUnits as unit>
+      <#list dataset.collections![] as col>
+        <#list col.curatorialUnits![] as unit>
           <#if unit.lower gt 0 || unit.upper gt 0>
             <jgtiCuratorialUnit>
               <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>
@@ -336,7 +334,7 @@
             </jgtiCuratorialUnit>
           </#if>
         </#list>
-        <#list col.curatorialUnits! as unit>
+        <#list col.curatorialUnits![] as unit>
           <#if unit.count gt 0>
             <jgtiCuratorialUnit>
               <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>

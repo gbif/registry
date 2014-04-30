@@ -2,6 +2,7 @@
 *.iml
 .idea
 target/
+registry-ws/logs
 
 # Package Files #
 *.jar

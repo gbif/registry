@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public class DatasetIndexBuilder {
 
   // controls how many results we request while paging over the WS
-  private static final int WS_PAGE_SIZE = 10; // 100
+  private static final int WS_PAGE_SIZE = 100;
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexBuilder.class);
   private final SolrServer solrServer;
   private final DatasetService datasetService;

@@ -9,11 +9,11 @@ import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.util.TimeSeriesExtractor;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -117,6 +117,7 @@ class DatasetDocConverter {
     InputStream stream = null;
     try {
       stream = datasetService.getMetadataDocument(d.getKey());
+
       if (stream != null) {
         FullTextSaxHandler handler = new FullTextSaxHandler();
         SAXParser p = saxFactory.newSAXParser();
@@ -130,8 +131,8 @@ class DatasetDocConverter {
     } catch (SAXException e) {
       LOG.warn("Cannot parse original metadata xml for dataset {}", d.getKey());
 
-    } catch (IOException e) {
-      LOG.error("Unable to read metadata document for dataset {}", d.getKey(), e);
+    } catch (Exception e) {
+      LOG.error("Unable to index metadata document for dataset {}", d.getKey(), e);
 
     } finally {
       Closeables.closeQuietly(stream);

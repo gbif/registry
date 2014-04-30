@@ -129,7 +129,7 @@ public class EMLWriter {
     try {
       FTL.getTemplate(EML_TEMPLATE).process(map, writer);
     } catch (TemplateException e) {
-      throw new IllegalStateException("Cannot find EML freemarker template on classpath", e);
+      throw new IOException("Error while processing the EML freemarker template for dataset " + dataset.getKey(), e);
     }
   }
 
