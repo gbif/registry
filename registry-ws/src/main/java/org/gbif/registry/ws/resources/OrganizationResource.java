@@ -121,7 +121,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * Organizations can also be filtered by their country, but a search and country filter cannot be combined.
    */
   @GET
-  public PagingResponse<Organization> list(@Nullable @QueryParam("country") Country country,
+  public PagingResponse<Organization> list(@Nullable @Context Country country,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("q") String query,

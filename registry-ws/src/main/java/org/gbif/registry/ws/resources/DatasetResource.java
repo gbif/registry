@@ -165,7 +165,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * additionally be supported, such as dataset search.
    */
   @GET
-  public PagingResponse<Dataset> list(@Nullable @QueryParam("country") Country country,
+  public PagingResponse<Dataset> list(@Nullable @Context Country country,
     @Nullable @QueryParam("type") DatasetType datasetType,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
@@ -233,7 +233,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Augments a list of datasets with information from their preferred metadata document.
-   * 
+   *
    * @return a the same paging response with a new list of augmented dataset instances
    */
   private PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
@@ -255,7 +255,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * <li>These objects are all mutable, and care should be taken that the returned object may be one or the other of the
    * supplied, thus you need to {@code Dataset result = merge(Dataset emlView, Dataset dbView);}</li>
    * </ul>
-   * 
+   *
    * @param target that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
    * @return the modified tagret dataset, or the supplementary dataset if the target is null
