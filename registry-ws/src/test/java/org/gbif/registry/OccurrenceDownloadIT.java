@@ -107,7 +107,8 @@ public class OccurrenceDownloadIT {
     Download download = new Download();
     final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
     DownloadRequest request =
-      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TEST_ADMIN_USER, emails);
+      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TEST_ADMIN_USER, emails,
+        true);
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);
     download.setRequest(request);

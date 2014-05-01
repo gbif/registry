@@ -9,11 +9,12 @@
     <result property="totalRecords" column="total_records"/>
     <result property="request.notificationAddressesAsString" column="notification_addresses"/>
     <result property="request.predicate" column="filter" typeHandler="PredicateTypeHandler"/>
+    <result property="request.sendNotification" column="send_notification"/>    
     <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
   </resultMap>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,filter,status,download_link,size,total_records,notification_addresses,created_by,created,modified
+    key,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,created,modified
   </sql>
   
   
@@ -40,6 +41,7 @@
     #{totalRecords,jdbcType=INTEGER},
     #{request.notificationAddressesAsString,jdbcType=VARCHAR},
     #{request.creator,jdbcType=VARCHAR},
+    #{request.sendNotification,jdbcType=BOOLEAN},
     now(), <!-- created -->
     now() <!-- modified -->    
   </sql>
