@@ -54,7 +54,6 @@
     </encoder>
   </appender>
 
-  <logger name="org.gbif" level="DEBUG"/>
   <logger name="org.gbif.registry.metadata.parse" level="INFO"/>
   <logger name="org.gbif.registry.ims.ImsNodeMapper" level="INFO"/>
   <logger name="org.gbif.registry.persistence.mapper" level="INFO"/>
