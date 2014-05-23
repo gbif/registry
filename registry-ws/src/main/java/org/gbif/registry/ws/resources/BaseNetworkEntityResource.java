@@ -12,15 +12,18 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
-import org.apache.bval.guice.Validate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.ChangedComponentEvent;
@@ -28,30 +31,52 @@ import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.BaseNetworkEntityMapper;
+import org.gbif.registry.persistence.mapper.CommentMapper;
+import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.registry.persistence.mapper.EndpointMapper;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
-import org.mybatis.guice.transactional.Transactional;
 
+import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.util.List;
-import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.eventbus.EventBus;
+import org.apache.bval.guice.Validate;
+import org.mybatis.guice.transactional.Transactional;
+
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 
 /**
@@ -536,10 +561,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public int addEndpoint(UUID targetEntityKey, @Valid Endpoint endpoint) {
-    // This WILL create machine tags if they exist as nested entities, which can safely be done since endpoint
-    // is immutable.
+    T oldEntity = get(targetEntityKey);
     int key = WithMyBatis.addEndpoint(endpointMapper, mapper, targetEntityKey, endpoint, machineTagMapper);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
+    T newEntity = get(targetEntityKey);
+    // posts an UpdateEvent instead of a ChangedComponentEvent, otherwise the crawler would have to start subscribing
+    // to ChangedComponentEvent instead just to detect when an endpoint has been added to a Dataset
+    eventBus.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
     return key;
   }
 
