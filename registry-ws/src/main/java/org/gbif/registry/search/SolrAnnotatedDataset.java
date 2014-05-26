@@ -5,6 +5,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.search.model.FacetField;
+import org.gbif.common.search.model.FacetField.Method;
 import org.gbif.common.search.model.FullTextSearchField;
 import org.gbif.common.search.model.Key;
 import org.gbif.common.search.model.SearchMapping;
@@ -24,14 +25,15 @@ import org.apache.solr.client.solrj.beans.Field;
  */
 @SearchMapping(
   facets = {
-    @FacetField(name = "TYPE", field = "dataset_type", sort = FacetField.SortOrder.INDEX),
-    @FacetField(name = "SUBTYPE", field = "dataset_subtype", sort = FacetField.SortOrder.INDEX),
-    @FacetField(name = "KEYWORD", field = "keyword"),
-    @FacetField(name = "OWNING_ORG", field = "owning_organization_key"),
-    @FacetField(name = "HOSTING_ORG", field = "hosting_organization_key"),
-    @FacetField(name = "DECADE", field = "decade", sort = FacetField.SortOrder.INDEX),
-    @FacetField(name = "COUNTRY", field = "country", sort = FacetField.SortOrder.INDEX),
-    @FacetField(name = "PUBLISHING_COUNTRY", field = "publishing_country", sort = FacetField.SortOrder.INDEX)
+    @FacetField(name = "TYPE", field = "dataset_type", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
+    @FacetField(name = "SUBTYPE", field = "dataset_subtype", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
+    @FacetField(name = "KEYWORD", field = "keyword", method = Method.ENUM),
+    @FacetField(name = "OWNING_ORG", field = "owning_organization_key", method = Method.ENUM),
+    @FacetField(name = "HOSTING_ORG", field = "hosting_organization_key", method = Method.ENUM),
+    @FacetField(name = "DECADE", field = "decade", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
+    @FacetField(name = "COUNTRY", field = "country", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
+    @FacetField(name = "PUBLISHING_COUNTRY", field = "publishing_country", sort = FacetField.SortOrder.INDEX,
+      method = Method.ENUM)
   },
   fulltextFields = {
     @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 10.0d,
@@ -50,7 +52,7 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
   @Field("country")
   public void setCountryCoverage(List<Integer> countryOrdinals) {
     Set<Country> countries = Sets.newHashSet();
-    for (Integer ordinal: countryOrdinals) {
+    for (Integer ordinal : countryOrdinals) {
       if (ordinal != null) {
         countries.add(Country.values()[ordinal]);
       }
