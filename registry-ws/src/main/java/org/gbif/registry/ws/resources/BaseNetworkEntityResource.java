@@ -255,7 +255,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void update(@Valid T entity) {
     T oldEntity = get(entity.getKey());
     WithMyBatis.update(mapper, entity);
-    eventBus.post(UpdateEvent.newInstance(entity, oldEntity, objectClass));
+    // get complete entity with components populated, so subscribers of UpdateEvent can compare new and old entities
+    T newEntity = get(entity.getKey());
+    eventBus.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
   }
 
   /**
