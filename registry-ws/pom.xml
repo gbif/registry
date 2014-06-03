@@ -357,7 +357,7 @@
       -->
       <id>dev</id>
       <properties>
-        <registry.db.url>jdbc:postgresql://apps.gbif-dev.org/registry</registry.db.url>
+        <registry.db.url>jdbc:postgresql://apps.gbif-dev.org/dev_registry</registry.db.url>
         <registry.db.username>registry</registry.db.username>
         <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
         <registry.messaging.port>5672</registry.messaging.port>
