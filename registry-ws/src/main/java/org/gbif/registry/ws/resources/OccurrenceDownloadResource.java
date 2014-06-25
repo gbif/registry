@@ -73,7 +73,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public Download get(@PathParam("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
-    clearSensitiveData(securityContext, download);
+    if (download != null) { // the user can request a non-existing download
+      clearSensitiveData(securityContext, download);
+    }
     return download;
   }
 
