@@ -90,30 +90,30 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the owning organization key. Mandatory field, injected on both register and update requests.
+   * Set the publishing organization key. Mandatory field, injected on both register and update requests.
    *
    * @param organizationKey organization key as UUID
    */
   @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   public void setOrganizationKey(String organizationKey) {
     try {
-      setOwningOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
+      setPublishingOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
     } catch (IllegalArgumentException e) {
-      LOG.error("Owning organization key is not a valid UUID: {}", Strings.nullToEmpty(organizationKey));
+      LOG.error("Publishing organization key is not a valid UUID: {}", Strings.nullToEmpty(organizationKey));
     }
 
   }
 
   /**
-   * Get the owning organization key. This is a required field in Registry2, and is required by the web services.
+   * Get the publishing organization key. This is a required field in Registry2, and is required by the web services.
    * This method is not used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
    *
-   * @return owning organization key of the dataset
+   * @return publishing organization key of the dataset
    */
   @XmlElement(name = LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   @NotNull
   public String getOrganizationKey() {
-    return getOwningOrganizationKey() != null ? getOwningOrganizationKey().toString() : null;
+    return getPublishingOrganizationKey() != null ? getPublishingOrganizationKey().toString() : null;
   }
 
   /**
@@ -713,7 +713,7 @@ public class LegacyDataset extends Dataset {
     dataset.setCreatedBy(getCreatedBy());
     dataset.setModifiedBy(getModifiedBy());
     dataset.setTitle(getTitle());
-    dataset.setOwningOrganizationKey(getOwningOrganizationKey());
+    dataset.setPublishingOrganizationKey(getPublishingOrganizationKey());
     dataset.setInstallationKey(getInstallationKey());
     dataset.setLanguage(getLanguage());
     dataset.setDescription(getDescription());

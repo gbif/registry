@@ -140,7 +140,7 @@ public class DatasetOccurrenceDownloadIT {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(Nodes.newInstance());
 
-    // owning organization (required field)
+    // publishing organization (required field)
     Organization o = Organizations.newInstance(nodeKey);
     UUID organizationKey = organizationService.create(o);
 

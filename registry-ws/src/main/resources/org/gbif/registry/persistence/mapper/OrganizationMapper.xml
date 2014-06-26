@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.OrganizationMapper">
-  
+
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="ORGANIZATION_MAP" type="Organization" autoMapping="true">
     <id property="key" column="key"/>
-    <association property="numOwnedDatasets" column="key" select="countOwnedDatasets" />
+    <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
@@ -17,37 +17,37 @@
   <sql id="WRITABLE_ORGANIZATION_FIELDS">
     key,endorsing_node_key,endorsement_approved,password,title,abbreviation,description,language,email,
     phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
-    modified,modified_by    
+    modified,modified_by
   </sql>
-  
+
   <sql id="ORGANIZATION_FIELDS">
     o.key,o.endorsing_node_key,o.endorsement_approved,o.password,o.title,o.abbreviation,o.description,o.language,o.email,
     o.phone,o.homepage,o.logo_url,o.address,o.city,o.province,o.country,o.postal_code,o.latitude,o.longitude,
-    o.created,o.created_by,o.modified,o.modified_by,o.deleted    
+    o.created,o.created_by,o.modified,o.modified_by,o.deleted
   </sql>
 
   <sql id="LEGACY_ORGANIZATION_BRIEF_FIELDS">
     o.key,o.title AS name
   </sql>
-  
-  <!-- 
+
+  <!--
     Simple fulltext search on the search field or contact search field.
     plainto_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
     Uses the default configuration english for the English language.
     E.g. no prefix search is supported.
    -->
-  <sql id="SIMPLE_SEARCH">  
+  <sql id="SIMPLE_SEARCH">
     AND (
       o.fulltext_search @@ plainto_tsquery('english',#{query})
       OR EXISTS(
-        SELECT contact_key 
+        SELECT contact_key
         FROM organization_contact JOIN contact c ON c.key = contact_key
         WHERE organization_key=o.key AND c.fulltext_search @@ plainto_tsquery('english',#{query})
       )
-    ) 
+    )
   </sql>
-  
-  <!-- 
+
+  <!--
     key, password, created and deleted are never changed
    -->
   <sql id="ORGANIZATION_UPDATE">
@@ -68,11 +68,11 @@
     postal_code = #{postalCode,jdbcType=VARCHAR},
     latitude = #{latitude,jdbcType=DOUBLE},
     longitude = #{longitude,jdbcType=DOUBLE},
-    modified = now(),    
+    modified = now(),
     modified_by = #{modifiedBy},
     deleted = null <!-- if we're updating it can't be deleted -->
   </sql>
-  
+
   <sql id="WRITABLE_ORGANIZATION_FIELD_TYPES">
     #{key,jdbcType=OTHER},
     #{endorsingNodeKey,jdbcType=OTHER},
@@ -93,14 +93,14 @@
     #{postalCode,jdbcType=VARCHAR},
     #{latitude,jdbcType=DOUBLE},
     #{longitude,jdbcType=DOUBLE},
-    now(), <!-- created -->    
+    now(), <!-- created -->
     #{createdBy},
-    now(), <!-- modified -->    
+    now(), <!-- modified -->
     #{createdBy}
   </sql>
-  
-  <select id="countOwnedDatasets" resultType="int">
-    SELECT COUNT(*) AS num_datasets FROM dataset WHERE deleted IS NULL AND owning_organization_key = #{key}
+
+  <select id="countPublishedDatasets" resultType="int">
+    SELECT COUNT(*) AS num_datasets FROM dataset WHERE deleted IS NULL AND publishing_organization_key = #{key}
   </select>
 
   <!--  Note: you can get entities which are deleted -->
@@ -108,26 +108,26 @@
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
     WHERE o.key = #{key,jdbcType=OTHER}
-  </select>  
-  
+  </select>
+
   <insert id="create" parameterType="Organization">
     INSERT INTO organization(<include refid="WRITABLE_ORGANIZATION_FIELDS"/>)
     VALUES(<include refid="WRITABLE_ORGANIZATION_FIELD_TYPES"/>)
-  </insert>  
-  
+  </insert>
+
   <update id="update" parameterType="Organization">
     UPDATE organization
     SET <include refid="ORGANIZATION_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}
-  </update>  
-  
+  </update>
+
   <!-- For safety, should it be already deleted nothing is done -->
   <update id="delete">
-    UPDATE organization 
+    UPDATE organization
     SET deleted = now()
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
-  </update>  
-  
+  </update>
+
   <!-- Append safe ordering, omitting deleted entities -->
   <select id="list" resultType="Organization"  resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
@@ -159,7 +159,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
@@ -168,7 +168,7 @@
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
     </if>
-  </select>      
+  </select>
 
   <!-- TAGS -->
   <insert id="addTag">
@@ -178,22 +178,22 @@
      #{tagKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listTags" resultType="Tag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
     FROM tag INNER JOIN organization_tag ON tag_key = key
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of tag to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
   <delete id="deleteTag">
-    DELETE FROM tag USING organization_tag 
+    DELETE FROM tag USING organization_tag
     WHERE
-      tag_key = tag.key AND 
+      tag_key = tag.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
-  
+
   <!-- CONTACTS -->
   <insert id="addContact">
     INSERT INTO organization_contact(organization_key,contact_key, type, is_primary)
@@ -217,7 +217,7 @@
     UPDATE organization_contact
     SET is_primary=#{primary,jdbcType=BOOLEAN},
     type=#{type,jdbcType=OTHER}
-    WHERE organization_key=#{targetEntityKey,jdbcType=OTHER} AND contact_key=#{contactKey,jdbcType=INTEGER} 
+    WHERE organization_key=#{targetEntityKey,jdbcType=OTHER} AND contact_key=#{contactKey,jdbcType=INTEGER}
   </update>
 
   <select id="listContacts" resultType="Contact">
@@ -226,23 +226,23 @@
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
+
   <select id="areRelated" resultType="boolean">
-    SELECT true 
-    FROM organization_contact 
-    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER} 
+    SELECT true
+    FROM organization_contact
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
       AND contact_key = #{contactKey,jdbcType=INTEGER}
-    LIMIT 1 
+    LIMIT 1
   </select>
-  
-  
-  <!-- Joined delete of contact to trigger cascade delete of the join table --> 
+
+
+  <!-- Joined delete of contact to trigger cascade delete of the join table -->
   <delete id="deleteContact">
-    DELETE FROM contact USING organization_contact 
+    DELETE FROM contact USING organization_contact
     WHERE
-      contact_key = contact.key AND 
+      contact_key = contact.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
-  </delete>  
+  </delete>
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
@@ -276,21 +276,21 @@
      #{endpointKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listEndpoints" resultMap="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_FIELDS"/>
     FROM endpoint INNER JOIN organization_endpoint ON endpoint_key = key
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of endpoint to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of endpoint to trigger cascade delete of the join table -->
   <delete id="deleteEndpoint">
     DELETE FROM endpoint USING organization_endpoint
     WHERE
-      endpoint_key = endpoint.key AND 
+      endpoint_key = endpoint.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
-  </delete>    
+  </delete>
 
   <!-- MACHINE TAGS -->
   <insert id="addMachineTag">
@@ -300,22 +300,22 @@
      #{machineTagKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listMachineTags" resultType="MachineTag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
     FROM machine_tag INNER JOIN organization_machine_tag ON machine_tag_key = key
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY namespace
   </select>
-  
-  <!-- Joined delete of machine_tag to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
   <delete id="deleteMachineTag">
-    DELETE FROM machine_tag USING organization_machine_tag 
+    DELETE FROM machine_tag USING organization_machine_tag
     WHERE
-      machine_tag_key = machine_tag.key AND 
+      machine_tag_key = machine_tag.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
-  </delete>  
-  
+  </delete>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO organization_comment(organization_key,comment_key)
@@ -324,41 +324,41 @@
      #{commentKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listComments" resultType="Comment">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
     FROM comment INNER JOIN organization_comment ON comment_key = key
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of comment to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
   <delete id="deleteComment">
     DELETE FROM comment USING organization_comment
     WHERE
-      comment_key = comment.key AND 
+      comment_key = comment.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
-  </delete>  
-  
+  </delete>
+
   <!-- Append safe ordering (ordering done first by organization name, then created date), omitting deleted entities -->
   <select id="organizationsEndorsedBy" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
-    INNER JOIN node n ON o.endorsing_node_key = n.key 
-    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true 
+    INNER JOIN node n ON o.endorsing_node_key = n.key
+    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
     ORDER BY o.title, o.created DESC, o.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
-  
+  </select>
+
   <select id="countOrganizationsEndorsedBy" resultType="Long">
     SELECT count(*)
     FROM organization o
-    INNER JOIN node n ON o.endorsing_node_key = n.key 
-    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true 
+    INNER JOIN node n ON o.endorsing_node_key = n.key
+    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
   </select>
-    
+
   <!-- Append safe ordering, omitting deleted entities -->
   <select id="pendingEndorsements" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
@@ -371,8 +371,8 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
-  
+  </select>
+
   <select id="countPendingEndorsements" resultType="Long">
     SELECT count(*)
     FROM organization o
@@ -380,7 +380,7 @@
     <if test="nodeKey != null" >
       AND o.endorsing_node_key= #{nodeKey,jdbcType=OTHER}
     </if>
-  </select>    
+  </select>
 
   <!--
    Append safe ordering, omitting deleted entities
@@ -399,7 +399,7 @@
     FROM organization o
     WHERE o.deleted IS NULL AND o.country = #{country,jdbcType=OTHER}
   </select>
-  
+
   <select id="deleted" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
@@ -408,36 +408,36 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countDeleted" resultType="Long">
     SELECT count(*)
     FROM organization o
     WHERE o.deleted IS NOT NULL
-  </select>    
-  
+  </select>
+
   <select id="nonPublishing" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o 
-    LEFT JOIN dataset ds ON o.key = ds.owning_organization_key 
+    FROM organization o
+    LEFT JOIN dataset ds ON o.key = ds.publishing_organization_key
     WHERE o.deleted IS NULL AND ds.key IS NULL
     ORDER BY o.created DESC, o.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countNonPublishing" resultType="Long">
     SELECT count(*)
     FROM organization o
-    LEFT JOIN dataset ds ON o.key = ds.owning_organization_key 
+    LEFT JOIN dataset ds ON o.key = ds.publishing_organization_key
     WHERE o.deleted IS NULL AND ds.key IS NULL
-  </select>    
+  </select>
   <select id="countPublishing" resultType="Integer">
     SELECT count(DISTINCT o.key)
     FROM organization o
-    INNER JOIN dataset ds ON o.key = ds.owning_organization_key 
+    INNER JOIN dataset ds ON o.key = ds.publishing_organization_key
     WHERE o.deleted IS NULL AND ds.deleted IS NULL AND o.endorsement_approved=true
-  </select>    
-  
+  </select>
+
   <select id="hostingInstallationsOf" resultMap="ORGANIZATION_MAP">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o JOIN installation i ON i.organization_key=o.key AND i.deleted IS NULL
@@ -445,8 +445,8 @@
     <if test="georeferenced != null and georeferenced == true" >
       AND o.latitude IS NOT NULL AND o.longitude IS NOT NULL
     </if>
-  </select>    
-  
+  </select>
+
   <select id="listByIdentifier" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
     SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
@@ -460,7 +460,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countByIdentifier" resultType="Long">
     SELECT count(DISTINCT o.key)
     FROM organization o
@@ -470,5 +470,5 @@
     <if test="type != null" >
       AND ide.type=#{type,jdbcType=OTHER}
     </if>
-  </select>  
+  </select>
 </mapper>

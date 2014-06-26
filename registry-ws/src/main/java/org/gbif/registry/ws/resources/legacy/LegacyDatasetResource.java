@@ -62,10 +62,10 @@ public class LegacyDatasetResource {
 
 
   /**
-   * Register GBRDS dataset, handling incoming request with path /resource. The primary contact, owning organization
+   * Register GBRDS dataset, handling incoming request with path /resource. The primary contact, publishing organization
    * key, and resource name are mandatory. Only after both the dataset and primary contact have been persisted is a
    * Response with Status.CREATED (201) returned.
-   * 
+   *
    * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
    * @return Response
@@ -80,11 +80,11 @@ public class LegacyDatasetResource {
   }
 
   /**
-   * Update GBRDS Dataset, handling incoming request with path /resource/{key}.The owning organization key is
+   * Update GBRDS Dataset, handling incoming request with path /resource/{key}.The publishing organization key is
    * mandatory. The primary contact is not required, but if any of the primary contact parameters were included in the
    * request, it is required required. This is the difference between this method and updateDataset. Only after both
    * the dataset and optional primary contact have been updated is a Response with Status.OK (201) returned.
-   * 
+   *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
@@ -127,9 +127,9 @@ public class LegacyDatasetResource {
       }
       // type can't be derived from endpoints, since there are no endpoints supplied on this update, so re-set existing
       dataset.setType(existing.getType());
-      // populate owning organization from credentials
-      dataset.setOwningOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
-      // ensure the owning organization exists, the installation exists, primary contact exists, etc
+      // populate publishing organization from credentials
+      dataset.setPublishingOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
+      // ensure the publishing organization exists, the installation exists, primary contact exists, etc
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils
         .isValidOnUpdate(dataset, datasetService, organizationService, installationService)) {
@@ -142,7 +142,7 @@ public class LegacyDatasetResource {
         existing.setLanguage(dataset.getLanguage());
         existing.setInstallationKey(dataset.getInstallationKey());
 
-        existing.setOwningOrganizationKey(dataset.getOwningOrganizationKey());
+        existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
         // persist changes
         datasetService.update(existing);
@@ -174,10 +174,10 @@ public class LegacyDatasetResource {
 
   /**
    * Retrieve all Datasets owned by an organization, handling incoming request with path /resource.
-   * The owning organization query parameter is mandatory. Only after both
+   * The publishing organization query parameter is mandatory. Only after both
    * the organizationKey is verified to correspond to an existing organization, is a Response including the list of
    * Datasets returned.
-   * 
+   *
    * @param organizationKey organization key (UUID) coming in as query param
    * @return Response with list of Datasets or empty list with error message if none found
    */
@@ -197,7 +197,7 @@ public class LegacyDatasetResource {
         PagingResponse<Dataset> response;
         do {
           LOG.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
-          response = organizationService.ownedDatasets(organizationKey, page);
+          response = organizationService.publishedDatasets(organizationKey, page);
           for (Dataset d : response.getResults()) {
             Contact contact = LegacyResourceUtils.getPrimaryContact(d);
             datasets.add(new LegacyDatasetResponse(d, contact));
@@ -219,7 +219,7 @@ public class LegacyDatasetResource {
 
   /**
    * Read GBRDS Dataset, handling incoming request with path /resource/{key}.
-   * 
+   *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return Response with Status.OK (200) if dataset exists
    */
@@ -247,7 +247,7 @@ public class LegacyDatasetResource {
   /**
    * Delete GBRDS Dataset, handling incoming request with path /resource/{key}. Only credentials are mandatory.
    * If deletion is successful, returns Response with Status.OK.
-   * 
+   *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return Response with Status.OK if successful
    * @see IptResource#deleteDataset(java.util.UUID)

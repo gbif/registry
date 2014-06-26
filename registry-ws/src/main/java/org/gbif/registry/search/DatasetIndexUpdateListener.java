@@ -241,7 +241,7 @@ public class DatasetIndexUpdateListener {
       // Page over all OWNED datasets that could be affected
       page = new PagingRequest();
       do {
-        results = organizationService.ownedDatasets(oEvent.getOldObject().getKey(), page);
+        results = organizationService.publishedDatasets(oEvent.getOldObject().getKey(), page);
         if (!results.getResults().isEmpty()) {
           LOG.debug("Found page of {} datasets owned by organization[{}]", results.getResults().size(), oEvent
             .getOldObject().getKey());

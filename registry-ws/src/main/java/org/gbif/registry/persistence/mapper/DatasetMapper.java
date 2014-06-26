@@ -37,19 +37,19 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Dataset> listDatasetsInNetwork(@Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page);
 
   /**
-   * Obtains a list of all the datasets owned by the given organization.
+   * Obtains a list of all the datasets published by the given organization.
    */
-  List<Dataset> listDatasetsOwnedBy(@Param("organizationKey") UUID organizationKey,
+  List<Dataset> listDatasetsPublishedBy(@Param("organizationKey") UUID organizationKey,
     @Nullable @Param("page") Pageable page);
 
   /**
-   * Obtains a list of all the datasets hosted by, but not owned by, the given organization.
+   * Obtains a list of all the datasets hosted by, but not published by, the given organization.
    */
   List<Dataset> listDatasetsHostedBy(@Param("organizationKey") UUID organizationKey,
     @Nullable @Param("page") Pageable page);
 
   /**
-   * Obtains a list of all the datasets owned by an organization that is endorsed by the given node.
+   * Obtains a list of all the datasets published by an organization that is endorsed by the given node.
    */
   List<Dataset> listDatasetsEndorsedBy(@Param("nodeKey") UUID nodeKey,
     @Nullable @Param("page") Pageable page);
@@ -77,13 +77,13 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   long countDatasetsByInstallation(@Param("installationKey") UUID installationKey);
 
   /**
-   * Count of datasets owned by an organization that is endorsed by the given node.
+   * Count of datasets published by an organization that is endorsed by the given node.
    */
   long countDatasetsEndorsedBy(@Param("nodeKey") UUID nodeKey);
 
   long countDatasetsHostedBy(@Param("organizationKey") UUID organizationKey);
 
-  long countDatasetsOwnedBy(@Param("organizationKey") UUID organizationKey);
+  long countDatasetsPublishedBy(@Param("organizationKey") UUID organizationKey);
 
   // sigh - int required by the model object, but the paging is long
   int countConstituents(@Param("key") UUID datasetKey);

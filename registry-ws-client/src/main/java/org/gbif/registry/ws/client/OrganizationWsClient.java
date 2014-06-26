@@ -47,7 +47,7 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   }
 
   @Override
-  public PagingResponse<Dataset> ownedDatasets(UUID organizationKey, Pageable page) {
+  public PagingResponse<Dataset> publishedDatasets(UUID organizationKey, Pageable page) {
     return get(GenericTypes.PAGING_DATASET, null, null, page, String.valueOf(organizationKey), "ownedDataset");
   }
 

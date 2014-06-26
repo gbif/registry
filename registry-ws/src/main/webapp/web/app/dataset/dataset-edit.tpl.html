@@ -15,13 +15,13 @@
       <select ng-model="dataset.type" ng-options="o for o in datasetTypes"></select>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='subType'>Subtype</label>
     <div class='controls'>
       <select ng-model="dataset.subType" ng-options="o for o in datasetSubTypes"></select>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='external'>External</label>
     <div class='controls'>
       <label class="checkbox">
@@ -29,8 +29,8 @@
         <small class='muted'>Indicates that the dataset is found through integration with metadata networks, and not registered directly with GBIF</small>
       </label>
     </div>
-	
-	<span ng-show="advancedMode || dataset.key == undefined">  
+
+	<span ng-show="advancedMode || dataset.key == undefined">
     <label class='control-label' for='lockedForAutoUpdate'>Lock auto updates</label>
     <div class='controls'>
       <label class="checkbox">
@@ -38,43 +38,43 @@
         <small class="muted">Controls permissions for crawlers updating metadata, contacts etc</small>
       </label>
       <p><span class="label label-important">Important</span> <span class="text-error">Use with caution - disables automated updates<span></p>
-            
+
     </div>
     </span>
-  
+
     <label class='control-label' for='title'>Title</label>
     <div class='controls'>
       <input id='title' maxlength='255' type='text' ng-model='dataset.title'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='alias'>Alias</label>
     <div class='controls'>
       <input id='alias' maxlength='255' type='text' ng-model='dataset.alias'>
       <p class='muted'><small>TODO: explain or remove this</small></p>
     </div>
-  
+
     <label class='control-label' for='abbreviation'>Abbreviation</label>
     <div class='controls'>
       <input id='abbreviation' maxlength='255' type='text' ng-model='dataset.abbreviation'>
       <p class='muted'><small>TODO: explain or remove this</small></p>
     </div>
-  
+
     <label class='control-label' for='description'>Description</label>
     <div class='controls'>
       <input id='description' maxlength='255' type='text' ng-model='dataset.description'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <span ng-show="advancedMode || dataset.key == undefined">
-    <label class='control-label' for='owningOrganizationKey'>Owning Organization</label>
+    <label class='control-label' for='publishingOrganizationKey'>Publishing Organization</label>
     <div class='controls'>
-      <input id='owningOrganizationKey' maxlength='255' type='text' ng-model='dataset.owningOrganizationKey'>
+      <input id='publishingOrganizationKey' maxlength='255' type='text' ng-model='dataset.publishingOrganizationKey'>
       <p><span class="label label-important">Important</span> <span class="text-error">Changing this will update all occurrence records<span></p>
       <p class='muted'><small>It is expected that this may be changed occasionally, but be vigilant in changes as this has potential to spawn significant processing for occurrence records, metrics and maps</small></p>
     </div>
     </span>
-  
+
     <span ng-show="advancedMode || dataset.key == undefined">
     <label class='control-label' for='installationKey'>Installation</label>
     <div class='controls'>
@@ -83,7 +83,7 @@
       <p class='muted'><small>It is expected that this may be changed occasionally, but be vigilant in changes as this has potential to spawn significant processing for occurrence records, metrics.  Please verify the services are as expected on change</small></p>
     </div>
     </span>
-  
+
     <span ng-show="advancedMode || dataset.key == undefined">
     <label class='control-label' for='parentDatasetKey'>Parent dataset</label>
     <div class='controls'>
@@ -91,7 +91,7 @@
       <p class='muted'><small>For use in declaring dataset relationships, such as the constituent parts of the Catalogue of Life</small></p>
     </div>
     </span>
-  
+
     <span ng-show="advancedMode || dataset.key == undefined">
     <label class='control-label' for='duplicateOfDatasetKey'>Duplicate Dataset</label>
     <div class='controls'>
@@ -100,48 +100,48 @@
       <p class='muted'><small>When a dataset is found to be a duplicate of another, then it should be updated.  This will effectively trigger a de-index which is the same as a deletion.  It may be that you ALSO need to set the parent dataset if this has been aggregated.</small></p>
     </div>
     </span>
-  
+
     <label class='control-label' for='citation'>Citation</label>
     <div class='controls'>
       <input id='citation' maxlength='255' type='text' ng-model='dataset.citation.text'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='citationIdentifier'>Citation identifier</label>
     <div class='controls'>
       <input id='citationIdentifier' maxlength='255' type='text' ng-model='dataset.citation.identifier'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='rights'>Rights</label>
     <div class='controls'>
       <input id='rights' maxlength='255' type='text' ng-model='dataset.rights'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='homepage'>Homepage</label>
     <div class='controls'>
       <input id='homepage' maxlength='255' type='text' ng-model='dataset.homepage'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='logoUrl'>Logo</label>
     <div class='controls'>
       <input id='logoUrl' maxlength='255' type='text' ng-model='dataset.logoUrl'>
       <p class='muted'><small></small></p>
     </div>
-  
+
     <label class='control-label' for='language'>Language</label>
     <div class='controls'>
       <select ng-model="dataset.language" ng-options="o for o in languages"></select>
       <p class='muted'><small>The language used for the likes of description, citation etc</small></p>
     </div>
 
-      
+
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>
       <button class="btn primary-btn" ng-click="save(dataset)" type="submit">Save changes</button>
-    </div>            
+    </div>
     <div class="form-actions" ng-show="advancedMode">
       <small><a href="" data-target="#deleteConfirm" data-toggle="modal">Delete this dataset</a></small>
       <p><small class="muted">A deletion may be reverted at a later date</small></p>
@@ -158,6 +158,6 @@
         <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
         <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="delete(dataset)">Yes, delete it!</button>
       </div>
-    </div>    
+    </div>
   </fieldset>
 </form>

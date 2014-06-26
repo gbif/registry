@@ -153,7 +153,7 @@ public class LegacyEndpoint extends Endpoint {
   }
 
   /**
-   * Set the owning organization key of the dataset to which the endpoint is associated.
+   * Set the publishing organization key of the dataset to which the endpoint is associated.
    *
    * @param organizationKey organization key as UUID
    */

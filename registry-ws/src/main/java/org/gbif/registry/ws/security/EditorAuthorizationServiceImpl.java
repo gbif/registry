@@ -63,7 +63,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     }
     // try higher organization or node rights
     Dataset d = datasetService.get(datasetKey);
-    return d == null ? false : allowedToModifyOrganization(user, d.getOwningOrganizationKey());
+    return d == null ? false : allowedToModifyOrganization(user, d.getPublishingOrganizationKey());
   }
 
   @Override

@@ -14,9 +14,9 @@
 <dl class="dl-horizontal spaced-list">
   <dt>Installation type</dt>
   <dd><span class="label label-success">{{installation.type | prettifyType}}</span></dd>
-  <dt>Owning organization</dt>
+  <dt>Publishing organization</dt>
   <dd>
-    <a href="" ng-click="openOrganization(installation.organizationKey)">{{installation.organization.title}}</a>  
+    <a href="" ng-click="openOrganization(installation.organizationKey)">{{installation.organization.title}}</a>
   </dd>
   <dt>Title</dt>
   <dd>{{installation.title}}</dd>
@@ -33,7 +33,7 @@
 </dl>
 <div class="form-actions" ng-show="installation.deleted==null">
   <small><a href="" ng-click="transitionTo('edit')">Edit these details</a></small>
-</div>            
+</div>
 <div class="form-actions" ng-show="installation.deleted!=null">
     <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this installation</a></small>
       <p><small class="muted">Will make this eligible for harvesting etc.</small></p>
@@ -51,7 +51,7 @@
         <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="restore(installation)">Yes, restore it!</button>
       </div>
     </div>
-</div>    
+</div>
 <div id="syncConfirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="title" aria-hidden="true">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -65,5 +65,4 @@
     <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="synchronize(installation)">Yes, synchronize it!</button>
   </div>
 </div>
-        
-    
+

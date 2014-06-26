@@ -103,7 +103,7 @@ public class LegacyResourceUtils {
   }
 
   /**
-   * Check dataset is valid before persisting. Check required fields, the owning organization
+   * Check dataset is valid before persisting. Check required fields, the publishing organization
    * still exists, and the installation still exists before updating.
    *
    * @param dataset dataset with fields injected from HTTP request
@@ -125,12 +125,12 @@ public class LegacyResourceUtils {
       LOG.error("Dataset is missing mandatory field type, key={}", dataset.getKey());
       return false;
     }
-    if (dataset.getOwningOrganizationKey() == null) {
-      LOG.error("Owning org key not included in HTTP parameters for dataset, key={}", dataset.getKey());
+    if (dataset.getPublishingOrganizationKey() == null) {
+      LOG.error("Publishing org key not included in HTTP parameters for dataset, key={}", dataset.getKey());
       return false;
     }
-    if (organizationService.get(dataset.getOwningOrganizationKey()) == null) {
-      LOG.error("Dataset uses an owning org that does not exist, key={}", dataset.getOwningOrganizationKey());
+    if (organizationService.get(dataset.getPublishingOrganizationKey()) == null) {
+      LOG.error("Dataset uses an publishing org that does not exist, key={}", dataset.getPublishingOrganizationKey());
       return false;
     }
     if (dataset.getInstallationKey() == null) {
@@ -146,8 +146,8 @@ public class LegacyResourceUtils {
   }
 
   /**
-   * Check dataset is valid before updating. Check the dataset still exists, the owning organization
-   * still exists, the same owning organization is specified, and the installation still exists before updating.
+   * Check dataset is valid before updating. Check the dataset still exists, the publishing organization
+   * still exists, the same publishing organization is specified, and the installation still exists before updating.
    *
    * @param dataset dataset with fields injected from HTTP request
    *

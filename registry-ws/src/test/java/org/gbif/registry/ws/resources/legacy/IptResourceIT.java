@@ -363,7 +363,7 @@ public class IptResourceIT {
    */
   @Test
   public void testRegisterIptDataset() throws Exception {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -407,7 +407,7 @@ public class IptResourceIT {
    */
   @Test
   public void testRegisterIptDatasetButNotAuthorized() throws Exception {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -441,7 +441,7 @@ public class IptResourceIT {
    */
   @Test
   public void testRegisterIptDatasetWithNoPrimaryContact() throws Exception {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -573,7 +573,7 @@ public class IptResourceIT {
    */
   @Test
   public void testUpdateIptDatasetButNotAuthorized() throws Exception {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -610,7 +610,7 @@ public class IptResourceIT {
    */
   @Test
   public void testUpdateIptDatasetWithNoPrimaryContact() throws Exception {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -711,12 +711,12 @@ public class IptResourceIT {
    * Retrieve dataset presumed already to exist, and make a series of assertions to ensure it is valid.
    *
    * @param dataset dataset
-   * @param organizationKey owning organization key
+   * @param organizationKey publishing organization key
    * @param installationKey installation key
    */
   private void validateExistingIptDataset(Dataset dataset, UUID organizationKey, UUID installationKey) {
     assertNotNull("Dataset should be present", dataset);
-    assertEquals(organizationKey, dataset.getOwningOrganizationKey());
+    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     // expected to change on update
@@ -788,7 +788,7 @@ public class IptResourceIT {
    * Retrieve persisted IPT dataset, and make a series of assertions to ensure it has been properly persisted.
    *
    * @param datasetKey installation key (UUID)
-   * @param organizationKey installation owning organization key
+   * @param organizationKey installation publishing organization key
    * @return validated installation
    */
   private Dataset validatePersistedIptDataset(UUID datasetKey, UUID organizationKey, UUID installationKey) {
@@ -796,7 +796,7 @@ public class IptResourceIT {
     Dataset dataset = datasetService.get(datasetKey);
 
     assertNotNull("Dataset should be present", dataset);
-    assertEquals(organizationKey, dataset.getOwningOrganizationKey());
+    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     assertEquals(Requests.DATASET_NAME, dataset.getTitle());

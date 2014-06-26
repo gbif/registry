@@ -75,7 +75,7 @@ public class LegacyDatasetResourceIT {
    * </br>
    * Then, it sends a register Dataset (POST) request to create a new Dataset owned by this organization. The request
    * does not contain an installation key, but it can be inferred that it should use the key of the one and only
-   * installation belonging to the owning organization. The request also doesn't create any endpoints, that's done in
+   * installation belonging to the publishing organization. The request also doesn't create any endpoints, that's done in
    * a separate legacy ws call. Therefore, the DatasetType defaults to METADATA.
    * </br>
    * Upon receiving an HTTP Response, the test parses its XML content in order to extract the registered Dataset UUID
@@ -85,7 +85,7 @@ public class LegacyDatasetResourceIT {
    */
   @Test
   public void testRegisterLegacyDataset() throws IOException, URISyntaxException, SAXException {
-    // persist new organization (Dataset owning organization)
+    // persist new organization (Dataset publishing organization)
     Organization organization = Organizations.newPersistedInstance();
     UUID organizationKey = organization.getKey();
 
@@ -202,7 +202,7 @@ public class LegacyDatasetResourceIT {
     dataset = datasetService.get(datasetKey);
 
     assertNotNull("Dataset should be present", dataset);
-    assertEquals(organizationKey, dataset.getOwningOrganizationKey());
+    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     assertEquals(Requests.DATASET_NAME, dataset.getTitle());
@@ -218,7 +218,7 @@ public class LegacyDatasetResourceIT {
 
   /**
    * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least
-   * the dataset key, owning organization key, dataset title, and dataset description.
+   * the dataset key, publishing organization key, dataset title, and dataset description.
    */
   @Test
   public void testGetLegacyDatasetsForOrganizationJSON() throws IOException, URISyntaxException, SAXException {
@@ -246,13 +246,13 @@ public class LegacyDatasetResourceIT {
     assertEquals(1, rootNode.size());
     // keys "key" and "name" expected
     assertEquals(datasetKey.toString(), rootNode.get(0).get("key").getTextValue());
-    assertEquals(dataset.getOwningOrganizationKey().toString(), rootNode.get(0).get("organisationKey").getTextValue());
+    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get(0).get("organisationKey").getTextValue());
     assertEquals(dataset.getTitle(), rootNode.get(0).get("name").getTextValue());
   }
 
   /**
    * The test sends a get all datasets owned by organization (GET) request, the XML response having at the very least
-   * the dataset key, owning organization key, dataset title, and dataset description.
+   * the dataset key, publishing organization key, dataset title, and dataset description.
    */
   @Test
   public void testGetLegacyDatasetsForOrganizationXML() throws IOException, URISyntaxException, SAXException {
@@ -318,7 +318,7 @@ public class LegacyDatasetResourceIT {
     JsonNode rootNode = objectMapper.readTree(result.content);
     // keys "key" and "name" expected
     assertEquals(datasetKey.toString(), rootNode.get("key").getTextValue());
-    assertEquals(dataset.getOwningOrganizationKey().toString(), rootNode.get("organisationKey").getTextValue());
+    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get("organisationKey").getTextValue());
     assertEquals(dataset.getTitle(), rootNode.get("name").getTextValue());
     assertEquals(dataset.getDescription(), rootNode.get("description").getTextValue());
     assertEquals(dataset.getLanguage().getIso2LetterCode(), rootNode.get("nameLanguage").getTextValue());
@@ -398,7 +398,7 @@ public class LegacyDatasetResourceIT {
 
   /**
    * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least
-   * the dataset key, owning organization key, dataset title, and dataset description.
+   * the dataset key, publishing organization key, dataset title, and dataset description.
    */
   @Test
   public void testGetLegacyDatasetsForOrganizationThatDoesNotExist()
@@ -419,7 +419,7 @@ public class LegacyDatasetResourceIT {
 
   /**
    * Populate a list of name value pairs used in the common ws requests for GBRDS dataset registrations and updates.
-   * 
+   *
    * @param organizationKey organization key
    * @return list of name value pairs
    */
@@ -456,9 +456,9 @@ public class LegacyDatasetResourceIT {
   /**
    * Retrieve persisted Legacy (GBRDS) dataset, and make a series of assertions to ensure it has been properly
    * persisted.
-   * 
+   *
    * @param datasetKey installation key (UUID)
-   * @param organizationKey installation owning organization key
+   * @param organizationKey installation publishing organization key
    * @return validated installation
    */
   private Dataset validatePersistedLegacyDataset(UUID datasetKey, UUID organizationKey, UUID installationKey) {
@@ -466,7 +466,7 @@ public class LegacyDatasetResourceIT {
     Dataset dataset = datasetService.get(datasetKey);
 
     assertNotNull("Dataset should be present", dataset);
-    assertEquals(organizationKey, dataset.getOwningOrganizationKey());
+    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.METADATA, dataset.getType());
     assertEquals(Requests.DATASET_NAME, dataset.getTitle());
@@ -498,14 +498,14 @@ public class LegacyDatasetResourceIT {
 
   /**
    * Retrieve dataset presumed already to exist, and make a series of assertions to ensure it is valid.
-   * 
+   *
    * @param dataset dataset
-   * @param organizationKey owning organization key
+   * @param organizationKey publishing organization key
    * @param installationKey installation key
    */
   private void validateExistingDataset(Dataset dataset, UUID organizationKey, UUID installationKey) {
     assertNotNull("Dataset should be present", dataset);
-    assertEquals(organizationKey, dataset.getOwningOrganizationKey());
+    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     // expected to change on update

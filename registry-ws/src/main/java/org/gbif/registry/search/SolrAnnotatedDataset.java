@@ -28,7 +28,7 @@ import org.apache.solr.client.solrj.beans.Field;
     @FacetField(name = "TYPE", field = "dataset_type", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "SUBTYPE", field = "dataset_subtype", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "KEYWORD", field = "keyword", method = Method.ENUM),
-    @FacetField(name = "OWNING_ORG", field = "owning_organization_key", method = Method.ENUM),
+    @FacetField(name = "PUBLISHING_ORG", field = "publishing_organization_key", method = Method.ENUM),
     @FacetField(name = "HOSTING_ORG", field = "hosting_organization_key", method = Method.ENUM),
     @FacetField(name = "DECADE", field = "decade", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "COUNTRY", field = "country", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
@@ -39,7 +39,7 @@ import org.apache.solr.client.solrj.beans.Field;
     @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 10.0d,
       partialMatchScore = 1.0d),
     @FullTextSearchField(field = "keyword", partialMatching = WildcardPadding.NONE, exactMatchScore = 4.0d),
-    @FullTextSearchField(field = "owning_organization_title", highlightField = "owning_organization_title",
+    @FullTextSearchField(field = "publishing_organization_title", highlightField = "publishing_organization_title",
       partialMatching = WildcardPadding.NONE, exactMatchScore = 2.0d),
     @FullTextSearchField(field = "hosting_organization_title", partialMatching = WildcardPadding.NONE,
       exactMatchScore = 2.0d),
@@ -106,15 +106,15 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
     super.setKeywords(keywords);
   }
 
-  @Field("owning_organization_key")
-  public void setOwningOrganizationKey(String owningOrganizationKey) {
-    setOwningOrganizationKey(UUID.fromString(owningOrganizationKey));
+  @Field("publishing_organization_key")
+  public void setPublishingOrganizationKey(String publishingOrganizationKey) {
+    setPublishingOrganizationKey(UUID.fromString(publishingOrganizationKey));
   }
 
   @Override
-  @Field("owning_organization_title")
-  public void setOwningOrganizationTitle(String owningOrganizationTitle) {
-    super.setOwningOrganizationTitle(owningOrganizationTitle);
+  @Field("publishing_organization_title")
+  public void setPublishingOrganizationTitle(String publishingOrganizationTitle) {
+    super.setPublishingOrganizationTitle(publishingOrganizationTitle);
   }
 
   @Field("dataset_subtype")

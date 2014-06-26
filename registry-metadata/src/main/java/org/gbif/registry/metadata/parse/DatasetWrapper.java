@@ -318,8 +318,8 @@ public class DatasetWrapper {
     target.setLogoUrl(logoURL);
   }
 
-  public void setOwningOrganizationKey(UUID owningOrganizationKey) {
-    target.setOwningOrganizationKey(owningOrganizationKey);
+  public void setPublishingOrganizationKey(UUID publishingOrganizationKey) {
+    target.setPublishingOrganizationKey(publishingOrganizationKey);
   }
 
   public void setProject(Project project) {

@@ -42,17 +42,17 @@ public class Datasets extends JsonBackedData<Dataset> {
     datasetService = i.getInstance(DatasetResource.class);
   }
 
-  public static Dataset newInstance(UUID owningOrganizationKey, UUID installationKey) {
+  public static Dataset newInstance(UUID publishingOrganizationKey, UUID installationKey) {
     Dataset d = INSTANCE.newTypedInstance();
-    d.setOwningOrganizationKey(owningOrganizationKey);
+    d.setPublishingOrganizationKey(publishingOrganizationKey);
     d.setInstallationKey(installationKey);
     return d;
   }
 
   /**
-   * Persist a new Dataset associated to an owning organization and installation for use in Unit Tests.
-   * 
-   * @param organizationKey owning organization key
+   * Persist a new Dataset associated to an publishing organization and installation for use in Unit Tests.
+   *
+   * @param organizationKey publishing organization key
    * @param installationKey installation key
    * @return persisted Dataset
    */

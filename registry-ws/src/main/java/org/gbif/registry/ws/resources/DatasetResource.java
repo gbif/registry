@@ -277,7 +277,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     target.setParentDatasetKey(supplementary.getParentDatasetKey());
     target.setDuplicateOfDatasetKey(supplementary.getDuplicateOfDatasetKey());
     target.setInstallationKey(supplementary.getInstallationKey());
-    target.setOwningOrganizationKey(supplementary.getOwningOrganizationKey());
+    target.setPublishingOrganizationKey(supplementary.getPublishingOrganizationKey());
     target.setExternal(supplementary.isExternal());
     target.setNumConstituents(supplementary.getNumConstituents());
     target.setType(supplementary.getType());
@@ -401,7 +401,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.setParentDatasetKey(dataset.getParentDatasetKey());
       updDataset.setDuplicateOfDatasetKey(dataset.getDuplicateOfDatasetKey());
       updDataset.setInstallationKey(dataset.getInstallationKey());
-      updDataset.setOwningOrganizationKey(dataset.getOwningOrganizationKey());
+      updDataset.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
       updDataset.setExternal(dataset.isExternal());
       updDataset.setNumConstituents(dataset.getNumConstituents());
       updDataset.setType(dataset.getType());
@@ -622,6 +622,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   protected UUID owningEntityKey(@NotNull Dataset entity) {
-    return entity.getOwningOrganizationKey();
+    return entity.getPublishingOrganizationKey();
   }
 }

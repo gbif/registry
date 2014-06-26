@@ -1,5 +1,20 @@
 package org.gbif.registry.events;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import javax.ws.rs.core.UriBuilder;
+
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -8,29 +23,15 @@ import com.google.inject.Singleton;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * A event bus listener that will flush varnish if registry entities like datasets and organizations have been
  * created, modified or deleted.
  * <p/>
  * Varnish provides two main ways of invalidating its cache: PURGE and BAN.
- * PURGE truely frees the cache, but only works on individual resoruce URLs while BANs work with regular expressions
+ * PURGE truly frees the cache, but only works on individual resource URLs while BANs work with regular expressions
  * and can banRegex entire subresources from being served. BANs do not remove the object from the varnish memory though.
  *
  * @see <h ref="https://www.varnish-software.com/static/book/Cache_invalidation.html">Varnish Book</h>
@@ -77,8 +78,8 @@ import java.util.UUID;
  *   <li>dataset/search|suggest BAN</li>
  *   <li>/installation/{d.installationKey}/dataset BAN</li>
  *   <li>/organization/{d.installation.organizationKey}/hostedDataset BAN</li>
- *   <li>/organization/{d.owningOrganizationKey}/ownedDataset BAN</li>
- *   <li>/node/{d.owningOrganization.endorsingNodeKey}/dataset BAN</li>
+ *   <li>/organization/{d.publishingOrganizationKey}/publishedDataset BAN</li>
+ *   <li>/node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN</li>
  *   <li>/network/{any UUID}/constituents BAN</li>
  * </ul>
  *
@@ -166,8 +167,8 @@ public class VarnishPurgeListener {
     Set<UUID> nodeKeys = new UUIDHashSet();
     Set<UUID> parentKeys = new UUIDHashSet();
     for (Dataset d : datasets) {
-      if (!orgKeys.contains(d.getOwningOrganizationKey())) {
-        Organization o = organizationService.get(d.getOwningOrganizationKey());
+      if (!orgKeys.contains(d.getPublishingOrganizationKey())) {
+        Organization o = organizationService.get(d.getPublishingOrganizationKey());
         nodeKeys.add(o.getEndorsingNodeKey());
       }
       if (!instKeys.contains(d.getInstallationKey())) {
@@ -175,7 +176,7 @@ public class VarnishPurgeListener {
         Installation i = installationService.get(d.getInstallationKey());
         orgKeys.add(i.getOrganizationKey());
       }
-      orgKeys.add(d.getOwningOrganizationKey());
+      orgKeys.add(d.getPublishingOrganizationKey());
       if (d.getParentDatasetKey() != null) {
         parentKeys.add(d.getParentDatasetKey());
         purge(uriBuilder.path("dataset").path(d.getParentDatasetKey().toString()).build());
@@ -184,10 +185,10 @@ public class VarnishPurgeListener {
     banRegex(String.format("%s/dataset/%s/constituents", apiRoot, anyKey(parentKeys)));
     // /installation/{d.installationKey}/dataset BAN
     banRegex(String.format("%s/installation/%s/dataset", apiRoot, anyKey(instKeys)));
-    // /organization/{d.owningOrganizationKey}/ownedDataset BAN
+    // /organization/{d.publishingOrganizationKey}/publishedDataset BAN
     // /organization/{d.installation.organizationKey}/hostedDataset BAN
-    banRegex(String.format("%s/organization/%s/(owned|hosted)Dataset", apiRoot, anyKey(orgKeys)));
-    // /node/{d.owningOrganization.endorsingNodeKey}/dataset BAN
+    banRegex(String.format("%s/organization/%s/(published|hosted)Dataset", apiRoot, anyKey(orgKeys)));
+    // /node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
     banRegex(String.format("%s/node/%s/dataset", apiRoot, anyKey(nodeKeys)));
     // /network/{any UUID}/constituents BAN
     banRegex(String.format("%s/network/.+/constituents", apiRoot));
@@ -260,7 +261,7 @@ public class VarnishPurgeListener {
   @NotThreadSafe
   public class HttpPurge extends HttpRequestBase {
 
-    public final static String METHOD_NAME = "PURGE";
+    public static final String METHOD_NAME = "PURGE";
 
 
     public HttpPurge(final URI uri) {
@@ -289,8 +290,8 @@ public class VarnishPurgeListener {
   @NotThreadSafe
   public class HttpBan extends HttpRequestBase {
 
-    public final static String METHOD_NAME = "BAN";
-    public final static String BAN_HEADER = "x-ban-url";
+    public static final String METHOD_NAME = "BAN";
+    public static final String BAN_HEADER = "x-ban-url";
 
     public HttpBan(String banRegex) {
       super();

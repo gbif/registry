@@ -165,24 +165,24 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Dataset dataset = create(newEntity(), 1);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull("Dataset should have an installation", i);
-    PagingResponse<Dataset> owned = organizationService.ownedDatasets(i.getOrganizationKey(), new PagingRequest());
+    PagingResponse<Dataset> published = organizationService.publishedDatasets(i.getOrganizationKey(), new PagingRequest());
     PagingResponse<Dataset> hosted = organizationService.hostedDatasets(i.getOrganizationKey(), new PagingRequest());
-    assertEquals("This installation should have only 1 owned dataset", 1, owned.getResults().size());
+    assertEquals("This installation should have only 1 published dataset", 1, published.getResults().size());
     assertTrue("This organization should not have any hosted datasets", hosted.getResults().isEmpty());
   }
 
   // Easier to test this here than OrganizationIT due to our utility dataset factory
   @Test
-  public void testOwnedByList() {
+  public void testPublishedByList() {
     Dataset dataset = create(newEntity(), 1);
-    PagingResponse<Dataset> owned =
-      organizationService.ownedDatasets(dataset.getOwningOrganizationKey(), new PagingRequest());
-    assertEquals("The organization should have only 1 dataset", 1, owned.getResults().size());
-    assertEquals("The organization should own the dataset created", owned.getResults().get(0).getKey(),
+    PagingResponse<Dataset> published =
+      organizationService.publishedDatasets(dataset.getPublishingOrganizationKey(), new PagingRequest());
+    assertEquals("The organization should have only 1 dataset", 1, published.getResults().size());
+    assertEquals("The organization should publish the dataset created", published.getResults().get(0).getKey(),
       dataset.getKey());
 
     assertEquals("The organization should have 1 dataset count", 1,
-      organizationService.get(dataset.getOwningOrganizationKey()).getNumOwnedDatasets());
+      organizationService.get(dataset.getPublishingOrganizationKey()).getNumPublishedDatasets());
   }
 
   // Easier to test this here than InstallationIT due to our utility dataset factory
@@ -228,14 +228,14 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertSearch(oldTitle, 0);
     assertSearch(d.getTitle(), 1);
 
-    // update owning organization title should be captured
-    Organization owner = organizationService.get(d.getOwningOrganizationKey());
-    assertSearch(owner.getTitle(), 1);
-    oldTitle = owner.getTitle();
-    owner.setTitle("NEW-OWNER-TITLE");
-    organizationService.update(owner);
+    // update publishing organization title should be captured
+    Organization publisher = organizationService.get(d.getPublishingOrganizationKey());
+    assertSearch(publisher.getTitle(), 1);
+    oldTitle = publisher.getTitle();
+    publisher.setTitle("NEW-OWNER-TITLE");
+    organizationService.update(publisher);
     assertSearch(oldTitle, 0);
-    assertSearch(owner.getTitle(), 1);
+    assertSearch(publisher.getTitle(), 1);
 
     // update hosting organization title should be captured
     Installation installation = installationService.get(d.getInstallationKey());
@@ -309,7 +309,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   protected Dataset newEntity() {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(Nodes.newInstance());
-    // owning organization (required field)
+    // publishing organization (required field)
     Organization o = Organizations.newInstance(nodeKey);
     UUID organizationKey = organizationService.create(o);
 
@@ -448,7 +448,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     service.create(d);
 
     // assign a controlled country based organization
-    Organization org = organizationService.get(d.getOwningOrganizationKey());
+    Organization org = organizationService.get(d.getPublishingOrganizationKey());
     org.setCountry(publishingCountry);
     organizationService.update(org);
 

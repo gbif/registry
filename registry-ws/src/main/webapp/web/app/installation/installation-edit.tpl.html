@@ -11,27 +11,27 @@
     <div class="controls">
       <input id="title" maxlength="255" type="text" name="title" ng-model="installation.title" value="{{installation.title}}">
       <p class="muted"><small>Enter an accurate installation title as it is used in many key places.</small></p>
-    </div>      
-      
+    </div>
+
     <label class="control-label" for="description">Description</label>
     <div class="controls">
       <textarea name="description id="description" ng-model="installation.description" value="{{installation.description}}"></textarea>
       <p class="muted"><small>Provide a meaningful description of the installation, so a user will understand what the installation is.</small></p>
     </div>
-    
+
     <span ng-show="advancedMode">
-    <label class="control-label" for="organizationKey">Owning organization</label>
+    <label class="control-label" for="organizationKey">Publishing organization</label>
     <div class="controls">
       <input id="organizationKey" maxlength="255" type="text" name="organizationKey" ng-model="installation.organizationKey" value="{{installation.organizationKey}}">
       <p><span class="label label-important">Important</span> <span class="text-error">Changing this will update hosting organization on all occurrence records.<span></p>
       <p class="muted"><small>It is expected that this may be changed occasionally, but be vigilant in changes as this has potential to spawn significant processing for occurrence records, metrics and maps</small></p>
-    </div>      
-    
+    </div>
+
     <label class="control-label" for="type">Installation type</label>
     <div class="controls">
       <select ng-model="installation.type" ng-options="o for o in installationTypes"></select>
       <p><span class="label label-important">Important</span> <span class="text-error">Has significant impact on crawlers<span></p>
-      <p class="muted"><small>When changing this, verify all services are also updated for the installation, and every dataset served.  Most likley you do not want to change this field, but rather create a new installation of the correct type, and migrate datasets.  
+      <p class="muted"><small>When changing this, verify all services are also updated for the installation, and every dataset served.  Most likley you do not want to change this field, but rather create a new installation of the correct type, and migrate datasets.
       Use this with extreme caution</small></p>
     </div>
 
@@ -42,14 +42,14 @@
         <small class='muted'>Indicates that the installation is disabled and no metasync or crawling of associated datasets will occur</small>
       </label>
     </div>
-    
+
     </span>
-      
+
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>
       <button class="btn primary-btn" ng-click="save(installation)" type="submit">Save changes</button>
-    </div>            
-    
+    </div>
+
     <div class="form-actions" ng-show="advancedMode">
       <small><a href="" data-target="#deleteConfirm" data-toggle="modal">Delete this installation</a></small>
       <p><small class="muted">A deletion may be reverted at a later date</small></p>

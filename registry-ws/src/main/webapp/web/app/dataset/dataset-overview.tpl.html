@@ -1,5 +1,5 @@
 <h4>Dataset overview</h4>
-<button class="btn btn-small btn-primary pull-right" type="button" ng-click="generateCrawlerWarningMsg(dataset.owningOrganization.endorsementApproved)" data-target="#crawlConfirm" data-toggle="modal">Crawl now</button>
+<button class="btn btn-small btn-primary pull-right" type="button" ng-click="generateCrawlerWarningMsg(dataset.publishingOrganization.endorsementApproved)" data-target="#crawlConfirm" data-toggle="modal">Crawl now</button>
 <p class="muted">This information appears on the dataset profile, organization pages, search results, and beyond.</p>
 <hr/>
 <p ng-show="dataset.deleted!=null">
@@ -26,9 +26,9 @@
   <dd>{{dataset.abbreviation}}</dd>
   <dt>Description</dt>
   <dd>{{dataset.description}}</dd>
-	
-  <dt>Owning organization</dt>
-  <dd><a href="" ng-click="redirectTo('organization', dataset.owningOrganizationKey)">{{dataset.owningOrganization.title}}</a></dd>
+
+  <dt>Publishing organization</dt>
+  <dd><a href="" ng-click="redirectTo('organization', dataset.publishingOrganizationKey)">{{dataset.publishingOrganization.title}}</a></dd>
   <dt>Serving installation</dt>
   <dd><a href="" ng-click="redirectTo('installation', dataset.installationKey)">{{dataset.installation.title}} <span class="muted"><small>{{installation.type}}</small></span></a></dd>
   <dt>Parent dataset</dt>
@@ -61,7 +61,7 @@
 </dl>
 <div class="form-actions">
   <small><a href="" ng-click="transitionTo('edit')">Edit these details</a></small>
-</div>            
+</div>
 <div id="crawlConfirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="title" aria-hidden="true">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -93,4 +93,4 @@
         <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="restore(dataset)">Yes, restore it!</button>
       </div>
     </div>
-</div>      
+</div>

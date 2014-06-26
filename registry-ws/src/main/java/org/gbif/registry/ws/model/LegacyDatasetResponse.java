@@ -36,7 +36,7 @@ public class LegacyDatasetResponse {
 
   public LegacyDatasetResponse(Dataset dataset, Contact contact) {
     key = dataset.getKey() == null ? "" : dataset.getKey().toString();
-    organisationKey = dataset.getOwningOrganizationKey() == null ? "" : dataset.getOwningOrganizationKey().toString();
+    organisationKey = dataset.getPublishingOrganizationKey() == null ? "" : dataset.getPublishingOrganizationKey().toString();
     name = dataset.getTitle() == null ? "" : dataset.getTitle();
     description = dataset.getDescription() == null ? "" : dataset.getDescription();
     descriptionLanguage = dataset.getLanguage() == null ? "" : dataset.getLanguage().getIso2LetterCode();

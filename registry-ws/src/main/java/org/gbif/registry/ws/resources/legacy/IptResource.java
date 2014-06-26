@@ -62,7 +62,7 @@ public class IptResource {
    * Register IPT installation, handling incoming request with path /ipt/register. The primary contact and hosting
    * organization key are mandatory. Only after both the installation and primary contact have been persisted is a
    * Response with Status.CREATED returned.
-   * 
+   *
    * @param installation IptInstallation with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
    * @return Response with Status.CREATED if successful
@@ -124,7 +124,7 @@ public class IptResource {
    * Update IPT installation, handling incoming request with path /ipt/update/{key}. The primary contact and hosting
    * organization key are mandatory. Only after both the installation and primary contact have been updated is a
    * Response with Status.CREATED returned.
-   * 
+   *
    * @param installationKey installation key (UUID) coming in as path param
    * @param installation IptInstallation with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
@@ -197,10 +197,10 @@ public class IptResource {
   }
 
   /**
-   * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact and owning
+   * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact and publishing
    * organization key are mandatory. Only after both the dataset and primary contact have been persisted is a
    * Response with Status.CREATED returned.
-   * 
+   *
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
    * @return Response with Status.CREATED if successful
@@ -215,13 +215,13 @@ public class IptResource {
       String user = security.getUserPrincipal().getName();
       dataset.setCreatedBy(user);
       dataset.setModifiedBy(user);
-      // if the installation key was missing, try to infer it from owning organization's installations
+      // if the installation key was missing, try to infer it from publishing organization's installations
       if (dataset.getInstallationKey() == null) {
         dataset.setInstallationKey(inferInstallationKey(dataset));
       }
       // add contact and endpoint(s) to dataset
       dataset.prepare();
-      // primary contact, owning organization key, and installationKey are mandatory
+      // primary contact, publishing organization key, and installationKey are mandatory
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils.isValid(dataset, organizationService, installationService)) {
         // persist dataset
@@ -258,7 +258,7 @@ public class IptResource {
           LOG.error("Dataset could not be persisted!");
         }
       } else {
-        LOG.error("Mandatory primary contact and/or owning organization key missing or incomplete!");
+        LOG.error("Mandatory primary contact and/or publishing organization key missing or incomplete!");
       }
     }
     LOG.error("Dataset registration failed");
@@ -268,10 +268,10 @@ public class IptResource {
 
 
   /**
-   * Update IPT Dataset, handling incoming request with path /ipt/resource/{key}. The primary contact and owning
+   * Update IPT Dataset, handling incoming request with path /ipt/resource/{key}. The primary contact and publishing
    * organization key are mandatory. Only after both the dataset and primary contact have been updated is a
    * Response with Status.OK returned.
-   * 
+   *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
@@ -303,9 +303,9 @@ public class IptResource {
       else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
         LOG.debug("The dataset's technical installation is being changed from {} to {}", new String[]{dataset.getInstallationKey().toString(), existing.getInstallationKey().toString()});
       }
-      // populate owning organization from credentials
-      dataset.setOwningOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
-      // ensure the owning organization exists, the installation exists, primary contact exists, etc
+      // populate publishing organization from credentials
+      dataset.setPublishingOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
+      // ensure the publishing organization exists, the installation exists, primary contact exists, etc
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils
         .isValidOnUpdate(dataset, datasetService, organizationService, installationService)) {
@@ -318,7 +318,7 @@ public class IptResource {
         existing.setType(dataset.getType());
         existing.setInstallationKey(dataset.getInstallationKey());
 
-        existing.setOwningOrganizationKey(dataset.getOwningOrganizationKey());
+        existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
         // persist changes
         datasetService.update(existing);
@@ -367,7 +367,7 @@ public class IptResource {
   /**
    * Delete IPT Dataset, handling incoming request with path /ipt/resource/{key}. Only credentials are mandatory.
    * If deletion is successful, returns Response with Status.OK.
-   * 
+   *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return Response with Status.OK if successful
    */
@@ -398,16 +398,16 @@ public class IptResource {
 
   /**
    * This method tries to infer the Dataset's installation key (when it is missing). Inference is done, using the rule
-   * that if the dataset's owning organization only has 1 installation, this must be the installation that serves
+   * that if the dataset's publishing organization only has 1 installation, this must be the installation that serves
    * the dataset. Conversely, if the organization has more or less than 1 installation, no inference can be made, and
    * null is returned instead.
-   * 
+   *
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
    * @return inferred installation key, or null if none inferred
    */
   private UUID inferInstallationKey(LegacyDataset dataset) {
     if (dataset.getInstallationKey() == null) {
-      UUID organizationKey = dataset.getOwningOrganizationKey();
+      UUID organizationKey = dataset.getPublishingOrganizationKey();
       if (organizationKey != null) {
         PagingRequest page = new PagingRequest(0, 2);
         PagingResponse<Installation> response = organizationService.installations(organizationKey, page);
@@ -415,13 +415,13 @@ public class IptResource {
         if (ONE.equals(response.getCount())) {
           Installation installation = response.getResults().get(0);
           if (installation != null) {
-            LOG.info("The installation key was inferred successfully from owning organization's single installation");
+            LOG.info("The installation key was inferred successfully from publishing organization's single installation");
             return installation.getKey();
           }
         }
       }
     }
-    LOG.error("The installation key could not be inferred from owning organization!");
+    LOG.error("The installation key could not be inferred from publishing organization!");
     return null;
   }
 }

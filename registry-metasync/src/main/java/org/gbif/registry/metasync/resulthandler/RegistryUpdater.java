@@ -56,7 +56,7 @@ public class RegistryUpdater {
    * Endpoints: only 1 endpoint exists per dataset.
    * </br>
    * Identifiers:
-   * 
+   *
    * @param result SyncResult
    */
   void saveUpdatedDatasets(SyncResult result) {
@@ -160,7 +160,7 @@ public class RegistryUpdater {
    * Check if the dataset update should be skipped. Currently, there are 2 reasons for skipping:
    * 1) The dataset has been locked for automatic updates
    * 2) The dataset has been migrated to DwC-A, in other words, it has an endpoint of type Darwin Core.
-   * 
+   *
    * @param existingDataset existing dataset (dataset as it currently exists in registry)
    * @return true if the dataset update should be skipped, false otherwise
    */
@@ -192,7 +192,7 @@ public class RegistryUpdater {
 
   private void saveAddedDatasets(SyncResult result) {
     for (Dataset dataset : result.addedDatasets) {
-      dataset.setOwningOrganizationKey(result.installation.getOrganizationKey());
+      dataset.setPublishingOrganizationKey(result.installation.getOrganizationKey());
       dataset.setInstallationKey(result.installation.getKey());
       dataset.setType(DatasetType.OCCURRENCE);
 

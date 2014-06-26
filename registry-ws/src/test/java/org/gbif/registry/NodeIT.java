@@ -187,7 +187,7 @@ public class NodeIT extends NetworkEntityTest<Node> {
   public void testDatasets() {
     // endorsing node for the organization
     Node node = create(newEntity(), 1);
-    // owning organization (required field)
+    // publishing organization (required field)
     Organization o = Organizations.newInstance(node.getKey());
     o.setEndorsementApproved(true);
     o.setEndorsingNodeKey(node.getKey());

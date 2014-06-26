@@ -151,9 +151,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GET
   @Path("{key}/ownedDataset")
   @Override
-  public PagingResponse<Dataset> ownedDatasets(@PathParam("key") UUID organizationKey, @Context Pageable page) {
-    return pagingResponse(page, datasetMapper.countDatasetsOwnedBy(organizationKey),
-      datasetMapper.listDatasetsOwnedBy(organizationKey, page));
+  public PagingResponse<Dataset> publishedDatasets(@PathParam("key") UUID organizationKey, @Context Pageable page) {
+    return pagingResponse(page, datasetMapper.countDatasetsPublishedBy(organizationKey),
+      datasetMapper.listDatasetsPublishedBy(organizationKey, page));
   }
 
   /**

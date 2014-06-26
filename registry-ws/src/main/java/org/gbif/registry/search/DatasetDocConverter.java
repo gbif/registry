@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -101,7 +100,7 @@ class DatasetDocConverter {
     List<Integer> decades = timeSeriesExtractor.extractDecades(d.getTemporalCoverages());
     doc.addField("decade", decades);
 
-    // hosting org and owning org title have to be retrieved via service calls
+    // hosting org and publishing org title have to be retrieved via service calls
     indexOrgs(doc, d);
 
     // index entire metadata documents
@@ -142,12 +141,12 @@ class DatasetDocConverter {
   private void indexOrgs(SolrInputDocument doc, Dataset d){
     // see http://dev.gbif.org/issues/browse/REG-405 which explains why we defend against NotFoundExceptions below
 
-    Organization owner = null;
+    Organization publisher = null;
     try {
-      owner = d.getOwningOrganizationKey() != null ? organizationService.get(d.getOwningOrganizationKey()) : null;
+      publisher = d.getPublishingOrganizationKey() != null ? organizationService.get(d.getPublishingOrganizationKey()) : null;
     } catch (NotFoundException e) {
       // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
-      LOG.warn("Service reports organization[{}] cannot be found for dataset[{}]", d.getOwningOrganizationKey(),
+      LOG.warn("Service reports organization[{}] cannot be found for dataset[{}]", d.getPublishingOrganizationKey(),
                d.getKey());
     }
 
@@ -169,11 +168,11 @@ class DatasetDocConverter {
                installation.getOrganizationKey(), installation.getKey());
     }
 
-    if (owner != null) {
-      doc.addField("owning_organization_key", owner.getKey().toString());
-      doc.addField("owning_organization_title", owner.getTitle());
-      if (owner.getCountry() != null) {
-        doc.addField("publishing_country", owner.getCountry().ordinal());
+    if (publisher != null) {
+      doc.addField("publishing_organization_key", publisher.getKey().toString());
+      doc.addField("publishing_organization_title", publisher.getTitle());
+      if (publisher.getCountry() != null) {
+        doc.addField("publishing_country", publisher.getCountry().ordinal());
       }
     } else {
       doc.addField("publishing_country", Country.UNKNOWN.ordinal());

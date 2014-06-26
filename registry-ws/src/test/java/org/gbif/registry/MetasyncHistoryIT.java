@@ -150,7 +150,7 @@ public class MetasyncHistoryIT {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(Nodes.newInstance());
 
-    // owning organization (required field)
+    // publishing organization (required field)
     Organization org = Organizations.newInstance(nodeKey);
     UUID organizationKey = organizationService.create(org);
 

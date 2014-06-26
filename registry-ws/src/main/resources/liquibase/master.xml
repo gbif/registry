@@ -28,5 +28,6 @@
   <include file="liquibase/022-namespace-rights.xml" />
   <include file="liquibase/023-send-notification.xml" />
   <include file="liquibase/024-download_indices.xml" />
+  <include file="liquibase/025-owning-org-to-publishing-org.xml"/>
 
 </databaseChangeLog>

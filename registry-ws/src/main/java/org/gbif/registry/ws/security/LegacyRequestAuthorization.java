@@ -28,8 +28,6 @@ import org.apache.http.auth.BasicUserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 /**
  * Class providing temporary authorization for legacy web service requests (GBRDS/IPT).
  */
@@ -180,7 +178,7 @@ public class LegacyRequestAuthorization implements SecurityContext {
     }
 
     // check the dataset belongs to organization
-    if (dataset.getOwningOrganizationKey().compareTo(userKey) != 0) {
+    if (dataset.getPublishingOrganizationKey().compareTo(userKey) != 0) {
       LOG.error("The Dataset is not owned by the organization specified in the credentials");
       return false;
     }

@@ -116,8 +116,8 @@
     <field name="dataset_title_ngram" type="text_auto_ngram" indexed="true" stored="true" required="false" />
     <field name="dataset_type" type="int" indexed="true" stored="true" required="false" />
     <field name="dataset_subtype" type="int" indexed="true" stored="true" required="false" />
-    <field name="owning_organization_key" type="lowercase" indexed="true" stored="true" required="false" />
-    <field name="owning_organization_title" type="text" indexed="true" stored="true" required="false" />
+    <field name="publishing_organization_key" type="lowercase" indexed="true" stored="true" required="false" />
+    <field name="publishing_organization_title" type="text" indexed="true" stored="true" required="false" />
     <field name="hosting_organization_key" type="lowercase" indexed="true" stored="true" required="false" />
     <field name="hosting_organization_title" type="text" indexed="true" stored="true" required="false" />
     <field name="description" type="text" indexed="true" stored="true" required="false" />
