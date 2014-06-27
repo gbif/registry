@@ -5,6 +5,7 @@ import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsSuggestClient;
@@ -16,15 +17,16 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 
 public class DatasetSearchWsClient
-  extends BaseWsSuggestClient<DatasetSearchResult, DatasetSearchParameter, DatasetSearchRequest, DatasetSuggestRequest>
+  extends
+  BaseWsSuggestClient<DatasetSearchResult, DatasetSearchParameter, DatasetSearchRequest, DatasetSuggestResult, DatasetSuggestRequest>
   implements DatasetSearchService {
 
   private static final GenericType<SearchResponse<DatasetSearchResult, DatasetSearchParameter>> SEARCH_TYPE =
     new GenericType<SearchResponse<DatasetSearchResult, DatasetSearchParameter>>() {
     };
 
-  private static final GenericType<List<DatasetSearchResult>> SUGGEST_TYPE =
-    new GenericType<List<DatasetSearchResult>>() {
+  private static final GenericType<List<DatasetSuggestResult>> SUGGEST_TYPE =
+    new GenericType<List<DatasetSuggestResult>>() {
     };
 
   @Inject
@@ -34,7 +36,7 @@ public class DatasetSearchWsClient
   }
 
   @Override
-  public List<DatasetSearchResult> suggest(DatasetSuggestRequest suggestRequest) {
+  public List<DatasetSuggestResult> suggest(DatasetSuggestRequest suggestRequest) {
     return super.suggest(suggestRequest);
   }
 

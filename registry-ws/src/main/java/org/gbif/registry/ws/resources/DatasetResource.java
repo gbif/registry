@@ -25,6 +25,7 @@ import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.service.registry.DatasetService;
@@ -59,6 +60,7 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -120,7 +122,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public DatasetResource(DatasetMapper datasetMapper, ContactMapper contactMapper, EndpointMapper endpointMapper,
     MachineTagMapper machineTagMapper, TagMapper tagMapper, IdentifierMapper identifierMapper,
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
-    DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper, EditorAuthorizationService userAuthService) {
+    DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
+    EditorAuthorizationService userAuthService) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
       Dataset.class, eventBus, userAuthService);
     this.searchService = searchService;
@@ -143,7 +146,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("suggest")
   @GET
   @Override
-  public List<DatasetSearchResult> suggest(@Context DatasetSuggestRequest suggestRequest) {
+  public List<DatasetSuggestResult> suggest(@Context DatasetSuggestRequest suggestRequest) {
     // TODO: Commented out because DatasetSuggestRequest doesn't have a toString method yet
     // LOG.debug("Suggest operation received {}", suggestRequest);
     return searchService.suggest(suggestRequest);
@@ -233,7 +236,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Augments a list of datasets with information from their preferred metadata document.
-   *
+   * 
    * @return a the same paging response with a new list of augmented dataset instances
    */
   private PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
@@ -255,7 +258,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * <li>These objects are all mutable, and care should be taken that the returned object may be one or the other of the
    * supplied, thus you need to {@code Dataset result = merge(Dataset emlView, Dataset dbView);}</li>
    * </ul>
-   *
+   * 
    * @param target that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
    * @return the modified tagret dataset, or the supplementary dataset if the target is null

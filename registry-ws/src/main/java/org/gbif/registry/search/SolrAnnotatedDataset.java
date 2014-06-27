@@ -9,7 +9,6 @@ import org.gbif.common.search.model.FacetField.Method;
 import org.gbif.common.search.model.FullTextSearchField;
 import org.gbif.common.search.model.Key;
 import org.gbif.common.search.model.SearchMapping;
-import org.gbif.common.search.model.SuggestMapping;
 import org.gbif.common.search.model.WildcardPadding;
 
 import java.util.List;
@@ -46,7 +45,6 @@ import org.apache.solr.client.solrj.beans.Field;
     @FullTextSearchField(field = "description", partialMatching = WildcardPadding.NONE),
     @FullTextSearchField(field = "metadata", partialMatching = WildcardPadding.NONE, exactMatchScore = 0.5d)
   })
-@SuggestMapping(field = "dataset_title_ngram", phraseQueryField = "dataset_title_nedge")
 public class SolrAnnotatedDataset extends DatasetSearchResult {
 
   @Field("country")

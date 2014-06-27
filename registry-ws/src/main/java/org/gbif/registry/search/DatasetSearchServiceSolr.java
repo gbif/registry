@@ -4,6 +4,7 @@ import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.common.search.service.SolrSearchSuggestService;
 
@@ -18,8 +19,9 @@ import org.apache.solr.client.solrj.SolrServer;
 /**
  * Dataset search implementation using the provided SOLR instance.
  */
-public class DatasetSearchServiceSolr extends SolrSearchSuggestService
-  <DatasetSearchResult, DatasetSearchParameter, SolrAnnotatedDataset, DatasetSearchRequest, DatasetSuggestRequest>
+public class DatasetSearchServiceSolr
+  extends
+  SolrSearchSuggestService<DatasetSearchResult, DatasetSearchParameter, SolrAnnotatedDataset, DatasetSearchRequest, DatasetSuggestResult, SolrAnnotatedSuggestDataset, DatasetSuggestRequest>
   implements DatasetSearchService {
 
   // Order by best score, then alphabetically by title
@@ -30,6 +32,7 @@ public class DatasetSearchServiceSolr extends SolrSearchSuggestService
   @Inject
   public DatasetSearchServiceSolr(@Named("Dataset") SolrServer server) {
     super(server, DatasetSearchResult.class, SolrAnnotatedDataset.class, DatasetSearchParameter.class,
-      PRIMARY_SORT_ORDER);
+      PRIMARY_SORT_ORDER, SolrAnnotatedSuggestDataset.class);
   }
+
 }
