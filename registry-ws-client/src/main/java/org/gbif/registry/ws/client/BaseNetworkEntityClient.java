@@ -134,7 +134,7 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
 
   @Override
   public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
-    return post(Integer.class, machineTag, targetEntityKey.toString(), "machinetag");
+    return post(Integer.class, machineTag, targetEntityKey.toString(), "machineTag");
   }
 
   @Override
@@ -145,7 +145,7 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
 
   @Override
   public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
-    delete(targetEntityKey.toString(), "machinetag", String.valueOf(machineTagKey));
+    delete(targetEntityKey.toString(), "machineTag", String.valueOf(machineTagKey));
   }
 
   @Override
@@ -162,7 +162,7 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
 
   @Override
   public List<MachineTag> listMachineTags(UUID targetEntityKey) {
-    return get(GenericTypes.LIST_MACHINETAG, null, null, (Pageable) null, targetEntityKey.toString(), "machinetag");
+    return get(GenericTypes.LIST_MACHINETAG, null, null, (Pageable) null, targetEntityKey.toString(), "machineTag");
   }
 
   @Override

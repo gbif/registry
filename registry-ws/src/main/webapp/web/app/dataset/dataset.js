@@ -5,7 +5,7 @@ angular.module('dataset', [
   'endpoint',
   'identifier',
   'tag',
-  'machinetag',
+  'machineTag',
   'comment'])
 
 /**
@@ -87,9 +87,9 @@ angular.module('dataset', [
     context: 'dataset',
     heading: 'Dataset tags'
   })
-  .state('dataset.machinetag', {
+  .state('dataset.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machinetag-list.tpl.html',
+    templateUrl: 'app/common/machineTag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'dataset',
     heading: 'Dataset machine tags'
@@ -127,7 +127,7 @@ angular.module('dataset', [
       $scope.counts.identifiers = _.size(dataset.identifiers);
       $scope.counts.endpoints = _.size(dataset.endpoints);
       $scope.counts.tags = _.size(dataset.tags);
-      $scope.counts.machinetags = _.size(dataset.machineTags);
+      $scope.counts.machineTags = _.size(dataset.machineTags);
       $scope.counts.comments = _.size(dataset.comments);
 
       dataset.publishingOrganization = Restangular.one('organization', dataset.publishingOrganizationKey).get();

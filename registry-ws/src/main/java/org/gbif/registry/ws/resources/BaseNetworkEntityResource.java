@@ -313,7 +313,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * Adding machinetags is not restricted to certain roles on the method level, but instead handled
+   * Adding machineTags is not restricted to certain roles on the method level, but instead handled
    * controlled field for createdBy.
    *
    * @param targetEntityKey key of target entity to add MachieTag to
@@ -322,7 +322,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of MachineTag created
    */
   @POST
-  @Path("{key}/machinetag")
+  @Path("{key}/machineTag")
   @Trim
   @Transactional
   public int addMachineTag(@PathParam("key") UUID targetEntityKey, @NotNull @Trim MachineTag machineTag,
@@ -358,9 +358,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
      * Ensures that the caller is authorized to perform the action by looking at the namespace.
      */
     @DELETE
-    @Path("{key}/machinetag/{machinetagKey}")
+    @Path("{key}/machineTag/{machineTagKey}")
     @Consumes(MediaType.WILDCARD)
-    public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machinetagKey") int machineTagKey,
+    public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey,
                                  @Context SecurityContext security) {
         if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
                 && !userAuthService.allowedToDeleteMachineTag(security.getUserPrincipal(), machineTagKey)) {
@@ -376,7 +376,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param machineTagKey key of MachineTag to delete
    */
   @Override
-  public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machinetagKey") int machineTagKey) {
+  public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey) {
     WithMyBatis.deleteMachineTag(mapper, targetEntityKey, machineTagKey);
   }
 
@@ -395,7 +395,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @GET
-  @Path("{key}/machinetag")
+  @Path("{key}/machineTag")
   @Override
   public List<MachineTag> listMachineTags(@PathParam("key") UUID targetEntityKey) {
     return WithMyBatis.listMachineTags(mapper, targetEntityKey);

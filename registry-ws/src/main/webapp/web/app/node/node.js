@@ -1,30 +1,30 @@
 angular.module('node', [
-  'restangular', 
-  'services.notifications', 
+  'restangular',
+  'services.notifications',
   'endpoint',
-  'identifier', 
-  'tag', 
-  'machinetag', 
+  'identifier',
+  'tag',
+  'machineTag',
   'comment'])
 
 /**
- * Nested stated provider using dot notation (item.detail has a parent of item) and the 
+ * Nested stated provider using dot notation (item.detail has a parent of item) and the
  * nested view is rendered into the parent template ui.view div.  A single controller
- * governs the actions on the page. 
+ * governs the actions on the page.
  */
 .config(['$stateProvider', function ($stateProvider, $stateParams) {
   $stateProvider.state('node-search', {
     abstract: true,
-    url: '/node-search',  
+    url: '/node-search',
     templateUrl: 'app/node/node-search.tpl.html',
     controller: 'NodeSearchCtrl'
   })
-  .state('node-search.search', {  
+  .state('node-search.search', {
     url: '',
     templateUrl: 'app/node/node-results.tpl.html'
   })
-  .state('node-search.create', {  
-    url: '/create',   
+  .state('node-search.create', {
+    url: '/create',
     templateUrl: 'app/node/node-edit.tpl.html',
     controller: 'NodeCreateCtrl',
     resolve: {
@@ -32,82 +32,82 @@ angular.module('node', [
     }
   })
   .state('node', {
-    url: '/node/{key}',  
-    abstract: true, 
+    url: '/node/{key}',
+    abstract: true,
     templateUrl: 'app/node/node-main.tpl.html',
     controller: 'NodeCtrl'
   })
-  .state('node.detail', {  
-    url: '',   
+  .state('node.detail', {
+    url: '',
     templateUrl: 'app/node/node-overview.tpl.html'
   })
   .state('node.edit', {
     url: '/edit',
     templateUrl: 'app/node/node-edit.tpl.html'
-  })  
-  .state('node.contact', {  
-    url: '/contact',   
+  })
+  .state('node.contact', {
+    url: '/contact',
     templateUrl: 'app/node/contact-list.tpl.html' // not common since read only
   })
-  .state('node.identifier', {  
-    url: '/identifier',   
+  .state('node.identifier', {
+    url: '/identifier',
     templateUrl: 'app/common/identifier-list.tpl.html',
-    controller: "IdentifierCtrl",  
+    controller: "IdentifierCtrl",
     context: 'node', // necessary for reusing the components
     heading: 'Node identifiers' // title for the sub pane
   })
-  .state('node.endpoint', {  
-    url: '/endpoint',   
+  .state('node.endpoint', {
+    url: '/endpoint',
     templateUrl: 'app/common/endpoint-list.tpl.html',
-    controller: "EndpointCtrl",  
-    context: 'node', 
+    controller: "EndpointCtrl",
+    context: 'node',
     heading: 'Node endpoints'
   })
-  .state('node.tag', {  
-    url: '/tag',   
+  .state('node.tag', {
+    url: '/tag',
     templateUrl: 'app/common/tag-list.tpl.html',
-    controller: "TagCtrl",  
-    context: 'node', 
+    controller: "TagCtrl",
+    context: 'node',
     heading: 'Node tags'
   })
-  .state('node.machinetag', {  
-    url: '/machineTag',   
-    templateUrl: 'app/common/machinetag-list.tpl.html',
-    controller: "MachinetagCtrl",  
-    context: 'node', 
+  .state('node.machineTag', {
+    url: '/machineTag',
+    templateUrl: 'app/common/machineTag-list.tpl.html',
+    controller: "MachinetagCtrl",
+    context: 'node',
     heading: 'Node machine tags'
   })
-  .state('node.comment', {  
-    url: '/comment',   
+  .state('node.comment', {
+    url: '/comment',
     templateUrl: 'app/common/comment-list.tpl.html',
-    controller: "CommentCtrl",  
-    context: 'node', 
+    controller: "CommentCtrl",
+    context: 'node',
     heading: 'Node comments'
   })
-  .state('node.pending', {  
-    url: '/pending',   
+  .state('node.pending', {
+    url: '/pending',
     templateUrl: 'app/common/organization-list.tpl.html',
-    context: 'node', 
+    context: 'node',
     heading: 'Organizations awaiting endorsement by the node'
   })
-  .state('node.organization', {  
-    url: '/organization',   
+  .state('node.organization', {
+    url: '/organization',
     templateUrl: 'app/common/organization-list.tpl.html',
-    context: 'node', 
+    context: 'node',
     heading: 'Organizations endorsed by the node'
   })
-  .state('node.dataset', {  
-    url: '/dataset',   
+  .state('node.dataset', {
+    url: '/dataset',
     templateUrl: 'app/common/dataset-list.tpl.html',
-    context: 'node', 
+    context: 'node',
     heading: 'Datasets published through the Nodes endorsement'
   })
-  .state('node.installation', {  
-    url: '/installation',   
+  .state('node.installation', {
+    url: '/installation',
     templateUrl: 'app/common/installation-list.tpl.html',
-    context: 'node', 
+    context: 'node',
     heading: 'Installations endorsed by the node'
-  })  
+  })
 }])
 
 /**
@@ -115,20 +115,20 @@ angular.module('node', [
  */
 .controller('NodeCtrl', function ($scope, $state, $stateParams, notifications, Restangular, DEFAULT_PAGE_SIZE) {
   var key = $stateParams.key;
-  
+
   // shared across sub views
-  $scope.counts = {}; 
-  
+  $scope.counts = {};
+
   var load = function() {
     Restangular.one('node', key).get().then(function(node) {
       $scope.node = node;
       $scope.counts.contacts = _.size(node.contacts);
-      $scope.counts.identifiers = _.size(node.identifiers); 
-      $scope.counts.endpoints = _.size(node.endpoints); 
-      $scope.counts.tags = _.size(node.tags); 
-      $scope.counts.machinetags = _.size(node.machineTags); 
-      $scope.counts.comments = _.size(node.comments); 
-      
+      $scope.counts.identifiers = _.size(node.identifiers);
+      $scope.counts.endpoints = _.size(node.endpoints);
+      $scope.counts.tags = _.size(node.tags);
+      $scope.counts.machineTags = _.size(node.machineTags);
+      $scope.counts.comments = _.size(node.comments);
+
       node.getList('organization', {limit: DEFAULT_PAGE_SIZE}).then(function(response) {
           $scope.organizations = response.results;
           $scope.counts.organizations = response.count;
@@ -147,23 +147,23 @@ angular.module('node', [
         });
     });
   }
-  load();  
-  
+  load();
+
   // populate the dropdowns
   $scope.types = Restangular.all("enumeration/basic/NodeType").getList();
   $scope.participationStatuses = Restangular.all("enumeration/basic/ParticipationStatus").getList();
   $scope.gbifRegions = Restangular.all("enumeration/basic/GbifRegion").getList();
   $scope.continents = Restangular.all("enumeration/basic/Continent").getList();
   $scope.countries = Restangular.all("enumeration/basic/Country").getList();
-  
-	
+
+
 	// transitions to a new view, correctly setting up the path
   $scope.transitionTo = function (target) {
-    $state.transitionTo('node.' + target, { key: key, type: "node" }); 
+    $state.transitionTo('node.' + target, { key: key, type: "node" });
   }
-	
+
 	$scope.save = function (node) {
-    node.put().then( 
+    node.put().then(
       function() {
         notifications.pushForNextRoute("Node successfully updated", 'info');
         $scope.transitionTo("detail");
@@ -173,7 +173,7 @@ angular.module('node', [
       }
     );
   }
-  
+
   $scope.delete = function (entity) {
     entity.remove().then(
       function() {
@@ -183,10 +183,10 @@ angular.module('node', [
       }
     );
   }
-  
+
   $scope.restore = function (entity) {
     entity.deleted = undefined;
-    entity.put().then( 
+    entity.put().then(
       function() {
         notifications.pushForCurrentRoute("Node successfully restored", 'info');
       },
@@ -195,13 +195,13 @@ angular.module('node', [
       }
     );
   }
-  
-  
+
+
   $scope.cancelEdit = function () {
     load();
     $scope.transitionTo("detail");
   }
-  
+
   // switch depending on the scope, which are visible
   $scope.getOrganizations = function() {
     if ($state.includes('node.pending')) {
@@ -210,7 +210,7 @@ angular.module('node', [
       return $scope['organizations'];
     }
   }
-  
+
   $scope.getDatasets = function() {
     return $scope['datasets'];
   }
@@ -225,7 +225,7 @@ angular.module('node', [
       $scope.searchString = q;
     });
   }
-  $scope.search(""); // start with empty search  
+  $scope.search(""); // start with empty search
 
   $scope.openNode = function(node) {
     $state.transitionTo('node.detail', {key: node.key})
@@ -245,14 +245,14 @@ angular.module('node', [
       Restangular.all("node").post(node).then(function(data) {
         notifications.pushForNextRoute("Node successfully updated", 'info');
         // strip the quotes
-        $state.transitionTo('node.detail', { key: data.replace(/["]/g,''), type: "node" }); 
-      }, function(error) { 
+        $state.transitionTo('node.detail', { key: data.replace(/["]/g,''), type: "node" });
+      }, function(error) {
         notifications.pushForCurrentRoute(error.data, 'error');
       });
     }
   }
 
   $scope.cancelEdit = function() {
-    $state.transitionTo('node-search.search'); 
-  }  
+    $state.transitionTo('node-search.search');
+  }
 });

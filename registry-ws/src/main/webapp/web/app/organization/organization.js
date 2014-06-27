@@ -5,7 +5,7 @@ angular.module('organization', [
   'organization',
   'identifier',
   'tag',
-  'machinetag',
+  'machineTag',
   'comment'])
 
 /**
@@ -82,9 +82,9 @@ angular.module('organization', [
     context: 'organization',
     heading: 'Organization tags'
   })
-  .state('organization.machinetag', {
+  .state('organization.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machinetag-list.tpl.html',
+    templateUrl: 'app/common/machineTag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'organization',
     heading: 'Organization machine tags'
@@ -135,7 +135,7 @@ angular.module('organization', [
       $scope.counts.endpoints = _.size(organization.endpoints);
       $scope.counts.identifiers = _.size(organization.identifiers);
       $scope.counts.tags = _.size(organization.tags);
-      $scope.counts.machinetags = _.size(organization.machineTags);
+      $scope.counts.machineTags = _.size(organization.machineTags);
       $scope.counts.comments = _.size(organization.comments);
 
       organization.getList('publishedDataset', {limit: DEFAULT_PAGE_SIZE})
