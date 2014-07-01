@@ -3,6 +3,7 @@
 .idea
 target/
 registry-ws/logs
+logs/
 
 # Package Files #
 *.jar

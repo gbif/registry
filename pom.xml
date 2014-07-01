@@ -69,7 +69,7 @@
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
     <gbif-api.version>0.15-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.15</gbif-common.version>
+    <gbif-common.version>0.16</gbif-common.version>
     <gbif-common-ws.version>0.15-SNAPSHOT</gbif-common-ws.version>
     <gbif-common-mybatis.version>0.10</gbif-common-mybatis.version>
     <gbif-common-test.version>0.6</gbif-common-test.version>
@@ -102,11 +102,11 @@
     <solr.version>4.5.1</solr.version>
     <grizzly-servlet-webserver.version>1.9.59</grizzly-servlet-webserver.version>
     <liquibase.version>3.0.7</liquibase.version>
-    <commons-lang3.version>3.1</commons-lang3.version>
+    <commons-lang3.version>3.3.1</commons-lang3.version>
     <commons-validator.version>1.4.0</commons-validator.version>
     <commons-email.version>1.3.2</commons-email.version>
     <jaxb-api.version>2.2.11</jaxb-api.version>
-    <commons-codec.version>1.8</commons-codec.version>
+    <commons-codec.version>1.9</commons-codec.version>
     <httpclient.version>4.2.3</httpclient.version>
     <httpcore.version>4.2.3</httpcore.version>
     <jersey-server.version>1.17.1</jersey-server.version>
