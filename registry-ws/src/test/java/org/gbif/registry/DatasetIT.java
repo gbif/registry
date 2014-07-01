@@ -46,10 +46,12 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.ValidationException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
@@ -108,7 +110,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
         webservice.getInstance(Key.get(SolrServer.class, Names.named("Dataset"))),
         webservice.getInstance(DatasetIndexUpdateListener.class),
         null // SimplePrincipalProvider only set in web service client
-        }
+      }
       ,
       new Object[] {
         client.getInstance(DatasetService.class),
@@ -165,7 +167,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Dataset dataset = create(newEntity(), 1);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull("Dataset should have an installation", i);
-    PagingResponse<Dataset> published = organizationService.publishedDatasets(i.getOrganizationKey(), new PagingRequest());
+    PagingResponse<Dataset> published =
+      organizationService.publishedDatasets(i.getOrganizationKey(), new PagingRequest());
     PagingResponse<Dataset> hosted = organizationService.hostedDatasets(i.getOrganizationKey(), new PagingRequest());
     assertEquals("This installation should have only 1 published dataset", 1, published.getResults().size());
     assertTrue("This organization should not have any hosted datasets", hosted.getResults().isEmpty());
@@ -438,6 +441,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertSearch(null, Country.DJIBOUTI, 3);
   }
 
+  @Test(expected = ValidationException.class)
+  public void createDatasetsWithInvalidUri() {
+    Dataset d = newEntity();
+    d.setHomepage(URI.create("file:/test.txt"));
+    service.create(d);
+  }
+
   private void createCountryDatasets(Country publishingCountry, int number) {
     createCountryDatasets(DatasetType.OCCURRENCE, publishingCountry, number, (Country) null);
   }
@@ -462,7 +472,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
   /**
    * Create a number of new Datasets, having a particular dataset type.
-   *
+   * 
    * @param type dataset type
    * @param number amount of datasets to create
    */
