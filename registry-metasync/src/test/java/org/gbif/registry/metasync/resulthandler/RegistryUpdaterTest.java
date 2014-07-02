@@ -172,7 +172,7 @@ public class RegistryUpdaterTest {
     // add single Contact
     Contact contact = new Contact();
     contact.setKey(1);
-    contact.setEmail("test@gbif.org");
+    contact.addEmail("test@gbif.org");
     dataset.setContacts(Lists.newArrayList(contact));
 
     // add single Identifier

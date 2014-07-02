@@ -34,6 +34,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.inject.Injector;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -68,7 +69,7 @@ public class IptResourceIT {
   private static final String IPT_DESCRIPTION = "Description of Test IPT";
   private static final String IPT_PRIMARY_CONTACT_TYPE = "technical";
   private static final String IPT_PRIMARY_CONTACT_NAME = "Kyle Braak";
-  private static final String IPT_PRIMARY_CONTACT_EMAIL = "kbraak@gbif.org";
+  private static final List<String> IPT_PRIMARY_CONTACT_EMAIL = Lists.newArrayList("kbraak@gbif.org");
   private static final String IPT_SERVICE_TYPE = "RSS";
   private static final URI IPT_SERVICE_URL = URI.create("http://ipt.gbif.org/rss.do");
   private static final String IPT_WS_PASSWORD = "password";
@@ -861,7 +862,7 @@ public class IptResourceIT {
     // primary contact
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM, IPT_PRIMARY_CONTACT_TYPE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM, IPT_PRIMARY_CONTACT_NAME));
-    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM, IPT_PRIMARY_CONTACT_EMAIL));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM, IPT_PRIMARY_CONTACT_EMAIL.get(0)));
 
     // service/endpoint
     data.add(new BasicNameValuePair(LegacyResourceConstants.SERVICE_TYPES_PARAM, IPT_SERVICE_TYPE));
@@ -893,13 +894,13 @@ public class IptResourceIT {
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
       Requests.DATASET_PRIMARY_CONTACT_TYPE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_EMAIL));
+      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
       Requests.DATASET_PRIMARY_CONTACT_NAME));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_ADDRESS));
+      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_PHONE));
+      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));
 
     // endpoint(s)
     data.add(new BasicNameValuePair(LegacyResourceConstants.SERVICE_TYPES_PARAM, DATASET_SERVICE_TYPES));

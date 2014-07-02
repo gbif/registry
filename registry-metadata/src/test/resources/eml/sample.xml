@@ -56,17 +56,34 @@ author of this metadata about the resource) -->
       <phone>+4528261487</phone>
       <electronicMailAddress>trobertson@gbif.org</electronicMailAddress>
       <onlineUrl>http://www.gbif.org</onlineUrl>
+      <userId directory="http://orcid.org">0000-0001-5337-1153</userId>
+      <userId directory="gbif">153</userId>
     </metadataProvider>
 
     <!-- Note that associated parties have roles -->
     <associatedParty>
       <individualName>
-        <surName>Doering</surName>
+        <givenName>Markus</givenName>
+        <surName>Döring</surName>
       </individualName>
-      <phone>4535321487</phone>
+      <phone>+45 35321 487</phone>
+      <phone>+45 35321 488</phone>
+      <electronicMailAddress>mdoering@gbif.org</electronicMailAddress>
+      <electronicMailAddress>mdoering@mailinator.com</electronicMailAddress>
+      <onlineUrl>http://www.gbif.org</onlineUrl>
+      <onlineUrl>http://www.gbif-dev.org</onlineUrl>
       <!-- The IPT will define a controlled vocabulary for this term -->
       <role>principalInvestigator</role>
+      <address>
+        <deliveryPoint>2nd floor</deliveryPoint>
+        <deliveryPoint>Universitestparken 15</deliveryPoint>
+        <city>Copenhagen</city>
+        <administrativeArea>Copenhagen</administrativeArea>
+        <postalCode>2100</postalCode>
+        <country>DK</country>
+      </address>
     </associatedParty>
+
     <associatedParty>
       <individualName>
         <surName>Hahn</surName>
@@ -85,7 +102,9 @@ author of this metadata about the resource) -->
 
     <!-- The brief overview -->
     <abstract>
-      <para>Specimens in jars</para>
+      <para>Specimens in jars.</para>
+      <para>Collected over years.</para>
+      <para>Still being curated.</para>
     </abstract>
 
     <!-- Keywords can optionally reference a thesaurus -->

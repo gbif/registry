@@ -56,7 +56,8 @@ public class NetworkIT extends NetworkEntityTest<Network> {
       null},
       new Object[] {
         RegistryTestModules.webserviceClient().getInstance(NetworkService.class),
-        RegistryTestModules.webserviceClient().getInstance(SimplePrincipalProvider.class)});
+        RegistryTestModules.webserviceClient().getInstance(SimplePrincipalProvider.class)
+    });
   }
 
   public NetworkIT(NetworkService service, @Nullable SimplePrincipalProvider pp) {

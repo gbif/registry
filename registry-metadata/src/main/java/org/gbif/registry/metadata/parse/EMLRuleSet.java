@@ -18,12 +18,12 @@ import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriodType;
+import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.metadata.parse.converter.ContactTypeConverter;
 import org.gbif.registry.metadata.parse.converter.CountryTypeConverter;
 import org.gbif.registry.metadata.parse.converter.DateConverter;
@@ -110,9 +110,13 @@ public class EMLRuleSet extends RuleSetBase {
 
     // WritableDataset properties
     digester.addBeanPropertySetter("eml/dataset/language", "dataLanguage");
-    digester.addBeanPropertySetter("eml/dataset/abstract/para", "description");
     digester.addBeanPropertySetter("eml/dataset/distribution/online/url", "homepage");
     digester.addBeanPropertySetter("eml/additionalMetadata/metadata/gbif/resourceLogoUrl", "logoURL");
+
+    // multi paragraph description
+    digester.addObjectCreate("eml/dataset/abstract", ParagraphContainer.class);
+    digester.addCallMethod("eml/dataset/abstract/para", "appendParagraph", 0);
+    digester.addRule("eml/dataset/abstract", new SetRootRule("addDescription", ParagraphContainer.class));
 
     // Citation
     addCitationRules(digester, "eml/additionalMetadata/metadata/gbif/citation", "setCitation");
@@ -217,9 +221,9 @@ public class EMLRuleSet extends RuleSetBase {
    */
   private void addCollectionRules(Digester digester, String prefix, String parentMethod) {
     digester.addObjectCreate(prefix, Collection.class);
-    digester.addBeanPropertySetter(prefix + "/parentCollectionIdentifier", "parentCollectionIdentifier");
-    digester.addBeanPropertySetter(prefix + "/collectionIdentifier", "collectionIdentifier");
-    digester.addBeanPropertySetter(prefix + "/collectionName", "collectionName");
+    digester.addBeanPropertySetter(prefix + "/parentCollectionIdentifier", "parentIdentifier");
+    digester.addBeanPropertySetter(prefix + "/collectionIdentifier", "identifier");
+    digester.addBeanPropertySetter(prefix + "/collectionName", "name");
     addCuratorialUnit(digester, "eml/additionalMetadata/metadata/gbif/jgtiCuratorialUnit", "addCuratorial");
     digester.addSetNext(prefix, parentMethod);
   }
@@ -234,18 +238,24 @@ public class EMLRuleSet extends RuleSetBase {
    */
   private void addContactRules(Digester digester, String prefix, String parentMethod) {
     digester.addObjectCreate(prefix, Contact.class);
+
+    digester.addCallMethod(prefix + "/userId", "addUserId", 2);
+    digester.addCallParam(prefix + "/userId", 0, "directory");
+    digester.addCallParam(prefix + "/userId", 1);
+
     digester.addBeanPropertySetter(prefix + "/individualName/givenName", "firstName");
     digester.addBeanPropertySetter(prefix + "/individualName/surName", "lastName");
     digester.addBeanPropertySetter(prefix + "/organizationName", "organization");
-    digester.addBeanPropertySetter(prefix + "/positionName", "position");
-    digester.addBeanPropertySetter(prefix + "/phone", "phone");
-    digester.addBeanPropertySetter(prefix + "/electronicMailAddress", "email");
+    digester.addCallMethod(prefix + "/positionName", "addPosition", 0);
+    digester.addCallMethod(prefix + "/phone", "addPhone", 0);
+    digester.addCallMethod(prefix + "/electronicMailAddress", "addEmail", 0);
+    digester.addCallMethod(prefix + "/onlineUrl", "addHomepage", 0, new Class[]{URI.class});
     digester.addBeanPropertySetter(prefix + "/role", "type");
     digester.addBeanPropertySetter(prefix + "/address/city", "city");
     digester.addBeanPropertySetter(prefix + "/address/administrativeArea", "province");
     digester.addBeanPropertySetter(prefix + "/address/postalCode", "postalCode");
     digester.addBeanPropertySetter(prefix + "/address/country", "country");
-    digester.addBeanPropertySetter(prefix + "/address/deliveryPoint", "address");
+    digester.addCallMethod(prefix + "/address/deliveryPoint", "addAddress", 0);
     digester.addSetNext(prefix, parentMethod);
   }
 

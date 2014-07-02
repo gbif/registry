@@ -349,7 +349,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     service.update(dataset);
     dataset = service.get(dataset.getKey());
     assertEquals("doi:123", dataset.getCitation().getIdentifier());
-    assertEquals("The BGBM: Pontaurus", dataset.getCitation().getText());
+    assertEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"", dataset.getCitation().getText());
   }
 
   @Test

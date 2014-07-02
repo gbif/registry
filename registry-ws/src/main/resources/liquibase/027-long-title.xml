@@ -1,0 +1,18 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    http://dev.gbif.org/issues/browse/POR-2079
+  -->
+  <changeSet id="27" author="markus">
+    <sql>
+      ALTER TABLE dataset ALTER column title TYPE text;
+      ALTER TABLE installation ALTER column title TYPE text;
+      ALTER TABLE organization ALTER column title TYPE text;
+      ALTER TABLE network ALTER column title TYPE text;
+      ALTER TABLE node ALTER column title TYPE text;
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -262,9 +262,9 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
   private Contact convertToRegistryContact(DigirContact digirContact) {
     Contact contact = new Contact();
     contact.setFirstName(trimToNull(digirContact.getName()));
-    contact.setPosition(trimToNull(digirContact.getTitle()));
-    contact.setEmail(trimToNull(digirContact.getEmail()));
-    contact.setPhone(trimToNull(digirContact.getPhone()));
+    contact.addPosition(trimToNull(digirContact.getTitle()));
+    contact.addEmail(trimToNull(digirContact.getEmail()));
+    contact.addPhone(trimToNull(digirContact.getPhone()));
     contact.setType(ContactType.inferType(digirContact.getType()));
     return contact;
   }

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -588,9 +589,9 @@ public class LegacyDataset extends Dataset {
       }
       // set/update other properties
       contact.setFirstName(primaryContactName);
-      contact.setEmail(primaryContactEmail);
-      contact.setPhone(primaryContactPhone);
-      contact.setAddress(primaryContactAddress);
+      contact.setEmail(Lists.newArrayList(primaryContactEmail));
+      contact.setPhone(Lists.newArrayList(primaryContactPhone));
+      contact.setAddress(Lists.newArrayList(primaryContactAddress));
       contact.setDescription(primaryContactDescription);
       primaryContact = contact;
     }

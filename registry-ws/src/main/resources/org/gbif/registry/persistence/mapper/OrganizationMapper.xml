@@ -220,7 +220,7 @@
     WHERE organization_key=#{targetEntityKey,jdbcType=OTHER} AND contact_key=#{contactKey,jdbcType=INTEGER}
   </update>
 
-  <select id="listContacts" resultType="Contact">
+  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_FIELDS"/>
     FROM contact INNER JOIN organization_contact ON contact_key = key
     WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}

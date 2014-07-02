@@ -48,10 +48,13 @@ public class LegacyOrganizationResponse {
     homepageURL = organization.getHomepage() == null ? "" : organization.getHomepage().toString();
     description = Strings.nullToEmpty(organization.getDescription());
     descriptionLanguage = organization.getLanguage() == null ? "" : organization.getLanguage().getIso2LetterCode();
-    primaryContactAddress = contact == null ? "" : Strings.nullToEmpty(contact.getAddress());
+    primaryContactAddress = contact == null || contact.getAddress().isEmpty() ? "" :
+      Strings.nullToEmpty(contact.getAddress().get(0));
     primaryContactDescription = contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
-    primaryContactEmail = contact == null ? "" : Strings.nullToEmpty(contact.getEmail());
-    primaryContactPhone = contact == null ? "" : Strings.nullToEmpty(contact.getPhone());
+    primaryContactEmail = contact == null || contact.getEmail().isEmpty() ? "" :
+      Strings.nullToEmpty(contact.getEmail().get(0));
+    primaryContactPhone = contact == null || contact.getPhone().isEmpty() ? "" :
+      Strings.nullToEmpty(contact.getPhone().get(0));
     primaryContactName =
       contact == null ? "" : CONTACT_NAME.join(new String[] {contact.getFirstName(), contact.getLastName()});
     nodeKey = node.getKey() == null ? "" : node.getKey().toString();

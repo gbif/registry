@@ -18,6 +18,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Strings;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.Logger;
@@ -347,7 +348,7 @@ public class LegacyInstallation extends Installation {
       }
       // set/update other properties
       contact.setFirstName(primaryContactName);
-      contact.setEmail(primaryContactEmail);
+      contact.setEmail(Lists.newArrayList(primaryContactEmail));
 
       primaryContact = contact;
     }

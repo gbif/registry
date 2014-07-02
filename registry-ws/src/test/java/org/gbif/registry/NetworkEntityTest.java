@@ -46,7 +46,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.security.AccessControlException;
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 
@@ -112,6 +111,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = ValidationException.class)
+
   public void createWithKey() {
     T e = newEntity();
     e.setKey(UUID.randomUUID()); // illegal to provide a key
@@ -129,6 +129,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
    * won't authorize, because there is no user "heinz" in the test Drupal database with role administrator.
    */
   @Test
+
   public void testCreateBadRole() {
     // SimplePrincipalProvider configured for web service client tests only
     if (pp != null) {
@@ -156,6 +157,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = ValidationException.class)
+
   public void testUpdateFailingValidation() {
     T n1 = create(newEntity(), 1);
     n1.setTitle("A"); // should fail as it is too short
@@ -302,6 +304,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   public void testContacts() {
     T entity = create(newEntity(), 1);
     ContactTests.testAddDeleteUpdate(contactService, entity);
+    System.out.print("fds");
   }
 
   @Test
@@ -317,6 +320,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = AccessControlException.class)
+
   public void testMachineTagsNotAllowedToCreateClient() {
       //only for client tests
       if (pp != null) {
@@ -329,6 +333,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = AccessControlException.class)
+
   public void testMachineTagsMissingNamespaceRights() {
     //only for client tests
     if (pp != null) {
@@ -341,6 +346,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = AccessControlException.class)
+
   public void testMachineTagsNotAllowedToDeleteClient() {
     //only for client tests
     if (pp != null) {

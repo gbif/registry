@@ -4,6 +4,9 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.utils.HttpUtil;
 import org.gbif.utils.PreemptiveAuthenticationInterceptor;
 
+import java.util.List;
+
+import com.beust.jcommander.internal.Lists;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Requests {
@@ -14,9 +17,9 @@ public class Requests {
   public static final String DATASET_LOGO_URL = "http://www.logo.com/1";
   public static final String DATASET_PRIMARY_CONTACT_TYPE = "administrative";
   public static final String DATASET_PRIMARY_CONTACT_NAME = "Jan Legind";
-  public static final String DATASET_PRIMARY_CONTACT_EMAIL = "jlegind@gbif.org";
-  public static final String DATASET_PRIMARY_CONTACT_PHONE = "90909090";
-  public static final String DATASET_PRIMARY_CONTACT_ADDRESS = "Universitetsparken 15, 2100, Denmark";
+  public static final List<String> DATASET_PRIMARY_CONTACT_EMAIL = Lists.newArrayList("jlegind@gbif.org");
+  public static final List<String> DATASET_PRIMARY_CONTACT_PHONE = Lists.newArrayList("90909090");
+  public static final List<String> DATASET_PRIMARY_CONTACT_ADDRESS = Lists.newArrayList("Universitetsparken 15, 2100, Denmark");
   // GBRDS Datasets only
   public static final String DATASET_PRIMARY_CONTACT_DESCRIPTION = "Data manager";
   public static final String DATASET_NAME_LANGUAGE = "fr";
