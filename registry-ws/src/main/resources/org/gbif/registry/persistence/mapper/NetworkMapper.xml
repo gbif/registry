@@ -5,6 +5,10 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="NETWORK_MAP" type="Network" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="StringArrayTypeHandler"/>
+    <result property="homepage" column="homepage" typeHandler="UriArrayTypeHandler"/>
     <association property="numConstituents" column="key" select="countDatasetsInNetwork" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
@@ -48,11 +52,11 @@
     title = #{title,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
     language = #{language,jdbcType=CHAR},
-    email = #{email,jdbcType=VARCHAR},
-    phone = #{phone,jdbcType=VARCHAR},
-    homepage = #{homepage,jdbcType=VARCHAR},
+    email = #{email,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    homepage = #{homepage,jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
     logo_url = #{logoUrl,jdbcType=VARCHAR},
-    address = #{address,jdbcType=VARCHAR},
+    address = #{address,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
     city = #{city,jdbcType=VARCHAR},
     province = #{province,jdbcType=VARCHAR},
     country = #{country,jdbcType=CHAR},
@@ -67,11 +71,11 @@
     #{title,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
     #{language,jdbcType=CHAR},
-    #{email,jdbcType=VARCHAR},
-    #{phone,jdbcType=VARCHAR},
-    #{homepage,jdbcType=VARCHAR},
+    #{email,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{homepage,jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
     #{logoUrl,jdbcType=VARCHAR},
-    #{address,jdbcType=VARCHAR},
+    #{address,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
     #{city,jdbcType=VARCHAR},
     #{province,jdbcType=VARCHAR},
     #{country,jdbcType=CHAR},

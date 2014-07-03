@@ -59,7 +59,7 @@ public class LegacyOrganizationResponse {
       contact == null ? "" : CONTACT_NAME.join(new String[] {contact.getFirstName(), contact.getLastName()});
     nodeKey = node.getKey() == null ? "" : node.getKey().toString();
     nodeName = node.getTitle() == null ? "" : node.getTitle();
-    nodeContactEmail = node.getEmail() == null ? "" : node.getEmail();
+    nodeContactEmail = node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
     // conversion of contact type, defaulting to empty
     primaryContactType = "";
     if (contact != null) {

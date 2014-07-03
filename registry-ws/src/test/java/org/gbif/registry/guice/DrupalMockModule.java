@@ -27,7 +27,7 @@ public class DrupalMockModule extends AbstractModule {
       mock.setAbbreviation("GBIF.ES");
       mock.setCity("Madrid");
       mock.setPostalCode("E-28014");
-      mock.setInstitution("Real Jardín Botánico - CSIC");
+      mock.setOrganization("Real Jardín Botánico - CSIC");
       for (int i = 1; i<8; i++) {
         Contact c = new Contact();
         c.setKey(i);

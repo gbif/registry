@@ -48,7 +48,7 @@ public class AugmenterImpl implements Augmenter {
             node.setAbbreviation(imsNode.getAbbreviation());
             node.setDescription(imsNode.getDescription());
             node.setParticipantSince(imsNode.getParticipantSince());
-            node.setInstitution(imsNode.getInstitution());
+            node.setOrganization(imsNode.getOrganization());
             node.setAddress(imsNode.getAddress());
             node.setPostalCode(imsNode.getPostalCode());
             node.setCity(imsNode.getCity());
