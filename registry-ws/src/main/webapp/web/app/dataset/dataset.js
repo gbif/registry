@@ -89,7 +89,7 @@ angular.module('dataset', [
   })
   .state('dataset.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machineTag-list.tpl.html',
+    templateUrl: 'app/common/machinetag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'dataset',
     heading: 'Dataset machine tags'

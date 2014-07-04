@@ -84,7 +84,7 @@ angular.module('organization', [
   })
   .state('organization.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machineTag-list.tpl.html',
+    templateUrl: 'app/common/machinetag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'organization',
     heading: 'Organization machine tags'

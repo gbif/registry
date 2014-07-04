@@ -72,7 +72,7 @@ angular.module('node', [
   })
   .state('node.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machineTag-list.tpl.html',
+    templateUrl: 'app/common/machinetag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'node',
     heading: 'Node machine tags'
