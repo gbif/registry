@@ -49,7 +49,7 @@ public class DatasetWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetWrapper.class);
   private final Dataset target = new Dataset();
-
+  private ParagraphContainer description = new ParagraphContainer();
   /**
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year, ignoring whitespace
    *
@@ -172,9 +172,16 @@ public class DatasetWrapper {
     }
   }
 
-  public void addAbstract(String text) {
-    if (!Strings.isNullOrEmpty(text) && Strings.isNullOrEmpty(target.getDescription())) {
-      target.setDescription(text);
+  public void addDescription(ParagraphContainer para) {
+    if (para != null) {
+      target.setDescription(para.toString());
+    }
+  }
+
+  public void addAbstract(String para) {
+    if (!Strings.isNullOrEmpty(para)) {
+      description.appendParagraph(para.trim());
+      target.setDescription(description.toString());
     }
   }
 

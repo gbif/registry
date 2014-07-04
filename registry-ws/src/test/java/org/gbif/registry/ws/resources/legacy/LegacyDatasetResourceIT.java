@@ -438,13 +438,13 @@ public class LegacyDatasetResourceIT {
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
       Requests.DATASET_PRIMARY_CONTACT_TYPE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_EMAIL));
+      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
       Requests.DATASET_PRIMARY_CONTACT_NAME));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_ADDRESS));
+      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,
-      Requests.DATASET_PRIMARY_CONTACT_PHONE));
+      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));
     data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,
       Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));
 

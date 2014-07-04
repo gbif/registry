@@ -227,10 +227,12 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
     for (TapirRelatedEntity tapirRelatedEntity : metadata.getRelatedEntities()) {
       for (TapirContact tapirContact : tapirRelatedEntity.getContacts()) {
         Contact contact = new Contact();
-        contact.setPosition(tapirContact.getRoles().toString());
+        for (String r : tapirContact.getRoles()) {
+          contact.addPosition(r);
+        }
         contact.setFirstName(tapirContact.getFullName());
-        contact.setPhone(tapirContact.getTelephone());
-        contact.setEmail(tapirContact.getEmail());
+        contact.addPhone(tapirContact.getTelephone());
+        contact.addEmail(tapirContact.getEmail());
         contact.setDescription(tapirContact.getTitle());
         contacts.add(contact);
       }

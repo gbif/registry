@@ -136,7 +136,7 @@ public class LegacyOrganizationResource {
       else if (op.equalsIgnoreCase("password")) {
         // contact email address is nullable, but mandatory for sending a mail
         Contact contact = LegacyResourceUtils.getPrimaryContact(organization);
-        String emailAddress = (contact == null) ? null: contact.getEmail();
+        String emailAddress = (contact == null || contact.getEmail().isEmpty()) ? null: contact.getEmail().get(0);
         if (emailAddress == null) {
           LOG.error("Password reminder failed: organization primary contact has no email address");
           return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

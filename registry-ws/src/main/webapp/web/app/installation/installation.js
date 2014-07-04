@@ -81,7 +81,7 @@ angular.module('installation', [
   })
   .state('installation.machineTag', {
     url: '/machineTag',
-    templateUrl: 'app/common/machineTag-list.tpl.html',
+    templateUrl: 'app/common/machinetag-list.tpl.html',
     controller: "MachinetagCtrl",
     context: 'installation',
     heading: 'Installation machine tags'

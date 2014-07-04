@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
  */
 public class ParagraphContainer {
 
-  private static Joiner BR_JOIN = Joiner.on("<br/>");
+  private static Joiner PARA_JOIN = Joiner.on("\n");
   private List<String> paragraphs = Lists.newArrayList();
 
   public void appendParagraph(String para) {
@@ -23,6 +23,9 @@ public class ParagraphContainer {
   }
 
   public String toString() {
-    return BR_JOIN.join(paragraphs);
+    if (paragraphs.isEmpty()) {
+      return null;
+    }
+    return PARA_JOIN.join(paragraphs);
   }
 }

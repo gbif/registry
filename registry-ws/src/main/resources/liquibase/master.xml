@@ -29,5 +29,8 @@
   <include file="liquibase/023-send-notification.xml" />
   <include file="liquibase/024-download_indices.xml" />
   <include file="liquibase/025-owning-org-to-publishing-org.xml"/>
+  <include file="liquibase/026-rich-contact.xml"/>
+  <include file="liquibase/027-long-title.xml"/>
+  <include file="liquibase/028-address.xml"/>
 
 </databaseChangeLog>

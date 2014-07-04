@@ -18,16 +18,25 @@
       <surName>${ct.lastName!}</surName>
     </individualName>
     </#if>
+    <#if ct.userId?has_content>
+     <#list ct.userId as uid>
+    <userId directory="">${uid}</userId>
+     </#list>
+    </#if>
     <#if ct.organization?has_content>
     <organizationName>${ct.organization}</organizationName>
     </#if>
     <#if ct.position?has_content>
-    <positionName>${ct.position}</positionName>
+      <#list ct.position as p>
+      <positionName>${p}</positionName>
+      </#list>
     </#if>
     <#if ct.address?has_content || ct.city?has_content || ct.province?has_content || ct.postalCode?has_content || ct.country?has_content>
     <address>
       <#if ct.address?has_content >
-        <deliveryPoint>${ct.address}</deliveryPoint>
+        <#list ct.address as ad>
+        <deliveryPoint>${ad}</deliveryPoint>
+        </#list>
       </#if>
       <#if ct.city?has_content >
         <city>${ct.city}</city>
@@ -44,10 +53,19 @@
     </address>
     </#if>
     <#if ct.phone?has_content>
-    <phone>${ct.phone}</phone>
+      <#list ct.phone as p>
+      <phone>${p}</phone>
+      </#list>
     </#if>
     <#if ct.email?has_content>
-    <electronicMailAddress>${ct.email}</electronicMailAddress>
+      <#list ct.email as e>
+      <electronicMailAddress>${e}</electronicMailAddress>
+      </#list>
+    </#if>
+    <#if ct.homepage?has_content>
+      <#list ct.homepage as h>
+      <onlineUrl>${h}</onlineUrl>
+      </#list>
     </#if>
     <#if withRole && ct.type?has_content>
     <role>${ct.type}</role>

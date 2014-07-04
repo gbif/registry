@@ -195,9 +195,9 @@ public class SimpleAbcd206Metadata {
   ) {
     Contact contact = new Contact();
     contact.setFirstName(name);
-    contact.setEmail(email);
-    contact.setPhone(phone);
-    contact.setAddress(address);
+    contact.setEmail(Lists.newArrayList(email));
+    contact.setPhone(Lists.newArrayList(phone));
+    contact.setAddress(Lists.newArrayList(address));
     contact.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     contacts.add(contact);
   }
@@ -211,9 +211,9 @@ public class SimpleAbcd206Metadata {
   ) {
     Contact contact = new Contact();
     contact.setFirstName(name);
-    contact.setEmail(email);
-    contact.setPhone(phone);
-    contact.setAddress(address);
+    contact.setEmail(Lists.newArrayList(email));
+    contact.setPhone(Lists.newArrayList(phone));
+    contact.setAddress(Lists.newArrayList(address));
     contact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
     contacts.add(contact);
   }

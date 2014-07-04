@@ -37,9 +37,26 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.CountryTypeHandler;
 import org.gbif.mybatis.type.LanguageTypeHandler;
+import org.gbif.mybatis.type.StringArrayTypeHandler;
+import org.gbif.mybatis.type.UriArrayTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
-import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.CommentMapper;
+import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
+import org.gbif.registry.persistence.mapper.EndpointMapper;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.InstallationMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.MetadataMapper;
+import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
+import org.gbif.registry.persistence.mapper.NetworkMapper;
+import org.gbif.registry.persistence.mapper.NodeMapper;
+import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
@@ -125,6 +142,8 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("CountryTypeHandler").to(CountryTypeHandler.class);
       addAlias("DownloadStatusTypeHandler").to(OccurrenceDownloadStatusTypeHandler.class);
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
+      addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
+      addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
     }
 
     @Override

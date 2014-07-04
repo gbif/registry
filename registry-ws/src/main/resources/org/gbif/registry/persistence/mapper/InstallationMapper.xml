@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.InstallationMapper">
-  
+
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="INSTALLATION_MAP" type="Installation" autoMapping="true">
     <id property="key" column="key"/>
@@ -15,29 +15,29 @@
   <sql id="WRITABLE_INSTALLATION_FIELDS">
     key,organization_key,password,type,title,description,created,created_by,modified,modified_by,disabled
   </sql>
-  
+
   <sql id="INSTALLATION_FIELDS">
     i.key,i.organization_key,i.password,i.type,i.title,i.description,i.created,i.created_by,i.modified,i.modified_by,i.deleted,i.disabled
   </sql>
-  
-  <!-- 
+
+  <!--
     Simple fulltext search on the search field or contact search field.
     plainto_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
     Uses the default configuration english for the English language.
     E.g. no prefix search is supported.
    -->
-  <sql id="SIMPLE_SEARCH">  
+  <sql id="SIMPLE_SEARCH">
     AND (
       i.fulltext_search @@ plainto_tsquery('english',#{query})
       OR EXISTS(
-        SELECT contact_key 
+        SELECT contact_key
         FROM installation_contact JOIN contact c ON c.key = contact_key
         WHERE installation_key=i.key AND c.fulltext_search @@ plainto_tsquery('english',#{query})
       )
-    ) 
+    )
   </sql>
-  
-  <!-- 
+
+  <!--
     key, password, created and deleted are never changed
    -->
   <sql id="INSTALLATION_UPDATE">
@@ -48,9 +48,9 @@
     modified = now(),
     modified_by = #{modifiedBy},
     deleted = null, <!-- if we're updating it can't be deleted -->
-    disabled = #{disabled,jdbcType=BOOLEAN}    
+    disabled = #{disabled,jdbcType=BOOLEAN}
   </sql>
-  
+
   <sql id="WRITABLE_INSTALLATION_FIELD_TYPES">
     #{key,jdbcType=OTHER},
     #{organizationKey,jdbcType=OTHER},
@@ -58,38 +58,38 @@
     #{type,jdbcType=OTHER},
     #{title,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
-    now(), <!-- created -->    
+    now(), <!-- created -->
     #{createdBy},
-    now(), <!-- modified -->    
+    now(), <!-- modified -->
     #{createdBy},
     #{disabled,jdbcType=BOOLEAN}
   </sql>
-  
+
   <!--  Note: you can get entities which are deleted -->
   <select id="get" resultMap="INSTALLATION_MAP">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     WHERE i.key = #{key,jdbcType=OTHER}
-  </select>  
-  
+  </select>
+
   <insert id="create" parameterType="Installation">
     INSERT INTO installation(<include refid="WRITABLE_INSTALLATION_FIELDS"/>)
     VALUES(<include refid="WRITABLE_INSTALLATION_FIELD_TYPES"/>)
-  </insert>  
-  
+  </insert>
+
   <update id="update" parameterType="Installation">
     UPDATE installation
     SET <include refid="INSTALLATION_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}
-  </update>  
-  
+  </update>
+
   <!-- For safety, should it be already deleted nothing is done -->
   <update id="delete">
-    UPDATE installation 
+    UPDATE installation
     SET deleted = now()
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
-  </update>  
-  
+  </update>
+
   <!-- Append safe ordering, omitting deleted entities -->
   <select id="list" resultType="Installation"  resultMap="INSTALLATION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
@@ -113,7 +113,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
@@ -122,8 +122,8 @@
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
     </if>
-  </select>      
-  
+  </select>
+
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO installation_tag(installation_key,tag_key)
@@ -132,22 +132,22 @@
      #{tagKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listTags" resultType="Tag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
     FROM tag INNER JOIN installation_tag ON tag_key = key
     WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of tag to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
   <delete id="deleteTag">
-    DELETE FROM tag USING installation_tag 
+    DELETE FROM tag USING installation_tag
     WHERE
-      tag_key = tag.key AND 
+      tag_key = tag.key AND
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
-  
+
   <!-- CONTACTS -->
   <insert id="addContact">
     INSERT INTO installation_contact(installation_key,contact_key, type, is_primary)
@@ -174,29 +174,29 @@
     WHERE installation_key=#{targetEntityKey,jdbcType=OTHER} AND contact_key=#{contactKey,jdbcType=INTEGER}
   </update>
 
-  <select id="listContacts" resultType="Contact">
+  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_FIELDS"/>
     FROM contact INNER JOIN installation_contact ON contact_key = key
     WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of contact to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of contact to trigger cascade delete of the join table -->
   <delete id="deleteContact">
-    DELETE FROM contact USING installation_contact 
+    DELETE FROM contact USING installation_contact
     WHERE
-      contact_key = contact.key AND 
+      contact_key = contact.key AND
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
-  </delete>  
-  
+  </delete>
+
   <select id="areRelated" resultType="boolean">
-    SELECT true 
-    FROM installation_contact 
-    WHERE installation_key = #{targetEntityKey,jdbcType=OTHER} 
+    SELECT true
+    FROM installation_contact
+    WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
       AND contact_key = #{contactKey,jdbcType=INTEGER}
-    LIMIT 1 
-  </select>  
-  
+    LIMIT 1
+  </select>
+
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
     INSERT INTO installation_identifier(installation_key,identifier_key)
@@ -229,21 +229,21 @@
      #{endpointKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listEndpoints" resultMap="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_FIELDS"/>
     FROM endpoint INNER JOIN installation_endpoint ON endpoint_key = key
     WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of endpoint to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of endpoint to trigger cascade delete of the join table -->
   <delete id="deleteEndpoint">
     DELETE FROM endpoint USING installation_endpoint
     WHERE
-      endpoint_key = endpoint.key AND 
+      endpoint_key = endpoint.key AND
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
-  </delete>    
+  </delete>
 
     <!-- MACHINE TAGS -->
   <insert id="addMachineTag">
@@ -253,22 +253,22 @@
      #{machineTagKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listMachineTags" resultType="MachineTag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
     FROM machine_tag INNER JOIN installation_machine_tag ON machine_tag_key = key
     WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY namespace
   </select>
-  
-  <!-- Joined delete of machine_tag to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
   <delete id="deleteMachineTag">
-    DELETE FROM machine_tag USING installation_machine_tag 
+    DELETE FROM machine_tag USING installation_machine_tag
     WHERE
-      machine_tag_key = machine_tag.key AND 
+      machine_tag_key = machine_tag.key AND
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
-  </delete>   
-  
+  </delete>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO installation_comment(installation_key,comment_key)
@@ -277,22 +277,22 @@
      #{commentKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listComments" resultType="Comment">
     SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
     FROM comment INNER JOIN installation_comment ON comment_key = key
     WHERE installation_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
   </select>
-  
-  <!-- Joined delete of comment to trigger cascade delete of the join table --> 
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
   <delete id="deleteComment">
     DELETE FROM comment USING installation_comment
     WHERE
-      comment_key = comment.key AND 
+      comment_key = comment.key AND
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
-  </delete>  
-  
+  </delete>
+
   <select id="listInstallationsEndorsedBy" resultMap="INSTALLATION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
@@ -303,15 +303,15 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
-  
+  </select>
+
   <select id="countInstallationsEndorsedBy" resultType="Long">
     SELECT count(*)
     FROM installation i
     INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
     INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
     WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
-  </select>  
+  </select>
 
   <select id="listInstallationsByOrganization" resultMap="INSTALLATION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
@@ -322,7 +322,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
 
   <select id="countInstallationsByOrganization" resultType="Long">
     SELECT count(*)
@@ -330,7 +330,7 @@
     INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
     WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
   </select>
-  
+
   <select id="deleted" resultMap="INSTALLATION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
@@ -339,12 +339,12 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countDeleted" resultType="Long">
     SELECT count(*)
     FROM installation
     WHERE deleted IS NOT NULL
-  </select>    
+  </select>
 
   <select id="nonPublishing" resultMap="INSTALLATION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
@@ -355,12 +355,12 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countNonPublishing" resultType="Long">
     SELECT count(*)
     FROM installation i
     LEFT JOIN dataset ds ON ds.installation_key = i.key
-    WHERE ds.key IS NULL 
+    WHERE ds.key IS NULL
   </select>
 
   <select id="listByIdentifier" resultMap="INSTALLATION_MAP" parameterType="Pageable">
@@ -376,7 +376,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>  
+  </select>
   <select id="countByIdentifier" resultType="Long">
     SELECT count(DISTINCT i.key)
     FROM installation i
@@ -386,5 +386,5 @@
     <if test="type != null" >
       AND ide.type=#{type,jdbcType=OTHER}
     </if>
-  </select>  
+  </select>
 </mapper>

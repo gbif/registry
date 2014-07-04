@@ -175,15 +175,15 @@ public class DatasetParserTest {
       Contact contact = contactList.get(0);
       assertEquals("DavidTheCreator", contact.getFirstName());
       assertEquals("Remsen", contact.getLastName());
-      assertEquals("ECAT Programme Officer", contact.getPosition());
+      assertEquals("ECAT Programme Officer", contact.getPosition().get(0));
       assertEquals("GBIF", contact.getOrganization());
-      assertEquals("Universitestparken 15", contact.getAddress());
+      assertEquals("Universitestparken 15", contact.getAddress().get(0));
       assertEquals("Copenhagen", contact.getCity());
       assertEquals("Sjaelland", contact.getProvince());
       assertEquals("2100", contact.getPostalCode());
       assertEquals(Country.DENMARK, contact.getCountry());
-      assertEquals("+4528261487", contact.getPhone());
-      assertEquals("dremsen@gbif.org", contact.getEmail());
+      assertEquals("+4528261487", contact.getPhone().get(0));
+      assertEquals("dremsen@gbif.org", contact.getEmail().get(0));
       assertTrue(contact.isPrimary());
       assertEquals(ContactType.ORIGINATOR, contact.getType());
 
@@ -191,37 +191,57 @@ public class DatasetParserTest {
       contact = contactList.get(1);
       assertEquals("Tim", contact.getFirstName());
       assertEquals("Robertson", contact.getLastName());
-      assertEquals("Universitestparken 15", contact.getAddress());
+      assertEquals("Universitestparken 15", contact.getAddress().get(0));
       assertEquals("Copenhagen", contact.getCity());
       assertEquals("Copenhagen", contact.getProvince());
       assertEquals("2100", contact.getPostalCode());
       assertEquals(Country.DENMARK, contact.getCountry());
-      assertEquals("+4528261487", contact.getPhone());
-      assertEquals("trobertson@gbif.org", contact.getEmail());
+      assertEquals("+4528261487", contact.getPhone().get(0));
+      assertEquals("trobertson@gbif.org", contact.getEmail().get(0));
       assertTrue(contact.isPrimary());
       assertEquals(ContactType.METADATA_AUTHOR, contact.getType());
+      assertEquals("http://orcid.org/0000-0001-5337-1153", contact.getUserId().get(0));
+      assertEquals("gbif:153", contact.getUserId().get(1));
 
       // test Contact
       contact = contactList.get(4);
       assertEquals("David", contact.getFirstName());
       assertEquals("Remsen", contact.getLastName());
-      assertEquals("ECAT Programme Officer", contact.getPosition());
+      assertEquals("ECAT Programme Officer", contact.getPosition().get(0));
       assertEquals("GBIF", contact.getOrganization());
-      assertEquals("Universitestparken 15", contact.getAddress());
+      assertEquals("Universitestparken 15", contact.getAddress().get(0));
       assertEquals("Copenhagen", contact.getCity());
       assertEquals("Sjaelland", contact.getProvince());
       assertEquals("2100", contact.getPostalCode());
       assertEquals(Country.DENMARK, contact.getCountry());
-      assertEquals("+4528261487", contact.getPhone());
-      assertEquals("dremsen@gbif.org", contact.getEmail());
+      assertEquals("+4528261487", contact.getPhone().get(0));
+      assertEquals("dremsen@gbif.org", contact.getEmail().get(0));
       assertTrue(contact.isPrimary());
       assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
 
       // test limited agent with role tests
       contact = contactList.get(2);
-      // assertEquals("principleInvestigator", contact.getRole());
       assertEquals(ContactType.PRINCIPAL_INVESTIGATOR, contact.getType());
       assertFalse(contact.isPrimary());
+      assertEquals("Markus", contact.getFirstName());
+      assertEquals("Döring", contact.getLastName());
+      assertEquals("2nd floor", contact.getAddress().get(0));
+      assertEquals("Universitestparken 15", contact.getAddress().get(1));
+      assertEquals("Copenhagen", contact.getCity());
+      assertEquals("Copenhagen", contact.getProvince());
+      assertEquals("2100", contact.getPostalCode());
+      assertEquals(Country.DENMARK, contact.getCountry());
+      assertEquals("+45 35321 487", contact.getPhone().get(0));
+      assertEquals("+45 35321 488", contact.getPhone().get(1));
+      assertEquals("mdoering@gbif.org", contact.getEmail().get(0));
+      assertEquals("mdoering@mailinator.com", contact.getEmail().get(1));
+      assertEquals("http://www.gbif.org", contact.getHomepage().get(0).toString());
+      assertEquals("http://www.gbif-dev.org", contact.getHomepage().get(1).toString());
+
+
+
+
+
 
       contact = contactList.get(3);
       // assertEquals("pointOfContact", contact.getRole());
@@ -238,7 +258,7 @@ public class DatasetParserTest {
       assertEquals(Language.ENGLISH, dataset.getLanguage());
       // <language>en</language>
       assertEquals(Language.ENGLISH, dataset.getDataLanguage());
-      assertEquals("Specimens in jars", dataset.getDescription());
+      assertEquals("Specimens in jars.\nCollected over years.\nStill being curated.", dataset.getDescription());
       assertEquals(buildURI("http://www.any.org/fauna/coleoptera/beetleList.html"), dataset.getHomepage());
       assertEquals(buildURI("http://www.tim.org/logo.jpg"), dataset.getLogoUrl());
 
@@ -324,7 +344,7 @@ public class DatasetParserTest {
       assertEquals(3, dataset.getSamplingDescription().getMethodSteps().size());
       assertEquals("Took picture, identified", dataset.getSamplingDescription().getMethodSteps().get(0));
       assertEquals("Themometer based test", dataset.getSamplingDescription().getMethodSteps().get(1));
-      assertEquals("Visual based test<br/>and one more time", dataset.getSamplingDescription().getMethodSteps().get(2));
+      assertEquals("Visual based test\nand one more time", dataset.getSamplingDescription().getMethodSteps().get(2));
       assertEquals("Daily Obersevation of Pigeons Eating Habits", dataset.getSamplingDescription().getStudyExtent());
       assertEquals("44KHz is what a CD has... I was more like one a day if I felt like it", dataset.getSamplingDescription().getSampling());
       assertEquals("None", dataset.getSamplingDescription().getQualityControl());
@@ -395,9 +415,9 @@ public class DatasetParserTest {
       // Collection
       Collection collection = dataset.getCollections().get(0);
       assertEquals(PreservationMethodType.ALCOHOL, collection.getSpecimenPreservationMethod());
-      assertEquals("urn:lsid:tim.org:12:1", collection.getParentCollectionIdentifier());
-      assertEquals("urn:lsid:tim.org:12:2", collection.getCollectionIdentifier());
-      assertEquals("Mammals", collection.getCollectionName());
+      assertEquals("urn:lsid:tim.org:12:1", collection.getParentIdentifier());
+      assertEquals("urn:lsid:tim.org:12:2", collection.getIdentifier());
+      assertEquals("Mammals", collection.getName());
       // JGTI curatorial unit tests inside Collection
       assertNotNull(dataset.getCollections().get(0).getCuratorialUnits());
       assertEquals(5, dataset.getCollections().get(0).getCuratorialUnits().get(0).getCount());
