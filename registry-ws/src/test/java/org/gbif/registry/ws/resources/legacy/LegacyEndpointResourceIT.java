@@ -104,7 +104,7 @@ public class LegacyEndpointResourceIT {
     HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
 
     // parse newly registered endpoint key (id)
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyEndpointResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);
     assertNotNull("Registered Endpoint key should be in response", Parsers.legacyEndpointResponseHandler.key);
     assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);
     assertEquals(ENDPOINT_ACCESS_POINT_URL, Parsers.legacyEndpointResponseHandler.accessPointURL);
@@ -312,7 +312,7 @@ public class LegacyEndpointResourceIT {
     assertTrue(result.content.contains("<legacyEndpointResponses><service>"));
 
     // parse returned list of services
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyEndpointResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);
     assertEquals(String.valueOf(endpointKey), Parsers.legacyEndpointResponseHandler.key);
     assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);
     assertEquals(endpoint.getType().name(), Parsers.legacyEndpointResponseHandler.type);

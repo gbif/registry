@@ -104,7 +104,7 @@ public class LegacyDatasetResourceIT {
     HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyDatasetResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);
     assertNotNull("Registered Dataset key should be in response",
       UUID.fromString(Parsers.legacyDatasetResponseHandler.key));
 
@@ -189,7 +189,7 @@ public class LegacyDatasetResourceIT {
     // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed
     String st = new String(result.content.getBytes(), Charsets.UTF_8);
     // parse updated registered Dataset key (UUID)
-    Parsers.saxParser.parse(Parsers.getStream(st), Parsers.legacyDatasetResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);
 
     assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);
     assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);
@@ -280,7 +280,7 @@ public class LegacyDatasetResourceIT {
     assertTrue(result.content.contains("Türkei"));
 
     // parse newly registered list of datasets
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyDatasetResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);
     assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);
     assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);
     assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);
@@ -381,7 +381,7 @@ public class LegacyDatasetResourceIT {
 
     // XML expected, parse Dataset
     assertTrue(result.content.contains("<resource>"));
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyDatasetResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);
 
     assertEquals(dataset.getKey().toString(), Parsers.legacyDatasetResponseHandler.key);
     assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);

@@ -2,11 +2,12 @@ package org.gbif.registry.utils;
 
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class Parsers {
 
   private static Logger LOG = LoggerFactory.getLogger(Parsers.class);
-
+  private static final Charset UTF8 = Charset.forName("UTF8");
   public static LegacyDatasetResponseHandler legacyDatasetResponseHandler;
   public static LegacyOrganizationResponseHandler legacyOrganizationResponseHandler;
   public static LegacyIptEntityHandler legacyIptEntityHandler;
@@ -58,15 +59,13 @@ public class Parsers {
 
   /**
    * Convert a String into a ByteArrayInputStream.
-   * </br>
-   * Note: this method is copied directly out of the IPT.
    *
    * @param source String to convert
    *
    * @return ByteArrayInputStream
    */
-  public static InputStream getStream(String source) {
-    return new ByteArrayInputStream(source.getBytes());
+  public static InputStream getUtf8Stream(String source) {
+    return IOUtils.toInputStream(source, UTF8);
   }
 
   /**

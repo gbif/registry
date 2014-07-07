@@ -121,7 +121,7 @@ public class IptResourceIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyIptEntityHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
     assertNotNull("Registered IPT key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
 
     // some information that should have been updated
@@ -389,7 +389,7 @@ public class IptResourceIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyIptEntityHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
     assertNotNull("Registered Dataset key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
 
     // some information that should have been updated

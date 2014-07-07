@@ -115,7 +115,7 @@ public class LegacyOrganizationResourceIT {
     HttpUtil.Response result = Requests.http.get(uri);
 
     // XML expected, parse Organization
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyOrganizationResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyOrganizationResponseHandler);
 
     assertEquals(organization.getKey().toString(), Parsers.legacyOrganizationResponseHandler.key);
     assertEquals(organization.getTitle(), Parsers.legacyOrganizationResponseHandler.name);
@@ -219,7 +219,7 @@ public class LegacyOrganizationResourceIT {
     assertTrue(result.content.contains("<legacyOrganizationBriefResponses><organisation>"));
 
     // parse newly registered list of datasets
-    Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyOrganizationResponseHandler);
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyOrganizationResponseHandler);
     assertEquals(organization.getKey().toString(), Parsers.legacyOrganizationResponseHandler.key);
     assertEquals(organization.getTitle(), Parsers.legacyOrganizationResponseHandler.name);
   }
