@@ -276,6 +276,8 @@ public class LegacyDatasetResourceIT {
 
     // TODO: Response must be wrapped with root <resources>, not <legacyDatasetResponses>
     assertTrue(result.content.contains("<legacyDatasetResponses><resource>"));
+    // verify character encoding here already, known to cause issue on some systems
+    assertTrue(result.content.contains("Türkei"));
 
     // parse newly registered list of datasets
     Parsers.saxParser.parse(Parsers.getStream(result.content), Parsers.legacyDatasetResponseHandler);
