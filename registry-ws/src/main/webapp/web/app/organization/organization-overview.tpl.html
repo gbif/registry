@@ -20,13 +20,13 @@
     <span ng-show="!organization.endorsementApproved" class="label label-important">awaiting approval</span>
   </dd>
   <dt>Homepage</dt>
-  <dd><a href="{{organization.homepage}}" target="_blank">{{organization.homepage}}</a></dd>
+  <dd ng-repeat="homepage in organization.homepage"><a href="{{homepage}}" target="_blank">{{homepage}}</a></dd>
   <dt>Logo url</dt>
   <dd>{{organization.logoUrl}}</dd>
   <dt>Language</dt>
   <dd>{{organization.language}}</dd>
   <dt>Address</dt>
-  <dd>{{organization.address}}</dd>
+  <dd ng-repeat="address in organization.address">{{address}}</dd>
   <dt>City</dt>
   <dd>{{organization.city}}</dd>
   <dt>Province</dt>
@@ -36,9 +36,9 @@
   <dt>Postal code</dt>
   <dd>{{organization.postalCode}}</dd>
   <dt>Email</dt>
-  <dd>{{organization.email}}</dd>
+  <dd ng-repeat="email in organization.email">{{email}}</dd>
   <dt>Phone</dt>
-  <dd>{{organization.phone}}</dd>
+  <dd ng-repeat="phone in organization.phone">{{phone}}</dd>
   <dt>Latitude</dt>
   <dd>{{organization.latitude}}</dd>
   <dt>Longitude</dt>
@@ -51,11 +51,11 @@
   <dd>{{organization.modified | timeAgo}} <br/><small class="muted">{{organization.modified}}</small></dd>
   <dt>Modified by</dt>
   <dd>{{organization.modifiedBy}}</dd>
-  
+
 </dl>
 <div class="form-actions" ng-show="organization.deleted==null">
   <small><a href="" ng-click="transitionTo('edit')">Edit these details</a></small>
-</div>   
+</div>
 <div class="form-actions" ng-show="organization.deleted!=null">
     <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this organization</a></small>
       <p><small class="muted">Will make this eligible for endorsements etc.</small></p>
