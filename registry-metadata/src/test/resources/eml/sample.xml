@@ -202,7 +202,7 @@ author of this metadata about the resource) -->
           <commonName>Birds</commonName>
         </taxonomicClassification>
         <taxonomicClassification>
-          <taxonRankName>kingdom</taxonRankName>
+          <taxonRankName>Kingdom</taxonRankName>
           <taxonRankValue>Plantae</taxonRankValue>
           <commonName>Plants</commonName>
         </taxonomicClassification>

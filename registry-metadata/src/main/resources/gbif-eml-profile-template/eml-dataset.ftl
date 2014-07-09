@@ -1,5 +1,6 @@
 <#escape x as x?xml>
-  <#macro interpretedEnum enum><#if enum??><#if enum.interpreted?has_content>${enum.interpreted}<#else>${enum.verbatim!}</#if></#if></#macro>
+  <#macro elem name value><#if value?has_content><${name}>${value}</${name}></#if></#macro>
+  <#macro interpretedEnum enum><#if enum??><#if enum.interpreted?has_content>${enum.interpreted.name()?lower_case?replace("_", " ")?capitalize}<#else>${enum.verbatim!}</#if></#if></#macro>
   <#macro citation cit>
     <#if cit??>
       <#if cit.identifier?has_content>
@@ -12,9 +13,7 @@
   <#macro contact ct withRole=false>
     <#if ct.lastName?has_content>
     <individualName>
-      <#if ct.firstName?has_content>
-        <givenName>${ct.firstName}</givenName>
-      </#if>
+      <@elem "givenName", ct.firstName! />
       <surName>${ct.lastName!}</surName>
     </individualName>
     </#if>
@@ -23,50 +22,30 @@
     <userId directory="">${uid}</userId>
      </#list>
     </#if>
-    <#if ct.organization?has_content>
-    <organizationName>${ct.organization}</organizationName>
-    </#if>
-    <#if ct.position?has_content>
-      <#list ct.position as p>
-      <positionName>${p}</positionName>
-      </#list>
-    </#if>
+    <@elem "organizationName", ct.organization! />
+    <#list ct.position![] as p>
+      <@elem "positionName", p! />
+    </#list>
     <#if ct.address?has_content || ct.city?has_content || ct.province?has_content || ct.postalCode?has_content || ct.country?has_content>
     <address>
-      <#if ct.address?has_content >
-        <#list ct.address as ad>
-        <deliveryPoint>${ad}</deliveryPoint>
-        </#list>
-      </#if>
-      <#if ct.city?has_content >
-        <city>${ct.city}</city>
-      </#if>
-      <#if ct.province?has_content >
-        <administrativeArea>${ct.province}</administrativeArea>
-      </#if>
-      <#if ct.postalCode?has_content >
-        <postalCode>${ct.postalCode}</postalCode>
-      </#if>
-      <#if ct.country?has_content >
-        <country>${ct.country}</country>
-      </#if>
+      <#list ct.address![] as ad>
+        <@elem "deliveryPoint", ad! />
+      </#list>
+      <@elem "city", ct.city! />
+      <@elem "administrativeArea", ct.province! />
+      <@elem "postalCode", ct.postalCode! />
+      <@elem "country", ct.country! />
     </address>
     </#if>
-    <#if ct.phone?has_content>
-      <#list ct.phone as p>
-      <phone>${p}</phone>
-      </#list>
-    </#if>
-    <#if ct.email?has_content>
-      <#list ct.email as e>
-      <electronicMailAddress>${e}</electronicMailAddress>
-      </#list>
-    </#if>
-    <#if ct.homepage?has_content>
-      <#list ct.homepage as h>
-      <onlineUrl>${h}</onlineUrl>
-      </#list>
-    </#if>
+    <#list ct.phone![] as p>
+      <@elem "phone", p! />
+    </#list>
+    <#list ct.email![] as e>
+      <@elem "electronicMailAddress", e! />
+    </#list>
+    <#list ct.homepage![] as h>
+      <@elem "onlineUrl", h! />
+    </#list>
     <#if withRole && ct.type?has_content>
     <role>${ct.type}</role>
     </#if>
@@ -85,7 +64,7 @@
 <eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd"
-         packageId="${dataset.key}" system="http://gbif.org" scope="system"
+         packageId="${dataset.key!}" system="http://gbif.org" scope="system"
          <#if dataset.language??>xml:lang="${dataset.language.getIso2LetterCode()}"</#if>>
 
 <dataset>
@@ -256,7 +235,7 @@
       <title>${dataset.project.title!}</title>
       <#list dataset.project.contacts![] as c>
       <personnel>
-        <@contact ct=c />
+        <@contact ct=c withRole=true />
       </personnel>
       </#list>
       <funding>
@@ -324,9 +303,9 @@
         <#-- TODO: Current GBIF Profile only allows a single collection! -->
         <#assign col=dataset.collections[0] />
         <collection>
-          <parentCollectionIdentifier>${col.parentCollectionIdentifier!}</parentCollectionIdentifier>
-          <collectionIdentifier>${col.collectionIdentifier!}</collectionIdentifier>
-          <collectionName>${col.collectionName!}</collectionName>
+          <parentCollectionIdentifier>${col.parentIdentifier!}</parentCollectionIdentifier>
+          <collectionIdentifier>${col.identifier!}</collectionIdentifier>
+          <collectionName>${col.name!}</collectionName>
         </collection>
       </#if>
       <#list eml.formationPeriods![] as p>
@@ -342,24 +321,22 @@
       </#list>
       <#list dataset.collections![] as col>
         <#list col.curatorialUnits![] as unit>
+          <#if unit.count gt 0>
+              <jgtiCuratorialUnit>
+                  <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>
+                  <jgtiUnits<#if unit.deviation gt 0> uncertaintyMeasure="${unit.deviation}"</#if>>${unit.count}</jgtiUnits>
+              </jgtiCuratorialUnit>
+          </#if>
           <#if unit.lower gt 0 || unit.upper gt 0>
             <jgtiCuratorialUnit>
-              <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>
-              <jgtiUnitRange>
-                <beginRange>${unit.lower}</beginRange>
-                <endRange>${unit.upper}</endRange>
-              </jgtiUnitRange>
+                <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>
+                <jgtiUnitRange>
+                    <beginRange>${unit.lower}</beginRange>
+                    <endRange>${unit.upper}</endRange>
+                </jgtiUnitRange>
             </jgtiCuratorialUnit>
           </#if>
         </#list>
-        <#list col.curatorialUnits![] as unit>
-          <#if unit.count gt 0>
-            <jgtiCuratorialUnit>
-              <jgtiUnitType>${unit.type!unit.typeVerbatim!}</jgtiUnitType>
-              <jgtiUnits<#if unit.deviation gt 0> uncertaintyMeasure="${unit.deviation}"</#if>>${unit.count}</jgtiUnits>
-            </jgtiCuratorialUnit>
-          </#if>
-          </#list>
       </#list>
     </gbif>
   </metadata>
