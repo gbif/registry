@@ -4,11 +4,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.16-SNAPSHOT</version>
+    <version>2.16</version>
   </parent>
 
   <artifactId>registry-ws</artifactId>
-  <version>2.16-SNAPSHOT</version>
+  <version>2.16</version>
   <packaging>war</packaging>
 
   <name>Registry Webservices</name>
