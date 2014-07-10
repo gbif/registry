@@ -75,7 +75,7 @@
     <gbif-common-test.version>0.6</gbif-common-test.version>
     <gbif-common-service.version>0.10</gbif-common-service.version>
     <gbif-common-search.version>0.17-SNAPSHOT</gbif-common-search.version>
-    <gbif-parsers.version>0.8</gbif-parsers.version>
+    <gbif-parsers.version>0.9-SNAPSHOT</gbif-parsers.version>
     <gbif-postal-service.version>0.10</gbif-postal-service.version>
     <gbif-httputils.version>0.5</gbif-httputils.version>
     <drupal-mybatis.version>0.13-SNAPSHOT</drupal-mybatis.version>
