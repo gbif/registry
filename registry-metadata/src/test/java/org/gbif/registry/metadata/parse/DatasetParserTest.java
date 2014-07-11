@@ -32,135 +32,136 @@ import static org.junit.Assert.*;
 public class DatasetParserTest {
 
 
-  @Test
-  public void testDetectParserType() throws Exception {
-    MetadataType type = DatasetParser.detectParserType(FileUtils.classpathStream("dc/worms_dc.xml"));
-    assertEquals(MetadataType.DC, type);
+    @Test
+    public void testDetectParserType() throws Exception {
+        MetadataType type = DatasetParser.detectParserType(FileUtils.classpathStream("dc/worms_dc.xml"));
+        assertEquals(MetadataType.DC, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/ipt_eml.xml"));
-    assertEquals(MetadataType.EML, type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/ipt_eml.xml"));
+        assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/clb_eml.xml"));
-    assertEquals(MetadataType.EML, type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/clb_eml.xml"));
+        assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/sample.xml"));
-    assertEquals(MetadataType.EML, type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/sample.xml"));
+        assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/eml_utf8_bom.xml"));
-    assertEquals(MetadataType.EML, type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/eml_utf8_bom.xml"));
+        assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/sample-breaking.xml"));
-    assertEquals(MetadataType.EML, type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/sample-breaking.xml"));
+        assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/eml-protocol.xml"));
-    assertNull(type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/eml-protocol.xml"));
+        assertNull(type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("logback-test.xml"));
-    assertNull(type);
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("logback-test.xml"));
+        assertNull(type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("dc/dc_broken.xml"));
-    assertNull(type);
-  }
-
-
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testBuild() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("dc/worms_dc.xml"));
-    assertNotNull(d);
-
-    d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
-    assertNotNull(d);
-
-    d = DatasetParser.build(FileUtils.classpathStream("eml/ipt_eml.xml"));
-    assertNotNull(d);
-
-    DatasetParser.build(FileUtils.classpathStream("logback-test.xml"));
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testBuildProtocol() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml"));
-    d.getTitle();
-  }
-
-  private Contact contactByType(Dataset d, ContactType type) {
-    for (Contact c : d.getContacts()) {
-      if (type == c.getType()) {
-        return c;
-      }
+        type = DatasetParser.detectParserType(FileUtils.classpathStream("dc/dc_broken.xml"));
+        assertNull(type);
     }
-    return null;
-  }
 
-  private void assertIdentifierExists(Dataset d, String id, IdentifierType type) {
-    for (Identifier i : d.getIdentifiers()) {
-      if (i.getType() == type && id.equals(i.getIdentifier())) {
-        return;
-      }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuild() throws Exception {
+        Dataset d = DatasetParser.build(FileUtils.classpathStream("dc/worms_dc.xml"));
+        assertNotNull(d);
+
+        d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
+        assertNotNull(d);
+
+        d = DatasetParser.build(FileUtils.classpathStream("eml/ipt_eml.xml"));
+        assertNotNull(d);
+
+        DatasetParser.build(FileUtils.classpathStream("logback-test.xml"));
     }
-    fail("Identifier " + id + " of type " + type + " missing");
-  }
 
-  private void assertKeywordExists(Dataset d, String tag) {
-    for (KeywordCollection kc : d.getKeywordCollections()) {
-      for (String k : kc.getKeywords()) {
-        if (k.equals(tag)) {
-          return;
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuildProtocol() throws Exception {
+        Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml"));
+        d.getTitle();
+    }
+
+    private Contact contactByType(Dataset d, ContactType type) {
+        for (Contact c : d.getContacts()) {
+            if (type == c.getType()) {
+                return c;
+            }
         }
-      }
+        return null;
     }
-    fail("Keyword" + tag+ " missing");
-  }
 
-  @Test
-  public void testDcParsing() throws Exception {
-    Dataset dataset = DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc.xml"));
-
-    Calendar cal = Calendar.getInstance();
-    cal.clear();
-
-    assertNotNull(dataset);
-
-    assertEquals("World Register of Marine Species", dataset.getTitle());
-    assertTrue(dataset.getDescription().startsWith(
-      "The aim of a World Register of Marine Species (WoRMS) is to provide an authoritative and comprehensive list of names of marine organisms, including information on synonymy. While highest priority goes to valid names, other names in use are included so that this register can serve as a guide to interpret taxonomic literature."));
-    assertEquals("http://www.marinespecies.org/", dataset.getHomepage().toString());
-    assertEquals("Ward Appeltans", contactByType(dataset, ContactType.ORIGINATOR).getLastName());
-    assertEquals("World Register of Marine Species", dataset.getTitle());
-    assertEquals("World Register of Marine Species", dataset.getTitle());
-    assertEquals("World Register of Marine Species", dataset.getTitle());
-
-    assertIdentifierExists(dataset, "1234", IdentifierType.UNKNOWN);
-    assertIdentifierExists(dataset, "doi:10.1093/ageing/29.1.57", IdentifierType.UNKNOWN);
-    assertIdentifierExists(dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.UNKNOWN);
-
-    assertKeywordExists(dataset, "Specimens");
-    assertKeywordExists(dataset, "Authoritative");
-    assertKeywordExists(dataset, "Species Checklist");
-    assertKeywordExists(dataset, "Taxonomy");
-    assertKeywordExists(dataset, "Marine");
-  }
-
-
-  @Test
-  public void testEmlParsing() {
-    try {
-        Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample.xml"));
-        verifySample(dataset);
-
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail();
+    private void assertIdentifierExists(Dataset d, String id, IdentifierType type) {
+        for (Identifier i : d.getIdentifiers()) {
+            if (i.getType() == type && id.equals(i.getIdentifier())) {
+                return;
+            }
+        }
+        fail("Identifier " + id + " of type " + type + " missing");
     }
-  }
 
+    private void assertKeywordExists(Dataset d, String tag) {
+        for (KeywordCollection kc : d.getKeywordCollections()) {
+            for (String k : kc.getKeywords()) {
+                if (k.equals(tag)) {
+                    return;
+                }
+            }
+        }
+        fail("Keyword" + tag + " missing");
+    }
+
+    @Test
+    public void testDcParsing() throws Exception {
+        Dataset dataset = DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc.xml"));
+
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+
+        assertNotNull(dataset);
+
+        assertEquals("World Register of Marine Species", dataset.getTitle());
+        assertTrue(dataset.getDescription().startsWith(
+            "The aim of a World Register of Marine Species (WoRMS) is to provide an authoritative and comprehensive list of names of marine organisms, including information on synonymy. While highest priority goes to valid names, other names in use are included so that this register can serve as a guide to interpret taxonomic literature."));
+        assertEquals("http://www.marinespecies.org/", dataset.getHomepage().toString());
+        assertEquals("Ward Appeltans", contactByType(dataset, ContactType.ORIGINATOR).getLastName());
+        assertEquals("World Register of Marine Species", dataset.getTitle());
+        assertEquals("World Register of Marine Species", dataset.getTitle());
+        assertEquals("World Register of Marine Species", dataset.getTitle());
+
+        assertIdentifierExists(dataset, "1234", IdentifierType.UNKNOWN);
+        assertIdentifierExists(dataset, "doi:10.1093/ageing/29.1.57", IdentifierType.UNKNOWN);
+        assertIdentifierExists(dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.UNKNOWN);
+
+        assertKeywordExists(dataset, "Specimens");
+        assertKeywordExists(dataset, "Authoritative");
+        assertKeywordExists(dataset, "Species Checklist");
+        assertKeywordExists(dataset, "Taxonomy");
+        assertKeywordExists(dataset, "Marine");
+    }
+
+
+    @Test
+    public void testEmlParsing() {
+        try {
+            Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample.xml"));
+            verifySample(dataset, false);
+
+            dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sampleBadEnum.xml"));
+            verifySample(dataset, true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 
     @Test
     public void testRoundtripping() {
         try {
             Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample.xml"));
-            verifySample(dataset);
+            verifySample(dataset, false);
 
             // write again to eml file and read again
             StringWriter writer = new StringWriter();
@@ -170,7 +171,7 @@ public class DatasetParserTest {
             System.out.println(eml);
             InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
             Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
-            verifySample(dataset2);
+            verifySample(dataset2, false);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,7 +179,7 @@ public class DatasetParserTest {
         }
     }
 
-    public void verifySample(Dataset dataset) {
+    public void verifySample(Dataset dataset, boolean ignorePreservationMethod) {
         Calendar cal = Calendar.getInstance();
         cal.clear();
 
@@ -262,7 +263,6 @@ public class DatasetParserTest {
         assertEquals("mdoering@mailinator.com", contact.getEmail().get(1));
         assertEquals("http://www.gbif.org", contact.getHomepage().get(0).toString());
         assertEquals("http://www.gbif-dev.org", contact.getHomepage().get(1).toString());
-
 
 
         contact = contactList.get(3);
@@ -436,7 +436,9 @@ public class DatasetParserTest {
 
         // Collection
         Collection collection = dataset.getCollections().get(0);
-        assertEquals(PreservationMethodType.ALCOHOL, collection.getSpecimenPreservationMethod());
+        if (!ignorePreservationMethod) {
+            assertEquals(PreservationMethodType.ALCOHOL, collection.getSpecimenPreservationMethod());
+        }
         assertEquals("urn:lsid:tim.org:12:1", collection.getParentIdentifier());
         assertEquals("urn:lsid:tim.org:12:2", collection.getIdentifier());
         assertEquals("Mammals", collection.getName());
@@ -451,26 +453,26 @@ public class DatasetParserTest {
     }
 
     @Test
-  public void testEmlParsingBreaking() throws IOException {
-    // throws a ConversionException/Throwable that is caught - but build still returns the dataset populated partially
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking.xml"));
-    assertEquals("Estimates of walleye abundance for Oneida\n" + "      Lake, NY (1957-2008)", dataset.getTitle());
-  }
-
-  @Test
-  public void testEmlParsingBreakingOnURLConversion() throws IOException {
-    // Gracefully handles ConversionException/Throwable during conversion of URLs, and fully populates the dataset
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking2.xml"));
-    assertEquals("WII Herbarium Dataset", dataset.getTitle());
-    assertEquals(buildURI("http://www.wii.gov.in"), dataset.getHomepage());
-  }
-
-  private URI buildURI(String uri) {
-    try {
-      return new URL(uri).toURI();
-    } catch (URISyntaxException e) {
-    } catch (MalformedURLException e) {
+    public void testEmlParsingBreaking() throws IOException {
+        // throws a ConversionException/Throwable that is caught - but build still returns the dataset populated partially
+        Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking.xml"));
+        assertEquals("Estimates of walleye abundance for Oneida\n" + "      Lake, NY (1957-2008)", dataset.getTitle());
     }
-    return null;
-  }
+
+    @Test
+    public void testEmlParsingBreakingOnURLConversion() throws IOException {
+        // Gracefully handles ConversionException/Throwable during conversion of URLs, and fully populates the dataset
+        Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking2.xml"));
+        assertEquals("WII Herbarium Dataset", dataset.getTitle());
+        assertEquals(buildURI("http://www.wii.gov.in"), dataset.getHomepage());
+    }
+
+    private URI buildURI(String uri) {
+        try {
+            return new URL(uri).toURI();
+        } catch (URISyntaxException e) {
+        } catch (MalformedURLException e) {
+        }
+        return null;
+    }
 }
