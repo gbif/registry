@@ -39,6 +39,7 @@
     <module>registry-metasync</module>
     <module>registry-ws</module>
     <module>registry-ws-client</module>
+    <module>registry-examples</module>
   </modules>
 
   <!--
@@ -132,6 +133,11 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-examples</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
