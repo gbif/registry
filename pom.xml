@@ -136,11 +136,6 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-examples</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
