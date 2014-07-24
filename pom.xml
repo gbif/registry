@@ -211,7 +211,6 @@
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-jaxrs</artifactId>
         <version>${jackson.version}</version>
-        <scope>test</scope>
       </dependency>
       <!-- jersey-server required in order to inject form params into Legacy Objects via @InjectParam -->
       <dependency>
@@ -258,12 +257,6 @@
         <groupId>com.sun.jersey.contribs</groupId>
         <artifactId>jersey-apache-client4</artifactId>
         <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-apache-client4</artifactId>
-        <version>${jersey.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>
