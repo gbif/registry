@@ -95,6 +95,7 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
    *         the appropriate {@link ErrorCode}s.
    */
   protected <T> T doHttpRequest(URI uri, Digester digester) throws MetadataException {
+    LOG.info("Issuing request: {}", uri);
     HttpUriRequest get = new HttpGet(uri);
     HttpResponse response;
     try {

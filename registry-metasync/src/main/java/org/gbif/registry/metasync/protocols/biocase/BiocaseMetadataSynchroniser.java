@@ -38,13 +38,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nullable;
 
+import org.slf4j.LoggerFactory;
+
+import org.slf4j.Logger;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -64,6 +67,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Unfortunately BioCASe does not have good (stable) identifiers for Datasets so we need to rely on the Dataset title.
  */
 public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(BiocaseMetadataSynchroniser.class);
 
   public BiocaseMetadataSynchroniser(HttpClient httpClient) {
     super(httpClient);
@@ -86,6 +90,8 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     Map<Dataset, Dataset> updated = Maps.newHashMap();
 
     for (Endpoint endpoint : installation.getEndpoints()) {
+      LOG.info("Starting synchronization of endpoint: {}", endpoint.getUrl());
+            
       Capabilities capabilities = getCapabilities(endpoint);
       if (capabilities.getPreferredSchema() == null) {
         throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
