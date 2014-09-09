@@ -65,6 +65,7 @@ public class EnumerationResource {
         info.put("isoNumerical", String.valueOf(c.getIsoNumericalCode()));
         info.put("title", c.getTitle());
         info.put("enumName", c.name());
+        info.put("official", String.valueOf(c.isOfficial()));
         countries.add(info);
       }
     }
