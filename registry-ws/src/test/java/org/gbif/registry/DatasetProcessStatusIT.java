@@ -17,6 +17,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.crawler.FinishReason;
+import org.gbif.api.model.crawler.ProcessState;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
@@ -227,6 +228,8 @@ public class DatasetProcessStatusIT {
     builder.fragmentsProcessed(144);
     builder.fragmentsReceived(144);
     builder.finishReason(FinishReason.NORMAL);
+    builder.processStateOccurrence(ProcessState.FINISHED);
+    builder.processStateChecklist(ProcessState.EMPTY);
     builder.interpretedOccurrencesPersistedError(0);
     builder.interpretedOccurrencesPersistedSuccessful(144);
     builder.pagesCrawled(2);

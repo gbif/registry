@@ -33,5 +33,6 @@
   <include file="liquibase/027-long-title.xml"/>
   <include file="liquibase/028-address.xml"/>
   <include file="liquibase/029-address-fix.xml"/>
+  <include file="liquibase/030-dataset-process-status.xml"/>
 
 </databaseChangeLog>

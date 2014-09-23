@@ -17,7 +17,8 @@
   </resultMap>
   
   <sql id="DATASET_PROCESS_STATUS_FIELDS">
-    dataset_key,attempt,target_url,endpoint_type,started_crawling,finished_crawling,finish_reason,pages_crawled,
+    dataset_key,attempt,target_url,endpoint_type,started_crawling,finished_crawling,
+    finish_reason,process_state_occurrence,process_state_checklist, pages_crawled,
     pages_fragmented_successful,pages_fragmented_error,fragments_emitted,fragments_received,
     raw_occurrences_persisted_new,raw_occurrences_persisted_updated,raw_occurrences_persisted_unchanged,
     raw_occurrences_persisted_error,fragments_processed,verbatim_occurrences_persisted_successful,
@@ -32,6 +33,8 @@
     #{startedCrawling,jdbcType=DATE},
     #{finishedCrawling,jdbcType=DATE},
     #{finishReason,jdbcType=OTHER},
+    #{processStateOccurrence,jdbcType=OTHER},
+    #{processStateChecklist,jdbcType=OTHER},
     #{pagesCrawled,jdbcType=INTEGER},
     #{pagesFragmentedSuccessful,jdbcType=INTEGER},
     #{pagesFragmentedError,jdbcType=INTEGER},
@@ -58,6 +61,8 @@
     started_crawling = #{startedCrawling,jdbcType=DATE},
     finished_crawling =#{finishedCrawling,jdbcType=DATE},
     finish_reason = #{finishReason,jdbcType=OTHER},
+    process_state_occurrence = #{processStateOccurrence,jdbcType=OTHER},
+    process_state_checklist = #{processStateChecklist,jdbcType=OTHER},
     pages_crawled = #{pagesCrawled,jdbcType=INTEGER},
     pages_fragmented_successful = #{pagesFragmentedSuccessful,jdbcType=INTEGER},
     pages_fragmented_error = #{pagesFragmentedError,jdbcType=INTEGER},
