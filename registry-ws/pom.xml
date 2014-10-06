@@ -87,9 +87,9 @@
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>org.gbif.occurrence:registry-ws</artifact>
+                  <artifact>org.gbif.registry:registry-ws</artifact>
                   <excludes>
-                    <exclude>io/dropwizard/*</exclude>
+                    <exclude>registry.properties</exclude>
                   </excludes>
                 </filter>
               </filters>

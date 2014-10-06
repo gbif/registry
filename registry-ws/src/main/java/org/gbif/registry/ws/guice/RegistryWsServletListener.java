@@ -28,9 +28,10 @@ import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.guice.GbifServletListener;
-import org.gbif.ws.util.PropertiesUtil;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
@@ -39,7 +40,7 @@ import java.util.Properties;
  */
 public class RegistryWsServletListener extends GbifServletListener {
 
-  public static final String APPLICATION_PROPERTIES = "registry.properties";
+  public static final String APP_CONF_ENV = "app.conf";
   public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
   public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
 
@@ -52,8 +53,8 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider";
 
-  public RegistryWsServletListener() {
-    super(PropertiesUtil.readFromClasspath(APPLICATION_PROPERTIES), PACKAGES, true, responseFilters, requestFilters);
+  public RegistryWsServletListener() throws IOException {
+    super(PropertiesUtil.readFromFile(System.getProperty(APP_CONF_ENV)), PACKAGES, true, responseFilters, requestFilters);
   }
 
   @VisibleForTesting
