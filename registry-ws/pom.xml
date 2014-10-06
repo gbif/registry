@@ -9,7 +9,7 @@
 
   <artifactId>registry-ws</artifactId>
   <version>2.18-SNAPSHOT</version>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
 
   <name>Registry Webservices</name>
 
@@ -20,6 +20,11 @@
     </repository>
   </repositories>
 
+  <properties>
+    <jettyVersion>7.3.1.v20110307</jettyVersion>
+    <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
+    <servlet-api.version>2.5</servlet-api.version>
+   </properties>
   <build>
     <defaultGoal>jetty:run</defaultGoal>
     <resources>
@@ -45,6 +50,52 @@
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${maven-shade-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.gbif.registry.ws.app.RegistryApplication</mainClass>
+                </transformer>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>org.jruby:jruby-complete</artifact>
+                  <excludes>
+                    <exclude>org/joda/**</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.gbif.occurrence:registry-ws</artifact>
+                  <excludes>
+                    <exclude>io/dropwizard/*</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -166,6 +217,7 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -289,6 +341,21 @@
       <artifactId>jersey-test-framework-http</artifactId>
       <version>${jersey.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>${jettyVersion}</version>
     </dependency>
   </dependencies>
 
