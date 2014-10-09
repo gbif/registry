@@ -24,12 +24,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
-import javax.inject.Provider;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.Closer;
 import com.google.inject.Exposed;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -181,7 +178,7 @@ public class RegistrySearchModule extends PrivateServiceModule {
    * @return The path to the exported resource
    * @throws Exception
    */
-  static public String exportResource(String resourceName, Path tmpDir) throws IOException {//todo move to Utils
+  private static String exportResource(String resourceName, Path tmpDir) throws IOException {//todo move to Utils
     Closer closer = Closer.create();
     try {
       URL resource = RegistrySearchModule.class.getResource(resourceName);

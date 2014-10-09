@@ -34,7 +34,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;

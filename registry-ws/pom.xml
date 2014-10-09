@@ -25,7 +25,9 @@
     <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
     <servlet-api.version>2.5</servlet-api.version>
     <gbif-microservice.version>0.1-SNAPSHOT</gbif-microservice.version>
-   </properties>
+    <commons-io.version>2.3</commons-io.version>
+    <commons-lang.version>2.6</commons-lang.version>
+  </properties>
   <build>
     <defaultGoal>jetty:run</defaultGoal>
     <resources>
@@ -123,6 +125,16 @@
           <groupId>commons-logging</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>${commons-lang.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-validator</groupId>
@@ -337,6 +349,8 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- GBIF microservice dependency -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-microservice</artifactId>

@@ -6,7 +6,7 @@ import org.gbif.utils.PreemptiveAuthenticationInterceptor;
 
 import java.util.List;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Requests {
