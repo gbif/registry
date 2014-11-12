@@ -68,7 +68,7 @@ public class DatasetIndexBuilder {
 
   public void build() throws SolrServerException, IOException {
     LOG.info("Building a new Dataset index");
-    Stopwatch stopwatch = new Stopwatch().start();
+    Stopwatch stopwatch = Stopwatch.createStarted();
     pageAndIndex();
     solrServer.commit();
     solrServer.optimize();

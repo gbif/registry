@@ -123,7 +123,7 @@ public class LegacyDatasetResource {
       }
       // Dataset can only have 1 installation key, log if the hosting installation is being changed
       else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
-        LOG.debug("The dataset's technical installation is being changed from {} to {}", new String[]{dataset.getInstallationKey().toString(), existing.getInstallationKey().toString()});
+        LOG.debug("The dataset's technical installation is being changed from {} to {}", dataset.getInstallationKey(), existing.getInstallationKey());
       }
       // type can't be derived from endpoints, since there are no endpoints supplied on this update, so re-set existing
       dataset.setType(existing.getType());

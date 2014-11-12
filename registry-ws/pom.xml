@@ -21,13 +21,11 @@
   </repositories>
 
   <properties>
+    <!-- plugin versions -->
     <jettyVersion>7.3.1.v20110307</jettyVersion>
     <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
-    <servlet-api.version>2.5</servlet-api.version>
-    <gbif-microservice.version>0.1-SNAPSHOT</gbif-microservice.version>
-    <commons-io.version>2.3</commons-io.version>
-    <commons-lang.version>2.6</commons-lang.version>
   </properties>
+
   <build>
     <defaultGoal>jetty:run</defaultGoal>
     <resources>
@@ -134,12 +132,10 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>${commons-io.version}</version>
     </dependency>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>${commons-lang.version}</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-validator</groupId>
@@ -216,10 +212,6 @@
       <artifactId>mybatis-guice</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mybatis</groupId>
-      <artifactId>mybatis-ehcache</artifactId>
-    </dependency>
-    <dependency>
       <!-- dependency:analyze reports a false positive here -->
       <groupId>com.google.inject.extensions</groupId>
       <artifactId>guice-servlet</artifactId>
@@ -235,7 +227,10 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-microservice</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -299,14 +294,9 @@
     </dependency>
     <!-- Database connection pooling -->
     <dependency>
-      <groupId>com.jolbox</groupId>
-      <artifactId>bonecp-provider</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.jolbox</groupId>
-      <artifactId>bonecp</artifactId>
-      <scope>runtime</scope>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP-java6</artifactId>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.liquibase</groupId>
@@ -346,20 +336,9 @@
     </dependency>
     <!-- test scope -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-    </dependency>
-
-    <!-- GBIF microservice dependency -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-microservice</artifactId>
-      <version>${gbif-microservice.version}</version>
     </dependency>
   </dependencies>
 
@@ -435,8 +414,13 @@
       -->
       <id>dev</id>
       <properties>
-        <registry.db.url>jdbc:postgresql://apps.gbif-dev.org/dev_registry</registry.db.url>
+        <!-- postgres -->
+        <registry.db.host>apps.gbif-dev.org</registry.db.host>
+        <registry.db.name>dev_registry</registry.db.name>
         <registry.db.username>registry</registry.db.username>
+        <registry.db.poolSize>6</registry.db.poolSize>
+        <registry.db.connectionTimeout>2000</registry.db.connectionTimeout>
+        <!-- rabbit -->
         <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
         <registry.messaging.port>5672</registry.messaging.port>
         <registry.messaging.virtualhost>/dev</registry.messaging.virtualhost>
@@ -445,8 +429,11 @@
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
         <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
-        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_devel?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
+        <drupal.db.host>nerf.gbif.org</drupal.db.host>
+        <drupal.db.name>drupal_devel</drupal.db.name>
         <drupal.db.username>drupal_devel</drupal.db.username>
+        <drupal.db.poolSize>4</drupal.db.poolSize>
+        <drupal.db.connectionTimeout>2000</drupal.db.connectionTimeout>
         <!-- Configures the Registry to use sandbox mode -->
         <sandboxmode.enabled>false</sandboxmode.enabled>
         <!-- email properties -->
@@ -464,7 +451,8 @@
        -->
       <id>jenkins</id>
       <properties>
-        <registry-it.db.url>jdbc:postgresql://builds.gbif.org/registry</registry-it.db.url>
+        <registry-it.db.host>builds.gbif.org</registry-it.db.host>
+        <registry-it.db.name>registry</registry-it.db.name>
         <registry-it.db.username>registry</registry-it.db.username>
       </properties>
     </profile>

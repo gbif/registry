@@ -21,9 +21,10 @@ import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.guice.GbifServletListener;
-import org.gbif.ws.util.PropertiesUtil;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import javax.servlet.ServletContextEvent;
@@ -51,8 +52,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
     .<Class<? extends ContainerRequestFilter>>newArrayList(LegacyAuthorizationFilter.class);
 
-  public TestRegistryWsServletListener() {
-    super(PropertiesUtil.readFromClasspath(APPLICATION_PROPERTIES),
+  public TestRegistryWsServletListener() throws IOException {
+    super(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES),
       "org.gbif.registry.ws,org.gbif.registry.ws.provider", true, null, requestFilters);
   }
 

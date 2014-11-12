@@ -22,7 +22,7 @@ public class DatasetSearchUpdateUtils {
   public static void awaitUpdates(DatasetIndexUpdateListener datasetIndexUpdater) {
     Preconditions.checkNotNull(datasetIndexUpdater, "Index updater is required");
     try {
-      Stopwatch stopWatch = new Stopwatch().start();
+      Stopwatch stopWatch = Stopwatch.createStarted();
       while (datasetIndexUpdater.queuedUpdates() > 0) {
         Thread.sleep(TimeUnit.MILLISECONDS.toMillis(SOLR_UPDATE_POLL_MSECS));
         if (stopWatch.elapsed(TimeUnit.SECONDS) > SOLR_UPDATE_TIMEOUT_SECS) {

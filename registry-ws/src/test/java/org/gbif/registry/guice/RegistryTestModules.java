@@ -30,22 +30,16 @@ import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
 
 import java.io.IOException;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.util.Properties;
-
-import javax.sql.DataSource;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import com.jolbox.bonecp.BoneCPDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.bval.guice.ValidationModule;
 import org.apache.ibatis.io.Resources;
 
@@ -65,7 +59,7 @@ public class RegistryTestModules {
   private static Injector webserviceClient;
   private static Injector webserviceBasicAuthClient;
   private static Injector management;
-  private static DataSource managementDatasource;
+  private static HikariDataSource managementDatasource;
 
   /**
    * @return An injector that is bound for the webservice layer without SOLR capabilities.
@@ -133,12 +127,11 @@ public class RegistryTestModules {
   /**
    * @return A datasource that is for use in management activities such as Liquibase, or cleaning between tests.
    */
-  public static DataSource database() {
+  public static HikariDataSource database() {
     if (managementDatasource == null) {
-      managementDatasource = RegistryTestModules.management().getInstance(DataSource.class);
+      managementDatasource = RegistryTestModules.management().getInstance(HikariDataSource.class);
     }
     return managementDatasource;
-
   }
 
   /**
@@ -153,8 +146,22 @@ public class RegistryTestModules {
 
           @Override
           protected void configure() {
-            Names.bindProperties(binder(), p);
-            bind(DataSource.class).toProvider(ManagementProvider.class);
+            //Names.bindProperties(binder(), p);
+            //bind(DataSource.class).toProvider(new ManagementProvider());
+          }
+
+          @Provides
+          @Singleton
+          /**
+           * Provides a hikari datasource that can issue connections for management activities, such as Liquibase or
+           * clearing tables before tests run etc.
+           * We provide an implementation specific datasource here so the pool can be properly closed at the end!
+           */
+          public HikariDataSource provideDs() {
+            HikariConfig config = new HikariConfig(filterProperties(p, "registry.db."));
+            config.setConnectionTimeout(5000);
+            config.setMaximumPoolSize(1);
+            return new HikariDataSource(config);
           }
         });
       } catch (Exception e) {
@@ -164,47 +171,14 @@ public class RegistryTestModules {
     return management;
   }
 
-  /**
-   * Provides a datasource that can issue connections for management activities, such as Liquibase or
-   * clearing tables before tests run etc.
-   */
-  @Singleton
-  public static class ManagementProvider implements Provider<DataSource> {
-
-    // Limit to a single (reusable) connection
-    public static final int PARTITION_COUNT = 1;
-    public static final int POOL_SIZE_PER_PARTITION = 1;
-    private final String url;
-    private final String username;
-    private final String password;
-
-    @Inject
-    public ManagementProvider(
-      @Named("registry.db.JDBC.driver") String driver,
-      @Named("registry.db.JDBC.url") String url,
-      @Named("registry.db.JDBC.username") String username,
-      @Named("registry.db.JDBC.password") String password) {
-      this.url = url;
-      this.username = username;
-      this.password = password;
-      try {
-        DriverManager.registerDriver((Driver) Class.forName(driver).newInstance());
-      } catch (Exception e) {
-        Throwables.propagate(e);
+  private static Properties filterProperties(Properties properties, final String prefix) {
+    Properties filtered = new Properties();
+    for(String key : properties.stringPropertyNames()) {
+      if (key.startsWith(prefix)) {
+        filtered.setProperty(key.substring(prefix.length()), properties.getProperty(key));
       }
-
     }
-
-    @Override
-    public DataSource get() {
-      BoneCPDataSource ds = new BoneCPDataSource();
-      ds.setJdbcUrl(url);
-      ds.setUsername(username);
-      ds.setPassword(password);
-      ds.setMaxConnectionsPerPartition(PARTITION_COUNT);
-      ds.setPartitionCount(POOL_SIZE_PER_PARTITION);
-      return ds;
-    }
+    return filtered;
   }
 
 }

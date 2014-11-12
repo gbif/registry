@@ -79,8 +79,8 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
 
     public static final String DATASOURCE_BINDING_NAME = "registry";
 
-    public InternalRegistryServiceMyBatisModule() {
-      super(DATASOURCE_BINDING_NAME);
+    public InternalRegistryServiceMyBatisModule(Properties props) {
+      super(DATASOURCE_BINDING_NAME, props);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
 
   @Override
   protected void configureService() {
-    MyBatisModule internalModule = new InternalRegistryServiceMyBatisModule();
+    MyBatisModule internalModule = new InternalRegistryServiceMyBatisModule(getProperties());
     install(internalModule); // the named parameters are already configured at this stage
     expose(internalModule.getDatasourceKey()); // to avoid clashes between multiple datasources
     // The Mappers are exposed to be injected in the ws resources
