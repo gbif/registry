@@ -24,7 +24,7 @@ public class DatasetSearchUpdateUtils {
     try {
       Stopwatch stopWatch = Stopwatch.createStarted();
       while (datasetIndexUpdater.queuedUpdates() > 0) {
-        Thread.sleep(TimeUnit.MILLISECONDS.toMillis(SOLR_UPDATE_POLL_MSECS));
+        Thread.sleep(SOLR_UPDATE_POLL_MSECS);
         if (stopWatch.elapsed(TimeUnit.SECONDS) > SOLR_UPDATE_TIMEOUT_SECS) {
           throw new IllegalStateException("Failing test due to unreasonable timeout on SOLR update");
         }
