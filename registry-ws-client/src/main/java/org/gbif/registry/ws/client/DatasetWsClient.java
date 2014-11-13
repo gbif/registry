@@ -27,14 +27,16 @@ import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.QueryParamBuilder;
 import org.gbif.ws.util.InputStreamUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
@@ -57,10 +59,20 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
 
   @Override
   public Metadata insertMetadata(UUID datasetKey, InputStream document) {
-    return getResource(datasetKey.toString(), "document")
-      .type(MediaType.APPLICATION_XML)
-      .entity(document)
-      .post(Metadata.class);
+    // allow post through varnish (no chunked encoding needed)
+    Metadata metadata;
+
+    try {
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
+      ByteStreams.copy(document, os);
+      metadata = getResource(datasetKey.toString(), "document")
+        .type(MediaType.APPLICATION_XML)
+        .post(Metadata.class, os.toByteArray());
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+
+    return metadata;
   }
 
   @Override
@@ -149,7 +161,7 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
 
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(UUID datasetKey, Pageable page) {
-    Preconditions.checkNotNull(datasetKey, "Dataset jey is required");
+    Preconditions.checkNotNull(datasetKey, "Dataset key is required");
     return get(GenericTypes.PAGING_DATASET_PROCESS_STATUS, page, datasetKey.toString(), "process");
   }
 

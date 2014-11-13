@@ -14,22 +14,25 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.ws.client.BaseWsGetClient;
 import org.gbif.ws.client.QueryParamBuilder;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetClient<T, UUID>
   implements NetworkEntityService<T> {
 
   private final GenericType<PagingResponse<T>> pagingType;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   public BaseNetworkEntityClient(Class<T> resourceClass, WebResource resource, @Nullable ClientFilter authFilter,
     GenericType<PagingResponse<T>> pagingType) {
@@ -134,7 +137,20 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
 
   @Override
   public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
-    return post(Integer.class, machineTag, targetEntityKey.toString(), "machineTag");
+    // allow post through varnish (no chunked encoding needed)
+    int tagId;
+    try {
+      tagId = getResource()
+        .path(targetEntityKey.toString())
+        .path("machineTag")
+        .type(MediaType.APPLICATION_JSON)
+        .post(Integer.class, mapper.writeValueAsBytes(machineTag));
+
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+//    int tagId = post(Integer.class, machineTag, targetEntityKey.toString(), "machineTag");
+    return tagId;
   }
 
   @Override
