@@ -4,11 +4,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.18-SNAPSHOT</version>
+    <version>2.18</version>
   </parent>
 
   <artifactId>registry-ws</artifactId>
-  <version>2.18-SNAPSHOT</version>
+  <version>2.18</version>
   <packaging>jar</packaging>
 
   <name>Registry Webservices</name>
@@ -70,10 +70,8 @@
             <configuration>
               <createDependencyReducedPom>true</createDependencyReducedPom>
               <transformers>
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                <transformer
-                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.ws.app.Application</mainClass>
                 </transformer>
               </transformers>
