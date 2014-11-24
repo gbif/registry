@@ -36,12 +36,12 @@ public class TimeSeriesExtractorTest {
 
     List<TemporalCoverage> coverages = Lists.newArrayList();
     coverages.add(range(1995, 1977));
-    coverages.add(range(1917, 1914));
+    coverages.add(range(1914, 1917));
     coverages.add(range(987, 999));
     coverages.add(range(3333, 2222));
 
     List<Integer> periods = ex.extractDecades(coverages);
-    List<Integer> expected = Lists.newArrayList(1000, 1910, 1970, 1980, 1990, 2200, 2300, 2400, 2500);
+    List<Integer> expected = Lists.newArrayList(1000, 1910);
     assertEquals(expected, periods);
   }
 

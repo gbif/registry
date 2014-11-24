@@ -53,15 +53,14 @@ public class TimeSeriesExtractor {
   }
 
   private Set<Integer> decadesFromInt(int start, int end) {
-    if (start > end) {
-      LOG.warn("Swapping inverted year range: {} - {}", start, end);
-      int x = start;
-      start = end;
-      end = x;
-    }
-    Range<Integer> range = Range.closed(start, end);
-
     Set<Integer> decades = Sets.newHashSet();
+
+    if (start > end) {
+      LOG.warn("Potentially inverted year range: {} - {}", start, end);
+      return decades;
+    }
+
+    Range<Integer> range = Range.closed(start, end);
     // produce centuries only if outside of decade range
     if (!decadeRange.encloses(range)) {
       // skip anything below min/max
