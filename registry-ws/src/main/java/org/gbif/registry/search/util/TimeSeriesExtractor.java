@@ -14,6 +14,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A utility to extract decades (eg 1980, 1840) or centuries (eg 1400, 1500, 1600) from TemporalCoverages as
@@ -21,6 +23,8 @@ import com.google.common.collect.Sets;
  * and a century range to avoid large list of decades for very old or future periods, mostly for bad data.
  */
 public class TimeSeriesExtractor {
+  private static final Logger LOG = LoggerFactory.getLogger(TimeSeriesExtractor.class);
+
   private final int minCentury;
   private final int maxCentury;
   private final int minDecade;
@@ -48,7 +52,13 @@ public class TimeSeriesExtractor {
     this.decadeRange = Range.closed(minDecade, maxDecade);
   }
 
-  private Set<Integer> decadesFromInt(final int start, final int end) {
+  private Set<Integer> decadesFromInt(int start, int end) {
+    if (start > end) {
+      LOG.warn("Swapping inverted year range: {} - {}", start, end);
+      int x = start;
+      start = end;
+      end = x;
+    }
     Range<Integer> range = Range.closed(start, end);
 
     Set<Integer> decades = Sets.newHashSet();

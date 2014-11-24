@@ -4,7 +4,6 @@ import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -30,13 +29,32 @@ public class TimeSeriesExtractorTest {
     assertEquals(expected, periods);
   }
 
+  @Test
+  public void testSwappedDecades() throws Exception {
+
+    TimeSeriesExtractor ex = new TimeSeriesExtractor(1000, 2500, 1800, 2050);
+
+    List<TemporalCoverage> coverages = Lists.newArrayList();
+    coverages.add(range(1995, 1977));
+    coverages.add(range(1917, 1914));
+    coverages.add(range(987, 999));
+    coverages.add(range(3333, 2222));
+
+    List<Integer> periods = ex.extractDecades(coverages);
+    List<Integer> expected = Lists.newArrayList(1000, 1910, 1970, 1980, 1990, 2200, 2300, 2400, 2500);
+    assertEquals(expected, periods);
+  }
+
   private DateRange range(int year1, int year2) {
+    DateRange dr = new DateRange();
+
     Calendar cal = Calendar.getInstance();
     cal.set(Calendar.YEAR, year1);
-    Date d1 = cal.getTime();
+    dr.setStart(cal.getTime());
 
     cal.set(Calendar.YEAR, year2);
-    Date d2 = cal.getTime();
-    return new DateRange(d1, d2);
+    dr.setEnd(cal.getTime());
+
+    return dr;
   }
 }
