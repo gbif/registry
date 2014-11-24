@@ -263,10 +263,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common-test</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.bval</groupId>
       <artifactId>bval-guice</artifactId>
     </dependency>
@@ -285,6 +281,12 @@
     <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.bval</groupId>
@@ -303,10 +305,6 @@
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>

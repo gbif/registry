@@ -77,6 +77,10 @@
       <artifactId>validation-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -86,11 +90,5 @@
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
-   
-
-    <!--dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-    </dependency-->
   </dependencies>
 </project>

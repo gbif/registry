@@ -90,6 +90,10 @@
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
-    </dependency>   
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
   </dependencies>
 </project>
