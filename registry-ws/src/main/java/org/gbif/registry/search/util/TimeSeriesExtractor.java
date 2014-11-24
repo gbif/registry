@@ -12,8 +12,8 @@ import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.math.IntRange;
 
 /**
  * A utility to extract decades (eg 1980, 1840) or centuries (eg 1400, 1500, 1600) from TemporalCoverages as
@@ -25,7 +25,7 @@ public class TimeSeriesExtractor {
   private final int maxCentury;
   private final int minDecade;
   private final int maxDecade;
-  private final IntRange decadeRange;
+  private final Range<Integer> decadeRange;
 
   /**
    * @param minCentury the minimum value ever extracted, eg 1500
@@ -45,15 +45,15 @@ public class TimeSeriesExtractor {
     this.maxDecade = maxDecade;
     this.minCentury = minCentury;
     this.maxCentury = maxCentury;
-    this.decadeRange = new IntRange(minDecade, maxDecade);
+    this.decadeRange = Range.closed(minDecade, maxDecade);
   }
 
   private Set<Integer> decadesFromInt(final int start, final int end) {
-    IntRange range = new IntRange(start, end);
+    Range<Integer> range = Range.closed(start, end);
 
     Set<Integer> decades = Sets.newHashSet();
     // produce centuries only if outside of decade range
-    if (!decadeRange.containsRange(range)) {
+    if (!decadeRange.encloses(range)) {
       // skip anything below min/max
       int startC = 100 * (int) Math.floor(minmax(minCentury, maxCentury, start) / 100d);
       int endC = 100 * (int) Math.floor(minmax(minCentury, maxCentury,  end) / 100d);
@@ -64,7 +64,7 @@ public class TimeSeriesExtractor {
     }
 
     // Produce decades if falling within the decade range
-    if (decadeRange.overlapsRange(range)) {
+    if (decadeRange.isConnected(range)) {
       int startD = 10 * (int) Math.floor(minmax(minDecade, maxDecade, start) / 10d);
       int endD = 10 * (int) Math.floor(minmax(minDecade, maxDecade, end) / 10d);
       for (int year = startD; year <= endD; year += 10) {
