@@ -405,7 +405,7 @@
       <id>dev</id>
       <properties>
         <!-- postgres -->
-        <registry.db.host>apps.gbif-dev.org</registry.db.host>
+        <registry.db.host>pg1.gbif-dev.org</registry.db.host>
         <registry.db.name>dev_registry</registry.db.name>
         <registry.db.username>registry</registry.db.username>
         <registry.db.poolSize>6</registry.db.poolSize>
@@ -419,7 +419,7 @@
         <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
         <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
-        <drupal.db.host>nerf.gbif.org</drupal.db.host>
+        <drupal.db.host>my1.gbif-dev.org</drupal.db.host>
         <drupal.db.name>drupal_devel</drupal.db.name>
         <drupal.db.username>drupal_devel</drupal.db.username>
         <drupal.db.poolSize>4</drupal.db.poolSize>
