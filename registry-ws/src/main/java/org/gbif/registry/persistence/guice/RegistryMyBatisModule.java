@@ -59,7 +59,7 @@ import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
-import org.gbif.registry.persistence.mapper.handler.DoiTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.service.guice.PrivateServiceModule;
@@ -143,7 +143,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("LanguageTypeHandler").to(LanguageTypeHandler.class);
       addAlias("CountryTypeHandler").to(CountryTypeHandler.class);
       addAlias("DownloadStatusTypeHandler").to(OccurrenceDownloadStatusTypeHandler.class);
-      addAlias("DoiTypeHandler").to(DoiTypeHandler.class);
+      addAlias("DoiTypeHandler").to(DOITypeHandler.class);
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
@@ -156,7 +156,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       handleType(Country.class).with(CountryTypeHandler.class);
       handleType(Language.class).with(LanguageTypeHandler.class);
       handleType(Download.Status.class).with(OccurrenceDownloadStatusTypeHandler.class);
-      handleType(DOI.class).with(DoiTypeHandler.class);
+      handleType(DOI.class).with(DOITypeHandler.class);
       handleType(Predicate.class).with(PredicateTypeHandler.class);
     }
   }

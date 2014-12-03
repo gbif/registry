@@ -30,7 +30,7 @@ import org.apache.ibatis.type.TypeHandler;
  * A converter for DOI objects to the database representation.
  * Nulls are passed through.
  */
-public class DoiTypeHandler implements TypeHandler<DOI> {
+public class DOITypeHandler implements TypeHandler<DOI> {
 
   @Override
   public void setParameter(PreparedStatement ps, int i, DOI parameter, JdbcType jdbcType) throws SQLException {
