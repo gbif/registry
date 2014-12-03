@@ -437,13 +437,16 @@
     <profile>
       <!--
         integration test profile for jenkins missing the following password secret:
-        <registry-it.db.password></registry-it.db.passwohahard>
+        <registry-it.db.password></registry-it.db.password>
        -->
       <id>jenkins</id>
       <properties>
         <registry-it.db.host>builds.gbif.org</registry-it.db.host>
         <registry-it.db.name>registry</registry-it.db.name>
         <registry-it.db.username>registry</registry-it.db.username>
+        <registry-it.db.url>jdbc:postgresql://builds.gbif.org/registry</registry-it.db.url>
+        <registry-it.db.driver>org.postgresql.Driver</registry-it.db.driver>
+        <appkeys.testfile>/usr/share/tomcat7/conf/appkeys.properties</appkeys.testfile>
       </properties>
     </profile>
   </profiles>
