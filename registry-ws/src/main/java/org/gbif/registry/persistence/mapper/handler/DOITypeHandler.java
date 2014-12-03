@@ -38,13 +38,13 @@ public class DoiTypeHandler implements TypeHandler<DOI> {
   }
 
   @Override
-  public DOI getResult(ResultSet rs, String columnName) throws SQLException {
-    return newDOIInstance(rs.getString(columnName));
+  public DOI getResult(ResultSet rs, int columnIndex) throws SQLException {
+    return newDOIInstance(rs.getString(columnIndex));
   }
 
   @Override
-  public DOI getResult(ResultSet rs, int columnIndex) throws SQLException {
-    return newDOIInstance(rs.getString(columnIndex));
+  public DOI getResult(ResultSet rs, String columnName) throws SQLException {
+    return newDOIInstance(rs.getString(columnName));
   }
 
   @Override
