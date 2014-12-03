@@ -25,7 +25,7 @@
     key,parent_dataset_key,duplicate_of_dataset_key,installation_key,publishing_organization_key,
     external,type,sub_type,title,alias,abbreviation,description,language,
     homepage,logo_url,citation,citation_identifier,rights,locked_for_auto_update,created,created_by,
-    modified,modified_by
+    modified,modified_by,doi
   </sql>
 
   <sql id="DATASET_FIELDS">
@@ -34,7 +34,7 @@
     d.homepage,d.logo_url,
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
-    d.modified,d.modified_by,d.deleted
+    d.modified,d.modified_by,d.deleted,d.doi
   </sql>
 
   <!--
@@ -78,7 +78,8 @@
     locked_for_auto_update = #{lockedForAutoUpdate,jdbcType=BOOLEAN},
     modified = now(),
     modified_by = #{modifiedBy},
-    deleted = null <!-- if we're updating it can't be deleted -->
+    deleted = null, <!-- if we're updating it can't be deleted -->
+    doi = #{doi,jdbcType=VARCHAR}
   </sql>
 
   <sql id="WRITABLE_DATASET_FIELD_TYPES">
@@ -104,7 +105,8 @@
     now(), <!-- created -->
     #{createdBy},
     now(), <!-- modified -->
-    #{createdBy}
+    #{createdBy},
+    #{doi,jdbcType=VARCHAR}
   </sql>
 
   <select id="countConstituents" resultType="int">

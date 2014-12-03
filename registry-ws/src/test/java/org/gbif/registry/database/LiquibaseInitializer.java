@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Rule that will run Liquibase to ensure the DB schema is up to date. This is an expensive operation, and unless the
  * application modified the schema during runtime, it should only be run as a {@link ClassRule}. To use this:
- * 
+ *
  * <pre>
  * @ClassRule
  * public static LiquibaseInitializer = new LiquibaseInitializer(getDatasource()); // developer required to provide datasource
@@ -64,7 +64,7 @@ public class LiquibaseInitializer extends ExternalResource {
                                           new ClassLoaderResourceAccessor(),
                                           new JdbcConnection(connection));
       liquibase.forceReleaseLocks(); // often happens when tests are aborted for example
-      liquibase.update(null);
+      liquibase.update((String)null);
     }
   }
 

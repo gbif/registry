@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.utils;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
@@ -33,6 +34,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final String DATASET_ABBREVIATION = "BGBM";
   public static final Language DATASET_LANGUAGE = Language.DANISH;
   public static final String DATASET_RIGHTS = "The rights";
+  public static final String DOI = "10.1234/gbif.2014.XSD123";
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
 
   public Datasets() {
@@ -46,6 +48,7 @@ public class Datasets extends JsonBackedData<Dataset> {
     Dataset d = INSTANCE.newTypedInstance();
     d.setPublishingOrganizationKey(publishingOrganizationKey);
     d.setInstallationKey(installationKey);
+    d.setDoi(new DOI(DOI));
     return d;
   }
 
