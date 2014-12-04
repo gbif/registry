@@ -39,6 +39,7 @@ public class LegacyResourceConstants {
   public static final String TYPE_PARAM = "type";
   public static final String TYPE_DESCRIPTION_PARAM = "typeDescription";
   public static final String ACCESS_POINT_URL_PARAM = "accessPointURL";
+  public static final String DOI_PARAM = "doi";
 
   // request / response value names
   public static final String ADMINISTRATIVE_CONTACT_TYPE = "administrative";

@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.legacy;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -171,6 +172,7 @@ public class LegacyDatasetResourceIT {
     data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));
     data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));
     data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,
       Requests.DATASET_DESCRIPTION_LANGUAGE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));
@@ -189,6 +191,7 @@ public class LegacyDatasetResourceIT {
     // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed
     String st = new String(result.content.getBytes(), Charsets.UTF_8);
     // parse updated registered Dataset key (UUID)
+
     Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);
 
     assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);
@@ -429,6 +432,7 @@ public class LegacyDatasetResourceIT {
     List<NameValuePair> data = new ArrayList<NameValuePair>();
     // main
     data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));
     data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));
     data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));
     data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,
@@ -467,11 +471,13 @@ public class LegacyDatasetResourceIT {
     // retrieve installation anew
     Dataset dataset = datasetService.get(datasetKey);
 
+
     assertNotNull("Dataset should be present", dataset);
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.METADATA, dataset.getType());
     assertEquals(Requests.DATASET_NAME, dataset.getTitle());
+    assertEquals(new DOI(Requests.DOI), dataset.getDoi()); // ensure that we handle the parsing
     assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
     assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
     assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());

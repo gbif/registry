@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.model;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -56,6 +57,7 @@ public class LegacyDataset extends Dataset {
   private String primaryContactDescription;
   private String serviceTypes;
   private String serviceUrls;
+  private DOI datasetDoi;
 
   // created from combination of fields after injection
   private Contact primaryContact;
@@ -88,6 +90,18 @@ public class LegacyDataset extends Dataset {
   @Nullable
   public String getDatasetKey() {
     return getKey() == null ? null : getKey().toString();
+  }
+
+  /**
+   * Get the dataset Doi. This method is not used but it is needed otherwise this Object can't be converted into an
+   * XML document via JAXB.
+   *
+   * @return key of the dataset
+   */
+  @XmlElement(name = LegacyResourceConstants.DOI_PARAM)
+  @Nullable
+  public String getDatasetDoi() {
+    return getDoi() == null ? null : getDoi().toString();
   }
 
   /**
@@ -131,7 +145,24 @@ public class LegacyDataset extends Dataset {
     } catch (IllegalArgumentException e) {
       LOG.error("IPT key is not a valid UUID: {}", Strings.nullToEmpty(iptKey));
     }
+  }
 
+  /**
+   * Set the Dataset DOI. Non-mandatory field because it has only been introduced as of IPT v2.2. It is injected on both
+   * register and update requests.
+   *
+   * @param doi The DOI
+   */
+  @FormParam(LegacyResourceConstants.DOI_PARAM)
+  @Nullable
+  public void setDoi(String doi) {
+    try {
+      if (doi != null) {
+        this.datasetDoi =new DOI(doi);
+      }
+    } catch (IllegalArgumentException e) {
+      LOG.error("DOI is not valid: {}", Strings.nullToEmpty(doi));
+    }
   }
 
   /**
@@ -721,6 +752,7 @@ public class LegacyDataset extends Dataset {
     dataset.setLogoUrl(getLogoUrl());
     dataset.setHomepage(getHomepage());
     dataset.setType(getType());
+    dataset.setDoi(datasetDoi);
     return dataset;
   }
 }

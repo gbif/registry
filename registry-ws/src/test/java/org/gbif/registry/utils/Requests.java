@@ -12,6 +12,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 public class Requests {
 
   public static final String DATASET_NAME = "Test Dataset Registry2 Sjælland";
+  public static final String DOI = "http://dx.doi.org/10.1234/timbo";
   public static final String DATASET_DESCRIPTION = "Description of Test Dataset";
   public static final String DATASET_HOMEPAGE_URL = "http://www.homepage.com";
   public static final String DATASET_LOGO_URL = "http://www.logo.com/1";
