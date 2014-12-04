@@ -30,6 +30,8 @@
       </label>
     </div>
 
+
+
 	<span ng-show="advancedMode || dataset.key == undefined">
     <label class='control-label' for='lockedForAutoUpdate'>Lock auto updates</label>
     <div class='controls'>
@@ -46,6 +48,12 @@
     <div class='controls'>
       <input id='title' maxlength='255' type='text' ng-model='dataset.title'>
       <p class='muted'><small></small></p>
+    </div>
+
+    <label class='control-label' for='doi'>Digital Object Identifier</label>
+    <div class='controls'>
+      <input id='doi' maxlength='255' type='text' ng-model='dataset.doi'>
+      <p><span class="label label-important">Important</span> <span class="text-error">Changes should be made understanding the consequences<span></p>
     </div>
 
     <label class='control-label' for='alias'>Alias</label>
