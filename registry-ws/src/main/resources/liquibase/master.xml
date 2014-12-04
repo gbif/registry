@@ -35,4 +35,5 @@
   <include file="liquibase/029-address-fix.xml"/>
   <include file="liquibase/030-dataset-process-status.xml"/>
   <include file="liquibase/031-doi-dataset.xml"/>
+  <include file="liquibase/032-downloads-doi.xml"/>
 </databaseChangeLog>

@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.persistence.mapper;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.Download;
 
@@ -27,6 +28,8 @@ import org.apache.ibatis.annotations.Param;
 public interface OccurrenceDownloadMapper {
 
   Download get(@Param("key") String key);
+
+  Download getByDOI(@Param("doi") DOI doi);
 
   void update(Download entity);
 

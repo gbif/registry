@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
@@ -28,6 +29,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.validation.ValidationException;
@@ -112,6 +114,7 @@ public class OccurrenceDownloadIT {
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);
     download.setRequest(request);
+    download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
     return download;
   }
@@ -205,6 +208,7 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setStatus(Download.Status.RUNNING);
     occurrenceDownload.setSize(200L);
     occurrenceDownload.setTotalRecords(600L);
+    occurrenceDownload.setDoi(new DOI("doi:10.1234/1ASCDU"));
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertTrue(occurrenceDownload2.getStatus() == Download.Status.RUNNING);
@@ -223,6 +227,7 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setStatus(Download.Status.SUCCEEDED);
     occurrenceDownload.setSize(200L);
     occurrenceDownload.setTotalRecords(600L);
+    occurrenceDownload.setDoi(new DOI("doi:10.1234/1ASCDU"));
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertTrue(occurrenceDownload2.getStatus() == Download.Status.SUCCEEDED);

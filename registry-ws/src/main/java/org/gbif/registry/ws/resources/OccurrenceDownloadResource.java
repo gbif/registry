@@ -3,8 +3,10 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.ws.server.interceptor.NullToNotFound;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.SecurityContext;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
@@ -47,12 +50,15 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
 
+  private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+
   @Context
   private SecurityContext securityContext;
 
   @Inject
-  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper) {
+  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
+    this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
   }
 
 
@@ -109,5 +115,20 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
     occurrenceDownloadMapper.update(download);
+  }
+
+  @GET
+  @Path("{key}/datasets")
+  @Override
+  @NullToNotFound
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathParam("key") String downloadKey,
+                                                                   @Context Pageable page){
+    Download download = get(downloadKey);
+    if(download != null) {
+      return new PagingResponse<DatasetOccurrenceDownloadUsage>(page,
+                                   download.getNumberDatasets(),
+                                   datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page));
+    }
+    throw new NotFoundException();
   }
 }

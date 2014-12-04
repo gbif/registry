@@ -34,4 +34,6 @@ public interface DatasetOccurrenceDownloadMapper {
 
   int countByDataset(@Param("datasetKey") UUID datasetKey);
 
+  List<DatasetOccurrenceDownloadUsage> listByDownload(@Param("downloadKey") String downloadKey,
+                                                     @Nullable @Param("page") Pageable page);
 }

@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
@@ -28,6 +29,7 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
@@ -162,6 +164,9 @@ public class DatasetOccurrenceDownloadIT {
     downloadDataset.setDownloadKey(occurrenceDownload.getKey());
     downloadDataset.setDatasetKey(testDataset.getKey());
     downloadDataset.setNumberRecords(1000L);
+    downloadDataset.setDatasetTitle(testDataset.getTitle());
+    downloadDataset.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
+    downloadDataset.setDatasetCitation(testDataset.getCitation().getText());
     occurrenceDownloadService.create(occurrenceDownload);
     datasetOccurrenceDownloadUsageService.create(downloadDataset);
     assertEquals("List operation should return 1 record", 1,

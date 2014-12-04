@@ -77,12 +77,6 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
-      <exclusions>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
