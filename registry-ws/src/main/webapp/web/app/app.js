@@ -15,9 +15,9 @@ angular.module('app', [
   'installation'
   ])
 
-.config(['$locationProvider', '$routeProvider', 'RestangularProvider', '$httpProvider', function ($routeProvider, RestangularProvider, $httpProvider, $locationProvider) {
+.config(['$routeProvider', 'RestangularProvider', '$httpProvider', function ($routeProvider, RestangularProvider, $httpProvider) {
   // TODO: no idea, why angular starts up redirecting to #/index.html, but this adds a second redirect
-  $routeProvider.when('', {redirectTo: '/home'});
+  $routeProvider.when('/index.html', {redirectTo: '/home'});
 
   // relative to /web brings us up to the root
   // should this be run outside of the registry-ws project, this will need changed
