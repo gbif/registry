@@ -151,9 +151,15 @@ angular.module('dataset', [
   load();
 
   // populate the dropdowns
-  $scope.datasetTypes = Restangular.all("enumeration/basic/DatasetType").getList();
-  $scope.datasetSubTypes = Restangular.all("enumeration/basic/DatasetSubtype").getList();
-  $scope.languages = Restangular.all("enumeration/basic/Language").getList();
+  Restangular.all("enumeration/basic/DatasetType").getList().then(function(data){
+    $scope.datasetTypes = data;
+  });
+  Restangular.all("enumeration/basic/DatasetSubtype").getList().then(function(data){
+    $scope.datasetSubTypes = data;
+  });
+  Restangular.all("enumeration/basic/Language").getList().then(function(data){
+    $scope.languages = data;
+  });
 
 	// transitions to a new view, correctly setting up the path
   $scope.transitionTo = function (target) {
@@ -183,7 +189,7 @@ angular.module('dataset', [
     $scope.generateCrawlerWarningMsg = function (isEndorsed) {
       $scope.crawlWarningMsg =
       (isEndorsed.toString().toLowerCase() == "true") ? "This will trigger a crawl of the dataset. "
-        : "This dataset\'s publishing organization is not endorsed yet! This will trigger a crawl of the dataset, and should only be done in a test environment";
+        : "This dataset\'s publishing organization is not endorsed yet! This will trigger a crawl of the dataset, and should only be done in a 1_2_27 environment";
     }
 
   $scope.cancelEdit = function () {
@@ -269,9 +275,15 @@ angular.module('dataset', [
 
 
 .controller('DatasetCreateCtrl', function ($scope, $state, notifications, Restangular) {
-  $scope.datasetTypes = Restangular.all("enumeration/basic/DatasetType").getList();
-  $scope.datasetSubTypes = Restangular.all("enumeration/basic/DatasetSubtype").getList();
-  $scope.languages = Restangular.all("enumeration/basic/Language").getList();
+  Restangular.all("enumeration/basic/DatasetType").getList().then(function(data){
+    $scope.datasetTypes = data;
+  });
+  Restangular.all("enumeration/basic/DatasetSubtype").getList().then(function(data){
+    $scope.datasetSubTypes = data;
+  });
+  Restangular.all("enumeration/basic/Language").getList().then(function(data){
+    $scope.languages = data;
+  });
 
 	// sensible defaults for creation
 	$scope.dataset = {};

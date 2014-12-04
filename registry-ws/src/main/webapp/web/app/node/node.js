@@ -150,11 +150,21 @@ angular.module('node', [
   load();
 
   // populate the dropdowns
-  $scope.types = Restangular.all("enumeration/basic/NodeType").getList();
-  $scope.participationStatuses = Restangular.all("enumeration/basic/ParticipationStatus").getList();
-  $scope.gbifRegions = Restangular.all("enumeration/basic/GbifRegion").getList();
-  $scope.continents = Restangular.all("enumeration/basic/Continent").getList();
-  $scope.countries = Restangular.all("enumeration/basic/Country").getList();
+  Restangular.all("enumeration/basic/NodeType").getList().then(function(data){
+    $scope.types = data;
+  });
+  Restangular.all("enumeration/basic/ParticipationStatus").getList().then(function(data){
+    $scope.participationStatuses = data;
+  });
+  Restangular.all("enumeration/basic/GbifRegion").getList().then(function(data){
+    $scope.gbifRegions = data;
+  });
+  Restangular.all("enumeration/basic/Continent").getList().then(function(data){
+    $scope.continents = data;
+  });
+  Restangular.all("enumeration/basic/Country").getList().then(function(data){
+    $scope.countries = data;
+  });
 
 
 	// transitions to a new view, correctly setting up the path
@@ -234,11 +244,21 @@ angular.module('node', [
 
 
 .controller('NodeCreateCtrl', function ($scope, $state, $http, notifications, Restangular) {
-  $scope.types = Restangular.all("enumeration/basic/NodeType").getList();
-  $scope.participationStatuses = Restangular.all("enumeration/basic/ParticipationStatus").getList();
-  $scope.gbifRegions = Restangular.all("enumeration/basic/GbifRegion").getList();
-  $scope.continents = Restangular.all("enumeration/basic/Continent").getList();
-  $scope.countries = Restangular.all("enumeration/basic/Country").getList();
+  Restangular.all("enumeration/basic/NodeType").getList().then(function(data){
+    $scope.types = data;
+  });
+  Restangular.all("enumeration/basic/ParticipationStatus").getList().then(function(data){
+    $scope.participationStatuses = data;
+  });
+  Restangular.all("enumeration/basic/GbifRegion").getList().then(function(data){
+    $scope.gbifRegions = data;
+  });
+  Restangular.all("enumeration/basic/Continent").getList().then(function(data){
+    $scope.continents = data;
+  });
+  Restangular.all("enumeration/basic/Country").getList().then(function(data){
+    $scope.countries = data;
+  });
 
   $scope.save = function (node) {
     if (node != undefined) {
