@@ -1,5 +1,6 @@
 angular.module('app', [
-  'ui.compat', // the stateful angular router
+  'ui.router.state', // the stateful angular router
+  'ngRoute',
   'restangular', // for REST calls
   'ngSanitize', // for the like	 of bind-html
   'ngCookies', // for security
@@ -17,21 +18,41 @@ angular.module('app', [
 .config(['$routeProvider', 'RestangularProvider', '$httpProvider', function ($routeProvider, RestangularProvider, $httpProvider) {
   // TODO: no idea, why angular starts up redirecting to #/index.html, but this adds a second redirect
   $routeProvider.when('/index.html', {redirectTo: '/home'});
-  
+
   // relative to /web brings us up to the root
   // should this be run outside of the registry-ws project, this will need changed
-  RestangularProvider.setBaseUrl("../"); 
-    
+  RestangularProvider.setBaseUrl("../");
+
   // all GBIF entities use "key" and not "id" as the id, and this is used inn routing
   RestangularProvider.setRestangularFields({
     id: "key"
-  });  
-  
+  });
+
+  // add a response intereceptor to handle responses that to LIST ops, in that arrays pass through, or else we
+  // reformat the response to extract the metadata.  Restangular added this in recent versions.
+  // see https://github.com/mgonto/restangular#my-response-is-actually-wrapped-with-some-metadata-how-do-i-get-the-data-in-that-case
+  RestangularProvider.addResponseInterceptor(function(data, operation, what, url, response, deferred) {
+    var extractedData;
+    if (operation === "getList") {
+      // if it is already an array, leave it alone
+      if( Object.prototype.toString.call( data) === '[object Array]' ) {
+        extractedData = data;
+      } else {
+        extractedData = data.results;
+        extractedData.results=data.results;
+        extractedData.count=data.count;
+      }
+    } else {
+      extractedData = data;
+    }
+    return extractedData;
+  });
+
   // we really do not want 401 responses (or the dreaded browser login window appears)
   $httpProvider.defaults.headers.common['gbif-prefer-403-over-401']='true';
 }])
 
-// app constants are global in scope 
+// app constants are global in scope
 .constant('DEFAULT_PAGE_SIZE', 50)
 
 .controller('AppCtrl', function ($scope, notifications, $state, $rootScope, notifications, $cookieStore, authService, Auth) {
@@ -41,28 +62,28 @@ angular.module('app', [
   $scope.removeNotification = function (notification) {
     notifications.remove(notification);
   };
-  
+
   $rootScope.$on('event:auth-loginRequired', function() {
     notifications.pushForNextRoute("Requires account with administrative rights", 'error');
-    $rootScope.isLoggedIn = false;        
+    $rootScope.isLoggedIn = false;
     $state.transitionTo("login");
   });
-    
+
   $rootScope.logout = function() {
     Auth.clearCredentials();
   }
-  
+
   $rootScope.isLoggedIn = authService.isLoggedIn(); // initialize with a default
 })
 
-// a safe array sizing filter  
+// a safe array sizing filter
 .filter('size', function() {
   return function(input) {
     if (input) {
       return  _.size(input || {});
     } else {
       return 0;
-    }    
+    }
   }
 })
 

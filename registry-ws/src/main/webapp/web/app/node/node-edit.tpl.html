@@ -16,21 +16,21 @@
     <div class="controls">
       <input id="title" maxlength="255" type="text" name="title" ng-model="node.title" value="{{node.title}}">
       <p class="muted"><small>Enter an accurate node title as it is used in many key places.</small></p>
-    </div>      
-      
-    <span ng-show="advancedMode">  
+    </div>
+
+    <span ng-show="advancedMode">
     <label class="control-label" for="type">Type</label>
     <div class="controls">
       <select ng-model="node.type" ng-options="o for o in types"></select>
       <p class="muted"><small>Please verify IMS is the same</small></p>
     </div>
-      
+
     <label class="control-label" for="participationStatus">Participation Status</label>
     <div class="controls">
       <select ng-model="node.participationStatus" ng-options="o for o in participationStatuses"></select>
       <p class="muted"><small>This is used for reporting purposes (e.g. occurrence counts in ad hoc reporting)</small></p>
     </div>
-      
+
     <label class="control-label" for="gbifRegion">GBIF Region</label>
     <div class="controls">
       <select ng-model="node.gbifRegion" ng-options="o for o in gbifRegions">
@@ -38,7 +38,7 @@
       </select>
       <p class="muted"><small>This is used for reporting purposes</small></p>
     </div>
-      
+
     <label class="control-label" for="continent">Continent</label>
     <div class="controls">
       <select ng-model="node.continent" ng-options="o for o in continents">
@@ -46,7 +46,7 @@
       </select>
       <p class="muted"><small>This is used for reporting purposes</small></p>
     </div>
-      
+
     <label class="control-label" for="country">Country</label>
     <div class="controls">
       <select ng-model="node.country" ng-options="o | prettifyCountry for o in countries">
@@ -55,11 +55,11 @@
       <p class="muted"><small>This is used for reporting purposes</small></p>
     </div>
     </span>
-      
+
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>
       <button class="btn primary-btn" ng-click="save(node)" type="submit">Save changes</button>
-    </div>   
+    </div>
     <div class="form-actions" ng-show="advancedMode">
       <small><a href="" data-target="#deleteConfirm" data-toggle="modal">Delete this node</a></small>
       <p><small class="muted">A deletion may be reverted at a later date</small></p>
@@ -76,6 +76,6 @@
         <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
         <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="delete(node)">Yes, delete it!</button>
       </div>
-    </div>    
+    </div>
   </fieldset>
 </form>
