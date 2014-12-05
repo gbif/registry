@@ -43,7 +43,17 @@ INSERT INTO organization(key,endorsing_node_key,endorsement_approved,password,ti
 VALUES('62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,'4ddd294f-02b7-4359-ac33-0806a9ca9c6b'::uuid,true::boolean,'password','Test Organisation Jenkins','Test Organisation for IPT built by Jenkins','EN','{kbraak@gbif.org}','{12345678}','{http://homepage.com}','http://logourl.com','{Universitetsparken 15}','Copenhagen','DK','2100','55.6761','55.6761',now(),now(),'Script', 'Script');
 
 INSERT INTO contact(key,first_name,last_name,description,position,email,phone,organization,address,city,province,country,postal_code,created_by,modified_by,created,modified)
-VALUES(21001,'Kyle','Braak','Programmer at GBIF','{Programmer}','{kbraak@gbif.org}','{12345678}','GBIF','{Universitetsparken 15}','Copenhagen','Zealand','DK','2100','Script','Script',now(),now());
+VALUES(21003,'Kyle','Braak','Programmer at GBIF','{Programmer}','{kbraak@gbif.org}','{12345678}','GBIF','{Universitetsparken 15}','Copenhagen','Zealand','DK','2100','Script','Script',now(),now());
 
 INSERT INTO organization_contact(organization_key,contact_key,type,is_primary)
-VALUES('62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,21001,'ADMINISTRATIVE_POINT_OF_CONTACT'::enum_contact_type,true);
+VALUES('62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,21003,'ADMINISTRATIVE_POINT_OF_CONTACT'::enum_contact_type,true);
+
+-- Add installation to host http://apps.gbif-dev.org:8080/ipt/
+INSERT INTO installation(key,organization_key,password,title,description,type,created,modified,created_by,modified_by)
+VALUES('107acb59-89f2-40ea-84e1-69a5ec1f08c0'::uuid,'62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,'password','Dev (Jenkins) IPT','Test IPT instance deployed by Jenkins communicating with the Dev Registry (not the registry-sandbox)','IPT_INSTALLATION',now(),now(),'Script', 'Script');
+
+INSERT INTO contact(key,first_name,last_name,description,position,email,phone,organization,address,city,province,country,postal_code,created_by,modified_by,created,modified)
+VALUES(21004,'Kyle','Braak','Programmer at GBIF','{Programmer}','{kbraak@gbif.org}','{12345678}','GBIF','{Universitetsparken 15}','Copenhagen','Zealand','DK','2100','Script','Script',now(),now());
+
+INSERT INTO installation_contact(installation_key,contact_key,type,is_primary)
+VALUES('107acb59-89f2-40ea-84e1-69a5ec1f08c0'::uuid,21004,'ADMINISTRATIVE_POINT_OF_CONTACT'::enum_contact_type,true);
