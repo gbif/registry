@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
@@ -45,6 +46,7 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
@@ -126,6 +128,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DatasetMapper datasetMapper;
   private final ContactMapper contactMapper;
   private final NetworkMapper networkMapper;
+  private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiService doiService;
   private final String doiPrefix;
@@ -141,7 +144,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     MachineTagMapper machineTagMapper, TagMapper tagMapper, IdentifierMapper identifierMapper,
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
     DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
-    EditorAuthorizationService userAuthService, DoiService doiService, @Named("doi.prefix") String doiPrefix) {
+    EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiService doiService,
+    @Named("doi.prefix") String doiPrefix) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
       Dataset.class, eventBus, userAuthService);
     this.searchService = searchService;
@@ -150,6 +154,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.contactMapper = contactMapper;
     this.datasetProcessStatusMapper = datasetProcessStatusMapper;
     this.networkMapper = networkMapper;
+    this.organizationMapper = organizationMapper;
     this.doiService = doiService;
     this.doiPrefix = doiPrefix;
   }
@@ -460,18 +465,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Deal with DOI business rules
-   * https://gist.github.com/timrobertson100/d02f2c447080dff441e8
+   * http://dev.gbif.org/issues/browse/POR-2554
    */
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public UUID create(@Valid Dataset dataset) {
+    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());;
     if (dataset.getDoi() == null) {
-      mintGbifDoi(dataset, false);
+      mintGbifDoi(dataset, publisher, false);
     }
     UUID key = super.create(dataset);
     // now we can register the DOI - we need the dataset key for the target URL!
     try {
-      doiService.register(dataset.getDoi(), datasetPortalUrl(dataset.getKey()), DataCiteConverter.convert(dataset));
+      doiService.register(dataset.getDoi(), datasetPortalUrl(dataset.getKey()), DataCiteConverter.convert(dataset, publisher));
+    } catch (NullPointerException e) {
+      System.out.print("FUCK");
+      System.out.print(dataset);
     } catch (DoiException e) {
       // rethrow as runtime
       throw new IllegalStateException("Failed to register new GBIF DOI", e);
@@ -481,33 +490,34 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Deal with DOI business rules
-   * https://gist.github.com/timrobertson100/d02f2c447080dff441e8
+   * http://dev.gbif.org/issues/browse/POR-2554
    */
   @Validate(groups = {PostPersist.class, Default.class})
   @Override
   public void update(@Valid Dataset dataset) {
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     final DOI oldDoi = super.get(dataset.getKey()).getDoi();
+    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());;
     if (dataset.getDoi() == null) {
       // did we have a non GBIF DOI before that we need to deprecate?
       if (!isGbif(oldDoi)) {
-        reactivatePreviousGbifDoi(dataset);
+        reactivatePreviousGbifDoi(dataset, publisher);
         if (dataset.getDoi() == null) {
           // we never had a GBIF DOI for this dataset, mint a new one
-          mintGbifDoi(dataset, true);
+          mintGbifDoi(dataset, publisher, true);
         }
         // add old DOI to list of alt identifiers
-        deprecateDoi(dataset, oldDoi);
+        deprecateDoi(oldDoi, dataset, publisher);
       }
 
     } else {
       if (dataset.getDoi().equals(oldDoi)) {
         // update datacite for GBIF DOIs only
-        updateDataCite(dataset);
+        updateDataCite(dataset, publisher);
 
       } else {
         // add old DOI to list of alt identifiers
-        deprecateDoi(dataset, oldDoi);
+        deprecateDoi(oldDoi, dataset, publisher);
       }
     }
     super.update(dataset);
@@ -529,9 +539,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Create a new, registered GBIF DOI and apply it to the dataset.
    */
-  private void mintGbifDoi(Dataset dataset, boolean register) {
+  private void mintGbifDoi(Dataset dataset, Organization publisher, boolean register) {
     try {
-      DataCiteMetadata metadata = DataCiteConverter.convert(dataset);
+      DataCiteMetadata metadata = DataCiteConverter.convert(dataset, publisher);
       DOI doi = doiService.reserveRandom(doiPrefix, "", 6, metadata);
       if (register) {
         doiService.register(doi, datasetPortalUrl(dataset.getKey()), metadata);
@@ -543,10 +553,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
   }
 
-  private void updateDataCite(Dataset d) {
+  private void updateDataCite(Dataset d, Organization publisher) {
     if (d.getDoi() != null && isGbif(d.getDoi())) {
       try {
-        DataCiteMetadata metadata = DataCiteConverter.convert(d);
+        DataCiteMetadata metadata = DataCiteConverter.convert(d, publisher);
         doiService.update(d.getDoi(), metadata);
       } catch (DoiException e) {
         // rethrow as runtime
@@ -559,7 +569,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * Add old DOI to list of alt identifiers and update its datacite metdata if it was a GBIF one
    * so that a previousVersionOf relationship exists. If it was a GBIF DOI change status to deleted.
    */
-  private void deprecateDoi(Dataset d, DOI deprecated) {
+  private void deprecateDoi(DOI deprecated, Dataset d, Organization publisher) {
     // update alt ids of dataset
     Identifier id = new Identifier();
     id.setType(IdentifierType.DOI);
@@ -568,7 +578,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // update datacite for deprecated GBIF DOIs
     if (isGbif(deprecated)) {
       try {
-        DataCiteMetadata metadata = DataCiteConverter.convert(d);
+        DataCiteMetadata metadata = DataCiteConverter.convert(d, publisher);
         // add previous relationship
         metadata.getRelatedIdentifiers().getRelatedIdentifier().add(
           DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
@@ -587,7 +597,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * Scan list of alternate identifiers to find a previous, deleted GBIF DOI.
    * If found update its datacite metadata and re-register so its an active DOI.
    */
-  private void reactivatePreviousGbifDoi(Dataset d) {
+  private void reactivatePreviousGbifDoi(Dataset d, Organization publisher) {
     Iterator<Identifier> iter = d.getIdentifiers().iterator();
     while (iter.hasNext()) {
       Identifier id = iter.next();
@@ -597,7 +607,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
           // remove from id list and make primary DOI
           iter.remove();
           d.setDoi(doi);
-          updateDataCite(d);
+          updateDataCite(d, publisher);
           return;
         }
       } catch (IllegalArgumentException e) {

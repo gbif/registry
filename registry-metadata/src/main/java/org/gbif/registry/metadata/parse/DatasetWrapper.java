@@ -409,10 +409,8 @@ public class DatasetWrapper {
 
   public void setPackageId(String id) {
     // is this a DOI?
-    try {
+    if (DOI.isParsable(id)) {
       target.setDoi(new DOI(id));
-    } catch (IllegalArgumentException e) {
-      // no, skip
     }
   }
 
@@ -458,8 +456,8 @@ public class DatasetWrapper {
   }
 
   /**
-   * This extracts the first DOI from alternate identifier or gbif citation identifier if no DOI existed
-   * that was found in the packageID rule.
+   * This extracts the first DOI from alternate identifier or gbif citation identifier if no target DOI existed, e.g.
+   * found in the packageID rule before or from the initial target instance.
    */
   private void updatePrimaryDOI() {
     if (target.getDoi() == null) {
@@ -467,12 +465,10 @@ public class DatasetWrapper {
       while (iter.hasNext()) {
         Identifier i = iter.next();
         if (i.getType() == IdentifierType.DOI) {
-          try {
+          if (DOI.isParsable(i.getIdentifier())) {
             target.setDoi( new DOI(i.getIdentifier()) );
             iter.remove();
             return;
-          } catch (IllegalArgumentException e) {
-            // invalid DOI, skip
           }
         }
       }
