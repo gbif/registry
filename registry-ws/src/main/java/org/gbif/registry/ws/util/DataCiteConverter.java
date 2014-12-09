@@ -22,6 +22,20 @@ public class DataCiteConverter {
     return DateFormatUtils.ISO_DATE_FORMAT.format(date);
   }
 
+  /**
+   * Convert a dataset and publisher object into a datacite metadata instance.
+   * DataCite requires at least the following properties:
+   * <ul>
+   *   <li>Identifier</li>
+   *   <li>Creator</li>
+   *   <li>Title</li>
+   *   <li>Publisher</li>
+   *   <li>PublicationYear</li>
+   * </ul>
+   *
+   * As the publicationYear property is often not available from newly created datasets, this converter uses the current
+   * year as the default in case no created timestamp or pubdate exists.
+   */
   public static DataCiteMetadata convert(Dataset d, Organization publisher) {
     // always add required metadata
     DataCiteMetadata.Builder<java.lang.Void> b = DataCiteMetadata.builder()
