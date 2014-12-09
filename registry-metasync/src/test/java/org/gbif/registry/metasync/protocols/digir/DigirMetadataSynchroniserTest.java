@@ -106,9 +106,8 @@ public class DigirMetadataSynchroniserTest {
     assertThat(dataset.getHomepage()).isEqualTo(URI.create("http://doi.pangaea.de/doi:10.1594/PANGAEA.51131"));
     assertThat(dataset.getCitation().getText()).isEqualTo(
       "Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K (1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131");
-    assertThat(dataset.getIdentifiers().size()).isEqualTo(1);
-    assertThat(dataset.getIdentifiers().get(0).getIdentifier()).isEqualTo("10.1594/PANGAEA.51131");
-    assertThat(dataset.getIdentifiers().get(0).getType()).isEqualTo(IdentifierType.DOI);
+    assertThat(dataset.getIdentifiers().size()).isEqualTo(0); // verify that we don't create an identifier for the DOI
+    assertThat(dataset.getDoi().getDoiName()).isEqualTo("10.1594/PANGAEA.51131");
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(1);
     assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.DIGIR);

@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metasync.protocols.digir;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -44,6 +45,8 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.metasync.util.Constants.METADATA_NAMESPACE;
 
@@ -56,10 +59,8 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
  * Endpoint.
  */
 public class DigirMetadataSynchroniser extends BaseProtocolHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(DigirMetadataSynchroniser.class);
 
-  // Source: http://stackoverflow.com/questions/27910/finding-a-doi-in-a-document-or-page#comment24134610_10324802
-  private static final Pattern DOI_PATTERN =
-    Pattern.compile("\\b(10[.][0-9]{4,}(?:[.][0-9]+)*/(?:(?![\"&\\'])\\S)+)\\b");
   // keyword used to identify if an endpoint is of type DIGIR_MANIS
   private static final String MANIS_KEYWORD = "manis";
   // only schemaLocation of type DIGIR_MANIS not containing the word "manis"
@@ -178,8 +179,12 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setCitation(new Citation(resource.getCitation(), null));
     dataset.setRights(resource.getUseRestrictions());
     dataset.setContacts(convertToRegistryContacts(resource.getContacts()));
-
     dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE, Constants.DIGIR_CODE, resource.getCode()));
+
+    // Respect publisher issued DOIs if provided.
+    if (DOI.isParsable(resource.getCode())) {
+      dataset.setDoi(new DOI(resource.getCode()));
+    }
 
     if (resource.getNumberOfRecords() != 0) {
       dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
@@ -203,15 +208,6 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
       dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
                                                    Constants.CONCEPTUAL_SCHEMA,
                                                    entry.getValue().toASCIIString()));
-    }
-
-    // See if the code contains a DOI and set it as an Identifier
-    Matcher matcher = DOI_PATTERN.matcher(resource.getCode());
-    if (matcher.find()) {
-      Identifier identifier = new Identifier();
-      identifier.setType(IdentifierType.DOI);
-      identifier.setIdentifier(matcher.group());
-      dataset.getIdentifiers().add(identifier);
     }
 
     // Each DiGIR Dataset has exactly one Endpoint, we create and populate it here
