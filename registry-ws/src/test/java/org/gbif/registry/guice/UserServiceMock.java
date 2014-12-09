@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableMap;
  * Class that implements an in-memory users store.
  * This class is intended to be use in IT and unit tests only.
  */
-public class MockUserService implements UserService {
+public class UserServiceMock implements UserService {
 
   private static final ImmutableMap<String, String> USERS = new ImmutableMap.Builder<String, String>()
     .put("admin", "admin").put("user", "user").put("editor", "editor").build();

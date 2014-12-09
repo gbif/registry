@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
@@ -49,7 +50,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 
@@ -69,6 +69,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -146,6 +147,20 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       datasetIndexUpdater == null ? RegistryServer.INSTANCE.getDatasetUpdater() : datasetIndexUpdater;
 
     this.solrRule = new SolrInitializer(solrServer, this.datasetIndexUpdater);
+  }
+
+  @Test
+  public void createCreateDoi() {
+    Dataset d = newEntity();
+    service.create(d);
+    assertEquals(Datasets.DATASET_DOI, d.getDoi());
+
+    d = newEntity();
+    d.setDoi(null);
+    UUID key = service.create(d);
+    d = service.get(key);
+    assertFalse(Datasets.DATASET_DOI.equals(d.getDoi()));
+    assertEquals(DOI.TEST_PREFIX, d.getDoi().getPrefix());
   }
 
   @Test

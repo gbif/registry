@@ -12,17 +12,11 @@
  */
 package org.gbif.registry.ws.guice;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
-import org.apache.bval.guice.ValidationModule;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.ims.ImsModule;
+import org.gbif.registry.persistence.guice.DataCiteModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
@@ -35,6 +29,14 @@ import org.gbif.ws.server.guice.GbifServletListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.sun.jersey.spi.container.ContainerRequestFilter;
+import com.sun.jersey.spi.container.ContainerResponseFilter;
+import org.apache.bval.guice.ValidationModule;
 
 /**
  * The Registry WS module.
@@ -66,7 +68,8 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected List<Module> getModules(Properties properties) {
-    return Lists.newArrayList(new RegistryMyBatisModule(properties),
+    return Lists.newArrayList(new DataCiteModule(properties),
+                              new RegistryMyBatisModule(properties),
                               new DrupalMyBatisModule(properties),
                               new ImsModule(),
                               StringTrimInterceptor.newMethodInterceptingModule(),

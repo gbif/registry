@@ -74,7 +74,6 @@ public class RegistryTestModules {
 
             @Override
             protected void configure() {
-              bind(DrupalMockModule.class);
               bind(NodeResource.class);
               bind(OrganizationResource.class);
               bind(InstallationResource.class);
@@ -84,7 +83,7 @@ public class RegistryTestModules {
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
             new DrupalMockModule(), new RegistryMyBatisModule(p), new ImsModule(), new RegistrySearchModule(p),
-            new EventModule(p), new ValidationModule(), new SecurityModule(p));
+            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiMockModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

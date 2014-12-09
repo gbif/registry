@@ -2,6 +2,7 @@
 <eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
          packageId="2853f657-ede6-4956-aea3-ca0b4a775947/eml-1.xml" system="GBIF-IPT" scope="system">
     <dataset>
+        <alternateIdentifier>doi:10.5072/example-full</alternateIdentifier>
         <alternateIdentifier>2853f657-ede6-4956-aea3-ca0b4a775947</alternateIdentifier>
         <title>PonTaurus</title>
         <creator>

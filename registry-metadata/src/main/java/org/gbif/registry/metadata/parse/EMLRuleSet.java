@@ -92,9 +92,9 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addCallMethod("eml", "setLanguage", 1, new Class[]{Language.class} );
     digester.addCallParam("eml", 0, "xml:lang");
 
-    // // guid as packageId attribute
-    // digester.addCallMethod("eml", "setPackageId", 1);
-    // digester.addCallParam("eml", 0, "packageId");
+    // DOI as packageId attribute
+    digester.addCallMethod("eml", "setPackageId", 1);
+    digester.addCallParam("eml", 0, "packageId");
 
     // identifiers
     digester.addObjectCreate("eml/dataset/alternateIdentifier", Identifier.class);

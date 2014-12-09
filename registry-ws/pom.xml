@@ -324,6 +324,10 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-httputils</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-doi</artifactId>
+    </dependency>
     <!-- test scope -->
     <dependency>
       <groupId>org.mockito</groupId>
@@ -335,88 +339,23 @@
   <profiles>
     <profile>
       <!--
-         A production deploy profile missing the following passwords:
-         <registry.db.password>
-         <registry.messaging.password>
-         <drupal.db.password>
-      -->
-      <id>prod</id>
+        integration test profile for jenkins missing the following password secret:
+        <registry-it.db.password></registry-it.db.password>
+        <drupal.db.password></drupal.db.password>
+       -->
+      <id>jenkins</id>
       <properties>
-        <registry.db.url>jdbc:postgresql://excalibur.gbif.org/prod_registry</registry.db.url>
-        <registry.db.username>registry</registry.db.username>
-        <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
-        <registry.messaging.port>5672</registry.messaging.port>
-        <registry.messaging.virtualhost>/prod</registry.messaging.virtualhost>
-        <registry.messaging.username>prod-registry</registry.messaging.username>
-        <!-- The application keys used by the uat server when it deploys -->
-        <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
-        <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
-        <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
-        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_live?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
-        <drupal.db.username>drupal_live</drupal.db.username>
-        <!-- Configures the Registry to use sandbox mode -->
-        <sandboxmode.enabled>false</sandboxmode.enabled>
-        <!-- email properties -->
-        <mail.devemail.enabled>false</mail.devemail.enabled>
-        <mail.smtp.host>smtp.gbif.org</mail.smtp.host>
-        <mail.cc>helpdesk@gbif.org</mail.cc>
-        <mail.from>registry@gbif.org</mail.from>
-      </properties>
-    </profile>
-
-    <profile>
-      <!--
-         A uat deploy profile missing the following passwords:
-         <registry.db.password>
-         <registry.messaging.password>
-         <drupal.db.password>
-      -->
-      <id>uat</id>
-      <properties>
-        <registry.db.url>jdbc:postgresql://apps.gbif-uat.org/uat_registry</registry.db.url>
-        <registry.db.username>registry</registry.db.username>
-        <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
-        <registry.messaging.port>5672</registry.messaging.port>
-        <registry.messaging.virtualhost>/uat</registry.messaging.virtualhost>
-        <registry.messaging.username>uat-registry</registry.messaging.username>
-        <!-- The application keys used by the uat server when it deploys -->
-        <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
-        <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
-        <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
-        <drupal.db.url>jdbc:mysql://nerf.gbif.org:3306/drupal_uat?useUnicode=true&amp;characterEncoding=UTF8&amp;characterSetResults=UTF8</drupal.db.url>
-        <drupal.db.username>drupal_uat</drupal.db.username>
-        <!-- Configures the Registry to use sandbox mode -->
-        <sandboxmode.enabled>false</sandboxmode.enabled>
-        <!-- email properties -->
-        <mail.devemail.enabled>true</mail.devemail.enabled>
-        <mail.smtp.host>smtp.gbif.org</mail.smtp.host>
-        <mail.cc>helpdesk@gbif.org</mail.cc>
-        <mail.from>registry@gbif.org</mail.from>
-      </properties>
-    </profile>
-    <profile>
-      <!--
-         A dev deploy profile missing the following passwords:
-         <registry.db.password>
-         <registry-it.db.password>
-         <registry.messaging.password>
-         <drupal.db.password>
-      -->
-      <id>dev</id>
-      <properties>
-        <!-- postgres -->
-        <registry.db.host>pg1.gbif-dev.org</registry.db.host>
-        <registry.db.name>dev_registry</registry.db.name>
-        <registry.db.username>registry</registry.db.username>
-        <registry.db.poolSize>6</registry.db.poolSize>
-        <registry.db.connectionTimeout>2000</registry.db.connectionTimeout>
+        <registry-it.db.host>builds.gbif.org</registry-it.db.host>
+        <registry-it.db.name>registry</registry-it.db.name>
+        <registry-it.db.username>registry</registry-it.db.username>
+        <registry-it.db.url>jdbc:postgresql://builds.gbif.org/registry</registry-it.db.url>
+        <registry-it.db.driver>org.postgresql.Driver</registry-it.db.driver>
+        <appkeys.testfile>/usr/share/tomcat7/conf/appkeys.properties</appkeys.testfile>
         <!-- rabbit -->
         <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
         <registry.messaging.port>5672</registry.messaging.port>
         <registry.messaging.virtualhost>/dev</registry.messaging.virtualhost>
         <registry.messaging.username>dev-registry</registry.messaging.username>
-        <!-- The application keys used by the devapp server when it deploys -->
-        <appkeys.file>/usr/share/tomcat7/conf/appkeys.properties</appkeys.file>
         <!-- CMS credentials are used for IMS infos and the authentication so can be a read only account -->
         <drupal.db.driver>com.mysql.jdbc.Driver</drupal.db.driver>
         <drupal.db.host>my1.gbif-dev.org</drupal.db.host>
@@ -427,26 +366,10 @@
         <!-- Configures the Registry to use sandbox mode -->
         <sandboxmode.enabled>false</sandboxmode.enabled>
         <!-- email properties -->
-        <mail.devemail.enabled>true</mail.devemail.enabled>
+        <mail.devemail.enabled>false</mail.devemail.enabled>
         <mail.smtp.host>smtp.gbif.org</mail.smtp.host>
         <mail.cc>helpdesk@gbif.org</mail.cc>
-        <mail.from>registry@gbif.org</mail.from>
-      </properties>
-    </profile>
-
-    <profile>
-      <!--
-        integration test profile for jenkins missing the following password secret:
-        <registry-it.db.password></registry-it.db.password>
-       -->
-      <id>jenkins</id>
-      <properties>
-        <registry-it.db.host>builds.gbif.org</registry-it.db.host>
-        <registry-it.db.name>registry</registry-it.db.name>
-        <registry-it.db.username>registry</registry-it.db.username>
-        <registry-it.db.url>jdbc:postgresql://builds.gbif.org/registry</registry-it.db.url>
-        <registry-it.db.driver>org.postgresql.Driver</registry-it.db.driver>
-        <appkeys.testfile>/usr/share/tomcat7/conf/appkeys.properties</appkeys.testfile>
+        <mail.from>jenkins@gbif.org</mail.from>
       </properties>
     </profile>
   </profiles>

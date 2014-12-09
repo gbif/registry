@@ -1,5 +1,6 @@
 package org.gbif.registry.metadata.parse;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -30,6 +31,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -405,6 +407,15 @@ public class DatasetWrapper {
     }
   }
 
+  public void setPackageId(String id) {
+    // is this a DOI?
+    try {
+      target.setDoi(new DOI(id));
+    } catch (IllegalArgumentException e) {
+      // no, skip
+    }
+  }
+
   public void setSubtype(DatasetSubtype subtype) {
     target.setSubtype(subtype);
   }
@@ -430,11 +441,47 @@ public class DatasetWrapper {
     target.setType(type);
   }
 
-  public void updateTaxonomicCoverageRanks() {
+
+  public void postProcess() {
+    updateTaxonomicCoverageRanks();
+    updatePrimaryDOI();
+  }
+
+  private void updateTaxonomicCoverageRanks() {
     for (TaxonomicCoverages tc : target.getTaxonomicCoverages()) {
       for (TaxonomicCoverage t : tc.getCoverages()) {
         if (t.getRank() != null) {
           t.getRank().setInterpreted(toRank(t.getRank().getVerbatim()));
+        }
+      }
+    }
+  }
+
+  /**
+   * This extracts the first DOI from alternate identifier or gbif citation identifier if no DOI existed
+   * that was found in the packageID rule.
+   */
+  private void updatePrimaryDOI() {
+    if (target.getDoi() == null) {
+      Iterator<Identifier> iter = target.getIdentifiers().iterator();
+      while (iter.hasNext()) {
+        Identifier i = iter.next();
+        if (i.getType() == IdentifierType.DOI) {
+          try {
+            target.setDoi( new DOI(i.getIdentifier()) );
+            iter.remove();
+            return;
+          } catch (IllegalArgumentException e) {
+            // invalid DOI, skip
+          }
+        }
+      }
+      // at last also check the citation field
+      if (!Strings.isNullOrEmpty(target.getCitation().getIdentifier())) {
+        try {
+          target.setDoi( new DOI(target.getCitation().getIdentifier()) );
+        } catch (IllegalArgumentException e) {
+          // invalid DOI, skip
         }
       }
     }

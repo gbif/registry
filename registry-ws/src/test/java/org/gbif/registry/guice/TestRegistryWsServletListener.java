@@ -60,6 +60,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   @Override
   protected List<Module> getModules(Properties props) {
     return Lists.<Module>newArrayList(new RegistryMyBatisModule(props),
+      new DoiMockModule(),
       new DrupalMockModule(),
       new ImsModule(),
       StringTrimInterceptor.newMethodInterceptingModule(),

@@ -1,6 +1,6 @@
 package org.gbif.registry.metadata.parse;
 
-import org.apache.commons.io.input.ReaderInputStream;
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
@@ -10,10 +10,15 @@ import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriodType;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.api.vocabulary.PreservationMethodType;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.utils.file.FileUtils;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +32,15 @@ import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.apache.commons.io.input.ReaderInputStream;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class DatasetParserTest {
 
@@ -70,9 +83,11 @@ public class DatasetParserTest {
 
         d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
         assertNotNull(d);
+        verifySample(d, false);
 
         d = DatasetParser.build(FileUtils.classpathStream("eml/ipt_eml.xml"));
         assertNotNull(d);
+        assertEquals(new DOI("doi:10.5072/example-full"), d.getDoi());
 
         DatasetParser.build(FileUtils.classpathStream("logback-test.xml"));
     }
@@ -185,9 +200,11 @@ public class DatasetParserTest {
 
         assertNotNull(dataset);
 
+        assertEquals(new DOI("doi:10.1093/ageing/29.1.57"), dataset.getDoi());
+
         assertIdentifierExists(dataset, "619a4b95-1a82-4006-be6a-7dbe3c9b33c5", IdentifierType.UUID);
-        assertIdentifierExists(dataset, "doi:10.1093/ageing/29.1.57", IdentifierType.DOI);
         assertIdentifierExists(dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.URL);
+        assertEquals(2, dataset.getIdentifiers().size());
 
         // assertEquals(7, dataset.getEmlVersion());
         assertEquals("Tanzanian Entomological Collection", dataset.getTitle());

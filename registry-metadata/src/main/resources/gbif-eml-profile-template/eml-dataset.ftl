@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="dataset" type="org.gbif.api.model.registry.Dataset" -->
 <#escape x as x?xml>
   <#macro elem name value><#if value?has_content><${name}>${value}</${name}></#if></#macro>
   <#macro interpretedEnum enum><#if enum??><#if enum.interpreted?has_content>${enum.interpreted.name()?lower_case?replace("_", " ")?capitalize}<#else>${enum.verbatim!}</#if></#if></#macro>
@@ -68,9 +69,12 @@
          <#if dataset.language??>xml:lang="${dataset.language.getIso2LetterCode()}"</#if>>
 
 <dataset>
+  <#if dataset.doi?exists>
+      <alternateIdentifier system="doi.org">${dataset.doi}</alternateIdentifier>
+  </#if>
   <#list dataset.identifiers![] as altid>
     <#if altid.identifier?has_content>
-    <alternateIdentifier<#if altid.type??> system="${altid.type}"</#if>>${altid.identifier}</alternateIdentifier>
+    <alternateIdentifier>${altid.identifier}</alternateIdentifier>
     </#if>
   </#list>
   <title>${dataset.title!}</title>

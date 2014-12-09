@@ -132,7 +132,7 @@ public class DatasetParser {
         throw new IllegalArgumentException("Invalid metadata xml document", e);
       }
     } finally {
-      delegator.updateTaxonomicCoverageRanks();
+      delegator.postProcess();
       Closeables.closeQuietly(xml);
     }
 

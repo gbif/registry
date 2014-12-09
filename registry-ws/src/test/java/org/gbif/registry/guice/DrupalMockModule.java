@@ -15,7 +15,7 @@ public class DrupalMockModule extends AbstractModule {
 
     @Override
     protected void configure() {
-      bind(UserService.class).to(MockUserService.class);
+      bind(UserService.class).to(UserServiceMock.class);
       bind(ImsNodeMapper.class).to(ImsNodeMapperMock.class);
     }
 

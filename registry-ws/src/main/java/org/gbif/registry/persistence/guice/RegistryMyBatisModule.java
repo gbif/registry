@@ -70,6 +70,7 @@ import java.util.UUID;
 
 /**
  * Sets up the persistence layer using the properties supplied.
+ * Depends on a DoiService being bound externally!
  */
 public class RegistryMyBatisModule extends PrivateServiceModule {
 
@@ -191,4 +192,5 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(MetasyncHistoryMapper.class);
     expose(UserRightsMapper.class);
   }
+
 }

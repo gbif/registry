@@ -4,6 +4,7 @@
 target/
 registry-ws/logs
 logs/
+dependency-reduced-pom.xml
 
 # Package Files #
 *.jar

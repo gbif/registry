@@ -34,7 +34,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final String DATASET_ABBREVIATION = "BGBM";
   public static final Language DATASET_LANGUAGE = Language.DANISH;
   public static final String DATASET_RIGHTS = "The rights";
-  public static final String DOI = "10.1234/gbif.2014.XSD123";
+  public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
 
   public Datasets() {
@@ -48,7 +48,7 @@ public class Datasets extends JsonBackedData<Dataset> {
     Dataset d = INSTANCE.newTypedInstance();
     d.setPublishingOrganizationKey(publishingOrganizationKey);
     d.setInstallationKey(installationKey);
-    d.setDoi(new DOI(DOI));
+    d.setDoi(DATASET_DOI);
     return d;
   }
 

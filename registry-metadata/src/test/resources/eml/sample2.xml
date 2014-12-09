@@ -14,7 +14,7 @@
     xmlns:dc="http://purl.org/dc/terms/"
     xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.1/eml-gbif-profile.xsd"
     xml:lang="en"
-    packageId="619a4b95-1a82-4006-be6a-7dbe3c9b33c5/v7" system="GBIF-IPT" scope="system">
+    packageId="doi:10.1093/ageing/29.1.57" system="doi.org" scope="system">
    
         <!-- The IPT is concerned with descriptions of datasets only -->
         <dataset>

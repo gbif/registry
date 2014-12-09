@@ -68,6 +68,7 @@
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
     <gbif-common.version>0.17</gbif-common.version>
+    <gbif-doi.version>1.0-SNAPSHOT</gbif-doi.version>
     <gbif-httputils.version>0.5</gbif-httputils.version>
     <gbif-microservice.version>0.1</gbif-microservice.version>
     <gbif-parsers.version>0.10</gbif-parsers.version>
@@ -160,6 +161,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-doi</artifactId>
+        <version>${gbif-doi.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
