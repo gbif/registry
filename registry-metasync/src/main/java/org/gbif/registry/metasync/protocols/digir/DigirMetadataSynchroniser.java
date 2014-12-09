@@ -20,12 +20,10 @@ import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
@@ -39,14 +37,10 @@ import org.gbif.registry.metasync.util.Constants;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.metasync.util.Constants.METADATA_NAMESPACE;
 
@@ -59,7 +53,6 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
  * Endpoint.
  */
 public class DigirMetadataSynchroniser extends BaseProtocolHandler {
-  private static final Logger LOG = LoggerFactory.getLogger(DigirMetadataSynchroniser.class);
 
   // keyword used to identify if an endpoint is of type DIGIR_MANIS
   private static final String MANIS_KEYWORD = "manis";
