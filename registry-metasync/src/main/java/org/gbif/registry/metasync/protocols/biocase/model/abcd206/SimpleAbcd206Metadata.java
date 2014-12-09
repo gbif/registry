@@ -46,6 +46,8 @@ public class SimpleAbcd206Metadata {
   private String citationText;
   @BeanPropertySetter(pattern = BASE_PATH + "Units/Unit[0]/RecordBasis")
   private String basisOfRecord;
+  @BeanPropertySetter(pattern = BASE_PATH + "DatasetGUID")
+  private String datasetGUID;
 
   public String getBasisOfRecord() {
     return basisOfRecord;
@@ -121,6 +123,14 @@ public class SimpleAbcd206Metadata {
 
   public String getName() {
     return name;
+  }
+
+  public String getDatasetGUID() {
+    return datasetGUID;
+  }
+
+  public void setDatasetGUID(String datasetGUID) {
+    this.datasetGUID = datasetGUID;
   }
 
   public void setName(String name) {
@@ -217,5 +227,4 @@ public class SimpleAbcd206Metadata {
     contact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
     contacts.add(contact);
   }
-
 }

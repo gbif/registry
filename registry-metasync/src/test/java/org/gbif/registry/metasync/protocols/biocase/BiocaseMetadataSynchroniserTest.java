@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metasync.protocols.biocase;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
@@ -89,6 +90,7 @@ public class BiocaseMetadataSynchroniserTest {
     Dataset dataset = syncResult.addedDatasets.get(0);
     assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
     assertThat(dataset.getCitation().getText()).isEqualTo("All credit to Markus Doring");
+    assertThat(dataset.getDoi()).isNull();
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(1);
     assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
@@ -109,6 +111,7 @@ public class BiocaseMetadataSynchroniserTest {
     assertThat(syncResult.addedDatasets).hasSize(1);
 
     Dataset dataset = syncResult.addedDatasets.get(0);
+    assertThat(dataset.getDoi()).isEqualTo(new DOI("10.1234/doi"));
     assertThat(dataset.getTitle()).isEqualTo("Collections of Phytoplankton at BGBM");
     assertThat(dataset.getCitation().getText()).isEqualTo(
       "Jahn, R. (Ed.) 2013+ (continuously updated): Collections of Phytoplankton at BGBM");
@@ -132,6 +135,7 @@ public class BiocaseMetadataSynchroniserTest {
     assertThat(syncResult.addedDatasets).hasSize(4);
 
     Dataset dataset = syncResult.addedDatasets.get(0);
+    assertThat(dataset.getDoi()).isNull();
     assertThat(dataset.getTitle()).isEqualTo("Mammals housed at MHNG, Geneva");
     assertThat(dataset.getCitation().getText()).isEqualTo(
       "Ruedi M. Mammals housed at MHNG, Geneva. Muséum d'histoire naturelle de la Ville de Genève");

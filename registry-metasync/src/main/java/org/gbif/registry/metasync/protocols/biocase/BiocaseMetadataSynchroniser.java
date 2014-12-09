@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metasync.protocols.biocase;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -91,7 +92,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
 
     for (Endpoint endpoint : installation.getEndpoints()) {
       LOG.info("Starting synchronization of endpoint: {}", endpoint.getUrl());
-            
+
       Capabilities capabilities = getCapabilities(endpoint);
       if (capabilities.getPreferredSchema() == null) {
         throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
@@ -244,6 +245,10 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setHomepage(metadata.getHomepage());
     dataset.setLogoUrl(metadata.getLogoUrl());
     dataset.setRights(metadata.getRights());
+    // Respect publisher issued DOIs if provided.
+    if (DOI.isParsable(metadata.getDatasetGUID())) {
+      dataset.setDoi(new DOI(metadata.getDatasetGUID()));
+    }
 
     Citation citation = new Citation();
     citation.setText(metadata.getCitationText());
