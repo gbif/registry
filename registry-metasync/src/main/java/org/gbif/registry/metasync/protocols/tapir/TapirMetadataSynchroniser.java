@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metasync.protocols.tapir;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -222,6 +223,10 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setDescription(metadata.getDescriptions().toString());
     dataset.setHomepage(metadata.getAccessPoint());
     dataset.setLanguage(metadata.getDefaultLanguage());
+    // Respect publisher issued DOIs if provided.
+    if (DOI.isParsable(metadata.getIdentifier())) {
+      dataset.setDoi(new DOI(metadata.getIdentifier()));
+    }
 
     List<Contact> contacts = Lists.newArrayList();
     for (TapirRelatedEntity tapirRelatedEntity : metadata.getRelatedEntities()) {

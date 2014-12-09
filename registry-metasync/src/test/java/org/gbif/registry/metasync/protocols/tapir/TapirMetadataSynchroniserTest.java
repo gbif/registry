@@ -1,5 +1,6 @@
 package org.gbif.registry.metasync.protocols.tapir;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
@@ -79,6 +80,7 @@ public class TapirMetadataSynchroniserTest {
     assertThat(syncResult.addedDatasets).hasSize(1);
     assertThat(syncResult.addedDatasets.get(0).getContacts()).hasSize(2);
     assertThat(syncResult.addedDatasets.get(0).getMachineTags()).hasSize(2);
+    assertThat(syncResult.addedDatasets.get(0).getDoi()).isEqualTo(new DOI("10.1234/doi"));
 
     // Assert the declared record count machine tag was found, and that its value was 167348
     MachineTag count = null;

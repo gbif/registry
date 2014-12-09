@@ -61,5 +61,9 @@
         </hasContact>
       </entity>
     </relatedEntity>
+    <custom>
+      <!-- A DOI in any accepted serialization (e.g. with a recognized URL form) will be accepted -->
+      <dct:identifier>10.1234/doi</dct:identifier>
+    </custom>
   </metadata>
 </response>

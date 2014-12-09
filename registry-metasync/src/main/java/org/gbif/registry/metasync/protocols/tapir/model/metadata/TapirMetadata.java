@@ -61,6 +61,8 @@ public class TapirMetadata {
   private IndexingPreferences indexingPreferences;
   @BeanPropertySetter(pattern = "response/metadata/modified")
   private DateTime modified;
+  @BeanPropertySetter(pattern = "response/metadata/custom/identifier")
+  private String identifier;
 
   @CallMethod(pattern = "response/metadata/title")
   public void addTitle(
@@ -229,8 +231,17 @@ public class TapirMetadata {
       .add("accessPoint", accessPoint)
       .add("subjects", subjects)
       .add("created", created)
+      .add("identifier", identifier)
       .add("indexingPreferences", indexingPreferences)
       .add("modified", modified)
       .toString();
+  }
+
+  public String getIdentifier() {
+    return identifier;
+  }
+
+  public void setIdentifier(String identifier) {
+    this.identifier = identifier;
   }
 }
