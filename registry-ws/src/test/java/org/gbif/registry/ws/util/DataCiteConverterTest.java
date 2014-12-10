@@ -23,7 +23,8 @@ public class DataCiteConverterTest {
   public void testConvert() throws Exception {
     Organization publisher = new Organization();
     publisher.setTitle("X-Publisher");
-
+    publisher.setKey(UUID.randomUUID());
+    
     Dataset d = new Dataset();
     d.setKey(UUID.randomUUID());
     d.setType(DatasetType.OCCURRENCE);

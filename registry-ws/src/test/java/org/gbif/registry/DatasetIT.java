@@ -150,7 +150,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void createCreateDoi() {
+  public void testCreateDoi() {
     Dataset d = newEntity();
     service.create(d);
     assertEquals(Datasets.DATASET_DOI, d.getDoi());

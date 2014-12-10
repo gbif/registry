@@ -44,10 +44,7 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.doi.service.DoiException;
-import org.gbif.doi.service.DoiService;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.ws.util.DataCiteConverter;
+import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -60,16 +57,17 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -93,7 +91,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -101,7 +98,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
@@ -122,7 +118,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
-  private static final URI PORTAL_DATASET_URI = URI.create("http://www.gbif.org/dataset/");
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
@@ -130,8 +125,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final NetworkMapper networkMapper;
   private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
-  private final DoiService doiService;
-  private final String doiPrefix;
+  private final DoiGenerator doiGenerator;
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -144,8 +138,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     MachineTagMapper machineTagMapper, TagMapper tagMapper, IdentifierMapper identifierMapper,
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
     DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
-    EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiService doiService,
-    @Named("doi.prefix") String doiPrefix) {
+    EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiGenerator doiGenerator) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
       Dataset.class, eventBus, userAuthService);
     this.searchService = searchService;
@@ -155,8 +148,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.datasetProcessStatusMapper = datasetProcessStatusMapper;
     this.networkMapper = networkMapper;
     this.organizationMapper = organizationMapper;
-    this.doiService = doiService;
-    this.doiPrefix = doiPrefix;
+    this.doiGenerator = doiGenerator;
   }
 
   @GET
@@ -470,22 +462,33 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public UUID create(@Valid Dataset dataset) {
-    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());;
     if (dataset.getDoi() == null) {
-      mintGbifDoi(dataset, publisher, false);
+      dataset.setDoi(doiGenerator.newDatasetDOI());
     }
-    UUID key = super.create(dataset);
-    // now we can register the DOI - we need the dataset key for the target URL!
-    try {
-      doiService.register(dataset.getDoi(), datasetPortalUrl(dataset.getKey()), DataCiteConverter.convert(dataset, publisher));
-    } catch (NullPointerException e) {
-      System.out.print("FUCK");
-      System.out.print(dataset);
-    } catch (DoiException e) {
-      // rethrow as runtime
-      throw new IllegalStateException("Failed to register new GBIF DOI", e);
-    }
+    final UUID key = super.create(dataset);
+    // now that we have a UUID registerDataset the DOI
+    doiGenerator.registerDataset(dataset.getDoi(), buildMetadata(dataset), key);
     return key;
+  }
+
+  private DataCiteMetadata buildMetadata(Dataset d) {
+    return buildMetadata(d, null, null);
+  }
+
+  private DataCiteMetadata buildMetadata(Dataset d, @Nullable DOI related, @Nullable RelationType relationType) {
+    Organization publisher = organizationMapper.get(d.getPublishingOrganizationKey());
+    DataCiteMetadata m = DataCiteConverter.convert(d, publisher);
+    // add previous relationship
+    if (related != null) {
+      m.getRelatedIdentifiers().getRelatedIdentifier()
+        .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+          .withRelationType(relationType)
+          .withValue(related.getDoiName())
+          .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+          .build()
+      );
+    }
+    return m;
   }
 
   /**
@@ -497,123 +500,72 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void update(@Valid Dataset dataset) {
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     final DOI oldDoi = super.get(dataset.getKey()).getDoi();
-    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());;
     if (dataset.getDoi() == null) {
-      // did we have a non GBIF DOI before that we need to deprecate?
-      if (!isGbif(oldDoi)) {
-        reactivatePreviousGbifDoi(dataset, publisher);
-        if (dataset.getDoi() == null) {
-          // we never had a GBIF DOI for this dataset, mint a new one
-          mintGbifDoi(dataset, publisher, true);
-        }
-        // add old DOI to list of alt identifiers
-        deprecateDoi(oldDoi, dataset, publisher);
-      }
-
-    } else {
-      if (dataset.getDoi().equals(oldDoi)) {
-        // update datacite for GBIF DOIs only
-        updateDataCite(dataset, publisher);
-
+      // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
+      if (doiGenerator.isGbif(oldDoi)) {
+        dataset.setDoi(oldDoi);
       } else {
+        // we have a non GBIF DOI before that we need to deprecate
+        reactivatePreviousGbifDoiOrMintNew(dataset);
         // add old DOI to list of alt identifiers
-        deprecateDoi(oldDoi, dataset, publisher);
+        addAltId(oldDoi, dataset);
       }
+
+    } else if (!dataset.getDoi().equals(oldDoi)) {
+      // the doi has changed. Add old DOI to list of alt identifiers
+      addAltId(oldDoi, dataset);
     }
+    // update database
     super.update(dataset);
-  }
 
-
-  private boolean isGbif(DOI doi) {
-    return doi.getPrefix().equalsIgnoreCase(doiPrefix);
-  }
-
-  /**
-   * @return the dataset detail page in the GBIF data portal
-   */
-  @VisibleForTesting
-  protected static URI datasetPortalUrl(UUID key) {
-    return PORTAL_DATASET_URI.resolve(key.toString());
-  }
-
-  /**
-   * Create a new, registered GBIF DOI and apply it to the dataset.
-   */
-  private void mintGbifDoi(Dataset dataset, Organization publisher, boolean register) {
-    try {
-      DataCiteMetadata metadata = DataCiteConverter.convert(dataset, publisher);
-      DOI doi = doiService.reserveRandom(doiPrefix, "", 6, metadata);
-      if (register) {
-        doiService.register(doi, datasetPortalUrl(dataset.getKey()), metadata);
-      }
-      dataset.setDoi(doi);
-    } catch (DoiException e) {
-      // rethrow as runtime
-      throw new IllegalStateException("Failed to mint new GBIF DOI", e);
+    // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
+    if (doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
+      doiGenerator.registerDataset(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF), dataset.getKey());
     }
-  }
-
-  private void updateDataCite(Dataset d, Organization publisher) {
-    if (d.getDoi() != null && isGbif(d.getDoi())) {
-      try {
-        DataCiteMetadata metadata = DataCiteConverter.convert(d, publisher);
-        doiService.update(d.getDoi(), metadata);
-      } catch (DoiException e) {
-        // rethrow as runtime
-        throw new IllegalStateException("Failed to update GBIF DOI metadata", e);
+    // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
+    if (doiGenerator.isGbif(dataset.getDoi())) {
+      // if DOIs changed establish relationship
+      DataCiteMetadata metadata;
+      if (dataset.getDoi().equals(oldDoi)) {
+        metadata = buildMetadata(dataset);
+      } else {
+        metadata = buildMetadata(dataset, oldDoi, RelationType.IS_NEW_VERSION_OF);
       }
+      doiGenerator.registerDataset(dataset.getDoi(), metadata, dataset.getKey());
     }
   }
 
   /**
-   * Add old DOI to list of alt identifiers and update its datacite metdata if it was a GBIF one
-   * so that a previousVersionOf relationship exists. If it was a GBIF DOI change status to deleted.
+   * Add old DOI to list of alt identifiers in dataset.
    */
-  private void deprecateDoi(DOI deprecated, Dataset d, Organization publisher) {
+  private void addAltId(DOI altId, Dataset d) {
     // update alt ids of dataset
     Identifier id = new Identifier();
     id.setType(IdentifierType.DOI);
-    id.setIdentifier(deprecated.toString());
+    id.setIdentifier(altId.toString());
     d.getIdentifiers().add(id);
-    // update datacite for deprecated GBIF DOIs
-    if (isGbif(deprecated)) {
-      try {
-        DataCiteMetadata metadata = DataCiteConverter.convert(d, publisher);
-        // add previous relationship
-        metadata.getRelatedIdentifiers().getRelatedIdentifier().add(
-          DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-            .withRelationType(RelationType.IS_PREVIOUS_VERSION_OF).withValue(d.getDoi().getDoiName())
-            .withRelatedIdentifierType(RelatedIdentifierType.DOI).build()
-        );
-        doiService.update(deprecated, metadata);
-      } catch (DoiException e) {
-        // rethrow as runtime
-        throw new IllegalStateException("Failed to update metadata of deprecated GBIF DOI " + deprecated, e);
-      }
-    }
   }
 
   /**
-   * Scan list of alternate identifiers to find a previous, deleted GBIF DOI.
-   * If found update its datacite metadata and re-register so its an active DOI.
+   * Scan list of alternate identifiers to find a previous, deleted GBIF DOI and update the dataset instance.
+   * If none can be found use a newly generated one.
    */
-  private void reactivatePreviousGbifDoi(Dataset d, Organization publisher) {
+  private void reactivatePreviousGbifDoiOrMintNew(Dataset d) {
     Iterator<Identifier> iter = d.getIdentifiers().iterator();
     while (iter.hasNext()) {
       Identifier id = iter.next();
-      try {
+      if (DOI.isParsable(id.getIdentifier())) {
         DOI doi = new DOI(id.getIdentifier());
-        if (isGbif(doi)) {
+        if (doiGenerator.isGbif(doi)) {
           // remove from id list and make primary DOI
           iter.remove();
           d.setDoi(doi);
-          updateDataCite(d, publisher);
           return;
         }
-      } catch (IllegalArgumentException e) {
-        // bad DOI... skip
       }
     }
+    // we never had a GBIF DOI for this dataset, give it a new one
+    d.setDoi(doiGenerator.newDatasetDOI());
   }
 
   /**

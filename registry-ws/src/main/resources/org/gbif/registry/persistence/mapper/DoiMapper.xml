@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DoiMapper">
+
+  <!-- Auto-mapping -->
+  <resultMap id="DOI_STATUS_MAP" type="DoiStatus" autoMapping="true">
+  </resultMap>
+
+  <select id="get" resultType="map" resultMap="DOI_STATUS_MAP">
+    SELECT status, target
+    FROM gbif_doi
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </select>
+
+  <insert id="create" parameterType="map" useGeneratedKeys="false">
+    INSERT INTO gbif_doi (doi, type)
+    VALUES(#{doi,jdbcType=OTHER}, #{type,jdbcType=OTHER})
+  </insert>
+
+  <update id="update" parameterType="map">
+    INSERT INTO gbif_doi (status, target, metadata, modified)
+    VALUES(#{status.status,jdbcType=OTHER}, #{status.target,jdbcType=OTHER}, #{xml,jdbcType=OTHER}, now())
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </update>
+</mapper>

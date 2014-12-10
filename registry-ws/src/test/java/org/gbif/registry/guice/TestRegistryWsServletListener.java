@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.guice;
 
+import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.ims.ImsModule;
@@ -60,7 +61,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   @Override
   protected List<Module> getModules(Properties props) {
     return Lists.<Module>newArrayList(new RegistryMyBatisModule(props),
-      new DoiMockModule(),
+      new DoiModule(props),
+      new RabbitMockModule(),
       new DrupalMockModule(),
       new ImsModule(),
       StringTrimInterceptor.newMethodInterceptingModule(),

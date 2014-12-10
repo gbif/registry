@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.guice;
 
+import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.ims.ImsModule;
@@ -83,7 +84,8 @@ public class RegistryTestModules {
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
             new DrupalMockModule(), new RegistryMyBatisModule(p), new ImsModule(), new RegistrySearchModule(p),
-            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiMockModule());
+            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule()
+            );
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

@@ -35,6 +35,7 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.doi.service.DoiStatus;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.CountryTypeHandler;
 import org.gbif.mybatis.type.LanguageTypeHandler;
@@ -47,6 +48,7 @@ import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
@@ -70,7 +72,6 @@ import java.util.UUID;
 
 /**
  * Sets up the persistence layer using the properties supplied.
- * Depends on a DoiService being bound externally!
  */
 public class RegistryMyBatisModule extends PrivateServiceModule {
 
@@ -112,6 +113,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(DatasetProcessStatusMapper.class);
       addMapperClass(MetasyncHistoryMapper.class);
       addMapperClass(UserRightsMapper.class);
+      addMapperClass(DoiMapper.class);
 
 
       // reduce mapper verboseness with aliases
@@ -134,13 +136,14 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("DatasetProcessStatus").to(DatasetProcessStatus.class);
       addAlias("CrawlJob").to(CrawlJob.class);
       addAlias("MetasyncHistory").to(MetasyncHistory.class);
-
-
+      addAlias("DoiStatus").to(DoiStatus.class);
+      addAlias("DOI").to(DOI.class);
       addAlias("Pageable").to(Pageable.class);
-      addAlias("UuidTypeHandler").to(UuidTypeHandler.class);
       addAlias("UUID").to(UUID.class);
       addAlias("Country").to(Country.class);
       addAlias("Language").to(Language.class);
+
+      addAlias("UuidTypeHandler").to(UuidTypeHandler.class);
       addAlias("LanguageTypeHandler").to(LanguageTypeHandler.class);
       addAlias("CountryTypeHandler").to(CountryTypeHandler.class);
       addAlias("DownloadStatusTypeHandler").to(OccurrenceDownloadStatusTypeHandler.class);
@@ -163,9 +166,11 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
   }
 
   private static final String PREFIX = "registry.db.";
+  private final Properties properties;
 
   public RegistryMyBatisModule(Properties properties) {
     super(PREFIX, properties);
+    this.properties = properties;
   }
 
   @Override
@@ -191,6 +196,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(DatasetProcessStatusMapper.class);
     expose(MetasyncHistoryMapper.class);
     expose(UserRightsMapper.class);
+    expose(DoiMapper.class);
   }
 
 }
