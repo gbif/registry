@@ -1,0 +1,15 @@
+messaging:
+  host: mq.gbif.org
+  virtualHost: /dev
+  username: doi
+  password: doi
+ganglia:
+  gangliaHost: b5g2.gbif.org
+  gangliaPort: 8649
+queueName: doi_updater
+doiUsername: GBIF
+doiPassword: replaceme
+dbHost: pg1.gbif-dev.org
+dbName: registry
+dbUsername: registry
+dbPassword: replaceme
