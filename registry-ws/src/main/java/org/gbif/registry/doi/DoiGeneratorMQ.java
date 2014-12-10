@@ -5,6 +5,8 @@ import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.DoiStatus;
+import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.events.MessageSendingEventListener;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
@@ -87,20 +89,13 @@ public class DoiGeneratorMQ implements DoiGenerator {
     return new DOI(prefix, suffix);
   }
 
-  private void validate(DataCiteMetadata m) {
-    Preconditions.checkArgument(!m.getCreators().getCreator().isEmpty(), "Creator required");
-    Preconditions.checkArgument(!m.getTitles().getTitle().isEmpty(), "Title required");
-    Preconditions.checkNotNull(m.getPublicationYear(), "Publication year required");
-    Preconditions.checkNotNull(m.getPublisher(), "Publisher required");
-  }
-
   @Override
-  public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws IllegalArgumentException {
+  public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
     Preconditions.checkNotNull(doi, "DOI required");
     Preconditions.checkNotNull(datasetKey, "Dataset key required");
-    validate(metadata);
 
-    Message message = new DoiChangeMessage(DoiStatus.Status.REGISTERED, doi, metadata, datasetTarget.resolve(datasetKey.toString()));
+    String xml = DataCiteValidator.toXml(doi, metadata);
+    Message message = new ChangeDoiMessage(DoiStatus.Status.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
 
     if (messagePublisher == null) {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and dataset {}", doi, datasetKey);
@@ -114,12 +109,12 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
-  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws IllegalArgumentException {
+  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
     Preconditions.checkNotNull(doi, "DOI required");
     Preconditions.checkNotNull(downloadKey, "Download key required");
-    validate(metadata);
 
-    Message message = new DoiChangeMessage(DoiStatus.Status.REGISTERED, doi, metadata, downloadTarget.resolve(downloadKey));
+    String xml = DataCiteValidator.toXml(doi, metadata);
+    Message message = new ChangeDoiMessage(DoiStatus.Status.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
 
     if (messagePublisher == null) {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and download {}", doi, downloadKey);

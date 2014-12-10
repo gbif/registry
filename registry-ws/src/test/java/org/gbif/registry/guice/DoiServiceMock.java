@@ -10,7 +10,6 @@ import java.net.URI;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.lang3.RandomUtils;
 
 /**
  * Class that implements a mock doi service that verifies the presence of mandatory fields.
@@ -27,13 +26,6 @@ public class DoiServiceMock implements DoiService {
   @Override
   public void reserve(DOI doi, DataCiteMetadata metadata) throws DoiException {
     requireMandatoryFields(metadata);
-  }
-
-  @Override
-  public DOI reserveRandom(String prefix, String shoulder, int length, DataCiteMetadata metadata) throws DoiException {
-    requireMandatoryFields(metadata);
-    // dont do nothing
-    return new DOI(prefix, shoulder + RandomUtils.nextInt(0, 10*length));
   }
 
   @Override

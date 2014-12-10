@@ -2,6 +2,7 @@ package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.service.InvalidMetadataException;
 
 import java.util.UUID;
 
@@ -40,9 +41,9 @@ public interface DoiGenerator {
    * @param metadata the metadata to post to datacite. Mandatory fields are validated immediately
    * @param datasetKey the dataset key to derive the target URL from
    *
-   * @throws IllegalArgumentException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
+   * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
    */
-  void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws IllegalArgumentException;
+  void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException;
 
   /**
    * Schedules a DOI metadata update with DataCite and registers the DOI if needed.
@@ -53,7 +54,7 @@ public interface DoiGenerator {
    * @param metadata the metadata to post to datacite. Mandatory fields are validated immediately
    * @param downloadKey the download key to derive the target URL from
    *
-   * @throws IllegalArgumentException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
+   * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
    */
-  void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws IllegalArgumentException;
+  void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException;
 }

@@ -44,6 +44,7 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
+import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
@@ -467,7 +468,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
     final UUID key = super.create(dataset);
     // now that we have a UUID registerDataset the DOI
-    doiGenerator.registerDataset(dataset.getDoi(), buildMetadata(dataset), key);
+    register(dataset.getDoi(), buildMetadata(dataset), key);
     return key;
   }
 
@@ -520,7 +521,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
     if (doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
-      doiGenerator.registerDataset(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF), dataset.getKey());
+      register(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF), dataset.getKey());
     }
     // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
     if (doiGenerator.isGbif(dataset.getDoi())) {
@@ -531,7 +532,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       } else {
         metadata = buildMetadata(dataset, oldDoi, RelationType.IS_NEW_VERSION_OF);
       }
-      doiGenerator.registerDataset(dataset.getDoi(), metadata, dataset.getKey());
+      register(dataset.getDoi(), metadata, dataset.getKey());
+    }
+  }
+
+  private void register(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
+    try {
+      doiGenerator.registerDataset(doi, metadata, datasetKey);
+    } catch (InvalidMetadataException e) {
+      // Lets hope this never happens. Throw the wrapped exception in any case
+      throw new IllegalArgumentException(e);
     }
   }
 
