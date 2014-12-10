@@ -101,7 +101,7 @@ public class OccurrenceDownloadIT {
   }
 
   /**
-   * Creates {@link OccurrenceDownload} instance with test data.
+   * Creates {@link Download} instance with test data.
    * The key is generated randomly using the class java.util.UUID.
    * The instance generated should be ready and valid to be persisted.
    */
@@ -126,7 +126,7 @@ public class OccurrenceDownloadIT {
 
 
   /**
-   * Persists a valid {@link OccurrenceDownload} instance.
+   * Persists a valid {@link Download} instance.
    */
   @Test
   public void testCreate() {
@@ -145,7 +145,7 @@ public class OccurrenceDownloadIT {
   }
 
   /**
-   * Creates a {@link OccurrenceDownload} with a null status which should trigger a validation exception.
+   * Creates a {@link Download} with a null status which should trigger a validation exception.
    */
   @Test(expected = ValidationException.class)
   public void testCreateWithNullStatus() {
@@ -199,7 +199,7 @@ public class OccurrenceDownloadIT {
   }
 
   /**
-   * Tests the status update of {@link OccurrenceDownload}.
+   * Tests the status update of {@link Download}.
    */
   @Test
   public void testUpdateStatus() {
@@ -218,7 +218,7 @@ public class OccurrenceDownloadIT {
 
 
   /**
-   * Tests the status update of {@link OccurrenceDownload}.
+   * Tests the status update of {@link Download}.
    */
   @Test
   public void testUpdateStatusCompleted() {
