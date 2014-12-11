@@ -22,4 +22,10 @@
     VALUES(#{status.status,jdbcType=OTHER}, #{status.target,jdbcType=OTHER}, #{xml,jdbcType=OTHER}, now())
     WHERE doi = #{doi,jdbcType=OTHER}
   </update>
+
+  <delete id="delete" parameterType="map">
+    DELETE FROM gbif_doi
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </delete>
+
 </mapper>

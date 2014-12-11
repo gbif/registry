@@ -13,4 +13,5 @@ public interface DoiMapper {
   void create (@Param("doi") DOI doi, @Param("type") DoiType type);
   void update (@Param("doi") DOI doi, @Param("status") DoiData status, @Param("xml") String xml);
   DoiData get (@Param("doi") DOI doi);
+  void delete (@Param("doi") DOI doi);
 }
