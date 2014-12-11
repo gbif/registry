@@ -22,6 +22,16 @@ public class DoiUpdaterConfiguration {
   @NotNull
   public GangliaConfiguration ganglia = new GangliaConfiguration();
 
+  @ParametersDelegate
+  @Valid
+  @NotNull
+  public DbConfiguration db = new DbConfiguration();
+
+  @ParametersDelegate
+  @Valid
+  @NotNull
+  public DataCiteConfiguration datacite = new DataCiteConfiguration();
+
   @Parameter(names = "--msg-pool-size")
   @Min(1)
   public int msgPoolSize = 1;
@@ -30,27 +40,4 @@ public class DoiUpdaterConfiguration {
   @NotNull
   public String queueName;
 
-  @Parameter(names = "--doi-username")
-  @NotNull
-  public String doiUsername;
-
-  @Parameter(names = "--doi-password")
-  @NotNull
-  public String doiPassword;
-
-  @Parameter(names = "--db-host")
-  @NotNull
-  public String dbHost;
-
-  @Parameter(names = "--db-name")
-  @NotNull
-  public String dbName;
-
-  @Parameter(names = "--db-username")
-  @NotNull
-  public String dbUsername;
-
-  @Parameter(names = "--db-password")
-  @NotNull
-  public String dbPassword;
 }

@@ -1,12 +1,11 @@
 package org.gbif.registry.cli;
 
 import org.gbif.common.messaging.MessageListener;
-import org.gbif.doi.service.DoiService;
-import org.gbif.doi.service.ServiceConfig;
-import org.gbif.doi.service.datacite.DataCiteService;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import org.apache.http.impl.client.HttpClientBuilder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 /**
  * A CLI service that starts and stops a listener of DoiUpdate messages.
@@ -25,14 +24,10 @@ public class DoiUpdaterService extends AbstractIdleService {
   protected void startUp() throws Exception {
     config.ganglia.start();
 
-    // TODO: does httpclient needoli more config?
-    DoiService doiService = new DataCiteService(HttpClientBuilder.create().build(),
-      new ServiceConfig(config.doiUsername, config.doiPassword));
-
-    // TODO: add db setup and include in listener constructor
-
+    Injector inj = Guice.createInjector(config.db.createMyBatisModule());
     listener = new MessageListener(config.messaging.getConnectionParameters());
-    listener.listen(config.queueName, config.msgPoolSize, new DoiUpdateListener(doiService, null));
+    listener.listen(config.queueName, config.msgPoolSize,
+      new DoiUpdateListener(config.datacite.createService(), inj.getInstance(DoiMapper.class)));
   }
 
   @Override

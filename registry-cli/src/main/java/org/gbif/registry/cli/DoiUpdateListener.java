@@ -1,12 +1,16 @@
 package org.gbif.registry.cli;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
+import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +33,57 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
   @Override
   public void handleMessage(ChangeDoiMessage msg) {
-    LOG.debug("Got change doi message");
-    switch (msg.getStatus()) {
-      case REGISTERED:
-      case RESERVED:
-      case DELETED:
+    LOG.debug("Handling change DOI to {} message for {}", msg.getStatus(), msg.getDoi());
+    final DoiData currState = doiMapper.get(msg.getDoi());
+    while(true) {
+      try {
+        switch (msg.getStatus()) {
+          case REGISTERED:
+            register(msg.getDoi(), msg.getTarget(), msg.getMetadata(), currState);
+            break;
+          case RESERVED:
+            reserve(msg.getDoi(), msg.getMetadata(), currState);
+            break;
+          case DELETED:
+            delete(msg.getDoi(), currState);
+            break;
+        }
+        break;
+      } catch (DoiException e){
+        LOG.warn("DOI exception updating {} to {}. Trying again in 5 minutes", msg.getDoi(), msg.getStatus());
+        try {
+          Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+        } catch (InterruptedException e1) {
+          LOG.info("Interrupted eternal retry");
+          break;
+        }
+      }
     }
   }
 
-  private void register(DOI doi, URI target, String xml) {
+  private void reserve(DOI doi, String xml, DoiData currState) throws DoiException {
+    doiService.reserve(doi, xml);
+    DoiData newState = new DoiData(DoiStatus.RESERVED, currState.getTarget());
+    doiMapper.update(doi, newState, xml);
+  }
 
+  private void delete(DOI doi, DoiData currState) throws DoiException {
+    if (currState.getStatus() == null) {
+      doiMapper.delete(doi);
+    } else {
+      boolean fullDeleted = doiService.delete(doi);
+      if (fullDeleted) {
+        doiMapper.delete(doi);
+      } else {
+        DoiData newState = new DoiData(DoiStatus.DELETED, currState.getTarget());
+        doiMapper.update(doi, newState, null);
+      }
+    }
+  }
+
+  private void register(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
+    doiService.register(doi, target, xml);
+    DoiData newState = new DoiData(DoiStatus.REGISTERED, target);
+    doiMapper.update(doi, newState, xml);
   }
 }
