@@ -47,7 +47,11 @@ public class DataCiteConverter {
       .withCreators()
         .addCreator()
           .withCreatorName(publisher.getTitle())
-          .withNameIdentifier().withValue(publisher.getKey().toString()).withSchemeURI("gbif.org").end()
+          .withNameIdentifier()
+            .withValue(publisher.getKey().toString())
+            .withSchemeURI("gbif.org")
+            .withNameIdentifierScheme("GBIF")
+          .end()
         .end()
       .end()
       .withRelatedIdentifiers().end();
@@ -61,7 +65,11 @@ public class DataCiteConverter {
         .withCreators()
           .addCreator()
             .withCreatorName(d.getCreatedBy())
-            .withNameIdentifier().withValue(d.getCreatedBy()).withSchemeURI("gbif.org").end()
+            .withNameIdentifier()
+              .withValue(d.getCreatedBy())
+              .withSchemeURI("gbif.org")
+              .withNameIdentifierScheme("GBIF")
+            .end()
           .end()
         .end();
     }
