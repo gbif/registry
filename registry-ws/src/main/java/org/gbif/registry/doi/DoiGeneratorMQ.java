@@ -74,7 +74,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   @Override
   public DOI newDownloadDOI() {
-    return newDOI("", DoiType.DATASET);
+    return newDOI("dl.", DoiType.DOWNLOAD);
   }
 
   @Override

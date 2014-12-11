@@ -30,7 +30,7 @@ public class DoiGeneratorMQIT {
   @Test
   public void testNewDOI() {
     Set<DOI> dois = Sets.newHashSet();
-    for (int x=1; x < 50; x++) {
+    for (int x = 1; x < 20; x++) {
       DOI doi = generator.newDatasetDOI();
       assertTrue(generator.isGbif(doi));
       dois.add(doi);
