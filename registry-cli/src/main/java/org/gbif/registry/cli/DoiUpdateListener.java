@@ -1,9 +1,12 @@
 package org.gbif.registry.cli;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.persistence.mapper.DoiMapper;
+
+import java.net.URI;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,15 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
   @Override
   public void handleMessage(ChangeDoiMessage msg) {
-    LOG.debug("Got doi update message");
+    LOG.debug("Got change doi message");
+    switch (msg.getStatus()) {
+      case REGISTERED:
+      case RESERVED:
+      case DELETED:
+    }
+  }
+
+  private void register(DOI doi, URI target, String xml) {
+
   }
 }

@@ -3,7 +3,7 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.DoiMapper">
 
   <!-- Auto-mapping -->
-  <resultMap id="DOI_STATUS_MAP" type="DoiStatus" autoMapping="true">
+  <resultMap id="DOI_STATUS_MAP" type="DoiData" autoMapping="true">
   </resultMap>
 
   <select id="get" resultType="map" resultMap="DOI_STATUS_MAP">

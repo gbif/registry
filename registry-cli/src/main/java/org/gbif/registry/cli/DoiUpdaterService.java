@@ -25,7 +25,7 @@ public class DoiUpdaterService extends AbstractIdleService {
   protected void startUp() throws Exception {
     config.ganglia.start();
 
-    // TODO: does httpclient need more config?
+    // TODO: does httpclient needoli more config?
     DoiService doiService = new DataCiteService(HttpClientBuilder.create().build(),
       new ServiceConfig(config.doiUsername, config.doiPassword));
 
