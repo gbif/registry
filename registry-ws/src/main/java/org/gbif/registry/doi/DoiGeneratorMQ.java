@@ -102,7 +102,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and dataset {}", doi, datasetKey);
     } else {
       try {
-        messagePublisher.send(message);
+        messagePublisher.send(message, true);
       } catch (IOException e) {
         LOG.warn("Failed sending DoiChangeMessage for {} and dataset {}", doi, datasetKey, e);
       }
@@ -121,7 +121,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and download {}", doi, downloadKey);
     } else {
       try {
-        messagePublisher.send(message);
+        messagePublisher.send(message, true);
       } catch (IOException e) {
         LOG.warn("Failed sending DoiChangeMessage for {} and download {}", doi, downloadKey, e);
       }
