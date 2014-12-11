@@ -7,12 +7,16 @@ import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
+import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import org.apache.commons.lang.time.DateFormatUtils;
 
@@ -42,7 +46,7 @@ public class DataCiteConverter {
       .withTitles().withTitle(DataCiteMetadata.Titles.Title.builder().withValue(d.getTitle()).build()).end()
       .withPublisher(publisher.getTitle())
       // default to this year, e.g. when creating new datasets. This field is required!
-      .withPublicationYear(String.valueOf(new Date().getYear()))
+      .withPublicationYear(String.valueOf(getYear(new Date())))
       .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).withValue(d.getType().name()).end()
       .withCreators()
         .addCreator()
@@ -57,7 +61,7 @@ public class DataCiteConverter {
       .withRelatedIdentifiers().end();
 
     if (d.getCreated() != null) {
-      b.withPublicationYear(String.valueOf(d.getModified().getYear()))
+      b.withPublicationYear(String.valueOf(getYear(d.getModified())))
         .withDates()
         .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
         .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
@@ -75,7 +79,7 @@ public class DataCiteConverter {
     }
     if (d.getPubDate() != null) {
       // use pub date for publication year if it exists
-      b.withPublicationYear(String.valueOf(d.getPubDate().getYear()));
+      b.withPublicationYear(String.valueOf(getYear(d.getPubDate())));
     }
     if (d.getModified() != null) {
       b.withDates()
@@ -92,7 +96,10 @@ public class DataCiteConverter {
     }
 
     if (!Strings.isNullOrEmpty(d.getDescription())) {
-      b.withDescriptions().addDescription().addContent(d.getDescription());
+      b.withDescriptions()
+        .addDescription()
+          .addContent(d.getDescription())
+        .withDescriptionType(DescriptionType.ABSTRACT);
     }
     if (d.getDataLanguage() != null) {
       b.withLanguage(d.getDataLanguage().getTitleEnglish());
@@ -123,5 +130,15 @@ public class DataCiteConverter {
       }
     }
     return b.build();
+  }
+
+  @VisibleForTesting
+  protected static Integer getYear(Date date) {
+    if (date == null) {
+      return null;
+    }
+    Calendar cal = new GregorianCalendar();
+    cal.setTime(date);
+    return cal.get(Calendar.YEAR);
   }
 }

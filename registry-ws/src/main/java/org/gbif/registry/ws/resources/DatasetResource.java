@@ -467,8 +467,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
     final UUID key = super.create(dataset);
-    // now that we have a UUID registerDataset the DOI
-    register(dataset.getDoi(), buildMetadata(dataset), key);
+    // now that we have a UUID schedule to register the DOI
+    // to get the latest timestamps we need to read a new copy of the dataset
+    register(dataset.getDoi(), buildMetadata(get(key)), key);
     return key;
   }
 
@@ -527,10 +528,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (doiGenerator.isGbif(dataset.getDoi())) {
       // if DOIs changed establish relationship
       DataCiteMetadata metadata;
+      // to get the latest timestamps we need to read a new copy of the dataset
       if (dataset.getDoi().equals(oldDoi)) {
-        metadata = buildMetadata(dataset);
+        metadata = buildMetadata(get(dataset.getKey()));
       } else {
-        metadata = buildMetadata(dataset, oldDoi, RelationType.IS_NEW_VERSION_OF);
+        metadata = buildMetadata(get(dataset.getKey()), oldDoi, RelationType.IS_NEW_VERSION_OF);
       }
       register(dataset.getDoi(), metadata, dataset.getKey());
     }

@@ -16,8 +16,16 @@ import com.beust.jcommander.internal.Lists;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DataCiteConverterTest {
+
+  @Test
+  public void testGetYear() throws Exception {
+    Date d = new Date(1418340702253l);
+    assertEquals((Integer)2014, DataCiteConverter.getYear(d));
+    assertNull(DataCiteConverter.getYear(null));
+  }
 
   @Test
   public void testConvert() throws Exception {
