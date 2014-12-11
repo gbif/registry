@@ -1,10 +1,11 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.service.DoiStatus;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.events.MessageSendingEventListener;
@@ -95,7 +96,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     Preconditions.checkNotNull(datasetKey, "Dataset key required");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.Status.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
+    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
 
     if (messagePublisher == null) {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and dataset {}", doi, datasetKey);
@@ -114,7 +115,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     Preconditions.checkNotNull(downloadKey, "Download key required");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.Status.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
+    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
 
     if (messagePublisher == null) {
       LOG.warn("No message publisher configured to send DoiChangeMessage for {} and download {}", doi, downloadKey);

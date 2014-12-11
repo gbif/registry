@@ -13,6 +13,7 @@
 package org.gbif.registry.persistence.guice;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
@@ -35,7 +36,6 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.doi.service.DoiStatus;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.CountryTypeHandler;
 import org.gbif.mybatis.type.LanguageTypeHandler;
@@ -136,7 +136,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("DatasetProcessStatus").to(DatasetProcessStatus.class);
       addAlias("CrawlJob").to(CrawlJob.class);
       addAlias("MetasyncHistory").to(MetasyncHistory.class);
-      addAlias("DoiStatus").to(DoiStatus.class);
+      addAlias("DoiData").to(DoiData.class);
       addAlias("DOI").to(DOI.class);
       addAlias("Pageable").to(Pageable.class);
       addAlias("UUID").to(UUID.class);

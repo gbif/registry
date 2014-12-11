@@ -32,7 +32,7 @@ public class DoiUpdaterService extends AbstractIdleService {
     // TODO: add db setup and include in listener constructor
 
     listener = new MessageListener(config.messaging.getConnectionParameters());
-    listener.listen(config.queueName, config.msgPoolSize, new DoiUpdateListener(doiService));
+    listener.listen(config.queueName, config.msgPoolSize, new DoiUpdateListener(doiService, null));
   }
 
   @Override

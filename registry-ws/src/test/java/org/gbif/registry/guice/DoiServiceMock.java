@@ -1,10 +1,11 @@
 package org.gbif.registry.guice;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
-import org.gbif.doi.service.DoiStatus;
 
 import java.net.URI;
 import javax.annotation.Nullable;
@@ -19,8 +20,8 @@ public class DoiServiceMock implements DoiService {
 
   @Nullable
   @Override
-  public DoiStatus resolve(DOI doi) throws DoiException {
-    return new DoiStatus(DoiStatus.Status.REGISTERED, MOCK_TARGET);
+  public DoiData resolve(DOI doi) throws DoiException {
+    return new DoiData(DoiStatus.REGISTERED, MOCK_TARGET);
   }
 
   @Override
