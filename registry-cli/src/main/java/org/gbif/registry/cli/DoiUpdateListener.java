@@ -34,7 +34,13 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   @Override
   public void handleMessage(ChangeDoiMessage msg) {
     LOG.debug("Handling change DOI to {} message for {}", msg.getStatus(), msg.getDoi());
-    final DoiData currState = doiMapper.get(msg.getDoi());
+    DoiData currState = doiMapper.get(msg.getDoi());
+    if (currState == null) {
+      // mybatis returns null and does not call the constructor when all its arguments are null!
+      // https://code.google.com/p/mybatis/issues/detail?id=798
+      // this behavior can apparently be changed in configs, but they do not seem to take effect
+      currState = new DoiData((DoiStatus) null, null);
+    }
     while(true) {
       try {
         switch (msg.getStatus()) {

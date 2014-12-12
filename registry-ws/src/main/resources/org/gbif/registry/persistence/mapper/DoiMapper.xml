@@ -5,7 +5,7 @@
   <resultMap id="DOI_DATA_MAP" type="DoiData">
     <constructor>
       <arg column="status" javaType="org.gbif.api.model.common.DoiStatus"/>
-      <arg column="target" typeHandler="UriTypeHandler"/>
+      <arg column="target" javaType="java.net.URI" typeHandler="UriTypeHandler"/>
     </constructor>
   </resultMap>
 
@@ -16,8 +16,8 @@
   </select>
 
   <insert id="create" parameterType="map" useGeneratedKeys="false">
-    INSERT INTO gbif_doi (doi, type)
-    VALUES(#{doi,jdbcType=OTHER}, #{type,jdbcType=OTHER})
+    INSERT INTO gbif_doi (doi, type, status)
+    VALUES(#{doi,jdbcType=OTHER}, #{type,jdbcType=OTHER}, 'NEW')
   </insert>
 
   <update id="update" parameterType="map">

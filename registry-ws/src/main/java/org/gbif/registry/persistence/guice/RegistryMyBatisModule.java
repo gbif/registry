@@ -70,6 +70,8 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
 
+import static com.google.inject.name.Names.named;
+
 /**
  * Sets up the persistence layer using the properties supplied.
  */
@@ -89,6 +91,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
 
     @Override
     protected void bindManagers() {
+      failFast(true);
     }
 
     @Override
