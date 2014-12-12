@@ -24,11 +24,6 @@
     <!-- plugin versions -->
     <jettyVersion>7.3.1.v20110307</jettyVersion>
     <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
-
-    <!-- ws-only deps -->
-    <janino.version>2.7.7</janino.version>
-    <!-- no newer than 1.4.7 because of compatibility with logback -->
-    <javax.mail.version>1.4.7</javax.mail.version>
   </properties>
 
   <build>
@@ -207,14 +202,10 @@
     <dependency>
       <groupId>org.codehaus.janino</groupId>
       <artifactId>janino</artifactId>
-      <version>${janino.version}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
-      <version>${javax.mail.version}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

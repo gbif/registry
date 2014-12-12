@@ -220,6 +220,15 @@
       <artifactId>logback-core</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <!-- needed for logback smtp appender -->
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>janino</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+    </dependency>
 
     <!-- testing -->
     <dependency>
@@ -229,5 +238,32 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>crawler-dev</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <version>1.0-beta-4</version>
+            <configuration>
+              <fromFile>${project.build.directory}/${project.artifactId}.jar</fromFile>
+              <url>scp://crap@crawler.gbif-dev.org/home/crap/lib</url>
+            </configuration>
+            <executions>
+              <execution>
+                <id>deploy-crawler</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>upload-single</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
 

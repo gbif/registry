@@ -1,4 +1,4 @@
-package org.gbif.registry.cli.common;
+package org.gbif.registry.cli.configuration;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,23 +14,23 @@ import com.yammer.metrics.reporting.GangliaReporter;
 public class GangliaConfiguration {
 
   @Parameter(names = "--ganglia-host")
-  public String gangliaHost;
+  public String host;
 
   @Parameter(names = "--ganglia-port")
-  public int gangliaPort;
+  public int port;
 
   /**
    * Starts the GangliaReporter, pointing to the configured host and port.
    */
   @JsonIgnore
   public void start() {
-    if (gangliaHost != null && gangliaPort > 0) {
-      GangliaReporter.enable(1, TimeUnit.MINUTES, gangliaHost, gangliaPort);
+    if (host != null && port > 0) {
+      GangliaReporter.enable(1, TimeUnit.MINUTES, host, port);
     }
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("gangliaHost", gangliaHost).add("gangliaPort", gangliaPort).toString();
+    return Objects.toStringHelper(this).add("gangliaHost", host).add("gangliaPort", port).toString();
   }
 }

@@ -1,10 +1,8 @@
-package org.gbif.registry.cli;
+package org.gbif.registry.cli.configuration;
 
 import org.gbif.common.messaging.config.MessagingConfiguration;
-import org.gbif.registry.cli.common.GangliaConfiguration;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
@@ -31,10 +29,6 @@ public class DoiUpdaterConfiguration {
   @Valid
   @NotNull
   public DataCiteConfiguration datacite = new DataCiteConfiguration();
-
-  @Parameter(names = "--msg-pool-size")
-  @Min(1)
-  public int msgPoolSize = 1;
 
   @Parameter(names = "--queue-name")
   @NotNull

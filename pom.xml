@@ -81,6 +81,9 @@
     <httpclient.version>4.3.6</httpclient.version>
     <httpcore.version>4.3.3</httpcore.version>
     <jackson.version>1.9.11</jackson.version>
+    <janino.version>2.7.7</janino.version>
+    <!-- no newer than 1.4.7 because of compatibility with logback -->
+    <javax.mail.version>1.4.7</javax.mail.version>
     <jaxb-api.version>2.2.12</jaxb-api.version>
     <jersey-server.version>1.18.3</jersey-server.version>
     <jersey.version>1.18.3</jersey.version>
@@ -289,6 +292,19 @@
         <groupId>org.slf4j</groupId>
         <artifactId>jul-to-slf4j</artifactId>
         <version>${slf4j.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <!-- next two for logback smtp appender -->
+      <dependency>
+        <groupId>org.codehaus.janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.mail</groupId>
+        <artifactId>mail</artifactId>
+        <version>${javax.mail.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>

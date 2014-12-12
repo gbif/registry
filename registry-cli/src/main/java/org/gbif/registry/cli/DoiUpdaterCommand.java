@@ -3,6 +3,7 @@ package org.gbif.registry.cli;
 
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
+import org.gbif.registry.cli.configuration.DoiUpdaterConfiguration;
 
 import com.google.common.util.concurrent.Service;
 import org.kohsuke.MetaInfServices;

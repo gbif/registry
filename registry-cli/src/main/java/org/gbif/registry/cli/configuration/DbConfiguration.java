@@ -1,4 +1,4 @@
-package org.gbif.registry.cli;
+package org.gbif.registry.cli.configuration;
 
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 

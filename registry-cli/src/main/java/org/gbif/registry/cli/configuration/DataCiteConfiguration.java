@@ -1,4 +1,4 @@
-package org.gbif.registry.cli;
+package org.gbif.registry.cli.configuration;
 
 import org.gbif.doi.service.ServiceConfig;
 import org.gbif.doi.service.datacite.DataCiteService;
