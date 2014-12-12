@@ -54,6 +54,27 @@
     </encoder>
   </appender>
 
+  <appender name="DOI_SMTP" class="ch.qos.logback.classic.net.SMTPAppender">
+    <asynchronousSending>false</asynchronousSending>
+    <smtpHost>smtp.gbif.org</smtpHost>
+    <to>omeyn@gbif.org</to>
+    <from>portal@gbif-dev.org</from>
+    <subject>DOI Failure</subject>
+    <layout class="ch.qos.logback.classic.html.HTMLLayout">
+      <pattern>%date%level%logger{24}%msg</pattern>
+    </layout>
+
+    <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+      <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
+        <expression>
+          marker != null &amp;&amp; marker.contains("DOI_SMTP") &amp;&amp; level > INFO
+        </expression>
+      </evaluator>
+      <OnMatch>ACCEPT</OnMatch>
+      <OnMismatch>DENY</OnMismatch>
+    </filter>
+  </appender>
+
   <logger name="org.gbif.registry.metadata.parse" level="INFO"/>
   <logger name="org.gbif.registry.ims.ImsNodeMapper" level="INFO"/>
   <logger name="org.gbif.registry.persistence.mapper" level="INFO"/>
@@ -65,6 +86,7 @@
     <!--appender-ref ref="CONSOLE"/-->
     <appender-ref ref="FILE"/>
     <appender-ref ref="ERROR_FILE"/>
+    <appender-ref ref="DOI_SMTP"/>
   </root>
 
 </configuration>
