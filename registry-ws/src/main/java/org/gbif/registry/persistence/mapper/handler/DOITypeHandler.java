@@ -27,14 +27,14 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
- * A converter for DOI objects to the database representation.
+ * A converter for DOI objects to the database representation using the DOI name.
  * Nulls are passed through.
  */
 public class DOITypeHandler implements TypeHandler<DOI> {
 
   @Override
   public void setParameter(PreparedStatement ps, int i, DOI parameter, JdbcType jdbcType) throws SQLException {
-    ps.setObject(i, parameter == null ? null : parameter.toString(), Types.OTHER);
+    ps.setObject(i, parameter == null ? null : parameter.getDoiName(), Types.OTHER);
   }
 
   @Override
