@@ -103,6 +103,8 @@ import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
@@ -119,6 +121,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
+  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
@@ -467,9 +470,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
     final UUID key = super.create(dataset);
-    // now that we have a UUID schedule to register the DOI
+    // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
-    register(dataset.getDoi(), buildMetadata(get(key)), key);
+    scheduleRegistration(dataset.getDoi(), buildMetadata(get(key)), key);
     return key;
   }
 
@@ -522,7 +525,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
     if (doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
-      register(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF), dataset.getKey());
+      scheduleRegistration(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
+        dataset.getKey());
     }
     // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
     if (doiGenerator.isGbif(dataset.getDoi())) {
@@ -534,16 +538,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       } else {
         metadata = buildMetadata(get(dataset.getKey()), oldDoi, RelationType.IS_NEW_VERSION_OF);
       }
-      register(dataset.getDoi(), metadata, dataset.getKey());
+      scheduleRegistration(dataset.getDoi(), metadata, dataset.getKey());
     }
   }
 
-  private void register(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
+  private void scheduleRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
     try {
       doiGenerator.registerDataset(doi, metadata, datasetKey);
     } catch (InvalidMetadataException e) {
-      // Lets hope this never happens. Throw the wrapped exception in any case
-      throw new IllegalArgumentException(e);
+      LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}, dataset {}", doi, datasetKey, e);
+      doiGenerator.failed(doi, e);
     }
   }
 

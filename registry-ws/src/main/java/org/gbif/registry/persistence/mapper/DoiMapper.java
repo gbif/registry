@@ -10,8 +10,8 @@ import org.apache.ibatis.annotations.Param;
  * MyBatis mapper to store DOIs and their status in the registry db.
  */
 public interface DoiMapper {
+  DoiData get (@Param("doi") DOI doi);
   void create (@Param("doi") DOI doi, @Param("type") DoiType type);
   void update (@Param("doi") DOI doi, @Param("status") DoiData status, @Param("xml") String xml);
-  DoiData get (@Param("doi") DOI doi);
   void delete (@Param("doi") DOI doi);
 }

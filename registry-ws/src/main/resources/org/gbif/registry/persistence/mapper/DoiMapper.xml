@@ -2,11 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.DoiMapper">
 
-  <!-- Auto-mapping -->
-  <resultMap id="DOI_STATUS_MAP" type="DoiData" autoMapping="true">
+  <resultMap id="DOI_DATA_MAP" type="DoiData">
+    <constructor>
+      <arg column="status" javaType="org.gbif.api.model.common.DoiStatus"/>
+      <arg column="target" typeHandler="UriTypeHandler"/>
+    </constructor>
   </resultMap>
 
-  <select id="get" resultType="map" resultMap="DOI_STATUS_MAP">
+  <select id="get" resultType="DoiData" resultMap="DOI_DATA_MAP">
     SELECT status, target
     FROM gbif_doi
     WHERE doi = #{doi,jdbcType=OTHER}
@@ -18,8 +21,11 @@
   </insert>
 
   <update id="update" parameterType="map">
-    INSERT INTO gbif_doi (status, target, metadata, modified)
-    VALUES(#{status.status,jdbcType=OTHER}, #{status.target,jdbcType=OTHER}, #{xml,jdbcType=OTHER}, now())
+    UPDATE gbif_doi SET
+      status = #{status.status,jdbcType=OTHER},
+      target = #{status.target,jdbcType=OTHER},
+      metadata = #{xml,jdbcType=OTHER},
+      modified = now()
     WHERE doi = #{doi,jdbcType=OTHER}
   </update>
 

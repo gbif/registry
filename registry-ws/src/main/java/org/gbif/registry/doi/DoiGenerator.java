@@ -33,6 +33,12 @@ public interface DoiGenerator {
   boolean isGbif(DOI doi);
 
   /**
+   * Updates the doi table to status FAILED and uses the error message & stacktrace as the xml
+   * for manual debugging / cleanup.
+   */
+  void failed(DOI doi, InvalidMetadataException e);
+
+  /**
    * Schedules a DOI metadata update with DataCite and registers the DOI if needed.
    * For subsequent calls with the same DOI only the metadata in DataCite will be updated.
    * If it is called for the very first time the DOI will also be properly registered with DataCite.

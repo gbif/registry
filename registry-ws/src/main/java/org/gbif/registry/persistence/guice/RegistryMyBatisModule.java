@@ -143,6 +143,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Country").to(Country.class);
       addAlias("Language").to(Language.class);
 
+      addAlias("UriTypeHandler").to(UriTypeHandler.class);
       addAlias("UuidTypeHandler").to(UuidTypeHandler.class);
       addAlias("LanguageTypeHandler").to(LanguageTypeHandler.class);
       addAlias("CountryTypeHandler").to(CountryTypeHandler.class);

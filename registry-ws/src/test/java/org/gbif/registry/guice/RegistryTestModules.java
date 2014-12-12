@@ -56,11 +56,29 @@ import org.apache.ibatis.io.Resources;
 public class RegistryTestModules {
 
   // cache everything, for reuse in repeated calls (e.g. IDE test everything)
+  private static Injector mybatis;
   private static Injector webservice;
   private static Injector webserviceClient;
   private static Injector webserviceBasicAuthClient;
   private static Injector management;
   private static HikariDataSource managementDatasource;
+
+  /**
+   * @return An injector that is bound for the mybatis layer and exposes mappers.
+   */
+  public static synchronized Injector mybatis() {
+    if (mybatis == null) {
+      try {
+        final Properties p = new Properties();
+        p.load(Resources.getResourceAsStream("registry-test.properties"));
+        mybatis =
+          Guice.createInjector(new RegistryMyBatisModule(p));
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
+    }
+    return mybatis;
+  }
 
   /**
    * @return An injector that is bound for the webservice layer without SOLR capabilities.
