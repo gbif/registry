@@ -1,17 +1,31 @@
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.doi.metadata.datacite.ContributorType;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
+import org.gbif.doi.metadata.datacite.RelationType;
+import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.EnumSet;
+import java.util.List;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
@@ -29,11 +43,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
@@ -52,13 +71,32 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
 
+  private final DatasetService datasetService;
+
+  private final DoiGenerator doiGenerator;
+
+  //Download final/failed states
+  private final EnumSet<Download.Status> FAILED_STATES = EnumSet.of(Download.Status.KILLED, Download.Status.CANCELLED,
+                                                                    Download.Status.FAILED);
+
+  //Page size to iterate over dataset usages
+  private static final int USAGES_PAGE_SIZE = 400;
+
+
+  //DOI logging marker
+  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
+  private static Logger LOG = LoggerFactory.getLogger(DoiGenerator.class);
+  private static final String DOI_ERR_MSG = "An error registering doi for download {}";
+
   @Context
   private SecurityContext securityContext;
 
   @Inject
-  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
+  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper, DoiGenerator doiGenerator, DatasetService datasetService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.doiGenerator = doiGenerator;
+    this.datasetService = datasetService;
   }
 
 
@@ -69,6 +107,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @RolesAllowed(ADMIN_ROLE)
   @Override
   public void create(@Valid @NotNull @Trim Download occurrenceDownload) {
+    occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
     occurrenceDownloadMapper.create(occurrenceDownload);
   }
 
@@ -114,8 +153,51 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
+    updateDownloadDOI(download);
     occurrenceDownloadMapper.update(download);
   }
+
+  /**
+   * Updates the download DOI according to the download status.
+   * If the download succeeded its DOI is registered; if the download status is one the FAILED_STATES
+   * the DOI is removed, otherwise doesn't nothing.
+   */
+  private void updateDownloadDOI(Download download){
+    if(download.isAvailable()){
+      try {
+        doiGenerator.registerDownload(download.getDoi(), buildMetadata(download), download.getKey());
+      } catch(Throwable error) {
+        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey());
+      }
+    } else if(FAILED_STATES.contains(download.getStatus())){
+      try {
+        doiGenerator.delete(download.getDoi());
+      } catch(Throwable error) {
+        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey());
+      }
+    }
+  }
+
+  /**
+   * Creates the DataCite metadata for a download object.
+   */
+  private DataCiteMetadata buildMetadata(Download download) {
+    DataCiteMetadata metadata = DataCiteConverter.convert(download);
+
+    PagingRequest pagingRequest = new PagingRequest(0,USAGES_PAGE_SIZE);
+    List<DatasetOccurrenceDownloadUsage> response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(),pagingRequest);
+
+    while (response != null && !response.isEmpty()) {
+      for (DatasetOccurrenceDownloadUsage usage : response) {
+         DataCiteConverter.appendDownloadDatasetMetadata(metadata, datasetService.get(usage.getDatasetKey()));
+      }
+      pagingRequest.nextPage();
+      response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
+    }
+    return metadata;
+  }
+
+
 
   @GET
   @Path("{key}/datasets")

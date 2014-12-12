@@ -65,11 +65,11 @@
 <eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd"
-         packageId="${dataset.key!}" system="http://gbif.org" scope="system"
+         packageId=<#if useDoiAsIdentifier && dataset.doi?exists>"${dataset.doi.doiName}"<#else>"${dataset.key!}"</#if>  system="http://gbif.org" scope="system"
          <#if dataset.language??>xml:lang="${dataset.language.getIso2LetterCode()}"</#if>>
 
 <dataset>
-  <#if dataset.doi?exists>
+  <#if !useDoiAsIdentifier && dataset.doi?exists>
       <alternateIdentifier system="doi.org">${dataset.doi}</alternateIdentifier>
   </#if>
   <#list dataset.identifiers![] as altid>

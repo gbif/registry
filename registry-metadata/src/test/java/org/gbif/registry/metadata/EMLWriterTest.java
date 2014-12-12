@@ -1,5 +1,6 @@
 package org.gbif.registry.metadata;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.metadata.parse.DatasetParser;
@@ -45,5 +46,14 @@ public class EMLWriterTest {
         d.setKey(UUID.randomUUID());
         StringWriter writer = new StringWriter();
         EMLWriter.write(d, writer);
+    }
+
+    @Test
+    public void testWriteDoiAsPrimaryId() throws Exception {
+      Dataset d = DatasetParser.build(FileUtils.classpathStream("dc/worms_dc.xml"));
+      d.setKey(UUID.randomUUID());
+      d.setDoi(new DOI("10.1234/5679"));
+      StringWriter writer = new StringWriter();
+      EMLWriter.write(d, writer,true);
     }
 }

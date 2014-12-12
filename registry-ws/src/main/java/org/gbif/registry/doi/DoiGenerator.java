@@ -63,4 +63,12 @@ public interface DoiGenerator {
    * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
    */
   void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException;
+
+  /**
+   * Deletes a GBIF DOI.
+   * If the DOI is registered in DataCite it's deleted; otherwise, it's only removed in the GBIF Registry.
+   *
+   * @param doi the GBIF DOI to delete/unregister
+   */
+  void delete(DOI doi);
 }

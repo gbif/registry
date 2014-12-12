@@ -117,6 +117,14 @@ public class EMLWriter {
   }
 
   public static void write(Dataset dataset, Writer writer) throws IOException {
+    write(dataset,writer,false);
+  }
+
+  /**
+   * Creates an EML which packageId is the dataset.doi.
+   * The dataset.doi won't be included in the list of alternate identifiers.
+   */
+  public static void write(Dataset dataset, Writer writer, boolean useDoiAsIdentifier) throws IOException {
     if (dataset == null) {
       throw new IllegalArgumentException("Dataset can't be null");
     }
@@ -124,6 +132,7 @@ public class EMLWriter {
     Map<String, Object> map = Maps.newHashMap();
     map.put("dataset", dataset);
     map.put("eml", new EmlDatasetWrapper(dataset));
+    map.put("useDoiAsIdentifier", useDoiAsIdentifier);
 
 
     try {

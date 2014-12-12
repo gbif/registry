@@ -102,37 +102,48 @@ public class DoiGeneratorMQ implements DoiGenerator {
   public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
     Preconditions.checkNotNull(doi, "DOI required");
     Preconditions.checkNotNull(datasetKey, "Dataset key required");
+    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
 
-    if (messagePublisher == null) {
-      LOG.warn("No message publisher configured to send DoiChangeMessage for {} and dataset {}", doi, datasetKey);
-    } else {
-      try {
-        messagePublisher.send(message, true);
-      } catch (IOException e) {
-        LOG.warn("Failed sending DoiChangeMessage for {} and dataset {}", doi, datasetKey, e);
-      }
+    try {
+      messagePublisher.send(message, true);
+    } catch (IOException e) {
+      LOG.error("Failed sending DoiChangeMessage for {} and dataset {}", doi, datasetKey, e);
     }
+
   }
 
   @Override
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
     Preconditions.checkNotNull(doi, "DOI required");
     Preconditions.checkNotNull(downloadKey, "Download key required");
+    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
 
-    if (messagePublisher == null) {
-      LOG.warn("No message publisher configured to send DoiChangeMessage for {} and download {}", doi, downloadKey);
-    } else {
-      try {
-        messagePublisher.send(message, true);
-      } catch (IOException e) {
-        LOG.warn("Failed sending DoiChangeMessage for {} and download {}", doi, downloadKey, e);
-      }
+    try {
+      messagePublisher.send(message, true);
+    } catch (IOException e) {
+      LOG.error("Failed sending DoiChangeMessage for {} and download {}", doi, downloadKey, e);
     }
+
+  }
+
+  @Override
+  public void delete(DOI doi) {
+    Preconditions.checkNotNull(doi, "DOI required");
+    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+
+    Message message = new ChangeDoiMessage(DoiStatus.DELETED, doi, null, null);
+
+    try {
+      messagePublisher.send(message, true);
+    } catch (IOException e) {
+      LOG.error("Failed sending DoiChangeMessage for {}", doi, e);
+    }
+
   }
 }
