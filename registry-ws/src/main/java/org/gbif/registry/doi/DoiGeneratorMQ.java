@@ -53,7 +53,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     datasetTarget = portal.resolve("dataset/");
-    downloadTarget = portal.resolve("occurrence/download/detail/");
+    downloadTarget = portal.resolve("occurrence/download/");
   }
 
   private DOI newDOI(final String shoulder, DoiType type) {
