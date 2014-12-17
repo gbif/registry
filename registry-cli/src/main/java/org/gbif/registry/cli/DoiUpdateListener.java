@@ -24,7 +24,7 @@ import org.slf4j.MarkerFactory;
 public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage> {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiUpdateListener.class);
-  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
+  private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   private final DoiService doiService;
   private final DoiMapper doiMapper;

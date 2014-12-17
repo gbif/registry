@@ -6,18 +6,12 @@
 
   <property name="defaultPattern" value="%-5level [%date{'yyyy-dd-MM HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
 
-  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>${defaultPattern}</pattern>
-    </encoder>
-  </appender>
-
-  <appender name="DOI_SMTP" class="ch.qos.logback.classic.net.SMTPAppender">
+  <appender name="DOI" class="ch.qos.logback.classic.net.SMTPAppender">
     <asynchronousSending>false</asynchronousSending>
     <smtpHost>smtp.gbif.org</smtpHost>
-    <to>omeyn@gbif.org</to>
-    <from>portal@gbif-dev.org</from>
-    <subject>DOI Failure</subject>
+    <to>dev@gbif.org</to>
+    <from>registry-cli@gbif-dev.org</from>
+    <subject>[registry-cli] DOI Error</subject>
     <layout class="ch.qos.logback.classic.html.HTMLLayout">
       <pattern>%date%level%logger{24}%msg</pattern>
     </layout>
@@ -33,6 +27,12 @@
     </filter>
   </appender>
 
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${defaultPattern}</pattern>
+    </encoder>
+  </appender>
+
   <appender name="SOCKET" class="ch.qos.logback.classic.net.SocketAppender">
     <remoteHost>b6g8.gbif.org</remoteHost>
     <port>10819</port>
@@ -40,9 +40,9 @@
     <includeCallerData>false</includeCallerData>
   </appender>
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="CONSOLE"/>
-    <appender-ref ref="DOI_SMTP"/>
+    <appender-ref ref="DOI"/>
     <!--<appender-ref ref="SOCKET"/>-->
   </root>
 
