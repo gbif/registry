@@ -6,6 +6,7 @@ import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.service.DoiException;
+import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
@@ -84,12 +85,21 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     if (currState.getStatus() == null) {
       doiMapper.delete(doi);
     } else {
-      boolean fullDeleted = doiService.delete(doi);
-      if (fullDeleted) {
-        doiMapper.delete(doi);
-      } else {
-        DoiData newState = new DoiData(DoiStatus.DELETED, currState.getTarget());
-        doiMapper.update(doi, newState, null);
+      try {
+        boolean fullDeleted = doiService.delete(doi);
+        if (fullDeleted) {
+          doiMapper.delete(doi);
+        } else {
+          DoiData newState = new DoiData(DoiStatus.DELETED, currState.getTarget());
+          doiMapper.update(doi, newState, null);
+        }
+      } catch (DoiHttpException e) {
+        // in case of a 404 swallow
+        if (e.getStatus() == 404) {
+          LOG.warn(DOI_SMTP, "Trying to delete DOI {} failed cause it is not existing at DataCite: {}", doi, e.getMessage());
+        } else {
+          throw e;
+        }
       }
     }
   }
