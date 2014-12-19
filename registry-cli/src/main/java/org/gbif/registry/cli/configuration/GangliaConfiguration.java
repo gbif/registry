@@ -31,6 +31,6 @@ public class GangliaConfiguration {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("gangliaHost", host).add("gangliaPort", port).toString();
+    return Objects.toStringHelper(this).add("host", host).add("port", port).toString();
   }
 }

@@ -57,9 +57,9 @@
   <appender name="DOI_SMTP" class="ch.qos.logback.classic.net.SMTPAppender">
     <asynchronousSending>false</asynchronousSending>
     <smtpHost>smtp.gbif.org</smtpHost>
-    <to>omeyn@gbif.org</to>
+    <to>dev@gbif.org</to>
     <from>portal@gbif-dev.org</from>
-    <subject>DOI Failure</subject>
+    <subject>[registry-ws] DOI Failure</subject>
     <layout class="ch.qos.logback.classic.html.HTMLLayout">
       <pattern>%date%level%logger{24}%msg</pattern>
     </layout>

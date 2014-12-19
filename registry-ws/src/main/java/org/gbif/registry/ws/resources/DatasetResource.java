@@ -507,16 +507,18 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     final DOI oldDoi = super.get(dataset.getKey()).getDoi();
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
-      if (doiGenerator.isGbif(oldDoi)) {
+      if (oldDoi != null && doiGenerator.isGbif(oldDoi)) {
         dataset.setDoi(oldDoi);
       } else {
         // we have a non GBIF DOI before that we need to deprecate
         reactivatePreviousGbifDoiOrMintNew(dataset);
         // add old DOI to list of alt identifiers
-        addAltId(oldDoi, dataset);
+        if (oldDoi != null) {
+          addAltId(oldDoi, dataset);
+        }
       }
 
-    } else if (!dataset.getDoi().equals(oldDoi)) {
+    } else if (oldDoi != null && !dataset.getDoi().equals(oldDoi)) {
       // the doi has changed. Add old DOI to list of alt identifiers
       addAltId(oldDoi, dataset);
     }
@@ -524,7 +526,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     super.update(dataset);
 
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
-    if (doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
+    if (oldDoi != null && doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
       scheduleRegistration(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
         dataset.getKey());
     }
@@ -533,7 +535,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       // if DOIs changed establish relationship
       DataCiteMetadata metadata;
       // to get the latest timestamps we need to read a new copy of the dataset
-      if (dataset.getDoi().equals(oldDoi)) {
+      if (oldDoi == null || dataset.getDoi().equals(oldDoi)) {
         metadata = buildMetadata(get(dataset.getKey()));
       } else {
         metadata = buildMetadata(get(dataset.getKey()), oldDoi, RelationType.IS_NEW_VERSION_OF);

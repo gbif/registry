@@ -1,7 +1,7 @@
 queueName: doi_updater
 messaging:
   host: mq.gbif.org
-  virtualHost: /dev
+  virtualHost: /users/omeyn
   username: doi
   password: doi
 ganglia:
@@ -11,8 +11,8 @@ db:
   serverName: pg1.gbif-dev.org
   databaseName: dev_registry
   user: registry
-  password: replaceme
+  password: h56jebHD6h
 datacite:
-  username: GBIF.DK
-  password: replaceme
+  username: DK.GBIF
+  password: gbif1234
 

@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -51,7 +53,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     datasetTarget = portal.resolve("dataset/");
-    downloadTarget = portal.resolve("occurrence/download/detail/");
+    downloadTarget = portal.resolve("occurrence/download/");
   }
 
   private DOI newDOI(final String shoulder, DoiType type) {
@@ -81,7 +83,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   @Override
   public boolean isGbif(DOI doi) {
-    return doi.getPrefix().equalsIgnoreCase(prefix);
+    return doi != null && doi.getPrefix().equalsIgnoreCase(prefix);
   }
 
   @Override
@@ -93,7 +95,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   /**
    * @return a random DOI with the given prefix. It is not guaranteed to be unique and might exist already
    */
-  private DOI random(String shoulder) {
+  private DOI random(@Nullable String shoulder) {
     String suffix = Strings.nullToEmpty(shoulder) + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH);
     return new DOI(prefix, suffix);
   }

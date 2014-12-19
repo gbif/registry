@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 /**
  * Message callback implementation to take DOI updates and send them to DataCite. Updates the status of the DOI in
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage> {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiUpdateListener.class);
+  private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   private final DoiService doiService;
   private final DoiMapper doiMapper;
@@ -41,7 +44,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       return;
     }
 
-    while(true) {
+    while (true) {
       try {
         switch (msg.getStatus()) {
           case REGISTERED:
@@ -58,8 +61,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
             break;
         }
         break;
-      } catch (DoiException e){
-        LOG.warn("DOI exception updating {} to {}. Trying again in 5 minutes", msg.getDoi(), msg.getStatus());
+      } catch (DoiException e) {
+        LOG.warn(DOI_SMTP, "DOI exception updating {} to {}. Trying again in 5 minutes", msg.getDoi(), msg.getStatus(),
+          e);
         try {
           Thread.sleep(TimeUnit.MINUTES.toMillis(5));
         } catch (InterruptedException e1) {
