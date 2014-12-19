@@ -167,13 +167,13 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download), download.getKey());
       } catch(Throwable error) {
-        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey());
+        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey(),error);
       }
     } else if(FAILED_STATES.contains(download.getStatus())){
       try {
         doiGenerator.delete(download.getDoi());
       } catch(Throwable error) {
-        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey());
+        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey(),error);
       }
     }
   }
