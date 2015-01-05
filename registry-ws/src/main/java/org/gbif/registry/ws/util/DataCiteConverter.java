@@ -1,13 +1,12 @@
 package org.gbif.registry.ws.util;
 
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.doi.metadata.datacite.ContributorType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
@@ -18,18 +17,23 @@ import org.gbif.doi.metadata.datacite.ResourceType;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang.time.DateFormatUtils;
 
 public class DataCiteConverter {
 
   private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
-  private static final String DOWNLOAD_CREATOR = "GBIF Download Service";
+  private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
+  private static final String RIGHTS = "CC0 1.0 Universal";
+  private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
+
   private static final String DWAC_FORMAT = "Darwin Core Archive";
   private static final Joiner NAME_JOINER = Joiner.on(" ").skipNulls();
 
@@ -57,7 +61,7 @@ public class DataCiteConverter {
       .withTitles().withTitle(DataCiteMetadata.Titles.Title.builder().withValue(d.getTitle()).build()).end()
       .withPublisher(publisher.getTitle())
       // default to this year, e.g. when creating new datasets. This field is required!
-      .withPublicationYear(String.valueOf(getYear(new Date())))
+      .withPublicationYear(getYear(new Date()))
       .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).withValue(d.getType().name()).end()
       .withCreators()
         .addCreator()
@@ -72,7 +76,7 @@ public class DataCiteConverter {
       .withRelatedIdentifiers().end();
 
     if (d.getCreated() != null) {
-      b.withPublicationYear(String.valueOf(getYear(d.getModified())))
+      b.withPublicationYear(getYear(d.getModified()))
         .withDates()
         .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
         .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
@@ -90,7 +94,7 @@ public class DataCiteConverter {
     }
     if (d.getPubDate() != null) {
       // use pub date for publication year if it exists
-      b.withPublicationYear(String.valueOf(getYear(d.getPubDate())));
+      b.withPublicationYear(getYear(d.getPubDate()));
     }
     if (d.getModified() != null) {
       b.withDates()
@@ -144,98 +148,62 @@ public class DataCiteConverter {
   }
 
   @VisibleForTesting
-  protected static Integer getYear(Date date) {
+  protected static String getYear(Date date) {
     if (date == null) {
       return null;
     }
     Calendar cal = new GregorianCalendar();
     cal.setTime(date);
-    return cal.get(Calendar.YEAR);
+    return String.valueOf(cal.get(Calendar.YEAR));
   }
 
   /**
-   * Convert a download into a datacite metadata instance.
-   * DataCite requires at least the following properties:
-   * <ul>
-   *   <li>Identifier</li>
-   *   <li>Creator</li>
-   *   <li>Title</li>
-   *   <li>Publisher</li>
-   *   <li>PublicationYear</li>
-   * </ul>
-   *
-   * As the publicationYear property is often not available from newly created datasets, this converter uses the current
-   * year as the default in case no created timestamp or pubdate exists.
+   * Convert a download and its dataset usages into a datacite metadata instance.
    */
-  public static DataCiteMetadata convert(Download d) {
+  public static DataCiteMetadata convert(Download d, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+    Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
+    Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");
+    Preconditions.checkNotNull(d.getRequest().getCreator(), "Download creator required to build valid DOI metadata");
+
     // always add required metadata
     DataCiteMetadata.Builder<java.lang.Void> b = DataCiteMetadata.builder()
-      .withTitles().withTitle(DataCiteMetadata.Titles.Title.builder().withValue(String.format(DOWNLOAD_TITLE,d.getRequest().getCreator())).build()).end()
-      .withPublisher(d.getRequest().getCreator())
-        // default to this year, e.g. when creating new datasets. This field is required!
-      .withPublicationYear(String.valueOf(new Date().getYear()))
-      .withResourceType().withResourceTypeGeneral(ResourceType.OTHER).end()
+      .withIdentifier().withIdentifierType(IdentifierType.DOI.name()).withValue(d.getDoi().getDoiName()).end()
+      .withTitles()
+        .withTitle(
+          DataCiteMetadata.Titles.Title.builder().withValue(String.format(DOWNLOAD_TITLE, d.getRequest().getCreator()))
+            .build())
+      .end()
       .withCreators()
-      .addCreator()
-      .withCreatorName(DOWNLOAD_CREATOR)
+        .addCreator().withCreatorName(d.getRequest().getCreator()).end()
       .end()
+      .withPublisher(GBIF_PUBLISHER).withPublicationYear(getYear(d.getCreated()))
+      .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
+      .withAlternateIdentifiers()
+        .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end()
       .end()
-      .withRelatedIdentifiers().end();
-
-    if (d.getCreated() != null) {
-      b.withPublicationYear(String.valueOf(d.getModified().getYear()))
-        .withDates()
+      .withDates()
         .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
         .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
-        .end()
-        .withCreators()
-        .addCreator()
-        .withCreatorName(DOWNLOAD_CREATOR)
-        .end()
-        .end();
-    }
-    b.withPublicationYear(String.valueOf(d.getCreated().getYear())).end();
-    if (d.getDoi() != null) {
-      b.withIdentifier().withIdentifierType(IdentifierType.DOI.name()).withValue(d.getDoi().getDoiName());
-      if (d.getKey() != null) {
-        b.withAlternateIdentifiers()
-          .addAlternateIdentifier().withAlternateIdentifierType("KEY").withValue(d.getKey().toString());
-      }
-    } else if (d.getKey() != null) {
-      b.withIdentifier().withIdentifierType("KEY").withValue(d.getKey().toString());
-    }
-    b.withFormats().addFormat(DWAC_FORMAT).end();
-    b.withSizes().addSize(Long.toString(d.getSize())).end();
-    return b.build();
-  }
+      .end()
+      .withFormats().addFormat(DWAC_FORMAT).end()
+      .withSizes().addSize(Long.toString(d.getSize())).end()
+      .withRightsList().addRights(
+        DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build())
+      .end();
 
-  /**
-   * Adds metadata from the related dataset to the DataCiteMetadata.
-   */
-  public static void appendDownloadDatasetMetadata(DataCiteMetadata metadata, Dataset dataset){
-    if (dataset.getContacts() != null) {
-      for (Contact contact : dataset.getContacts()) {
-        metadata.getContributors()
-          .getContributor()
-          .add(DataCiteMetadata.Contributors.Contributor.builder()
-                 .withContributorName(NAME_JOINER.join(contact.getFirstName(),contact.getLastName()))
-                 .withContributorType(ContributorType.OTHER)
-                 .build());
+    if (!usedDatasets.isEmpty()) {
+      for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
+        if(du.getDatasetDOI() != null) {
+          b.withRelatedIdentifiers()
+            .addRelatedIdentifier()
+              .withRelationType(RelationType.REFERENCES)
+              .withValue(du.getDatasetDOI().getDoiName())
+              .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+            .end();
+        }
       }
     }
-    if (!Strings.isNullOrEmpty(dataset.getRights())) {
-      metadata.getRightsList()
-        .getRights()
-        .add(DataCiteMetadata.RightsList.Rights.builder().withValue(dataset.getRights()).build());
-    }
-    if(dataset.getDoi() != null) {
-      metadata.getRelatedIdentifiers()
-        .getRelatedIdentifier()
-        .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-               .withRelationType(RelationType.REFERENCES)
-               .withValue(dataset.getDoi().getDoiName())
-               .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-               .build());
-    }
+
+    return b.build();
   }
 }

@@ -3,18 +3,16 @@ package org.gbif.registry.ws.util;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -24,14 +22,13 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class DataCiteConverterTest {
 
   @Test
   public void testGetYear() throws Exception {
     Date d = new Date(1418340702253l);
-    assertEquals((Integer)2014, DataCiteConverter.getYear(d));
+    assertEquals("2014", DataCiteConverter.getYear(d));
     assertNull(DataCiteConverter.getYear(null));
   }
 
@@ -77,21 +74,12 @@ public class DataCiteConverterTest {
     return m;
   }
 
+  @Test
   public void testConvertDownload() throws Exception{
-    Dataset dataset = new Dataset();
-    dataset.setKey(UUID.randomUUID());
-    dataset.setType(DatasetType.OCCURRENCE);
-    dataset.setTitle("my title");
-    dataset.setCreated(new Date());
-    dataset.setModified(new Date());
-    dataset.setCreatedBy("gbif.dev");
-    dataset.setDoi(new DOI("10.1234/5679"));
-    Contact contact = new Contact();
-    contact.setFirstName("GBIF");
-    contact.setLastName("dev");
-    List<Contact> contacts = new ArrayList<Contact>();
-    contacts.add(contact);
-    dataset.setContacts(contacts);
+    DatasetOccurrenceDownloadUsage du = new DatasetOccurrenceDownloadUsage();
+    du.setDatasetKey(UUID.randomUUID());
+    du.setDatasetTitle("my title");
+    du.setDatasetDOI(new DOI("10.1234/5679"));
 
     Download download = new Download();
     download.setCreated(new Date());
@@ -104,16 +92,9 @@ public class DataCiteConverterTest {
     download.setTotalRecords(10);
     DownloadRequest downloadRequest = new DownloadRequest();
     downloadRequest.setCreator("dev@gbif.org");
+    download.setRequest(downloadRequest);
 
-    DataCiteMetadata metadata = DataCiteConverter.convert(download);
-    DataCiteConverter.appendDownloadDatasetMetadata(metadata,dataset);
-    assertEquals(metadata.getContributors().getContributor().get(0).getContributorName(),contact.getFirstName() + " " + contact.getLastName());
-    assertEquals(metadata.getRightsList().getRights().get(0),dataset.getRights());
-    assertEquals(metadata.getSizes().getSize().get(0),download.getSize());
-    assertTrue(!metadata.getCreators().getCreator().isEmpty());
-    assertEquals(metadata.getRelatedIdentifiers().getRelatedIdentifier().get(0),dataset.getDoi().getDoiName());
-    assertEquals(metadata.getIdentifier().getIdentifierType(), IdentifierType.DOI.name());
-    assertEquals(metadata.getIdentifier().getValue(), download.getDoi().getDoiName());
-    assertEquals(metadata.getAlternateIdentifiers().getAlternateIdentifier().get(0),download.getKey());
+    DataCiteMetadata metadata = DataCiteConverter.convert(download, Lists.newArrayList(du));
+    DataCiteValidator.toXml(download.getDoi(), metadata);
   }
 }

@@ -1,21 +1,15 @@
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
-import org.gbif.doi.metadata.datacite.ContributorType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
-import org.gbif.doi.metadata.datacite.RelationType;
+import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
@@ -42,8 +36,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sun.jersey.api.NotFoundException;
@@ -86,7 +80,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   //DOI logging marker
   private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
   private static Logger LOG = LoggerFactory.getLogger(DoiGenerator.class);
-  private static final String DOI_ERR_MSG = "An error registering doi for download {}";
 
   @Context
   private SecurityContext securityContext;
@@ -166,15 +159,12 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     if(download.isAvailable()){
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download), download.getKey());
-      } catch(Throwable error) {
-        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey(),error);
+      } catch(InvalidMetadataException error) {
+        LOG.error(DOI_SMTP, "Invalid metadata for download {} with doi {} ", download.getKey(), download.getDoi(),  error);
       }
+
     } else if(FAILED_STATES.contains(download.getStatus())){
-      try {
-        doiGenerator.delete(download.getDoi());
-      } catch(Throwable error) {
-        LOG.error(DOI_SMTP, DOI_ERR_MSG,download.getKey(),error);
-      }
+      doiGenerator.delete(download.getDoi());
     }
   }
 
@@ -182,19 +172,18 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
    * Creates the DataCite metadata for a download object.
    */
   private DataCiteMetadata buildMetadata(Download download) {
-    DataCiteMetadata metadata = DataCiteConverter.convert(download);
 
-    PagingRequest pagingRequest = new PagingRequest(0,USAGES_PAGE_SIZE);
-    List<DatasetOccurrenceDownloadUsage> response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(),pagingRequest);
+    List<DatasetOccurrenceDownloadUsage> response = null;
+    List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
+    PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
 
-    while (response != null && !response.isEmpty()) {
-      for (DatasetOccurrenceDownloadUsage usage : response) {
-         DataCiteConverter.appendDownloadDatasetMetadata(metadata, datasetService.get(usage.getDatasetKey()));
-      }
-      pagingRequest.nextPage();
+    while (response == null || !response.isEmpty()) {
       response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
+      usages.addAll(response);
+      pagingRequest.nextPage();
     }
-    return metadata;
+
+    return DataCiteConverter.convert(download, usages);
   }
 
 
