@@ -29,9 +29,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Random;
 import java.util.UUID;
-
 import javax.validation.ValidationException;
 
 import com.google.common.collect.ImmutableList;
@@ -224,6 +222,9 @@ public class OccurrenceDownloadIT {
   public void testUpdateStatusCompleted() {
     Download occurrenceDownload = getTestInstance();
     occurrenceDownloadService.create(occurrenceDownload);
+    // reload to get latest db modifications like created date
+    occurrenceDownload = occurrenceDownloadService.get(occurrenceDownload.getKey());
+
     occurrenceDownload.setStatus(Download.Status.SUCCEEDED);
     occurrenceDownload.setSize(200L);
     occurrenceDownload.setTotalRecords(600L);

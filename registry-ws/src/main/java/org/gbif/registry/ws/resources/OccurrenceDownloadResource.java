@@ -146,7 +146,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
-    updateDownloadDOI(download);
+    updateDownloadDOI(download, currentDownload);
     occurrenceDownloadMapper.update(download);
   }
 
@@ -155,8 +155,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
    * If the download succeeded its DOI is registered; if the download status is one the FAILED_STATES
    * the DOI is removed, otherwise doesn't nothing.
    */
-  private void updateDownloadDOI(Download download){
-    if(download.isAvailable()){
+  private void updateDownloadDOI(Download download, Download previousDownload){
+    if(download.isAvailable() && previousDownload.getStatus() != Download.Status.SUCCEEDED){
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download), download.getKey());
       } catch(InvalidMetadataException error) {
