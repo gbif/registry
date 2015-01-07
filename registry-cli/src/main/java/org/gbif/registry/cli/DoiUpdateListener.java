@@ -96,7 +96,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       } catch (DoiHttpException e) {
         // in case of a 404 swallow
         if (e.getStatus() == 404) {
-          LOG.warn(DOI_SMTP, "Trying to delete DOI {} failed cause it is not existing at DataCite: {}", doi, e.getMessage());
+          LOG.warn(DOI_SMTP, "Trying to delete DOI {} failed because it doesn't exist in DataCite; deleting locally",
+            doi, e);
+          doiMapper.delete(doi);
         } else {
           throw e;
         }
