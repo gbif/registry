@@ -12,6 +12,8 @@
  */
 package org.gbif.registry.guice;
 
+import org.gbif.api.model.common.User;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -29,9 +31,13 @@ import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.registry.ws.resources.legacy.IptResource;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
+import org.gbif.ws.server.filter.AuthFilter;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
+import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
@@ -99,16 +105,31 @@ public class RegistryTestModules {
               bind(DatasetResource.class);
               bind(NetworkResource.class);
               bind(IptResource.class);
+              bind(SecurityContext.class).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
             new DrupalMockModule(), new RegistryMyBatisModule(p), new ImsModule(), new RegistrySearchModule(p),
-            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule()
-            );
+            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule(),
+            new ChecklistBankMockModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
     }
     return webservice;
+  }
+
+  private static SecurityContext mockAdmin() {
+    User user = new User();
+    user.setUserName("admin");
+    user.setFirstName("Veronica");
+    user.setLastName("Meier");
+    user.setEmail("veronica@mailinator.com");
+    user.setKey(1);
+    Set<UserRole> roles = new HashSet<UserRole>();
+    roles.add(UserRole.ADMIN);
+    user.setRoles(roles);
+    AuthFilter af = new AuthFilter(null, null);
+    return af.new Authorizer(user, "");
   }
 
   /**

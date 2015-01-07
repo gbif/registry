@@ -179,9 +179,11 @@ public class OccurrenceDownloadIT {
       OccurrenceDownloadService downloadServiceAuth = clientBasicAuth.getInstance(OccurrenceDownloadService.class);
       assertTrue("List by user operation should return 5 records",
         downloadServiceAuth.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5)).getResults().size() > 0);
+
+    } else {
+      // Just to make the test pass for the webservice version
+      throw new AccessControlException("Fake exception");
     }
-    // Just to make the test pass
-    throw new AccessControlException("Fake exception");
   }
 
   /**

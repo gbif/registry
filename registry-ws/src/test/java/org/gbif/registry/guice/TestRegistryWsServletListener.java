@@ -69,7 +69,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new ValidationModule(),
       new EventModule(props),
       new RegistrySearchModule(props),
-      new SecurityModule(props));
+      new SecurityModule(props),
+      new ChecklistBankMockModule());
   }
 
   /**

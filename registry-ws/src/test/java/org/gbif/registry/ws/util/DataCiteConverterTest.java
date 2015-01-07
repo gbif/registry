@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.util;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.registry.Dataset;
@@ -8,6 +9,8 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.service.checklistbank.NameUsageService;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
@@ -22,6 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 public class DataCiteConverterTest {
 
@@ -94,7 +98,23 @@ public class DataCiteConverterTest {
     downloadRequest.setCreator("dev@gbif.org");
     download.setRequest(downloadRequest);
 
-    DataCiteMetadata metadata = DataCiteConverter.convert(download, Lists.newArrayList(du));
-    DataCiteValidator.toXml(download.getDoi(), metadata);
+    User user = new User();
+    user.setUserName("peta");
+    user.setEmail("aha@music.com");
+    user.setFirstName("Pete");
+    user.setEmail("Doherty");
+
+    DatasetService ds = mock(DatasetService.class);
+    NameUsageService nus = mock(NameUsageService.class);
+
+    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du), ds, nus);
+    System.out.println(DataCiteValidator.toXml(download.getDoi(), metadata));
+  }
+
+  @Test
+  public void ttt() {
+    long l = 321l;
+    String q = "HALLO";
+    System.out.print(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s",l,q));
   }
 }

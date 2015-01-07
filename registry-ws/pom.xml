@@ -110,6 +110,10 @@
       <artifactId>drupal-mybatis</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.checklistbank</groupId>
+      <artifactId>checklistbank-ws-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
     </dependency>

@@ -13,10 +13,10 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.drupal.guice.DrupalMyBatisModule;
+import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.ims.ImsModule;
-import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
@@ -77,7 +77,8 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new EventModule(properties),
                               new RegistrySearchModule(properties),
                               new SecurityModule(properties),
-                              new VarnishPurgeModule(properties));
+                              new VarnishPurgeModule(properties),
+                              new NameUsageServiceWrapperModule(properties));
   }
 
   @VisibleForTesting

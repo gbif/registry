@@ -1,12 +1,17 @@
 package org.gbif.registry.ws.util;
 
+import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.service.checklistbank.NameUsageService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.util.occurrence.HumanFilterBuilder;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
@@ -33,7 +38,7 @@ public class DataCiteConverter {
   private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
   private static final String RIGHTS = "CC0 1.0 Universal";
   private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
-
+  private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWAC_FORMAT = "Darwin Core Archive";
   private static final Joiner NAME_JOINER = Joiner.on(" ").skipNulls();
 
@@ -160,10 +165,12 @@ public class DataCiteConverter {
   /**
    * Convert a download and its dataset usages into a datacite metadata instance.
    */
-  public static DataCiteMetadata convert(Download d, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+  public static DataCiteMetadata convert(Download d, User creator, List<DatasetOccurrenceDownloadUsage> usedDatasets,
+    DatasetService datasetService, NameUsageService nameUsageService) {
     Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
     Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");
-    Preconditions.checkNotNull(d.getRequest().getCreator(), "Download creator required to build valid DOI metadata");
+    Preconditions.checkNotNull(creator, "Download creator required to build valid DOI metadata");
+    Preconditions.checkNotNull(d.getRequest(), "Download request required to build valid DOI metadata");
 
     // always add required metadata
     DataCiteMetadata.Builder<java.lang.Void> b = DataCiteMetadata.builder()
@@ -173,23 +180,31 @@ public class DataCiteConverter {
           DataCiteMetadata.Titles.Title.builder().withValue(String.format(DOWNLOAD_TITLE, d.getRequest().getCreator()))
             .build())
       .end()
-      .withCreators()
-        .addCreator().withCreatorName(d.getRequest().getCreator()).end()
+      .withSubjects()
+        .addSubject().withValue("GBIF").withLang(ENGLISH).end()
+        .addSubject().withValue("biodiversity").withLang(ENGLISH).end()
+        .addSubject().withValue("species occurrences").withLang(ENGLISH).end()
+      .end()
+      .withCreators().addCreator().withCreatorName(creator.getName()).end()
       .end()
       .withPublisher(GBIF_PUBLISHER).withPublicationYear(getYear(d.getCreated()))
       .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
       .withAlternateIdentifiers()
-        .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end()
-      .end()
-      .withDates()
-        .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
-        .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
-      .end()
-      .withFormats().addFormat(DWAC_FORMAT).end()
-      .withSizes().addSize(Long.toString(d.getSize())).end()
-      .withRightsList().addRights(
-        DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build())
+        .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end().end().withDates()
+      .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
+        .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end().end().withFormats()
+      .addFormat(DWAC_FORMAT).end().withSizes().addSize(Long.toString(d.getSize())).end().withRightsList()
+      .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build())
       .end();
+
+    String query = new HumanFilterBuilder(datasetService, nameUsageService, false).humanFilterString(
+      d.getRequest().getPredicate());
+    final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
+      .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
+        .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s.",
+            d.getTotalRecords(), query))
+        .addContent(String.format("The dataset includes %s records from the following %s constituent datasets:",
+          d.getTotalRecords(), d.getNumberDatasets()));
 
     if (!usedDatasets.isEmpty()) {
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
@@ -200,6 +215,9 @@ public class DataCiteConverter {
               .withValue(du.getDatasetDOI().getDoiName())
               .withRelatedIdentifierType(RelatedIdentifierType.DOI)
             .end();
+        }
+        if (!Strings.isNullOrEmpty(du.getDatasetTitle())) {
+          db.addContent("\n " + du.getNumberRecords() + " records from " + du.getDatasetTitle() + ".");
         }
       }
     }

@@ -69,6 +69,7 @@
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
     <gbif-common.version>0.17</gbif-common.version>
+    <gbif-checklistbank.version>2.10-SNAPSHOT</gbif-checklistbank.version>
     <gbif-doi.version>1.0-SNAPSHOT</gbif-doi.version>
     <gbif-httputils.version>0.5</gbif-httputils.version>
     <gbif-microservice.version>0.1</gbif-microservice.version>
@@ -158,6 +159,11 @@
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-ws-client</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.checklistbank</groupId>
+        <artifactId>checklistbank-ws-client</artifactId>
+        <version>${gbif-checklistbank.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
