@@ -110,7 +110,7 @@ public class RegistryTestModules {
           }, TestValidateInterceptor.newMethodInterceptingModule(),
             new DrupalMockModule(), new RegistryMyBatisModule(p), new ImsModule(), new RegistrySearchModule(p),
             new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule(),
-            new ChecklistBankMockModule());
+            new TitleLookupMockModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

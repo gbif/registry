@@ -7,9 +7,6 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
-import org.gbif.api.service.checklistbank.NameUsageService;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.util.occurrence.HumanFilterBuilder;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -18,6 +15,8 @@ import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
+import org.gbif.occurrence.query.HumanFilterBuilder;
+import org.gbif.occurrence.query.TitleLookup;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -27,7 +26,6 @@ import java.util.Set;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -40,7 +38,6 @@ public class DataCiteConverter {
   private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
   private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWAC_FORMAT = "Darwin Core Archive";
-  private static final Joiner NAME_JOINER = Joiner.on(" ").skipNulls();
 
   private static String fdate(Date date) {
     return DateFormatUtils.ISO_DATE_FORMAT.format(date);
@@ -166,7 +163,7 @@ public class DataCiteConverter {
    * Convert a download and its dataset usages into a datacite metadata instance.
    */
   public static DataCiteMetadata convert(Download d, User creator, List<DatasetOccurrenceDownloadUsage> usedDatasets,
-    DatasetService datasetService, NameUsageService nameUsageService) {
+    TitleLookup titleLookup) {
     Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
     Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");
     Preconditions.checkNotNull(creator, "Download creator required to build valid DOI metadata");
@@ -197,8 +194,7 @@ public class DataCiteConverter {
       .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build())
       .end();
 
-    String query = new HumanFilterBuilder(datasetService, nameUsageService, false).humanFilterString(
-      d.getRequest().getPredicate());
+    String query = new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
     final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
       .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
         .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s.",

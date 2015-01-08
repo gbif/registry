@@ -69,12 +69,12 @@
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
     <gbif-common.version>0.17</gbif-common.version>
-    <gbif-checklistbank.version>2.10-SNAPSHOT</gbif-checklistbank.version>
     <gbif-doi.version>1.0-SNAPSHOT</gbif-doi.version>
     <gbif-httputils.version>0.5</gbif-httputils.version>
     <gbif-microservice.version>0.1</gbif-microservice.version>
     <gbif-parsers.version>0.10</gbif-parsers.version>
     <gbif-postal-service.version>0.13-SNAPSHOT</gbif-postal-service.version>
+    <gbif-download-query-tools.version>1.0-SNAPSHOT</gbif-download-query-tools.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
@@ -146,6 +146,11 @@
         <version>${gbif-microservice.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>download-query-tools</artifactId>
+        <version>${gbif-download-query-tools.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-metadata</artifactId>
         <version>${project.version}</version>
@@ -159,11 +164,6 @@
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-ws-client</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.checklistbank</groupId>
-        <artifactId>checklistbank-ws-client</artifactId>
-        <version>${gbif-checklistbank.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

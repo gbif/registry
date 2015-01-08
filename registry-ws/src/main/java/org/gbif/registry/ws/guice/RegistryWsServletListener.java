@@ -43,6 +43,7 @@ import org.apache.bval.guice.ValidationModule;
  */
 public class RegistryWsServletListener extends GbifServletListener {
 
+  private static final String API_URL_PROPERTY = "api.url";
   public static final String APP_CONF_FILE = "registry.properties";
 
   public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
@@ -78,7 +79,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new RegistrySearchModule(properties),
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
-                              new NameUsageServiceWrapperModule(properties));
+                              new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)));
   }
 
   @VisibleForTesting

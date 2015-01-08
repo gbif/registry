@@ -7,12 +7,11 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.service.checklistbank.NameUsageService;
 import org.gbif.api.service.common.UserService;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
@@ -66,8 +65,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
-  private final NameUsageService nameUsageService;
-  private final DatasetService datasetService;
+  private final TitleLookup titleLookup;
   private final UserService userService;
   private final DoiGenerator doiGenerator;
 
@@ -88,14 +86,12 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Inject
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    NameUsageService nameUsageService, DoiGenerator doiGenerator, DatasetService datasetService,
-    UserService userService) {
+    DoiGenerator doiGenerator, UserService userService, TitleLookup titleLookup) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
-    this.nameUsageService = nameUsageService;
     this.doiGenerator = doiGenerator;
-    this.datasetService = datasetService;
     this.userService = userService;
+    this.titleLookup = titleLookup;
   }
 
 
@@ -189,10 +185,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       pagingRequest.nextPage();
     }
 
-    return DataCiteConverter.convert(download, user, usages, datasetService, nameUsageService);
+    return DataCiteConverter.convert(download, user, usages, titleLookup);
   }
-
-
 
   @GET
   @Path("{key}/datasets")

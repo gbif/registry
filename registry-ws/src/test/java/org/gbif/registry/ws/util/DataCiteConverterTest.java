@@ -9,12 +9,11 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
-import org.gbif.api.service.checklistbank.NameUsageService;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.occurrence.query.TitleLookup;
 
 import java.util.Date;
 import java.util.List;
@@ -25,7 +24,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DataCiteConverterTest {
 
@@ -104,10 +105,12 @@ public class DataCiteConverterTest {
     user.setFirstName("Pete");
     user.setEmail("Doherty");
 
-    DatasetService ds = mock(DatasetService.class);
-    NameUsageService nus = mock(NameUsageService.class);
+    // mock title lookup API
+    TitleLookup tl = mock(TitleLookup.class);
+    when(tl.getDatasetTitle(anyString())).thenReturn("PonTaurus");
+    when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
 
-    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du), ds, nus);
+    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du), tl);
     System.out.println(DataCiteValidator.toXml(download.getDoi(), metadata));
   }
 
