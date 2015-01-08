@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.drupal.guice.DrupalMyBatisModule;
+import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
