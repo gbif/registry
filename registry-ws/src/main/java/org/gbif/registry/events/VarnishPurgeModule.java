@@ -6,8 +6,6 @@ import java.net.URI;
 import java.util.Properties;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,15 +35,11 @@ public class VarnishPurgeModule extends PrivateModule {
   protected void configure() {
     if (apiRoot != null) {
       bind(URI.class).toInstance(apiRoot);
+      bind(HttpClient.class).toInstance(HttpUtil.newMultithreadedClient(
+        DEFAULT_HTTP_TIMEOUT_MSECS, DEFAULT_MAX_HTTP_CONNECTIONS, DEFAULT_MAX_HTTP_CONNECTIONS_PER_ROUTE));
       bind(VarnishPurgeListener.class).asEagerSingleton();
       LOG.info("Varnish purging enabled with api root {}", apiRoot);
     }
   }
 
-  @Provides
-  @Singleton
-  public HttpClient provideHttpClient() {
-    return HttpUtil.newMultithreadedClient(DEFAULT_HTTP_TIMEOUT_MSECS, DEFAULT_MAX_HTTP_CONNECTIONS,
-            DEFAULT_MAX_HTTP_CONNECTIONS_PER_ROUTE);
-  }
 }
