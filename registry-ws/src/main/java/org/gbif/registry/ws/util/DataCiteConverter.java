@@ -32,10 +32,10 @@ import org.apache.commons.lang.time.DateFormatUtils;
 
 public class DataCiteConverter {
 
-  private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
-  private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
-  private static final String RIGHTS = "CC0 1.0 Universal";
-  private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
+  public static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
+  public static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
+  public static final String RIGHTS = "CC0 1.0 Universal";
+  public static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
   private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWAC_FORMAT = "Darwin Core Archive";
 
@@ -187,12 +187,12 @@ public class DataCiteConverter {
       .withPublisher(GBIF_PUBLISHER).withPublicationYear(getYear(d.getCreated()))
       .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
       .withAlternateIdentifiers()
-        .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end().end().withDates()
-      .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
-        .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end().end().withFormats()
-      .addFormat(DWAC_FORMAT).end().withSizes().addSize(Long.toString(d.getSize())).end().withRightsList()
-      .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build())
-      .end();
+        .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end()
+      .end().withDates().addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
+        .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
+      .end().withFormats().addFormat(DWAC_FORMAT).end().withSizes().addSize(Long.toString(d.getSize())).end()
+      .withRightsList()
+      .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build()).end();
 
     String query = new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
     final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
