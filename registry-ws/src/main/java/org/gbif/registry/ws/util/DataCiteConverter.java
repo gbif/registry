@@ -32,10 +32,10 @@ import org.apache.commons.lang.time.DateFormatUtils;
 
 public class DataCiteConverter {
 
-  public static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
-  public static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
-  public static final String RIGHTS = "CC0 1.0 Universal";
-  public static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
+  private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
+  private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
+  private static final String RIGHTS = "CC0 1.0 Universal";
+  private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
   private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWAC_FORMAT = "Darwin Core Archive";
 
