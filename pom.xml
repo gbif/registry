@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>16</version>
+    <version>17</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -64,7 +64,7 @@
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.21</freemarker.version>
     <gbif-api.version>0.17-SNAPSHOT</gbif-api.version>
-    <gbif-common-mybatis.version>0.13</gbif-common-mybatis.version>
+    <gbif-common-mybatis.version>0.14-SNAPSHOT</gbif-common-mybatis.version>
     <gbif-common-search.version>0.18</gbif-common-search.version>
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
@@ -78,10 +78,10 @@
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
-    <!-- RC2 because we want this commit:
+    <!-- RC4 because we want this commit:
       https://github.com/brettwooldridge/HikariCP/commit/4c238613b031e6fd42bd9b6b1aa3d072846e04ef
     -->
-    <hikaricp.version>2.3.0-rc2</hikaricp.version>
+    <hikaricp.version>2.3.0-rc4</hikaricp.version>
     <httpclient.version>4.3.6</httpclient.version>
     <httpcore.version>4.3.3</httpcore.version>
     <jackson.version>1.9.11</jackson.version>
