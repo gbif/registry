@@ -32,10 +32,10 @@ import org.apache.commons.lang.time.DateFormatUtils;
 
 public class DataCiteConverter {
 
-  private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download %s";
+  private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download";
   private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
-  private static final String RIGHTS = "CC0 1.0 Universal";
-  private static final String RIGHTS_URL = "http://creativecommons.org/publicdomain/zero/1.0/";
+  private static final String RIGHTS = "The data included in this download are provided to the user under a Creative Commons BY-NC 4.0 license which means that you are free to use, share, and adapt the data provided that you give reasonable and appropriate credit (attribution) and that you do not use the material for commercial purposes (non-commercial).\n\nData from some individual datasets included in this download may be licensed under less restrictive terms; review the details below.";
+  private static final String RIGHTS_URL = "http://creativecommons.org/licenses/by-nc/4.0";
   private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWAC_FORMAT = "Darwin Core Archive";
 
@@ -174,8 +174,7 @@ public class DataCiteConverter {
       .withIdentifier().withIdentifierType(IdentifierType.DOI.name()).withValue(d.getDoi().getDoiName()).end()
       .withTitles()
         .withTitle(
-          DataCiteMetadata.Titles.Title.builder().withValue(String.format(DOWNLOAD_TITLE, d.getRequest().getCreator()))
-            .build())
+          DataCiteMetadata.Titles.Title.builder().withValue(DOWNLOAD_TITLE).build())
       .end()
       .withSubjects()
         .addSubject().withValue("GBIF").withLang(ENGLISH).end()
