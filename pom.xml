@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>16</version>
+    <version>19</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -64,7 +64,7 @@
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.21</freemarker.version>
     <gbif-api.version>0.17-SNAPSHOT</gbif-api.version>
-    <gbif-common-mybatis.version>0.13</gbif-common-mybatis.version>
+    <gbif-common-mybatis.version>0.14-SNAPSHOT</gbif-common-mybatis.version>
     <gbif-common-search.version>0.18</gbif-common-search.version>
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
