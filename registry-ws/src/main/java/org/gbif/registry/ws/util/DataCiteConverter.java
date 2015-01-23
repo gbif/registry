@@ -202,14 +202,14 @@ public class DataCiteConverter {
           d.getTotalRecords(), d.getNumberDatasets()));
 
     if (!usedDatasets.isEmpty()) {
+      final DataCiteMetadata.RelatedIdentifiers.Builder<?> relBuilder = b.withRelatedIdentifiers();
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
         if(du.getDatasetDOI() != null) {
-          b.withRelatedIdentifiers()
-            .addRelatedIdentifier()
-              .withRelationType(RelationType.REFERENCES)
-              .withValue(du.getDatasetDOI().getDoiName())
-              .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-            .end();
+          relBuilder.addRelatedIdentifier()
+            .withRelationType(RelationType.REFERENCES)
+            .withValue(du.getDatasetDOI().getDoiName())
+            .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+          .end();
         }
         if (!Strings.isNullOrEmpty(du.getDatasetTitle())) {
           db.addContent("\n " + du.getNumberRecords() + " records from " + du.getDatasetTitle() + ".");

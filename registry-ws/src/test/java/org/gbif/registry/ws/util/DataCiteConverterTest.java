@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -81,10 +82,17 @@ public class DataCiteConverterTest {
 
   @Test
   public void testConvertDownload() throws Exception{
-    DatasetOccurrenceDownloadUsage du = new DatasetOccurrenceDownloadUsage();
-    du.setDatasetKey(UUID.randomUUID());
-    du.setDatasetTitle("my title");
-    du.setDatasetDOI(new DOI("10.1234/5679"));
+    DatasetOccurrenceDownloadUsage du1 = new DatasetOccurrenceDownloadUsage();
+    du1.setDatasetKey(UUID.randomUUID());
+    du1.setDatasetTitle("my title");
+    du1.setDatasetDOI(new DOI("10.1234/5679"));
+    du1.setNumberRecords(101);
+
+    DatasetOccurrenceDownloadUsage du2 = new DatasetOccurrenceDownloadUsage();
+    du2.setDatasetKey(UUID.randomUUID());
+    du2.setDatasetTitle("my title #2");
+    du2.setDatasetDOI(new DOI("10.1234/klimbim"));
+    du2.setNumberRecords(2002);
 
     Download download = new Download();
     download.setCreated(new Date());
@@ -110,8 +118,13 @@ public class DataCiteConverterTest {
     when(tl.getDatasetTitle(anyString())).thenReturn("PonTaurus");
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
 
-    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du), tl);
-    System.out.println(DataCiteValidator.toXml(download.getDoi(), metadata));
+    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
+    String xml = DataCiteValidator.toXml(download.getDoi(), metadata);
+    System.out.println(xml);
+    assertTrue(xml.contains(du1.getDatasetDOI().getDoiName()));
+    assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
+    assertTrue(xml.contains(String.valueOf(du1.getNumberRecords())));
+    assertTrue(xml.contains(String.valueOf(du2.getNumberRecords())));
   }
 
   @Test
