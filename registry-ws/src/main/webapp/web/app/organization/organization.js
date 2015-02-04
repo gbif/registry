@@ -125,7 +125,10 @@ angular.module('organization', [
 
   // shared across sub views
   $scope.counts = {};
-  $scope.countries = Restangular.all("enumeration/basic/Country").getList();
+  Restangular.all("enumeration/basic/Country").getList().then(function(data){
+    $scope.countries = data;
+  });
+  
 
   var load = function() {
     Restangular.one('organization', key).get()
@@ -261,7 +264,10 @@ angular.module('organization', [
 
 .controller('OrganizationCreateCtrl', function ($scope, $state, notifications, Restangular) {
 
-  $scope.countries = Restangular.all("enumeration/basic/Country").getList();
+  Restangular.all("enumeration/basic/Country").getList().then(function(data){
+    $scope.countries = data;
+  });
+  
 
   $scope.save = function (organization) {
     if (organization != undefined) {
