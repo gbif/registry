@@ -6,6 +6,7 @@ import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.service.DoiException;
+import org.gbif.doi.service.DoiExistsException;
 import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.persistence.mapper.DoiMapper;
@@ -49,7 +50,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       try {
         switch (msg.getStatus()) {
           case REGISTERED:
-            register(msg.getDoi(), msg.getTarget(), msg.getMetadata(), currState);
+            registerOrUpdate(msg.getDoi(), msg.getTarget(), msg.getMetadata(), currState);
             break;
           case RESERVED:
             reserve(msg.getDoi(), msg.getMetadata(), currState);
@@ -62,9 +63,13 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
             break;
         }
         break;
+
+      } catch (DoiExistsException e) {
+        LOG.warn(DOI_SMTP, "DOI {} existed already when trying to change status to {}. Ignore", msg.getDoi(), msg.getStatus(), e);
+        break;
+
       } catch (DoiException e) {
-        LOG.warn(DOI_SMTP, "DOI exception updating {} to {}. Trying again in 5 minutes", msg.getDoi(), msg.getStatus(),
-          e);
+        LOG.warn(DOI_SMTP, "DOI exception updating {} to {}. Trying again in 5 minutes", msg.getDoi(), msg.getStatus(), e);
         try {
           Thread.sleep(TimeUnit.MINUTES.toMillis(5));
         } catch (InterruptedException e1) {
@@ -106,9 +111,17 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     }
   }
 
-  private void register(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
-    doiService.register(doi, target, xml);
-    DoiData newState = new DoiData(DoiStatus.REGISTERED, target);
-    doiMapper.update(doi, newState, xml);
+  private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
+    if (DoiStatus.REGISTERED == currState.getStatus()) {
+      // the DOI was already registered, so we only need to update the target url if changed and the metadata
+      if (!target.equals(currState.getTarget())) {
+        doiService.update(doi, target);
+      }
+      doiService.update(doi, xml);
+    } else {
+      doiService.register(doi, target, xml);
+    }
+    // store the new state in our registry
+    doiMapper.update(doi, new DoiData(DoiStatus.REGISTERED, target), xml);
   }
 }
