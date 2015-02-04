@@ -119,7 +119,7 @@ public class DataCiteConverter {
         .withDescriptionType(DescriptionType.ABSTRACT);
     }
     if (d.getDataLanguage() != null) {
-      b.withLanguage(d.getDataLanguage().getTitleEnglish());
+      b.withLanguage(d.getDataLanguage().getIso3LetterCode());
     }
     if (!Strings.isNullOrEmpty(d.getRights())) {
       b.withRightsList().addRights().withValue(d.getRights()).end();

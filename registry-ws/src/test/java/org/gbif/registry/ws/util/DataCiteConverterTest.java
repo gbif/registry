@@ -10,6 +10,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
@@ -52,6 +53,8 @@ public class DataCiteConverterTest {
     d.setCreated(new Date());
     d.setModified(new Date());
     d.setCreatedBy("Markus");
+    d.setLanguage(Language.NORWEGIAN);
+    d.setDataLanguage(Language.NORWEGIAN);
 
     DataCiteMetadata m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
@@ -73,6 +76,7 @@ public class DataCiteConverterTest {
     assertEquals(Lists.<Double>newArrayList(1d,3d,2d,4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationBox());
     assertEquals(d.getDescription(), m.getDescriptions().getDescription().get(0).getContent().get(0));
   }
+
 
   private DataCiteMetadata convertAndValidate(DOI doi, Dataset d, Organization publisher) throws InvalidMetadataException {
     DataCiteMetadata m = DataCiteConverter.convert(d, publisher);
