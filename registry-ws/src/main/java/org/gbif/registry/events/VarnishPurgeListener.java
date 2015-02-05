@@ -21,8 +21,9 @@ import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.http.annotation.NotThreadSafe;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +88,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class VarnishPurgeListener {
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeListener.class);
-  private final HttpClient client;
+  private final CloseableHttpClient client;
   private final UriBuilder uriBuilder;
   private final String apiRoot;
   private final OrganizationService organizationService;
@@ -95,7 +96,7 @@ public class VarnishPurgeListener {
   private final DatasetService datasetService;
 
   @Inject
-  public VarnishPurgeListener(HttpClient client, EventBus eventBus, URI apiBaseUrl,
+  public VarnishPurgeListener(CloseableHttpClient client, EventBus eventBus, URI apiBaseUrl,
                               OrganizationService organizationService,InstallationService installationService,
                               DatasetService datasetService) {
     this.client = client;
@@ -241,7 +242,8 @@ public class VarnishPurgeListener {
 
   private void purge(URI uri) {
     try {
-      client.execute(new HttpPurge(uri));
+      CloseableHttpResponse resp = client.execute(new HttpPurge(uri));
+      resp.close();
     } catch (IOException e) {
       LOG.error("Failed to purge {}", uri, e);
     }
@@ -249,7 +251,8 @@ public class VarnishPurgeListener {
 
   private void banRegex(String regex) {
     try {
-      client.execute(new HttpBan(regex));
+      CloseableHttpResponse resp = client.execute(new HttpBan(regex));
+      resp.close();
     } catch (IOException e) {
       LOG.error("Failed to ban {}", regex, e);
     }
@@ -267,14 +270,6 @@ public class VarnishPurgeListener {
     public HttpPurge(final URI uri) {
       super();
       setURI(uri);
-    }
-
-    /**
-     * @throws IllegalArgumentException if the uri is invalid.
-     */
-    public HttpPurge(final String uri) {
-      super();
-      setURI(URI.create(uri));
     }
 
     @Override
