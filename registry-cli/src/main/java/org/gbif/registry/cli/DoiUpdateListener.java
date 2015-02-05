@@ -74,8 +74,8 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       } catch (DoiHttpException e) {
         writeFailedStatus(msg.getDoi(), msg.getTarget(), msg.getMetadata());
         if (e.getStatus() == 413) {
-          LOG.warn(DOI_SMTP, "Metadata exceeding max limit. DOI http 413 exception updating {} to {} with target {}. "
-                 + "Trying again with truncated metadata", msg.getDoi(), msg.getStatus(), msg.getTarget(), e);
+          LOG.warn(DOI_SMTP, "Metadata of length {} is exceeding max limit. DOI http 413 exception updating {} to {} with target {}. "
+                 + "Trying again with truncated metadata", msg.getMetadata().length(), msg.getDoi(), msg.getStatus(), msg.getTarget(), e);
           try {
             LOG.debug("Original metadata for DOI {}:\n\n{}", msg.getDoi(), msg.getMetadata());
             String truncatedXml = DataCiteConverter.truncateDescription(msg.getDoi(), msg.getMetadata(), msg.getTarget());
@@ -110,6 +110,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
   private void reserve(DOI doi, String xml, DoiData currState) throws DoiException {
     doiService.reserve(doi, xml);
+    LOG.info("Reserved doi {}", doi);
     DoiData newState = new DoiData(DoiStatus.RESERVED, currState.getTarget());
     doiMapper.update(doi, newState, xml);
   }
@@ -122,9 +123,11 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         boolean fullDeleted = doiService.delete(doi);
         if (fullDeleted) {
           doiMapper.delete(doi);
+          LOG.info("Deleted doi {}", doi);
         } else {
           DoiData newState = new DoiData(DoiStatus.DELETED, currState.getTarget());
           doiMapper.update(doi, newState, null);
+          LOG.info("Marked registered doi {} as deleted", doi);
         }
       } catch (DoiHttpException e) {
         // in case of a 404 swallow
@@ -146,8 +149,10 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         doiService.update(doi, target);
       }
       doiService.update(doi, xml);
+      LOG.info("Updated doi {} with target {}", doi, target);
     } else {
       doiService.register(doi, target, xml);
+      LOG.info("Registered doi {} with target {}", doi, target);
     }
     // store the new state in our registry
     doiMapper.update(doi, new DoiData(DoiStatus.REGISTERED, target), xml);
