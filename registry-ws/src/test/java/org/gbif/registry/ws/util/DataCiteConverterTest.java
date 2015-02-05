@@ -16,11 +16,14 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -132,9 +135,13 @@ public class DataCiteConverterTest {
   }
 
   @Test
-  public void ttt() {
-    long l = 321l;
-    String q = "HALLO";
-    System.out.print(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s",l,q));
+  public void testTruncateDesription() throws Exception{
+    DOI doi = new DOI("10.15468/dl.v8zc57");
+    String xml = Resources.toString(Resources.getResource("metadata/datacite-large.xml"), Charsets.UTF_8);
+    String xml2 = DataCiteConverter.truncateDescription(doi, xml, URI.create("http://gbif.org"));
+    //System.out.println(xml2);
+    DataCiteValidator.validateMetadata(xml2);
+    assertEquals(2316, xml2.length());
   }
+
 }
