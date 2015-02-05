@@ -77,6 +77,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
           LOG.warn(DOI_SMTP, "Metadata exceeding max limit. DOI http 413 exception updating {} to {} with target {}. "
                  + "Trying again with truncated metadata", msg.getDoi(), msg.getStatus(), msg.getTarget(), e);
           try {
+            LOG.debug("Original metadata for DOI {}:\n\n{}", msg.getDoi(), msg.getMetadata());
             String truncatedXml = DataCiteConverter.truncateDescription(msg.getDoi(), msg.getMetadata(), msg.getTarget());
             msg = new ChangeDoiMessage(msg.getStatus(), msg.getDoi(), truncatedXml, msg.getTarget());
           } catch (InvalidMetadataException e1) {
