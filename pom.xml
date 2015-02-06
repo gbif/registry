@@ -65,7 +65,7 @@
     <freemarker.version>2.3.21</freemarker.version>
     <gbif-api.version>0.17</gbif-api.version>
     <gbif-common-mybatis.version>0.14</gbif-common-mybatis.version>
-    <gbif-common-search.version>0.18</gbif-common-search.version>
+    <gbif-common-search.version>0.20-SNAPSHOT</gbif-common-search.version>
     <gbif-common-service.version>0.11</gbif-common-service.version>
     <gbif-common-ws.version>0.16</gbif-common-ws.version>
     <gbif-common.version>0.17</gbif-common.version>
