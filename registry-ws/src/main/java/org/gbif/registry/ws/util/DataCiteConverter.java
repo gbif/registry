@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.util;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
@@ -15,22 +16,33 @@ import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
+import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.HumanFilterBuilder;
 import org.gbif.occurrence.query.TitleLookup;
 
+import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.JAXBException;
+
 import com.beust.jcommander.internal.Sets;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DataCiteConverter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DataCiteConverter.class);
 
   private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download";
   private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
@@ -149,6 +161,25 @@ public class DataCiteConverter {
     return b.build();
   }
 
+  public static String truncateDescription(DOI doi, String xml, URI target) throws InvalidMetadataException {
+    try {
+      DataCiteMetadata dm = DataCiteValidator.fromXml(xml);
+      String description = Joiner.on("\n").join(dm.getDescriptions().getDescription().get(0).getContent());
+      dm.setDescriptions(DataCiteMetadata.Descriptions.builder().addDescription()
+        .withDescriptionType(DescriptionType.ABSTRACT)
+        .withLang(ENGLISH)
+        .addContent(StringUtils.substringBefore(description, "constituent datasets:") +
+                    String.format("constituent datasets:\nPlease see %s for full list.", target))
+        .end()
+        .build()
+      );
+      return DataCiteValidator.toXml(doi, dm);
+
+    } catch (JAXBException e) {
+      throw new InvalidMetadataException("Failed to deserialize datacite xml for DOI " + doi, e);
+    }
+  }
+
   @VisibleForTesting
   protected static String getYear(Date date) {
     if (date == null) {
@@ -198,7 +229,7 @@ public class DataCiteConverter {
       .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
         .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s.",
             d.getTotalRecords(), query))
-        .addContent(String.format("The dataset includes %s records from the following %s constituent datasets:",
+        .addContent(String.format("The dataset includes %s records from %s constituent datasets:",
           d.getTotalRecords(), d.getNumberDatasets()));
 
     if (!usedDatasets.isEmpty()) {

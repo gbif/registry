@@ -6,7 +6,7 @@ import java.net.URI;
 import java.util.Properties;
 
 import com.google.inject.PrivateModule;
-import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,29 +16,30 @@ import org.slf4j.LoggerFactory;
  */
 public class VarnishPurgeModule extends PrivateModule {
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeModule.class);
-  protected static final int DEFAULT_HTTP_TIMEOUT_MSECS = 5000;
-  protected static final int DEFAULT_MAX_HTTP_CONNECTIONS = 25;
-  protected static final int DEFAULT_MAX_HTTP_CONNECTIONS_PER_ROUTE = 25;
+  private static final int DEFAULT_HTTP_TIMEOUT_MSECS = 2000;
+  private final int httpThreads;
   private final URI apiRoot;
 
   public VarnishPurgeModule(Properties properties) {
-    URI uri = null;
     try {
-      uri = URI.create(properties.getProperty("api.url"));
+      apiRoot = URI.create(properties.getProperty("api.url"));
+      httpThreads = Integer.valueOf(properties.getProperty("purging.threads", "100").trim());
     } catch (RuntimeException e) {
-      LOG.warn("No varnish purging configured. Please set api.url if you want it");
+      LOG.error("Failed to initialize varnish purger because of invalid properties", e.getMessage());
+      throw e;
     }
-    apiRoot = uri;
   }
 
   @Override
   protected void configure() {
-    if (apiRoot != null) {
+    if (httpThreads > 0) {
       bind(URI.class).toInstance(apiRoot);
-      bind(HttpClient.class).toInstance(HttpUtil.newMultithreadedClient(
-        DEFAULT_HTTP_TIMEOUT_MSECS, DEFAULT_MAX_HTTP_CONNECTIONS, DEFAULT_MAX_HTTP_CONNECTIONS_PER_ROUTE));
+      bind(CloseableHttpClient.class).toInstance(HttpUtil.newMultithreadedClient(
+        DEFAULT_HTTP_TIMEOUT_MSECS, httpThreads, httpThreads));
       bind(VarnishPurgeListener.class).asEagerSingleton();
-      LOG.info("Varnish purging enabled with api root {}", apiRoot);
+      LOG.info("Varnish purging enabled with {} threads and API {}", httpThreads, apiRoot);
+    } else {
+      LOG.warn("No varnish purging configured. Please set purging.threads greater than zero if you want it");
     }
   }
 

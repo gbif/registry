@@ -2,6 +2,7 @@ package org.gbif.registry.cli.configuration;
 
 import org.gbif.common.messaging.config.MessagingConfiguration;
 
+import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -34,4 +35,6 @@ public class DoiUpdaterConfiguration {
   @NotNull
   public String queueName;
 
+  @Parameter(names = "--retry-time")
+  public long timeToRetryInMs = TimeUnit.MINUTES.toMillis(5);
 }
