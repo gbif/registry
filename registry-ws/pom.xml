@@ -21,6 +21,7 @@
   </repositories>
 
   <properties>
+    <registry.postalservice.enabled>false</registry.postalservice.enabled>
     <!-- plugin versions -->
     <jettyVersion>7.3.1.v20110307</jettyVersion>
     <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
@@ -349,6 +350,11 @@
       <artifactId>gbif-doi</artifactId>
     </dependency>
     <!-- test scope -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>

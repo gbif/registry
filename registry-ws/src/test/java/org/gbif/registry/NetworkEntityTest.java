@@ -157,7 +157,6 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = ValidationException.class)
-
   public void testUpdateFailingValidation() {
     T n1 = create(newEntity(), 1);
     n1.setTitle("A"); // should fail as it is too short

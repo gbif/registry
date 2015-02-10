@@ -21,11 +21,13 @@ import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
@@ -69,8 +71,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -126,6 +128,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
   private final ContactMapper contactMapper;
+  private final IdentifierMapper identifierMapper;
+  private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
   private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
@@ -149,6 +153,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
     this.contactMapper = contactMapper;
+    this.identifierMapper = identifierMapper;
+    this.tagMapper = tagMapper;
     this.datasetProcessStatusMapper = datasetProcessStatusMapper;
     this.networkMapper = networkMapper;
     this.organizationMapper = organizationMapper;
@@ -436,17 +442,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.setModifiedBy(user);
       updDataset.setModified(new Date());
       // persist contacts, overwriting any existing ones
-      for (Contact c : dataset.getContacts()) {
-        datasetMapper.deleteContact(datasetKey, c.getKey());
-      }
-      for (Contact c : updDataset.getContacts()) {
-        c.setCreatedBy(user);
-        c.setCreated(new Date());
-        c.setModifiedBy(user);
-        c.setModified(new Date());
-        WithMyBatis.addContact(contactMapper, datasetMapper, datasetKey, c);
-      }
-      // now update the core dataset only, remove associated data which could break validation
+      replaceContacts(datasetKey, updDataset.getContacts(), user);
+      addIdentifiers(datasetKey, updDataset.getIdentifiers(), user);
+      addTags(datasetKey, updDataset.getTags(), user);
+
+      // now update the core dataset only, remove associated data to avoid confusion and potential validation problems
       updDataset.getContacts().clear();
       updDataset.getIdentifiers().clear();
       updDataset.getTags().clear();
@@ -457,6 +457,61 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
 
     return metadata;
+  }
+
+  private <T extends LenientEquals> boolean containedIn(T id, Collection<T> ids) {
+    for (T id2 : ids) {
+      if (id.lenientEquals(id2)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Add all not yet existing identifiers to the db!
+   */
+  private void addIdentifiers(UUID datasetKey, List<Identifier> newIdentifiers, String user) {
+    List<Identifier> existing = datasetMapper.listIdentifiers(datasetKey);
+    for (Identifier id : newIdentifiers) {
+      if (IdentifierType.UNKNOWN != id.getType() && !containedIn(id, existing)) {
+        // insert into db
+        id.setCreatedBy(user);
+        id.setCreated(new Date());
+        WithMyBatis.addIdentifier(identifierMapper, datasetMapper, datasetKey, id);
+        // keep it in list for subsequent tests
+        existing.add(id);
+      }
+    }
+  }
+
+  /**
+   * Add all not yet existing identifiers to the db!
+   */
+  private void addTags(UUID datasetKey, List<Tag> newTags, String user) {
+    List<Tag> existing = datasetMapper.listTags(datasetKey);
+    for (Tag tag : newTags) {
+      if (!containedIn(tag, existing)) {
+        // insert into db
+        tag.setCreatedBy(user);
+        tag.setCreated(new Date());
+        WithMyBatis.addTag(tagMapper, datasetMapper, datasetKey, tag);
+        // keep it in list for subsequent tests
+        existing.add(tag);
+      }
+    }
+  }
+
+  private void replaceContacts(UUID datasetKey, List<Contact> contacts, String user) {
+    // persist contacts, overwriting any existing ones
+    datasetMapper.deleteContacts(datasetKey);
+    for (Contact c : contacts) {
+      c.setCreatedBy(user);
+      c.setCreated(new Date());
+      c.setModifiedBy(user);
+      c.setModified(new Date());
+      WithMyBatis.addContact(contactMapper, datasetMapper, datasetKey, c);
+    }
   }
 
   /**
@@ -496,33 +551,41 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return m;
   }
 
+  @Override
+  @Validate(groups = {PostPersist.class, Default.class})
+  public void update(@Valid Dataset dataset) {
+    Dataset old = super.get(dataset.getKey());
+    if (old == null) {
+      throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
+    }
+    update(dataset, old.getIdentifiers(), old.getDoi(), dataset.getModifiedBy());
+  }
+
   /**
    * Deal with DOI business rules
    * http://dev.gbif.org/issues/browse/POR-2554
    */
-  @Validate(groups = {PostPersist.class, Default.class})
-  @Override
-  public void update(@Valid Dataset dataset) {
+  private void update(Dataset dataset, List<Identifier> existingIds, final DOI oldDoi, final String user) {
     // no need to parse EML for the DOI, just get the current mybatis dataset props
-    final DOI oldDoi = super.get(dataset.getKey()).getDoi();
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
       if (oldDoi != null && doiGenerator.isGbif(oldDoi)) {
         dataset.setDoi(oldDoi);
       } else {
         // we have a non GBIF DOI before that we need to deprecate
-        reactivatePreviousGbifDoiOrMintNew(dataset);
+        reactivatePreviousGbifDoiOrMintNew(existingIds, dataset);
         // add old DOI to list of alt identifiers
         if (oldDoi != null) {
-          addAltId(oldDoi, dataset);
+          addAltId(oldDoi, dataset.getKey(), user);
         }
       }
 
     } else if (oldDoi != null && !dataset.getDoi().equals(oldDoi)) {
       // the doi has changed. Add old DOI to list of alt identifiers
-      addAltId(oldDoi, dataset);
+      addAltId(oldDoi, dataset.getKey(), user);
+      removeAltIdIfExists(dataset.getKey(), dataset.getDoi(), existingIds);
     }
-    // update database
+    // update database for core dataset only
     super.update(dataset);
 
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
@@ -556,34 +619,53 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Add old DOI to list of alt identifiers in dataset.
    */
-  private void addAltId(DOI altId, Dataset d) {
+  private void addAltId(DOI altId, UUID datasetKey, String user) {
     // update alt ids of dataset
     Identifier id = new Identifier();
     id.setType(IdentifierType.DOI);
     id.setIdentifier(altId.toString());
-    d.getIdentifiers().add(id);
+    id.setCreatedBy(user);
+    id.setCreated(new Date());
+    LOG.info("DOI changed. Adding previous DOI {} to alternative identifier list for dataset {}", altId, datasetKey);
+    WithMyBatis.addIdentifier(identifierMapper, datasetMapper, datasetKey, id);
+  }
+
+  /**
+   * Removes a DOI from the alternative identifiers list of a dataset if it exists.
+   */
+  private void removeAltIdIfExists(UUID key, DOI doiToRemove, List<Identifier> existingIds) {
+    for (Identifier id : existingIds) {
+      if (DOI.isParsable(id.getIdentifier())) {
+        DOI doi = new DOI(id.getIdentifier());
+        if (doiToRemove.equals(doi)) {
+          // remove from id list
+          datasetMapper.deleteIdentifier(key, id.getKey());
+        }
+      }
+    }
   }
 
   /**
    * Scan list of alternate identifiers to find a previous, deleted GBIF DOI and update the dataset instance.
    * If none can be found use a newly generated one.
    */
-  private void reactivatePreviousGbifDoiOrMintNew(Dataset d) {
-    Iterator<Identifier> iter = d.getIdentifiers().iterator();
-    while (iter.hasNext()) {
-      Identifier id = iter.next();
+  private void reactivatePreviousGbifDoiOrMintNew(List<Identifier> existingIds, Dataset d) {
+    for (Identifier id : existingIds) {
       if (DOI.isParsable(id.getIdentifier())) {
         DOI doi = new DOI(id.getIdentifier());
         if (doiGenerator.isGbif(doi)) {
           // remove from id list and make primary DOI
-          iter.remove();
+          LOG.info("Reactivating old GBIF DOI {} for dataset {}", doi, d.getKey());
+          datasetMapper.deleteIdentifier(d.getKey(), id.getKey());
           d.setDoi(doi);
           return;
         }
       }
     }
     // we never had a GBIF DOI for this dataset, give it a new one
-    d.setDoi(doiGenerator.newDatasetDOI());
+    DOI doi = doiGenerator.newDatasetDOI();
+    LOG.info("Create new GBIF DOI {} for dataset {}", doi, d.getKey());
+    d.setDoi(doi);
   }
 
   /**

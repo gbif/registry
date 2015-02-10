@@ -215,6 +215,13 @@
       network_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteContacts">
+    DELETE FROM contact USING network_contact
+    WHERE
+    contact_key = contact.key AND
+    network_contact = #{targetEntityKey,jdbcType=OTHER}
+  </delete>
+
   <select id="areRelated" resultType="boolean">
     SELECT true
     FROM network_contact

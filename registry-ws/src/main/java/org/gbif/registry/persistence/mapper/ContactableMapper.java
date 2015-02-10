@@ -42,6 +42,11 @@ public interface ContactableMapper {
 
   int deleteContact(@Param("targetEntityKey") UUID entityKey, @Param("contactKey") int contactKey);
 
+  /**
+   * Delete all contacts assocaited with the given entity
+   */
+  int deleteContacts(@Param("targetEntityKey") UUID entityKey);
+
   List<Contact> listContacts(@Param("targetEntityKey") UUID targetEntityKey);
 
   /**

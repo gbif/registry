@@ -248,6 +248,13 @@
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteContacts">
+    DELETE FROM contact USING organization_contact
+    WHERE
+    contact_key = contact.key AND
+    organization_contact = #{targetEntityKey,jdbcType=OTHER}
+  </delete>
+
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
     INSERT INTO organization_identifier(organization_key,identifier_key)
