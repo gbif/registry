@@ -562,10 +562,29 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
-   * Deal with DOI business rules
-   * http://dev.gbif.org/issues/browse/POR-2554
+   * This method does a regular dataset update as defined in the super.update(), but also deals with setting, changing
+   * or removing DOIs from the dataset.doi property and the list of attached identifiers.
+   *
+   * DOI update logic:
+   * <ul>
+   *   <li>If oldDoi exists and the new DOI is the same nothing happens</li>
+   *   <li>If oldDoi exists and the new DOI is different, the new one is used for the dataset and the old one is moved
+   *   to the identifiers table. If the new DOI existed in the identifiers table it will be removed.</li>
+   *   <li>If the dataset has no DOI and no oldDoi exists a new GBIF DOI is issued</li>
+   *   <li>If the dataset has no DOI and the oldDoi is a GBIF DOI, the oldDoi is kept</li>
+   *   <li>If the dataset has no DOI and the oldDoi is not a GBIF DOI, the oldDoi is moved to the identifiers table.
+   *   In case the identifiers table already contains a GBIF DOI this is removed and used for the dataset. If there was
+   *   no GBIF DOI yet a new one is issued</li>
+   * </ul>
+   *
+   * Also see http://dev.gbif.org/issues/browse/POR-2554 for a discussion.
+   *
+   * @param dataset the dataset to be used to update the dataset table in postgres
+   * @param existingIds the complete list of identifiers linked in postgres to the dataset before the update
+   * @param oldDoi the doi as found in postgres for the dataset before this update
+   * @param user the gbif user doing the update
    */
-  private void update(Dataset dataset, List<Identifier> existingIds, final DOI oldDoi, final String user) {
+  private void update(Dataset dataset, List<Identifier> existingIds, @Nullable final DOI oldDoi, final String user) {
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist

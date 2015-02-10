@@ -373,6 +373,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   public void testDoiChanges() {
     final DOI external1 = new DOI("10.9999/nonGbif");
     final DOI external2 = new DOI("10.9999/nonGbif2");
+    // we use the test prefix in tests for GBIF DOIs, see registry-test.properties
+    final DOI gbif2 = new DOI("10.5072/sthelse");
 
     Dataset src = newEntity();
     src.setDoi(external1);
@@ -414,6 +416,23 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertThat(service.listIdentifiers(key))
       .hasSize(2)
       .extracting("identifier").contains(external1.toString(), external2.toString());
+
+    dataset.setDoi(gbif2);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(gbif2, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(3)
+      .extracting("identifier").contains(external1.toString(), external2.toString(), originalGBIF.toString());
+
+    dataset.setDoi(external1);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(external1, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(3)
+      .extracting("identifier").contains(gbif2.toString(), external2.toString(), originalGBIF.toString());
+
   }
 
   @Test
