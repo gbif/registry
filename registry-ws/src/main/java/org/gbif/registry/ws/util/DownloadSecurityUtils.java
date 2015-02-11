@@ -31,8 +31,7 @@ public class DownloadSecurityUtils {
   public static void checkUserIsInSecurityContext(String user, SecurityContext securityContext) {
     // A null securityContext means that the class is executed locally
     if (!isUserAuthorizedInContext(securityContext, user)) {
-      LOG.warn(String.format("Unauthorized access detected, authenticated user %s, requested user %s",
-        securityContext.getUserPrincipal().getName(), user));
+      LOG.warn(String.format("Unauthorized access detected, authenticated use, requested user %s", user));
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
   }
