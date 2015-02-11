@@ -9,7 +9,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-motherpom</artifactId>
-  <version>2.21-SNAPSHOT</version>
+  <version>2.24-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Registry Mother POM</name>
@@ -53,6 +53,7 @@
     <jdkLevel>1.7</jdkLevel>
 
     <aopalliance.version>1.0</aopalliance.version>
+    <assertj.version>1.7.1</assertj.version>
     <bval.version>0.5</bval.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
@@ -65,16 +66,16 @@
     <freemarker.version>2.3.21</freemarker.version>
     <gbif-api.version>0.17</gbif-api.version>
     <gbif-common-mybatis.version>0.14</gbif-common-mybatis.version>
-    <gbif-common-search.version>0.20-SNAPSHOT</gbif-common-search.version>
+    <gbif-common-search.version>0.20</gbif-common-search.version>
     <gbif-common-service.version>0.11</gbif-common-service.version>
-    <gbif-common-ws.version>0.18-SNAPSHOT</gbif-common-ws.version>
+    <gbif-common-ws.version>0.18</gbif-common-ws.version>
     <gbif-common.version>0.17</gbif-common.version>
     <gbif-doi.version>1.0</gbif-doi.version>
     <gbif-httputils.version>0.5</gbif-httputils.version>
     <gbif-microservice.version>0.1</gbif-microservice.version>
     <gbif-parsers.version>0.10</gbif-parsers.version>
     <gbif-postal-service.version>0.13</gbif-postal-service.version>
-    <gbif-download-query-tools.version>1.1-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.1</gbif-download-query-tools.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
@@ -104,7 +105,7 @@
     <powermock-mockito.version>1.6.0</powermock-mockito.version>
     <servlet-api.version>3.1.0</servlet-api.version>
     <slf4j.version>1.7.7</slf4j.version>
-    <solr.version>4.5.1</solr.version>
+    <solr.version>4.10.3</solr.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
   </properties>
 
@@ -323,6 +324,12 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
@@ -409,17 +416,72 @@
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-solrj</artifactId>
         <version>${solr.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.solr</groupId>
         <artifactId>solr-core</artifactId>
         <version>${solr.version}</version>
         <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
+             <exclusion>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-jdk14</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.apache.httpcomponents</groupId>
+               <artifactId>httpclient</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.apache.httpcomponents</groupId>
+               <artifactId>httpmime</artifactId>
+             </exclusion>
+             <!-- solr 4.10 comes with various jetty 8.1 deps which clash with our microservices jetty 9.x -->
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-http</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-continuation</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-deploy</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-jmx</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-io</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-security</artifactId>
+             </exclusion>
+             <exclusion>
+               <groupId>org.eclipse.jetty</groupId>
+               <artifactId>jetty-xml</artifactId>
+             </exclusion>
+           </exclusions>
       </dependency>
       <dependency>
         <groupId>com.sun.grizzly</groupId>

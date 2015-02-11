@@ -157,7 +157,7 @@ public class LegacyResourceUtils {
     OrganizationService organizationService, InstallationService installationService) {
     Dataset existing = datasetService.get(dataset.getKey());
     if (existing == null) {
-      LOG.error("Dataset update uses a datast that does not exist, key={}", dataset.getKey());
+      LOG.error("Dataset update uses a dataset that does not exist, key={}", dataset.getKey());
       return false;
     }
     return isValid(dataset, organizationService, installationService);

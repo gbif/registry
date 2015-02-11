@@ -26,7 +26,7 @@ import static org.gbif.config.jersey.RegistryWsClientFactoryJersey.installationS
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@Ignore("This tests uses registry-sandbox which doesn't use the latest registry api")
+@Ignore("Requires live UAT API")
 public class RegistryWsJerseyIT {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RegistryWsJerseyIT.class);
   private static final String DATASET_TITLE = "Dataset - Ws Client Demo";

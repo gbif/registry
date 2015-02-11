@@ -13,6 +13,7 @@ import static org.gbif.config.guice.RegistryWsClientFactoryGuice.webserviceClien
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore("Requires live UAT API")
 public class RegistryWsGuiceIT {
 
   /**
@@ -29,7 +30,7 @@ public class RegistryWsGuiceIT {
   /**
    * Update dataset user has permission to edit.
    */
-  @Ignore("Ignored because Dataset with key 38b0f0f5-cac1-48e6-be85-b9f8cdd5ca93 may not always exist")
+  @Test
   public void testUpdateDataset() {
     DatasetService ds = webserviceClient().getInstance(DatasetService.class);
     Dataset dataset = ds.get(UUID.fromString("38b0f0f5-cac1-48e6-be85-b9f8cdd5ca93"));

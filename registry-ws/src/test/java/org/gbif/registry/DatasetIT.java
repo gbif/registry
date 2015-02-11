@@ -68,6 +68,7 @@ import org.junit.runners.Parameterized.Parameters;
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -365,6 +366,73 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     dataset = service.get(dataset.getKey());
     assertEquals("doi:123", dataset.getCitation().getIdentifier());
     assertEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"", dataset.getCitation().getText());
+  }
+
+
+  @Test
+  public void testDoiChanges() {
+    final DOI external1 = new DOI("10.9999/nonGbif");
+    final DOI external2 = new DOI("10.9999/nonGbif2");
+    // we use the test prefix in tests for GBIF DOIs, see registry-test.properties
+    final DOI gbif2 = new DOI("10.5072/sthelse");
+
+    Dataset src = newEntity();
+    src.setDoi(external1);
+    final UUID key = create(src, 1).getKey();
+    Dataset dataset = service.get(key);
+    assertEquals(external1, dataset.getDoi());
+    assertEquals(0, service.listIdentifiers(key).size());
+
+    dataset.setDoi(null);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertNotNull("DOI should never be null", dataset.getDoi());
+    assertFalse(dataset.getDoi().equals(external1));
+    final DOI originalGBIF = dataset.getDoi();
+    assertThat(service.listIdentifiers(key))
+      .hasSize(1)
+      .extracting("identifier").contains(external1.toString());
+
+    dataset.setDoi(external1);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(external1, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(1)
+      .extracting("identifier").contains(originalGBIF.toString());
+
+    dataset.setDoi(external2);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(external2, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(2)
+      .extracting("identifier").contains(originalGBIF.toString(), external1.toString());
+
+    dataset.setDoi(null);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(originalGBIF, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(2)
+      .extracting("identifier").contains(external1.toString(), external2.toString());
+
+    dataset.setDoi(gbif2);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(gbif2, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(3)
+      .extracting("identifier").contains(external1.toString(), external2.toString(), originalGBIF.toString());
+
+    dataset.setDoi(external1);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(external1, dataset.getDoi());
+    assertThat(service.listIdentifiers(key))
+      .hasSize(3)
+      .extracting("identifier").contains(gbif2.toString(), external2.toString(), originalGBIF.toString());
+
   }
 
   @Test

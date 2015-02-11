@@ -131,8 +131,8 @@ public class LegacyDatasetResource {
       dataset.setPublishingOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
       // ensure the publishing organization exists, the installation exists, primary contact exists, etc
       Contact contact = dataset.getPrimaryContact();
-      if (contact != null && LegacyResourceUtils
-        .isValidOnUpdate(dataset, datasetService, organizationService, installationService)) {
+      if (contact != null && LegacyResourceUtils.isValidOnUpdate(dataset,
+                                datasetService, organizationService, installationService)) {
         // update only fields that could have changed
         existing.setModifiedBy(user);
         existing.setTitle(dataset.getTitle());

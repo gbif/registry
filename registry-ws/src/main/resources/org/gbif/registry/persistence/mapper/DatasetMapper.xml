@@ -263,6 +263,13 @@
       dataset_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteContacts">
+    DELETE FROM contact USING dataset_contact
+    WHERE
+    contact_key = contact.key AND
+    dataset_key = #{targetEntityKey,jdbcType=OTHER}
+  </delete>
+
   <!-- ENDPOINTS -->
   <insert id="addEndpoint">
     INSERT INTO dataset_endpoint(dataset_key,endpoint_key)

@@ -189,6 +189,13 @@
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteContacts">
+    DELETE FROM contact USING installation_contact
+    WHERE
+    contact_key = contact.key AND
+    installation_key = #{targetEntityKey,jdbcType=OTHER}
+  </delete>
+
   <select id="areRelated" resultType="boolean">
     SELECT true
     FROM installation_contact

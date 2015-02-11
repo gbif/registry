@@ -27,9 +27,9 @@ public class RegistryWsClientFactoryJersey {
   private static final String USERNAME = "ws_client_demo";
   private static final String PASSWORD = "Demo123";
   private static final HTTPBasicAuthFilter AUTH_FILTER = new HTTPBasicAuthFilter(USERNAME, PASSWORD);
-  private static final String REGISTRY_API_BASE_URL = "http://registry-sandbox.gbif.org";
+  private static final String REGISTRY_API_BASE_URL = "http://api.gbif-uat.org/v1/";
 
-  private static ApacheHttpClient4 client;
+  private static WebResource resource;
   private static DatasetService datasetService;
   private static DatasetService datasetServiceReadOnly;
   private static InstallationService installationService;
@@ -44,19 +44,20 @@ public class RegistryWsClientFactoryJersey {
   }
 
   /**
-   * @return Jersey client that utilizes the Apache HTTP Client to send and receive HTTP request and responses.
+   * @return Jersey resource that utilizes the Apache HTTP Client to send and receive HTTP request and responses to the
+   * GBIF API.
    */
-  public static synchronized ApacheHttpClient4 buildJerseyClient() {
-    if (client == null) {
+  public static synchronized WebResource buildJerseyClient() {
+    if (resource == null) {
         ApacheHttpClient4Handler hch = new ApacheHttpClient4Handler(buildHttpClient(), null, false);
         ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getClasses().add(JacksonJsonContextResolver.class);
         // this line is critical! Note that this is the jersey version of this class name!
         clientConfig.getClasses().add(JacksonJsonProvider.class);
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        client = new ApacheHttpClient4(hch, clientConfig);
+        resource = new ApacheHttpClient4(hch, clientConfig).resource(REGISTRY_API_BASE_URL);
     }
-    return client;
+    return resource;
   }
 
   /**
@@ -64,8 +65,7 @@ public class RegistryWsClientFactoryJersey {
    */
   public static synchronized DatasetService datasetServiceReadOnly() {
     if (datasetServiceReadOnly == null) {
-      WebResource datasetResource = buildJerseyClient().resource(REGISTRY_API_BASE_URL);
-      datasetServiceReadOnly = new DatasetWsClient(datasetResource, null);
+      datasetServiceReadOnly = new DatasetWsClient(buildJerseyClient(), null);
     }
     return datasetServiceReadOnly;
   }
@@ -75,8 +75,7 @@ public class RegistryWsClientFactoryJersey {
    */
   public static synchronized DatasetService datasetService() {
     if (datasetService == null) {
-      WebResource datasetResource = buildJerseyClient().resource(REGISTRY_API_BASE_URL);
-      datasetService = new DatasetWsClient(datasetResource, AUTH_FILTER);
+      datasetService = new DatasetWsClient(buildJerseyClient(), AUTH_FILTER);
     }
     return datasetService;
   }
@@ -86,8 +85,7 @@ public class RegistryWsClientFactoryJersey {
    */
   public static synchronized InstallationService installationService() {
     if (installationService == null) {
-      WebResource installationResource = buildJerseyClient().resource(REGISTRY_API_BASE_URL);
-      installationService = new InstallationWsClient(installationResource, AUTH_FILTER);
+      installationService = new InstallationWsClient(buildJerseyClient(), AUTH_FILTER);
     }
     return installationService;
   }

@@ -85,9 +85,6 @@ public class RegistrySearchModule extends PrivateServiceModule {
     expose(DatasetService.class); // for testing
     expose(NodeService.class); // for testing
 
-    // boolean instance binding named sandboxmode.enabled, defaults to false if property is null
-    mapAndExposeBool("registry.sandboxmode.enabled","sandboxmode.enabled");
-
     // 6 email properties:
     // use dev email?
     mapAndExposeBool("mail.devemail.enabled","useDevEmail");
