@@ -18,9 +18,12 @@ package org.gbif.registry.events;
 import org.gbif.common.messaging.guice.PostalServiceModule;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * One can either extend and bind listeners in this class, or bind them in other modules.
@@ -28,8 +31,9 @@ import com.google.inject.AbstractModule;
  * in guice.
  */
 public class EventModule extends AbstractModule {
-
+  private static final Logger LOG = LoggerFactory.getLogger(EventModule.class);
   public static final String MESSAGING_ENABLED_PROPERTY = "registry.postalservice.enabled";
+  public static final String EMBARGO_SECONDS_PROPERTY = "registry.postalservice.embargoSeconds";
   private final EventBus eventBus = new EventBus();
   private final Properties properties;
 
@@ -49,8 +53,19 @@ public class EventModule extends AbstractModule {
   private void bindEventListeners() {
     if (properties.getProperty(MESSAGING_ENABLED_PROPERTY, "false").equals("true")) {
       install(new PostalServiceModule("registry", properties));
+
+      // bind the embargo, defaulting to 0 seconds if there is none specified
+      try {
+        bind(Integer.class)
+          .annotatedWith(EmbargoDuration.class)
+          .toInstance(Integer.valueOf(properties.getProperty(EMBARGO_SECONDS_PROPERTY, "0")));
+      } catch (NumberFormatException e) {
+        LOG.error("{} is not of expected format. Expected single integer (e.g. 60), found {}",
+                  EMBARGO_SECONDS_PROPERTY, properties.getProperty(EMBARGO_SECONDS_PROPERTY));
+        throw e;
+      }
+
       bind(MessageSendingEventListener.class).asEagerSingleton();
     }
   }
-
 }
