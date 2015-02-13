@@ -64,10 +64,14 @@ public class MessageSendingEventListener {
                                                 event.getObjectClass(),
                                                 null,
                                                 event.getNewObject());
+      LOG.debug("Scheduling notification of CreateEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
       scheduler.schedule(new Runnable() {
         @Override
         public void run() {
-          try{
+          try {
+            LOG.debug("Broadcasting to postal service CreateEvent [{}]",
+                     event.getObjectClass().getSimpleName(), embargoSeconds);
+
             messagePublisher.send(message);
           } catch (IOException e) {
             LOG.warn("Failed sending RegistryChangeMessage for CreateEvent [{}]",
@@ -84,10 +88,14 @@ public class MessageSendingEventListener {
                                                 event.getObjectClass(),
                                                 event.getOldObject(),
                                                 event.getNewObject());
+    LOG.debug("Scheduling notification of UpdateEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
+
     scheduler.schedule(new Runnable() {
       @Override
       public void run() {
-        try{
+        try {
+          LOG.debug("Broadcasting to postal service UpdateEvent [{}]",
+                    event.getObjectClass().getSimpleName(), embargoSeconds);
           messagePublisher.send(message);
         } catch (IOException e) {
           LOG.warn("Failed sending RegistryChangeMessage for UpdateEvent [{}]",
@@ -103,10 +111,14 @@ public class MessageSendingEventListener {
                                                 event.getObjectClass(),
                                                 event.getOldObject(),
                                                 null);
+    LOG.debug("Scheduling notification of DeleteEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
+
     scheduler.schedule(new Runnable() {
       @Override
       public void run() {
-        try{
+        try {
+          LOG.debug("Broadcasting to postal service DeleteEvent [{}]",
+                    event.getObjectClass().getSimpleName(), embargoSeconds);
           messagePublisher.send(message);
         } catch (IOException e) {
           LOG.warn("Failed sending RegistryChangeMessage for DeleteEvent [{}]",
