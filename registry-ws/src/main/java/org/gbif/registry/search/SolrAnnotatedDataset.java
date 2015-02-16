@@ -35,7 +35,7 @@ import org.apache.solr.client.solrj.beans.Field;
       method = Method.ENUM)
   },
   fulltextFields = {
-    @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 10.0d,
+    @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 1000.0d,
       partialMatchScore = 1.0d),
     @FullTextSearchField(field = "keyword", partialMatching = WildcardPadding.NONE, exactMatchScore = 4.0d),
     @FullTextSearchField(field = "publishing_organization_title", highlightField = "publishing_organization_title",
