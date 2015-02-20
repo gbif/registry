@@ -271,7 +271,7 @@
         <dateStamp><@xmlSchemaDateTime dataset.modified/></dateStamp>
       </#if>
       <#-- How to cite the resource. -->
-      <#if dataset.citation??>
+      <#if dataset.citation?? && dataset.citation.text?has_content>
         <@citation dataset.citation />
       </#if>
       <#if dataset.bibliographicCitations?has_content>
