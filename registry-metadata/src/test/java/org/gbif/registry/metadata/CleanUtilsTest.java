@@ -1,5 +1,6 @@
 package org.gbif.registry.metadata;
 
+import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 
 import com.google.common.collect.Lists;
@@ -29,5 +30,15 @@ public class CleanUtilsTest {
     assertNull(c.getFirstName());
     assertNull(c.getLastName());
     assertNull(c.getCountry());
+  }
+
+  @Test
+  public void testRemoveEmptyStringsCitation() throws Exception {
+    Citation c = new Citation();
+    c.setText("");
+    CleanUtils.removeEmptyStrings(c);
+
+    assertNull(c.getText());
+    assertNull(c.getIdentifier());
   }
 }

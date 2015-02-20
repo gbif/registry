@@ -285,6 +285,7 @@ public class DatasetWrapper {
   }
 
   public void setCitation(Citation citation) {
+    CleanUtils.removeEmptyStrings(citation);
     target.setCitation(citation);
   }
 
