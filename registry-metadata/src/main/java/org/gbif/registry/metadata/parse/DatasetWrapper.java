@@ -25,6 +25,7 @@ import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.registry.metadata.CleanUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -100,7 +101,23 @@ public class DatasetWrapper {
    * @param contact Contact
    */
   public void addContact(Contact contact) {
-    target.getContacts().add(contact);
+    CleanUtils.removeEmptyStrings(contact);
+    if (verifyContact(contact)) {
+      target.getContacts().add(contact);
+    }
+  }
+
+  /**
+   * @return true if the minimal required contact information exists
+   */
+  private boolean verifyContact(Contact contact) {
+    return contact.getFirstName() !=null
+           || contact.getLastName()  !=null
+           || !contact.getPosition().isEmpty()
+           || !contact.getEmail().isEmpty()
+           || !contact.getPhone().isEmpty()
+           || contact.getOrganization() !=null
+           || (!contact.getAddress().isEmpty() && contact.getCity() !=null);
   }
 
   /**
@@ -153,7 +170,7 @@ public class DatasetWrapper {
       Contact contact = new Contact();
       contact.setLastName(creator);
       contact.setType(ContactType.ORIGINATOR);
-      target.getContacts().add(contact);
+      addContact(contact);
     }
   }
 
@@ -216,7 +233,7 @@ public class DatasetWrapper {
     contact.setPrimary(true);
     // set type to administrative
     contact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
-    target.getContacts().add(contact);
+    addContact(contact);
   }
 
   /**
@@ -230,7 +247,7 @@ public class DatasetWrapper {
     contact.setPrimary(true);
     // set type to administrative
     contact.setType(ContactType.METADATA_AUTHOR);
-    target.getContacts().add(contact);
+    addContact(contact);
   }
 
   /**
@@ -244,7 +261,7 @@ public class DatasetWrapper {
     contact.setPrimary(true);
     // set type to administrative
     contact.setType(ContactType.ORIGINATOR);
-    target.getContacts().add(contact);
+    addContact(contact);
   }
 
   public void addTaxonomicCoverages(TaxonomicCoverages taxonomicCoverages) {
@@ -268,6 +285,7 @@ public class DatasetWrapper {
   }
 
   public void setCitation(Citation citation) {
+    CleanUtils.removeEmptyStrings(citation);
     target.setCitation(citation);
   }
 

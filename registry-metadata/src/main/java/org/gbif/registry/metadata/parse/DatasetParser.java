@@ -63,6 +63,7 @@ public class DatasetParser {
 
   /**
    * @return the detected parser type or null
+   * @throws java.lang.IllegalArgumentException in case no parser exists for this document
    */
   public static MetadataType detectParserType(InputStream xml) {
     try {
@@ -71,14 +72,16 @@ public class DatasetParser {
       xmlReader.setContentHandler(handler);
       InputSource inputSource = new InputSource(xml);
       xmlReader.parse(inputSource);
-      return handler.parserType;
+      if (handler.parserType != null) {
+        return handler.parserType;
+      }
 
     } catch (SAXException e) {
       LOG.error("Failed to SAX parse a document for parser type detection", e);
     } catch (IOException e) {
       LOG.warn("Failed to read metadata document for parser type detection", e);
     }
-    return null;
+    throw new IllegalArgumentException("No parser found for this metadata document. Only EML or DC supported");
   }
 
 
@@ -97,11 +100,7 @@ public class DatasetParser {
     return parse(detectParserType(new ByteArrayInputStream(data)), new ByteArrayInputStream(data));
   }
 
-  public static Dataset parse(MetadataType type, InputStream xml) throws IOException{
-    if (type == null) {
-      throw new IllegalArgumentException("No parser found for this metadata document. Only EML or DC supported");
-    }
-
+  public static Dataset parse(MetadataType type, InputStream xml) throws IOException {
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
 

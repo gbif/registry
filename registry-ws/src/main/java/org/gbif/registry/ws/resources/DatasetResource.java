@@ -390,16 +390,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
     // now detect type and create a new metadata record
     MetadataType type;
-    InputStream in = null;
-    try {
-      in = new ByteArrayInputStream(data);
+    try (InputStream in = new ByteArrayInputStream(data)){
       type = DatasetParser.detectParserType(in);
-    } finally {
-      Closeables.closeQuietly(in);
-    }
-
-    if (type == null) {
-      throw new IllegalArgumentException("Document format not supported");
+      //TODO: should we not also validate the EML/DC document ???
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unreadable document", e);
     }
 
     Metadata metadata = new Metadata();
