@@ -70,7 +70,7 @@
 
     <label class='control-label' for='description'>Description</label>
     <div class='controls'>
-      <input id='description' maxlength='255' type='text' ng-model='dataset.description'>
+      <textarea rows="4" id="description" name="description" ng-model="dataset.description" value="{{dataset.description}}"></textarea>
       <p class='muted'><small></small></p>
     </div>
 

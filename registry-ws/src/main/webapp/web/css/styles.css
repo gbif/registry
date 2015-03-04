@@ -189,6 +189,17 @@ i.nav-session {
   font-size: 11px;
 }
 
+/** large input forms for editing **/
+.content form fieldset input[type=text] {
+  width: 380px;
+}
+.content form fieldset textarea {
+  width: 380px;
+}
+.content form fieldset select {
+  width: 380px;
+}
+
 /**  OLD STUFF */
 
 
