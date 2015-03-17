@@ -75,7 +75,7 @@
     <gbif-microservice.version>0.2</gbif-microservice.version>
     <gbif-parsers.version>0.11-SNAPSHOT</gbif-parsers.version>
     <gbif-postal-service.version>0.13</gbif-postal-service.version>
-    <gbif-download-query-tools.version>1.1</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.2-SNAPSHOT</gbif-download-query-tools.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
