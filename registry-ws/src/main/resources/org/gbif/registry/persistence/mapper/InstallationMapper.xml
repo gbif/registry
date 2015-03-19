@@ -28,11 +28,11 @@
    -->
   <sql id="SIMPLE_SEARCH">
     AND (
-      i.fulltext_search @@ plainto_tsquery('english',#{query})
+      query @@ i.fulltext_search
       OR EXISTS(
         SELECT contact_key
         FROM installation_contact JOIN contact c ON c.key = contact_key
-        WHERE installation_key=i.key AND c.fulltext_search @@ plainto_tsquery('english',#{query})
+        WHERE installation_key=i.key AND query @@ c.fulltext_search
       )
     )
   </sql>
@@ -104,12 +104,12 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="INSTALLATION_MAP">
     SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
+    FROM installation i<if test="query != null" >, plainto_tsquery('english',unaccent(#{query})) AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
     </if>
-    ORDER BY created DESC, key
+    ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -117,7 +117,7 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM installation i
+    FROM installation i<if test="query != null" >, plainto_tsquery('english',unaccent(#{query})) AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
