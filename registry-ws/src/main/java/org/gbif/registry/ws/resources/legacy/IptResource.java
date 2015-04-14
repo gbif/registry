@@ -268,9 +268,10 @@ public class IptResource {
 
 
   /**
-   * Update IPT Dataset, handling incoming request with path /ipt/resource/{key}. The primary contact and publishing
-   * organization key are mandatory. Only after both the dataset and primary contact have been updated is a
-   * Response with Status.OK returned.
+   * Update IPT Dataset, handling incoming request with path /ipt/resource/{key}. The publishing organization key is
+   * mandatory (supplied in the credentials not the parameters). The contacts are preserved from the existing dataset,
+   * careful not to duplicate contacts. Only after both the dataset and primary contact have been updated is a Response
+   * with Status.OK returned.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey

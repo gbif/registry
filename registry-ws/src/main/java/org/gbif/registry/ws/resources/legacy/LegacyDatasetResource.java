@@ -80,10 +80,11 @@ public class LegacyDatasetResource {
   }
 
   /**
-   * Update GBRDS Dataset, handling incoming request with path /resource/{key}.The publishing organization key is
-   * mandatory. The primary contact is not required, but if any of the primary contact parameters were included in the
-   * request, it is required required. This is the difference between this method and updateDataset. Only after both
-   * the dataset and optional primary contact have been updated is a Response with Status.OK (201) returned.
+   * Update GBRDS Dataset, handling incoming request with path /resource/{key}. The publishing organization key is
+   * mandatory (supplied in the credentials not the parameters). The primary contact is not required, but if any
+   * of the primary contact parameters were included in the request, it is required. This is the difference between this
+   * method and registerDataset. Only after both the dataset and optional primary contact have been updated is a
+   * Response with Status.OK (201) returned.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
