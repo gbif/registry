@@ -105,7 +105,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the publishing organization key. Mandatory field, injected on both register and update requests.
+   * Set the publishing organization key, a mandatory field. Be aware the publishing organisation key gets supplied in
+   * the parameters only on register requests. On update requests the key is supplied in the credentials.
    *
    * @param organizationKey organization key as UUID
    */
@@ -114,7 +115,7 @@ public class LegacyDataset extends Dataset {
     try {
       setPublishingOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
     } catch (IllegalArgumentException e) {
-      LOG.error("Publishing organization key is not a valid UUID: {}", Strings.nullToEmpty(organizationKey));
+      LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
     }
 
   }
