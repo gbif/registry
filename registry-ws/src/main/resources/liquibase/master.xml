@@ -39,4 +39,5 @@
   <include file="liquibase/033-doi-table.xml"/>
   <include file="liquibase/034-doi-status.xml"/>
   <include file="liquibase/035-unaccent-fulltext-search.xml"/>
+  <include file="liquibase/036-add-download-format.xml"/>
 </databaseChangeLog>

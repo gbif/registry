@@ -15,6 +15,7 @@ package org.gbif.registry;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -46,6 +47,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceBasicAuthClient;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -108,7 +110,7 @@ public class OccurrenceDownloadIT {
     final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
     DownloadRequest request =
       new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TEST_ADMIN_USER, emails,
-        true);
+        true, DownloadFormat.DWCA);
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);
     download.setRequest(request);
@@ -140,6 +142,19 @@ public class OccurrenceDownloadIT {
     occurrenceDownloadService.create(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
+  }
+
+  /**
+   * Tests the persistence of the DownloadRequest's DownloadFormat.
+   */
+  @Test
+  public void testDownloadFormatPersistence() {
+    Download occurrenceDownload = getTestInstance();
+    DownloadFormat format = occurrenceDownload.getRequest().getFormat();
+    occurrenceDownloadService.create(occurrenceDownload);
+    Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertNotNull(occurrenceDownload2);
+    assertEquals(format, occurrenceDownload2.getRequest().getFormat());
   }
 
   /**
