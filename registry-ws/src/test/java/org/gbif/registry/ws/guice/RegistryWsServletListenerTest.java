@@ -7,7 +7,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.utils.file.properties.PropertiesUtil;
-import org.gbif.ws.security.GbifAppAuthService;
+import org.gbif.ws.security.GbifAuthService;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -43,7 +43,7 @@ public class RegistryWsServletListenerTest {
     RegistryWsServletListener mod = new RegistryWsServletListener(properties);
     Injector injector = mod.getInjector();
 
-    GbifAppAuthService auth = injector.getInstance(GbifAppAuthService.class);
+    GbifAuthService auth = injector.getInstance(GbifAuthService.class);
     assertNotNull(auth);
 
     DatasetService datasetService = injector.getInstance(DatasetService.class);
