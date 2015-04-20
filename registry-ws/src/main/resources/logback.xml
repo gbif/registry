@@ -75,6 +75,8 @@
     </filter>
   </appender>
 
+  <logger name="org.gbif.ws.security" level="DEBUG"/>
+  <logger name="org.gbif.ws.server" level="DEBUG"/>
   <logger name="org.gbif.registry.metadata.parse" level="INFO"/>
   <logger name="org.gbif.registry.ims.ImsNodeMapper" level="INFO"/>
   <logger name="org.gbif.registry.persistence.mapper" level="INFO"/>
