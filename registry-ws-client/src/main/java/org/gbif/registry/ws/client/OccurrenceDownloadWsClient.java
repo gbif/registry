@@ -8,18 +8,38 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsGetClient;
 
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.MultivaluedMap;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * OccurrenceDownloadService web service client.
  */
 public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String> implements
   OccurrenceDownloadService {
+
+  private MultivaluedMap<String,String> buildStatusParam(Set<Download.Status> status){
+    MultivaluedMap<String,String> statuses = new MultivaluedMapImpl();
+    if(status != null) {
+      statuses.put("status", Lists.newArrayList(Collections2.transform(status,new Function<Download.Status, String>() {
+        @Nullable
+        @Override
+        public String apply(@Nullable Download.Status input) {
+          return input.name();
+        }
+      })));
+    }
+    return statuses;
+  }
 
   @Inject
   public OccurrenceDownloadWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
@@ -36,15 +56,18 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     post(occurrenceDownload, "/");
   }
 
-
   @Override
-  public PagingResponse<Download> list(Pageable page) {
-    return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, page);
+  public PagingResponse<Download> list(@Nullable Pageable page, @Nullable Set<Download.Status> status) {
+    if (status == null ||status.isEmpty()) {
+      return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, page);
+    } else {
+      return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, null, buildStatusParam(status), page);
+    }
   }
 
   @Override
-  public PagingResponse<Download> listByUser(String user, Pageable page) {
-    return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, page, "user", user);
+  public PagingResponse<Download> listByUser(String user, Pageable page, Set<Download.Status> status) {
+    return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, null, buildStatusParam(status), page,"user", user);
   }
 
   @Override
@@ -53,4 +76,5 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
   ) {
     return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, downloadKey, "datasets");
   }
+
 }
