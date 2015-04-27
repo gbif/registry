@@ -17,6 +17,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.Download;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -39,8 +40,12 @@ public interface OccurrenceDownloadMapper {
 
   int count();
 
-  List<Download> listByUser(@Param("creator") String creator, @Nullable @Param("page") Pageable page);
+  List<Download> listByStatus(@Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
 
-  int countByUser(@Param("creator") String creator);
+  int countByStatus(@Param("status") Set<Download.Status> status);
+
+  List<Download> listByUser(@Param("creator") String creator, @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
+
+  int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
 
 }

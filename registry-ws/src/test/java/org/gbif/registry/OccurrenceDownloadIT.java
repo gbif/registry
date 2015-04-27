@@ -177,7 +177,7 @@ public class OccurrenceDownloadIT {
     }
 
     assertTrue("List operation should return 5 records",
-      occurrenceDownloadService.list(new PagingRequest(0, 20)).getResults().size() > 0);
+      occurrenceDownloadService.list(new PagingRequest(0, 20), null).getResults().size() > 0);
   }
 
   /**
@@ -193,7 +193,7 @@ public class OccurrenceDownloadIT {
       final Injector clientBasicAuth = webserviceBasicAuthClient(TEST_USER, TEST_USER);
       OccurrenceDownloadService downloadServiceAuth = clientBasicAuth.getInstance(OccurrenceDownloadService.class);
       assertTrue("List by user operation should return 5 records",
-        downloadServiceAuth.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5)).getResults().size() > 0);
+        downloadServiceAuth.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5),null).getResults().size() > 0);
 
     } else {
       // Just to make the test pass for the webservice version
@@ -210,7 +210,31 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstance());
     }
     assertTrue("List by user operation should return 5 records",
-      occurrenceDownloadService.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5)).getResults().size() > 0);
+      occurrenceDownloadService.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5),null).getResults().size() > 0);
+  }
+
+  /**
+   * Creates several occurrence download with running status and retrieves the downloads done by status.
+   */
+  @Test
+  public void testListByStatus() {
+    for (int i = 1; i <= 5; i++) {
+      occurrenceDownloadService.create(getTestInstance());
+    }
+    assertTrue("List by user operation should return 5 records",
+               occurrenceDownloadService.list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES).getResults().size() > 0);
+  }
+
+  /**
+   * Creates several occurrence download with the same user name. And retrieves the downloads done by the user.
+   */
+  @Test
+  public void testListByUserAndStatus() {
+    for (int i = 1; i <= 5; i++) {
+      occurrenceDownloadService.create(getTestInstance());
+    }
+    assertTrue("List by user and status operation should return 5 records",
+               occurrenceDownloadService.listByUser(TEST_ADMIN_USER, new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES).getResults().size() > 0);
   }
 
   /**

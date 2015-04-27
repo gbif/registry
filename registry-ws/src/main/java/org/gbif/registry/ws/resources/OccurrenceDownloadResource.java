@@ -22,6 +22,7 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
@@ -34,6 +35,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -125,19 +127,25 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GET
   @RolesAllowed(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(@Context Pageable page) {
-    return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.count(),
-      occurrenceDownloadMapper.list(page));
+  public PagingResponse<Download> list(@Context Pageable page, @Nullable Set<Download.Status> status) {
+    if(status == null ||status.isEmpty()) {
+      return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
+    } else {
+      return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByStatus(status), occurrenceDownloadMapper.listByStatus(page,status));
+    }
   }
+
 
   @GET
   @Path("user/{user}")
   @NullToNotFound
-  public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page) {
+  public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page, @QueryParam("status")
+  Set<Download.Status> status) {
     checkUserIsInSecurityContext(user, securityContext);
-    return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByUser(user),
-      occurrenceDownloadMapper.listByUser(user, page));
+    return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
+                                        occurrenceDownloadMapper.listByUser(user,page,status));
   }
+
 
   @PUT
   @Path("{key}")

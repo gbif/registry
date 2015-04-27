@@ -79,6 +79,13 @@
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     WHERE created_by = #{creator,jdbcType=VARCHAR}
+    <if test="status != null" >
+      AND status IN
+      <foreach item="item" index="index" collection="status"
+               open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -89,6 +96,13 @@
     SELECT COUNT(*)
     FROM occurrence_download
     WHERE created_by = #{creator,jdbcType=VARCHAR}
+    <if test="status != null" >
+      AND status IN
+      <foreach item="item" index="index" collection="status"
+               open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
   </select>
 
   <!-- Append safe ordering -->
@@ -104,6 +118,31 @@
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
     FROM occurrence_download
+  </select>
+
+  <!-- Append safe ordering -->
+  <select id="listByStatus" resultType="Download">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download
+    WHERE status IN
+    <foreach item="item" index="index" collection="status"
+             open="(" separator="," close=")">
+      #{item}
+    </foreach>
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByStatus" resultType="Integer">
+    SELECT COUNT(*)
+    FROM occurrence_download
+    WHERE status IN
+    <foreach item="item" index="index" collection="status"
+             open="(" separator="," close=")">
+      #{item}
+    </foreach>
   </select>
 
 </mapper>
