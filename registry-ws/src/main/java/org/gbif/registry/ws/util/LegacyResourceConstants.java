@@ -48,6 +48,7 @@ public class LegacyResourceConstants {
   public static final String CHECKLIST_SERVICE_TYPE_2 = "DWC_ARCHIVE_CHECKLIST";
   public static final String OCCURRENCE_SERVICE_TYPE_1 = "DWC-ARCHIVE-OCCURRENCE";
   public static final String OCCURRENCE_SERVICE_TYPE_2 = "DWC_ARCHIVE_OCCURRENCE";
+  public static final String SAMPLING_EVENT_SERVICE_TYPE = "DWC-ARCHIVE-SAMPLING-EVENT";
 
   // used to ensure Response is not cached, forcing the IPT to make a new request
   public static final CacheControl CACHE_CONTROL_DISABLED = CacheControl.valueOf("no-cache");

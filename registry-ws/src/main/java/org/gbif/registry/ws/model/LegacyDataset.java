@@ -70,7 +70,8 @@ public class LegacyDataset extends Dataset {
     ImmutableSet.of(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1,
                     LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
                     LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
-                    LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2);
+                    LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
+                    LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
 
   /**
    * Default constructor.
@@ -716,10 +717,11 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type OCCURRENCE or CHECKLIST
-   * could not be resolved.
+   * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type OCCURRENCE, CHECKLIST
+   * or SAMPLING_EVENT could not be resolved.
    *
-   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE or CHECKLIST could not be resolved
+   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, CHECKLIST or SAMPLING_EVENT could not be
+   * resolved
    */
   public DatasetType resolveType() {
     if (serviceTypes != null) {
@@ -729,6 +731,8 @@ public class LegacyDataset extends Dataset {
       } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1) || serviceTypes.contains(
         LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
         return DatasetType.OCCURRENCE;
+      } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
+        return DatasetType.SAMPLING_EVENT;
       }
     }
     return DatasetType.METADATA;

@@ -75,6 +75,7 @@ public class IptResourceIT {
   private static final String IPT_WS_PASSWORD = "password";
 
   private static final String DATASET_SERVICE_TYPES = "EML|DWC-ARCHIVE-OCCURRENCE";
+  private static final String DATASET_EVENT_SERVICE_TYPES = "EML|DWC-ARCHIVE-SAMPLING-EVENT";
   private static final String DATASET_SERVICE_URLS =
     "http://ipt.gbif.org/eml.do?r=ds123|http://ipt.gbif.org/archive.do?r=ds123";
   private static final URI DATASET_EML_SERVICE_URL = URI.create("http://ipt.gbif.org/eml.do?r=ds123");
@@ -394,7 +395,61 @@ public class IptResourceIT {
 
     // some information that should have been updated
     Dataset dataset = validatePersistedIptDataset(UUID.fromString(Parsers.legacyIptEntityHandler.key), organizationKey,
-      installationKey);
+      installationKey, DatasetType.OCCURRENCE);
+
+    // some additional information to check
+    assertNotNull(dataset.getCreatedBy());
+    assertNotNull(dataset.getModifiedBy());
+  }
+
+  /**
+   * NOTE: This test is the same as testRegisterIptDataset() except that it registers a dataset of type SAMPLING_EVENT
+   */
+  @Test
+  public void testRegisterIptEventDataset() throws Exception {
+    // persist new organization (Dataset publishing organization)
+    Organization organization = Organizations.newPersistedInstance();
+    UUID organizationKey = organization.getKey();
+
+    // persist new installation of type IPT
+    Installation installation = Installations.newPersistedInstance(organizationKey);
+    UUID installationKey = installation.getKey();
+
+    // populate params for ws
+    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
+
+    // replace service type and url params in order to reflect that this is a dataset of type SAMPLING_EVENT
+    for (Iterator<NameValuePair> iter = data.listIterator(); iter.hasNext();) {
+      NameValuePair pair = iter.next();
+      if (pair.getName().equals(LegacyResourceConstants.SERVICE_TYPES_PARAM)
+          || pair.getName().equals(LegacyResourceConstants.SERVICE_URLS_PARAM) ) {
+        iter.remove();
+      }
+    }
+    data.add(new BasicNameValuePair(LegacyResourceConstants.SERVICE_TYPES_PARAM, DATASET_EVENT_SERVICE_TYPES));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.SERVICE_URLS_PARAM, DATASET_SERVICE_URLS));
+
+    // organisationKey param included on register, not on update
+    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
+
+    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+
+    // construct request uri
+    String uri = Requests.getRequestUri("/registry/ipt/resource");
+
+    // send POST request with credentials
+    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
+
+    // correct response code?
+    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+
+    // parse newly registered IPT key (UUID)
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
+    assertNotNull("Registered Dataset key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
+
+    // some information that should have been updated
+    Dataset dataset = validatePersistedIptDataset(UUID.fromString(Parsers.legacyIptEntityHandler.key), organizationKey,
+      installationKey, DatasetType.SAMPLING_EVENT);
 
     // some additional information to check
     assertNotNull(dataset.getCreatedBy());
@@ -532,7 +587,7 @@ public class IptResourceIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
-    dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey);
+    dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey, DatasetType.OCCURRENCE);
 
     // some additional information that should not have been updated
     assertEquals(created, dataset.getCreated());
@@ -557,7 +612,7 @@ public class IptResourceIT {
 
     // retrieve newly updated dataset, and make sure the same number of datasets, contacts and endpoints exist
     assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());
-    dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey);
+    dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey, DatasetType.OCCURRENCE);
     assertEquals(1, dataset.getContacts().size());
     assertEquals(2, dataset.getEndpoints().size());
 
@@ -792,14 +847,15 @@ public class IptResourceIT {
    * @param organizationKey installation publishing organization key
    * @return validated installation
    */
-  private Dataset validatePersistedIptDataset(UUID datasetKey, UUID organizationKey, UUID installationKey) {
+  private Dataset validatePersistedIptDataset(UUID datasetKey, UUID organizationKey, UUID installationKey,
+    DatasetType datasetType) {
     // retrieve installation anew
     Dataset dataset = datasetService.get(datasetKey);
 
     assertNotNull("Dataset should be present", dataset);
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
-    assertEquals(DatasetType.OCCURRENCE, dataset.getType());
+    assertEquals(datasetType, dataset.getType());
     assertEquals(Requests.DATASET_NAME, dataset.getTitle());
     assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getCreated());

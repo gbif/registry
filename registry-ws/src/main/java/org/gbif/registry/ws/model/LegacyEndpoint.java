@@ -101,7 +101,8 @@ public class LegacyEndpoint extends Endpoint {
       if (injected.equalsIgnoreCase(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
           || injected.equalsIgnoreCase(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)
           || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
-          || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
+          || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
+          || injected.equalsIgnoreCase(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         setType(EndpointType.DWC_ARCHIVE);
       } else {
         LOG.error("Endpoint type could not be interpreted: {}", injected);

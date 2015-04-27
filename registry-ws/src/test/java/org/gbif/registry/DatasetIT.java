@@ -234,6 +234,21 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
+  public void testEventTypeSearch() {
+    Dataset d = newEntity();
+    d.setType(DatasetType.SAMPLING_EVENT);
+    d = create(d, 1);
+    assertSearch(d.getTitle(), 1); // 1 result expected for a simple search
+
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addTypeFilter(DatasetType.SAMPLING_EVENT);
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertNotNull(resp.getCount());
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1),
+      resp.getCount());
+  }
+
+  @Test
   public void testSearchListener() {
     Dataset d = newEntity();
     d = create(d, 1);
@@ -494,10 +509,12 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     createDatasetsWithType(DatasetType.METADATA, 1);
     createDatasetsWithType(DatasetType.CHECKLIST, 2);
     createDatasetsWithType(DatasetType.OCCURRENCE, 3);
+    createDatasetsWithType(DatasetType.SAMPLING_EVENT, 4);
 
     assertResultsOfSize(service.listByType(DatasetType.METADATA, new PagingRequest()), 1);
     assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);
     assertResultsOfSize(service.listByType(DatasetType.OCCURRENCE, new PagingRequest()), 3);
+    assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);
   }
 
   @Test
