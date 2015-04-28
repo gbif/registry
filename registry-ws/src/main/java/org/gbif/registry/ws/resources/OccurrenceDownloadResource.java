@@ -127,7 +127,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GET
   @RolesAllowed(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(@Context Pageable page, @Nullable Set<Download.Status> status) {
+  public PagingResponse<Download> list(@Context Pageable page, @Nullable @QueryParam("status") Set<Download.Status> status) {
     if(status == null ||status.isEmpty()) {
       return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
@@ -139,7 +139,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GET
   @Path("user/{user}")
   @NullToNotFound
-  public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page, @QueryParam("status")
+  public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page, @Nullable @QueryParam("status")
   Set<Download.Status> status) {
     checkUserIsInSecurityContext(user, securityContext);
     return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByUser(user,status),

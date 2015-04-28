@@ -79,7 +79,7 @@
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     WHERE created_by = #{creator,jdbcType=VARCHAR}
-    <if test="status != null" >
+    <if test="status != null and !status.isEmpty()" >
       AND status IN
       <foreach item="item" index="index" collection="status"
                open="(" separator="," close=")">
@@ -96,7 +96,7 @@
     SELECT COUNT(*)
     FROM occurrence_download
     WHERE created_by = #{creator,jdbcType=VARCHAR}
-    <if test="status != null" >
+    <if test="status != null and !status.isEmpty()" >
       AND status IN
       <foreach item="item" index="index" collection="status"
                open="(" separator="," close=")">

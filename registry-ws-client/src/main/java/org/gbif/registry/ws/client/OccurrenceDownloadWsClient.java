@@ -28,8 +28,9 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
   OccurrenceDownloadService {
 
   private MultivaluedMap<String,String> buildStatusParam(Set<Download.Status> status){
-    MultivaluedMap<String,String> statuses = new MultivaluedMapImpl();
-    if(status != null) {
+    MultivaluedMap<String,String> statuses = null;
+    if(status != null && !status.isEmpty()) {
+      statuses = new MultivaluedMapImpl();
       statuses.put("status", Lists.newArrayList(Collections2.transform(status,new Function<Download.Status, String>() {
         @Nullable
         @Override
@@ -58,11 +59,7 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
 
   @Override
   public PagingResponse<Download> list(@Nullable Pageable page, @Nullable Set<Download.Status> status) {
-    if (status == null ||status.isEmpty()) {
-      return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, page);
-    } else {
-      return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, null, buildStatusParam(status), page);
-    }
+     return get(GenericTypes.PAGING_OCCURRENCE_DOWNLOAD, null, buildStatusParam(status), page);
   }
 
   @Override
