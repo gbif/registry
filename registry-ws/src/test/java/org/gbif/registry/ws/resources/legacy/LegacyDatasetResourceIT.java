@@ -35,6 +35,7 @@ import java.util.UUID;
 import javax.xml.parsers.ParserConfigurationException;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -217,6 +218,120 @@ public class LegacyDatasetResourceIT {
     assertEquals(created.toString(), dataset.getCreated().toString());
     assertEquals(createdBy, dataset.getCreatedBy());
     assertNotNull(dataset.getModified());
+  }
+
+  /**
+   * This test verifies http://dev.gbif.org/issues/browse/POR-2733 is solved.
+   * </br>
+   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset
+   * associated to the Organization. An administrative primary contact with first name "Jan" and last name "Legind"
+   * is then added to the Dataset.
+   * </br>
+   * Then, it sends an update Dataset (POST) request to update the same Dataset. The request has the primary
+   * contact name "Jan Legind" that used to try and override the first name "Jan".
+   * </br>
+   * Upon receiving an HTTP Response, the test ensures the update was successful by parsing its XML content.
+   * Then it ensures that the primary contact first name is still "Jan" not "Jan Legind".
+   */
+  @Test
+  public void testUpdateLegacyDatasetWithExistingPrimaryContact()
+    throws IOException, URISyntaxException, SAXException {
+    // persist new organization (IPT hosting organization)
+    Organization organization = Organizations.newPersistedInstance();
+    UUID organizationKey = organization.getKey();
+
+    // persist new installation of type IPT
+    Installation installation = Installations.newPersistedInstance(organizationKey);
+    UUID installationKey = installation.getKey();
+
+    // persist new Dataset associated to installation
+    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    UUID datasetKey = dataset.getKey();
+    // add primary contact to Dataset
+    Contact c = new Contact();
+    c.setFirstName("Jan");
+    c.setLastName("Legind");
+    c.setEmail(Lists.newArrayList("jlegind@gbif.org"));
+    c.setPrimary(true);
+    c.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
+    datasetService.addContact(datasetKey, c);
+    // add endpoint to Dataset
+    Endpoint e = Endpoints.newInstance();
+    datasetService.addEndpoint(datasetKey, e);
+
+    // validate it
+    validateExistingDataset(dataset, organizationKey, installationKey);
+
+    // before sending the update POST request, count the number of datasets, contacts and endpoints
+    assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());
+    assertEquals(1, datasetService.listEndpoints(datasetKey).size());
+    assertEquals(1, datasetService.listContacts(datasetKey).size());
+
+    Contact persisted = datasetService.listContacts(datasetKey).get(0);
+    assertEquals("Jan", persisted.getFirstName());
+    assertEquals("Legind", persisted.getLastName());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, persisted.getType());
+
+    // populate params for ws
+    List<NameValuePair> data = new ArrayList<NameValuePair>();
+    // main fields
+    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,
+      Requests.DATASET_DESCRIPTION_LANGUAGE));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));
+    // add additional ipt and organisation parameters
+    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
+
+    // primary contact with name "Jan Legind" and type "administrative"
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_TYPE));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_NAME)); // Jan Legind
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));
+    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,
+      Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));
+
+    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+
+    // construct request uri
+    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());
+
+    // send POST request with credentials
+    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
+
+    // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed
+    String st = new String(result.content.getBytes(), Charsets.UTF_8);
+
+    // parse updated registered Dataset key (UUID)
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);
+
+    assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);
+    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);
+    assertNotNull("Updated Dataset organizationKey should be in response",
+      Parsers.legacyDatasetResponseHandler.organisationKey);
+    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);
+
+    // make some additional assertions that the update was successful
+    // retrieve installation anew
+    dataset = datasetService.get(datasetKey);
+
+    assertNotNull("Dataset should be present", dataset);
+
+    // the contact should still have first name "Jan" and last name "Legind"
+    assertEquals(1, dataset.getContacts().size());
+    Contact updated = dataset.getContacts().get(0);
+    assertEquals("Jan", updated.getFirstName());
+    assertEquals("Legind", updated.getLastName());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, updated.getType());
   }
 
   /**

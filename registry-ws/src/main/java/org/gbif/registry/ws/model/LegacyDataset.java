@@ -598,7 +598,7 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Generates the primary technical contact, and adds it to the dataset. This method must be called after all
+   * Generates the primary contact, and adds it to the dataset. This method must be called after all
    * primary contact parameters have been set.
    *
    * @return new primary contact added
@@ -614,18 +614,19 @@ public class LegacyDataset extends Dataset {
           break;
         }
       }
-      // if it doesn't exist already, create it
+      // Only if it doesn't exist already, create it and populate it with the incoming contact parameters.
+      // If it does exist already, don't update it! This was the cause of http://dev.gbif.org/issues/browse/POR-2733
+      // Modifications to existing primary contacts should only happen via a) metadata sync or via b) registry console
       if (contact == null) {
         contact = new Contact();
         contact.setPrimary(true);
         contact.setType(primaryContactType);
+        contact.setFirstName(primaryContactName);
+        contact.setEmail(Lists.newArrayList(primaryContactEmail));
+        contact.setPhone(Lists.newArrayList(primaryContactPhone));
+        contact.setAddress(Lists.newArrayList(primaryContactAddress));
+        contact.setDescription(primaryContactDescription);
       }
-      // set/update other properties
-      contact.setFirstName(primaryContactName);
-      contact.setEmail(Lists.newArrayList(primaryContactEmail));
-      contact.setPhone(Lists.newArrayList(primaryContactPhone));
-      contact.setAddress(Lists.newArrayList(primaryContactAddress));
-      contact.setDescription(primaryContactDescription);
       primaryContact = contact;
     }
     return contact;
