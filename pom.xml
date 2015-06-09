@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>20</version>
+    <version>23-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -50,7 +50,7 @@
     to the release of that dependency]
   -->
   <properties>
-    <jdkLevel>1.7</jdkLevel>
+    <jdkLevel>1.8</jdkLevel>
 
     <aopalliance.version>1.0</aopalliance.version>
     <assertj.version>1.7.1</assertj.version>
