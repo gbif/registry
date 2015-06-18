@@ -50,7 +50,7 @@
     to the release of that dependency]
   -->
   <properties>
-    <jdkLevel>1.8</jdkLevel>
+    <jdkLevel>1.7</jdkLevel>
 
     <aopalliance.version>1.0</aopalliance.version>
     <assertj.version>1.7.1</assertj.version>
