@@ -13,17 +13,17 @@
   <name>Registry CLI</name>
 
   <properties>
-    <gbif-cli.version>0.8</gbif-cli.version>
-    <gbif-doi.version>1.0</gbif-doi.version>
+    <gbif-cli.version>0.9</gbif-cli.version>
+    <gbif-doi.version>1.1</gbif-doi.version>
     <!-- guava has to match gbif-cli version -->
-    <guava.version>14.0.1</guava.version>
+    <guava.version>17.0</guava.version>
     <httpclient.version>4.3.6</httpclient.version>
     <!-- cli specific jackson versions in order to use yaml configs -->
     <jackson.version>1.9.11</jackson.version>
-    <jackson-annotations.version>2.4.2</jackson-annotations.version>
-    <jackson-datatype-guava.version>1.9.1</jackson-datatype-guava.version>
-    <jcommander.version>1.35</jcommander.version>
-    <metainf-services.version>1.4</metainf-services.version>
+    <jackson-annotations.version>2.5.4</jackson-annotations.version>
+    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
+    <jcommander.version>1.48</jcommander.version>
+    <metainf-services.version>1.5</metainf-services.version>
     <yammer.version>2.2.0</yammer.version>
   </properties>
 
