@@ -61,7 +61,8 @@
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>3.3.2</commons-lang.version>
     <commons-validator.version>1.4.0</commons-validator.version>
-    <drupal-mybatis.version>0.15</drupal-mybatis.version>
+    <!-- Upgrading to drupal-mybatis 0.15 breaks tests - code changes required in order to upgrade -->
+    <drupal-mybatis.version>0.14</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.22</freemarker.version>
     <gbif-api.version>0.23</gbif-api.version>
