@@ -23,7 +23,19 @@
   <alternateIdentifiers>
     <alternateIdentifier alternateIdentifierType="GBIF">0000364-150202100118378</alternateIdentifier>
   </alternateIdentifiers>
-  <relatedIdentifiers/>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/qyzfdt</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/xmki52</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/l8vpay</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/gi6aum</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/mug7kr</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/2gfyxk</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/vjuvw1</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/a7isx1</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/tkezjv</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/4wnutv</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.15468/siye1z</relatedIdentifier>
+  </relatedIdentifiers>
   <sizes>
     <size>1847106</size>
   </sizes>
