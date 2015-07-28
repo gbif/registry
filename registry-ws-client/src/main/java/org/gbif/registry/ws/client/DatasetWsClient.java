@@ -165,7 +165,12 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
     return get(GenericTypes.PAGING_DATASET_PROCESS_STATUS, page, datasetKey.toString(), "process");
   }
 
-  @Override
+    @Override
+    public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(Pageable page) {
+        return get(GenericTypes.PAGING_DATASET_PROCESS_STATUS, page, "process/aborted");
+    }
+
+    @Override
   public List<Network> listNetworks(UUID datasetKey) {
     return get(GenericTypes.LIST_NETWORK, datasetKey.toString(), "networks");
   }

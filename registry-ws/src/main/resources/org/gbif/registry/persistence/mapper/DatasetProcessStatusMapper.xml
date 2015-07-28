@@ -131,4 +131,23 @@
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
 
+
+  <select id="countAborted" resultType="Integer">
+    SELECT COUNT(*) FROM (
+      SELECT DISTINCT ON (dataset_key) dataset_key, finish_reason, started_crawling, finished_crawling
+      FROM crawl_history
+      ORDER BY started_crawling desc, dataset_key
+    ) AS crawls
+    WHERE finish_reason='ABORT'
+  </select>
+
+  <select id="listAborted" resultType="DATASET_PROCESS_STATUS_MAP" parameterType="Pageable">
+    SELECT * FROM (
+      SELECT DISTINCT ON (dataset_key) <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+      FROM crawl_history
+      ORDER BY started_crawling DESC, dataset_key
+    ) AS crawls
+    WHERE finish_reason='ABORT'
+    LIMIT #{page.limit} OFFSET #{page.offset}
+  </select>
 </mapper>

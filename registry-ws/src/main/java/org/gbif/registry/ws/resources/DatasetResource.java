@@ -697,7 +697,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public PagingResponse<Dataset> listConstituents(@PathParam("key") UUID datasetKey, @Context Pageable page) {
     return pagingResponse(page, (long) datasetMapper.countConstituents(datasetKey),
-      datasetMapper.listConstituents(datasetKey, page));
+            datasetMapper.listConstituents(datasetKey, page));
   }
 
   @Path("{key}/networks")
@@ -826,7 +826,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void createDatasetProcessStatus(@PathParam("datasetKey") UUID datasetKey, @PathParam("attempt") int attempt,
     @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
-      "DatasetProcessStatus must have the same key as the url");
+            "DatasetProcessStatus must have the same key as the url");
     checkArgument(attempt == datasetProcessStatus.getCrawlJob().getAttempt(),
       "DatasetProcessStatus must have the same attempt as the url");
     updateDatasetProcessStatus(datasetProcessStatus);
@@ -859,10 +859,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @GET
+  @Path("process/aborted")
+  @Override
+  public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(@Context Pageable page) {
+      return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countAborted(),
+              datasetProcessStatusMapper.listAborted(page));
+  }
+
+  @GET
   @Path("{datasetKey}/process")
   @Override
-  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathParam("datasetKey") UUID datasetKey,
-    @Context Pageable page) {
+  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathParam("datasetKey") UUID datasetKey, @Context Pageable page) {
     return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
       datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }

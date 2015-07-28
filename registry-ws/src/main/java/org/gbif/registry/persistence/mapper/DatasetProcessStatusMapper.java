@@ -29,6 +29,8 @@ public interface DatasetProcessStatusMapper {
 
   int count();
 
+  int countAborted();
+
   int countByDataset(@Param("datasetKey") UUID datasetKey);
 
   void create(DatasetProcessStatus datasetProcessStatus);
@@ -39,7 +41,8 @@ public interface DatasetProcessStatusMapper {
 
   List<DatasetProcessStatus> list(@Nullable @Param("page") Pageable page);
 
-  List<DatasetProcessStatus>
-    listByDataset(@Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
+  List<DatasetProcessStatus> listByDataset(@Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
+
+  List<DatasetProcessStatus> listAborted(@Nullable @Param("page") Pageable page);
 
 }
