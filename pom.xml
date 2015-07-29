@@ -65,7 +65,7 @@
     <drupal-mybatis.version>0.14</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.22</freemarker.version>
-    <gbif-api.version>0.27-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.27</gbif-api.version>
     <gbif-common-mybatis.version>0.16</gbif-common-mybatis.version>
     <gbif-common-search.version>0.22</gbif-common-search.version>
     <gbif-common-service.version>0.12</gbif-common-service.version>
