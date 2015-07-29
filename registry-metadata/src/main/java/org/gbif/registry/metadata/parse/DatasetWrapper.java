@@ -329,6 +329,15 @@ public class DatasetWrapper {
     target.setRights(rights);
   }
 
+  /**
+   * Will only set the rights, if it is currently NULL otherwise will do nothing.
+   */
+  public void setRightsIfEmpty(String rights) {
+    if (target.getRights() == null) {
+      target.setRights(rights);
+    }
+  }
+
   public void setCountryCoverage(Set<Country> countryCoverage) {
     target.setCountryCoverage(countryCoverage);
   }

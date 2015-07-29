@@ -494,6 +494,20 @@ public class DatasetParserTest {
     assertEquals("Estimates of walleye abundance for Oneida\n" + "      Lake, NY (1957-2008)", dataset.getTitle());
   }
 
+  /**
+   * POR-2792: Handle <pre><ulink></pre> elements in intellectualRights.
+   */
+  @Test
+  public void testEmbeddedUlinkElements() throws IOException {
+    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-ulink.xml"));
+    assertEquals("Creative Commons Attribution (CC-BY) 4.0 License", dataset.getRights());
+
+    // check original behaviour
+    dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-no-ulink.xml"));
+    assertEquals("This work is licensed under a Creative Commons Attribution (CC-BY) 4.0 License.", dataset.getRights());
+  }
+
+
   @Test
   public void testEmlParsingBreakingOnURLConversion() throws IOException {
     // Gracefully handles ConversionException/Throwable during conversion of URLs, and fully populates the dataset

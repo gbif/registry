@@ -1,0 +1,147 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1" xmlns:dc="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd" packageId="http://www.gbif.fr/ipt/resource?id=inpn_fcbn_flora/v1.0" system="http://gbif.org" scope="system" xml:lang="eng">
+  <dataset>
+    <alternateIdentifier>http://www.gbif.fr/ipt/resource?r=inpn_fcbn_flora</alternateIdentifier>
+    <title xml:lang="eng">INPN - Données flore des CBN agrégées par la FCBN</title>
+    <creator>
+      <individualName>
+        <givenName>Dutrève</givenName>
+        <surName>Bruno</surName>
+      </individualName>
+      <organizationName>Fédération des Conservatoires Botaniques Nationaux</organizationName>
+      <positionName>Directeur</positionName>
+      <address>
+        <deliveryPoint>
+          18 rue Beaumarchais - BP 87 - 93511 Montreuil-sous-Bois Cedex
+        </deliveryPoint>
+        <city>Montreuil-sous-Bois</city>
+        <postalCode>93511</postalCode>
+        <country>FR</country>
+      </address>
+      <phone>01 80 89 70 00</phone>
+      <electronicMailAddress>bruno.dutreve@fcbn.fr</electronicMailAddress>
+      <onlineUrl>http://www.fcbn.fr</onlineUrl>
+    </creator>
+    <metadataProvider>
+      <individualName>
+        <givenName>Robert</givenName>
+        <surName>Solène</surName>
+      </individualName>
+      <organizationName>MNHN-SPN</organizationName>
+      <positionName>Gestionnaire de données</positionName>
+      <address>
+        <deliveryPoint>36, rue Geaoffroy Saint-Hilaire, 75005 Paris</deliveryPoint>
+        <city>Paris</city>
+        <country>FR</country>
+      </address>
+      <phone>TODO</phone>
+      <electronicMailAddress>srobert@mnhn.fr</electronicMailAddress>
+    </metadataProvider>
+    <pubDate>2015-07-17</pubDate>
+    <language>fre</language>
+    <abstract>
+      <para>
+        Dès la création de leur Fédération (FCBN - www.fcbn.fr) en 1999, les onze Conservatoires botaniques nationaux (CBN) ont exprimé la volonté collective de constituer un système d’information national pour mettre en commun leurs données, et celles de leurs partenaires, sur la flore, la fonge et les végétations-habitats. C’est réellement en 2010 avec le lancement de l’établissement du Format Standard de Données sur la flore (FSD Flore), conçu comme le « format commun de données de la Fédération des CBN », que la démarche a été initiée. Il s’en est suivi de nombreux échanges ayant permis de finaliser le format, de le tester sur les premiers jeux de données, d’établir une charte d’adhésion au projet et d’élaborer le cadrage final de l’exercice d’agrégation des données. Le projet s’est concrétisé au premier trimestre 2013 à travers la mise au format des données détenues par les CBN et leur intégration dans le Système d’Information de la FCBN (SI-Flore). A l’horizon de l’année 2014, il résulte, de ce projet structurant, que la FCBN dispose d’un système d’information d’envergure nationale et fort de plus de 20 millions de données d’observation sur la flore de France. Les données centralisées ont été consolidées sur la base du référentiel TAXREF 5.0 et une mise à jour est prévue pour fin 2015.
+      </para>
+    </abstract>
+    <keywordSet>
+      <keyword>
+        Flore, Flora, Conservatoire Botanique National, CBN, FCBN, observation
+      </keyword>
+      <keywordThesaurus>n/a</keywordThesaurus>
+    </keywordSet>
+    <keywordSet>
+      <keyword>Occurrence</keyword>
+      <keywordThesaurus>
+        GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml
+      </keywordThesaurus>
+    </keywordSet>
+    <intellectualRights>
+      <para>
+        This work is licensed under a Creative Commons Attribution (CC-BY) 4.0 License.
+      </para>
+    </intellectualRights>
+    <coverage>
+      <geographicCoverage>
+        <geographicDescription>France</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-5.266</westBoundingCoordinate>
+          <eastBoundingCoordinate>9.341</eastBoundingCoordinate>
+          <northBoundingCoordinate>51.174</northBoundingCoordinate>
+          <southBoundingCoordinate>41.271</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+      <temporalCoverage>
+        <rangeOfDates>
+          <beginDate>
+            <calendarDate>1500-01-01</calendarDate>
+          </beginDate>
+          <endDate>
+            <calendarDate>2014-06-12</calendarDate>
+          </endDate>
+        </rangeOfDates>
+      </temporalCoverage>
+      <taxonomicCoverage>
+        <generalTaxonomicCoverage>Plante</generalTaxonomicCoverage>
+        <taxonomicClassification>
+          <taxonRankName>kingdom</taxonRankName>
+          <taxonRankValue>Plantae</taxonRankValue>
+        </taxonomicClassification>
+      </taxonomicCoverage>
+    </coverage>
+    <maintenance>
+      <description>
+        <para/>
+      </description>
+      <maintenanceUpdateFrequency>daily</maintenanceUpdateFrequency>
+    </maintenance>
+    <contact>
+      <individualName>
+        <givenName>Thomas</givenName>
+        <surName>Milon</surName>
+      </individualName>
+      <organizationName>Fédération des Conservatoires Botaniques Nationaux</organizationName>
+      <positionName>Gestionnaire de données</positionName>
+      <address>
+        <deliveryPoint>
+          18 rue Beaumarchais - BP 87 - 93511 Montreuil-sous-Bois Cedex
+        </deliveryPoint>
+        <city>Montreuil-sous-Bois</city>
+        <postalCode>93511</postalCode>
+        <country>FR</country>
+      </address>
+      <phone>01 80 89 70 02</phone>
+      <electronicMailAddress>informatique@fcbn.fr</electronicMailAddress>
+      <onlineUrl>http://www.fcbn.fr</onlineUrl>
+    </contact>
+    <contact>
+      <individualName>
+        <givenName>Anaïs</givenName>
+        <surName>Just</surName>
+      </individualName>
+      <organizationName>Fédération des Conservatoires Botaniques Nationaux</organizationName>
+      <positionName>Gestionnaire de données</positionName>
+      <address>
+        <deliveryPoint>
+          18 rue Beaumarchais - BP 87 - 93511 Montreuil-sous-Bois Cedex
+        </deliveryPoint>
+        <city>Montreuil-sous-Bois</city>
+        <postalCode>93511</postalCode>
+        <country>FR</country>
+      </address>
+      <phone>01 80 89 70 02</phone>
+      <electronicMailAddress>informatique@fcbn.fr</electronicMailAddress>
+      <onlineUrl>http://www.fcbn.fr</onlineUrl>
+    </contact>
+  </dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+        <dateStamp>2015-07-17T02:54:35.698+02:00</dateStamp>
+        <hierarchyLevel>dataset</hierarchyLevel>
+        <citation>
+          Citation: Just A., Gourvil J., Millet J., Mandon I., Milon T., Dutrève B., Boullet V. (2014). SIFlore, a dataset of geographical distribution of vascular plants covering five centuries of knowledge in France: Results of a collaborative project coordinated by the Federation of the National Botanical Conservatories. PhytoKeys (In press)
+        </citation>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

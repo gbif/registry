@@ -138,7 +138,15 @@ public class EMLRuleSet extends RuleSetBase {
 
     digester.addBeanPropertySetter("eml/dataset/purpose/para", "purpose");
     digester.addBeanPropertySetter("eml/dataset/additionalInfo/para", "additionalInfo");
-    digester.addBeanPropertySetter("eml/dataset/intellectualRights/para", "rights");
+
+    // POR-2792: We prefer to use the title if it is given, otherwise we'll take the blurb
+    // Digester provides no easy way of concatenating the content across the elements, and this is seen
+    // as an acceptable solution, recognising that one could craft EML that would make this behaviour
+    // unacceptable.  However, the risk of that is considered tiny.
+    digester.addBeanPropertySetter("eml/dataset/intellectualRights/para/ulink/citetitle", "rights");
+    // Note: because this fires on leaving the element, any ulink/citetitle will already have populated the value
+    digester.addCallMethod("eml/dataset/intellectualRights/para", "setRightsIfEmpty", 1);
+    digester.addCallParam("eml/dataset/intellectualRights/para", 0);
 
     // KeywordCollections
     addKeywordCollectionRules(digester, "eml/dataset/keywordSet", "addKeywordCollection");
