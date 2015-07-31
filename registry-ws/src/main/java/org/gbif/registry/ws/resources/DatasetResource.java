@@ -70,6 +70,7 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,10 +96,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -404,12 +407,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // propagated which can trigger crawlers which will run an update etc.
     List<Metadata> existingDocs = listMetadata(datasetKey, type);
     for (Metadata existing : existingDocs) {
-      String existingContent = existing.getContent();
-      if (existingContent != null) {
-        if (new String(data).equals(new String(existing.getContent().getBytes()))) {
-          LOG.debug("This metadata document already exists - returning existing");
-          return existing;
+      try (InputStream in = getMetadataDocument(existing.getKey())){
+        String existingContent = CharStreams.toString(new InputStreamReader(in, Charsets.UTF_8));
+        if (existingContent != null) {
+          if (existingContent.equals(new String(data))) {
+            LOG.debug("This metadata document already exists - returning existing");
+            return existing;
+          }
         }
+      } catch (Exception e) {
+        // swallow - we'll delete it anyway
       }
     }
 
