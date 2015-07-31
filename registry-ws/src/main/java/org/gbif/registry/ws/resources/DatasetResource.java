@@ -71,6 +71,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -263,7 +264,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Augments a list of datasets with information from their preferred metadata document.
-   * 
+   *
    * @return a the same paging response with a new list of augmented dataset instances
    */
   private PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
@@ -285,7 +286,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * <li>These objects are all mutable, and care should be taken that the returned object may be one or the other of the
    * supplied, thus you need to {@code Dataset result = merge(Dataset emlView, Dataset dbView);}</li>
    * </ul>
-   * 
+   *
    * @param target that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
    * @return the modified tagret dataset, or the supplementary dataset if the target is null
@@ -397,16 +398,30 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       throw new IllegalArgumentException("Unreadable document", e);
     }
 
+
+    // first, determine if this document is already stored, returning it with no action
+    // we do this, because updating metadata when nothing has changed, results in registry change events being
+    // propagated which can trigger crawlers which will run an update etc.
+    List<Metadata> existingDocs = listMetadata(datasetKey, type);
+    for (Metadata existing : existingDocs) {
+      String existingContent = existing.getContent();
+      if (existingContent != null) {
+        if (Arrays.equals(existing.getContent().getBytes(), data)) {
+          LOG.debug("This metadata document already exists - returning existing");
+          return existing;
+        }
+      }
+    }
+
+    // persist metadata & data, which we know is not already stored
+    // first remove all existing metadata of the same type (so we end up storing only one document per type)
     Metadata metadata = new Metadata();
     metadata.setDatasetKey(datasetKey);
     metadata.setType(type);
     metadata.setCreatedBy(user);
     metadata.setModifiedBy(user);
-
-    // persist metadata & data
-    // first remove all existing metadata of the same type (so we end up storing only one document per type)
-    for (Metadata exist : listMetadata(datasetKey, type)) {
-      deleteMetadata(exist.getKey());
+    for (Metadata existing : existingDocs) {
+      deleteMetadata(existing.getKey());
     }
     int metaKey = metadataMapper.create(metadata, data);
     metadata.setKey(metaKey);
