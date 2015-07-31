@@ -13,7 +13,6 @@
   <name>Registry CLI</name>
 
   <properties>
-    <gbif-cli.version>0.9</gbif-cli.version>
     <gbif-doi.version>1.1</gbif-doi.version>
     <!-- guava has to match gbif-cli version -->
     <guava.version>17.0</guava.version>
