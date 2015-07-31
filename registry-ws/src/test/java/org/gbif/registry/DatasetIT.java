@@ -485,6 +485,32 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertEquals("Created data should not change", d1.getCreated(), d3.getCreated());
   }
 
+  /**
+   * Test that uploading the same document repeatedly does not change the dataset.
+   */
+  @Test
+  public void testMetadataDuplication() throws IOException {
+    Dataset d1 = create(newEntity(), 1);
+    List<Metadata> m1 = service.listMetadata(d1.getKey(), MetadataType.EML);
+
+    // upload a valid EML doc
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
+
+    // verify our dataset has changed
+    Dataset d2 = service.get(d1.getKey());
+    assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);
+    List<Metadata> m2 = service.listMetadata(d1.getKey(), MetadataType.EML);
+    assertNotEquals("Dataset metadata should have changed after metadata was uploaded", m1, m2);
+
+
+    // upload the doc a second time - it should do nothing
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
+    Dataset d3 = service.get(d1.getKey());
+    assertEquals("Dataset should not have changed after same metadata document was uploaded", d2, d3);
+    List<Metadata> m3 = service.listMetadata(d1.getKey(), MetadataType.EML);
+    assertEquals("Dataset metadata should not have changed after same metadata document was uploaded", m2, m3);
+  }
+
   @Test
   public void testByCountry() {
     createCountryDatasets(DatasetType.OCCURRENCE, Country.ANDORRA, 3);
@@ -572,7 +598,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
   /**
    * Create a number of new Datasets, having a particular dataset type.
-   * 
+   *
    * @param type dataset type
    * @param number amount of datasets to create
    */
