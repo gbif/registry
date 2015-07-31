@@ -406,7 +406,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     for (Metadata existing : existingDocs) {
       String existingContent = existing.getContent();
       if (existingContent != null) {
-        if (Arrays.equals(existing.getContent().getBytes(), data)) {
+        if (new String(data).equals(new String(existing.getContent().getBytes()))) {
           LOG.debug("This metadata document already exists - returning existing");
           return existing;
         }
