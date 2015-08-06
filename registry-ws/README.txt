@@ -18,34 +18,33 @@ To use this project you would typically do one of the following:
 
 With a maven profile similar to:
 
-    <!-- A local profile for the registry2 postgres development -->
+    <!-- A profile that allows for local development -->
     <profile>
-      <id>registry2-local</id>
+      <id>registry-local</id>
       <properties>
-        <registry2.db.url>jdbc:postgresql://localhost/registry</registry2.db.url>
-        <registry2.db.username>postgres</registry2.db.username>
-        <registry2.db.password>postgres</registry2.db.password>
-
-        <registry2-it.db.url>jdbc:postgresql://localhost/registry</registry2-it.db.url>
-        <registry2-it.db.username>postgres</registry2-it.db.username>
-        <registry2-it.db.password>postgres</registry2-it.db.password>
-
-        <registry.messaging.hostname></registry.messaging.hostname>
-        <registry.messaging.username></registry.messaging.username>
-        <registry.messaging.password></registry.messaging.password>
-        <registry.messaging.virtualhost></registry.messaging.virtualhost>
-      </properties>
-    </profile>
-
-
-If an optional IMS Filemaker connection is configured with a profile as follows, extra information will be taken from that:
-
-    <!-- A local profile for the registry2 IMS development -->
-    <profile>
-      <id>ims</id>
-      <properties>
-        <ims.db.url>jdbc:filemaker://filemaker.gbif.org/IMS_NG</ims.db.url>
-        <ims.db.username>mdoering</ims.db.username>
-        <ims.db.password>password</ims.db.password>
+        <registry.db.host>localhost</registry.db.host>
+        <registry.db.name>registry</registry.db.name>
+        <registry.db.username>tim</registry.db.username>
+        <registry.db.password/>
+        <registry.db.poolSize>6</registry.db.poolSize>
+        <registry.db.connectionTimeout>1000</registry.db.connectionTimeout>
+        <appkeys.file>/Users/tim/dev/appkeys.properties</appkeys.file>
+        <api.url>http://localhost/</api.url>
+        <drupal.db.host>localhost</drupal.db.host>
+        <drupal.db.name>drupal</drupal.db.name>
+        <drupal.db.username>root</drupal.db.username>
+        <drupal.db.password></drupal.db.password>
+        <drupal.db.poolSize>6</drupal.db.poolSize>
+        <drupal.db.connectionTimeout>1000</drupal.db.connectionTimeout>
+        <registry.postalservice.enabled>false</registry.postalservice.enabled>
+        <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
+        <registry.messaging.port>5672</registry.messaging.port>
+        <registry.messaging.virtualhost>/users/trobertson</registry.messaging.virtualhost>
+        <registry.messaging.username>trobertson</registry.messaging.username>
+        <registry.messaging.password>password</registry.messaging.password>
+        <mail.devemail.enabled>false</mail.devemail.enabled>
+        <mail.smtp.host>localhost</mail.smtp.host>
+        <mail.cc></mail.cc>
+        <mail.from>tim@mailinator.com</mail.from>
       </properties>
     </profile>

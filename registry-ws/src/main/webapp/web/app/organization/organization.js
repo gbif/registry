@@ -128,7 +128,7 @@ angular.module('organization', [
   Restangular.all("enumeration/basic/Country").getList().then(function(data){
     $scope.countries = data;
   });
-  
+
 
   var load = function() {
     Restangular.one('organization', key).get()
@@ -162,7 +162,9 @@ angular.module('organization', [
           });
         });
 
-      organization.node = Restangular.one('node', organization.endorsingNodeKey).get();
+      Restangular.one('node', organization.endorsingNodeKey).get().then(function(data) {
+        organization.node = data;
+      });
     });
   }
   load();
@@ -267,7 +269,7 @@ angular.module('organization', [
   Restangular.all("enumeration/basic/Country").getList().then(function(data){
     $scope.countries = data;
   });
-  
+
 
   $scope.save = function (organization) {
     if (organization != undefined) {

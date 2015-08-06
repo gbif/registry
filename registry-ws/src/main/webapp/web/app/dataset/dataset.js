@@ -130,10 +130,18 @@ angular.module('dataset', [
       $scope.counts.machineTags = _.size(dataset.machineTags);
       $scope.counts.comments = _.size(dataset.comments);
 
-      dataset.publishingOrganization = Restangular.one('organization', dataset.publishingOrganizationKey).get();
-      dataset.installation = Restangular.one('installation', dataset.installationKey).get();
-      dataset.parentDataset = Restangular.one('dataset', dataset.parentDatasetKey).get();
-      dataset.duplicateOfDataset = Restangular.one('dataset', dataset.duplicateOfDatasetKey).get();
+      Restangular.one('organization', dataset.publishingOrganizationKey).get().then(function(data) {
+        dataset.publishingOrganization = data;
+      });
+      Restangular.one('installation', dataset.installationKey).get().then(function(data) {
+        dataset.installation = data;
+      });
+      Restangular.one('dataset', dataset.parentDatasetKey).get().then(function(data) {
+        dataset.parentDataset = data;
+      });
+      Restangular.one('dataset', dataset.duplicateOfDatasetKey).get().then(function(data) {
+        dataset.duplicateOfDataset = data;
+      });
 
       dataset.getList('constituents', {limit: DEFAULT_PAGE_SIZE}).then(function(response) {
           $scope.constituents = response.results;

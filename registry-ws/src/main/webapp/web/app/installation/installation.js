@@ -153,7 +153,9 @@ angular.module('installation', [
         });
 
       // the hosting organization
-      installation.organization = Restangular.one('organization', installation.organizationKey).get();
+      Restangular.one('organization', installation.organizationKey).get().then(function(data) {
+        installation.organization = data;
+      });
     });
   }
   load();
