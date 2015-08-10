@@ -170,7 +170,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     if(download.isAvailable() && previousDownload.getStatus() != Download.Status.SUCCEEDED){
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download, user), download.getKey());
-      } catch(InvalidMetadataException error) {
+      } catch(Exception error) {
         LOG.error(DOI_SMTP, "Invalid metadata for download {} with doi {} ", download.getKey(), download.getDoi(),  error);
       }
 
