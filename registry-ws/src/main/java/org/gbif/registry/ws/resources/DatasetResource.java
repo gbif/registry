@@ -72,7 +72,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -105,6 +104,7 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
@@ -381,7 +381,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // check if the dataset actually exists
     Dataset dataset = super.get(datasetKey);
     if (dataset == null) {
-      throw new IllegalArgumentException("Dataset " + datasetKey + " not existing");
+      throw new NotFoundException("Dataset " + datasetKey + " not existing");
+    } else if (dataset.getDeleted() != null) {
+      throw new NotFoundException("Dataset " + datasetKey + " has been deleted");
     }
 
     // first keep document as byte array so we can analyze it as much as we want and store it later
