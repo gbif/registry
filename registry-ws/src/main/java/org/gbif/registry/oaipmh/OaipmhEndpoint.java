@@ -20,6 +20,7 @@ import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
 import com.lyncode.xoai.dataprovider.repository.Repository;
 import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
 import com.lyncode.xoai.model.oaipmh.DeletedRecord;
+import com.lyncode.xoai.model.oaipmh.Granularity;
 import com.lyncode.xoai.model.oaipmh.OAIPMH;
 import com.lyncode.xoai.model.oaipmh.Verb;
 import com.lyncode.xoai.services.impl.SimpleResumptionTokenFormat;
@@ -31,6 +32,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
+import java.util.Date;
 
 /**
  * An OAI-PMH endpoint, using the XOAI library.
@@ -49,15 +51,15 @@ public class OaipmhEndpoint {
   public OaipmhEndpoint() {
 
     this.repositoryConfiguration = new RepositoryConfiguration()
-            .withDefaults()
             .withRepositoryName("GBIF Registry")
+            .withAdminEmails()
             .withAdminEmail("admin@gbif.org")
             .withBaseUrl("http://localhost")
-            //.withEarliestDate()
-            //.withMaxListIdentifiers()
-            //.withMaxListSets()
-            //.withMaxListRecords()
-            //.withGranularity(Granularity.Second)
+            .withEarliestDate(new Date())
+            .withMaxListIdentifiers(100)
+            .withMaxListSets(100)
+            .withMaxListRecords(100)
+            .withGranularity(Granularity.Second)
             .withDeleteMethod(DeletedRecord.NO) // TODO Not yet implemented
             .withDescription("<TestDescription xmlns=\"\">Test description</TestDescription>")
     ;
