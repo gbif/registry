@@ -16,6 +16,8 @@ import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
 import com.lyncode.xoai.dataprovider.DataProvider;
 import com.lyncode.xoai.dataprovider.builder.OAIRequestParametersBuilder;
+import com.lyncode.xoai.dataprovider.model.Context;
+import com.lyncode.xoai.dataprovider.model.MetadataFormat;
 import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
 import com.lyncode.xoai.dataprovider.repository.Repository;
 import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
@@ -28,11 +30,13 @@ import com.lyncode.xoai.xml.XmlWritable;
 import com.lyncode.xoai.xml.XmlWriter;
 import org.gbif.api.exception.ServiceUnavailableException;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.util.Date;
+
 
 /**
  * An OAI-PMH endpoint, using the XOAI library.
@@ -41,8 +45,19 @@ import java.util.Date;
 @Singleton
 public class OaipmhEndpoint {
 
-  private com.lyncode.xoai.dataprovider.model.Context context = new com.lyncode.xoai.dataprovider.model.Context()
-          .withMetadataFormat("xoai", com.lyncode.xoai.dataprovider.model.MetadataFormat.identity());
+  private final MetadataFormat OAIDC_METADATA_FORMAT = new MetadataFormat()
+          .withPrefix("oai_dc")
+          .withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
+          .withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
+
+  private final MetadataFormat EML_METADATA_FORMAT = new MetadataFormat()
+            .withPrefix("eml")
+            .withNamespace("eml://ecoinformatics.org/eml-2.1.1")
+            .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
+
+  private Context context = new Context()
+          .withMetadataFormat(OAIDC_METADATA_FORMAT)
+          .withMetadataFormat(EML_METADATA_FORMAT);
 
   private RepositoryConfiguration repositoryConfiguration;
   private Repository repository;
@@ -73,12 +88,23 @@ public class OaipmhEndpoint {
 
   @GET
   @Produces(MediaType.APPLICATION_XML)
-  public InputStream oaipmh(@QueryParam("verb") String verb) {
+  public InputStream oaipmh(@QueryParam("verb") String verb, @Nullable @QueryParam("identifier") String identifier) {
 
+    OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder().withVerb(verb);
+
+    // to enable later when we'll have a ItemRepository implementation
+//  if(identifier != null){
+//    reqBuilder.withIdentifier(identifier);
+//  }
+
+    //eventually we can simply do that:
+    //return handle(reqBuilder.build());
+    //but for development we control the 'verbs' available
     switch (verb) {
       case "Identify":
-        return handle(new OAIRequestParametersBuilder().withVerb(Verb.Type.Identify).build());
-
+        return handle(reqBuilder.build());
+      case "ListMetadataFormats":
+        return handle(reqBuilder.build());
       default:
         throw new RuntimeException("Invalid verb"); // TODO Incorrect exception.
     }
