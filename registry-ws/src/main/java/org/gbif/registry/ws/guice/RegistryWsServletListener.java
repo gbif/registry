@@ -57,7 +57,7 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   }
 
-  private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider";
+  private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
 
   public RegistryWsServletListener() throws IOException {
     super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)), PACKAGES, true, responseFilters, requestFilters);

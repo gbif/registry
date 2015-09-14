@@ -106,6 +106,7 @@
     <slf4j.version>1.7.12</slf4j.version>
     <solr.version>4.10.3</solr.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
+    <xoai.version>4.1.0</xoai.version>
   </properties>
 
   <!--
@@ -547,6 +548,28 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>${jettison.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.lyncode</groupId>
+        <artifactId>xoai-service-provider</artifactId>
+        <version>${xoai.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.lyncode</groupId>
+        <artifactId>xoai-data-provider</artifactId>
+        <version>${xoai.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>

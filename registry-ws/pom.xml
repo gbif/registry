@@ -349,6 +349,17 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-doi</artifactId>
     </dependency>
+
+    <!-- OAI-PMH library -->
+    <dependency>
+      <groupId>com.lyncode</groupId>
+      <artifactId>xoai-service-provider</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.lyncode</groupId>
+      <artifactId>xoai-data-provider</artifactId>
+    </dependency>
+
     <!-- test scope -->
     <dependency>
       <groupId>org.assertj</groupId>
