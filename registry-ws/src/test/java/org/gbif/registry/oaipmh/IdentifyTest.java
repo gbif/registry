@@ -16,24 +16,23 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class IdentifyTest {
 
-    private static final String OAI_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
+  private static final String OAI_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 
-    @Test
-    public void testIdentify() throws IOException {
+  @Test
+  public void testIdentify() throws IOException {
 
-        OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint();
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint();
 
-        InputStream resultStream = oaipmhEndpoint.oaipmh("Identify");
+    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify");
 
-        String result = IOUtils.toString(resultStream, "UTF-8");
+    String result = IOUtils.toString(resultStream, "UTF-8");
 
-        assertThat("Repository name element is present", result, xPath("//repositoryName", equalTo("GBIF Registry")));
-        assertThat("Base URL element is set", result, xPath("//baseURL", equalTo("http://localhost")));
-        assertThat("Admin email is set", result, xPath("//adminEmail", equalTo("admin@gbif.org")));
-    }
+    assertThat("Repository name element is present", result, xPath("//repositoryName", equalTo("GBIF Registry")));
+    assertThat("Base URL element is set", result, xPath("//baseURL", equalTo("http://localhost")));
+    assertThat("Admin email is set", result, xPath("//adminEmail", equalTo("admin@gbif.org")));
+  }
 
-
-    private Matcher<String> xPath(String xpath, Matcher<String> valueMatcher) {
-        return XPathMatchers.xPath(xpath, valueMatcher, OAI_NAMESPACE);
-    }
+  private Matcher<String> xPath(String xpath, Matcher<String> valueMatcher) {
+    return XPathMatchers.xPath(xpath, valueMatcher, OAI_NAMESPACE);
+  }
 }
