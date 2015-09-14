@@ -4,11 +4,12 @@
     <dc:title>${dataset.title!}</dc:title>
 
     <#if dataset.keywordCollections?has_content>
-        <#list dataset.keywordCollections![] as kwc>
-            <dc:subject>${kwc.keywords?join(", ")}</dc:subject>
-        </#list>
+    <#list dataset.keywordCollections![] as kwc>
+    <dc:subject>${kwc.keywords?join(", ")}</dc:subject>
+    </#list>
     </#if>
 
+    <dc:source>${dataset.homepage!}</dc:source>
     <dc:description>${dataset.description!}</dc:description>
 
     <#-- The date on which the resource was published. -->
@@ -20,13 +21,19 @@
     <dc:rights>${dataset.rights}</dc:rights>
     </#if>
 
-    <#if !useDoiAsIdentifier && dataset.doi?exists>
-        <dc:identifier>${dataset.doi}</dc:identifier>
+    <#if dataset.doi?exists>
+    <dc:identifier>${dataset.doi}</dc:identifier>
     </#if>
     <#list dataset.identifiers![] as altid>
-        <#if altid.identifier?has_content>
-            <dc:identifier>${altid.identifier}</dc:identifier>
-        </#if>
+    <#if altid.identifier?has_content>
+    <dc:identifier>${altid.identifier}</dc:identifier>
+    </#if>
     </#list>
+
+    <#if dataset.bibliographicCitations?has_content>
+    <#list dataset.bibliographicCitations as bcit>
+    <dc:bibliographicCitation>${bcit.text}</dc:bibliographicCitation>
+    </#list>
+    </#if>
 </oai_dc:dc>
 </#escape>
