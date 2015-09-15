@@ -23,7 +23,7 @@ public class IdentifyTest {
 
     OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint();
 
-    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify");
+    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null);
 
     String result = IOUtils.toString(resultStream, "UTF-8");
 
