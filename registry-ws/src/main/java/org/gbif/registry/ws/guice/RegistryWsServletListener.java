@@ -18,6 +18,7 @@ import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.ims.ImsModule;
+import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
@@ -80,7 +81,8 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new RegistrySearchModule(properties),
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
-                              new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)));
+                              new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
+                              new OaipmhModule());
   }
 
   @VisibleForTesting

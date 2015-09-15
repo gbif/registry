@@ -25,7 +25,7 @@ public class RepositoryInformationTest {
   @Test
   public void testIdentify() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null);
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository());
 
     InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null, null);
 
@@ -39,7 +39,7 @@ public class RepositoryInformationTest {
   @Test
   public void testListMetadataFormats() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null);
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository());
 
     InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null, null);
 

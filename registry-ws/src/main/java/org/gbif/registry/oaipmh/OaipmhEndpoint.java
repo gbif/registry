@@ -20,8 +20,10 @@ import com.lyncode.xoai.dataprovider.builder.OAIRequestParametersBuilder;
 import com.lyncode.xoai.dataprovider.model.Context;
 import com.lyncode.xoai.dataprovider.model.MetadataFormat;
 import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
+import com.lyncode.xoai.dataprovider.repository.ItemRepository;
 import com.lyncode.xoai.dataprovider.repository.Repository;
 import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
+import com.lyncode.xoai.dataprovider.repository.SetRepository;
 import com.lyncode.xoai.model.oaipmh.DeletedRecord;
 import com.lyncode.xoai.model.oaipmh.Granularity;
 import com.lyncode.xoai.model.oaipmh.OAIPMH;
@@ -60,15 +62,12 @@ public class OaipmhEndpoint {
           .withMetadataFormat(OAIDC_METADATA_FORMAT)
           .withMetadataFormat(EML_METADATA_FORMAT);
 
-  private final OaipmhItemRepository oaipmhItemRepository;
-
   private RepositoryConfiguration repositoryConfiguration;
   private Repository repository;
   private DataProvider dataProvider;
 
   @Inject
-  public OaipmhEndpoint(OaipmhItemRepository oaipmhItemRepository) {
-    this.oaipmhItemRepository = oaipmhItemRepository;
+  public OaipmhEndpoint(ItemRepository itemRepository, SetRepository setRepository) {
 
     this.repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
@@ -85,7 +84,8 @@ public class OaipmhEndpoint {
     ;
 
     this.repository = new Repository()
-            .withItemRepository(oaipmhItemRepository)
+            .withItemRepository(itemRepository)
+            .withSetRepository(setRepository)
             .withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
             .withConfiguration(repositoryConfiguration);
 
@@ -116,6 +116,7 @@ public class OaipmhEndpoint {
       case "GetRecord":
       case "Identify":
       case "ListMetadataFormats":
+      case "ListSets":
         return handle(reqBuilder.build());
       default:
         throw new RuntimeException("Invalid verb"); // TODO Incorrect exception.
