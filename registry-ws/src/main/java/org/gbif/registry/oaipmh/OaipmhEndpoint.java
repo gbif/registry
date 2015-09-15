@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.oaipmh;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
 import com.lyncode.xoai.dataprovider.DataProvider;
@@ -59,11 +60,15 @@ public class OaipmhEndpoint {
           .withMetadataFormat(OAIDC_METADATA_FORMAT)
           .withMetadataFormat(EML_METADATA_FORMAT);
 
+  private final OaipmhItemRepository oaipmhItemRepository;
+
   private RepositoryConfiguration repositoryConfiguration;
   private Repository repository;
   private DataProvider dataProvider;
 
-  public OaipmhEndpoint() {
+  @Inject
+  public OaipmhEndpoint(OaipmhItemRepository oaipmhItemRepository) {
+    this.oaipmhItemRepository = oaipmhItemRepository;
 
     this.repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
@@ -80,6 +85,7 @@ public class OaipmhEndpoint {
     ;
 
     this.repository = new Repository()
+            .withItemRepository(oaipmhItemRepository)
             .withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
             .withConfiguration(repositoryConfiguration);
 
@@ -88,9 +94,15 @@ public class OaipmhEndpoint {
 
   @GET
   @Produces(MediaType.APPLICATION_XML)
-  public InputStream oaipmh(@QueryParam("verb") String verb, @Nullable @QueryParam("identifier") String identifier) {
+  public InputStream oaipmh(
+          @QueryParam("verb") String verb,
+          @Nullable @QueryParam("identifier") String identifier,
+          @Nullable @QueryParam("metadataPrefix") String metadataPrefix) {
 
-    OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder().withVerb(verb);
+    OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder()
+            .withVerb(verb)
+            .withMetadataPrefix(metadataPrefix)
+            .withIdentifier(identifier);
 
     // to enable later when we'll have a ItemRepository implementation
 //  if(identifier != null){
@@ -101,14 +113,13 @@ public class OaipmhEndpoint {
     //return handle(reqBuilder.build());
     //but for development we control the 'verbs' available
     switch (verb) {
+      case "GetRecord":
       case "Identify":
-        return handle(reqBuilder.build());
       case "ListMetadataFormats":
         return handle(reqBuilder.build());
       default:
         throw new RuntimeException("Invalid verb"); // TODO Incorrect exception.
     }
-
   }
 
   private InputStream handle(OAIRequest request) {

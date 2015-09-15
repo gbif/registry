@@ -25,9 +25,9 @@ public class RepositoryInformationTest {
   @Test
   public void testIdentify() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint();
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null);
 
-    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null);
+    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null, null);
 
     String result = IOUtils.toString(resultStream, "UTF-8");
 
@@ -39,9 +39,9 @@ public class RepositoryInformationTest {
   @Test
   public void testListMetadataFormats() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint();
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null);
 
-    InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null);
+    InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null, null);
 
     String result = IOUtils.toString(resultStream, "UTF-8");
 
