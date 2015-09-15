@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.io.StringWriter;
 import java.net.URI;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +30,10 @@ public class DublinCoreWriterTest extends TestCase {
         d.setKey(UUID.randomUUID());
         d.setDoi(new DOI("10.1234/5679"));
         d.setTitle("This is a keyboard dataset");
-        d.setPubDate(new Date());
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2015, 8, 14);
+        d.setPubDate(calendar.getTime());
         d.setDescription("This is the description of the keyboard dataset");
 
         d.setHomepage(URI.create("http:///www.gbif.org"));
