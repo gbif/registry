@@ -29,11 +29,5 @@
     <dc:identifier>${altid.identifier}</dc:identifier>
     </#if>
     </#list>
-
-    <#if dataset.bibliographicCitations?has_content>
-    <#list dataset.bibliographicCitations as bcit>
-    <dc:bibliographicCitation>${bcit.text}</dc:bibliographicCitation>
-    </#list>
-    </#if>
 </oai_dc:dc>
 </#escape>
