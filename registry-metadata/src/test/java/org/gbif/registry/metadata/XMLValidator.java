@@ -29,6 +29,7 @@ public class XMLValidator {
    */
   public static void assertXMLAgainstXSD(String xmlContent, String xsdLocation) throws IOException {
     try {
+      //warning, this is slow
       Schema schema = FACTORY.newSchema(new StreamSource(xsdLocation));
       Validator validator = schema.newValidator();
       validator.validate(new StreamSource(new StringReader(xmlContent)));

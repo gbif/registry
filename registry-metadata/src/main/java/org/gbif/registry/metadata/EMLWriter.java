@@ -14,8 +14,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 
@@ -25,8 +23,8 @@ import freemarker.template.TemplateException;
 public class EMLWriter {
 
   private static final String TEMPLATE_PATH = "/gbif-eml-profile-template";
-  private static final String EML_TEMPLATE = "eml-dataset.ftl";
-  private static final Configuration FTL = provideFreemarker();
+  private static final String EML_TEMPLATE = String.format("eml-dataset-%s.ftl", EMLProfileVersion.GBIF_1_0_2.getVersion());
+  private static final Configuration FTL = DatasetXMLWriterConfigurationProvider.provideFreemarker(TEMPLATE_PATH);
 
   private EMLWriter() {
     // static utils class
@@ -101,21 +99,6 @@ public class EMLWriter {
 
   }
 
-  /**
-   * Provides a freemarker template loader. It is configured to access the utf8 templates folder on the classpath, i.e.
-   * /src/resources/templates
-   */
-  private static Configuration provideFreemarker() {
-    // load templates from classpath by prefixing /templates
-    TemplateLoader tl = new ClassTemplateLoader(EMLWriter.class, TEMPLATE_PATH);
-
-    Configuration fm = new Configuration();
-    fm.setDefaultEncoding("utf8");
-    fm.setTemplateLoader(tl);
-
-    return fm;
-  }
-
   public static void write(Dataset dataset, Writer writer) throws IOException {
     write(dataset,writer,false);
   }
@@ -133,7 +116,6 @@ public class EMLWriter {
     map.put("dataset", dataset);
     map.put("eml", new EmlDatasetWrapper(dataset));
     map.put("useDoiAsIdentifier", useDoiAsIdentifier);
-
 
     try {
       FTL.getTemplate(EML_TEMPLATE).process(map, writer);
