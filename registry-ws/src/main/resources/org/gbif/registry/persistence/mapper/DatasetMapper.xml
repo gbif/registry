@@ -424,12 +424,11 @@
     FROM dataset d
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     WHERE d.deleted IS NULL
-    <if test="country != null" >
-      AND o.country = #{country,jdbcType=OTHER}
-    </if>
-    <if test="type != null" >
-      AND d.type = #{type,jdbcType=OTHER}
-    </if>
+    <if test="country != null" > AND o.country = #{country}</if>
+    <if test="type != null" > AND d.type = #{type}</if>
+    <if test="installation_key != null" > AND d.installation_key = #{installation_key}</if>
+    <if test="date_from != null" > AND d.modified &gt;= #{date_from}</if>
+    <if test="date_to != null" > AND d.modified &lt; #{date_to}</if>
     ORDER BY d.created DESC, d.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}

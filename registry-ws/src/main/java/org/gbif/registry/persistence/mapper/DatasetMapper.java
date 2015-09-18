@@ -17,6 +17,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,6 +62,21 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
     @Nullable @Param("page") Pageable page);
 
   /**
+   * Obtains a list of all datasets using the provided filter(s)
+   *
+   * @param country
+   * @param type
+   * @param installationKey
+   * @param from lower bound dataset modified date (inclusive)
+   * @param to upper bound dataset modified date (exclusive)
+   * @param page
+   * @return
+   */
+  List<Dataset> listWithFilter(@Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type,
+    @Nullable @Param("installation_key") UUID installationKey,
+    @Nullable @Param("date_from")Date from, @Nullable @Param("date_to")Date to, @Nullable @Param("page") Pageable page);
+
+  /**
    * Count all datasets having all non null filters given.
    */
   int countWithFilter(@Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type);
@@ -103,4 +119,5 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Dataset> withNoEndpoint(@Nullable @Param("page") Pageable page);
 
   long countWithNoEndpoint();
+
 }
