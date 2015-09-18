@@ -11,7 +11,7 @@ import freemarker.template.Configuration;
  *
  * @author cgendreau
  */
-public class DatasetXMLWriterConfigurationProvider {
+class DatasetXMLWriterConfigurationProvider {
 
   private static final String TEMPLATE_PATH = "/";
 
@@ -30,6 +30,13 @@ public class DatasetXMLWriterConfigurationProvider {
     // load templates from classpath by prefixing /templates
     TemplateLoader tl = new ClassTemplateLoader(DatasetXMLWriterConfigurationProvider.class, templatePath);
 
+    // Using deprecated constructor
+    // From Freemarker documentation:
+    // Configuration cfg = new Configuration(VERSION_X_Y_Z));
+    // Where X, Y, Z enables the not-100%-backward-compatible fixes introduced in
+    // FreeMarker version X.Y.Z  and earlier (see Configuration(Version)).
+    // To be safe, we do not use any of the new features but it would be useful to have a minimum version
+    // of Freemarker to use.
     Configuration fm = new Configuration();
 
     fm.setDefaultEncoding(StandardCharsets.UTF_8.toString());

@@ -1,5 +1,7 @@
 package org.gbif.registry.metadata;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -25,16 +27,16 @@ public class DublinCoreWriter {
     }
 
     /**
-     * Write a DublinCore file from a Dataset object.
+     * Write a DublinCore document from a Dataset object.
+     *
+     * @param dataset non null dataset object
+     * @param writer where the output document will go. The writer is not closed by this method.
+     * @throws IOException if an error occurs while processing the template
      */
     public static void write(Dataset dataset, Writer writer) throws IOException {
-        if (dataset == null) {
-            throw new IllegalArgumentException("Dataset can't be null");
-        }
+        Preconditions.checkNotNull(dataset, "Dataset can't be null");
 
-        Map<String, Object> map = Maps.newHashMap();
-        map.put("dataset", dataset);
-
+        Map<String, Dataset> map = ImmutableMap.of("dataset", dataset);
         try {
             FTL.getTemplate(DC_TEMPLATE).process(map, writer);
         } catch (TemplateException e) {

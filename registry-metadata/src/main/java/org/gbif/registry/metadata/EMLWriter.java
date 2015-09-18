@@ -12,8 +12,9 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 
@@ -99,28 +100,35 @@ public class EMLWriter {
 
   }
 
+  /**
+   * Same as calling {@link #write(Dataset, Writer, boolean) write} method with useDoiAsIdentifier = false.
+   *
+   * @param dataset
+   * @param writer
+   * @throws IOException
+   */
   public static void write(Dataset dataset, Writer writer) throws IOException {
     write(dataset,writer,false);
   }
 
   /**
-   * Creates an EML which packageId is the dataset.doi.
-   * The dataset.doi won't be included in the list of alternate identifiers.
+   * Write an EML document from a Dataset object.
+   *
+   * @param dataset non null dataset object
+   * @param writer where the output document will go. The writer is not closed by this method.
+   * @param useDoiAsIdentifier should the packageId be the dataset.doi? If true, the dataset.doi won't be included in the list of alternate identifiers.
+   * @throws IOException if an error occurs while processing the template
    */
   public static void write(Dataset dataset, Writer writer, boolean useDoiAsIdentifier) throws IOException {
-    if (dataset == null) {
-      throw new IllegalArgumentException("Dataset can't be null");
-    }
+    Preconditions.checkNotNull(dataset, "Dataset can't be null");
 
-    Map<String, Object> map = Maps.newHashMap();
-    map.put("dataset", dataset);
-    map.put("eml", new EmlDatasetWrapper(dataset));
-    map.put("useDoiAsIdentifier", useDoiAsIdentifier);
+    Map<String, Object> map = ImmutableMap.of
+            ("dataset", dataset, "eml", new EmlDatasetWrapper(dataset), "useDoiAsIdentifier", useDoiAsIdentifier);
 
     try {
       FTL.getTemplate(EML_TEMPLATE).process(map, writer);
     } catch (TemplateException e) {
-      throw new IOException("Error while processing the EML freemarker template for dataset " + dataset.getKey(), e);
+      throw new IOException("Error while processing the EML Freemarker template for dataset " + dataset.getKey(), e);
     }
   }
 
