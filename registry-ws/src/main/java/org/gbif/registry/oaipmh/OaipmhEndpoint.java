@@ -15,31 +15,34 @@ package org.gbif.registry.oaipmh;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
-import com.lyncode.xoai.dataprovider.DataProvider;
-import com.lyncode.xoai.dataprovider.builder.OAIRequestParametersBuilder;
-import com.lyncode.xoai.dataprovider.model.Context;
-import com.lyncode.xoai.dataprovider.model.MetadataFormat;
-import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
-import com.lyncode.xoai.dataprovider.repository.ItemRepository;
-import com.lyncode.xoai.dataprovider.repository.Repository;
-import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
-import com.lyncode.xoai.dataprovider.repository.SetRepository;
-import com.lyncode.xoai.model.oaipmh.DeletedRecord;
-import com.lyncode.xoai.model.oaipmh.Granularity;
-import com.lyncode.xoai.model.oaipmh.OAIPMH;
-import com.lyncode.xoai.model.oaipmh.Verb;
-import com.lyncode.xoai.services.impl.SimpleResumptionTokenFormat;
-import com.lyncode.xoai.xml.XmlWritable;
-import com.lyncode.xoai.xml.XmlWriter;
+import org.dspace.xoai.dataprovider.DataProvider;
+import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
+import org.dspace.xoai.dataprovider.model.Context;
+import org.dspace.xoai.dataprovider.model.MetadataFormat;
+import org.dspace.xoai.dataprovider.parameters.OAIRequest;
+import org.dspace.xoai.dataprovider.repository.ItemRepository;
+import org.dspace.xoai.dataprovider.repository.Repository;
+import org.dspace.xoai.dataprovider.repository.RepositoryConfiguration;
+import org.dspace.xoai.dataprovider.repository.SetRepository;
+import org.dspace.xoai.model.oaipmh.DeletedRecord;
+import org.dspace.xoai.model.oaipmh.Granularity;
+import org.dspace.xoai.model.oaipmh.OAIPMH;
+import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
+import org.dspace.xoai.xml.XmlWritable;
+import org.dspace.xoai.xml.XmlWriter;
 import org.gbif.api.exception.ServiceUnavailableException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.xml.stream.XMLStreamException;
-import java.io.*;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Date;
-
 
 /**
  * An OAI-PMH endpoint, using the XOAI library.
@@ -48,15 +51,33 @@ import java.util.Date;
 @Singleton
 public class OaipmhEndpoint {
 
+  private static final TransformerFactory factory = TransformerFactory.newInstance();
+
+  public Transformer xsltTransformer(String xsltFile) {
+    try {
+      /*
+       * TODO: "An object of this class [Transformer] may not be used in multiple threads running concurrently!"
+       * Instead, XOAI should accept an immutable Templates object, and call .newTransformer() to get a Transformer.
+       * See https://xalan.apache.org/xalan-j/usagepatterns.html#multithreading
+       */
+      InputStream stream = this.getClass().getClassLoader().getResourceAsStream("org/gbif/registry/oaipmh/"+xsltFile);
+      return factory.newTransformer(new StreamSource(stream));
+    } catch (TransformerConfigurationException e) {
+      throw new RuntimeException("Unable to read XSLT transform "+xsltFile, e);
+    }
+  }
+
   private final MetadataFormat OAIDC_METADATA_FORMAT = new MetadataFormat()
           .withPrefix("oai_dc")
           .withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
-          .withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
+          .withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd")
+          .withTransformer(xsltTransformer("dc.xslt"));
 
   private final MetadataFormat EML_METADATA_FORMAT = new MetadataFormat()
-            .withPrefix("eml")
-            .withNamespace("eml://ecoinformatics.org/eml-2.1.1")
-            .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
+          .withPrefix("eml")
+          .withNamespace("eml://ecoinformatics.org/eml-2.1.1")
+          .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd")
+          .withTransformer(xsltTransformer("eml.xslt"));
 
   private Context context = new Context()
           .withMetadataFormat(OAIDC_METADATA_FORMAT)
@@ -71,7 +92,6 @@ public class OaipmhEndpoint {
 
     this.repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
-            .withAdminEmails()
             .withAdminEmail("admin@gbif.org")
             .withBaseUrl("http://localhost")
             .withEarliestDate(new Date())

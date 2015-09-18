@@ -352,11 +352,11 @@
 
     <!-- OAI-PMH library -->
     <dependency>
-      <groupId>com.lyncode</groupId>
+      <groupId>org.dspace</groupId>
       <artifactId>xoai-service-provider</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.lyncode</groupId>
+      <groupId>org.dspace</groupId>
       <artifactId>xoai-data-provider</artifactId>
     </dependency>
 

@@ -8,8 +8,8 @@ import org.gbif.registry.search.DatasetSearchServiceSolr;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.lyncode.xoai.dataprovider.repository.ItemRepository;
-import com.lyncode.xoai.dataprovider.repository.SetRepository;
+import org.dspace.xoai.dataprovider.repository.ItemRepository;
+import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 /**
  * A guice module that sets up implementation of XOAI related classes.

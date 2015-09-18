@@ -5,9 +5,9 @@ import java.util.List;
 import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableList;
-import com.lyncode.xoai.dataprovider.handlers.results.ListSetsResult;
-import com.lyncode.xoai.dataprovider.model.Set;
-import com.lyncode.xoai.dataprovider.repository.SetRepository;
+import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
+import org.dspace.xoai.dataprovider.model.Set;
+import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 /**
  * WIP, sets should include all distinct countries, installations and dataset types.
