@@ -563,4 +563,28 @@
       AND i.type=#{type,jdbcType=OTHER}
     </if>
   </select>
+
+  <select id="listDistinctCountries" parameterType="Pageable" resultType="Country">
+    SELECT DISTINCT country
+    FROM organization o
+    INNER JOIN dataset d ON d.publishing_organization_key = o.key
+    WHERE d.deleted IS NULL AND country IS NOT NULL
+    ORDER BY country
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <!-- Should probably include more fields -->
+  <select id="listDistinctInstallations" parameterType="Pageable" resultType="Installation">
+    SELECT DISTINCT i.key, i.title
+    FROM installation i
+    INNER JOIN dataset d ON d.installation_key = i.key
+    WHERE d.deleted IS NULL
+    ORDER BY i.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
 </mapper>

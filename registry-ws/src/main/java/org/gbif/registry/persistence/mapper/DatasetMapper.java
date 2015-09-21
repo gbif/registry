@@ -14,6 +14,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 
@@ -119,5 +120,22 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Dataset> withNoEndpoint(@Nullable @Param("page") Pageable page);
 
   long countWithNoEndpoint();
+
+  /**
+   * Get the list of distinct countries of organizations that serves at least one dataset(not flagged as deleted).
+   *
+   * @param page
+   * @return The list of distinct countries of organizations that serves at least one dataset.
+   */
+  List<Country> listDistinctCountries(@Nullable @Param("page") Pageable page);
+
+  /**
+   * Get the list of installations that serves at least one dataset (not flagged as deleted).
+   * Note that if the installation is flagged as 'deleted' but not the dataset, the dataset will be included.
+   *
+   * @param page
+   * @return The list of distinct installations that serves at least one dataset.
+   */
+  List<Installation> listDistinctInstallations(@Nullable @Param("page") Pageable page);
 
 }

@@ -1,10 +1,16 @@
 package org.gbif.registry.oaipmh;
 
+import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.DoiMapper;
+
+import com.google.inject.Injector;
 import com.lyncode.test.matchers.xml.XPathMatchers;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -22,10 +28,18 @@ public class RepositoryInformationTest {
 
   private static final String OAI_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 
+  private DatasetMapper mapper;
+
+  @Before
+  public void setup() {
+    Injector inj = RegistryTestModules.mybatis();
+    mapper = inj.getInstance(DatasetMapper.class);
+  }
+
   @Test
   public void testIdentify() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository());
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository(mapper));
 
     InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null, null);
 
@@ -39,7 +53,7 @@ public class RepositoryInformationTest {
   @Test
   public void testListMetadataFormats() throws IOException {
 
-    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository());
+    OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository(mapper));
 
     InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null, null);
 
