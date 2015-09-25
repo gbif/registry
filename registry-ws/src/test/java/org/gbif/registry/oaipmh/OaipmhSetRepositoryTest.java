@@ -50,6 +50,12 @@ public class OaipmhSetRepositoryTest {
   }
 
   @Test
+  public void testParseSetName(){
+    assertTrue(OaipmhSetRepository.parseSetName("country:DK").isPresent());
+    assertFalse(OaipmhSetRepository.parseSetName("null:Country").isPresent());
+  }
+
+  @Test
   public void testRetrieveSets(){
     DatasetMapper mockDatasetMapper = prepareDatasetMapperMock();
     OaipmhSetRepository setRepository = new OaipmhSetRepository(mockDatasetMapper);
@@ -70,14 +76,14 @@ public class OaipmhSetRepositoryTest {
     DatasetMapper mockDatasetMapper = prepareDatasetMapperMock();
     OaipmhSetRepository setRepository = new OaipmhSetRepository(mockDatasetMapper);
     assertTrue("Should find Set provided in test data:" + installationUUIDRepitle.toString(),
-            setRepository.exists(OaipmhSetRepository.INSTALLATION_SET_PREFIX + OaipmhSetRepository.SUB_SET_SEPARATOR + installationUUIDRepitle.toString()));
+            setRepository.exists(OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix() + installationUUIDRepitle.toString()));
     assertFalse("Should not find a Set for random Installation key",
-            setRepository.exists(OaipmhSetRepository.INSTALLATION_SET_PREFIX + OaipmhSetRepository.SUB_SET_SEPARATOR + UUID.randomUUID().toString()));
+            setRepository.exists(OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix() + UUID.randomUUID().toString()));
 
     assertTrue("Should find Set provided in test data:" + Country.DENMARK.getIso2LetterCode(),
-            setRepository.exists(OaipmhSetRepository.COUNTRY_SET_PREFIX + OaipmhSetRepository.SUB_SET_SEPARATOR + Country.DENMARK.getIso2LetterCode()));
+            setRepository.exists(OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix() + Country.DENMARK.getIso2LetterCode()));
     assertFalse("Should not find Set not provided in test data:" + Country.AUSTRALIA.getIso2LetterCode(),
-            setRepository.exists(OaipmhSetRepository.COUNTRY_SET_PREFIX + OaipmhSetRepository.SUB_SET_SEPARATOR + Country.AUSTRALIA.getIso2LetterCode()));
+            setRepository.exists(OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix() + Country.AUSTRALIA.getIso2LetterCode()));
   }
 
 }

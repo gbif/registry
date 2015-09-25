@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
 import org.dspace.xoai.dataprovider.model.Set;
@@ -24,19 +25,85 @@ import org.dspace.xoai.dataprovider.repository.SetRepository;
 @Singleton
 public class OaipmhSetRepository implements SetRepository {
 
-  public static final String COUNTRY_SET_PREFIX = "country";
-  public static final String INSTALLATION_SET_PREFIX = "installation";
-  public static final String DATASET_TYPE_SET_PREFIX = "dataset_type";
-  public static final String SUB_SET_SEPARATOR = ":";
+  private static final String SUB_SET_SEPARATOR = ":";
 
-  private static final Set COUNTRY_SET = new Set(COUNTRY_SET_PREFIX).withName("per country");
-  private static final Set INSTALLATION_SET = new Set(INSTALLATION_SET_PREFIX).withName("per installation");
+  /**
+   * Enum of the type of Set supported by the OaipmhSetRepository.
+   */
+  enum SetType {
+    COUNTRY("country"), INSTALLATION("installation"), DATASET_TYPE("dataset_type");
+
+    private final String name;
+
+    SetType(String name){
+      this.name = name;
+    }
+
+    /**
+     * Return the name of the Set formatted to be used as a prefix of a subset.
+     *
+     * @return
+     */
+    public String getSubsetPrefix(){
+      return name + SUB_SET_SEPARATOR;
+    }
+
+    @Override
+    public String toString(){
+      return name;
+    }
+
+    /**
+     * Get a SetType from a string.
+     *
+     * @param str
+     * @return SetType enum constant, never null
+     * @throws NullPointerException if str is null
+     * @throws IllegalArgumentException if str is not an enum constant of SetType
+     */
+    public static SetType fromString(String str){
+      if( str == null){
+        throw new NullPointerException("str is null");
+      }
+      for(SetType setType : SetType.values()) {
+        if (setType.name.equalsIgnoreCase(str)) {
+          return setType;
+        }
+      }
+      throw new IllegalArgumentException("No enum constant SetType." + str);
+    }
+  }
+
+  /**
+   * Represents the identification of a set including a possible subset.
+   *
+   */
+  static class SetIdentification {
+    private SetType setType;
+    private String subSet;
+
+    public SetIdentification(SetType setType, String subSet){
+      this.setType = setType;
+      this.subSet = subSet;
+    }
+
+    public SetType getSetType(){
+      return setType;
+    }
+
+    public String getSubSet(){
+      return subSet;
+    }
+  }
+
+  private static final Set COUNTRY_SET = new Set(SetType.COUNTRY.toString()).withName("per country");
+  private static final Set INSTALLATION_SET = new Set(SetType.INSTALLATION.toString()).withName("per installation");
 
   // should we turn it to immutable list after init?
-  private static final List<Set> DATASET_TYPE_SET = Lists.newArrayList(new Set(DATASET_TYPE_SET_PREFIX).withName("per dataset type"));
+  private static final List<Set> DATASET_TYPE_SET = Lists.newArrayList(new Set(SetType.DATASET_TYPE.toString()).withName("per dataset type"));
   static{
     for(DatasetType datasetType : DatasetType.values()){
-      DATASET_TYPE_SET.add(new Set(DATASET_TYPE_SET_PREFIX + ":" + datasetType.name()).withName(datasetType.name().toLowerCase()));
+      DATASET_TYPE_SET.add(new Set(SetType.DATASET_TYPE.getSubsetPrefix() + datasetType.name()).withName(datasetType.name().toLowerCase()));
     }
   }
 
@@ -45,6 +112,27 @@ public class OaipmhSetRepository implements SetRepository {
   @Inject
   public OaipmhSetRepository(DatasetMapper datasetMapper){
     this.datasetMapper = datasetMapper;
+  }
+
+
+  /**
+   * Parse a given setName into a SetIdentification object.
+   *
+   * @param setName a Set name in the form of set1 or set1:subset1. Nulls are handled and will return Optional.absent.
+   * @return SetIdentification instance or Optional.absent if not Set can be found with the provided setName
+   */
+  public static Optional<SetIdentification> parseSetName(String setName) {
+    if(StringUtils.isBlank(setName)){
+      return Optional.absent();
+    }
+
+    String rootSet = StringUtils.substringBefore(setName, SUB_SET_SEPARATOR);
+    SetType rootSetType = SetType.fromString(rootSet);
+    if (rootSetType == null) {
+      return Optional.absent();
+    }
+    String subSet = StringUtils.substringAfter(setName, SUB_SET_SEPARATOR);
+    return Optional.of(new SetIdentification(rootSetType, subSet));
   }
 
   @Override
@@ -61,7 +149,7 @@ public class OaipmhSetRepository implements SetRepository {
     List<Country> countries = datasetMapper.listDistinctCountries(null);
     possibleSet.add(COUNTRY_SET);
     for(Country country : countries){
-      possibleSet.add( new Set(COUNTRY_SET_PREFIX + ":" + country.getIso2LetterCode()).withName(country.getTitle()));
+      possibleSet.add( new Set(SetType.COUNTRY.getSubsetPrefix() + country.getIso2LetterCode()).withName(country.getTitle()));
     }
 
     // Do we need to pull more elements ?
@@ -70,7 +158,7 @@ public class OaipmhSetRepository implements SetRepository {
       List<Installation> installations = datasetMapper.listDistinctInstallations(null);
       possibleSet.add(INSTALLATION_SET);
       for (Installation installation : installations) {
-        possibleSet.add(new Set(INSTALLATION_SET_PREFIX + ":" + installation.getKey().toString()).withName(installation.getTitle()));
+        possibleSet.add(new Set(SetType.INSTALLATION.getSubsetPrefix() + installation.getKey().toString()).withName(installation.getTitle()));
       }
     }
     return new ListSetsResult(offset + length < possibleSet.size(), possibleSet.subList(offset, Math.min(offset + length, possibleSet.size())));
@@ -80,17 +168,34 @@ public class OaipmhSetRepository implements SetRepository {
   public boolean exists(String set) {
 
     String rootSet = StringUtils.substringBefore(set, SUB_SET_SEPARATOR);
-    String subSet = StringUtils.substringAfter(set, SUB_SET_SEPARATOR);
+    if(StringUtils.isBlank(rootSet)){
+      return false;
+    }
 
-    switch (rootSet){
-      case COUNTRY_SET_PREFIX: return handleCountrySetExists(subSet);
-      case INSTALLATION_SET_PREFIX: return handleInstallationSetExists(subSet);
-      case DATASET_TYPE_SET_PREFIX: return handleDatasetTypeSetExists(subSet);
+    SetType rootSetType = null;
+    try{
+      rootSetType = SetType.fromString(rootSet);
+    }
+    catch(IllegalArgumentException iaEx){
+      return false;
+    }
+
+    String subSet = StringUtils.substringAfter(set, SUB_SET_SEPARATOR);
+    switch (rootSetType){
+      case COUNTRY: return handleCountrySetExists(subSet);
+      case INSTALLATION: return handleInstallationSetExists(subSet);
+      case DATASET_TYPE: return handleDatasetTypeSetExists(subSet);
       default:
         return false;
     }
   }
 
+  /**
+   * Check if a DatasetType exists. If no subSet is provided this method returns true.
+   *
+   * @param subSet
+   * @return
+   */
   private boolean handleDatasetTypeSetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
       return true;
@@ -104,6 +209,12 @@ public class OaipmhSetRepository implements SetRepository {
     return false;
   }
 
+  /**
+   * Check if a Country ISO 2 letter code exists. If no subSet is provided this method returns true.
+   *
+   * @param subSet
+   * @return
+   */
   private boolean handleCountrySetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
       return true;
@@ -117,6 +228,12 @@ public class OaipmhSetRepository implements SetRepository {
     return count > 0;
   }
 
+  /**
+   * Check if an Installation key exists. If no subSet is provided this method returns true.
+   *
+   * @param subSet
+   * @return
+   */
   private boolean handleInstallationSetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
       return true;
@@ -137,4 +254,5 @@ public class OaipmhSetRepository implements SetRepository {
     long count = datasetMapper.countDatasetsByInstallation(uuid);
     return count > 0;
   }
+
 }
