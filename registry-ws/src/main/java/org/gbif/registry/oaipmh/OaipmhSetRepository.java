@@ -126,13 +126,15 @@ public class OaipmhSetRepository implements SetRepository {
       return Optional.absent();
     }
 
-    String rootSet = StringUtils.substringBefore(setName, SUB_SET_SEPARATOR);
-    SetType rootSetType = SetType.fromString(rootSet);
-    if (rootSetType == null) {
+    try {
+      String rootSet = StringUtils.substringBefore(setName, SUB_SET_SEPARATOR);
+      SetType rootSetType = SetType.fromString(rootSet);
+      String subSet = StringUtils.substringAfter(setName, SUB_SET_SEPARATOR);
+      return Optional.of(new SetIdentification(rootSetType, subSet));
+    }
+    catch (IllegalArgumentException iaEx){
       return Optional.absent();
     }
-    String subSet = StringUtils.substringAfter(setName, SUB_SET_SEPARATOR);
-    return Optional.of(new SetIdentification(rootSetType, subSet));
   }
 
   @Override

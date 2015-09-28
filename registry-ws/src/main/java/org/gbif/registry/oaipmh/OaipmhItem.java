@@ -19,10 +19,26 @@ public class OaipmhItem implements Item {
 
   private Dataset dataset;
   private Metadata metadata;
+  private List<Set> sets;
 
-  public OaipmhItem(Dataset dataset, String metadata) {
+  /**
+   * Creates a new OaipmhItem instance with no metadata content.
+   * Mostly to be used as ItemIdentifier.
+   *
+   * @param dataset
+   * @param sets
+   */
+  public OaipmhItem(Dataset dataset, List<Set> sets) {
+    this(dataset, null, sets);
+  }
+
+  public OaipmhItem(Dataset dataset, String metadata, List<Set> sets) {
     this.dataset = dataset;
-    this.metadata = new Metadata(metadata);
+    this.sets = sets;
+
+    if(metadata != null){
+      this.metadata = new Metadata(metadata);
+    }
   }
 
   @Override
@@ -50,7 +66,7 @@ public class OaipmhItem implements Item {
 
   @Override
   public List<Set> getSets() {
-    return new ArrayList<>();
+    return sets;
   }
 
   @Override

@@ -36,7 +36,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import java.sql.PreparedStatement;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the OaipmhEndpoint implementation.
