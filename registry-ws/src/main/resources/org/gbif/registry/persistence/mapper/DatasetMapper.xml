@@ -425,12 +425,14 @@
     SELECT <include refid="DATASET_FIELDS"/>
     FROM dataset d
     INNER JOIN organization o ON d.publishing_organization_key = o.key
-    WHERE d.deleted IS NULL
+    <where>
+    <if test="!_parameter.containsKey('includeDeleted') or !includeDeleted" > d.deleted IS NULL</if>
     <if test="country != null" > AND o.country = #{country}</if>
-    <if test="type != null" > AND d.type = #{type}</if>
+    <if test="type != null" > AND d.type = #{type,jdbcType=OTHER}</if>
     <if test="_parameter.containsKey('installationKey') and installationKey != null" > AND d.installation_key = #{installationKey}</if>
     <if test="_parameter.containsKey('dateFrom') and dateFrom != null" > AND d.modified &gt;= #{dateFrom}</if>
     <if test="_parameter.containsKey('dateTo') and dateTo != null" > AND d.modified &lt; #{dateTo}</if>
+    </where>
     ORDER BY d.created DESC, d.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
