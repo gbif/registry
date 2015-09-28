@@ -41,7 +41,7 @@ public class RepositoryInformationTest {
 
     OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository(mapper));
 
-    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null, null);
+    InputStream resultStream = oaipmhEndpoint.oaipmh("Identify", null, null, null, null, null);
 
     String result = IOUtils.toString(resultStream, "UTF-8");
 
@@ -55,7 +55,7 @@ public class RepositoryInformationTest {
 
     OaipmhEndpoint oaipmhEndpoint = new OaipmhEndpoint(null, new OaipmhSetRepository(mapper));
 
-    InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null, null);
+    InputStream resultStream = oaipmhEndpoint.oaipmh("ListMetadataFormats", null, null, null, null, null);
 
     String result = IOUtils.toString(resultStream, "UTF-8");
 

@@ -15,6 +15,9 @@ package org.gbif.registry.oaipmh;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.dspace.xoai.dataprovider.DataProvider;
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
 import org.dspace.xoai.dataprovider.model.Context;
@@ -42,6 +45,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -51,6 +57,8 @@ import java.util.Date;
 @Singleton
 public class OaipmhEndpoint {
 
+  //thread-safe implementation of SimpleDateFormat
+  private static final FastDateFormat ISO_DATEFORMAT = DateFormatUtils.ISO_DATETIME_FORMAT;
   private static final TransformerFactory factory = TransformerFactory.newInstance();
 
   public Transformer xsltTransformer(String xsltFile) {
@@ -95,13 +103,12 @@ public class OaipmhEndpoint {
             .withAdminEmail("admin@gbif.org")
             .withBaseUrl("http://localhost")
             .withEarliestDate(new Date())
-            .withMaxListIdentifiers(100)
-            .withMaxListSets(100)
+            .withMaxListIdentifiers(1000)
+            .withMaxListSets(1000)
             .withMaxListRecords(100)
             .withGranularity(Granularity.Second)
-            .withDeleteMethod(DeletedRecord.NO) // TODO Not yet implemented
-            .withDescription("<TestDescription xmlns=\"\">Test description</TestDescription>")
-    ;
+            .withDeleteMethod(DeletedRecord.TRANSIENT)
+            .withDescription("<TestDescription xmlns=\"\">Test description</TestDescription>");
 
     this.repository = new Repository()
             .withItemRepository(itemRepository)
@@ -117,33 +124,43 @@ public class OaipmhEndpoint {
   public InputStream oaipmh(
           @QueryParam("verb") String verb,
           @Nullable @QueryParam("identifier") String identifier,
-          @Nullable @QueryParam("metadataPrefix") String metadataPrefix) {
+          @Nullable @QueryParam("metadataPrefix") String metadataPrefix,
+          @Nullable @QueryParam("from") String from,
+          @Nullable @QueryParam("until") String until,
+          @Nullable @QueryParam("set") String set) {
+
+    Date fromDate = null, untilDate = null;
+
+    if(from != null) {
+      try {
+        fromDate = ISO_DATEFORMAT.parse(from);
+      } catch (ParseException pEx) {
+        //TODO: throw OAI badArgument
+        pEx.printStackTrace();
+      }
+    }
+
+    if(until != null){
+      try {
+        untilDate = ISO_DATEFORMAT.parse(until);
+      } catch (ParseException pEx) {
+        //TODO: OAI throw badArgument
+        pEx.printStackTrace();
+      }
+    }
 
     OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder()
             .withVerb(verb)
             .withMetadataPrefix(metadataPrefix)
-            .withIdentifier(identifier);
+            .withIdentifier(identifier)
+            .withFrom(fromDate)
+            .withUntil(untilDate)
+            .withSet(set);
 
-    // to enable later when we'll have a ItemRepository implementation
-//  if(identifier != null){
-//    reqBuilder.withIdentifier(identifier);
-//  }
-
-    //eventually we can simply do that:
-    //return handle(reqBuilder.build());
-    //but for development we control the 'verbs' available
-    switch (verb) {
-      case "GetRecord":
-      case "Identify":
-      case "ListMetadataFormats":
-      case "ListSets":
-        return handle(reqBuilder.build());
-      default:
-        throw new RuntimeException("Invalid verb"); // TODO Incorrect exception.
-    }
+    return handleOAIRequest(reqBuilder.build());
   }
 
-  private InputStream handle(OAIRequest request) {
+  private InputStream handleOAIRequest(OAIRequest request) {
     try {
       OAIPMH oaipmh = dataProvider.handle(request);
       return new ByteArrayInputStream(write(oaipmh).getBytes("UTF-8"));
