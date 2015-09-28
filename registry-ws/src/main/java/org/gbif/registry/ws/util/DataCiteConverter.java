@@ -238,11 +238,11 @@ public class DataCiteConverter {
                 .withRightsList()
                 .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build()).end();
 
-        String query = new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
+
         final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
                 .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
                 .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s.",
-                        d.getTotalRecords(), query))
+                        d.getTotalRecords(), getFilterQuery(d, titleLookup)))
                 .addContent(String.format("The dataset includes %s records from %s constituent datasets:",
                         d.getTotalRecords(), d.getNumberDatasets()));
 
@@ -264,4 +264,15 @@ public class DataCiteConverter {
 
         return b.build();
     }
+
+  /**
+   *  Tries to get the human readable version of the download query, if fails returns the raw query.
+   */
+  private static String getFilterQuery(Download d, TitleLookup titleLookup){
+    try {
+      return new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
+    } catch (Exception ex){
+      return d.getRequest().getPredicate().toString();
+    }
+  }
 }
