@@ -15,11 +15,10 @@ package org.gbif.registry.oaipmh;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 import org.dspace.xoai.dataprovider.DataProvider;
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
+import org.dspace.xoai.dataprovider.exceptions.BadArgumentException;
+import org.dspace.xoai.dataprovider.handlers.ErrorHandler;
 import org.dspace.xoai.dataprovider.model.Context;
 import org.dspace.xoai.dataprovider.model.MetadataFormat;
 import org.dspace.xoai.dataprovider.parameters.OAIRequest;
@@ -30,7 +29,10 @@ import org.dspace.xoai.dataprovider.repository.SetRepository;
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Granularity;
 import org.dspace.xoai.model.oaipmh.OAIPMH;
+import org.dspace.xoai.model.oaipmh.Request;
+import org.dspace.xoai.services.api.DateProvider;
 import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
+import org.dspace.xoai.services.impl.UTCDateProvider;
 import org.dspace.xoai.xml.XmlWritable;
 import org.dspace.xoai.xml.XmlWriter;
 import org.gbif.api.exception.ServiceUnavailableException;
@@ -45,10 +47,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.MetadataPrefix;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.ResumptionToken;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Verb;
 
 /**
  * An OAI-PMH endpoint, using the XOAI library.
@@ -57,9 +62,10 @@ import java.util.Date;
 @Singleton
 public class OaipmhEndpoint {
 
-  //thread-safe implementation of SimpleDateFormat
-  private static final FastDateFormat ISO_DATEFORMAT = DateFormatUtils.ISO_DATETIME_FORMAT;
   private static final TransformerFactory factory = TransformerFactory.newInstance();
+
+  private static final DateProvider dateProvider = new UTCDateProvider();
+  private static final ErrorHandler errorsHandler = new ErrorHandler();
 
   public Transformer xsltTransformer(String xsltFile) {
     try {
@@ -130,29 +136,27 @@ public class OaipmhEndpoint {
           @Nullable @QueryParam("set") String set) {
 
     Date fromDate = null, untilDate = null;
+    OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder()
+            .withVerb(verb)
+            .withMetadataPrefix(metadataPrefix);
 
     if(from != null) {
       try {
-        fromDate = ISO_DATEFORMAT.parse(from);
+        fromDate = dateProvider.parse(from);
       } catch (ParseException pEx) {
-        //TODO: throw OAI badArgument
-        pEx.printStackTrace();
+        return handleOAIRequestBadArgument(reqBuilder.build(), "from=" + from);
       }
     }
 
     if(until != null){
       try {
-        untilDate = ISO_DATEFORMAT.parse(until);
+        untilDate = dateProvider.parse(from);
       } catch (ParseException pEx) {
-        //TODO: OAI throw badArgument
-        pEx.printStackTrace();
+        return handleOAIRequestBadArgument(reqBuilder.build(), "until=" + until);
       }
     }
 
-    OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder()
-            .withVerb(verb)
-            .withMetadataPrefix(metadataPrefix)
-            .withIdentifier(identifier)
+    reqBuilder.withIdentifier(identifier)
             .withFrom(fromDate)
             .withUntil(untilDate)
             .withSet(set);
@@ -164,6 +168,33 @@ public class OaipmhEndpoint {
     try {
       OAIPMH oaipmh = dataProvider.handle(request);
       return new ByteArrayInputStream(write(oaipmh).getBytes("UTF-8"));
+
+    } catch (Exception e) {
+      throw new ServiceUnavailableException("OAI Failed to serialize dataset", e);
+    }
+  }
+
+  /**
+   * Build and generate the response for a BadArgument error code.
+   *
+   * @param requestParameters origin of the BadArgument error
+   * @param errorMessage textual message to report
+   * @return
+   */
+  private InputStream handleOAIRequestBadArgument(OAIRequest requestParameters, String errorMessage) {
+
+    Request request = new Request(repository.getConfiguration().getBaseUrl())
+            .withVerbType(requestParameters.get(Verb))
+            .withResumptionToken(requestParameters.get(ResumptionToken))
+            .withIdentifier(requestParameters.get(Identifier))
+            .withMetadataPrefix(requestParameters.get(MetadataPrefix));
+
+    try {
+      OAIPMH errorResponse = new OAIPMH()
+              .withRequest(request)
+              .withResponseDate(dateProvider.now())
+              .withError(errorsHandler.handle(new BadArgumentException(errorMessage)));
+      return new ByteArrayInputStream(write(errorResponse).getBytes("UTF-8"));
 
     } catch (Exception e) {
       throw new ServiceUnavailableException("OAI Failed to serialize dataset", e);

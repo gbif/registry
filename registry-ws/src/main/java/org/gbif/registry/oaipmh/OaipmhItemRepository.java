@@ -6,9 +6,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.ibatis.annotations.Param;
 import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.dataprovider.exceptions.OAIException;
 import org.dspace.xoai.dataprovider.filter.ScopedFilter;
@@ -21,7 +18,6 @@ import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.gbif.api.exception.ServiceUnavailableException;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -30,7 +26,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.metadata.DublinCoreWriter;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.resources.DatasetResource;
 
@@ -41,10 +36,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
 
 /**
+ * Implementation of ItemRepository for {@link Dataset}.
  *
  */
 @Singleton
@@ -140,6 +136,18 @@ public class OaipmhItemRepository implements ItemRepository {
     return getItemIdentifiers(list, offset, length, set, null, until);
   }
 
+  /**
+   * Get items identifier as {@link ListItemIdentifiersResult} matching the provided filters.
+   *
+   * @param list
+   * @param offset
+   * @param length
+   * @param set a valid set or null
+   * @param from from date (inclusive) or null
+   * @param until until date (exclusive) or null
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
     List<Dataset> datasetList = getDatasetListFromFilters(offset, length, set, from, until);
@@ -153,41 +161,118 @@ public class OaipmhItemRepository implements ItemRepository {
     return new ListItemIdentifiersResult(true, results);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length) throws OAIException {
     return getItems(list, offset, length, null, null, null);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param from
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, Date from) throws OAIException {
     return getItems(list, offset, length, null, from, null);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param until
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItemsUntil(List<ScopedFilter> list, int offset, int length, Date until) throws OAIException {
     return getItems(list, offset, length, null, null, until);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param from
+   * @param until
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, Date from, Date until) throws OAIException {
-    return getItems(list, offset, length, null, from,  until);
+    return getItems(list, offset, length, null, from, until);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param set
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set) throws OAIException {
-    return getItems(list, offset, length, set, null,  null);
+    return getItems(list, offset, length, set, null, null);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param set
+   * @param from
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set, Date from) throws OAIException {
-    return getItems(list, offset, length, set, from,  null);
+    return getItems(list, offset, length, set, from, null);
   }
 
+  /**
+   * See {@link #getItems(List, int, int, String, Date, Date) getItems}
+   * @param list
+   * @param offset
+   * @param length
+   * @param set
+   * @param until
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItemsUntil(List<ScopedFilter> list, int offset, int length, String set, Date until) throws OAIException {
-    return getItems(list, offset, length, set, null,  until);
+    return getItems(list, offset, length, set, null, until);
   }
 
+  /**
+   * Get items as {@link ListItemsResults} matching the provided filters.
+   *
+   * @param list
+   * @param offset
+   * @param length
+   * @param set a valid set or null
+   * @param from from date (inclusive) or null
+   * @param until until date (exclusive) or null
+   * @return
+   * @throws OAIException
+   */
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
 
@@ -208,6 +293,14 @@ public class OaipmhItemRepository implements ItemRepository {
 
   }
 
+  /**
+   * Build a {@OaipmhItem} instance from a {@link Dataset} and the {@link Set} it belongs to.
+   *
+   * @param dataset
+   * @param sets
+   * @return
+   * @throws IOException
+   */
   private OaipmhItem toOaipmhItem(Dataset dataset, List<Set> sets) throws IOException {
     /**
      * The XOAI library doesn't provide us with the metadata type (EML / OAI DC), so both must be produced.
@@ -233,10 +326,10 @@ public class OaipmhItemRepository implements ItemRepository {
   /**
    * Get the list of {@link org.dspace.xoai.dataprovider.model.Set} for a {@link Dataset}.
    *
-   * @param dataset
-   * @return
+   * @param dataset non-null {@link Dataset}
+   * @return list of all {@link org.dspace.xoai.dataprovider.model.Set} that the {@link Dataset} belongs to. Never null.
    */
-  private List<Set> getSets(Dataset dataset) {
+  private List<Set> getSets(@NotNull Dataset dataset) {
     Country publishingCountry = null;
     try {
       publishingCountry = ORGANIZATION_CACHE.get(dataset.getPublishingOrganizationKey()).getCountry();
@@ -258,11 +351,12 @@ public class OaipmhItemRepository implements ItemRepository {
    * @param offset
    * @param length
    * @param set set name in the form of set:subset {@see http://www.openarchives.org/OAI/openarchivesprotocol.html#Set}
+   *            XOAI library validates the set before calling the ItemRepository so we do not validate it again here.
    * @param from
    * @param until
-   * @return
+   * @return list of matching {@link Dataset}. Never null.
    */
-  private List<Dataset> getDatasetListFromFilters(int offset, int length, String set, Date from, Date until){
+  private List<Dataset> getDatasetListFromFilters(int offset, int length, String set, Date from, Date until) {
 
     Optional<OaipmhSetRepository.SetIdentification> setIdentification = OaipmhSetRepository.parseSetName(set);
 
@@ -272,7 +366,6 @@ public class OaipmhItemRepository implements ItemRepository {
       UUID installationKey = null;
       DatasetType datasetType = null;
 
-      //TODO handle wrong set values ---
       String subSet = setIdentification.get().getSubSet();
       switch (setIdentification.get().getSetType()) {
         case COUNTRY:

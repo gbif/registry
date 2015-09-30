@@ -19,8 +19,10 @@ import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 /**
- * WIP, sets should include all distinct countries, installations and dataset types.
- * Created by cgendreau on 15/09/15.
+ *
+ * Implementation of SetRepository for country, installation, dataset_type sets.
+ *
+ * @author cgendreau
  */
 @Singleton
 public class OaipmhSetRepository implements SetRepository {
@@ -196,26 +198,33 @@ public class OaipmhSetRepository implements SetRepository {
    * Check if a DatasetType exists. If no subSet is provided this method returns true.
    *
    * @param subSet
-   * @return
+   * @return the provided subSet exists or is empty
    */
   private boolean handleDatasetTypeSetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
       return true;
     }
-
-    for(DatasetType datasetType : DatasetType.values()){
-      if(datasetType.name().equalsIgnoreCase(subSet)){
-        return true;
-      }
+    DatasetType datasetType;
+    try {
+      datasetType = DatasetType.fromString(subSet);
     }
-    return false;
+    catch (IllegalArgumentException iaEx){
+      return false;
+    }
+
+    //still needed until POR-2858 is addressed
+    if( datasetType == null){
+      return false;
+    }
+
+    return true;
   }
 
   /**
    * Check if a Country ISO 2 letter code exists. If no subSet is provided this method returns true.
    *
    * @param subSet
-   * @return
+   * @return the provided subSet exists or is empty
    */
   private boolean handleCountrySetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
@@ -234,18 +243,18 @@ public class OaipmhSetRepository implements SetRepository {
    * Check if an Installation key exists. If no subSet is provided this method returns true.
    *
    * @param subSet
-   * @return
+   * @return the provided subSet exists or is empty
    */
   private boolean handleInstallationSetExists(String subSet){
     if (StringUtils.isBlank(subSet)){
       return true;
     }
 
-    UUID uuid = null;
+    UUID uuid;
     try {
       uuid = UUID.fromString(subSet);
     }
-    catch (IllegalFormatException ifEx){
+    catch (IllegalArgumentException iaEx){
       return false;
     }
 
