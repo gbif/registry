@@ -7,23 +7,32 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
+import org.dspace.xoai.serviceprovider.ServiceProvider;
+import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
+import org.dspace.xoai.serviceprovider.client.OAIClient;
+import org.dspace.xoai.serviceprovider.model.Context;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,17 +45,26 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import java.sql.PreparedStatement;
 
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the OaipmhEndpoint implementation.
  */
 @RunWith(Parameterized.class)
-public class OaipmhEnpointIT {
+public abstract class AbstractOaipmhEndpointIT {
+
+  String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
+  String EML_FORMAT = "eml";
 
   // Flushes the database on each run
   @ClassRule
   public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+
+  @ClassRule
+  public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
   public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
@@ -56,12 +74,18 @@ public class OaipmhEnpointIT {
   private final InstallationService installationService;
   private final DatasetService datasetService;
 
-  public OaipmhEnpointIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService,
-                         DatasetService datasetService){
+  final ServiceProvider serviceProvider;
+
+  public AbstractOaipmhEndpointIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService,
+                                  DatasetService datasetService){
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
+
+    OAIClient oaiClient = new HttpOAIClient(String.format(BASE_URL_FORMAT, registryServer.getPort()));
+    Context context = new Context().withOAIClient(oaiClient).withMetadataTransformer(EML_FORMAT, org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
+    serviceProvider = new ServiceProvider(context);
   }
 
   @Parameters
@@ -80,7 +104,7 @@ public class OaipmhEnpointIT {
    * @throws Throwable
    */
   @Test
-  public void prepareData() throws Throwable {
+  public void prepareData() throws Exception {
     Organization org1 = createOrganization(Country.ICELAND);
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
@@ -106,7 +130,7 @@ public class OaipmhEnpointIT {
    * @param publishingCountry
    * @return
    */
-  private Organization createOrganization(Country publishingCountry){
+  Organization createOrganization(Country publishingCountry) {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(Nodes.newInstance());
     // publishing organization (required field)
@@ -122,7 +146,7 @@ public class OaipmhEnpointIT {
    * @param organizationKey
    * @return
    */
-  private Installation createInstallation(UUID organizationKey){
+  Installation createInstallation(UUID organizationKey) {
     Installation i = Installations.newInstance(organizationKey);
     installationService.create(i);
     return i;
@@ -138,7 +162,7 @@ public class OaipmhEnpointIT {
    * @return the newly created Dataset
    * @throws Throwable
    */
-  private Dataset createDataset(UUID organizationKey, UUID installationKey, DatasetType type, Date modifiedDate) throws Throwable {
+  Dataset createDataset(UUID organizationKey, UUID installationKey, DatasetType type, Date modifiedDate) throws Exception {
 
     Dataset d = Datasets.newInstance(organizationKey, installationKey);
     d.setType(type);
@@ -158,7 +182,7 @@ public class OaipmhEnpointIT {
    * @param modifiedDate new modified date to set
    *
    */
-  private void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Throwable {
+  void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
     Connection connection = null;
     try {
       connection = RegistryTestModules.database().getConnection();
