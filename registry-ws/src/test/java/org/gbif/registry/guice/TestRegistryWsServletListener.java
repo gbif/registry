@@ -16,6 +16,7 @@ import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.ims.ImsModule;
+import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexUpdateListener;
 import org.gbif.registry.search.guice.RegistrySearchModule;
@@ -55,7 +56,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
 
   public TestRegistryWsServletListener() throws IOException {
     super(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES),
-      "org.gbif.registry.ws,org.gbif.registry.ws.provider", true, null, requestFilters);
+      "org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh", true, null, requestFilters);
   }
 
   @Override
@@ -70,7 +71,9 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new EventModule(props),
       new RegistrySearchModule(props),
       new SecurityModule(props),
-      new TitleLookupMockModule());
+      new TitleLookupMockModule(),
+      new OaipmhModule()
+    );
   }
 
   /**
