@@ -26,8 +26,6 @@ import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.dspace.xoai.dataprovider.repository.Repository;
 import org.dspace.xoai.dataprovider.repository.RepositoryConfiguration;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
-import org.dspace.xoai.model.oaipmh.DeletedRecord;
-import org.dspace.xoai.model.oaipmh.Granularity;
 import org.dspace.xoai.model.oaipmh.OAIPMH;
 import org.dspace.xoai.model.oaipmh.Request;
 import org.dspace.xoai.services.api.DateProvider;
@@ -97,24 +95,11 @@ public class OaipmhEndpoint {
           .withMetadataFormat(OAIDC_METADATA_FORMAT)
           .withMetadataFormat(EML_METADATA_FORMAT);
 
-  private RepositoryConfiguration repositoryConfiguration;
   private Repository repository;
   private DataProvider dataProvider;
 
   @Inject
-  public OaipmhEndpoint(ItemRepository itemRepository, SetRepository setRepository) {
-
-    this.repositoryConfiguration = new RepositoryConfiguration()
-            .withRepositoryName("GBIF Registry")
-            .withAdminEmail("admin@gbif.org")
-            .withBaseUrl("http://localhost")
-            .withEarliestDate(new Date())
-            .withMaxListIdentifiers(1000)
-            .withMaxListSets(1000)
-            .withMaxListRecords(100)
-            .withGranularity(Granularity.Second)
-            .withDeleteMethod(DeletedRecord.PERSISTENT)
-            .withDescription("<TestDescription xmlns=\"\">Test description</TestDescription>");
+  public OaipmhEndpoint(RepositoryConfiguration repositoryConfiguration, ItemRepository itemRepository, SetRepository setRepository) {
 
     this.repository = new Repository()
             .withItemRepository(itemRepository)
