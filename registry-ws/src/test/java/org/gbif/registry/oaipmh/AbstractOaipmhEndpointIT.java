@@ -26,6 +26,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,9 @@ import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
 import org.dspace.xoai.serviceprovider.model.Context;
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.core.IsEqual;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -187,6 +191,39 @@ public abstract class AbstractOaipmhEndpointIT {
       if (connection != null) {
         connection.close();
       }
+    }
+  }
+
+  /**
+   * Same as {@link org.hamcrest.collection.IsIterableWithSize} but for Iterator since XOAI library returns iterators directly.
+   *
+   * Usage: assertThat(records, IsIterorWithSize.<Record>iteratorWithSize(3))
+   *
+   * @param <E>
+   */
+  static class IsIterorWithSize<E> extends FeatureMatcher<Iterator<E>, Integer> {
+
+    public IsIterorWithSize(org.hamcrest.Matcher<? super Integer> sizeMatcher) {
+      super(sizeMatcher, "an iterator with size", "iterator size");
+    }
+
+    @Override
+    protected Integer featureValueOf(Iterator<E> iterator) {
+      int size = 0;
+
+      while(iterator.hasNext()) {
+        ++size;
+        iterator.next();
+      }
+      return Integer.valueOf(size);
+    }
+
+    public static <E> org.hamcrest.Matcher<Iterator<E>> iteratorWithSize(org.hamcrest.Matcher<? super Integer> sizeMatcher) {
+      return new IsIterorWithSize(sizeMatcher);
+    }
+
+    public static <E> org.hamcrest.Matcher<Iterator<E>> iteratorWithSize(int size) {
+      return iteratorWithSize(IsEqual.equalTo(Integer.valueOf(size)));
     }
   }
 }

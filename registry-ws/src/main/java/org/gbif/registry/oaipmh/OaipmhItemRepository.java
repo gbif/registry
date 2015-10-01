@@ -276,8 +276,14 @@ public class OaipmhItemRepository implements ItemRepository {
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
 
-    List<Dataset> datasetList = getDatasetListFromFilters(offset, length, set, from, until);
+    // ask for length+1 to determine if the is more result
+    List<Dataset> datasetList = getDatasetListFromFilters(offset, length+1, set, from, until);
     List<Item> results = Lists.newArrayListWithCapacity(datasetList.size());
+
+    boolean asMoreResults = (datasetList.size() == length+1);
+    if(asMoreResults) {
+      datasetList.remove(datasetList.size()-1);
+    }
 
     try {
       for (Dataset dataset : datasetList) {
@@ -288,9 +294,7 @@ public class OaipmhItemRepository implements ItemRepository {
       e.printStackTrace();
     }
 
-    //FIXME asMoreResults is not set properly
-    return new ListItemsResults(true, results);
-
+    return new ListItemsResults(asMoreResults, results);
   }
 
   /**

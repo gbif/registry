@@ -72,7 +72,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new RegistrySearchModule(props),
       new SecurityModule(props),
       new TitleLookupMockModule(),
-      new OaipmhModule()
+      new OaipmhMockModule()
     );
   }
 

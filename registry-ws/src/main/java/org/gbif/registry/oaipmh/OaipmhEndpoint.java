@@ -118,7 +118,8 @@ public class OaipmhEndpoint {
           @Nullable @QueryParam("metadataPrefix") String metadataPrefix,
           @Nullable @QueryParam("from") String from,
           @Nullable @QueryParam("until") String until,
-          @Nullable @QueryParam("set") String set) {
+          @Nullable @QueryParam("set") String set,
+          @Nullable @QueryParam("resumptionToken") String resumptionToken) {
 
     Date fromDate = null, untilDate = null;
     OAIRequestParametersBuilder reqBuilder = new OAIRequestParametersBuilder()
@@ -144,7 +145,8 @@ public class OaipmhEndpoint {
     reqBuilder.withIdentifier(identifier)
             .withFrom(fromDate)
             .withUntil(untilDate)
-            .withSet(set);
+            .withSet(set)
+            .withResumptionToken(resumptionToken);
 
     return handleOAIRequest(reqBuilder.build());
   }

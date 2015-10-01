@@ -10,13 +10,19 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.guice.OaipmhMockModule;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 
+import com.google.inject.matcher.Matcher;
 import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
+import org.hamcrest.Factory;
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +30,7 @@ import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -98,6 +105,38 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                     .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())
                     .withSetSpec("non-existing-set"));
     assertFalse("ListRecords verb with non-existing set should return no record", records.hasNext());
+  }
+
+  /**
+   *
+   * Test that ListRecords verb return all records when the number of records is higher than 'MaxListRecords'.
+   * When the number of records is higher than 'MaxListRecords', at least 2 requests will be sent and a 'resumptionToken'
+   * will be used.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testListRecordsPaging() throws Exception {
+    int numberOfDataset = 3;
+    Organization orgIceland = createOrganization(Country.ICELAND);
+    Installation orgIcelandInstallation1 = createInstallation(orgIceland.getKey());
+    createDataset(orgIceland.getKey(), orgIcelandInstallation1.getKey(), DatasetType.CHECKLIST, new Date());
+
+    Installation orgIcelandInstallation2 = createInstallation(orgIceland.getKey());
+    createDataset(orgIceland.getKey(), orgIcelandInstallation2.getKey(), DatasetType.OCCURRENCE, new Date());
+
+    Organization org2 = createOrganization(Country.NEW_ZEALAND);
+    Installation org2Installation1 = createInstallation(org2.getKey());
+    createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+
+    // ensure the test will run under the expected configuration
+    assertTrue("OaipmhMockModule 'MaxListRecords' should be set to a value less than " + numberOfDataset, numberOfDataset > OaipmhMockModule.MAX_LIST_RECORDS);
+
+    Iterator<Record> records = serviceProvider.listRecords(
+            ListRecordsParameters.request()
+                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix()));
+
+    assertThat("ListRecords verb return all records when the number of records is higher than 'MaxListRecords'", records, IsIterorWithSize.<Record>iteratorWithSize(numberOfDataset));
   }
 
 }
