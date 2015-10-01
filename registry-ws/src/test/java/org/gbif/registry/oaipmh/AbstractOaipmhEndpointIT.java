@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
+import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
@@ -58,7 +59,16 @@ import static org.junit.Assert.assertEquals;
 public abstract class AbstractOaipmhEndpointIT {
 
   private String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
-  String EML_FORMAT = "eml";
+
+  protected MetadataFormat OAIDC_FORMAT = new MetadataFormat()
+          .withMetadataPrefix("oai_dc")
+          .withMetadataNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
+          .withSchema("http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
+
+  protected MetadataFormat EML_FORMAT = new MetadataFormat()
+          .withMetadataPrefix("eml")
+          .withMetadataNamespace("eml://ecoinformatics.org/eml-2.1.1")
+          .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
 
   // Flushes the database on each run
   @ClassRule
@@ -87,7 +97,7 @@ public abstract class AbstractOaipmhEndpointIT {
 
     baseUrl = String.format(BASE_URL_FORMAT, registryServer.getPort());
     OAIClient oaiClient = new HttpOAIClient(baseUrl);
-    Context context = new Context().withOAIClient(oaiClient).withMetadataTransformer(EML_FORMAT, org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
+    Context context = new Context().withOAIClient(oaiClient).withMetadataTransformer(EML_FORMAT.getMetadataPrefix(), org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
     serviceProvider = new ServiceProvider(context);
   }
 
@@ -100,31 +110,6 @@ public abstract class AbstractOaipmhEndpointIT {
             webservice.getInstance(OrganizationService.class),
             webservice.getInstance(InstallationService.class),
             webservice.getInstance(DatasetService.class)});
-  }
-
-  /**
-   * TODO incomplete test
-   * @throws Throwable
-   */
-  @Test
-  public void prepareData() throws Exception {
-    Organization org1 = createOrganization(Country.ICELAND);
-    Installation org1Installation1 = createInstallation(org1.getKey());
-    Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
-
-    Installation org1Installation2 = createInstallation(org1.getKey());
-    Dataset org1Installation2Dataset1 = createDataset(org1.getKey(), org1Installation2.getKey(), DatasetType.OCCURRENCE, new Date());
-
-    Organization org2 = createOrganization(Country.NEW_ZEALAND);
-    Installation org2Installation1 = createInstallation(org2.getKey());
-    Dataset org2Installation1Dataset1 = createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());
-
-    PagingResponse<Dataset> datasetList =  datasetService.listByCountry(Country.ICELAND, null, null);
-    assertEquals(2, datasetList.getResults().size());
-
-    datasetList =  datasetService.listByCountry(Country.NEW_ZEALAND, null, null);
-    assertEquals(1, datasetList.getResults().size());
-
   }
 
   /**

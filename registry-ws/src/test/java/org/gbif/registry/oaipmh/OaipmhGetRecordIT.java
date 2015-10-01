@@ -63,7 +63,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
     serviceProvider.getRecord(
             GetRecordParameters.request()
                     .withIdentifier("non-existent-record-identifier")
-                    .withMetadataFormatPrefix(EML_FORMAT)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix())
     );
   }
 
@@ -89,7 +89,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
     Record record = serviceProvider.getRecord(
             GetRecordParameters.request()
                     .withIdentifier(key)
-                    .withMetadataFormatPrefix(EML_FORMAT)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix())
     );
 
     assertEquals(key, record.getHeader().getIdentifier());

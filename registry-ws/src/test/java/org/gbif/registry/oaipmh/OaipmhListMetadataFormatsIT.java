@@ -30,16 +30,6 @@ import static org.junit.Assert.assertThat;
 @RunWith(Parameterized.class)
 public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 
-  private MetadataFormat oaidcFormat = new MetadataFormat()
-          .withMetadataPrefix("oai_dc")
-          .withMetadataNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
-          .withSchema("http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
-
-  private MetadataFormat emlFormat = new MetadataFormat()
-          .withMetadataPrefix("eml")
-          .withMetadataNamespace("eml://ecoinformatics.org/eml-2.1.1")
-          .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
-
   public OaipmhListMetadataFormatsIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService, DatasetService datasetService) {
     super(nodeService, organizationService, installationService, datasetService);
   }
@@ -65,7 +55,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
                     .withIdentifier(key)
     ));
 
-    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(oaidcFormat, emlFormat));
+    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(OAIDC_FORMAT, EML_FORMAT));
   }
 
   @Test
@@ -75,6 +65,6 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
             ListMetadataParameters.request()
     ));
 
-    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(oaidcFormat, emlFormat));
+    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(OAIDC_FORMAT, EML_FORMAT));
   }
 }
