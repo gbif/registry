@@ -22,6 +22,7 @@ import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -56,7 +57,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public abstract class AbstractOaipmhEndpointIT {
 
-  String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
+  private String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
   String EML_FORMAT = "eml";
 
   // Flushes the database on each run
@@ -74,6 +75,7 @@ public abstract class AbstractOaipmhEndpointIT {
   private final InstallationService installationService;
   private final DatasetService datasetService;
 
+  final String baseUrl;
   final ServiceProvider serviceProvider;
 
   public AbstractOaipmhEndpointIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService,
@@ -83,7 +85,8 @@ public abstract class AbstractOaipmhEndpointIT {
     this.installationService = installationService;
     this.datasetService = datasetService;
 
-    OAIClient oaiClient = new HttpOAIClient(String.format(BASE_URL_FORMAT, registryServer.getPort()));
+    baseUrl = String.format(BASE_URL_FORMAT, registryServer.getPort());
+    OAIClient oaiClient = new HttpOAIClient(baseUrl);
     Context context = new Context().withOAIClient(oaiClient).withMetadataTransformer(EML_FORMAT, org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
     serviceProvider = new ServiceProvider(context);
   }

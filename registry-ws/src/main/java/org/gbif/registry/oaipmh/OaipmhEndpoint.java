@@ -113,7 +113,7 @@ public class OaipmhEndpoint {
             .withMaxListSets(1000)
             .withMaxListRecords(100)
             .withGranularity(Granularity.Second)
-            .withDeleteMethod(DeletedRecord.TRANSIENT)
+            .withDeleteMethod(DeletedRecord.PERSISTENT)
             .withDescription("<TestDescription xmlns=\"\">Test description</TestDescription>");
 
     this.repository = new Repository()
