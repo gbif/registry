@@ -82,7 +82,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
-                              new OaipmhModule());
+                              new OaipmhModule(properties.getProperty(API_URL_PROPERTY)));
   }
 
   @VisibleForTesting

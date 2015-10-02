@@ -50,6 +50,8 @@ import org.apache.solr.client.solrj.SolrServer;
 public class TestRegistryWsServletListener extends GbifServletListener {
 
   public static final String APPLICATION_PROPERTIES = "registry-test.properties";
+  private static final String API_URL_PROPERTY = "api.url";
+
   @SuppressWarnings("unchecked")
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
     .<Class<? extends ContainerRequestFilter>>newArrayList(LegacyAuthorizationFilter.class);
@@ -72,7 +74,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new RegistrySearchModule(props),
       new SecurityModule(props),
       new TitleLookupMockModule(),
-      new OaipmhMockModule()
+      new OaipmhMockModule(props.getProperty(API_URL_PROPERTY))
     );
   }
 

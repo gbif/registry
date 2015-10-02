@@ -20,13 +20,19 @@ import org.dspace.xoai.model.oaipmh.Granularity;
  */
 public class OaipmhModule extends AbstractModule {
 
+  private String baseUrl;
+
+  public OaipmhModule(String baseUrl){
+    this.baseUrl = baseUrl;
+  }
+
   @Override
   protected void configure() {
 
     RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
             .withAdminEmail("admin@gbif.org")
-            .withBaseUrl("http://localhost")
+            .withBaseUrl(baseUrl)
             .withEarliestDate(new Date())
             .withMaxListIdentifiers(1000)
             .withMaxListSets(1000)
