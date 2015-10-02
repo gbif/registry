@@ -1,13 +1,11 @@
 package org.gbif.registry.oaipmh;
 
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
-import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
@@ -19,14 +17,10 @@ import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
-import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
-import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.net.URI;
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
@@ -36,25 +30,13 @@ import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
 import org.dspace.xoai.serviceprovider.model.Context;
-import org.hamcrest.FeatureMatcher;
-import org.hamcrest.Matchers;
-import org.hamcrest.core.IsEqual;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
-import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
-
-import java.sql.PreparedStatement;
-
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the OaipmhEndpoint implementation.
@@ -62,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public abstract class AbstractOaipmhEndpointIT {
 
+  // used by OAIClient to access the OAI-PMH web service locally
   private String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
 
   protected MetadataFormat OAIDC_FORMAT = new MetadataFormat()
@@ -89,7 +72,7 @@ public abstract class AbstractOaipmhEndpointIT {
   private final InstallationService installationService;
   private final DatasetService datasetService;
 
-  final String baseUrl;
+  private final String baseUrl;
   final ServiceProvider serviceProvider;
 
   public AbstractOaipmhEndpointIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService,

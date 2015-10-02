@@ -2,11 +2,14 @@ package org.gbif.registry.guice;
 
 import org.gbif.registry.oaipmh.OaipmhItemRepository;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
+import org.gbif.registry.oaipmh.guice.OaipmhModule;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.dspace.xoai.dataprovider.repository.RepositoryConfiguration;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
@@ -24,10 +27,10 @@ public class OaipmhMockModule extends AbstractModule {
 
   public static final int MAX_LIST_RECORDS = 2;
 
-  private String baseUrl;
+  private String apiUrl;
 
-  public OaipmhMockModule(String baseUrl){
-    this.baseUrl = baseUrl;
+  public OaipmhMockModule(String apiUrl){
+    this.apiUrl = apiUrl;
   }
 
   @Override
@@ -36,8 +39,8 @@ public class OaipmhMockModule extends AbstractModule {
     RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Test Registry")
             .withAdminEmail("admin@gbif.org")
-            .withBaseUrl(baseUrl)
-            .withEarliestDate(new Date())
+            .withBaseUrl(StringUtils.appendIfMissing(apiUrl, "/") + OaipmhModule.OAI_PMH_PATH)
+            .withEarliestDate(OaipmhModule.EARLIEST_DATE)
             .withMaxListIdentifiers(2)
             .withMaxListSets(2)
             .withMaxListRecords(MAX_LIST_RECORDS)

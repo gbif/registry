@@ -3,10 +3,12 @@ package org.gbif.registry.oaipmh.guice;
 import org.gbif.registry.oaipmh.OaipmhItemRepository;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.dspace.xoai.dataprovider.repository.RepositoryConfiguration;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
@@ -20,10 +22,24 @@ import org.dspace.xoai.model.oaipmh.Granularity;
  */
 public class OaipmhModule extends AbstractModule {
 
-  private String baseUrl;
+  // earliest date a dataset was created
+  public static final Date EARLIEST_DATE;
+  static{
+    Calendar cal = Calendar.getInstance();
+    cal.set(2007,1,1);
+    EARLIEST_DATE = cal.getTime();
+  }
 
-  public OaipmhModule(String baseUrl){
-    this.baseUrl = baseUrl;
+  public static final String OAI_PMH_PATH = "oaipmh";
+
+  private String apiUrl;
+
+  /**
+   *
+   * @param apiUrl api root url
+   */
+  public OaipmhModule(String apiUrl){
+    this.apiUrl = apiUrl;
   }
 
   @Override
@@ -32,8 +48,8 @@ public class OaipmhModule extends AbstractModule {
     RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
             .withAdminEmail("admin@gbif.org")
-            .withBaseUrl(baseUrl)
-            .withEarliestDate(new Date())
+            .withBaseUrl(StringUtils.appendIfMissing(apiUrl,"/") + OAI_PMH_PATH)
+            .withEarliestDate(EARLIEST_DATE)
             .withMaxListIdentifiers(1000)
             .withMaxListSets(1000)
             .withMaxListRecords(100)
