@@ -28,7 +28,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
     Identify response = serviceProvider.identify();
 
-    assertEquals("GBIF Registry", response.getRepositoryName());
+    assertEquals("GBIF Test Registry", response.getRepositoryName());
     assertEquals(baseUrl, response.getBaseURL());
     assertEquals(DeletedRecord.PERSISTENT, response.getDeletedRecord());
   }
