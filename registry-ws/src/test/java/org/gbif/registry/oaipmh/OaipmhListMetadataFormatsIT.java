@@ -17,11 +17,12 @@ import com.google.common.collect.Lists;
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -55,7 +56,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
                     .withIdentifier(key)
     ));
 
-    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(OAIDC_FORMAT, EML_FORMAT));
+    assertThat("EML and OAIDC formats supported", metadataFormats, containsInAnyOrder(samePropertyValuesAs(OAIDC_FORMAT), samePropertyValuesAs(EML_FORMAT)));
   }
 
   @Test
@@ -65,6 +66,6 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
             ListMetadataParameters.request()
     ));
 
-    assertThat("EML and OAIDC formats supported", metadataFormats, Matchers.containsInAnyOrder(OAIDC_FORMAT, EML_FORMAT));
+    assertThat("EML and OAIDC formats supported", metadataFormats, containsInAnyOrder(samePropertyValuesAs(OAIDC_FORMAT), samePropertyValuesAs(EML_FORMAT)));
   }
 }
