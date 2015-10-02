@@ -150,15 +150,21 @@ public class OaipmhItemRepository implements ItemRepository {
    */
   @Override
   public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
-    List<Dataset> datasetList = getDatasetListFromFilters(offset, length, set, from, until);
+    // ask for length+1 to determine if there is more result
+    List<Dataset> datasetList = getDatasetListFromFilters(offset, length+1, set, from, until);
     List<ItemIdentifier> results = Lists.newArrayListWithCapacity(datasetList.size());
+
+    boolean asMoreResults = (datasetList.size() == length+1);
+    // remove last element, it was only retrieve to determine asMoreResults
+    if(asMoreResults) {
+      datasetList.remove(datasetList.size()-1);
+    }
 
     for (Dataset dataset : datasetList) {
       results.add(new OaipmhItem(dataset, getSets(dataset)));
     }
 
-    //FIXME asMoreResults is not set properly
-    return new ListItemIdentifiersResult(true, results);
+    return new ListItemIdentifiersResult(asMoreResults, results);
   }
 
   /**
@@ -276,11 +282,12 @@ public class OaipmhItemRepository implements ItemRepository {
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
 
-    // ask for length+1 to determine if the is more result
+    // ask for length+1 to determine if there is more result
     List<Dataset> datasetList = getDatasetListFromFilters(offset, length+1, set, from, until);
     List<Item> results = Lists.newArrayListWithCapacity(datasetList.size());
 
     boolean asMoreResults = (datasetList.size() == length+1);
+    // remove last element, it was only retrieve to determine asMoreResults
     if(asMoreResults) {
       datasetList.remove(datasetList.size()-1);
     }

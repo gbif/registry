@@ -193,37 +193,4 @@ public abstract class AbstractOaipmhEndpointIT {
       }
     }
   }
-
-  /**
-   * Same as {@link org.hamcrest.collection.IsIterableWithSize} but for Iterator since XOAI library returns iterators directly.
-   *
-   * Usage: assertThat(records, IsIterorWithSize.<Record>iteratorWithSize(3))
-   *
-   * @param <E>
-   */
-  static class IsIterorWithSize<E> extends FeatureMatcher<Iterator<E>, Integer> {
-
-    public IsIterorWithSize(org.hamcrest.Matcher<? super Integer> sizeMatcher) {
-      super(sizeMatcher, "an iterator with size", "iterator size");
-    }
-
-    @Override
-    protected Integer featureValueOf(Iterator<E> iterator) {
-      int size = 0;
-
-      while(iterator.hasNext()) {
-        ++size;
-        iterator.next();
-      }
-      return Integer.valueOf(size);
-    }
-
-    public static <E> org.hamcrest.Matcher<Iterator<E>> iteratorWithSize(org.hamcrest.Matcher<? super Integer> sizeMatcher) {
-      return new IsIterorWithSize(sizeMatcher);
-    }
-
-    public static <E> org.hamcrest.Matcher<Iterator<E>> iteratorWithSize(int size) {
-      return iteratorWithSize(IsEqual.equalTo(Integer.valueOf(size)));
-    }
-  }
 }

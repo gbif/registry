@@ -1,6 +1,5 @@
 package org.gbif.registry.oaipmh;
 
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
@@ -15,18 +14,13 @@ import org.gbif.registry.guice.OaipmhMockModule;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
-import com.google.inject.matcher.Matcher;
+import com.google.common.collect.Lists;
 import org.dspace.xoai.model.oaipmh.Record;
+import org.dspace.xoai.model.oaipmh.Set;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
-import org.hamcrest.Factory;
-import org.hamcrest.FeatureMatcher;
-import org.hamcrest.Matchers;
-import org.hamcrest.core.IsEqual;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,7 +31,6 @@ import static org.junit.Assert.assertTrue;
  * Test the ListRecords verb of the OAI-PMH endpoint.
  *
  */
-@RunWith(Parameterized.class)
 public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   public OaipmhListRecordsIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService, DatasetService datasetService) {
@@ -135,8 +128,8 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
     Iterator<Record> records = serviceProvider.listRecords(
             ListRecordsParameters.request()
                     .withMetadataPrefix(EML_FORMAT.getMetadataPrefix()));
-
-    assertThat("ListRecords verb return all records when the number of records is higher than 'MaxListRecords'", records, IsIterorWithSize.<Record>iteratorWithSize(numberOfDataset));
+    List<Record> recordList = Lists.newArrayList(records);
+    assertEquals("ListRecords verb return all records when the number of records is higher than 'MaxListRecords'", numberOfDataset, recordList.size());
   }
 
 }
