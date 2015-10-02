@@ -106,7 +106,7 @@
     <slf4j.version>1.7.12</slf4j.version>
     <solr.version>4.10.3</solr.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
-    <xoai.version>4.1.1-SNAPSHOT</xoai.version>
+    <xoai.version>4.1.0-gbif-1-SNAPSHOT</xoai.version>
   </properties>
 
   <!--
