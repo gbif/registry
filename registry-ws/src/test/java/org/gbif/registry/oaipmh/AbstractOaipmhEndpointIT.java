@@ -45,7 +45,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 public abstract class AbstractOaipmhEndpointIT {
 
   // used by OAIClient to access the OAI-PMH web service locally
-  private String BASE_URL_FORMAT = "http://localhost:%d/oaipmh";
+  private String BASE_URL_FORMAT = "http://localhost:%d/oai-pmh/registry";
 
   protected MetadataFormat OAIDC_FORMAT = new MetadataFormat()
           .withMetadataPrefix("oai_dc")

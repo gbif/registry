@@ -27,10 +27,10 @@ public class OaipmhMockModule extends AbstractModule {
 
   public static final int MAX_LIST_RECORDS = 2;
 
-  private String apiUrl;
+  private String oaipmhBaseUrl;
 
-  public OaipmhMockModule(String apiUrl){
-    this.apiUrl = apiUrl;
+  public OaipmhMockModule(String oaipmhBaseUrl){
+    this.oaipmhBaseUrl = oaipmhBaseUrl;
   }
 
   @Override
@@ -39,7 +39,7 @@ public class OaipmhMockModule extends AbstractModule {
     RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Test Registry")
             .withAdminEmail("admin@gbif.org")
-            .withBaseUrl(StringUtils.appendIfMissing(apiUrl, "/") + OaipmhModule.OAI_PMH_PATH)
+            .withBaseUrl(oaipmhBaseUrl)
             .withEarliestDate(OaipmhModule.EARLIEST_DATE)
             .withMaxListIdentifiers(2)
             .withMaxListSets(2)

@@ -56,7 +56,7 @@ import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Verb;
 /**
  * An OAI-PMH endpoint, using the XOAI library.
  */
-@Path("oaipmh")
+@Path("oai-pmh/registry")
 @Singleton
 public class OaipmhEndpoint {
 

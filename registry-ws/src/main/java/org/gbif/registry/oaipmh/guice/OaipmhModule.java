@@ -30,16 +30,15 @@ public class OaipmhModule extends AbstractModule {
     EARLIEST_DATE = cal.getTime();
   }
 
-  public static final String OAI_PMH_PATH = "oaipmh";
 
-  private String apiUrl;
+  private String oaipmhBaseUrl;
 
   /**
    *
-   * @param apiUrl api root url
+   * @param oaipmhBaseUrl OAI-PMH root url
    */
-  public OaipmhModule(String apiUrl){
-    this.apiUrl = apiUrl;
+  public OaipmhModule(String oaipmhBaseUrl){
+    this.oaipmhBaseUrl = oaipmhBaseUrl;
   }
 
   @Override
@@ -48,7 +47,7 @@ public class OaipmhModule extends AbstractModule {
     RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName("GBIF Registry")
             .withAdminEmail("admin@gbif.org")
-            .withBaseUrl(StringUtils.appendIfMissing(apiUrl,"/") + OAI_PMH_PATH)
+            .withBaseUrl(oaipmhBaseUrl)
             .withEarliestDate(EARLIEST_DATE)
             .withMaxListIdentifiers(1000)
             .withMaxListSets(1000)
