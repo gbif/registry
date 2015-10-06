@@ -150,13 +150,13 @@ public class OaipmhItemRepository implements ItemRepository {
    */
   @Override
   public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
-    // ask for length+1 to determine if there is more result
+    // ask for length+1 to determine if there are more results
     List<Dataset> datasetList = getDatasetListFromFilters(offset, length+1, set, from, until);
     List<ItemIdentifier> results = Lists.newArrayListWithCapacity(datasetList.size());
 
-    boolean asMoreResults = (datasetList.size() == length+1);
+    boolean hasMoreResults = (datasetList.size() == length+1);
     // remove last element, it was only retrieve to determine asMoreResults
-    if(asMoreResults) {
+    if (hasMoreResults) {
       datasetList.remove(datasetList.size()-1);
     }
 
@@ -164,7 +164,7 @@ public class OaipmhItemRepository implements ItemRepository {
       results.add(new OaipmhItem(dataset, getSets(dataset)));
     }
 
-    return new ListItemIdentifiersResult(asMoreResults, results);
+    return new ListItemIdentifiersResult(hasMoreResults, results);
   }
 
   /**
@@ -282,13 +282,13 @@ public class OaipmhItemRepository implements ItemRepository {
   @Override
   public ListItemsResults getItems(List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) throws OAIException {
 
-    // ask for length+1 to determine if there is more result
+    // ask for length+1 to determine if there are more results
     List<Dataset> datasetList = getDatasetListFromFilters(offset, length+1, set, from, until);
     List<Item> results = Lists.newArrayListWithCapacity(datasetList.size());
 
-    boolean asMoreResults = (datasetList.size() == length+1);
+    boolean hasMoreResults = (datasetList.size() == length+1);
     // remove last element, it was only retrieve to determine asMoreResults
-    if(asMoreResults) {
+    if (hasMoreResults) {
       datasetList.remove(datasetList.size()-1);
     }
 
@@ -301,7 +301,7 @@ public class OaipmhItemRepository implements ItemRepository {
       e.printStackTrace();
     }
 
-    return new ListItemsResults(asMoreResults, results);
+    return new ListItemsResults(hasMoreResults, results);
   }
 
   /**
