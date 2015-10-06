@@ -151,6 +151,37 @@ public abstract class AbstractOaipmhEndpointIT {
   }
 
   /**
+   * Get the specified Dataset
+   * @param datasetKey
+   * @return
+   * @throws Exception
+   */
+  Dataset getDataset(UUID datasetKey) throws Exception {
+    return datasetService.get(datasetKey);
+  }
+
+
+  /**
+   * Delete the specified Dataset.
+   *
+   * @param datasetKey
+   * @throws Exception
+   */
+  void deleteDataset(UUID datasetKey) throws Exception {
+    datasetService.delete(datasetKey);
+  }
+
+  /**
+   * Update the provided Dataset.
+   *
+   * @param dataset
+   * @throws Exception
+   */
+  void updateDataset(Dataset dataset) throws Exception {
+    datasetService.update(dataset);
+  }
+
+  /**
    * This method is used to change the modified date of a dataset in order to test date queries.
    *
    * @param key

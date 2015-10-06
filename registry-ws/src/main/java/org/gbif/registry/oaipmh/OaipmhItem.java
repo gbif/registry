@@ -58,9 +58,6 @@ public class OaipmhItem implements Item {
 
   @Override
   public Date getDatestamp() {
-    dataset.getCreated();
-    dataset.getModified();
-    dataset.getDeleted();
     return dataset.getModified();
   }
 

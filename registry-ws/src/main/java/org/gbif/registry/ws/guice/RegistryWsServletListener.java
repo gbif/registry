@@ -48,8 +48,6 @@ public class RegistryWsServletListener extends GbifServletListener {
   public static final String APP_CONF_FILE = "registry.properties";
 
   private static final String API_URL_PROPERTY = "api.url";
-  private static final String OAIPMH_BASE_URL_PROPERTY = "oaipmh.baseUrl";
-  private static final String OAIPMH_ADMIN_EMAIL_PROPERTY = "oaipmh.adminEmail";
 
   public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
   public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
@@ -85,7 +83,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
-                              new OaipmhModule(properties.getProperty(OAIPMH_BASE_URL_PROPERTY), properties.getProperty(OAIPMH_ADMIN_EMAIL_PROPERTY)));
+                              new OaipmhModule(properties));
   }
 
   @VisibleForTesting

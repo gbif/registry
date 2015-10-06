@@ -5,6 +5,7 @@ import org.gbif.registry.oaipmh.OaipmhSetRepository;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import com.google.inject.AbstractModule;
@@ -31,20 +32,21 @@ public class OaipmhModule extends AbstractModule {
     EARLIEST_DATE = cal.getTime();
   }
 
+  public static final String OAIPMH_BASE_URL_PROPERTY = "oaipmh.baseUrl";
+  public static final String OAIPMH_ADMIN_EMAIL_PROPERTY = "oaipmh.adminEmail";
   private static final String REPO_NAME = "GBIF Registry";
 
   private final RepositoryConfiguration repositoryConfiguration;
 
   /**
    *
-   * @param oaipmhBaseUrl OAI-PMH root url
-   * @param adminEmail adminEmail to return in OAI-PMH Identity request
+   * @param properties OAI-PMH root url
    */
-  public OaipmhModule(String oaipmhBaseUrl, String adminEmail){
+  public OaipmhModule(Properties properties){
     repositoryConfiguration = new RepositoryConfiguration()
             .withRepositoryName(REPO_NAME)
-            .withAdminEmail(adminEmail)
-            .withBaseUrl(oaipmhBaseUrl)
+            .withAdminEmail(properties.getProperty(OAIPMH_ADMIN_EMAIL_PROPERTY))
+            .withBaseUrl(properties.getProperty(OAIPMH_BASE_URL_PROPERTY))
             .withEarliestDate(EARLIEST_DATE)
             .withMaxListIdentifiers(1000)
             .withMaxListSets(1000)

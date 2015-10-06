@@ -20,6 +20,7 @@ import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexUpdateListener;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
@@ -50,7 +51,6 @@ import org.apache.solr.client.solrj.SolrServer;
 public class TestRegistryWsServletListener extends GbifServletListener {
 
   public static final String APPLICATION_PROPERTIES = "registry-test.properties";
-  private static final String OAIPMH_BASE_URL_PROPERTY = "oaipmh.baseUrl";
 
   @SuppressWarnings("unchecked")
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
@@ -74,7 +74,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new RegistrySearchModule(props),
       new SecurityModule(props),
       new TitleLookupMockModule(),
-      new OaipmhMockModule(props.getProperty(OAIPMH_BASE_URL_PROPERTY))
+      new OaipmhModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
     );
   }
 

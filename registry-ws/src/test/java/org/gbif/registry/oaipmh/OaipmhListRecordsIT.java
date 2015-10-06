@@ -9,7 +9,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.registry.guice.OaipmhMockModule;
+import org.gbif.registry.utils.OaipmhTestConfiguration;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -18,13 +18,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.dspace.xoai.model.oaipmh.Record;
-import org.dspace.xoai.model.oaipmh.Set;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -123,7 +121,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
     createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());
 
     // ensure the test will run under the expected configuration
-    assertTrue("OaipmhMockModule 'MaxListRecords' should be set to a value less than " + numberOfDataset, numberOfDataset > OaipmhMockModule.MAX_LIST_RECORDS);
+    assertTrue("OaipmhMockModule 'MaxListRecords' should be set to a value less than " + numberOfDataset, numberOfDataset > OaipmhTestConfiguration.MAX_LIST_RECORDS);
 
     Iterator<Record> records = serviceProvider.listRecords(
             ListRecordsParameters.request()

@@ -45,6 +45,9 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the OAI-PMH endpoint using the XOAI OAI-PMH client library.
@@ -91,7 +94,46 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
                     .withIdentifier(key)
                     .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix())
     );
-
     assertEquals(key, record.getHeader().getIdentifier());
+  }
+
+  @Test
+  public void testGetDeletedRestoredRecord() throws Exception {
+    Organization org1 = createOrganization(Country.ZAMBIA);
+    Installation org1Installation1 = createInstallation(org1.getKey());
+    Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+
+    String key = org1Installation1Dataset1.getKey().toString();
+
+    Record record = serviceProvider.getRecord(
+            GetRecordParameters.request()
+                    .withIdentifier(key)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix())
+    );
+    assertEquals(key, record.getHeader().getIdentifier());
+    assertFalse("An active record is returned and not identified as deleted", record.getHeader().isDeleted());
+
+    // deleted the record and make sure it is flagged as 'deleted'
+    deleteDataset(org1Installation1Dataset1.getKey());
+
+    record = serviceProvider.getRecord(
+            GetRecordParameters.request()
+                    .withIdentifier(key)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
+    assertEquals(key, record.getHeader().getIdentifier());
+    assertTrue("A deleted record is returned and is identified as deleted", record.getHeader().isDeleted());
+
+    // restore the dataset
+    org1Installation1Dataset1 = getDataset(org1Installation1Dataset1.getKey());
+    assertNotNull(org1Installation1Dataset1.getDeleted());
+
+    org1Installation1Dataset1.setDeleted(null);
+    updateDataset(org1Installation1Dataset1);
+    record = serviceProvider.getRecord(
+            GetRecordParameters.request()
+                    .withIdentifier(key)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
+    assertEquals(key, record.getHeader().getIdentifier());
+    assertFalse("A restored record is returned and not identified as deleted", record.getHeader().isDeleted());
   }
 }
