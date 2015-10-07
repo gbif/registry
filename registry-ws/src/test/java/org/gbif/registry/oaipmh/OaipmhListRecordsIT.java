@@ -10,14 +10,18 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
+import org.gbif.utils.file.FileUtils;
 
+import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.io.IOUtils;
 import org.dspace.xoai.model.oaipmh.Record;
+import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
 import org.junit.Test;
 
@@ -128,6 +132,29 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                     .withMetadataPrefix(EML_FORMAT.getMetadataPrefix()));
     List<Record> recordList = Lists.newArrayList(records);
     assertEquals("ListRecords verb return all records when the number of records is higher than 'MaxListRecords'", numberOfDataset, recordList.size());
+  }
+
+  @Test
+  public void getListRecordsWithAugmentedMetadata() throws Exception {
+    Organization org1 = createOrganization(Country.ZAMBIA);
+    Installation org1Installation1 = createInstallation(org1.getKey());
+    Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+
+    insertMetadata(org1Installation1Dataset1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
+
+    String key = org1Installation1Dataset1.getKey().toString();
+
+    Record record = serviceProvider.getRecord(
+            GetRecordParameters.request()
+                    .withIdentifier(key)
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
+    assertEquals(key, record.getHeader().getIdentifier());
+
+    // the xoai library doesn't return the <metadata> content as we expect so test the returned document directly.
+    String result = IOUtils.toString(new URI(baseUrl + "?verb=ListRecords&metadataPrefix=" + EML_FORMAT.getMetadataPrefix()).toURL(), "UTF-8");
+
+    // ensure we get the augmented metadata data
+    assertTrue("ListRecords verb returns augmented metadata", result.contains("<citation identifier=\"doi:tims-ident.2136.ex43.33.d\">title 1</citation>"));
   }
 
 }

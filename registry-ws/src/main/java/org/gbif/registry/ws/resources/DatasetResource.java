@@ -270,7 +270,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    *
    * @return a the same paging response with a new list of augmented dataset instances
    */
-  private PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
+  public PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
     List<Dataset> augmented = Lists.newArrayList();
     for (Dataset d : resp.getResults()) {
       augmented.add(merge(getPreferredMetadataDataset(d.getKey()), d));
@@ -292,7 +292,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    *
    * @param target that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
-   * @return the modified tagret dataset, or the supplementary dataset if the target is null
+   * @return the modified target dataset, or the supplementary dataset if the target is null
    */
   @Nullable
   private Dataset merge(@Nullable Dataset target, @Nullable Dataset supplementary) {

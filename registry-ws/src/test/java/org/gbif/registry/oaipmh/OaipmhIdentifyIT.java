@@ -5,7 +5,6 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 
-import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Identify;
 import org.hamcrest.Matchers;
@@ -15,7 +14,6 @@ import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test the Identify verb of the OAI-PMH endpoint.
@@ -28,7 +26,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
   }
 
   /**
-   * Since the Identity verb response is all set by the OaipmhMockModule (with test parameters)
+   * Since the Identity verb response is all set by the OaipmhTestConfiguration (with test parameters)
    * we only test that we actually get a response.
    */
   @Test

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
@@ -155,7 +156,7 @@ public class OaipmhItemRepository implements ItemRepository {
     List<ItemIdentifier> results = Lists.newArrayListWithCapacity(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length+1);
-    // remove last element, it was only retrieve to determine asMoreResults
+    // remove last element, it was only retrieve to determine hasMoreResults
     if (hasMoreResults) {
       datasetList.remove(datasetList.size()-1);
     }
@@ -287,13 +288,17 @@ public class OaipmhItemRepository implements ItemRepository {
     List<Item> results = Lists.newArrayListWithCapacity(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length+1);
-    // remove last element, it was only retrieve to determine asMoreResults
+    // remove last element, it was only retrieve to determine hasMoreResults
     if (hasMoreResults) {
       datasetList.remove(datasetList.size()-1);
     }
 
+    PagingResponse<Dataset> pagingResponse = new PagingResponse<>();
+    pagingResponse.setResults(datasetList);
+    pagingResponse = datasetResource.augmentWithMetadata(pagingResponse);
+
     try {
-      for (Dataset dataset : datasetList) {
+      for (Dataset dataset : pagingResponse.getResults() ) {
         results.add(toOaipmhItem(dataset, getSets(dataset)));
       }
     } catch (IOException e) {

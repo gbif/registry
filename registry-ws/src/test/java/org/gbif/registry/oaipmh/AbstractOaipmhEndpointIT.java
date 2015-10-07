@@ -2,6 +2,7 @@ package org.gbif.registry.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
@@ -18,6 +19,7 @@ import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Date;
@@ -72,7 +74,7 @@ public abstract class AbstractOaipmhEndpointIT {
   private final InstallationService installationService;
   private final DatasetService datasetService;
 
-  private final String baseUrl;
+  protected final String baseUrl;
   final ServiceProvider serviceProvider;
 
   public AbstractOaipmhEndpointIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService,
@@ -179,6 +181,17 @@ public abstract class AbstractOaipmhEndpointIT {
    */
   void updateDataset(Dataset dataset) throws Exception {
     datasetService.update(dataset);
+  }
+
+  /**
+   * Insert metadata associated to the provided Dataset.
+   *
+   * @param key dataset key
+   * @param document
+   * @throws Exception
+   */
+  Metadata insertMetadata(UUID key, InputStream document) throws Exception {
+    return datasetService.insertMetadata(key, document);
   }
 
   /**
