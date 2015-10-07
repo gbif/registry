@@ -111,7 +111,7 @@ public class OaipmhEndpoint {
   }
 
   @GET
-  @Produces(MediaType.APPLICATION_XML)
+  @Produces("application/xml;charset=UTF-8")
   public InputStream oaipmh(
           @QueryParam("verb") String verb,
           @Nullable @QueryParam("identifier") String identifier,
@@ -189,11 +189,14 @@ public class OaipmhEndpoint {
   }
 
   protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
-    return XmlWriter.toString(new XmlWritable() {
-      @Override
-      public void write(XmlWriter writer) throws XmlWriteException {
-        writer.write(handle);
-      }
-    });
+    return new StringBuilder()
+            .append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+            .append(XmlWriter.toString(new XmlWritable() {
+              @Override
+              public void write(XmlWriter writer) throws XmlWriteException {
+                writer.write(handle);
+              }
+            }))
+            .toString();
   }
 }
