@@ -52,7 +52,18 @@ public class OaipmhModule extends AbstractModule {
             .withMaxListSets(1000)
             .withMaxListRecords(100)
             .withGranularity(Granularity.Second)
-            .withDeleteMethod(DeletedRecord.PERSISTENT);
+            .withDeleteMethod(DeletedRecord.PERSISTENT)
+            .withDescription(
+                    "<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n" +
+                    "\t<dc:title>GBIF Registry</dc:title>\n" +
+                    "\t<dc:creator>Global Biodiversity Information Facility Secretariat</dc:creator>\n" +
+                    "\t<dc:description>\n" +
+                    "\t\tThe GBIF Registry — the entities that make up the GBIF network.\n" +
+                    "\t\tThis OAI-PMH service exposes Datasets, organized into sets of country, installation and resource type.\n" +
+                    "\t\tFor more information, see http://www.gbif.org/developer/registry\n" +
+                    "\t</dc:description>\n" +
+                    "</oai_dc:dc>\n"
+            );
   }
 
   /**
