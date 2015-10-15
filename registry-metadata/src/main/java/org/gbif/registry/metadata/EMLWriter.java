@@ -6,6 +6,7 @@ import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriodType;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -38,43 +39,27 @@ public class EMLWriter {
   public static class EmlDatasetWrapper {
 
     private final Dataset dataset;
+    private final ContactAdapter contactAdapter;
 
     public EmlDatasetWrapper(Dataset dataset) {
       this.dataset = dataset;
+      this.contactAdapter = new ContactAdapter(dataset.getContacts());
     }
 
     public List<Contact> getAssociatedParties() {
-      List<Contact> contacts = Lists.newArrayList();
-      for (Contact c : dataset.getContacts()) {
-        if (!c.isPrimary()) {
-          contacts.add(c);
-        }
-      }
-      return contacts;
+      return contactAdapter.getAssociatedParties();
     }
 
     public Contact getResourceCreator() {
-      return getFirstPreferredType(ContactType.ORIGINATOR);
+      return contactAdapter.getResourceCreator();
     }
 
     public Contact getAdministrativeContact() {
-      return getFirstPreferredType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
+      return contactAdapter.getAdministrativeContact();
     }
 
     public Contact getMetadataProvider() {
-      return getFirstPreferredType(ContactType.METADATA_AUTHOR);
-    }
-
-    private Contact getFirstPreferredType(ContactType type) {
-      Contact pref = null;
-      for (Contact c : dataset.getContacts()) {
-        if (type == c.getType()) {
-          if (pref == null || c.isPrimary()) {
-            pref = c;
-          }
-        }
-      }
-      return pref;
+      return contactAdapter.getFirstPreferredType(ContactType.METADATA_AUTHOR);
     }
 
     public List getFormationPeriods() {

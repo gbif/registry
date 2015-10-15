@@ -6,8 +6,12 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
+import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Language;
 
 import org.junit.Test;
 import java.io.StringWriter;
@@ -34,11 +38,12 @@ public class DublinCoreWriterTest {
     d.setKey(UUID.randomUUID());
     d.setDoi(new DOI("10.1234/5679"));
     d.setTitle("This is a keyboard dataset");
+    d.setDataLanguage(Language.FRENCH);
 
     Calendar calendar = Calendar.getInstance();
     calendar.set(2015, 8, 14);
     d.setPubDate(calendar.getTime());
-    d.setDescription("This is the description of the keyboard dataset");
+    d.setDescription("Description d'un dataset sur les claviers qwerty");
 
     d.setHomepage(URI.create("http:///www.gbif.org"));
 
@@ -55,8 +60,18 @@ public class DublinCoreWriterTest {
     citationList.add(citation);
     d.setBibliographicCitations(citationList);
 
+    Contact contact = new Contact();
+    contact.setFirstName("Carey");
+    contact.setLastName("Price");
+    contact.setType(ContactType.ORIGINATOR);
+    contact.setPrimary(true);
+    d.setContacts(Lists.newArrayList(contact));
+
+    Organization organization = new Organization();
+    organization.setTitle("Qwerty U");
+
     StringWriter writer = new StringWriter();
-    DublinCoreWriter.write(d, writer);
+    DublinCoreWriter.write(organization, d, writer);
 
     //Load test file
     String expectedContent = FileUtils.readFileToString(org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));

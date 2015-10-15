@@ -2,6 +2,7 @@
 <#escape x as x?xml>
 <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
     <dc:title>${dataset.title!}</dc:title>
+    <dc:publisher>${(organization.title)!}</dc:publisher>
 
     <#if dataset.keywordCollections?has_content>
     <#list dataset.keywordCollections![] as kwc>
@@ -11,12 +12,16 @@
 
     <dc:source>${dataset.homepage!}</dc:source>
     <dc:description>${dataset.description!}</dc:description>
+    <dc:type>Dataset</dc:type>
 
+    <#if contactAdapter.resourceCreator?has_content>
+    <dc:creator>${contactAdapter.resourceCreatorName}</dc:creator>
+    </#if>
     <#-- The date on which the resource was published. -->
     <#if dataset.pubDate?has_content>
     <dc:date>${isodate(dataset.pubDate)}</dc:date>
     </#if>
-    <dc:language>${dataset.dataLanguage!"en"}</dc:language>
+    <dc:language>${(dataset.dataLanguage.iso2LetterCode)!"en"}</dc:language>
     <#if dataset.rights?has_content>
     <dc:rights>${dataset.rights}</dc:rights>
     </#if>
@@ -29,5 +34,6 @@
     <dc:identifier>${altid.identifier}</dc:identifier>
     </#if>
     </#list>
+    <dc:source>Global Biodiversity Information Facility (GBIF)</dc:source>
 </oai_dc:dc>
 </#escape>

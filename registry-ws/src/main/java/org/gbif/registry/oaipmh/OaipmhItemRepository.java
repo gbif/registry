@@ -94,7 +94,7 @@ public class OaipmhItemRepository implements ItemRepository {
 
     if (dataset != null) {
       try {
-        return toOaipmhItem(dataset, getSets(dataset));
+        return toOaipmhItem(dataset);
       } catch (Exception e) {
         throw new ServiceUnavailableException("Failed to serialize dataset " + s + " to DC/EML", e);
       }
@@ -162,7 +162,7 @@ public class OaipmhItemRepository implements ItemRepository {
     }
 
     for (Dataset dataset : datasetList) {
-      results.add(new OaipmhItem(dataset, getSets(dataset)));
+      results.add(toOaipmhItemIdentifier(dataset));
     }
 
     return new ListItemIdentifiersResult(hasMoreResults, results);
@@ -299,7 +299,7 @@ public class OaipmhItemRepository implements ItemRepository {
 
     try {
       for (Dataset dataset : pagingResponse.getResults() ) {
-        results.add(toOaipmhItem(dataset, getSets(dataset)));
+        results.add(toOaipmhItem(dataset));
       }
     } catch (IOException e) {
       //TODO handle that, caused by https://github.com/DSpace/xoai/issues/31
@@ -313,11 +313,19 @@ public class OaipmhItemRepository implements ItemRepository {
    * Build a {@OaipmhItem} instance from a {@link Dataset} and the {@link Set} it belongs to.
    *
    * @param dataset
-   * @param sets
    * @return
    * @throws IOException
    */
-  private OaipmhItem toOaipmhItem(Dataset dataset, List<Set> sets) throws IOException {
+  private OaipmhItem toOaipmhItem(Dataset dataset) throws IOException {
+
+    Organization organization = null;
+    try {
+      organization = ORGANIZATION_CACHE.get(dataset.getPublishingOrganizationKey());
+    } catch (ExecutionException e) {
+      LOG.error("Error while loading Organization from cache fro dataset {}", dataset, e);
+    }
+    List<Set> sets = getSets(organization, dataset);
+
     /**
      * The XOAI library doesn't provide us with the metadata type (EML / OAI DC), so both must be produced.
      * An XSLT transform pulls out the one that's required.
@@ -328,7 +336,7 @@ public class OaipmhItemRepository implements ItemRepository {
     xml.write("<root>");
 
     xml.write("<oaidc>\n");
-    DublinCoreWriter.write(dataset, xml);
+    DublinCoreWriter.write(organization, dataset, xml);
     xml.write("</oaidc>\n");
 
     xml.write("<eml>\n");
@@ -339,19 +347,30 @@ public class OaipmhItemRepository implements ItemRepository {
     return new OaipmhItem(dataset, xml.toString(), sets);
   }
 
+  private OaipmhItem toOaipmhItemIdentifier(Dataset dataset) {
+    Organization organization = null;
+    try {
+      organization = ORGANIZATION_CACHE.get(dataset.getPublishingOrganizationKey());
+    } catch (ExecutionException e) {
+      LOG.error("Error while loading Organization from cache fro dataset {}", dataset, e);
+    }
+    return new OaipmhItem(dataset, getSets(organization, dataset));
+  }
+
   /**
    * Get the list of {@link org.dspace.xoai.dataprovider.model.Set} for a {@link Dataset}.
    *
+   * @param organization {@link Organization}, can be null
    * @param dataset non-null {@link Dataset}
    * @return list of all {@link org.dspace.xoai.dataprovider.model.Set} that the {@link Dataset} belongs to. Never null.
    */
-  private List<Set> getSets(@NotNull Dataset dataset) {
+  private List<Set> getSets(Organization organization, @NotNull Dataset dataset) {
     Country publishingCountry = null;
-    try {
-      publishingCountry = ORGANIZATION_CACHE.get(dataset.getPublishingOrganizationKey()).getCountry();
-    } catch (ExecutionException e) {
-      LOG.error("Error while loading Organization from cache for dataset {}", dataset.getKey(), e);
+
+    if(organization != null) {
+      publishingCountry = organization.getCountry();
     }
+
     List<Set> sets = Lists.newArrayList();
     sets.add(new Set(OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix() + dataset.getInstallationKey().toString()));
     sets.add(new Set(OaipmhSetRepository.SetType.DATASET_TYPE.getSubsetPrefix() + dataset.getType().toString()));
