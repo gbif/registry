@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.sun.jersey.api.NotFoundException;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class DatasetIndexUpdateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexUpdateListener.class);
-  private final SolrServer solrServer;
+  private final SolrClient solrClient;
   private final DatasetDocConverter docConverter;
 
   // Used to build a new index before consuming if required
@@ -67,15 +67,15 @@ public class DatasetIndexUpdateListener {
   @Inject
   public DatasetIndexUpdateListener(DatasetIndexBuilder indexBuilder,
     @Named("performIndexSync") boolean performIndexSync,
-    @Named("Dataset") SolrServer solrServer,
+    @Named("Dataset") SolrClient solrClient,
     OrganizationService organizationService,
     InstallationService installationService,
     DatasetService datasetService,
     EventBus eventBus) {
     this.indexBuilder = indexBuilder;
     this.performIndexSync = performIndexSync;
-    this.solrServer = solrServer;
-    this.docConverter = new DatasetDocConverter(organizationService, installationService, datasetService);
+    this.solrClient = solrClient;
+    docConverter = new DatasetDocConverter(organizationService, installationService, datasetService);
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
@@ -255,8 +255,8 @@ public class DatasetIndexUpdateListener {
       if (dataset != null) {
         SolrInputDocument doc = docConverter.build(dataset);
         try {
-          solrServer.add(doc);
-          solrServer.commit();
+          solrClient.add(doc);
+          solrClient.commit();
         } catch (Exception e) {
           LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
         }
@@ -270,8 +270,8 @@ public class DatasetIndexUpdateListener {
         docs.add(docConverter.build(d));
       }
       try {
-        solrServer.add(docs);
-        solrServer.commit();
+        solrClient.add(docs);
+        solrClient.commit();
       } catch (Exception e) {
         LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
       }
@@ -279,8 +279,8 @@ public class DatasetIndexUpdateListener {
 
     private void deleteDataset(Dataset dataset) {
       try {
-        solrServer.deleteById(String.valueOf(dataset.getKey()));
-        solrServer.commit();
+        solrClient.deleteById(String.valueOf(dataset.getKey()));
+        solrClient.commit();
       } catch (Exception e) {
         LOG.error("CRITICAL: Unable to delete from SOLR - index is now out of sync", e);
       }

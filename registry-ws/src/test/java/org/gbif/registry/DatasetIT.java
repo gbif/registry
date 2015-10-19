@@ -57,7 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -109,7 +109,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
         webservice.getInstance(OrganizationResource.class),
         webservice.getInstance(NodeResource.class),
         webservice.getInstance(InstallationResource.class),
-        webservice.getInstance(Key.get(SolrServer.class, Names.named("Dataset"))),
+        webservice.getInstance(Key.get(SolrClient.class, Names.named("Dataset"))),
         webservice.getInstance(DatasetIndexUpdateListener.class),
         null // SimplePrincipalProvider only set in web service client
       }
@@ -133,7 +133,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     OrganizationService organizationService,
     NodeService nodeService,
     InstallationService installationService,
-    @Nullable SolrServer solrServer,
+    @Nullable SolrClient solrClient,
     @Nullable DatasetIndexUpdateListener datasetIndexUpdater,
     @Nullable SimplePrincipalProvider pp) {
     super(service, pp);
@@ -143,11 +143,11 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     this.nodeService = nodeService;
     this.installationService = installationService;
     // if no SOLR are given for the test, use the SOLR in Grizzly
-    solrServer = solrServer == null ? RegistryServer.INSTANCE.getSolrServer() : solrServer;
+    solrClient = solrClient == null ? RegistryServer.INSTANCE.getSolrClient() : solrClient;
     this.datasetIndexUpdater =
       datasetIndexUpdater == null ? RegistryServer.INSTANCE.getDatasetUpdater() : datasetIndexUpdater;
 
-    this.solrRule = new SolrInitializer(solrServer, this.datasetIndexUpdater);
+    solrRule = new SolrInitializer(solrClient, this.datasetIndexUpdater);
   }
 
   @Test

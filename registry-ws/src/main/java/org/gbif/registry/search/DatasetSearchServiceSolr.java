@@ -13,8 +13,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 
 /**
  * Dataset search implementation using the provided SOLR instance.
@@ -30,8 +30,8 @@ public class DatasetSearchServiceSolr
     "dataset_title", SolrQuery.ORDER.asc);
 
   @Inject
-  public DatasetSearchServiceSolr(@Named("Dataset") SolrServer server) {
-    super(server, DatasetSearchResult.class, SolrAnnotatedDataset.class, DatasetSearchParameter.class,
+  public DatasetSearchServiceSolr(@Named("Dataset") SolrClient solrClient) {
+    super(solrClient, DatasetSearchResult.class, SolrAnnotatedDataset.class, DatasetSearchParameter.class,
       PRIMARY_SORT_ORDER, SolrAnnotatedSuggestDataset.class);
   }
 

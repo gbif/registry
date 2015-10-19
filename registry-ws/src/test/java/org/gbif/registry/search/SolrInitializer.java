@@ -13,7 +13,7 @@
 package org.gbif.registry.search;
 
 import com.google.common.base.Preconditions;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Rule that will delete everything from SOLR ready for a new test. It is expected to do this before each test by
  * using the following:
- * 
+ *
  * <pre>
  * @Rule
  * public SolrInitializer = new SolrInitializer(getSolrServer()); // developer required to provide solrServer
@@ -30,21 +30,21 @@ import org.slf4j.LoggerFactory;
 public class SolrInitializer extends ExternalResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(SolrInitializer.class);
-  private final SolrServer solrServer;
+  private final SolrClient solrClient;
   private final DatasetIndexUpdateListener datasetIndexUpdater;
 
-  public SolrInitializer(SolrServer solrServer, DatasetIndexUpdateListener datasetIndexUpdater) {
+  public SolrInitializer(SolrClient solrClient, DatasetIndexUpdateListener datasetIndexUpdater) {
     this.datasetIndexUpdater = datasetIndexUpdater;
-    this.solrServer = solrServer;
+    this.solrClient = solrClient;
   }
 
   @Override
   protected void before() throws Throwable {
-    Preconditions.checkNotNull(this.solrServer, "SolrServer is required");
+    Preconditions.checkNotNull(solrClient, "SolrServer is required");
     DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater);
     LOG.info("Truncating SOLR");
-    solrServer.deleteByQuery("*:*");
-    solrServer.commit();
+    solrClient.deleteByQuery("*:*");
+    solrClient.commit();
     LOG.info("SOLR truncated");
   }
 }

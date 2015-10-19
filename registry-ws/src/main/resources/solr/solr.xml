@@ -1,5 +1,3 @@
-<solr persistent="false">
-  <cores defaultCoreName="dataset">
-    <core name="dataset" instanceDir="dataset"/>
-  </cores>
+<solr>
+  <str name="coreRootDirectory">${coreRootDirectory:.}</str>
 </solr>

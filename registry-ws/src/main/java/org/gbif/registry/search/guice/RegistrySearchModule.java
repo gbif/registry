@@ -33,7 +33,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.apache.commons.io.FileUtils;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.core.CoreContainer;
 
@@ -140,7 +140,7 @@ public class RegistrySearchModule extends PrivateServiceModule {
   @Exposed
   @Named("Dataset")
   @Singleton
-  public SolrServer datasetSolr(@Named("solr.home") String solrHome) throws URISyntaxException, IOException {
+  public SolrClient datasetSolr(@Named("solr.home") String solrHome) throws URISyntaxException, IOException {
     Path tmpSolrHome = createTempSolrDirectory(solrHome);
     File conf = new File(tmpSolrHome.toFile().getAbsolutePath(), "solr.xml");
     return new EmbeddedSolrServer(CoreContainer.createAndLoad(tmpSolrHome.toFile().getAbsolutePath(), conf), "dataset");
@@ -150,17 +150,19 @@ public class RegistrySearchModule extends PrivateServiceModule {
    * Creates a temporary Solr directory containing all the Solr configuration files.
    */
   private Path createTempSolrDirectory(String solrHome) throws IOException {
-    Path solrHomePath = Paths.get(solrHome);
+    final Path solrHomePath = Paths.get(solrHome);
+    final Path datasetCoreHomePath = Paths.get(solrHome,"dataset");
     File solrHomeFile = solrHomePath.toFile();
     if (solrHomeFile.exists()){
       FileUtils.cleanDirectory(solrHomeFile);
     } else {
       solrHomeFile.mkdirs();
     }
-    File confDir = new File(solrHomeFile,"dataset/conf");
+    File confDir = new File(datasetCoreHomePath.toFile(),"conf");
     confDir.mkdirs();
-    Path confPath = Paths.get(confDir.toURI());
+    final Path confPath = Paths.get(confDir.toURI());
     exportResource("/solr/solr.xml",solrHomePath);
+    exportResource("/solr/dataset/core.properties", datasetCoreHomePath);
     exportResource("/solr/dataset/conf/mapping-FoldToASCII.txt", confPath);
     exportResource("/solr/dataset/conf/mapping-ISOLatin1Accent.txt", confPath);
     exportResource("/solr/dataset/conf/schema.xml", confPath);

@@ -35,7 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
@@ -51,17 +51,17 @@ public class DatasetIndexBuilder {
   // controls how many results we request while paging over the WS
   private static final int WS_PAGE_SIZE = 100;
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexBuilder.class);
-  private final SolrServer solrServer;
+  private final SolrClient solrClient;
   private final DatasetService datasetService;
   private final DatasetDocConverter docConverter;
 
   @Inject
-  public DatasetIndexBuilder(@Named("Dataset") SolrServer solrServer, DatasetService datasetService,
+  public DatasetIndexBuilder(@Named("Dataset") SolrClient solrClient, DatasetService datasetService,
     InstallationService installationService, OrganizationService organizationService) {
-    this.solrServer = solrServer;
+    this.solrClient = solrClient;
     this.datasetService = datasetService;
     // We can use a cache at startup
-    this.docConverter =
+    docConverter =
       new DatasetDocConverter(new CachingNetworkEntityService<Organization>(organizationService),
         new CachingNetworkEntityService<Installation>(installationService), datasetService);
   }
@@ -70,8 +70,8 @@ public class DatasetIndexBuilder {
     LOG.info("Building a new Dataset index");
     Stopwatch stopwatch = Stopwatch.createStarted();
     pageAndIndex();
-    solrServer.commit();
-    solrServer.optimize();
+    solrClient.commit();
+    solrClient.optimize();
     LOG.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
@@ -90,8 +90,8 @@ public class DatasetIndexBuilder {
         batch.add(docConverter.build(ds));
       }
       if (!batch.isEmpty()) {
-        solrServer.add(batch);
-        solrServer.commit(); // to allow eager users (or impatient developers) to see search data on startup quickly
+        solrClient.add(batch);
+        solrClient.commit(); // to allow eager users (or impatient developers) to see search data on startup quickly
       }
       page.nextPage();
 

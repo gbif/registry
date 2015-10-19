@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<schema name="registry" version="1.2">
+<schema name="registry" version="1.5">
   <!-- attribute "name" is the name of this schema and is only used for display
     purposes. Applications should change this to reflect the nature of the search
     collection. version="1.2" is Solr's version number for the schema syntax
@@ -114,18 +114,18 @@
     <field name="dataset_title" type="text" indexed="true" stored="true" required="false" />
     <field name="dataset_title_nedge" type="text_auto_edge" indexed="true" stored="true" required="false" />
     <field name="dataset_title_ngram" type="text_auto_ngram" indexed="true" stored="true" required="false" />
-    <field name="dataset_type" type="int" indexed="true" stored="true" required="false" />
-    <field name="dataset_subtype" type="int" indexed="true" stored="true" required="false" />
-    <field name="publishing_organization_key" type="lowercase" indexed="true" stored="true" required="false" />
+    <field name="dataset_type" type="int" indexed="true" stored="true" required="false" docValues="true"/>
+    <field name="dataset_subtype" type="int" indexed="true" stored="true" required="false" docValues="true"/>
+    <field name="publishing_organization_key" type="lowercase" indexed="true" stored="true" required="false"/>
     <field name="publishing_organization_title" type="text" indexed="true" stored="true" required="false" />
-    <field name="hosting_organization_key" type="lowercase" indexed="true" stored="true" required="false" />
+    <field name="hosting_organization_key" type="lowercase" indexed="true" stored="true" required="false"/>
     <field name="hosting_organization_title" type="text" indexed="true" stored="true" required="false" />
     <field name="description" type="text" indexed="true" stored="true" required="false" />
-    <field name="decade" type="int" indexed="true" stored="true" required="false" multiValued="true" />
-    <field name="keyword" type="lowercase" indexed="true" stored="true" required="false" multiValued="true" />
+    <field name="decade" type="int" indexed="true" stored="true" required="false" multiValued="true" docValues="true"/>
+    <field name="keyword" type="lowercase" indexed="true" stored="true" required="false" multiValued="true"/>
     <field name="metadata" type="text" indexed="true" stored="false" required="false" multiValued="false" />
-    <field name="publishing_country" type="int" indexed="true" stored="true" required="false" multiValued="false" />
-    <field name="country" type="int" indexed="true" stored="true" required="false" multiValued="true" />
+    <field name="publishing_country" type="int" indexed="true" stored="true" required="false" multiValued="false" docValues="true"/>
+    <field name="country" type="int" indexed="true" stored="true" required="false" multiValued="true" docValues="true"/>
   </fields>
 
   <!-- Field to use to determine and enforce document uniqueness. Unless this

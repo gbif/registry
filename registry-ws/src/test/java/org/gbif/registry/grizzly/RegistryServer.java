@@ -22,7 +22,7 @@ import com.google.common.base.Throwables;
 import com.google.inject.servlet.GuiceFilter;
 import com.sun.grizzly.http.embed.GrizzlyWebServer;
 import com.sun.grizzly.http.servlet.ServletAdapter;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -50,7 +50,7 @@ public class RegistryServer implements TestRule {
 
   public static final RegistryServer INSTANCE = new RegistryServer();
 
-  private SolrServer solrServer;
+  private SolrClient solrClient;
   private DatasetIndexUpdateListener datasetUpdater;
 
   /**
@@ -92,8 +92,8 @@ public class RegistryServer implements TestRule {
     LOG.info("Stopping test registry WS");
   }
 
-  public synchronized void setSolrServer(SolrServer solrServer) {
-    this.solrServer = solrServer;
+  public synchronized void setSolrClient(SolrClient solrClient) {
+    this.solrClient = solrClient;
   }
 
   public synchronized void setDatasetUpdater(DatasetIndexUpdateListener datasetUpdater) {
@@ -120,9 +120,9 @@ public class RegistryServer implements TestRule {
     };
   }
 
-  public SolrServer getSolrServer() {
-    Preconditions.checkNotNull(solrServer, "Misuse of class. SolrServer has not been set");
-    return solrServer;
+  public SolrClient getSolrClient() {
+    Preconditions.checkNotNull(solrClient, "Misuse of class. SolrClient has not been set");
+    return solrClient;
   }
 
   public DatasetIndexUpdateListener getDatasetUpdater() {
