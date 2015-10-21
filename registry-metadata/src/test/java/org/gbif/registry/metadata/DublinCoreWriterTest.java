@@ -35,8 +35,8 @@ public class DublinCoreWriterTest {
   @Test
   public void testWrite() throws Exception {
     Dataset d = new Dataset();
-    d.setKey(UUID.randomUUID());
-    d.setDoi(new DOI("10.1234/5679"));
+    d.setKey(UUID.fromString("bdd601cc-00a7-431c-9724-d5b03170fcb2"));
+    //d.setDoi(new DOI("10.1234/5679"));
     d.setTitle("This is a keyboard dataset");
     d.setDataLanguage(Language.FRENCH);
 
@@ -60,12 +60,21 @@ public class DublinCoreWriterTest {
     citationList.add(citation);
     d.setBibliographicCitations(citationList);
 
-    Contact contact = new Contact();
-    contact.setFirstName("Carey");
-    contact.setLastName("Price");
-    contact.setType(ContactType.ORIGINATOR);
-    contact.setPrimary(true);
-    d.setContacts(Lists.newArrayList(contact));
+    Contact originatorContact = new Contact();
+    originatorContact.setFirstName("Carey");
+    originatorContact.setLastName("Price");
+    originatorContact.setType(ContactType.ORIGINATOR);
+    originatorContact.setPrimary(true);
+
+    //add the same name twice sith a different ContactType to make sure it will appear only once at the end
+    Contact metadataAuthorContact = new Contact();
+    metadataAuthorContact.setFirstName("Carey");
+    metadataAuthorContact.setLastName("Price");
+    metadataAuthorContact.setType(ContactType.METADATA_AUTHOR);
+    metadataAuthorContact.setPrimary(true);
+
+    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact));
+
 
     Organization organization = new Organization();
     organization.setTitle("Qwerty U");
