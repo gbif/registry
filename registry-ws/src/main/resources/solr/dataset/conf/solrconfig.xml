@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
-  <luceneMatchVersion>LUCENE_43</luceneMatchVersion>
+  <luceneMatchVersion>5.3.1</luceneMatchVersion>
 
   <dataDir>${solr.data.dir:}</dataDir>
 
   <!--  In memory index -->
-  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>                      
+  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
 
   <indexConfig>
     <ramBufferSizeMB>1024</ramBufferSizeMB>
     <!--  No need to take file locks, we are single instance in memory -->
     <lockType>single</lockType>
-    <unlockOnStartup>true</unlockOnStartup>  
+    <unlockOnStartup>true</unlockOnStartup>
   </indexConfig>
 
   <jmx />
 
   <!-- The default high-performance update handler -->
-  <updateHandler class="solr.DirectUpdateHandler2"/>      
-  
+  <updateHandler class="solr.DirectUpdateHandler2"/>
+
   <query>
     <maxBooleanClauses>1024</maxBooleanClauses>
-    
+
     <filterCache class="solr.FastLRUCache"
                  size="1024"
                  initialSize="512"
@@ -31,23 +31,23 @@
                      size="1024"
                      initialSize="512"
                      autowarmCount="0"/>
-   
+
     <documentCache class="solr.LRUCache"
                    size="1024"
                    initialSize="512"
                    autowarmCount="0"/>
- 
+
     <enableLazyFieldLoading>true</enableLazyFieldLoading>
     <queryResultWindowSize>60</queryResultWindowSize>
 
-   
-   <queryResultMaxDocsCached>12000</queryResultMaxDocsCached>   
+
+   <queryResultMaxDocsCached>12000</queryResultMaxDocsCached>
     <listener event="newSearcher" class="solr.QuerySenderListener">
-      <arr name="queries">       
+      <arr name="queries">
         <lst><str name="q">*:*</str></lst>
       </arr>
     </listener>
-    
+
     <listener event="firstSearcher" class="solr.QuerySenderListener">
       <arr name="queries">
         <lst>
@@ -55,9 +55,9 @@
         </lst>
       </arr>
     </listener>
-    
+
     <useColdSearcher>false</useColdSearcher>
-    
+
     <maxWarmingSearchers>2</maxWarmingSearchers>
 
   </query>
@@ -70,7 +70,7 @@
 
   <requestHandler name="/update" class="solr.UpdateRequestHandler">
   </requestHandler>
- 
+
   <requestHandler name="/select" class="solr.SearchHandler">
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
@@ -80,8 +80,8 @@
        <int name="rows">10</int>
        <str name="df">key</str>
      </lst>
-  </requestHandler>  
-  
+  </requestHandler>
+
   <!-- ping/healthcheck -->
   <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
     <lst name="invariants">
@@ -172,7 +172,7 @@
       </fragmentsBuilder>
     </highlighting>
   </searchComponent>
-  
+
   <queryResponseWriter name="json" class="solr.JSONResponseWriter">
     <bool name="useJsonContentType">true</bool>
   </queryResponseWriter>
