@@ -5,7 +5,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 
-import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Singleton;

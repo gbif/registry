@@ -4,6 +4,9 @@
     <dc:title>${dataset.title!}</dc:title>
     <dc:publisher>${(organization.title)!}</dc:publisher>
 
+    <#-- Always use only one identifier -->
+    <dc:identifier>${dc.identifier}</dc:identifier>
+
     <#if dataset.keywordCollections?has_content>
     <#list dataset.keywordCollections![] as kwc>
     <dc:subject>${kwc.keywords?join(", ")}</dc:subject>
@@ -14,9 +17,10 @@
     <dc:description>${dataset.description!}</dc:description>
     <dc:type>Dataset</dc:type>
 
-    <#if contactAdapter.resourceCreator?has_content>
-    <dc:creator>${contactAdapter.resourceCreatorName}</dc:creator>
-    </#if>
+    <#list dc.creators![] as creator>
+    <dc:creator>${creator}</dc:creator>
+    </#list>
+
     <#-- The date on which the resource was published. -->
     <#if dataset.pubDate?has_content>
     <dc:date>${isodate(dataset.pubDate)}</dc:date>
@@ -25,15 +29,6 @@
     <#if dataset.rights?has_content>
     <dc:rights>${dataset.rights}</dc:rights>
     </#if>
-
-    <#if dataset.doi?exists>
-    <dc:identifier>${dataset.doi}</dc:identifier>
-    </#if>
-    <#list dataset.identifiers![] as altid>
-    <#if altid.identifier?has_content>
-    <dc:identifier>${altid.identifier}</dc:identifier>
-    </#if>
-    </#list>
-    <dc:source>Global Biodiversity Information Facility (GBIF)</dc:source>
+    <dc:source>Global Biodiversity Information Facility (GBIF) http://www.gbif.org</dc:source>
 </oai_dc:dc>
 </#escape>

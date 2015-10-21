@@ -18,7 +18,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ContactAdapter {
 
-  private final Joiner JOINER = Joiner.on(" ").skipNulls();
+  private static final Joiner JOINER = Joiner.on(" ").skipNulls();
 
   private List<Contact> contactList;
 
@@ -52,13 +52,14 @@ public class ContactAdapter {
     return getFirstPreferredType(ContactType.ORIGINATOR);
   }
 
+
   /**
-   * Get ResourceCreator name as "FirstName LastName".
+   * Format the name of the contact as "FirstName LastName".
    *
-   * @return ResourceCreator name or "" if no ResourceCreator were found
+   * @param contact
+   * @return formatted name or "" if the contact is null or empty
    */
-  public String getResourceCreatorName() {
-    Contact contact = getResourceCreator();
+  public static String formatContactName(Contact contact){
     if(contact == null){
       return "";
     }
@@ -73,6 +74,25 @@ public class ContactAdapter {
    */
   public Contact getAdministrativeContact() {
     return getFirstPreferredType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
+  }
+
+  /**
+   * Filter contacts based on the provided contact types.
+   * Filtering is done by the {@link #getFirstPreferredType} method.
+   *
+   * @param types
+   * @return filtered contacts or an empty list if none matched
+   */
+  public List<Contact> getFilteredContacts(ContactType ... types){
+    List<Contact> contacts = Lists.newArrayList();
+    Contact contact;
+    for(ContactType type : types){
+      contact = getFirstPreferredType(type);
+      if(contact != null){
+        contacts.add(contact);
+      }
+    }
+    return contacts;
   }
 
   /**

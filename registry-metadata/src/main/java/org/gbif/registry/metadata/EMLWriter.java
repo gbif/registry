@@ -35,6 +35,7 @@ public class EMLWriter {
   /**
    * Wrapper for a dataset instance that exposes some very EML specific methods.
    * Mostly used for generating EML, see EMLWriter.
+   * This class requires to be public to be used in the Freemarker template.
    */
   public static class EmlDatasetWrapper {
 
