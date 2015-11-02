@@ -6,23 +6,34 @@ import java.net.URI;
 import java.util.Properties;
 
 import com.google.inject.PrivateModule;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A guice module that sets up implementation of the varnish purging via the event bus.
- * If no or a bad apiRoot URL property is configured the listener will not be wired up.
+ * A Guice module that sets up implementation of the varnish purging via the event bus.
+ * If no or a bad api.cache.purge.url property is configured the listener will not be wired up.
  */
 public class VarnishPurgeModule extends PrivateModule {
+
+  public static final String API_CACHE_PURGE_URL_PROPERTY = "api.cache.purge.url";
+
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeModule.class);
   private static final int DEFAULT_HTTP_TIMEOUT_MSECS = 2000;
   private final int httpThreads;
   private final URI apiRoot;
 
   public VarnishPurgeModule(Properties properties) {
+    String apiCachePurgeUrl = properties.getProperty(API_CACHE_PURGE_URL_PROPERTY);
+
     try {
-      apiRoot = URI.create(properties.getProperty("api.url"));
+      if(StringUtils.isNotBlank(apiCachePurgeUrl)) {
+        apiRoot = URI.create(apiCachePurgeUrl);
+      }
+      else{
+        apiRoot = null;
+      }
       httpThreads = Integer.valueOf(properties.getProperty("purging.threads", "100").trim());
     } catch (RuntimeException e) {
       LOG.error("Failed to initialize varnish purger because of invalid properties", e.getMessage());
@@ -32,6 +43,10 @@ public class VarnishPurgeModule extends PrivateModule {
 
   @Override
   protected void configure() {
+    if(apiRoot == null){
+      LOG.warn("No varnish purging configured: {} not found or empty", API_CACHE_PURGE_URL_PROPERTY);
+      return;
+    }
     if (httpThreads > 0) {
       bind(URI.class).toInstance(apiRoot);
       bind(CloseableHttpClient.class).toInstance(HttpUtil.newMultithreadedClient(
