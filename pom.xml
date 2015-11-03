@@ -65,7 +65,7 @@
     <drupal-mybatis.version>0.14</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.22</freemarker.version>
-    <gbif-api.version>0.29</gbif-api.version>
+    <gbif-api.version>0.30-SNAPSHOT</gbif-api.version>
     <gbif-common-mybatis.version>0.17</gbif-common-mybatis.version>
     <gbif-common-search.version>0.24-SNAPSHOT</gbif-common-search.version>
     <gbif-common-service.version>0.14</gbif-common-service.version>
@@ -78,6 +78,7 @@
     <gbif-postal-service.version>0.16</gbif-postal-service.version>
     <gbif-download-query-tools.version>1.6</gbif-download-query-tools.version>
     <gbif-cli.version>0.10</gbif-cli.version>
+    <gbif-metrics.version>0.23</gbif-metrics.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
@@ -200,6 +201,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-search</artifactId>
         <version>${gbif-common-search.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.metrics</groupId>
+        <artifactId>metrics-ws-client</artifactId>
+        <version>${gbif-metrics.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.inject</groupId>
