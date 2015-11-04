@@ -353,10 +353,6 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-doi</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.metrics</groupId>
-      <artifactId>metrics-ws-client</artifactId>
-    </dependency>
 
     <!-- OAI-PMH library -->
     <dependency>

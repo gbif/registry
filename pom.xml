@@ -202,11 +202,6 @@
         <version>${gbif-common-search.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.metrics</groupId>
-        <artifactId>metrics-ws-client</artifactId>
-        <version>${gbif-metrics.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guice.version}</version>
