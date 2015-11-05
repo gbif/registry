@@ -9,3 +9,10 @@
         </#if>
     </#if>
 </#function>
+
+<#-- Usage: <@printIfHasContent dataset.rights!; r><dc:rights>${r}</dc:rights></@printIfHasContent> -->
+<#macro printIfHasContent var>
+<#if var?has_content>
+<#nested var>
+</#if>
+</#macro>

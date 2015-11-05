@@ -3,16 +3,26 @@
     <dc:publisher>Qwerty U</dc:publisher>
 
     <dc:identifier>http://www.gbif.org/dataset/bdd601cc-00a7-431c-9724-d5b03170fcb2</dc:identifier>
-
+    <dc:subject>Le but de ce dataset est de ...</dc:subject>
     <dc:subject>keyboard, qwerty</dc:subject>
 
     <dc:source>http:///www.gbif.org</dc:source>
     <dc:description>Description d&apos;un dataset sur les claviers qwerty</dc:description>
+    <dc:description>3 occurrences</dc:description>
     <dc:type>Dataset</dc:type>
 
     <dc:creator>Carey Price</dc:creator>
 
     <dc:date>2015-09-14</dc:date>
     <dc:language>fr</dc:language>
+
+    <dc:coverage>2015-09-13/2015-09-14</dc:coverage>
+
+    <dc:coverage>Plusieurs pays</dc:coverage>
+
+    <dc:coverage>Defined by bounding box</dc:coverage>
+    <dc:coverage>-10,20 / 10,-20 (min, max Latitude / min, max Longitude)</dc:coverage>
+    <dc:format>application/dwca+zip</dc:format>
+
     <dc:source>Global Biodiversity Information Facility (GBIF) http://www.gbif.org</dc:source>
 </oai_dc:dc>

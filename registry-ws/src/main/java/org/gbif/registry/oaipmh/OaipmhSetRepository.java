@@ -19,7 +19,7 @@ import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 /**
  *
- * Implementation of SetRepository for country, installation, dataset_type sets.
+ * Implementation of a XOAI SetRepository for country, installation, dataset_type sets.
  *
  * @author cgendreau
  */

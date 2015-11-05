@@ -1,5 +1,6 @@
 package org.gbif.registry.oaipmh;
 
+import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -20,8 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.metrics.cube.OccurrenceCube;
+import org.gbif.api.model.metrics.cube.ReadBuilder;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.metrics.CubeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.metadata.DublinCoreWriter;
@@ -29,11 +33,13 @@ import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.resources.DatasetResource;
+import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +47,7 @@ import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
 
 /**
- * Implementation of ItemRepository for {@link Dataset}.
+ * Implementation of a XOAI ItemRepository for {@link Dataset}.
  *
  */
 @Singleton
@@ -59,12 +65,21 @@ public class OaipmhItemRepository implements ItemRepository {
   private final DatasetResource datasetResource;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
+  private final CubeService cubeService;
+
+  private final EMLWriter emlWriter;
+  private final DublinCoreWriter dublinCoreWriter;
 
   @Inject
-  public OaipmhItemRepository(DatasetResource datasetResource, DatasetMapper datasetMapper, OrganizationMapper organizationMapper ) {
+  public OaipmhItemRepository(DatasetResource datasetResource, DatasetMapper datasetMapper, OrganizationMapper organizationMapper, CubeService cubeService ) {
     this.datasetResource = datasetResource;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
+    this.cubeService = cubeService;
+
+    // should eventually be injected
+    emlWriter = EMLWriter.newInstance();
+    dublinCoreWriter = DublinCoreWriter.newInstance();
   }
 
   /**
@@ -325,7 +340,16 @@ public class OaipmhItemRepository implements ItemRepository {
       LOG.error("Error while loading Organization from cache fro dataset {}", dataset, e);
     }
     List<Set> sets = getSets(organization, dataset);
+    Map<String,Object> additionalProperties = Maps.newHashMap();
+    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, ExtraMediaTypes.APPLICATION_DWCA);
 
+    //get the occurrence counts for this dataset, only used in DublinCore
+    ReadBuilder readBuilder = new ReadBuilder();
+    readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
+    long count = cubeService.get(readBuilder);
+    if(count > 0){
+      additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, count);
+    }
     /**
      * The XOAI library doesn't provide us with the metadata type (EML / OAI DC), so both must be produced.
      * An XSLT transform pulls out the one that's required.
@@ -336,11 +360,11 @@ public class OaipmhItemRepository implements ItemRepository {
     xml.write("<root>");
 
     xml.write("<oaidc>\n");
-    DublinCoreWriter.write(organization, dataset, xml);
+    dublinCoreWriter.writeTo(organization, dataset, additionalProperties, xml);
     xml.write("</oaidc>\n");
 
     xml.write("<eml>\n");
-    EMLWriter.write(dataset, xml);
+    emlWriter.write(dataset, xml);
     xml.write("</eml>\n");
 
     xml.write("</root>\n");

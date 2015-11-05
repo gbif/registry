@@ -37,7 +37,6 @@ import org.gbif.api.exception.ServiceUnavailableException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;

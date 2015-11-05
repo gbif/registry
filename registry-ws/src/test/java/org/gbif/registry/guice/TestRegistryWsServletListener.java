@@ -74,7 +74,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new RegistrySearchModule(props),
       new SecurityModule(props),
       new TitleLookupMockModule(),
-      new OaipmhModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
+      new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
     );
   }
 
@@ -88,6 +88,5 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       .setSolrClient(getInjector().getInstance(Key.get(SolrClient.class, Names.named("Dataset"))));
     RegistryServer.INSTANCE.setDatasetUpdater(getInjector().getInstance(DatasetIndexUpdateListener.class));
   }
-
 
 }
