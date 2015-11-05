@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>25.1</version>
+    <version>26-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -72,7 +72,7 @@
     <gbif-common.version>0.19</gbif-common.version>
     <gbif-doi.version>1.1</gbif-doi.version>
     <gbif-httputils.version>0.8</gbif-httputils.version>
-    <gbif-microservice.version>0.4-SNAPSHOT</gbif-microservice.version>
+    <gbif-microservice.version>0.4</gbif-microservice.version>
     <gbif-parsers.version>0.17</gbif-parsers.version>
     <gbif-postal-service.version>0.17</gbif-postal-service.version>
     <gbif-download-query-tools.version>1.6</gbif-download-query-tools.version>
@@ -200,6 +200,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-search</artifactId>
         <version>${gbif-common-search.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.metrics</groupId>
+        <artifactId>metrics-ws-client</artifactId>
+        <version>${gbif-metrics.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.inject</groupId>
@@ -456,7 +461,7 @@
                <groupId>org.apache.httpcomponents</groupId>
                <artifactId>httpmime</artifactId>
              </exclusion>
-             <!-- solr 4.10 comes with various jetty 8.1 deps which clash with our microservices jetty 9.x -->
+             <!-- solr 5.3.1 comes with various jetty 8.1 deps which clash with our microservices jetty 9.x -->
              <exclusion>
                <groupId>org.eclipse.jetty</groupId>
                <artifactId>jetty-http</artifactId>
