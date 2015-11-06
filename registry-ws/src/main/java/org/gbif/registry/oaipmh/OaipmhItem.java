@@ -2,14 +2,10 @@ package org.gbif.registry.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
-import com.lyncode.builder.ListBuilder;
 import org.dspace.xoai.dataprovider.model.Item;
 import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.model.oaipmh.About;

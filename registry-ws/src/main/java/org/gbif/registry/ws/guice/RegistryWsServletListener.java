@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.drupal.guice.DrupalMyBatisModule;
+import org.gbif.metrics.ws.client.guice.MetricsWsClientModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
@@ -56,10 +57,22 @@ public class RegistryWsServletListener extends GbifServletListener {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
-
   }
 
   private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
+
+  /**
+   * Get a subset of properties related to metrics.
+   *
+   * @param properties
+   * @return
+   */
+  private Properties getMetricsProperties(Properties properties){
+    Properties metricsProperties = new Properties();
+    metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
+    metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, "100");
+    return metricsProperties;
+  }
 
   public RegistryWsServletListener() throws IOException {
     super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)), PACKAGES, true, responseFilters, requestFilters);
@@ -83,6 +96,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
+                              new MetricsWsClientModule(getMetricsProperties(properties)),
                               new OaipmhModule(properties));
   }
 
