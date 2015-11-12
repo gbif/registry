@@ -49,6 +49,8 @@ public class RegistryWsServletListener extends GbifServletListener {
   public static final String APP_CONF_FILE = "registry.properties";
 
   private static final String API_URL_PROPERTY = "api.url";
+  // fail fast by designed, see CubeService usage
+  private static final String METRICS_WS_HTTP_TIMEOUT = "100";
 
   public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
   public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
@@ -63,6 +65,9 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   /**
    * Get a subset of properties related to metrics.
+   * Uses the api.url to fill metrics.ws.url and set a small timeout (100 ms) for http
+   * This methods only exists because {@link org.gbif.ws.client.guice.GbifWsClientModule} uses Names.bindProperties(binder(), properties);
+   * which would lead to multiple bindings for the same property.
    *
    * @param properties
    * @return
@@ -70,7 +75,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   private Properties getMetricsProperties(Properties properties){
     Properties metricsProperties = new Properties();
     metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
-    metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, "100");
+    metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
     return metricsProperties;
   }
 

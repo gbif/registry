@@ -303,7 +303,6 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   public void testContacts() {
     T entity = create(newEntity(), 1);
     ContactTests.testAddDeleteUpdate(contactService, entity);
-    System.out.print("fds");
   }
 
   @Test
