@@ -125,7 +125,6 @@ public class NodeIT extends NetworkEntityTest<Node> {
     // test taiwan hack
     n = nodeService.getByCountry(Country.TAIWAN);
     assertEquals(Country.TAIWAN, n.getCountry());
-
   }
 
   private void initVotingCountryNodes() {
@@ -152,6 +151,17 @@ public class NodeIT extends NetworkEntityTest<Node> {
         id.setIdentifier(TEST_COUNTRIES.get(c).toString());
         nodeService.addIdentifier(n.getKey(), id);
       }
+  }
+
+  @Test
+  public void testAffiliateNode(){
+    Node n = newEntity();
+    n.setTitle("GBIF Affiliate Node");
+    n.setType(NodeType.OTHER);
+    n.setParticipationStatus(ParticipationStatus.AFFILIATE);
+    n.setGbifRegion(null);
+    n.setCountry(null);
+    create(n, 1);
   }
 
   //@Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
