@@ -65,11 +65,11 @@
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.23</freemarker.version>
     <gbif-api.version>0.31-SNAPSHOT</gbif-api.version>
-    <gbif-common-mybatis.version>0.18</gbif-common-mybatis.version>
-    <gbif-common-search.version>0.24</gbif-common-search.version>
+    <gbif-common-mybatis.version>0.20</gbif-common-mybatis.version>
+    <gbif-common-search.version>0.25</gbif-common-search.version>
     <gbif-common-service.version>0.14</gbif-common-service.version>
     <gbif-common-ws.version>0.26</gbif-common-ws.version>
-    <gbif-common.version>0.19</gbif-common.version>
+    <gbif-common.version>0.21</gbif-common.version>
     <gbif-doi.version>1.1</gbif-doi.version>
     <gbif-httputils.version>0.8</gbif-httputils.version>
     <gbif-microservice.version>0.4</gbif-microservice.version>
