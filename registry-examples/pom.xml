@@ -30,6 +30,13 @@
   <name>Registry Examples</name>
   <description>This project has examples demonstrating how to implement the registry web service client</description>
 
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>http://gbif.github.io/registry/${project.artifactId}/</url>
+    </site>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>gbif-all</id>

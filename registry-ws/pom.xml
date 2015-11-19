@@ -13,6 +13,13 @@
 
   <name>Registry Webservices</name>
 
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>http://gbif.github.io/registry/${project.artifactId}/</url>
+    </site>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>gbif-all</id>
