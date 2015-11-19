@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.gbif.registry.ws.model;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.gbif.api.model.registry.Endpoint;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.gbif.registry.ws.util.LegacyResourceConstants;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>import java.util.UUID;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import javax.validation.constraints.NotNull;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import javax.xml.bind.annotation.XmlElement;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import javax.xml.bind.annotation.XmlRootElement;<a name="line.9"></a>
+<span class="sourceLineNo">010</span><a name="line.10"></a>
+<span class="sourceLineNo">011</span>/**<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Class used to generate responses for legacy (GBRDS/IPT) API.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * &lt;/br&gt;<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * JAXB annotations allow the class to be converted into an XML document or JSON response. @XmlElement is used to<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * specify element names that consumers of legacy services expect to find.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>@XmlRootElement(name = "service")<a name="line.17"></a>
+<span class="sourceLineNo">018</span>public class LegacyEndpointResponse {<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>  private String key;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>  private String organisationKey;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>  private String resourceKey;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>  private String description;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>  private String descriptionLanguage;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>  private String type;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>  private String typeDescription;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>  private String accessPointURL;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>  public LegacyEndpointResponse(Endpoint endpoint, UUID datasetKey) {<a name="line.29"></a>
+<span class="sourceLineNo">030</span>    key = endpoint.getKey() == null ? "" : endpoint.getKey().toString();<a name="line.30"></a>
+<span class="sourceLineNo">031</span>    type = endpoint.getType() == null ? "" : endpoint.getType().name();<a name="line.31"></a>
+<span class="sourceLineNo">032</span>    resourceKey = datasetKey == null ? "" : datasetKey.toString();<a name="line.32"></a>
+<span class="sourceLineNo">033</span>    description = endpoint.getDescription() == null ? "" : endpoint.getDescription();<a name="line.33"></a>
+<span class="sourceLineNo">034</span>    accessPointURL = endpoint.getUrl() == null ? "" : endpoint.getUrl().toASCIIString();<a name="line.34"></a>
+<span class="sourceLineNo">035</span>    // always empty - not null because they have to be included in response<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    organisationKey = "";<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    descriptionLanguage = "";<a name="line.37"></a>
+<span class="sourceLineNo">038</span>    typeDescription = "";<a name="line.38"></a>
+<span class="sourceLineNo">039</span>  }<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>  /**<a name="line.41"></a>
+<span class="sourceLineNo">042</span>   * No argument, default constructor needed by JAXB.<a name="line.42"></a>
+<span class="sourceLineNo">043</span>   */<a name="line.43"></a>
+<span class="sourceLineNo">044</span>  public LegacyEndpointResponse() {<a name="line.44"></a>
+<span class="sourceLineNo">045</span>  }<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>  @XmlElement(name = LegacyResourceConstants.KEY_PARAM)<a name="line.47"></a>
+<span class="sourceLineNo">048</span>  @NotNull<a name="line.48"></a>
+<span class="sourceLineNo">049</span>  public String getKey() {<a name="line.49"></a>
+<span class="sourceLineNo">050</span>    return key;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>  }<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>  public void setKey(String key) {<a name="line.53"></a>
+<span class="sourceLineNo">054</span>    this.key = key;<a name="line.54"></a>
+<span class="sourceLineNo">055</span>  }<a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>  @XmlElement(name = LegacyResourceConstants.RESOURCE_KEY_PARAM)<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  @NotNull<a name="line.58"></a>
+<span class="sourceLineNo">059</span>  public String getResourceKey() {<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    return resourceKey;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  }<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>  public void setResourceKey(String resourceKey) {<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    this.resourceKey = resourceKey;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>  }<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>  @XmlElement(name = LegacyResourceConstants.ORGANIZATION_KEY_PARAM)<a name="line.67"></a>
+<span class="sourceLineNo">068</span>  @NotNull<a name="line.68"></a>
+<span class="sourceLineNo">069</span>  public String getOrganisationKey() {<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    return organisationKey;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>  }<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>  public void setOrganisationKey(String organisationKey) {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    this.organisationKey = organisationKey;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>  }<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>  @XmlElement(name = LegacyResourceConstants.TYPE_PARAM)<a name="line.77"></a>
+<span class="sourceLineNo">078</span>  @NotNull<a name="line.78"></a>
+<span class="sourceLineNo">079</span>  public String getType() {<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    return type;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>  }<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>  public void setType(String type) {<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    this.type = type;<a name="line.84"></a>
+<span class="sourceLineNo">085</span>  }<a name="line.85"></a>
+<span class="sourceLineNo">086</span><a name="line.86"></a>
+<span class="sourceLineNo">087</span>  @XmlElement(name = LegacyResourceConstants.TYPE_DESCRIPTION_PARAM)<a name="line.87"></a>
+<span class="sourceLineNo">088</span>  @NotNull<a name="line.88"></a>
+<span class="sourceLineNo">089</span>  public String getTypeDescription() {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    return typeDescription;<a name="line.90"></a>
+<span class="sourceLineNo">091</span>  }<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>  public void setTypeDescription(String typeDescription) {<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    this.typeDescription = typeDescription;<a name="line.94"></a>
+<span class="sourceLineNo">095</span>  }<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>  @XmlElement(name = LegacyResourceConstants.DESCRIPTION_PARAM)<a name="line.97"></a>
+<span class="sourceLineNo">098</span>  @NotNull<a name="line.98"></a>
+<span class="sourceLineNo">099</span>  public String getDescription() {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    return description;<a name="line.100"></a>
+<span class="sourceLineNo">101</span>  }<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>  public void setDescription(String description) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    this.description = description;<a name="line.104"></a>
+<span class="sourceLineNo">105</span>  }<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>  @XmlElement(name = LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM)<a name="line.107"></a>
+<span class="sourceLineNo">108</span>  @NotNull<a name="line.108"></a>
+<span class="sourceLineNo">109</span>  public String getDescriptionLanguage() {<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    return descriptionLanguage;<a name="line.110"></a>
+<span class="sourceLineNo">111</span>  }<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>  public void setDescriptionLanguage(String descriptionLanguage) {<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    this.descriptionLanguage = descriptionLanguage;<a name="line.114"></a>
+<span class="sourceLineNo">115</span>  }<a name="line.115"></a>
+<span class="sourceLineNo">116</span><a name="line.116"></a>
+<span class="sourceLineNo">117</span>  @XmlElement(name = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)<a name="line.117"></a>
+<span class="sourceLineNo">118</span>  @NotNull<a name="line.118"></a>
+<span class="sourceLineNo">119</span>  public String getAccessPointURL() {<a name="line.119"></a>
+<span class="sourceLineNo">120</span>    return accessPointURL;<a name="line.120"></a>
+<span class="sourceLineNo">121</span>  }<a name="line.121"></a>
+<span class="sourceLineNo">122</span><a name="line.122"></a>
+<span class="sourceLineNo">123</span>  public void setAccessPointURL(String accessPointURL) {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>    this.accessPointURL = accessPointURL;<a name="line.124"></a>
+<span class="sourceLineNo">125</span>  }<a name="line.125"></a>
+<span class="sourceLineNo">126</span>}<a name="line.126"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

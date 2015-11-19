@@ -1,0 +1,693 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright 2013 Global Biodiversity Information Facility (GBIF)<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * you may not use this file except in compliance with the License.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * You may obtain a copy of the License at<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * http://www.apache.org/licenses/LICENSE-2.0<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * Unless required by applicable law or agreed to in writing, software<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * See the License for the specific language governing permissions and<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * limitations under the License.<a name="line.11"></a>
+<span class="sourceLineNo">012</span> */<a name="line.12"></a>
+<span class="sourceLineNo">013</span>package org.gbif.registry;<a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.gbif.api.model.common.DOI;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.gbif.api.model.common.paging.PagingRequest;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.gbif.api.model.common.paging.PagingResponse;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.gbif.api.model.common.search.SearchResponse;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.gbif.api.model.registry.Dataset;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.gbif.api.model.registry.Installation;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.gbif.api.model.registry.Metadata;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.gbif.api.model.registry.Organization;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.gbif.api.model.registry.search.DatasetSearchParameter;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.gbif.api.model.registry.search.DatasetSearchRequest;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.gbif.api.model.registry.search.DatasetSearchResult;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.gbif.api.service.registry.DatasetSearchService;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.gbif.api.service.registry.DatasetService;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.gbif.api.service.registry.InstallationService;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.gbif.api.service.registry.NodeService;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.gbif.api.service.registry.OrganizationService;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.gbif.api.vocabulary.Country;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.gbif.api.vocabulary.DatasetType;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.gbif.api.vocabulary.MetadataType;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.gbif.registry.grizzly.RegistryServer;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.gbif.registry.search.DatasetIndexUpdateListener;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.gbif.registry.search.DatasetSearchUpdateUtils;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.gbif.registry.search.SolrInitializer;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.gbif.registry.utils.Datasets;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.gbif.registry.utils.Installations;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>import org.gbif.registry.utils.Nodes;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>import org.gbif.registry.utils.Organizations;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import org.gbif.registry.ws.resources.DatasetResource;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import org.gbif.registry.ws.resources.InstallationResource;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import org.gbif.registry.ws.resources.NodeResource;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>import org.gbif.registry.ws.resources.OrganizationResource;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>import org.gbif.utils.file.FileUtils;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import org.gbif.ws.client.filter.SimplePrincipalProvider;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>import java.io.IOException;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import java.net.URI;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import java.util.List;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import java.util.UUID;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>import javax.annotation.Nullable;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>import javax.validation.ValidationException;<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>import com.google.common.collect.ImmutableList;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>import com.google.inject.Injector;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>import com.google.inject.Key;<a name="line.58"></a>
+<span class="sourceLineNo">059</span>import com.google.inject.name.Names;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>import org.apache.solr.client.solrj.SolrClient;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>import org.junit.Ignore;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>import org.junit.Rule;<a name="line.62"></a>
+<span class="sourceLineNo">063</span>import org.junit.Test;<a name="line.63"></a>
+<span class="sourceLineNo">064</span>import org.junit.runner.RunWith;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>import org.junit.runners.Parameterized;<a name="line.65"></a>
+<span class="sourceLineNo">066</span>import org.junit.runners.Parameterized.Parameters;<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>import static org.gbif.registry.guice.RegistryTestModules.webservice;<a name="line.68"></a>
+<span class="sourceLineNo">069</span>import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>import static org.assertj.core.api.Assertions.assertThat;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>import static org.junit.Assert.assertEquals;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>import static org.junit.Assert.assertFalse;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>import static org.junit.Assert.assertNotEquals;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>import static org.junit.Assert.assertNotNull;<a name="line.75"></a>
+<span class="sourceLineNo">076</span>import static org.junit.Assert.assertNull;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>import static org.junit.Assert.assertTrue;<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>/**<a name="line.79"></a>
+<span class="sourceLineNo">080</span> * This is parameterized to run the same test routines for the following:<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * &lt;ol&gt;<a name="line.81"></a>
+<span class="sourceLineNo">082</span> * &lt;li&gt;The persistence layer&lt;/li&gt;<a name="line.82"></a>
+<span class="sourceLineNo">083</span> * &lt;li&gt;The WS service layer&lt;/li&gt;<a name="line.83"></a>
+<span class="sourceLineNo">084</span> * &lt;li&gt;The WS service client layer&lt;/li&gt;<a name="line.84"></a>
+<span class="sourceLineNo">085</span> * &lt;/ol&gt;<a name="line.85"></a>
+<span class="sourceLineNo">086</span> */<a name="line.86"></a>
+<span class="sourceLineNo">087</span>@RunWith(Parameterized.class)<a name="line.87"></a>
+<span class="sourceLineNo">088</span>public class DatasetIT extends NetworkEntityTest&lt;Dataset&gt; {<a name="line.88"></a>
+<span class="sourceLineNo">089</span><a name="line.89"></a>
+<span class="sourceLineNo">090</span>  // Resets SOLR between each method<a name="line.90"></a>
+<span class="sourceLineNo">091</span>  @Rule<a name="line.91"></a>
+<span class="sourceLineNo">092</span>  public final SolrInitializer solrRule;<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>  private final DatasetService service;<a name="line.94"></a>
+<span class="sourceLineNo">095</span>  private final DatasetSearchService searchService;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>  private final OrganizationService organizationService;<a name="line.96"></a>
+<span class="sourceLineNo">097</span>  private final NodeService nodeService;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>  private final InstallationService installationService;<a name="line.98"></a>
+<span class="sourceLineNo">099</span>  private final DatasetIndexUpdateListener datasetIndexUpdater;<a name="line.99"></a>
+<span class="sourceLineNo">100</span><a name="line.100"></a>
+<span class="sourceLineNo">101</span>  @Parameters<a name="line.101"></a>
+<span class="sourceLineNo">102</span>  public static Iterable&lt;Object[]&gt; data() {<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    final Injector client = webserviceClient();<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    final Injector webservice = webservice();<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    return ImmutableList.&lt;Object[]&gt;of(<a name="line.105"></a>
+<span class="sourceLineNo">106</span>      new Object[] {<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        webservice.getInstance(DatasetResource.class),<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        webservice.getInstance(DatasetResource.class),<a name="line.108"></a>
+<span class="sourceLineNo">109</span>        webservice.getInstance(OrganizationResource.class),<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        webservice.getInstance(NodeResource.class),<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        webservice.getInstance(InstallationResource.class),<a name="line.111"></a>
+<span class="sourceLineNo">112</span>        webservice.getInstance(Key.get(SolrClient.class, Names.named("Dataset"))),<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        webservice.getInstance(DatasetIndexUpdateListener.class),<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        null // SimplePrincipalProvider only set in web service client<a name="line.114"></a>
+<span class="sourceLineNo">115</span>      }<a name="line.115"></a>
+<span class="sourceLineNo">116</span>      ,<a name="line.116"></a>
+<span class="sourceLineNo">117</span>      new Object[] {<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        client.getInstance(DatasetService.class),<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        client.getInstance(DatasetSearchService.class),<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        client.getInstance(OrganizationService.class),<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        client.getInstance(NodeService.class),<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        client.getInstance(InstallationService.class),<a name="line.122"></a>
+<span class="sourceLineNo">123</span>        null, // use the SOLR in Grizzly<a name="line.123"></a>
+<span class="sourceLineNo">124</span>        null, // use the SOLR in Grizzly<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        client.getInstance(SimplePrincipalProvider.class)<a name="line.125"></a>
+<span class="sourceLineNo">126</span>      }<a name="line.126"></a>
+<span class="sourceLineNo">127</span>      );<a name="line.127"></a>
+<span class="sourceLineNo">128</span>  }<a name="line.128"></a>
+<span class="sourceLineNo">129</span><a name="line.129"></a>
+<span class="sourceLineNo">130</span>  public DatasetIT(<a name="line.130"></a>
+<span class="sourceLineNo">131</span>    DatasetService service,<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    DatasetSearchService searchService,<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    OrganizationService organizationService,<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    NodeService nodeService,<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    InstallationService installationService,<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    @Nullable SolrClient solrClient,<a name="line.136"></a>
+<span class="sourceLineNo">137</span>    @Nullable DatasetIndexUpdateListener datasetIndexUpdater,<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    @Nullable SimplePrincipalProvider pp) {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>    super(service, pp);<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    this.service = service;<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    this.searchService = searchService;<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    this.organizationService = organizationService;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>    this.nodeService = nodeService;<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    this.installationService = installationService;<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    // if no SOLR are given for the test, use the SOLR in Grizzly<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    solrClient = solrClient == null ? RegistryServer.INSTANCE.getSolrClient() : solrClient;<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    this.datasetIndexUpdater =<a name="line.147"></a>
+<span class="sourceLineNo">148</span>      datasetIndexUpdater == null ? RegistryServer.INSTANCE.getDatasetUpdater() : datasetIndexUpdater;<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>    solrRule = new SolrInitializer(solrClient, this.datasetIndexUpdater);<a name="line.150"></a>
+<span class="sourceLineNo">151</span>  }<a name="line.151"></a>
+<span class="sourceLineNo">152</span><a name="line.152"></a>
+<span class="sourceLineNo">153</span>  @Test<a name="line.153"></a>
+<span class="sourceLineNo">154</span>  public void testCreateDoi() {<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    Dataset d = newEntity();<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    service.create(d);<a name="line.156"></a>
+<span class="sourceLineNo">157</span>    assertEquals(Datasets.DATASET_DOI, d.getDoi());<a name="line.157"></a>
+<span class="sourceLineNo">158</span><a name="line.158"></a>
+<span class="sourceLineNo">159</span>    d = newEntity();<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    d.setDoi(null);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>    UUID key = service.create(d);<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    d = service.get(key);<a name="line.162"></a>
+<span class="sourceLineNo">163</span>    assertFalse(Datasets.DATASET_DOI.equals(d.getDoi()));<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    assertEquals(DOI.TEST_PREFIX, d.getDoi().getPrefix());<a name="line.164"></a>
+<span class="sourceLineNo">165</span>  }<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>  @Test<a name="line.167"></a>
+<span class="sourceLineNo">168</span>  public void testConstituents() {<a name="line.168"></a>
+<span class="sourceLineNo">169</span>    Dataset parent = create(newEntity(), 1);<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    for (int id = 0; id &lt; 10; id++) {<a name="line.170"></a>
+<span class="sourceLineNo">171</span>      Dataset constituent = newEntity();<a name="line.171"></a>
+<span class="sourceLineNo">172</span>      constituent.setParentDatasetKey(parent.getKey());<a name="line.172"></a>
+<span class="sourceLineNo">173</span>      constituent.setType(parent.getType());<a name="line.173"></a>
+<span class="sourceLineNo">174</span>      create(constituent, id + 2);<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    }<a name="line.175"></a>
+<span class="sourceLineNo">176</span><a name="line.176"></a>
+<span class="sourceLineNo">177</span>    assertEquals(10, service.get(parent.getKey()).getNumConstituents());<a name="line.177"></a>
+<span class="sourceLineNo">178</span>  }<a name="line.178"></a>
+<span class="sourceLineNo">179</span><a name="line.179"></a>
+<span class="sourceLineNo">180</span>  // Easier to test this here than OrganizationIT due to our utility dataset factory<a name="line.180"></a>
+<span class="sourceLineNo">181</span>  @Test<a name="line.181"></a>
+<span class="sourceLineNo">182</span>  public void testHostedByList() {<a name="line.182"></a>
+<span class="sourceLineNo">183</span>    Dataset dataset = create(newEntity(), 1);<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    Installation i = installationService.get(dataset.getInstallationKey());<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    assertNotNull("Dataset should have an installation", i);<a name="line.185"></a>
+<span class="sourceLineNo">186</span>    PagingResponse&lt;Dataset&gt; published =<a name="line.186"></a>
+<span class="sourceLineNo">187</span>      organizationService.publishedDatasets(i.getOrganizationKey(), new PagingRequest());<a name="line.187"></a>
+<span class="sourceLineNo">188</span>    PagingResponse&lt;Dataset&gt; hosted = organizationService.hostedDatasets(i.getOrganizationKey(), new PagingRequest());<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    assertEquals("This installation should have only 1 published dataset", 1, published.getResults().size());<a name="line.189"></a>
+<span class="sourceLineNo">190</span>    assertTrue("This organization should not have any hosted datasets", hosted.getResults().isEmpty());<a name="line.190"></a>
+<span class="sourceLineNo">191</span>  }<a name="line.191"></a>
+<span class="sourceLineNo">192</span><a name="line.192"></a>
+<span class="sourceLineNo">193</span>  // Easier to test this here than OrganizationIT due to our utility dataset factory<a name="line.193"></a>
+<span class="sourceLineNo">194</span>  @Test<a name="line.194"></a>
+<span class="sourceLineNo">195</span>  public void testPublishedByList() {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    Dataset dataset = create(newEntity(), 1);<a name="line.196"></a>
+<span class="sourceLineNo">197</span>    PagingResponse&lt;Dataset&gt; published =<a name="line.197"></a>
+<span class="sourceLineNo">198</span>      organizationService.publishedDatasets(dataset.getPublishingOrganizationKey(), new PagingRequest());<a name="line.198"></a>
+<span class="sourceLineNo">199</span>    assertEquals("The organization should have only 1 dataset", 1, published.getResults().size());<a name="line.199"></a>
+<span class="sourceLineNo">200</span>    assertEquals("The organization should publish the dataset created", published.getResults().get(0).getKey(),<a name="line.200"></a>
+<span class="sourceLineNo">201</span>      dataset.getKey());<a name="line.201"></a>
+<span class="sourceLineNo">202</span><a name="line.202"></a>
+<span class="sourceLineNo">203</span>    assertEquals("The organization should have 1 dataset count", 1,<a name="line.203"></a>
+<span class="sourceLineNo">204</span>      organizationService.get(dataset.getPublishingOrganizationKey()).getNumPublishedDatasets());<a name="line.204"></a>
+<span class="sourceLineNo">205</span>  }<a name="line.205"></a>
+<span class="sourceLineNo">206</span><a name="line.206"></a>
+<span class="sourceLineNo">207</span>  // Easier to test this here than InstallationIT due to our utility dataset factory<a name="line.207"></a>
+<span class="sourceLineNo">208</span>  @Test<a name="line.208"></a>
+<span class="sourceLineNo">209</span>  public void testHostedByInstallationList() {<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    Dataset dataset = create(newEntity(), 1);<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    Installation i = installationService.get(dataset.getInstallationKey());<a name="line.211"></a>
+<span class="sourceLineNo">212</span>    assertNotNull("Dataset should have an installation", i);<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    PagingResponse&lt;Dataset&gt; hosted =<a name="line.213"></a>
+<span class="sourceLineNo">214</span>      installationService.getHostedDatasets(dataset.getInstallationKey(), new PagingRequest());<a name="line.214"></a>
+<span class="sourceLineNo">215</span>    assertEquals("This installation should have only 1 hosted dataset", 1, hosted.getResults().size());<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    assertEquals("Paging response counts are not being set", Long.valueOf(1), hosted.getCount());<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    assertEquals("The hosted installation should serve the dataset created", hosted.getResults().get(0).getKey(),<a name="line.217"></a>
+<span class="sourceLineNo">218</span>      dataset.getKey());<a name="line.218"></a>
+<span class="sourceLineNo">219</span>  }<a name="line.219"></a>
+<span class="sourceLineNo">220</span><a name="line.220"></a>
+<span class="sourceLineNo">221</span>  @Test<a name="line.221"></a>
+<span class="sourceLineNo">222</span>  public void testTypedSearch() {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>    Dataset d = newEntity();<a name="line.223"></a>
+<span class="sourceLineNo">224</span>    d.setType(DatasetType.CHECKLIST);<a name="line.224"></a>
+<span class="sourceLineNo">225</span>    d = create(d, 1);<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    assertSearch(d.getTitle(), 1); // 1 result expected for a simple search<a name="line.226"></a>
+<span class="sourceLineNo">227</span><a name="line.227"></a>
+<span class="sourceLineNo">228</span>    DatasetSearchRequest req = new DatasetSearchRequest();<a name="line.228"></a>
+<span class="sourceLineNo">229</span>    req.addTypeFilter(DatasetType.CHECKLIST);<a name="line.229"></a>
+<span class="sourceLineNo">230</span>    SearchResponse&lt;DatasetSearchResult, DatasetSearchParameter&gt; resp = searchService.search(req);<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    assertNotNull(resp.getCount());<a name="line.231"></a>
+<span class="sourceLineNo">232</span>    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1),<a name="line.232"></a>
+<span class="sourceLineNo">233</span>      resp.getCount());<a name="line.233"></a>
+<span class="sourceLineNo">234</span>  }<a name="line.234"></a>
+<span class="sourceLineNo">235</span><a name="line.235"></a>
+<span class="sourceLineNo">236</span>  @Test<a name="line.236"></a>
+<span class="sourceLineNo">237</span>  public void testEventTypeSearch() {<a name="line.237"></a>
+<span class="sourceLineNo">238</span>    Dataset d = newEntity();<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    d.setType(DatasetType.SAMPLING_EVENT);<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    d = create(d, 1);<a name="line.240"></a>
+<span class="sourceLineNo">241</span>    assertSearch(d.getTitle(), 1); // 1 result expected for a simple search<a name="line.241"></a>
+<span class="sourceLineNo">242</span><a name="line.242"></a>
+<span class="sourceLineNo">243</span>    DatasetSearchRequest req = new DatasetSearchRequest();<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    req.addTypeFilter(DatasetType.SAMPLING_EVENT);<a name="line.244"></a>
+<span class="sourceLineNo">245</span>    SearchResponse&lt;DatasetSearchResult, DatasetSearchParameter&gt; resp = searchService.search(req);<a name="line.245"></a>
+<span class="sourceLineNo">246</span>    assertNotNull(resp.getCount());<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1),<a name="line.247"></a>
+<span class="sourceLineNo">248</span>      resp.getCount());<a name="line.248"></a>
+<span class="sourceLineNo">249</span>  }<a name="line.249"></a>
+<span class="sourceLineNo">250</span><a name="line.250"></a>
+<span class="sourceLineNo">251</span>  @Test<a name="line.251"></a>
+<span class="sourceLineNo">252</span>  public void testSearchListener() {<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    Dataset d = newEntity();<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    d = create(d, 1);<a name="line.254"></a>
+<span class="sourceLineNo">255</span>    assertSearch(d.getTitle(), 1); // 1 result expected<a name="line.255"></a>
+<span class="sourceLineNo">256</span><a name="line.256"></a>
+<span class="sourceLineNo">257</span>    // update<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    String oldTitle = d.getTitle();<a name="line.258"></a>
+<span class="sourceLineNo">259</span>    d.setTitle("NEW-DATASET-TITLE");<a name="line.259"></a>
+<span class="sourceLineNo">260</span>    service.update(d);<a name="line.260"></a>
+<span class="sourceLineNo">261</span>    assertSearch("*", 1);<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    assertSearch(oldTitle, 0);<a name="line.262"></a>
+<span class="sourceLineNo">263</span>    assertSearch(d.getTitle(), 1);<a name="line.263"></a>
+<span class="sourceLineNo">264</span><a name="line.264"></a>
+<span class="sourceLineNo">265</span>    // update publishing organization title should be captured<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    Organization publisher = organizationService.get(d.getPublishingOrganizationKey());<a name="line.266"></a>
+<span class="sourceLineNo">267</span>    assertSearch(publisher.getTitle(), 1);<a name="line.267"></a>
+<span class="sourceLineNo">268</span>    oldTitle = publisher.getTitle();<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    publisher.setTitle("NEW-OWNER-TITLE");<a name="line.269"></a>
+<span class="sourceLineNo">270</span>    organizationService.update(publisher);<a name="line.270"></a>
+<span class="sourceLineNo">271</span>    assertSearch(oldTitle, 0);<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    assertSearch(publisher.getTitle(), 1);<a name="line.272"></a>
+<span class="sourceLineNo">273</span><a name="line.273"></a>
+<span class="sourceLineNo">274</span>    // update hosting organization title should be captured<a name="line.274"></a>
+<span class="sourceLineNo">275</span>    Installation installation = installationService.get(d.getInstallationKey());<a name="line.275"></a>
+<span class="sourceLineNo">276</span>    assertNotNull("Installation should be present", installation);<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    Organization host = organizationService.get(installation.getOrganizationKey());<a name="line.277"></a>
+<span class="sourceLineNo">278</span>    assertSearch(host.getTitle(), 1);<a name="line.278"></a>
+<span class="sourceLineNo">279</span>    oldTitle = host.getTitle();<a name="line.279"></a>
+<span class="sourceLineNo">280</span>    host.setTitle("NEW-HOST-TITLE");<a name="line.280"></a>
+<span class="sourceLineNo">281</span>    organizationService.update(host);<a name="line.281"></a>
+<span class="sourceLineNo">282</span>    assertSearch(oldTitle, 0);<a name="line.282"></a>
+<span class="sourceLineNo">283</span>    assertSearch(host.getTitle(), 1);<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>    // check a deletion removes the dataset for search<a name="line.285"></a>
+<span class="sourceLineNo">286</span>    service.delete(d.getKey());<a name="line.286"></a>
+<span class="sourceLineNo">287</span>    assertSearch(host.getTitle(), 0);<a name="line.287"></a>
+<span class="sourceLineNo">288</span>  }<a name="line.288"></a>
+<span class="sourceLineNo">289</span><a name="line.289"></a>
+<span class="sourceLineNo">290</span>  @Test<a name="line.290"></a>
+<span class="sourceLineNo">291</span>  public void testInstallationMove() {<a name="line.291"></a>
+<span class="sourceLineNo">292</span>    Dataset d = newEntity();<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    d = create(d, 1);<a name="line.293"></a>
+<span class="sourceLineNo">294</span>    assertSearch(d.getTitle(), 1); // 1 result expected<a name="line.294"></a>
+<span class="sourceLineNo">295</span><a name="line.295"></a>
+<span class="sourceLineNo">296</span>    UUID nodeKey = nodeService.create(Nodes.newInstance());<a name="line.296"></a>
+<span class="sourceLineNo">297</span>    Organization o = Organizations.newInstance(nodeKey);<a name="line.297"></a>
+<span class="sourceLineNo">298</span>    o.setTitle("A-NEW-ORG");<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    UUID organizationKey = organizationService.create(o);<a name="line.299"></a>
+<span class="sourceLineNo">300</span>    assertSearch(o.getTitle(), 0); // No datasets hosted by that organization yet<a name="line.300"></a>
+<span class="sourceLineNo">301</span><a name="line.301"></a>
+<span class="sourceLineNo">302</span>    Installation installation = installationService.get(d.getInstallationKey());<a name="line.302"></a>
+<span class="sourceLineNo">303</span>    installation.setOrganizationKey(organizationKey);<a name="line.303"></a>
+<span class="sourceLineNo">304</span>    installationService.update(installation); // we just moved the installation to a new organization<a name="line.304"></a>
+<span class="sourceLineNo">305</span><a name="line.305"></a>
+<span class="sourceLineNo">306</span>    assertSearch(o.getTitle(), 1); // The dataset moved with the organization!<a name="line.306"></a>
+<span class="sourceLineNo">307</span>    assertSearch("*", 1);<a name="line.307"></a>
+<span class="sourceLineNo">308</span>  }<a name="line.308"></a>
+<span class="sourceLineNo">309</span><a name="line.309"></a>
+<span class="sourceLineNo">310</span>  /**<a name="line.310"></a>
+<span class="sourceLineNo">311</span>   * Utility to verify that after waiting for SOLR to update, the given query returns the expected count of results.<a name="line.311"></a>
+<span class="sourceLineNo">312</span>   */<a name="line.312"></a>
+<span class="sourceLineNo">313</span>  private void assertSearch(String query, int expected) {<a name="line.313"></a>
+<span class="sourceLineNo">314</span>    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater); // SOLR updates are asynchronous<a name="line.314"></a>
+<span class="sourceLineNo">315</span>    DatasetSearchRequest req = new DatasetSearchRequest();<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    req.setQ(query);<a name="line.316"></a>
+<span class="sourceLineNo">317</span>    SearchResponse&lt;DatasetSearchResult, DatasetSearchParameter&gt; resp = searchService.search(req);<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    assertNotNull(resp.getCount());<a name="line.318"></a>
+<span class="sourceLineNo">319</span>    assertEquals("SOLR does not have the expected number of results for query[" + query + "]", Long.valueOf(expected),<a name="line.319"></a>
+<span class="sourceLineNo">320</span>      resp.getCount());<a name="line.320"></a>
+<span class="sourceLineNo">321</span>  }<a name="line.321"></a>
+<span class="sourceLineNo">322</span><a name="line.322"></a>
+<span class="sourceLineNo">323</span>  /**<a name="line.323"></a>
+<span class="sourceLineNo">324</span>   * Utility to verify that after waiting for SOLR to update, the given query returns the expected count of results.<a name="line.324"></a>
+<span class="sourceLineNo">325</span>   */<a name="line.325"></a>
+<span class="sourceLineNo">326</span>  private void assertSearch(Country publishingCountry, Country country, int expected) {<a name="line.326"></a>
+<span class="sourceLineNo">327</span>    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater); // SOLR updates are asynchronous<a name="line.327"></a>
+<span class="sourceLineNo">328</span>    DatasetSearchRequest req = new DatasetSearchRequest();<a name="line.328"></a>
+<span class="sourceLineNo">329</span>    if (country != null) {<a name="line.329"></a>
+<span class="sourceLineNo">330</span>      req.addCountryFilter(country);<a name="line.330"></a>
+<span class="sourceLineNo">331</span>    }<a name="line.331"></a>
+<span class="sourceLineNo">332</span>    if (publishingCountry != null) {<a name="line.332"></a>
+<span class="sourceLineNo">333</span>      req.addPublishingCountryFilter(publishingCountry);<a name="line.333"></a>
+<span class="sourceLineNo">334</span>    }<a name="line.334"></a>
+<span class="sourceLineNo">335</span>    SearchResponse&lt;DatasetSearchResult, DatasetSearchParameter&gt; resp = searchService.search(req);<a name="line.335"></a>
+<span class="sourceLineNo">336</span>    assertNotNull(resp.getCount());<a name="line.336"></a>
+<span class="sourceLineNo">337</span>    assertEquals("SOLR does not have the expected number of results for country[" + country +<a name="line.337"></a>
+<span class="sourceLineNo">338</span>      "] and publishingCountry[" + publishingCountry + "]", Long.valueOf(expected),<a name="line.338"></a>
+<span class="sourceLineNo">339</span>      resp.getCount());<a name="line.339"></a>
+<span class="sourceLineNo">340</span>  }<a name="line.340"></a>
+<span class="sourceLineNo">341</span><a name="line.341"></a>
+<span class="sourceLineNo">342</span>  @Override<a name="line.342"></a>
+<span class="sourceLineNo">343</span>  protected Dataset newEntity() {<a name="line.343"></a>
+<span class="sourceLineNo">344</span>    // endorsing node for the organization<a name="line.344"></a>
+<span class="sourceLineNo">345</span>    UUID nodeKey = nodeService.create(Nodes.newInstance());<a name="line.345"></a>
+<span class="sourceLineNo">346</span>    // publishing organization (required field)<a name="line.346"></a>
+<span class="sourceLineNo">347</span>    Organization o = Organizations.newInstance(nodeKey);<a name="line.347"></a>
+<span class="sourceLineNo">348</span>    UUID organizationKey = organizationService.create(o);<a name="line.348"></a>
+<span class="sourceLineNo">349</span><a name="line.349"></a>
+<span class="sourceLineNo">350</span>    Installation i = Installations.newInstance(organizationKey);<a name="line.350"></a>
+<span class="sourceLineNo">351</span>    UUID installationKey = installationService.create(i);<a name="line.351"></a>
+<span class="sourceLineNo">352</span><a name="line.352"></a>
+<span class="sourceLineNo">353</span>    return newEntity(organizationKey, installationKey);<a name="line.353"></a>
+<span class="sourceLineNo">354</span>  }<a name="line.354"></a>
+<span class="sourceLineNo">355</span><a name="line.355"></a>
+<span class="sourceLineNo">356</span>  private Dataset newEntity(UUID organizationKey, UUID installationKey) {<a name="line.356"></a>
+<span class="sourceLineNo">357</span>    // the dataset<a name="line.357"></a>
+<span class="sourceLineNo">358</span>    Dataset d = Datasets.newInstance(organizationKey, installationKey);<a name="line.358"></a>
+<span class="sourceLineNo">359</span>    return d;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>  }<a name="line.360"></a>
+<span class="sourceLineNo">361</span><a name="line.361"></a>
+<span class="sourceLineNo">362</span>  @Test<a name="line.362"></a>
+<span class="sourceLineNo">363</span>  public void testCitation() {<a name="line.363"></a>
+<span class="sourceLineNo">364</span>    Dataset dataset = create(newEntity(), 1);<a name="line.364"></a>
+<span class="sourceLineNo">365</span>    dataset = service.get(dataset.getKey());<a name="line.365"></a>
+<span class="sourceLineNo">366</span>    assertNotNull("Citation should never be null", dataset.getCitation());<a name="line.366"></a>
+<span class="sourceLineNo">367</span>    assertEquals("ABC", dataset.getCitation().getIdentifier());<a name="line.367"></a>
+<span class="sourceLineNo">368</span>    assertEquals("This is a citation text", dataset.getCitation().getText());<a name="line.368"></a>
+<span class="sourceLineNo">369</span><a name="line.369"></a>
+<span class="sourceLineNo">370</span>    // update it<a name="line.370"></a>
+<span class="sourceLineNo">371</span>    dataset.getCitation().setIdentifier("doi:123");<a name="line.371"></a>
+<span class="sourceLineNo">372</span>    dataset.getCitation().setText("GOD publishing, volume 123");<a name="line.372"></a>
+<span class="sourceLineNo">373</span>    service.update(dataset);<a name="line.373"></a>
+<span class="sourceLineNo">374</span>    dataset = service.get(dataset.getKey());<a name="line.374"></a>
+<span class="sourceLineNo">375</span>    assertEquals("doi:123", dataset.getCitation().getIdentifier());<a name="line.375"></a>
+<span class="sourceLineNo">376</span>    assertEquals("GOD publishing, volume 123", dataset.getCitation().getText());<a name="line.376"></a>
+<span class="sourceLineNo">377</span><a name="line.377"></a>
+<span class="sourceLineNo">378</span>    // setting to null should make it the default using the org:dataset titles<a name="line.378"></a>
+<span class="sourceLineNo">379</span>    dataset.getCitation().setText(null);<a name="line.379"></a>
+<span class="sourceLineNo">380</span>    service.update(dataset);<a name="line.380"></a>
+<span class="sourceLineNo">381</span>    dataset = service.get(dataset.getKey());<a name="line.381"></a>
+<span class="sourceLineNo">382</span>    assertEquals("doi:123", dataset.getCitation().getIdentifier());<a name="line.382"></a>
+<span class="sourceLineNo">383</span>    assertEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari &amp; Aladaglari, Türkei\"", dataset.getCitation().getText());<a name="line.383"></a>
+<span class="sourceLineNo">384</span>  }<a name="line.384"></a>
+<span class="sourceLineNo">385</span><a name="line.385"></a>
+<span class="sourceLineNo">386</span><a name="line.386"></a>
+<span class="sourceLineNo">387</span>  @Test<a name="line.387"></a>
+<span class="sourceLineNo">388</span>  public void testDoiChanges() {<a name="line.388"></a>
+<span class="sourceLineNo">389</span>    final DOI external1 = new DOI("10.9999/nonGbif");<a name="line.389"></a>
+<span class="sourceLineNo">390</span>    final DOI external2 = new DOI("10.9999/nonGbif2");<a name="line.390"></a>
+<span class="sourceLineNo">391</span>    // we use the test prefix in tests for GBIF DOIs, see registry-test.properties<a name="line.391"></a>
+<span class="sourceLineNo">392</span>    final DOI gbif2 = new DOI("10.5072/sthelse");<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>    Dataset src = newEntity();<a name="line.394"></a>
+<span class="sourceLineNo">395</span>    src.setDoi(external1);<a name="line.395"></a>
+<span class="sourceLineNo">396</span>    final UUID key = create(src, 1).getKey();<a name="line.396"></a>
+<span class="sourceLineNo">397</span>    Dataset dataset = service.get(key);<a name="line.397"></a>
+<span class="sourceLineNo">398</span>    assertEquals(external1, dataset.getDoi());<a name="line.398"></a>
+<span class="sourceLineNo">399</span>    assertEquals(0, service.listIdentifiers(key).size());<a name="line.399"></a>
+<span class="sourceLineNo">400</span><a name="line.400"></a>
+<span class="sourceLineNo">401</span>    dataset.setDoi(null);<a name="line.401"></a>
+<span class="sourceLineNo">402</span>    service.update(dataset);<a name="line.402"></a>
+<span class="sourceLineNo">403</span>    dataset = service.get(key);<a name="line.403"></a>
+<span class="sourceLineNo">404</span>    assertNotNull("DOI should never be null", dataset.getDoi());<a name="line.404"></a>
+<span class="sourceLineNo">405</span>    assertFalse(dataset.getDoi().equals(external1));<a name="line.405"></a>
+<span class="sourceLineNo">406</span>    final DOI originalGBIF = dataset.getDoi();<a name="line.406"></a>
+<span class="sourceLineNo">407</span>    assertThat(service.listIdentifiers(key))<a name="line.407"></a>
+<span class="sourceLineNo">408</span>      .hasSize(1)<a name="line.408"></a>
+<span class="sourceLineNo">409</span>      .extracting("identifier").contains(external1.toString());<a name="line.409"></a>
+<span class="sourceLineNo">410</span><a name="line.410"></a>
+<span class="sourceLineNo">411</span>    dataset.setDoi(external1);<a name="line.411"></a>
+<span class="sourceLineNo">412</span>    service.update(dataset);<a name="line.412"></a>
+<span class="sourceLineNo">413</span>    dataset = service.get(key);<a name="line.413"></a>
+<span class="sourceLineNo">414</span>    assertEquals(external1, dataset.getDoi());<a name="line.414"></a>
+<span class="sourceLineNo">415</span>    assertThat(service.listIdentifiers(key))<a name="line.415"></a>
+<span class="sourceLineNo">416</span>      .hasSize(1)<a name="line.416"></a>
+<span class="sourceLineNo">417</span>      .extracting("identifier").contains(originalGBIF.toString());<a name="line.417"></a>
+<span class="sourceLineNo">418</span><a name="line.418"></a>
+<span class="sourceLineNo">419</span>    dataset.setDoi(external2);<a name="line.419"></a>
+<span class="sourceLineNo">420</span>    service.update(dataset);<a name="line.420"></a>
+<span class="sourceLineNo">421</span>    dataset = service.get(key);<a name="line.421"></a>
+<span class="sourceLineNo">422</span>    assertEquals(external2, dataset.getDoi());<a name="line.422"></a>
+<span class="sourceLineNo">423</span>    assertThat(service.listIdentifiers(key))<a name="line.423"></a>
+<span class="sourceLineNo">424</span>      .hasSize(2)<a name="line.424"></a>
+<span class="sourceLineNo">425</span>      .extracting("identifier").contains(originalGBIF.toString(), external1.toString());<a name="line.425"></a>
+<span class="sourceLineNo">426</span><a name="line.426"></a>
+<span class="sourceLineNo">427</span>    dataset.setDoi(null);<a name="line.427"></a>
+<span class="sourceLineNo">428</span>    service.update(dataset);<a name="line.428"></a>
+<span class="sourceLineNo">429</span>    dataset = service.get(key);<a name="line.429"></a>
+<span class="sourceLineNo">430</span>    assertEquals(originalGBIF, dataset.getDoi());<a name="line.430"></a>
+<span class="sourceLineNo">431</span>    assertThat(service.listIdentifiers(key))<a name="line.431"></a>
+<span class="sourceLineNo">432</span>      .hasSize(2)<a name="line.432"></a>
+<span class="sourceLineNo">433</span>      .extracting("identifier").contains(external1.toString(), external2.toString());<a name="line.433"></a>
+<span class="sourceLineNo">434</span><a name="line.434"></a>
+<span class="sourceLineNo">435</span>    dataset.setDoi(gbif2);<a name="line.435"></a>
+<span class="sourceLineNo">436</span>    service.update(dataset);<a name="line.436"></a>
+<span class="sourceLineNo">437</span>    dataset = service.get(key);<a name="line.437"></a>
+<span class="sourceLineNo">438</span>    assertEquals(gbif2, dataset.getDoi());<a name="line.438"></a>
+<span class="sourceLineNo">439</span>    assertThat(service.listIdentifiers(key))<a name="line.439"></a>
+<span class="sourceLineNo">440</span>      .hasSize(3)<a name="line.440"></a>
+<span class="sourceLineNo">441</span>      .extracting("identifier").contains(external1.toString(), external2.toString(), originalGBIF.toString());<a name="line.441"></a>
+<span class="sourceLineNo">442</span><a name="line.442"></a>
+<span class="sourceLineNo">443</span>    dataset.setDoi(external1);<a name="line.443"></a>
+<span class="sourceLineNo">444</span>    service.update(dataset);<a name="line.444"></a>
+<span class="sourceLineNo">445</span>    dataset = service.get(key);<a name="line.445"></a>
+<span class="sourceLineNo">446</span>    assertEquals(external1, dataset.getDoi());<a name="line.446"></a>
+<span class="sourceLineNo">447</span>    assertThat(service.listIdentifiers(key))<a name="line.447"></a>
+<span class="sourceLineNo">448</span>      .hasSize(3)<a name="line.448"></a>
+<span class="sourceLineNo">449</span>      .extracting("identifier").contains(gbif2.toString(), external2.toString(), originalGBIF.toString());<a name="line.449"></a>
+<span class="sourceLineNo">450</span><a name="line.450"></a>
+<span class="sourceLineNo">451</span>  }<a name="line.451"></a>
+<span class="sourceLineNo">452</span><a name="line.452"></a>
+<span class="sourceLineNo">453</span>  @Test<a name="line.453"></a>
+<span class="sourceLineNo">454</span>  public void test404() throws IOException {<a name="line.454"></a>
+<span class="sourceLineNo">455</span>    assertNull(service.get(UUID.randomUUID()));<a name="line.455"></a>
+<span class="sourceLineNo">456</span>  }<a name="line.456"></a>
+<span class="sourceLineNo">457</span><a name="line.457"></a>
+<span class="sourceLineNo">458</span>  @Test<a name="line.458"></a>
+<span class="sourceLineNo">459</span>  public void testMetadata() throws IOException {<a name="line.459"></a>
+<span class="sourceLineNo">460</span>    Dataset d1 = create(newEntity(), 1);<a name="line.460"></a>
+<span class="sourceLineNo">461</span><a name="line.461"></a>
+<span class="sourceLineNo">462</span>    // upload a valid EML doc<a name="line.462"></a>
+<span class="sourceLineNo">463</span>    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));<a name="line.463"></a>
+<span class="sourceLineNo">464</span><a name="line.464"></a>
+<span class="sourceLineNo">465</span>    // verify our dataset has changed<a name="line.465"></a>
+<span class="sourceLineNo">466</span>    Dataset d2 = service.get(d1.getKey());<a name="line.466"></a>
+<span class="sourceLineNo">467</span>    assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);<a name="line.467"></a>
+<span class="sourceLineNo">468</span>    assertEquals("Tanzanian Entomological Collection", d2.getTitle());<a name="line.468"></a>
+<span class="sourceLineNo">469</span>    assertEquals("Created data should not change", d1.getCreated(), d2.getCreated());<a name="line.469"></a>
+<span class="sourceLineNo">470</span>    assertTrue("Dataset modification date should change", d1.getModified().before(d2.getModified()));<a name="line.470"></a>
+<span class="sourceLineNo">471</span><a name="line.471"></a>
+<span class="sourceLineNo">472</span>    // check metadata<a name="line.472"></a>
+<span class="sourceLineNo">473</span>    List&lt;Metadata&gt; metadata = service.listMetadata(d1.getKey(), MetadataType.DC);<a name="line.473"></a>
+<span class="sourceLineNo">474</span>    assertTrue("No Dublin Core uplaoded yet", metadata.isEmpty());<a name="line.474"></a>
+<span class="sourceLineNo">475</span><a name="line.475"></a>
+<span class="sourceLineNo">476</span>    metadata = service.listMetadata(d1.getKey(), MetadataType.EML);<a name="line.476"></a>
+<span class="sourceLineNo">477</span>    assertEquals("Exactly one EML uploaded", 1, metadata.size());<a name="line.477"></a>
+<span class="sourceLineNo">478</span>    assertEquals("Wrong metadata type", MetadataType.EML, metadata.get(0).getType());<a name="line.478"></a>
+<span class="sourceLineNo">479</span><a name="line.479"></a>
+<span class="sourceLineNo">480</span>    // upload subsequent DC document which has less priority than the previous EML doc<a name="line.480"></a>
+<span class="sourceLineNo">481</span>    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/worms_dc.xml"));<a name="line.481"></a>
+<span class="sourceLineNo">482</span>    // verify our dataset has not changed<a name="line.482"></a>
+<span class="sourceLineNo">483</span>    Dataset d3 = service.get(d1.getKey());<a name="line.483"></a>
+<span class="sourceLineNo">484</span>    assertEquals("Tanzanian Entomological Collection", d3.getTitle());<a name="line.484"></a>
+<span class="sourceLineNo">485</span>    assertEquals("Created data should not change", d1.getCreated(), d3.getCreated());<a name="line.485"></a>
+<span class="sourceLineNo">486</span>  }<a name="line.486"></a>
+<span class="sourceLineNo">487</span><a name="line.487"></a>
+<span class="sourceLineNo">488</span>  /**<a name="line.488"></a>
+<span class="sourceLineNo">489</span>   * Test that uploading the same document repeatedly does not change the dataset.<a name="line.489"></a>
+<span class="sourceLineNo">490</span>   */<a name="line.490"></a>
+<span class="sourceLineNo">491</span>  @Test<a name="line.491"></a>
+<span class="sourceLineNo">492</span>  public void testMetadataDuplication() throws IOException {<a name="line.492"></a>
+<span class="sourceLineNo">493</span>    Dataset d1 = create(newEntity(), 1);<a name="line.493"></a>
+<span class="sourceLineNo">494</span>    List&lt;Metadata&gt; m1 = service.listMetadata(d1.getKey(), MetadataType.EML);<a name="line.494"></a>
+<span class="sourceLineNo">495</span><a name="line.495"></a>
+<span class="sourceLineNo">496</span>    // upload a valid EML doc<a name="line.496"></a>
+<span class="sourceLineNo">497</span>    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));<a name="line.497"></a>
+<span class="sourceLineNo">498</span><a name="line.498"></a>
+<span class="sourceLineNo">499</span>    // verify our dataset has changed<a name="line.499"></a>
+<span class="sourceLineNo">500</span>    Dataset d2 = service.get(d1.getKey());<a name="line.500"></a>
+<span class="sourceLineNo">501</span>    assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);<a name="line.501"></a>
+<span class="sourceLineNo">502</span>    List&lt;Metadata&gt; m2 = service.listMetadata(d1.getKey(), MetadataType.EML);<a name="line.502"></a>
+<span class="sourceLineNo">503</span>    assertNotEquals("Dataset metadata should have changed after metadata was uploaded", m1, m2);<a name="line.503"></a>
+<span class="sourceLineNo">504</span><a name="line.504"></a>
+<span class="sourceLineNo">505</span>    // upload the doc a second time - it should not update the metadata<a name="line.505"></a>
+<span class="sourceLineNo">506</span>    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));<a name="line.506"></a>
+<span class="sourceLineNo">507</span>    List&lt;Metadata&gt; m3 = service.listMetadata(d1.getKey(), MetadataType.EML);<a name="line.507"></a>
+<span class="sourceLineNo">508</span>    assertEquals("Dataset metadata should not have changed after same metadata document was uploaded", m2, m3);<a name="line.508"></a>
+<span class="sourceLineNo">509</span>  }<a name="line.509"></a>
+<span class="sourceLineNo">510</span><a name="line.510"></a>
+<span class="sourceLineNo">511</span>  @Test<a name="line.511"></a>
+<span class="sourceLineNo">512</span>  public void testByCountry() {<a name="line.512"></a>
+<span class="sourceLineNo">513</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.ANDORRA, 3);<a name="line.513"></a>
+<span class="sourceLineNo">514</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1);<a name="line.514"></a>
+<span class="sourceLineNo">515</span>    createCountryDatasets(DatasetType.METADATA, Country.HAITI, 7);<a name="line.515"></a>
+<span class="sourceLineNo">516</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.HAITI, 3);<a name="line.516"></a>
+<span class="sourceLineNo">517</span>    createCountryDatasets(DatasetType.CHECKLIST, Country.HAITI, 2);<a name="line.517"></a>
+<span class="sourceLineNo">518</span><a name="line.518"></a>
+<span class="sourceLineNo">519</span>    assertResultsOfSize(service.listByCountry(Country.UNKNOWN, null, new PagingRequest()), 0);<a name="line.519"></a>
+<span class="sourceLineNo">520</span>    assertResultsOfSize(service.listByCountry(Country.ANDORRA, null, new PagingRequest()), 3);<a name="line.520"></a>
+<span class="sourceLineNo">521</span>    assertResultsOfSize(service.listByCountry(Country.DJIBOUTI, null, new PagingRequest()), 1);<a name="line.521"></a>
+<span class="sourceLineNo">522</span>    assertResultsOfSize(service.listByCountry(Country.HAITI, null, new PagingRequest()), 12);<a name="line.522"></a>
+<span class="sourceLineNo">523</span><a name="line.523"></a>
+<span class="sourceLineNo">524</span>    assertResultsOfSize(service.listByCountry(Country.ANDORRA, DatasetType.CHECKLIST, new PagingRequest()), 0);<a name="line.524"></a>
+<span class="sourceLineNo">525</span>    assertResultsOfSize(service.listByCountry(Country.HAITI, DatasetType.OCCURRENCE, new PagingRequest()), 3);<a name="line.525"></a>
+<span class="sourceLineNo">526</span>    assertResultsOfSize(service.listByCountry(Country.HAITI, DatasetType.CHECKLIST, new PagingRequest()), 2);<a name="line.526"></a>
+<span class="sourceLineNo">527</span>    assertResultsOfSize(service.listByCountry(Country.HAITI, DatasetType.METADATA, new PagingRequest()), 7);<a name="line.527"></a>
+<span class="sourceLineNo">528</span>  }<a name="line.528"></a>
+<span class="sourceLineNo">529</span><a name="line.529"></a>
+<span class="sourceLineNo">530</span>  @Test<a name="line.530"></a>
+<span class="sourceLineNo">531</span>  public void testListByType() {<a name="line.531"></a>
+<span class="sourceLineNo">532</span>    createDatasetsWithType(DatasetType.METADATA, 1);<a name="line.532"></a>
+<span class="sourceLineNo">533</span>    createDatasetsWithType(DatasetType.CHECKLIST, 2);<a name="line.533"></a>
+<span class="sourceLineNo">534</span>    createDatasetsWithType(DatasetType.OCCURRENCE, 3);<a name="line.534"></a>
+<span class="sourceLineNo">535</span>    createDatasetsWithType(DatasetType.SAMPLING_EVENT, 4);<a name="line.535"></a>
+<span class="sourceLineNo">536</span><a name="line.536"></a>
+<span class="sourceLineNo">537</span>    assertResultsOfSize(service.listByType(DatasetType.METADATA, new PagingRequest()), 1);<a name="line.537"></a>
+<span class="sourceLineNo">538</span>    assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);<a name="line.538"></a>
+<span class="sourceLineNo">539</span>    assertResultsOfSize(service.listByType(DatasetType.OCCURRENCE, new PagingRequest()), 3);<a name="line.539"></a>
+<span class="sourceLineNo">540</span>    assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);<a name="line.540"></a>
+<span class="sourceLineNo">541</span>  }<a name="line.541"></a>
+<span class="sourceLineNo">542</span><a name="line.542"></a>
+<span class="sourceLineNo">543</span>  @Test<a name="line.543"></a>
+<span class="sourceLineNo">544</span>  @Ignore("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")<a name="line.544"></a>
+<span class="sourceLineNo">545</span>  public void testCountrySearch() {<a name="line.545"></a>
+<span class="sourceLineNo">546</span>    createCountryDatasets(Country.ANDORRA, 3);<a name="line.546"></a>
+<span class="sourceLineNo">547</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1, Country.DJIBOUTI);<a name="line.547"></a>
+<span class="sourceLineNo">548</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.HAITI, 3, Country.AFGHANISTAN, Country.DENMARK);<a name="line.548"></a>
+<span class="sourceLineNo">549</span>    createCountryDatasets(DatasetType.CHECKLIST, Country.HAITI, 4, Country.GABON, Country.FIJI);<a name="line.549"></a>
+<span class="sourceLineNo">550</span>    createCountryDatasets(DatasetType.OCCURRENCE, Country.DOMINICA, 2, Country.DJIBOUTI);<a name="line.550"></a>
+<span class="sourceLineNo">551</span><a name="line.551"></a>
+<span class="sourceLineNo">552</span>    assertSearch(Country.ALBANIA, null, 0);<a name="line.552"></a>
+<span class="sourceLineNo">553</span>    assertSearch(Country.ANDORRA, null, 3);<a name="line.553"></a>
+<span class="sourceLineNo">554</span>    assertSearch(Country.DJIBOUTI, null, 1);<a name="line.554"></a>
+<span class="sourceLineNo">555</span>    assertSearch(Country.HAITI, null, 7);<a name="line.555"></a>
+<span class="sourceLineNo">556</span>    assertSearch(Country.UNKNOWN, null, 0);<a name="line.556"></a>
+<span class="sourceLineNo">557</span><a name="line.557"></a>
+<span class="sourceLineNo">558</span>    assertSearch(Country.HAITI, Country.GABON, 4);<a name="line.558"></a>
+<span class="sourceLineNo">559</span>    assertSearch(Country.HAITI, Country.FIJI, 4);<a name="line.559"></a>
+<span class="sourceLineNo">560</span>    assertSearch(Country.HAITI, Country.DENMARK, 3);<a name="line.560"></a>
+<span class="sourceLineNo">561</span>    assertSearch(Country.DJIBOUTI, Country.DENMARK, 0);<a name="line.561"></a>
+<span class="sourceLineNo">562</span>    assertSearch(Country.DJIBOUTI, Country.DJIBOUTI, 1);<a name="line.562"></a>
+<span class="sourceLineNo">563</span>    assertSearch(Country.DJIBOUTI, Country.GERMANY, 0);<a name="line.563"></a>
+<span class="sourceLineNo">564</span>    assertSearch(null, Country.DJIBOUTI, 3);<a name="line.564"></a>
+<span class="sourceLineNo">565</span>  }<a name="line.565"></a>
+<span class="sourceLineNo">566</span><a name="line.566"></a>
+<span class="sourceLineNo">567</span>  @Test(expected = ValidationException.class)<a name="line.567"></a>
+<span class="sourceLineNo">568</span>  public void createDatasetsWithInvalidUri() {<a name="line.568"></a>
+<span class="sourceLineNo">569</span>    Dataset d = newEntity();<a name="line.569"></a>
+<span class="sourceLineNo">570</span>    d.setHomepage(URI.create("file:/test.txt"));<a name="line.570"></a>
+<span class="sourceLineNo">571</span>    service.create(d);<a name="line.571"></a>
+<span class="sourceLineNo">572</span>  }<a name="line.572"></a>
+<span class="sourceLineNo">573</span><a name="line.573"></a>
+<span class="sourceLineNo">574</span>  private void createCountryDatasets(Country publishingCountry, int number) {<a name="line.574"></a>
+<span class="sourceLineNo">575</span>    createCountryDatasets(DatasetType.OCCURRENCE, publishingCountry, number, (Country) null);<a name="line.575"></a>
+<span class="sourceLineNo">576</span>  }<a name="line.576"></a>
+<span class="sourceLineNo">577</span><a name="line.577"></a>
+<span class="sourceLineNo">578</span>  private void createCountryDatasets(DatasetType type, Country publishingCountry, int number, Country... countries) {<a name="line.578"></a>
+<span class="sourceLineNo">579</span>    Dataset d = addCountryCoverage(newEntity(), countries);<a name="line.579"></a>
+<span class="sourceLineNo">580</span>    d.setType(type);<a name="line.580"></a>
+<span class="sourceLineNo">581</span>    service.create(d);<a name="line.581"></a>
+<span class="sourceLineNo">582</span><a name="line.582"></a>
+<span class="sourceLineNo">583</span>    // assign a controlled country based organization<a name="line.583"></a>
+<span class="sourceLineNo">584</span>    Organization org = organizationService.get(d.getPublishingOrganizationKey());<a name="line.584"></a>
+<span class="sourceLineNo">585</span>    org.setCountry(publishingCountry);<a name="line.585"></a>
+<span class="sourceLineNo">586</span>    organizationService.update(org);<a name="line.586"></a>
+<span class="sourceLineNo">587</span><a name="line.587"></a>
+<span class="sourceLineNo">588</span>    // create datasets for it<a name="line.588"></a>
+<span class="sourceLineNo">589</span>    for (int x = 1; x &lt; number; x++) {<a name="line.589"></a>
+<span class="sourceLineNo">590</span>      d = addCountryCoverage(newEntity(org.getKey(), d.getInstallationKey()));<a name="line.590"></a>
+<span class="sourceLineNo">591</span>      d.setType(type);<a name="line.591"></a>
+<span class="sourceLineNo">592</span>      service.create(d);<a name="line.592"></a>
+<span class="sourceLineNo">593</span>    }<a name="line.593"></a>
+<span class="sourceLineNo">594</span>  }<a name="line.594"></a>
+<span class="sourceLineNo">595</span><a name="line.595"></a>
+<span class="sourceLineNo">596</span>  /**<a name="line.596"></a>
+<span class="sourceLineNo">597</span>   * Create a number of new Datasets, having a particular dataset type.<a name="line.597"></a>
+<span class="sourceLineNo">598</span>   *<a name="line.598"></a>
+<span class="sourceLineNo">599</span>   * @param type dataset type<a name="line.599"></a>
+<span class="sourceLineNo">600</span>   * @param number amount of datasets to create<a name="line.600"></a>
+<span class="sourceLineNo">601</span>   */<a name="line.601"></a>
+<span class="sourceLineNo">602</span>  private void createDatasetsWithType(DatasetType type, int number) {<a name="line.602"></a>
+<span class="sourceLineNo">603</span>    // create datasets for it<a name="line.603"></a>
+<span class="sourceLineNo">604</span>    for (int x = 0; x &lt; number; x++) {<a name="line.604"></a>
+<span class="sourceLineNo">605</span>      Dataset d = newEntity();<a name="line.605"></a>
+<span class="sourceLineNo">606</span>      d.setType(type);<a name="line.606"></a>
+<span class="sourceLineNo">607</span>      service.create(d);<a name="line.607"></a>
+<span class="sourceLineNo">608</span>    }<a name="line.608"></a>
+<span class="sourceLineNo">609</span>  }<a name="line.609"></a>
+<span class="sourceLineNo">610</span><a name="line.610"></a>
+<span class="sourceLineNo">611</span>  private Dataset addCountryCoverage(Dataset d, Country... countries) {<a name="line.611"></a>
+<span class="sourceLineNo">612</span>    if (countries != null) {<a name="line.612"></a>
+<span class="sourceLineNo">613</span>      for (Country c : countries) {<a name="line.613"></a>
+<span class="sourceLineNo">614</span>        if (c != null) {<a name="line.614"></a>
+<span class="sourceLineNo">615</span>          d.getCountryCoverage().add(c);<a name="line.615"></a>
+<span class="sourceLineNo">616</span>        }<a name="line.616"></a>
+<span class="sourceLineNo">617</span>      }<a name="line.617"></a>
+<span class="sourceLineNo">618</span>    }<a name="line.618"></a>
+<span class="sourceLineNo">619</span>    return d;<a name="line.619"></a>
+<span class="sourceLineNo">620</span>  }<a name="line.620"></a>
+<span class="sourceLineNo">621</span>}<a name="line.621"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
