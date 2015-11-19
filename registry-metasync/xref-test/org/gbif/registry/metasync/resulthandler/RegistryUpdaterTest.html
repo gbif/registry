@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>RegistryUpdaterTest xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../testapidocs/org/gbif/registry/metasync/resulthandler/RegistryUpdaterTest.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <strong class="jxr_keyword">package</strong> org.gbif.registry.metasync.resulthandler;
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Contact;
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Dataset;
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Endpoint;
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Identifier;
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Installation;
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.MachineTag;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> org.gbif.api.model.registry.Tag;
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.service.registry.DatasetService;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.service.registry.MetasyncHistoryService;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.vocabulary.EndpointType;
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.vocabulary.IdentifierType;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.vocabulary.InstallationType;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.metasync.api.SyncResult;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.metasync.protocols.HttpGetMatcher;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.metasync.protocols.tapir.TapirMetadataSynchroniser;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.metasync.util.Constants;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> java.net.URI;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> java.util.UUID;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.Lists;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> com.google.common.io.Resources;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.apache.http.HttpResponse;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> org.apache.http.ProtocolVersion;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> org.apache.http.client.HttpClient;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> org.apache.http.entity.ByteArrayEntity;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> org.apache.http.message.BasicHttpResponse;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> org.apache.http.message.BasicStatusLine;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> org.junit.Before;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> org.junit.BeforeClass;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> org.junit.Test;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> org.junit.runner.RunWith;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> org.mockito.Mock;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> org.mockito.runners.MockitoJUnitRunner;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Matchers.any;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Matchers.anyInt;
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Matchers.argThat;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.mock;
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.times;
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.verify;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.mockito.Mockito.when;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  @RunWith(MockitoJUnitRunner.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../org/gbif/registry/metasync/resulthandler/RegistryUpdaterTest.html">RegistryUpdaterTest</a> {
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> TapirMetadataSynchroniser synchroniser;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>    @Mock
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>    <strong class="jxr_keyword">private</strong> DatasetService datasetService;
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>    @Mock
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    <strong class="jxr_keyword">private</strong> MetasyncHistoryService metasyncHistoryService;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>    <strong class="jxr_keyword">private</strong> RegistryUpdater updater;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    <strong class="jxr_keyword">private</strong> Dataset dataset;
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>    <strong class="jxr_keyword">private</strong> Installation installation;
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>    <strong class="jxr_keyword">private</strong> Endpoint endpoint;
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>    @BeforeClass
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">void</strong> init() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>      HttpClient client = mock(HttpClient.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>      <em class="jxr_comment">// mock endpoint responses</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      when(client.execute(argThat(HttpGetMatcher.matchUrl(<span class="jxr_string">"http://localhost/nmr?op=capabilities"</span>)))).thenReturn(
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>        prepareResponse(200, <span class="jxr_string">"tapir/capabilities1.xml"</span>));
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>      when(client.execute(argThat(HttpGetMatcher.matchUrl(<span class="jxr_string">"http://localhost/nmr"</span>)))).thenReturn(
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>        prepareResponse(200, <span class="jxr_string">"tapir/metadata1.xml"</span>));
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      when(
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>        client.execute(argThat(<a href="../../../../../org/gbif/registry/metasync/protocols/HttpGetMatcher.html">HttpGetMatcher</a>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>          .matchUrl(<span class="jxr_string">"http://localhost/nmr?op=s&amp;t=http%3A%2F%2Frs.gbif.org%2Ftemplates%2Ftapir%2Fdwc%2F1.4%2Fsci_name_range.xml&amp;count=true&amp;start=0&amp;limit=1&amp;lower=AAA&amp;upper=zzz"</span>))))
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>        .thenReturn(
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          prepareResponse(200, <span class="jxr_string">"tapir/search1.xml"</span>));
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>      synchroniser = <strong class="jxr_keyword">new</strong> TapirMetadataSynchroniser(client);
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>    }
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>    @Before
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setup() {
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <em class="jxr_comment">// same Endpoint for Installation and Dataset</em>
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      endpoint = <strong class="jxr_keyword">new</strong> Endpoint();
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>      endpoint.setKey(1);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      endpoint.setUrl(URI.create(<span class="jxr_string">"http://localhost/nmr"</span>));
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>      <em class="jxr_comment">// Installation, synchronized against</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      installation = <strong class="jxr_keyword">new</strong> Installation();
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      installation.setType(InstallationType.TAPIR_INSTALLATION);
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      installation.addEndpoint(endpoint);
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>      <em class="jxr_comment">// Populated Dataset</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      dataset = prepareDataset();
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>  
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>      <em class="jxr_comment">// RegistryUpdater, using mocked web service client implementation</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>      updater = <strong class="jxr_keyword">new</strong> RegistryUpdater(datasetService, metasyncHistoryService);
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>    }
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>    <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  <em class="jxr_javadoccomment">   * Synchronize a TAPIR installation, updating a single existing Dataset. The HTTP responses, and the Registry web</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>  <em class="jxr_javadoccomment">   * service client are mocked.</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_javadoccomment">   * &lt;/br&gt;</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <em class="jxr_javadoccomment">   * The test verifies that the Dataset update was successful, counting the number of web service method invocations.</em>
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> <em class="jxr_javadoccomment">   * For example, if datasetService.addContact was called twice, and 2 contacts were expected to be persisted on</em>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> <em class="jxr_javadoccomment">   * update, we can assume the service does its job correctly and just assert that the addContact() was called twice.</em>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>   @Test
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testSaveUpdatedDatasets() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>     <em class="jxr_comment">// generate SyncResult, including a single updated Dataset</em>
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>     SyncResult syncResult = synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> 
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>     <em class="jxr_comment">// update Dataset in Registry</em>
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>     updater.saveUpdatedDatasets(syncResult);
+<a class="jxr_linenumber" name="L112" href="#L112">112</a> 
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>     <em class="jxr_comment">// update dataset 1 time</em>
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>     verify(updater.getDatasetService(), times(1)).update(any(Dataset.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L115" href="#L115">115</a> 
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>     <em class="jxr_comment">// delete 1 existing machine tag, add 2 new</em>
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>     verify(updater.getDatasetService(), times(1)).deleteMachineTag(any(UUID.<strong class="jxr_keyword">class</strong>), anyInt());
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     verify(updater.getDatasetService(), times(2)).addMachineTag(any(UUID.<strong class="jxr_keyword">class</strong>), any(MachineTag.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> 
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>     <em class="jxr_comment">// delete 1 existing contact, add 2 new</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>     verify(updater.getDatasetService(), times(1)).deleteContact(any(UUID.<strong class="jxr_keyword">class</strong>), anyInt());
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>     verify(updater.getDatasetService(), times(2)).addContact(any(UUID.<strong class="jxr_keyword">class</strong>), any(Contact.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L123" href="#L123">123</a> 
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>     <em class="jxr_comment">// delete 1 endpoint, add 1 endpoint</em>
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>     verify(updater.getDatasetService(), times(1)).deleteEndpoint(any(UUID.<strong class="jxr_keyword">class</strong>), anyInt());
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>     verify(updater.getDatasetService(), times(1)).addEndpoint(any(UUID.<strong class="jxr_keyword">class</strong>), any(Endpoint.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L127" href="#L127">127</a> 
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>     <em class="jxr_comment">// delete 0 identifiers, add 0 identifiers</em>
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>     verify(updater.getDatasetService(), times(0)).deleteIdentifier(any(UUID.<strong class="jxr_keyword">class</strong>), anyInt());
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>     verify(updater.getDatasetService(), times(0)).addIdentifier(any(UUID.<strong class="jxr_keyword">class</strong>), any(Identifier.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L131" href="#L131">131</a> 
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     <em class="jxr_comment">// delete 0 tags, add 0 tags</em>
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>     verify(updater.getDatasetService(), times(0)).deleteTag(any(UUID.<strong class="jxr_keyword">class</strong>), anyInt());
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>     verify(updater.getDatasetService(), times(0)).addTag(any(UUID.<strong class="jxr_keyword">class</strong>), any(Tag.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>   }
+<a class="jxr_linenumber" name="L136" href="#L136">136</a> 
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> <em class="jxr_javadoccomment">   * Synchronize a TAPIR installation, whose single existing Dataset has been migrated to DwC-A already. An endpoint of</em>
+<a class="jxr_linenumber" name="L139" href="#L139">139</a> <em class="jxr_javadoccomment">   * type DwC-A is evidence of migration. Since the Dataset has been migrated, its metadata won't be updated from</em>
+<a class="jxr_linenumber" name="L140" href="#L140">140</a> <em class="jxr_javadoccomment">   * TAPIR anymore.</em>
+<a class="jxr_linenumber" name="L141" href="#L141">141</a> <em class="jxr_javadoccomment">   * &lt;/br&gt;</em>
+<a class="jxr_linenumber" name="L142" href="#L142">142</a> <em class="jxr_javadoccomment">   * The test verifies that the Dataset update was skipped, counting the number of web service method invocations.</em>
+<a class="jxr_linenumber" name="L143" href="#L143">143</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>   @Test
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testSaveUpdatedDatasetsSkipped() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>     Endpoint dwca = <strong class="jxr_keyword">new</strong> Endpoint();
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     dwca.setKey(100);
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>     dwca.setType(EndpointType.DWC_ARCHIVE);
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>     dwca.setUrl(URI.create(<span class="jxr_string">"http://ipt.gbif.org/archive.do?r=test"</span>));
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>     dataset.getEndpoints().add(dwca);
+<a class="jxr_linenumber" name="L151" href="#L151">151</a> 
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>     <em class="jxr_comment">// generate SyncResult, including a single updated Dataset</em>
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>     SyncResult syncResult = synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
+<a class="jxr_linenumber" name="L154" href="#L154">154</a> 
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>     <em class="jxr_comment">// update Dataset in Registry</em>
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>     updater.saveUpdatedDatasets(syncResult);
+<a class="jxr_linenumber" name="L157" href="#L157">157</a> 
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>     <em class="jxr_comment">// update dataset was skipped - service was called 0 times!</em>
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>     verify(updater.getDatasetService(), times(0)).update(any(Dataset.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>   }
+<a class="jxr_linenumber" name="L161" href="#L161">161</a> 
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L163" href="#L163">163</a> <em class="jxr_javadoccomment">   * Prepare TAPIR Dataset for use in tests, having 1 contact, 1 identifier, 2 machine tags, 1 tag, and 1 endpoint.</em>
+<a class="jxr_linenumber" name="L164" href="#L164">164</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>   <strong class="jxr_keyword">private</strong> Dataset prepareDataset() {
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>     <em class="jxr_comment">// create TAPIR dataset with single endpoint</em>
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>     Dataset dataset = <strong class="jxr_keyword">new</strong> Dataset();
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>     dataset.setKey(UUID.randomUUID());
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>     dataset.setTitle(<span class="jxr_string">"Beavers"</span>);
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     dataset.addEndpoint(endpoint);
+<a class="jxr_linenumber" name="L171" href="#L171">171</a> 
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>     <em class="jxr_comment">// add single Contact</em>
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>     Contact contact = <strong class="jxr_keyword">new</strong> Contact();
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     contact.setKey(1);
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>     contact.addEmail(<span class="jxr_string">"test@gbif.org"</span>);
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>     dataset.setContacts(Lists.newArrayList(contact));
+<a class="jxr_linenumber" name="L177" href="#L177">177</a> 
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>     <em class="jxr_comment">// add single Identifier</em>
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>     Identifier identifier = <strong class="jxr_keyword">new</strong> Identifier();
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>     identifier.setKey(1);
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>     identifier.setType(IdentifierType.GBIF_PORTAL);
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>     identifier.setIdentifier(<span class="jxr_string">"450"</span>);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>     dataset.setIdentifiers(Lists.newArrayList(identifier));
+<a class="jxr_linenumber" name="L184" href="#L184">184</a> 
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     <em class="jxr_comment">// add 2 MachineTags 1 with metasync.gbif.org namespace, and another not having it</em>
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>     List&lt;MachineTag&gt; machineTags = Lists.newArrayList();
+<a class="jxr_linenumber" name="L187" href="#L187">187</a> 
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>     MachineTag machineTag = <strong class="jxr_keyword">new</strong> MachineTag();
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>     machineTag.setKey(1);
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>     machineTag.setNamespace(Constants.METADATA_NAMESPACE);
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>     machineTag.setName(Constants.DECLARED_COUNT);
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>     machineTag.setValue(<span class="jxr_string">"1000"</span>);
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>     machineTags.add(machineTag);
+<a class="jxr_linenumber" name="L194" href="#L194">194</a> 
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>     MachineTag machineTag2 = <strong class="jxr_keyword">new</strong> MachineTag();
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>     machineTag2.setKey(2);
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>     machineTag2.setNamespace(<span class="jxr_string">"public"</span>);
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>     machineTag2.setName(<span class="jxr_string">"IsoCountryCode"</span>);
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>     machineTag2.setValue(<span class="jxr_string">"DK"</span>);
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>     machineTags.add(machineTag2);
+<a class="jxr_linenumber" name="L201" href="#L201">201</a> 
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     dataset.setMachineTags(machineTags);
+<a class="jxr_linenumber" name="L203" href="#L203">203</a> 
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>     <em class="jxr_comment">// add 1 Tag</em>
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>     Tag tag = <strong class="jxr_keyword">new</strong> Tag();
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>     tag.setKey(1);
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>     tag.setValue(<span class="jxr_string">"Invasive"</span>);
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>     dataset.setTags(Lists.newArrayList(tag));
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> 
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>     <strong class="jxr_keyword">return</strong> dataset;
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>   }
+<a class="jxr_linenumber" name="L212" href="#L212">212</a> 
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> HttpResponse prepareResponse(<strong class="jxr_keyword">int</strong> responseStatus, String fileName) <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>     HttpResponse response =
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>       <strong class="jxr_keyword">new</strong> BasicHttpResponse(<strong class="jxr_keyword">new</strong> BasicStatusLine(<strong class="jxr_keyword">new</strong> ProtocolVersion(<span class="jxr_string">"HTTP"</span>, 1, 1), responseStatus, <span class="jxr_string">""</span>));
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>     response.setStatusCode(responseStatus);
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>     byte[] bytes = Resources.toByteArray(Resources.getResource(fileName));
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>     response.setEntity(<strong class="jxr_keyword">new</strong> ByteArrayEntity(bytes));
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>     <strong class="jxr_keyword">return</strong> response;
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>   }
+<a class="jxr_linenumber" name="L221" href="#L221">221</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015 <a href="http://www.gbif.org">Global Biodiversity Information Facility</a>. All rights reserved.</div>
+</body>
+</html>

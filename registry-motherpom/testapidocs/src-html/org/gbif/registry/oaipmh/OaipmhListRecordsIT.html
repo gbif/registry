@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.gbif.registry.oaipmh;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.gbif.api.model.registry.Dataset;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.gbif.api.model.registry.Installation;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.gbif.api.model.registry.Organization;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.gbif.api.service.registry.DatasetService;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.gbif.api.service.registry.InstallationService;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.gbif.api.service.registry.NodeService;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.gbif.api.service.registry.OrganizationService;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.gbif.api.vocabulary.Country;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.gbif.api.vocabulary.DatasetType;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.gbif.registry.utils.OaipmhTestConfiguration;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.gbif.utils.file.FileUtils;<a name="line.13"></a>
+<span class="sourceLineNo">014</span><a name="line.14"></a>
+<span class="sourceLineNo">015</span>import java.net.URI;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import java.util.Calendar;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import java.util.Date;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import java.util.Iterator;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.util.List;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>import com.google.common.collect.Lists;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.apache.commons.io.IOUtils;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.dspace.xoai.model.oaipmh.Record;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.junit.Test;<a name="line.26"></a>
+<span class="sourceLineNo">027</span><a name="line.27"></a>
+<span class="sourceLineNo">028</span>import static org.junit.Assert.assertEquals;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import static org.junit.Assert.assertFalse;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import static org.junit.Assert.assertTrue;<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>/**<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * Test the ListRecords verb of the OAI-PMH endpoint.<a name="line.33"></a>
+<span class="sourceLineNo">034</span> *<a name="line.34"></a>
+<span class="sourceLineNo">035</span> */<a name="line.35"></a>
+<span class="sourceLineNo">036</span>public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>  public OaipmhListRecordsIT(NodeService nodeService, OrganizationService organizationService, InstallationService installationService, DatasetService datasetService) {<a name="line.38"></a>
+<span class="sourceLineNo">039</span>    super(nodeService, organizationService, installationService, datasetService);<a name="line.39"></a>
+<span class="sourceLineNo">040</span>  }<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>  /**<a name="line.42"></a>
+<span class="sourceLineNo">043</span>   * Prepare test data<a name="line.43"></a>
+<span class="sourceLineNo">044</span>   * @throws Throwable<a name="line.44"></a>
+<span class="sourceLineNo">045</span>   */<a name="line.45"></a>
+<span class="sourceLineNo">046</span>  public void prepareData() throws Exception {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>    Organization org1 = createOrganization(Country.ICELAND);<a name="line.47"></a>
+<span class="sourceLineNo">048</span>    Installation org1Installation1 = createInstallation(org1.getKey());<a name="line.48"></a>
+<span class="sourceLineNo">049</span>    Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>    Installation org1Installation2 = createInstallation(org1.getKey());<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    Dataset org1Installation2Dataset1 = createDataset(org1.getKey(), org1Installation2.getKey(), DatasetType.OCCURRENCE, new Date());<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>    Organization org2 = createOrganization(Country.NEW_ZEALAND);<a name="line.54"></a>
+<span class="sourceLineNo">055</span>    Installation org2Installation1 = createInstallation(org2.getKey());<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    Dataset org2Installation1Dataset1 = createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.56"></a>
+<span class="sourceLineNo">057</span>  }<a name="line.57"></a>
+<span class="sourceLineNo">058</span><a name="line.58"></a>
+<span class="sourceLineNo">059</span>  @Test<a name="line.59"></a>
+<span class="sourceLineNo">060</span>  public void testListRecordsBySets() throws Exception {<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    Calendar calendar = Calendar.getInstance();<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    calendar.set(2015,9,16);<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    Organization orgIceland = createOrganization(Country.ICELAND);<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    Installation orgIcelandInstallation1 = createInstallation(orgIceland.getKey());<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    Dataset orgIcelandInstallation1Dataset1 = createDataset(orgIceland.getKey(), orgIcelandInstallation1.getKey(), DatasetType.CHECKLIST, calendar.getTime());<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    Installation orgIcelandInstallation2 = createInstallation(orgIceland.getKey());<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    Dataset orgIcelandInstallation2Dataset1 = createDataset(orgIceland.getKey(), orgIcelandInstallation2.getKey(), DatasetType.OCCURRENCE, new Date());<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    Organization org2 = createOrganization(Country.NEW_ZEALAND);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    Installation org2Installation1 = createInstallation(org2.getKey());<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>    // SetType.COUNTRY<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    Iterator&lt;Record&gt; records = serviceProvider.listRecords(<a name="line.75"></a>
+<span class="sourceLineNo">076</span>            ListRecordsParameters.request()<a name="line.76"></a>
+<span class="sourceLineNo">077</span>                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())<a name="line.77"></a>
+<span class="sourceLineNo">078</span>                    .withSetSpec(OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix() + Country.ICELAND.getIso2LetterCode()));<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    assertTrue("ListRecords verb with set Country return at least 1 record", records.hasNext());<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    // SetType.INSTALLATION<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    records = serviceProvider.listRecords(<a name="line.82"></a>
+<span class="sourceLineNo">083</span>            ListRecordsParameters.request()<a name="line.83"></a>
+<span class="sourceLineNo">084</span>                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())<a name="line.84"></a>
+<span class="sourceLineNo">085</span>                    .withSetSpec(OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix() + orgIcelandInstallation1.getKey().toString()));<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    assertTrue("ListRecords verb with set Installation return at least 1 record", records.hasNext());<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    assertEquals(orgIcelandInstallation1Dataset1.getKey().toString(), records.next().getHeader().getIdentifier());<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    // SetType.DATASET_TYPE<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    records = serviceProvider.listRecords(<a name="line.90"></a>
+<span class="sourceLineNo">091</span>            ListRecordsParameters.request()<a name="line.91"></a>
+<span class="sourceLineNo">092</span>                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())<a name="line.92"></a>
+<span class="sourceLineNo">093</span>                    .withSetSpec(OaipmhSetRepository.SetType.DATASET_TYPE.getSubsetPrefix() + DatasetType.OCCURRENCE.toString()));<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    assertTrue("ListRecords verb with set DatasetType return at least 1 record", records.hasNext());<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    assertEquals(orgIcelandInstallation2Dataset1.getKey().toString(), records.next().getHeader().getIdentifier());<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    // Non-existing Set<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    records = serviceProvider.listRecords(<a name="line.98"></a>
+<span class="sourceLineNo">099</span>            ListRecordsParameters.request()<a name="line.99"></a>
+<span class="sourceLineNo">100</span>                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())<a name="line.100"></a>
+<span class="sourceLineNo">101</span>                    .withSetSpec("non-existing-set"));<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    assertFalse("ListRecords verb with non-existing set should return no record", records.hasNext());<a name="line.102"></a>
+<span class="sourceLineNo">103</span>  }<a name="line.103"></a>
+<span class="sourceLineNo">104</span><a name="line.104"></a>
+<span class="sourceLineNo">105</span>  /**<a name="line.105"></a>
+<span class="sourceLineNo">106</span>   *<a name="line.106"></a>
+<span class="sourceLineNo">107</span>   * Test that ListRecords verb return all records when the number of records is higher than 'MaxListRecords'.<a name="line.107"></a>
+<span class="sourceLineNo">108</span>   * When the number of records is higher than 'MaxListRecords', at least 2 requests will be sent and a 'resumptionToken'<a name="line.108"></a>
+<span class="sourceLineNo">109</span>   * will be used.<a name="line.109"></a>
+<span class="sourceLineNo">110</span>   *<a name="line.110"></a>
+<span class="sourceLineNo">111</span>   * @throws Exception<a name="line.111"></a>
+<span class="sourceLineNo">112</span>   */<a name="line.112"></a>
+<span class="sourceLineNo">113</span>  @Test<a name="line.113"></a>
+<span class="sourceLineNo">114</span>  public void testListRecordsPaging() throws Exception {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    int numberOfDataset = 3;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    Organization orgIceland = createOrganization(Country.ICELAND);<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    Installation orgIcelandInstallation1 = createInstallation(orgIceland.getKey());<a name="line.117"></a>
+<span class="sourceLineNo">118</span>    createDataset(orgIceland.getKey(), orgIcelandInstallation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>    Installation orgIcelandInstallation2 = createInstallation(orgIceland.getKey());<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    createDataset(orgIceland.getKey(), orgIcelandInstallation2.getKey(), DatasetType.OCCURRENCE, new Date());<a name="line.121"></a>
+<span class="sourceLineNo">122</span><a name="line.122"></a>
+<span class="sourceLineNo">123</span>    Organization org2 = createOrganization(Country.NEW_ZEALAND);<a name="line.123"></a>
+<span class="sourceLineNo">124</span>    Installation org2Installation1 = createInstallation(org2.getKey());<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>    // ensure the test will run under the expected configuration<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    assertTrue("OaipmhMockModule 'MaxListRecords' should be set to a value less than " + numberOfDataset, numberOfDataset &gt; OaipmhTestConfiguration.MAX_LIST_RECORDS);<a name="line.128"></a>
+<span class="sourceLineNo">129</span><a name="line.129"></a>
+<span class="sourceLineNo">130</span>    Iterator&lt;Record&gt; records = serviceProvider.listRecords(<a name="line.130"></a>
+<span class="sourceLineNo">131</span>            ListRecordsParameters.request()<a name="line.131"></a>
+<span class="sourceLineNo">132</span>                    .withMetadataPrefix(EML_FORMAT.getMetadataPrefix()));<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    List&lt;Record&gt; recordList = Lists.newArrayList(records);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    assertEquals("ListRecords verb return all records when the number of records is higher than 'MaxListRecords'", numberOfDataset, recordList.size());<a name="line.134"></a>
+<span class="sourceLineNo">135</span>  }<a name="line.135"></a>
+<span class="sourceLineNo">136</span><a name="line.136"></a>
+<span class="sourceLineNo">137</span>  @Test<a name="line.137"></a>
+<span class="sourceLineNo">138</span>  public void getListRecordsWithAugmentedMetadata() throws Exception {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>    Organization org1 = createOrganization(Country.ZAMBIA);<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    Installation org1Installation1 = createInstallation(org1.getKey());<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    Dataset org1Installation1Dataset1 = createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());<a name="line.141"></a>
+<span class="sourceLineNo">142</span><a name="line.142"></a>
+<span class="sourceLineNo">143</span>    insertMetadata(org1Installation1Dataset1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>    String key = org1Installation1Dataset1.getKey().toString();<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>    Record record = serviceProvider.getRecord(<a name="line.147"></a>
+<span class="sourceLineNo">148</span>            GetRecordParameters.request()<a name="line.148"></a>
+<span class="sourceLineNo">149</span>                    .withIdentifier(key)<a name="line.149"></a>
+<span class="sourceLineNo">150</span>                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    assertEquals(key, record.getHeader().getIdentifier());<a name="line.151"></a>
+<span class="sourceLineNo">152</span><a name="line.152"></a>
+<span class="sourceLineNo">153</span>    // the xoai library doesn't return the &lt;metadata&gt; content as we expect so test the returned document directly.<a name="line.153"></a>
+<span class="sourceLineNo">154</span>    String result = IOUtils.toString(new URI(baseUrl + "?verb=ListRecords&amp;metadataPrefix=" + EML_FORMAT.getMetadataPrefix()).toURL(), "UTF-8");<a name="line.154"></a>
+<span class="sourceLineNo">155</span><a name="line.155"></a>
+<span class="sourceLineNo">156</span>    // ensure we get the augmented metadata data<a name="line.156"></a>
+<span class="sourceLineNo">157</span>    assertTrue("ListRecords verb returns augmented metadata", result.contains("&lt;citation identifier=\"doi:tims-ident.2136.ex43.33.d\"&gt;title 1&lt;/citation&gt;"));<a name="line.157"></a>
+<span class="sourceLineNo">158</span>  }<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>}<a name="line.160"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
