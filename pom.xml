@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>29</version>
+    <version>31</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -12,7 +12,7 @@
   <version>2.40-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Registry Mother POM</name>
+  <name>GBIF Registry</name>
   <description>The projects to provide the registry, web services and client</description>
   <url>http://github.org/gbif/registry</url>
 
@@ -88,7 +88,7 @@
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
-    <hikaricp.version>2.3.8</hikaricp.version>
+    <hikaricp.version>2.4.2</hikaricp.version>
     <httpclient.version>4.3.6</httpclient.version>
     <httpcore.version>4.3.3</httpcore.version>
     <jackson.version>1.9.11</jackson.version>
@@ -563,17 +563,6 @@
       </dependency>
       <dependency>
         <groupId>org.dspace</groupId>
-        <artifactId>xoai-service-provider</artifactId>
-        <version>${xoai.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.dspace</groupId>
         <artifactId>xoai-data-provider</artifactId>
         <version>${xoai.version}</version>
         <exclusions>
@@ -606,4 +595,15 @@
     </dependencies>
   </dependencyManagement>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <topSiteURL>http://gbif.github.io/registry/</topSiteURL>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
