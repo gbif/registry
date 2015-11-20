@@ -1,0 +1,4 @@
+org.gbif.registry.metadata
+org.gbif.registry.metadata.contact
+org.gbif.registry.metadata.parse
+org.gbif.registry.metadata.parse.converter

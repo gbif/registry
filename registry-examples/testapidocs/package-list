@@ -1,0 +1,3 @@
+org.gbif
+org.gbif.config.guice
+org.gbif.config.jersey

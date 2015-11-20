@@ -1,0 +1,450 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.gbif.registry.ws.resources.legacy;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.gbif.api.model.registry.Dataset;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.gbif.api.model.registry.Endpoint;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.gbif.api.model.registry.Installation;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.gbif.api.model.registry.Organization;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.gbif.api.service.registry.DatasetService;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.gbif.registry.database.DatabaseInitializer;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.gbif.registry.database.LiquibaseInitializer;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.gbif.registry.grizzly.RegistryServer;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.gbif.registry.guice.RegistryTestModules;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.gbif.registry.utils.Datasets;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.gbif.registry.utils.Endpoints;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.gbif.registry.utils.Installations;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.gbif.registry.utils.Organizations;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.gbif.registry.utils.Parsers;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.gbif.registry.utils.Requests;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import org.gbif.registry.ws.util.LegacyResourceConstants;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.gbif.utils.HttpUtil;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.nio.charset.Charset;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.ArrayList;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.Iterator;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.List;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.util.UUID;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import javax.ws.rs.core.Response;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import javax.xml.parsers.ParserConfigurationException;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>import com.google.inject.Injector;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.apache.http.NameValuePair;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.apache.http.client.entity.UrlEncodedFormEntity;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.apache.http.message.BasicNameValuePair;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.codehaus.jackson.JsonNode;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.codehaus.jackson.map.ObjectMapper;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.junit.ClassRule;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.junit.Rule;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.junit.Test;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.xml.sax.SAXException;<a name="line.38"></a>
+<span class="sourceLineNo">039</span><a name="line.39"></a>
+<span class="sourceLineNo">040</span>import static org.junit.Assert.assertEquals;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>import static org.junit.Assert.assertNotNull;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import static org.junit.Assert.assertTrue;<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>public class LegacyEndpointResourceIT {<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>  // Flushes the database on each run<a name="line.46"></a>
+<span class="sourceLineNo">047</span>  @ClassRule<a name="line.47"></a>
+<span class="sourceLineNo">048</span>  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>  @ClassRule<a name="line.50"></a>
+<span class="sourceLineNo">051</span>  public static final RegistryServer registryServer = RegistryServer.INSTANCE;<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>  @Rule<a name="line.53"></a>
+<span class="sourceLineNo">054</span>  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>  public static final String ENDPOINT_DESCRIPTION = "Description of Test Endpoint";<a name="line.56"></a>
+<span class="sourceLineNo">057</span>  public static final String ENDPOINT_TYPE = "EML";<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  public static final String ENDPOINT_ACCESS_POINT_URL = "http://ipt.gbif.org/eml.do?r=bigdbtest&amp;v=18";<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>  private final DatasetService datasetService;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  private final ObjectMapper objectMapper = new ObjectMapper();<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>  public LegacyEndpointResourceIT() throws ParserConfigurationException, SAXException {<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    Injector i = RegistryTestModules.webservice();<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    this.datasetService = i.getInstance(DatasetService.class);<a name="line.65"></a>
+<span class="sourceLineNo">066</span>  }<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>  /**<a name="line.68"></a>
+<span class="sourceLineNo">069</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.69"></a>
+<span class="sourceLineNo">070</span>   * associated to the Organization.<a name="line.70"></a>
+<span class="sourceLineNo">071</span>   * &lt;/br&gt;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>   * Then, it sends a create Endpoint (POST) request to create a new Endpoint associated to this dataset.<a name="line.72"></a>
+<span class="sourceLineNo">073</span>   * &lt;/br&gt;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>   * Upon receiving an HTTP Response, the test parses its XML content in order to extract the created Endpoint key.<a name="line.74"></a>
+<span class="sourceLineNo">075</span>   * The content is parsed exactly the same way as the GBRDS WS consumer would do it.<a name="line.75"></a>
+<span class="sourceLineNo">076</span>   * &lt;/br&gt;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>   * Last, the test validates that the endpoint was persisted correctly.<a name="line.77"></a>
+<span class="sourceLineNo">078</span>   */<a name="line.78"></a>
+<span class="sourceLineNo">079</span>  @Test<a name="line.79"></a>
+<span class="sourceLineNo">080</span>  public void testRegisterLegacyEndpoint() throws Exception {<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    // persist new organization (IPT hosting organization)<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    UUID organizationKey = organization.getKey();<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>    // persist new installation<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    UUID installationKey = installation.getKey();<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    // persist new Dataset associated to installation<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    UUID datasetKey = dataset.getKey();<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>    // populate params for ws<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    List&lt;NameValuePair&gt; data = buildLegacyEndpointParameters(datasetKey);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    // construct request uri<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    String uri = Requests.getRequestUri("/registry/service");<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    // before sending the update POST request, count the number of endpoints<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    assertEquals(0, datasetService.listEndpoints(datasetKey).size());<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>    // send POST request with credentials<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.104"></a>
+<span class="sourceLineNo">105</span><a name="line.105"></a>
+<span class="sourceLineNo">106</span>    // parse newly registered endpoint key (id)<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);<a name="line.107"></a>
+<span class="sourceLineNo">108</span>    assertNotNull("Registered Endpoint key should be in response", Parsers.legacyEndpointResponseHandler.key);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    assertEquals(ENDPOINT_ACCESS_POINT_URL, Parsers.legacyEndpointResponseHandler.accessPointURL);<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    assertEquals(ENDPOINT_TYPE, Parsers.legacyEndpointResponseHandler.type);<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    assertEquals(ENDPOINT_DESCRIPTION, Parsers.legacyEndpointResponseHandler.description);<a name="line.112"></a>
+<span class="sourceLineNo">113</span><a name="line.113"></a>
+<span class="sourceLineNo">114</span>    // count the number of endpoints<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.115"></a>
+<span class="sourceLineNo">116</span>  }<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>  /**<a name="line.118"></a>
+<span class="sourceLineNo">119</span>   * The test sends a create Endpoint (POST) request to create a new Dataset Endpoint, however, its credentials are<a name="line.119"></a>
+<span class="sourceLineNo">120</span>   * not authorized. The test must check that the server responds  with a 401 Unauthorized Response.<a name="line.120"></a>
+<span class="sourceLineNo">121</span>   */<a name="line.121"></a>
+<span class="sourceLineNo">122</span>  @Test<a name="line.122"></a>
+<span class="sourceLineNo">123</span>  public void testRegisterLegacyEndpointButNotAuthorized() throws Exception {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>    // persist new organization (IPT hosting organization)<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    UUID organizationKey = organization.getKey();<a name="line.126"></a>
+<span class="sourceLineNo">127</span><a name="line.127"></a>
+<span class="sourceLineNo">128</span>    // persist new installation<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    UUID installationKey = installation.getKey();<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>    // persist new Dataset associated to installation<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    UUID datasetKey = dataset.getKey();<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>    // populate params for ws<a name="line.136"></a>
+<span class="sourceLineNo">137</span>    List&lt;NameValuePair&gt; data = buildLegacyEndpointParameters(datasetKey);<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    // construct request uri<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    String uri = Requests.getRequestUri("/registry/service");<a name="line.141"></a>
+<span class="sourceLineNo">142</span><a name="line.142"></a>
+<span class="sourceLineNo">143</span>    // send POST request with credentials<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    // assign the organization the random generated key, to provoke authorization failure<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    organization.setKey(UUID.randomUUID());<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>    // 401 expected<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());<a name="line.149"></a>
+<span class="sourceLineNo">150</span>  }<a name="line.150"></a>
+<span class="sourceLineNo">151</span><a name="line.151"></a>
+<span class="sourceLineNo">152</span>  /**<a name="line.152"></a>
+<span class="sourceLineNo">153</span>   * The test sends a create Endpoint (POST) request to create a new Dataset Endpoint, however, its type HTTP parameter<a name="line.153"></a>
+<span class="sourceLineNo">154</span>   * is missing. The test must check that the server responds  with a 400 BAD_REQUEST Response.<a name="line.154"></a>
+<span class="sourceLineNo">155</span>   */<a name="line.155"></a>
+<span class="sourceLineNo">156</span>  @Test<a name="line.156"></a>
+<span class="sourceLineNo">157</span>  public void testRegisterLegacyEndpointWithNoType() throws Exception {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    // persist new organization (IPT hosting organization)<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    UUID organizationKey = organization.getKey();<a name="line.160"></a>
+<span class="sourceLineNo">161</span><a name="line.161"></a>
+<span class="sourceLineNo">162</span>    // persist new installation<a name="line.162"></a>
+<span class="sourceLineNo">163</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    UUID installationKey = installation.getKey();<a name="line.164"></a>
+<span class="sourceLineNo">165</span><a name="line.165"></a>
+<span class="sourceLineNo">166</span>    // persist new Dataset associated to installation<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    UUID datasetKey = dataset.getKey();<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>    // populate params for ws<a name="line.170"></a>
+<span class="sourceLineNo">171</span>    List&lt;NameValuePair&gt; data = buildLegacyEndpointParameters(datasetKey);<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    assertEquals(4, data.size());<a name="line.172"></a>
+<span class="sourceLineNo">173</span>    // remove mandatory key/value before sending<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    Iterator&lt;NameValuePair&gt; iter = data.iterator();<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    while (iter.hasNext()) {<a name="line.175"></a>
+<span class="sourceLineNo">176</span>      NameValuePair pair = iter.next();<a name="line.176"></a>
+<span class="sourceLineNo">177</span>      if (pair.getName().equals("type")) {<a name="line.177"></a>
+<span class="sourceLineNo">178</span>        iter.remove();<a name="line.178"></a>
+<span class="sourceLineNo">179</span>      }<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    }<a name="line.180"></a>
+<span class="sourceLineNo">181</span>    assertEquals(3, data.size());<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.182"></a>
+<span class="sourceLineNo">183</span><a name="line.183"></a>
+<span class="sourceLineNo">184</span>    // construct request uri<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    String uri = Requests.getRequestUri("/registry/service");<a name="line.185"></a>
+<span class="sourceLineNo">186</span><a name="line.186"></a>
+<span class="sourceLineNo">187</span>    // send POST request with credentials<a name="line.187"></a>
+<span class="sourceLineNo">188</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.188"></a>
+<span class="sourceLineNo">189</span><a name="line.189"></a>
+<span class="sourceLineNo">190</span>    // 400 expected<a name="line.190"></a>
+<span class="sourceLineNo">191</span>    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());<a name="line.191"></a>
+<span class="sourceLineNo">192</span>  }<a name="line.192"></a>
+<span class="sourceLineNo">193</span><a name="line.193"></a>
+<span class="sourceLineNo">194</span>  /**<a name="line.194"></a>
+<span class="sourceLineNo">195</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.195"></a>
+<span class="sourceLineNo">196</span>   * associated to the Organization. Then it adds an Endpoints for the Dataset.<a name="line.196"></a>
+<span class="sourceLineNo">197</span>   * &lt;/br&gt;<a name="line.197"></a>
+<span class="sourceLineNo">198</span>   * Then, it sends a delete all Endpoints (DELETE) request to delete all the Endpoints associated to this dataset.<a name="line.198"></a>
+<span class="sourceLineNo">199</span>   * &lt;/br&gt;<a name="line.199"></a>
+<span class="sourceLineNo">200</span>   * Last, the test validates that the endpoints were deleted correctly.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>   */<a name="line.201"></a>
+<span class="sourceLineNo">202</span>  @Test<a name="line.202"></a>
+<span class="sourceLineNo">203</span>  public void testDeleteAllDatasetEndpoints() throws Exception {<a name="line.203"></a>
+<span class="sourceLineNo">204</span>    // persist new organization (IPT hosting organization)<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.205"></a>
+<span class="sourceLineNo">206</span>    UUID organizationKey = organization.getKey();<a name="line.206"></a>
+<span class="sourceLineNo">207</span><a name="line.207"></a>
+<span class="sourceLineNo">208</span>    // persist new installation<a name="line.208"></a>
+<span class="sourceLineNo">209</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    UUID installationKey = installation.getKey();<a name="line.210"></a>
+<span class="sourceLineNo">211</span><a name="line.211"></a>
+<span class="sourceLineNo">212</span>    // persist new Dataset associated to installation<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    UUID datasetKey = dataset.getKey();<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>    // add endpooint for Dataset<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    Endpoint endpoint = Endpoints.newInstance();<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    datasetService.addEndpoint(datasetKey, endpoint);<a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>    // count the number of endpoints<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.221"></a>
+<span class="sourceLineNo">222</span><a name="line.222"></a>
+<span class="sourceLineNo">223</span>    // construct update request uri<a name="line.223"></a>
+<span class="sourceLineNo">224</span>    String uri = Requests.getRequestUri("/registry/service?resourceKey=" + datasetKey.toString());<a name="line.224"></a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span>    // send delete POST request<a name="line.226"></a>
+<span class="sourceLineNo">227</span>    HttpUtil.Response result = Requests.http.delete(uri, Organizations.credentials(organization));<a name="line.227"></a>
+<span class="sourceLineNo">228</span><a name="line.228"></a>
+<span class="sourceLineNo">229</span>    // check that the dataset was deleted<a name="line.229"></a>
+<span class="sourceLineNo">230</span>    assertEquals(200, result.getStatusCode());<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    assertEquals(0, datasetService.listEndpoints(datasetKey).size());<a name="line.231"></a>
+<span class="sourceLineNo">232</span>  }<a name="line.232"></a>
+<span class="sourceLineNo">233</span><a name="line.233"></a>
+<span class="sourceLineNo">234</span>  /**<a name="line.234"></a>
+<span class="sourceLineNo">235</span>   * The test sends a get all endpoints for dataset (GET) request, the JSON response having at the very least<a name="line.235"></a>
+<span class="sourceLineNo">236</span>   * the dataset key, endpoint key, endpoint type, and endpoint url.<a name="line.236"></a>
+<span class="sourceLineNo">237</span>   */<a name="line.237"></a>
+<span class="sourceLineNo">238</span>  @Test<a name="line.238"></a>
+<span class="sourceLineNo">239</span>  public void testGetLegacyEndpointsForDatasetJSON() throws Exception {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    // persist new organization (IPT hosting organization)<a name="line.240"></a>
+<span class="sourceLineNo">241</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    UUID organizationKey = organization.getKey();<a name="line.242"></a>
+<span class="sourceLineNo">243</span><a name="line.243"></a>
+<span class="sourceLineNo">244</span>    // persist new installation of type IPT<a name="line.244"></a>
+<span class="sourceLineNo">245</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.245"></a>
+<span class="sourceLineNo">246</span>    UUID installationKey = installation.getKey();<a name="line.246"></a>
+<span class="sourceLineNo">247</span><a name="line.247"></a>
+<span class="sourceLineNo">248</span>    // persist new Dataset associated to installation<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    UUID datasetKey = dataset.getKey();<a name="line.250"></a>
+<span class="sourceLineNo">251</span><a name="line.251"></a>
+<span class="sourceLineNo">252</span>    // add endpooint for Dataset<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    Endpoint endpoint = Endpoints.newInstance();<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    int endpointKey = datasetService.addEndpoint(datasetKey, endpoint);<a name="line.254"></a>
+<span class="sourceLineNo">255</span><a name="line.255"></a>
+<span class="sourceLineNo">256</span>    // count the number of endpoints<a name="line.256"></a>
+<span class="sourceLineNo">257</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.257"></a>
+<span class="sourceLineNo">258</span><a name="line.258"></a>
+<span class="sourceLineNo">259</span>    // construct request uri<a name="line.259"></a>
+<span class="sourceLineNo">260</span>    String uri = Requests.getRequestUri("/registry/service.json?resourceKey=" + datasetKey.toString());<a name="line.260"></a>
+<span class="sourceLineNo">261</span><a name="line.261"></a>
+<span class="sourceLineNo">262</span>    // send GET request with no credentials<a name="line.262"></a>
+<span class="sourceLineNo">263</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.263"></a>
+<span class="sourceLineNo">264</span><a name="line.264"></a>
+<span class="sourceLineNo">265</span>    // JSON array expected, with single endpoint<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    assertTrue(result.content.startsWith("[") &amp;&amp; result.content.endsWith("]"));<a name="line.266"></a>
+<span class="sourceLineNo">267</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.267"></a>
+<span class="sourceLineNo">268</span>    assertEquals(1, rootNode.size());<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    // all the expected keys in response?<a name="line.269"></a>
+<span class="sourceLineNo">270</span>    assertEquals(String.valueOf(endpointKey), rootNode.get(0).get(LegacyResourceConstants.KEY_PARAM).getTextValue());<a name="line.270"></a>
+<span class="sourceLineNo">271</span>    assertEquals(datasetKey.toString(), rootNode.get(0).get(LegacyResourceConstants.RESOURCE_KEY_PARAM).getTextValue());<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    assertEquals(endpoint.getType().toString(), rootNode.get(0).get(LegacyResourceConstants.TYPE_PARAM).getTextValue());<a name="line.272"></a>
+<span class="sourceLineNo">273</span>    assertEquals(endpoint.getUrl().toASCIIString(),<a name="line.273"></a>
+<span class="sourceLineNo">274</span>                 rootNode.get(0).get(LegacyResourceConstants.ACCESS_POINT_URL_PARAM).getTextValue());<a name="line.274"></a>
+<span class="sourceLineNo">275</span>    // simply empty values, but expected nonetheless<a name="line.275"></a>
+<span class="sourceLineNo">276</span>    assertNotNull(rootNode.get(0).get(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM).getTextValue());<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    assertNotNull(rootNode.get(0).get(LegacyResourceConstants.TYPE_DESCRIPTION_PARAM).getTextValue());<a name="line.277"></a>
+<span class="sourceLineNo">278</span>  }<a name="line.278"></a>
+<span class="sourceLineNo">279</span><a name="line.279"></a>
+<span class="sourceLineNo">280</span>  /**<a name="line.280"></a>
+<span class="sourceLineNo">281</span>   * The test sends a get all endpoints for dataset (GET) request, the XML response having at the very least<a name="line.281"></a>
+<span class="sourceLineNo">282</span>   * the dataset key, endpoint key, endpoint type, and endpoint url.<a name="line.282"></a>
+<span class="sourceLineNo">283</span>   */<a name="line.283"></a>
+<span class="sourceLineNo">284</span>  @Test<a name="line.284"></a>
+<span class="sourceLineNo">285</span>  public void testGetLegacyEndpointsForDatasetXML() throws Exception {<a name="line.285"></a>
+<span class="sourceLineNo">286</span>    // persist new organization (IPT hosting organization)<a name="line.286"></a>
+<span class="sourceLineNo">287</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.287"></a>
+<span class="sourceLineNo">288</span>    UUID organizationKey = organization.getKey();<a name="line.288"></a>
+<span class="sourceLineNo">289</span><a name="line.289"></a>
+<span class="sourceLineNo">290</span>    // persist new installation of type IPT<a name="line.290"></a>
+<span class="sourceLineNo">291</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.291"></a>
+<span class="sourceLineNo">292</span>    UUID installationKey = installation.getKey();<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>    // persist new Dataset associated to installation<a name="line.294"></a>
+<span class="sourceLineNo">295</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.295"></a>
+<span class="sourceLineNo">296</span>    UUID datasetKey = dataset.getKey();<a name="line.296"></a>
+<span class="sourceLineNo">297</span><a name="line.297"></a>
+<span class="sourceLineNo">298</span>    // add endpooint for Dataset<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    Endpoint endpoint = Endpoints.newInstance();<a name="line.299"></a>
+<span class="sourceLineNo">300</span>    int endpointKey = datasetService.addEndpoint(datasetKey, endpoint);<a name="line.300"></a>
+<span class="sourceLineNo">301</span><a name="line.301"></a>
+<span class="sourceLineNo">302</span>    // count the number of endpoints<a name="line.302"></a>
+<span class="sourceLineNo">303</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.303"></a>
+<span class="sourceLineNo">304</span><a name="line.304"></a>
+<span class="sourceLineNo">305</span>    // construct request uri<a name="line.305"></a>
+<span class="sourceLineNo">306</span>    String uri = Requests.getRequestUri("/registry/service?resourceKey=" + datasetKey.toString());<a name="line.306"></a>
+<span class="sourceLineNo">307</span><a name="line.307"></a>
+<span class="sourceLineNo">308</span>    // send GET request with no credentials<a name="line.308"></a>
+<span class="sourceLineNo">309</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.309"></a>
+<span class="sourceLineNo">310</span><a name="line.310"></a>
+<span class="sourceLineNo">311</span>    // TODO: Response must be wrapped with root &lt;services&gt;, not &lt;legacyEndpointResponses&gt;<a name="line.311"></a>
+<span class="sourceLineNo">312</span>    assertTrue(result.content.contains("&lt;legacyEndpointResponses&gt;&lt;service&gt;"));<a name="line.312"></a>
+<span class="sourceLineNo">313</span><a name="line.313"></a>
+<span class="sourceLineNo">314</span>    // parse returned list of services<a name="line.314"></a>
+<span class="sourceLineNo">315</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    assertEquals(String.valueOf(endpointKey), Parsers.legacyEndpointResponseHandler.key);<a name="line.316"></a>
+<span class="sourceLineNo">317</span>    assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    assertEquals(endpoint.getType().name(), Parsers.legacyEndpointResponseHandler.type);<a name="line.318"></a>
+<span class="sourceLineNo">319</span>    assertEquals(endpoint.getUrl().toASCIIString(), Parsers.legacyEndpointResponseHandler.accessPointURL);<a name="line.319"></a>
+<span class="sourceLineNo">320</span>    assertEquals(endpoint.getDescription(), Parsers.legacyEndpointResponseHandler.description);<a name="line.320"></a>
+<span class="sourceLineNo">321</span>    assertEquals("", Parsers.legacyEndpointResponseHandler.organisationKey);<a name="line.321"></a>
+<span class="sourceLineNo">322</span>    assertEquals("", Parsers.legacyEndpointResponseHandler.typeDescription);<a name="line.322"></a>
+<span class="sourceLineNo">323</span>    assertEquals("", Parsers.legacyEndpointResponseHandler.descriptionLanguage);<a name="line.323"></a>
+<span class="sourceLineNo">324</span>  }<a name="line.324"></a>
+<span class="sourceLineNo">325</span><a name="line.325"></a>
+<span class="sourceLineNo">326</span>  /**<a name="line.326"></a>
+<span class="sourceLineNo">327</span>   * The test sends a get endpoint for dataset (GET) request for a dataset that does not exist.<a name="line.327"></a>
+<span class="sourceLineNo">328</span>   * The JSON response having an error message, not a 404.<a name="line.328"></a>
+<span class="sourceLineNo">329</span>   */<a name="line.329"></a>
+<span class="sourceLineNo">330</span>  @Test<a name="line.330"></a>
+<span class="sourceLineNo">331</span>  public void testGetLegacyEndpointsForDatasetNotFoundJSON() throws Exception {<a name="line.331"></a>
+<span class="sourceLineNo">332</span>    // construct request uri<a name="line.332"></a>
+<span class="sourceLineNo">333</span>    String uri = Requests.getRequestUri("/registry/service.json?resourceKey=" + UUID.randomUUID().toString());<a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334"></a>
+<span class="sourceLineNo">335</span>    // send GET request with no credentials<a name="line.335"></a>
+<span class="sourceLineNo">336</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.336"></a>
+<span class="sourceLineNo">337</span><a name="line.337"></a>
+<span class="sourceLineNo">338</span>    // JSON object expected, representing single dataset<a name="line.338"></a>
+<span class="sourceLineNo">339</span>    assertTrue(result.content.equalsIgnoreCase("{\"error\":\"No dataset matches the key provided\"}"));<a name="line.339"></a>
+<span class="sourceLineNo">340</span>  }<a name="line.340"></a>
+<span class="sourceLineNo">341</span><a name="line.341"></a>
+<span class="sourceLineNo">342</span>  /**<a name="line.342"></a>
+<span class="sourceLineNo">343</span>   * Populate a list of name value pairs used in the common ws requests for GBRDS endpoint creation.<a name="line.343"></a>
+<span class="sourceLineNo">344</span>   *<a name="line.344"></a>
+<span class="sourceLineNo">345</span>   * @param datasetKey dataset key<a name="line.345"></a>
+<span class="sourceLineNo">346</span>   *<a name="line.346"></a>
+<span class="sourceLineNo">347</span>   * @return list of name value pairs<a name="line.347"></a>
+<span class="sourceLineNo">348</span>   */<a name="line.348"></a>
+<span class="sourceLineNo">349</span>  private List&lt;NameValuePair&gt; buildLegacyEndpointParameters(UUID datasetKey) {<a name="line.349"></a>
+<span class="sourceLineNo">350</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.350"></a>
+<span class="sourceLineNo">351</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.RESOURCE_KEY_PARAM, datasetKey.toString()));<a name="line.351"></a>
+<span class="sourceLineNo">352</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, ENDPOINT_DESCRIPTION));<a name="line.352"></a>
+<span class="sourceLineNo">353</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.TYPE_PARAM, ENDPOINT_TYPE));<a name="line.353"></a>
+<span class="sourceLineNo">354</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ACCESS_POINT_URL_PARAM, ENDPOINT_ACCESS_POINT_URL));<a name="line.354"></a>
+<span class="sourceLineNo">355</span>    return data;<a name="line.355"></a>
+<span class="sourceLineNo">356</span>  }<a name="line.356"></a>
+<span class="sourceLineNo">357</span><a name="line.357"></a>
+<span class="sourceLineNo">358</span>  /**<a name="line.358"></a>
+<span class="sourceLineNo">359</span>   * The test sends a get all service types (GET) request, the JSON response having a name, description,<a name="line.359"></a>
+<span class="sourceLineNo">360</span>   * overviewURL, and key for each service in the list.<a name="line.360"></a>
+<span class="sourceLineNo">361</span>   */<a name="line.361"></a>
+<span class="sourceLineNo">362</span>  @Test<a name="line.362"></a>
+<span class="sourceLineNo">363</span>  public void testGetServiceTypes() throws Exception {<a name="line.363"></a>
+<span class="sourceLineNo">364</span><a name="line.364"></a>
+<span class="sourceLineNo">365</span>    // construct request uri<a name="line.365"></a>
+<span class="sourceLineNo">366</span>    String uri = Requests.getRequestUri("/registry/service.json?op=types");<a name="line.366"></a>
+<span class="sourceLineNo">367</span><a name="line.367"></a>
+<span class="sourceLineNo">368</span>    // send GET request with no credentials<a name="line.368"></a>
+<span class="sourceLineNo">369</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.369"></a>
+<span class="sourceLineNo">370</span><a name="line.370"></a>
+<span class="sourceLineNo">371</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.371"></a>
+<span class="sourceLineNo">372</span><a name="line.372"></a>
+<span class="sourceLineNo">373</span>    // JSON object expected, with array of services [{},{},..]<a name="line.373"></a>
+<span class="sourceLineNo">374</span>    assertTrue(result.content.startsWith("[") &amp;&amp; result.content.endsWith("]"));<a name="line.374"></a>
+<span class="sourceLineNo">375</span>    JsonNode node0 = rootNode.get(0);<a name="line.375"></a>
+<span class="sourceLineNo">376</span>    assertEquals("EML", node0.get("name").asText());<a name="line.376"></a>
+<span class="sourceLineNo">377</span>  }<a name="line.377"></a>
+<span class="sourceLineNo">378</span>}<a name="line.378"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

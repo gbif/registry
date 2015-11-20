@@ -1,0 +1,17 @@
+org.gbif.registry.metasync
+org.gbif.registry.metasync.api
+org.gbif.registry.metasync.protocols
+org.gbif.registry.metasync.protocols.biocase
+org.gbif.registry.metasync.protocols.biocase.model
+org.gbif.registry.metasync.protocols.biocase.model.abcd12
+org.gbif.registry.metasync.protocols.biocase.model.abcd206
+org.gbif.registry.metasync.protocols.biocase.model.capabilities
+org.gbif.registry.metasync.protocols.digir
+org.gbif.registry.metasync.protocols.digir.model
+org.gbif.registry.metasync.protocols.tapir
+org.gbif.registry.metasync.protocols.tapir.model.capabilities
+org.gbif.registry.metasync.protocols.tapir.model.metadata
+org.gbif.registry.metasync.protocols.tapir.model.search
+org.gbif.registry.metasync.resulthandler
+org.gbif.registry.metasync.util
+org.gbif.registry.metasync.util.converter

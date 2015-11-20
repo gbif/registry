@@ -1,0 +1,16 @@
+org.gbif.registry
+org.gbif.registry.database
+org.gbif.registry.doi
+org.gbif.registry.grizzly
+org.gbif.registry.guice
+org.gbif.registry.oaipmh
+org.gbif.registry.persistence.mapper
+org.gbif.registry.search
+org.gbif.registry.search.util
+org.gbif.registry.utils
+org.gbif.registry.ws.guice
+org.gbif.registry.ws.model
+org.gbif.registry.ws.resources
+org.gbif.registry.ws.resources.legacy
+org.gbif.registry.ws.security
+org.gbif.registry.ws.util
