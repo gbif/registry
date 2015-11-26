@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.38-SNAPSHOT</version>
+    <version>2.43-SNAPSHOT</version>
   </parent>
 
   <artifactId>registry-cli</artifactId>
@@ -12,18 +12,16 @@
 
   <name>Registry CLI</name>
 
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>http://gbif.github.io/registry/${project.artifactId}/</url>
+    </site>
+  </distributionManagement>
+
   <properties>
-    <gbif-doi.version>1.1</gbif-doi.version>
     <!-- guava has to match gbif-cli version -->
     <guava.version>17.0</guava.version>
-    <httpclient.version>4.3.6</httpclient.version>
-    <!-- cli specific jackson versions in order to use yaml configs -->
-    <jackson.version>1.9.11</jackson.version>
-    <jackson-annotations.version>2.5.4</jackson-annotations.version>
-    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
-    <jcommander.version>1.48</jcommander.version>
-    <metainf-services.version>1.5</metainf-services.version>
-    <yammer.version>2.2.0</yammer.version>
   </properties>
 
   <build>
@@ -37,31 +35,58 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-ssh</artifactId>
-        <version>2.4</version>
       </extension>
     </extensions>
     <plugins>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
         <configuration>
-          <appendAssemblyId>false</appendAssemblyId>
-          <finalName>${project.artifactId}</finalName>
-          <archive>
-            <manifest>
-              <mainClass>org.gbif.cli.Application</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
+          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+              </excludes>
+            </filter>
+          </filters>
         </configuration>
         <executions>
           <execution>
-            <id>make-assembly</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>shade</goal>
             </goals>
+            <configuration>
+              <finalName>${project.artifactId}</finalName>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <transformers>
+                <!-- This bit sets the main class for the executable jar as you otherwise -->
+                <!-- would with the assembly plugin                                       -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <manifestEntries>
+                    <Main-Class>org.gbif.cli.Application</Main-Class>
+                  </manifestEntries>
+                </transformer>
+                <!-- This bit merges the various META-INF/services files         -->
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+              </transformers>
+              <!--
+              <relocations>
+                <relocation>
+                  <pattern>org.codehaus.plexus.util</pattern>
+                  <shadedPattern>org.shaded.plexus.util</shadedPattern>
+                  <excludes>
+                    <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>
+                    <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>
+                  </excludes>
+                </relocation>
+              </relocations>
+              -->
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -83,22 +108,18 @@
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
-      <version>${jcommander.version}</version>
     </dependency>
     <dependency>
       <groupId>com.yammer.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>${yammer.version}</version>
     </dependency>
     <dependency>
       <groupId>com.yammer.metrics</groupId>
       <artifactId>metrics-ganglia</artifactId>
-      <version>${yammer.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson-datatype-guava.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -106,7 +127,6 @@
            Jackson 2 because only that supports YAML so we have to use the annotations from Jackson 2 -->
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson-annotations.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -128,12 +148,10 @@
     <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-cli</artifactId>
-      <version>${gbif-cli.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-doi</artifactId>
-      <version>${gbif-doi.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.common</groupId>
@@ -153,14 +171,12 @@
     <dependency>
       <groupId>org.kohsuke.metainf-services</groupId>
       <artifactId>metainf-services</artifactId>
-      <version>${metainf-services.version}</version>
       <!-- This is the proper declaration. For details see the homepage of the project. -->
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
       <type>jar</type>
       <exclusions>
         <exclusion>
@@ -172,23 +188,19 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>${httpcore.version}</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-apache-client4</artifactId>
-      <version>${jersey.version}</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
-      <version>${jersey.version}</version>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-core</artifactId>
-      <version>${jersey.version}</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
@@ -246,32 +258,5 @@
     </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <id>crawler-dev</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>wagon-maven-plugin</artifactId>
-            <version>1.0-beta-4</version>
-            <configuration>
-              <fromFile>${project.build.directory}/${project.artifactId}.jar</fromFile>
-              <url>scp://crap@crawler.gbif-dev.org/home/crap/lib</url>
-            </configuration>
-            <executions>
-              <execution>
-                <id>deploy-crawler</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>upload-single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
 

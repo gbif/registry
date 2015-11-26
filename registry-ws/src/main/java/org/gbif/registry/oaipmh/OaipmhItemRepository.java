@@ -7,6 +7,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.dataprovider.exceptions.OAIException;
 import org.dspace.xoai.dataprovider.filter.ScopedFilter;
@@ -317,10 +318,9 @@ public class OaipmhItemRepository implements ItemRepository {
         results.add(toOaipmhItem(dataset));
       }
     } catch (IOException e) {
-      //TODO handle that, caused by https://github.com/DSpace/xoai/issues/31
-      e.printStackTrace();
+      // caused by https://github.com/DSpace/xoai/issues/31
+      LOG.error("Failed to serialize datasets to DC/EML", e);
     }
-
     return new ListItemsResults(hasMoreResults, results);
   }
 
@@ -340,16 +340,23 @@ public class OaipmhItemRepository implements ItemRepository {
       LOG.error("Error while loading Organization from cache fro dataset {}", dataset, e);
     }
     List<Set> sets = getSets(organization, dataset);
-    Map<String,Object> additionalProperties = Maps.newHashMap();
+    Map<String, Object> additionalProperties = Maps.newHashMap();
     additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, ExtraMediaTypes.APPLICATION_DWCA);
 
-    //get the occurrence counts for this dataset, only used in DublinCore
+    // get the occurrence counts for this dataset, only used in DublinCore
+    // This is designed to fail fast (short http timeout) and on failures which are expected to be exceptional
+    // events, it is simply omitted.  See the Guice RegistryWsSevletListener for the configuration of the timeout.
     ReadBuilder readBuilder = new ReadBuilder();
     readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
-    long count = cubeService.get(readBuilder);
-    if(count > 0){
-      additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, count);
+    try {
+      long occurrenceCount = cubeService.get(readBuilder);
+      if (occurrenceCount > 0) {
+        additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, occurrenceCount);
+      }
+    } catch (ClientHandlerException ex) {
+      LOG.warn("Unable to get occurrence count from cubeService for dataset {}. Omitting count.", dataset.getKey(), ex);
     }
+
     /**
      * The XOAI library doesn't provide us with the metadata type (EML / OAI DC), so both must be produced.
      * An XSLT transform pulls out the one that's required.

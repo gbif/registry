@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.drupal.guice.DrupalMyBatisModule;
+import org.gbif.metrics.ws.client.guice.MetricsWsClientModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
@@ -48,6 +49,8 @@ public class RegistryWsServletListener extends GbifServletListener {
   public static final String APP_CONF_FILE = "registry.properties";
 
   private static final String API_URL_PROPERTY = "api.url";
+  // fail fast by designed, see CubeService usage
+  private static final String METRICS_WS_HTTP_TIMEOUT = "100";
 
   public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
   public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
@@ -56,10 +59,25 @@ public class RegistryWsServletListener extends GbifServletListener {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
-
   }
 
   private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
+
+  /**
+   * Get a subset of properties related to metrics.
+   * Uses the api.url to fill metrics.ws.url and set a small timeout (100 ms) for http
+   * This methods only exists because {@link org.gbif.ws.client.guice.GbifWsClientModule} uses Names.bindProperties(binder(), properties);
+   * which would lead to multiple bindings for the same property.
+   *
+   * @param properties
+   * @return
+   */
+  private Properties getMetricsProperties(Properties properties){
+    Properties metricsProperties = new Properties();
+    metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
+    metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
+    return metricsProperties;
+  }
 
   public RegistryWsServletListener() throws IOException {
     super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)), PACKAGES, true, responseFilters, requestFilters);
@@ -83,6 +101,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
+                              new MetricsWsClientModule(getMetricsProperties(properties)),
                               new OaipmhModule(properties));
   }
 
