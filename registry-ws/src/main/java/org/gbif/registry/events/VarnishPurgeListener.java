@@ -180,7 +180,7 @@ public class VarnishPurgeListener {
       orgKeys.add(d.getPublishingOrganizationKey());
       if (d.getParentDatasetKey() != null) {
         parentKeys.add(d.getParentDatasetKey());
-        purge(uriBuilder.path("dataset").path(d.getParentDatasetKey().toString()).build());
+        purge(uriBuilder.clone().path("dataset").path(d.getParentDatasetKey().toString()).build());
       }
     }
     banRegex(String.format("%s/dataset/%s/constituents", apiRoot, anyKey(parentKeys)));
@@ -221,7 +221,7 @@ public class VarnishPurgeListener {
     banRegex(String.format("%s/node/%s/organization", apiRoot, anyKey(nodekeys)));
   }
 
-  private String anyKey(Set<UUID> keys) {
+  private static String anyKey(Set<UUID> keys) {
     if (keys.size() == 1) {
       return keys.iterator().next().toString();
     }
@@ -234,7 +234,7 @@ public class VarnishPurgeListener {
    */
   private void purgeEntityAndBanLists(Class cl, UUID key) {
     // purge entity detail
-    purge(uriBuilder.path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());
+    purge(uriBuilder.clone().path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());
 
     // banRegex lists and searches
     banRegex(String.format("%s/%s(/search|/suggest)?[^/]*$", apiRoot, cl.getSimpleName().toLowerCase()));
@@ -290,7 +290,7 @@ public class VarnishPurgeListener {
 
     public HttpBan(String banRegex) {
       super();
-      setURI(uriBuilder.build());
+      setURI(uriBuilder.clone().build());
       setHeader(BAN_HEADER, banRegex);
     }
 
