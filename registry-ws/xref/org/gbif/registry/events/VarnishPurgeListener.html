@@ -188,7 +188,7 @@
 <a class="jxr_linenumber" name="L180" href="#L180">180</a>       orgKeys.add(d.getPublishingOrganizationKey());
 <a class="jxr_linenumber" name="L181" href="#L181">181</a>       <strong class="jxr_keyword">if</strong> (d.getParentDatasetKey() != <strong class="jxr_keyword">null</strong>) {
 <a class="jxr_linenumber" name="L182" href="#L182">182</a>         parentKeys.add(d.getParentDatasetKey());
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>         purge(uriBuilder.path(<span class="jxr_string">"dataset"</span>).path(d.getParentDatasetKey().toString()).build());
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>         purge(uriBuilder.clone().path(<span class="jxr_string">"dataset"</span>).path(d.getParentDatasetKey().toString()).build());
 <a class="jxr_linenumber" name="L184" href="#L184">184</a>       }
 <a class="jxr_linenumber" name="L185" href="#L185">185</a>     }
 <a class="jxr_linenumber" name="L186" href="#L186">186</a>     banRegex(String.format(<span class="jxr_string">"%s/dataset/%s/constituents"</span>, apiRoot, anyKey(parentKeys)));
@@ -229,7 +229,7 @@
 <a class="jxr_linenumber" name="L221" href="#L221">221</a>     banRegex(String.format(<span class="jxr_string">"%s/node/%s/organization"</span>, apiRoot, anyKey(nodekeys)));
 <a class="jxr_linenumber" name="L222" href="#L222">222</a>   }
 <a class="jxr_linenumber" name="L223" href="#L223">223</a> 
-<a class="jxr_linenumber" name="L224" href="#L224">224</a>   <strong class="jxr_keyword">private</strong> String anyKey(Set&lt;UUID&gt; keys) {
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> String anyKey(Set&lt;UUID&gt; keys) {
 <a class="jxr_linenumber" name="L225" href="#L225">225</a>     <strong class="jxr_keyword">if</strong> (keys.size() == 1) {
 <a class="jxr_linenumber" name="L226" href="#L226">226</a>       <strong class="jxr_keyword">return</strong> keys.iterator().next().toString();
 <a class="jxr_linenumber" name="L227" href="#L227">227</a>     }
@@ -242,7 +242,7 @@
 <a class="jxr_linenumber" name="L234" href="#L234">234</a> <em class="jxr_javadoccomment">   */</em>
 <a class="jxr_linenumber" name="L235" href="#L235">235</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> purgeEntityAndBanLists(Class cl, UUID key) {
 <a class="jxr_linenumber" name="L236" href="#L236">236</a>     <em class="jxr_comment">// purge entity detail</em>
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>     purge(uriBuilder.path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>     purge(uriBuilder.clone().path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());
 <a class="jxr_linenumber" name="L238" href="#L238">238</a> 
 <a class="jxr_linenumber" name="L239" href="#L239">239</a>     <em class="jxr_comment">// banRegex lists and searches</em>
 <a class="jxr_linenumber" name="L240" href="#L240">240</a>     banRegex(String.format(<span class="jxr_string">"%s/%s(/search|/suggest)?[^/]*$"</span>, apiRoot, cl.getSimpleName().toLowerCase()));
@@ -298,7 +298,7 @@
 <a class="jxr_linenumber" name="L290" href="#L290">290</a> 
 <a class="jxr_linenumber" name="L291" href="#L291">291</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../org/gbif/registry/events/VarnishPurgeListener.html">HttpBan</a>(String banRegex) {
 <a class="jxr_linenumber" name="L292" href="#L292">292</a>       <strong class="jxr_keyword">super</strong>();
-<a class="jxr_linenumber" name="L293" href="#L293">293</a>       setURI(uriBuilder.build());
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>       setURI(uriBuilder.clone().build());
 <a class="jxr_linenumber" name="L294" href="#L294">294</a>       setHeader(BAN_HEADER, banRegex);
 <a class="jxr_linenumber" name="L295" href="#L295">295</a>     }
 <a class="jxr_linenumber" name="L296" href="#L296">296</a> 

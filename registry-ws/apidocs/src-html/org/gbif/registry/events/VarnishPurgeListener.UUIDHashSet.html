@@ -188,7 +188,7 @@
 <span class="sourceLineNo">180</span>      orgKeys.add(d.getPublishingOrganizationKey());<a name="line.180"></a>
 <span class="sourceLineNo">181</span>      if (d.getParentDatasetKey() != null) {<a name="line.181"></a>
 <span class="sourceLineNo">182</span>        parentKeys.add(d.getParentDatasetKey());<a name="line.182"></a>
-<span class="sourceLineNo">183</span>        purge(uriBuilder.path("dataset").path(d.getParentDatasetKey().toString()).build());<a name="line.183"></a>
+<span class="sourceLineNo">183</span>        purge(uriBuilder.clone().path("dataset").path(d.getParentDatasetKey().toString()).build());<a name="line.183"></a>
 <span class="sourceLineNo">184</span>      }<a name="line.184"></a>
 <span class="sourceLineNo">185</span>    }<a name="line.185"></a>
 <span class="sourceLineNo">186</span>    banRegex(String.format("%s/dataset/%s/constituents", apiRoot, anyKey(parentKeys)));<a name="line.186"></a>
@@ -229,7 +229,7 @@
 <span class="sourceLineNo">221</span>    banRegex(String.format("%s/node/%s/organization", apiRoot, anyKey(nodekeys)));<a name="line.221"></a>
 <span class="sourceLineNo">222</span>  }<a name="line.222"></a>
 <span class="sourceLineNo">223</span><a name="line.223"></a>
-<span class="sourceLineNo">224</span>  private String anyKey(Set&lt;UUID&gt; keys) {<a name="line.224"></a>
+<span class="sourceLineNo">224</span>  private static String anyKey(Set&lt;UUID&gt; keys) {<a name="line.224"></a>
 <span class="sourceLineNo">225</span>    if (keys.size() == 1) {<a name="line.225"></a>
 <span class="sourceLineNo">226</span>      return keys.iterator().next().toString();<a name="line.226"></a>
 <span class="sourceLineNo">227</span>    }<a name="line.227"></a>
@@ -242,7 +242,7 @@
 <span class="sourceLineNo">234</span>   */<a name="line.234"></a>
 <span class="sourceLineNo">235</span>  private void purgeEntityAndBanLists(Class cl, UUID key) {<a name="line.235"></a>
 <span class="sourceLineNo">236</span>    // purge entity detail<a name="line.236"></a>
-<span class="sourceLineNo">237</span>    purge(uriBuilder.path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());<a name="line.237"></a>
+<span class="sourceLineNo">237</span>    purge(uriBuilder.clone().path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());<a name="line.237"></a>
 <span class="sourceLineNo">238</span><a name="line.238"></a>
 <span class="sourceLineNo">239</span>    // banRegex lists and searches<a name="line.239"></a>
 <span class="sourceLineNo">240</span>    banRegex(String.format("%s/%s(/search|/suggest)?[^/]*$", apiRoot, cl.getSimpleName().toLowerCase()));<a name="line.240"></a>
@@ -298,7 +298,7 @@
 <span class="sourceLineNo">290</span><a name="line.290"></a>
 <span class="sourceLineNo">291</span>    public HttpBan(String banRegex) {<a name="line.291"></a>
 <span class="sourceLineNo">292</span>      super();<a name="line.292"></a>
-<span class="sourceLineNo">293</span>      setURI(uriBuilder.build());<a name="line.293"></a>
+<span class="sourceLineNo">293</span>      setURI(uriBuilder.clone().build());<a name="line.293"></a>
 <span class="sourceLineNo">294</span>      setHeader(BAN_HEADER, banRegex);<a name="line.294"></a>
 <span class="sourceLineNo">295</span>    }<a name="line.295"></a>
 <span class="sourceLineNo">296</span><a name="line.296"></a>
