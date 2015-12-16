@@ -78,7 +78,10 @@ public class ContactAdapter {
 
   /**
    * Filter contacts based on the provided contact types.
+   * The order in which the ContactType are provided will be respected in the response except missing
+   * ContactType will be ommited.
    * Filtering is done by the {@link #getFirstPreferredType} method.
+
    *
    * @param types
    * @return filtered contacts or an empty list if none matched

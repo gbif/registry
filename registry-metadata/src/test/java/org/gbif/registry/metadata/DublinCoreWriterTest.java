@@ -87,7 +87,13 @@ public class DublinCoreWriterTest {
     metadataAuthorContact.setType(ContactType.METADATA_AUTHOR);
     metadataAuthorContact.setPrimary(true);
 
-    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact));
+    // ADMINISTRATIVE_POINT_OF_CONTACT should be displayed first in the generated DublinCore document
+    Contact administrativeContact = new Contact();
+    administrativeContact.setFirstName("Patrick");
+    administrativeContact.setLastName("Roy");
+    administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
+
+    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact, administrativeContact));
 
     d.setGeographicCoverageDescription("Description de la portée");
     Date endDate = calendar.getTime();

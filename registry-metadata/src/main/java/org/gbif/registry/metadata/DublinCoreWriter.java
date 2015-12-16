@@ -24,6 +24,7 @@ import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -119,9 +120,12 @@ public class DublinCoreWriter {
       return "";
     }
 
+    /**
+     * The following ordering will be respected: ADMINISTRATIVE_POINT_OF_CONTACT, METADATA_AUTHOR and ORIGINATOR
+     * @return set of formatted contact name ordered by ContactType
+     */
     public Set<String> getCreators() {
-      Set<String> creators = Sets.newHashSet();
-
+      Set<String> creators = Sets.newLinkedHashSet();
       List<Contact> filteredContacts = contactAdapter.getFilteredContacts(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT,
               ContactType.METADATA_AUTHOR, ContactType.ORIGINATOR);
       for(Contact contact : filteredContacts){
