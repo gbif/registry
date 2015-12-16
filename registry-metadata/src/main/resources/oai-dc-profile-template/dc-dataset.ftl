@@ -6,9 +6,6 @@
 
     <#-- Always use only one identifier -->
     <dc:identifier>${dc.identifier}</dc:identifier>
-    <#if dataset.purpose?has_content>
-    <dc:subject>${dataset.purpose}</dc:subject>
-    </#if>
     <#if dataset.keywordCollections?has_content>
     <#list dataset.keywordCollections![] as kwc>
     <dc:subject>${kwc.keywords?join(", ")}</dc:subject>
@@ -20,7 +17,7 @@
     <#list dc.description![] as description>
     <dc:description>${description}</dc:description>
     </#list>
-
+    <#if dataset.purpose?has_content><dc:description>${dataset.purpose}</dc:description></#if>
     <@printIfHasContent dc.occurrenceCount!; oc><dc:description>${oc} ${fmUtil.choiceFormat("0#occurrences|1#occurrence|1<occurrences", dc.occurrenceCount)}</dc:description></@printIfHasContent>
 
     <dc:type>Dataset</dc:type>

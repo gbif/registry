@@ -3,11 +3,11 @@
     <dc:publisher>Qwerty U</dc:publisher>
 
     <dc:identifier>http://www.gbif.org/dataset/bdd601cc-00a7-431c-9724-d5b03170fcb2</dc:identifier>
-    <dc:subject>Le but de ce dataset est de ...</dc:subject>
     <dc:subject>keyboard, qwerty</dc:subject>
 
     <dc:source>http:///www.gbif.org</dc:source>
     <dc:description>Description d&apos;un dataset sur les claviers qwerty</dc:description>
+    <dc:description>Le but de ce dataset est de ...</dc:description>
     <dc:description>3 occurrences</dc:description>
     <dc:type>Dataset</dc:type>
 
