@@ -13,10 +13,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * specify element names that consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "IptError")
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ErrorResponse {
 
-  @XmlAttribute
   private String error;
 
   public ErrorResponse(String error) {
@@ -29,6 +27,7 @@ public class ErrorResponse {
   public ErrorResponse() {
   }
 
+  @XmlAttribute
   @NotNull
   public String getError() {
     return error;
