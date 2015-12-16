@@ -62,6 +62,7 @@ import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.util.DataCiteConverter;
@@ -758,7 +759,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Produces(MediaType.APPLICATION_XML)
   @Override
   public InputStream getMetadataDocument(@PathParam("key") int metadataKey) {
-    return new ByteArrayInputStream(metadataMapper.getDocument(metadataKey).getData());
+    ByteArrayWrapper document = metadataMapper.getDocument(metadataKey);
+    if(document == null){
+      return null;
+    }
+    return new ByteArrayInputStream(document.getData());
   }
 
   @Path("metadata/{key}")
