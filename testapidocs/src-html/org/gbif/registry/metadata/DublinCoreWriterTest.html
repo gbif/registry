@@ -95,43 +95,49 @@
 <span class="sourceLineNo">087</span>    metadataAuthorContact.setType(ContactType.METADATA_AUTHOR);<a name="line.87"></a>
 <span class="sourceLineNo">088</span>    metadataAuthorContact.setPrimary(true);<a name="line.88"></a>
 <span class="sourceLineNo">089</span><a name="line.89"></a>
-<span class="sourceLineNo">090</span>    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact));<a name="line.90"></a>
-<span class="sourceLineNo">091</span><a name="line.91"></a>
-<span class="sourceLineNo">092</span>    d.setGeographicCoverageDescription("Description de la portée");<a name="line.92"></a>
-<span class="sourceLineNo">093</span>    Date endDate = calendar.getTime();<a name="line.93"></a>
-<span class="sourceLineNo">094</span>    //subtract a day<a name="line.94"></a>
-<span class="sourceLineNo">095</span>    calendar.roll(Calendar.DAY_OF_MONTH, false);<a name="line.95"></a>
-<span class="sourceLineNo">096</span>    Date startDate = calendar.getTime();<a name="line.96"></a>
-<span class="sourceLineNo">097</span>    TemporalCoverage tp = new DateRange(startDate, endDate);<a name="line.97"></a>
-<span class="sourceLineNo">098</span>    d.setTemporalCoverages(Lists.newArrayList(tp));<a name="line.98"></a>
-<span class="sourceLineNo">099</span><a name="line.99"></a>
-<span class="sourceLineNo">100</span>    d.setGeographicCoverageDescription("Plusieurs pays");<a name="line.100"></a>
-<span class="sourceLineNo">101</span>    GeospatialCoverage geospatialCoverage = new GeospatialCoverage();<a name="line.101"></a>
-<span class="sourceLineNo">102</span>    geospatialCoverage.setBoundingBox(new BoundingBox(-10, 10, 20, -20));<a name="line.102"></a>
-<span class="sourceLineNo">103</span>    geospatialCoverage.setDescription("Defined by bounding box");<a name="line.103"></a>
-<span class="sourceLineNo">104</span>    d.setGeographicCoverages(Lists.newArrayList(geospatialCoverage));<a name="line.104"></a>
+<span class="sourceLineNo">090</span>    // ADMINISTRATIVE_POINT_OF_CONTACT should be displayed first in the generated DublinCore document<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    Contact administrativeContact = new Contact();<a name="line.91"></a>
+<span class="sourceLineNo">092</span>    administrativeContact.setFirstName("Patrick");<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    administrativeContact.setLastName("Roy");<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact, administrativeContact));<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    d.setGeographicCoverageDescription("Description de la portée");<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    Date endDate = calendar.getTime();<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    //subtract a day<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    calendar.roll(Calendar.DAY_OF_MONTH, false);<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    Date startDate = calendar.getTime();<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    TemporalCoverage tp = new DateRange(startDate, endDate);<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    d.setTemporalCoverages(Lists.newArrayList(tp));<a name="line.104"></a>
 <span class="sourceLineNo">105</span><a name="line.105"></a>
-<span class="sourceLineNo">106</span>    Organization organization = new Organization();<a name="line.106"></a>
-<span class="sourceLineNo">107</span>    organization.setTitle("Qwerty U");<a name="line.107"></a>
-<span class="sourceLineNo">108</span><a name="line.108"></a>
-<span class="sourceLineNo">109</span>    StringWriter writer = new StringWriter();<a name="line.109"></a>
-<span class="sourceLineNo">110</span>    DublinCoreWriter.newInstance().writeTo(organization, d, additionalProperties, writer);<a name="line.110"></a>
+<span class="sourceLineNo">106</span>    d.setGeographicCoverageDescription("Plusieurs pays");<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    GeospatialCoverage geospatialCoverage = new GeospatialCoverage();<a name="line.107"></a>
+<span class="sourceLineNo">108</span>    geospatialCoverage.setBoundingBox(new BoundingBox(-10, 10, 20, -20));<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    geospatialCoverage.setDescription("Defined by bounding box");<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    d.setGeographicCoverages(Lists.newArrayList(geospatialCoverage));<a name="line.110"></a>
 <span class="sourceLineNo">111</span><a name="line.111"></a>
-<span class="sourceLineNo">112</span>    //Load test file<a name="line.112"></a>
-<span class="sourceLineNo">113</span>    String expectedContent = FileUtils.readFileToString(org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));<a name="line.113"></a>
+<span class="sourceLineNo">112</span>    Organization organization = new Organization();<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    organization.setTitle("Qwerty U");<a name="line.113"></a>
 <span class="sourceLineNo">114</span><a name="line.114"></a>
-<span class="sourceLineNo">115</span>    //compare without the whitespace characters<a name="line.115"></a>
-<span class="sourceLineNo">116</span>    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);<a name="line.116"></a>
-<span class="sourceLineNo">117</span>    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());<a name="line.117"></a>
-<span class="sourceLineNo">118</span><a name="line.118"></a>
-<span class="sourceLineNo">119</span>    assertEquals(expectedFileContent, actualFileContent);<a name="line.119"></a>
+<span class="sourceLineNo">115</span>    StringWriter writer = new StringWriter();<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    DublinCoreWriter.newInstance().writeTo(organization, d, additionalProperties, writer);<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    //Load test file<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    String expectedContent = FileUtils.readFileToString(org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));<a name="line.119"></a>
 <span class="sourceLineNo">120</span><a name="line.120"></a>
-<span class="sourceLineNo">121</span>    // ensure we have a valid XML file according to the schema<a name="line.121"></a>
-<span class="sourceLineNo">122</span>    XMLValidator.assertXMLAgainstXSD(writer.toString(), OAI_DC_SCHEMA);<a name="line.122"></a>
-<span class="sourceLineNo">123</span><a name="line.123"></a>
-<span class="sourceLineNo">124</span>  }<a name="line.124"></a>
-<span class="sourceLineNo">125</span><a name="line.125"></a>
-<span class="sourceLineNo">126</span>}<a name="line.126"></a>
+<span class="sourceLineNo">121</span>    //compare without the whitespace characters<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());<a name="line.123"></a>
+<span class="sourceLineNo">124</span><a name="line.124"></a>
+<span class="sourceLineNo">125</span>    assertEquals(expectedFileContent, actualFileContent);<a name="line.125"></a>
+<span class="sourceLineNo">126</span><a name="line.126"></a>
+<span class="sourceLineNo">127</span>    // ensure we have a valid XML file according to the schema<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    XMLValidator.assertXMLAgainstXSD(writer.toString(), OAI_DC_SCHEMA);<a name="line.128"></a>
+<span class="sourceLineNo">129</span><a name="line.129"></a>
+<span class="sourceLineNo">130</span>  }<a name="line.130"></a>
+<span class="sourceLineNo">131</span><a name="line.131"></a>
+<span class="sourceLineNo">132</span>}<a name="line.132"></a>
 
 
 
