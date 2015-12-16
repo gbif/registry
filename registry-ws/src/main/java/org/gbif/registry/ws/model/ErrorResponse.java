@@ -1,6 +1,8 @@
 package org.gbif.registry.ws.model;
 
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -11,6 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * specify element names that consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "IptError")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ErrorResponse {
 
   @XmlAttribute

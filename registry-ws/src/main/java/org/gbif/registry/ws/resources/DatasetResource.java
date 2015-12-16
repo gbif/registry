@@ -758,6 +758,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GET
   @Produces(MediaType.APPLICATION_XML)
   @Override
+  @NullToNotFound
   public InputStream getMetadataDocument(@PathParam("key") int metadataKey) {
     ByteArrayWrapper document = metadataMapper.getDocument(metadataKey);
     if(document == null){
