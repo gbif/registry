@@ -43,7 +43,7 @@ public class StaticContentFilter implements Filter {
     if (path.equals("/")) {
       // so registry.gbif.org or localhost:8080 redirects to home landing page
       HttpServletResponse res = (HttpServletResponse) response;
-      res.sendRedirect("/web/index.html");
+      res.sendRedirect("/web/#/home");
     } else if (path.contains("/web/")) {
       // do not chain any more filters, e.g. requests to /web/app/app.js must pass through
       request.getRequestDispatcher(path).forward(request, response);
