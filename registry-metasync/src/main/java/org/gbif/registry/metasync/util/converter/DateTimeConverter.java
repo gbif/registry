@@ -61,7 +61,8 @@ public class DateTimeConverter implements Converter {
     String valueString = ((String) value)
             .replace('/', '-')
             .replace('−', '-') // ISO 8601 actually specifies a Unicode minus, U+2212, with a hyphen as an alternative.
-            .replace(' ', 'T');
+            .replace(' ', 'T')
+            .trim();
 
     try {
       dateTime = basicFormatter.parseDateTime(valueString);
@@ -70,7 +71,7 @@ public class DateTimeConverter implements Converter {
         dateTime = formatter.parseDateTime(valueString);
       } catch (IllegalArgumentException e2) {
         try {
-          dateTime = formatter.parseDateTime(valueString.substring(0, 10));
+          dateTime = formatter.parseDateTime((valueString.length() > 10) ? valueString.substring(0, 10) : valueString);
         } catch (IllegalArgumentException e3) {
           LOG.debug("Could not parse date: [{}]", value, e3);
         }

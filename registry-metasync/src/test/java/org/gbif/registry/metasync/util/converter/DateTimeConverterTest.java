@@ -44,4 +44,20 @@ public class DateTimeConverterTest {
     assertEquals(new DateTime().withZone(DateTimeZone.UTC).withDate(2016, 1, 27).withTime(06, 11, 22, 0).toDate(), ((DateTime) converter.convert(DateTime.class, "2016-01-27 09:11:22+0300")).toDate());
     assertEquals(new DateTime().withDate(2016, 1, 27).withTimeAtStartOfDay(), converter.convert(DateTime.class, "2016-01-27TCentral Sta:ndard Time"));
   }
+
+  /**
+   * Test some partial formats.
+   */
+  @Test
+  public void testPartialDates() {
+    assertEquals(new DateTime().withDate(2016, 1, 1).withTimeAtStartOfDay(), converter.convert(DateTime.class, "2016-01"));
+    assertEquals(new DateTime().withDate(2016, 1, 1).withTimeAtStartOfDay(), converter.convert(DateTime.class, "2016"));
+
+    assertEquals(new DateTime().withDate(2016, 1, 1).withTimeAtStartOfDay(), converter.convert(DateTime.class, "2016/01"));
+
+    assertEquals(null, converter.convert(DateTime.class, ":"));
+    assertEquals(null, converter.convert(DateTime.class, ""));
+    assertEquals(null, converter.convert(DateTime.class, "ABCDEFGHIJKM"));
+    assertEquals(null, converter.convert(DateTime.class, "ABCD"));
+  }
 }
