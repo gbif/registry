@@ -15,6 +15,7 @@ org.gbif.registry.metasync.protocols.biocase
 org.gbif.registry.metasync.protocols.digir
 org.gbif.registry.metasync.protocols.tapir
 org.gbif.registry.metasync.resulthandler
+org.gbif.registry.metasync.util.converter
 org.gbif.registry.oaipmh
 org.gbif.registry.persistence.mapper
 org.gbif.registry.search
