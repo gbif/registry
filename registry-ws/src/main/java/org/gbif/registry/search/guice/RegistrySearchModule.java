@@ -143,7 +143,7 @@ public class RegistrySearchModule extends PrivateServiceModule {
   public SolrClient datasetSolr(@Named("solr.home") String solrHome) throws URISyntaxException, IOException {
     Path tmpSolrHome = createTempSolrDirectory(solrHome);
     File conf = new File(tmpSolrHome.toFile().getAbsolutePath(), "solr.xml");
-    return new EmbeddedSolrServer(CoreContainer.createAndLoad(tmpSolrHome.toFile().getAbsolutePath(), conf), "dataset");
+    return new EmbeddedSolrServer(CoreContainer.createAndLoad(Paths.get(tmpSolrHome.toFile().getAbsolutePath()), conf.toPath()), "dataset");
   }
 
   /**
