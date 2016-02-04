@@ -7,22 +7,18 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.ws.varnish.VarnishPurger;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import javax.ws.rs.core.UriBuilder;
 
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.http.annotation.NotThreadSafe;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,24 +84,21 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class VarnishPurgeListener {
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeListener.class);
-  private final CloseableHttpClient client;
-  private final UriBuilder uriBuilder;
-  private final String apiRoot;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
+  private final VarnishPurger purger;
+  private static final Joiner PATH_JOINER = Joiner.on("/").skipNulls();
 
   @Inject
   public VarnishPurgeListener(CloseableHttpClient client, EventBus eventBus, URI apiBaseUrl,
                               OrganizationService organizationService,InstallationService installationService,
                               DatasetService datasetService) {
-    this.client = client;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
-    uriBuilder = UriBuilder.fromUri(apiBaseUrl);
-    apiRoot = apiBaseUrl.getPath();
     eventBus.register(this);
+    purger = new VarnishPurger(client, apiBaseUrl);
   }
 
   @Subscribe
@@ -180,19 +173,19 @@ public class VarnishPurgeListener {
       orgKeys.add(d.getPublishingOrganizationKey());
       if (d.getParentDatasetKey() != null) {
         parentKeys.add(d.getParentDatasetKey());
-        purge(uriBuilder.clone().path("dataset").path(d.getParentDatasetKey().toString()).build());
+        purger.purge(path("dataset", d.getParentDatasetKey()));
       }
     }
-    banRegex(String.format("%s/dataset/%s/constituents", apiRoot, anyKey(parentKeys)));
+    purger.ban(String.format("dataset/%s/constituents", purger.anyKey(parentKeys)));
     // /installation/{d.installationKey}/dataset BAN
-    banRegex(String.format("%s/installation/%s/dataset", apiRoot, anyKey(instKeys)));
+    purger.ban(String.format("installation/%s/dataset", purger.anyKey(instKeys)));
     // /organization/{d.publishingOrganizationKey}/publishedDataset BAN
     // /organization/{d.installation.organizationKey}/hostedDataset BAN
-    banRegex(String.format("%s/organization/%s/(published|hosted)Dataset", apiRoot, anyKey(orgKeys)));
+    purger.ban(String.format("organization/%s/(published|hosted)Dataset", purger.anyKey(orgKeys)));
     // /node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
-    banRegex(String.format("%s/node/%s/dataset", apiRoot, anyKey(nodeKeys)));
+    purger.ban(String.format("node/%s/dataset", purger.anyKey(nodeKeys)));
     // /network/{any UUID}/constituents BAN
-    banRegex(String.format("%s/network/.+/constituents", apiRoot));
+    purger.ban(String.format("network/.+/constituents"));
   }
 
   private void cascadeOrganizationChange(Organization ... orgs) {
@@ -201,7 +194,7 @@ public class VarnishPurgeListener {
     for (Organization o : orgs) {
       nodeKeys.add(o.getEndorsingNodeKey());
     }
-    banRegex(String.format("%s/node/%s/organization", apiRoot, anyKey(nodeKeys)));
+    purger.ban(String.format("node/%s/organization", purger.anyKey(nodeKeys)));
   }
 
   private void cascadeInstallationChange(Installation ... installations) {
@@ -210,7 +203,7 @@ public class VarnishPurgeListener {
     for (Installation i : installations) {
       keys.add(i.getOrganizationKey());
     }
-    banRegex(String.format("%s/organization/%s/installation", apiRoot, anyKey(keys)));
+    purger.ban(String.format("organization/%s/installation", purger.anyKey(keys)));
 
     // /node/{i.organization.endorsingNodeKey}/installation BAN
     Set<UUID> nodekeys = new UUIDHashSet();
@@ -218,15 +211,9 @@ public class VarnishPurgeListener {
       Organization o = organizationService.get(orgKey);
       nodekeys.add(o.getEndorsingNodeKey());
     }
-    banRegex(String.format("%s/node/%s/organization", apiRoot, anyKey(nodekeys)));
+    purger.ban(String.format("%node/%s/organization", purger.anyKey(nodekeys)));
   }
 
-  private static String anyKey(Set<UUID> keys) {
-    if (keys.size() == 1) {
-      return keys.iterator().next().toString();
-    }
-    return "(" + Joiner.on("|").skipNulls().join(keys) + ")";
-  }
   /**
    * Removes the specific entity from varnish and bans search & list pages.
    * This method does not check which entity class was supplied, but as it is some type of NetworkEntity
@@ -234,71 +221,14 @@ public class VarnishPurgeListener {
    */
   private void purgeEntityAndBanLists(Class cl, UUID key) {
     // purge entity detail
-    purge(uriBuilder.clone().path(cl.getSimpleName().toLowerCase()).path(key.toString()).build());
+    purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
 
     // banRegex lists and searches
-    banRegex(String.format("%s/%s(/search|/suggest)?[^/]*$", apiRoot, cl.getSimpleName().toLowerCase()));
+    purger.ban(String.format("%s(/search|/suggest)?[^/]*$", cl.getSimpleName().toLowerCase()));
   }
 
-  private void purge(URI uri) {
-    try {
-      CloseableHttpResponse resp = client.execute(new HttpPurge(uri));
-      resp.close();
-    } catch (IOException e) {
-      LOG.error("Failed to purge {}", uri, e);
-    }
-  }
-
-  private void banRegex(String regex) {
-    try {
-      CloseableHttpResponse resp = client.execute(new HttpBan(regex));
-      resp.close();
-    } catch (IOException e) {
-      LOG.error("Failed to ban {}", regex, e);
-    }
-  }
-
-  /**
-   * The HTTP PURGE method is used by varnish to flush its cache via http.
-   */
-  @NotThreadSafe
-  public class HttpPurge extends HttpRequestBase {
-
-    public static final String METHOD_NAME = "PURGE";
-
-
-    public HttpPurge(final URI uri) {
-      super();
-      setURI(uri);
-    }
-
-    @Override
-    public String getMethod() {
-      return METHOD_NAME;
-    }
-
-  }
-
-  /**
-   * The HTTP BAN method is used by varnish to flush its cache via http.
-   */
-  @NotThreadSafe
-  public class HttpBan extends HttpRequestBase {
-
-    public static final String METHOD_NAME = "BAN";
-    public static final String BAN_HEADER = "x-ban-url";
-
-    public HttpBan(String banRegex) {
-      super();
-      setURI(uriBuilder.clone().build());
-      setHeader(BAN_HEADER, banRegex);
-    }
-
-    @Override
-    public String getMethod() {
-      return METHOD_NAME;
-    }
-
+  private static String path(Object ... parts) {
+    return PATH_JOINER.join(parts);
   }
 
   /**
@@ -307,10 +237,7 @@ public class VarnishPurgeListener {
   public class UUIDHashSet extends HashSet<UUID> {
     @Override
     public boolean add(UUID t) {
-      if (t != null) {
-        return super.add(t);
-      }
-      return false;
+      return t != null && super.add(t);
     }
   }
 }
