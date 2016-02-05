@@ -62,6 +62,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
   @Override
   protected void configureClient() {
     install(new InternalRegistryWsClientModule(getProperties()));
+
     expose(NodeService.class);
     expose(OrganizationService.class);
     expose(InstallationService.class);

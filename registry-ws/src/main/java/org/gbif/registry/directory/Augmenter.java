@@ -1,4 +1,4 @@
-package org.gbif.registry.ims;
+package org.gbif.registry.directory;
 
 import org.gbif.api.model.registry.Node;
 

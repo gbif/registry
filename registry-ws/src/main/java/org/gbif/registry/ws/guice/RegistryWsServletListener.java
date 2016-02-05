@@ -15,10 +15,10 @@ package org.gbif.registry.ws.guice;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.metrics.ws.client.guice.MetricsWsClientModule;
 import org.gbif.occurrence.query.TitleLookupModule;
+import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
-import org.gbif.registry.ims.ImsModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
@@ -72,7 +72,7 @@ public class RegistryWsServletListener extends GbifServletListener {
    * @param properties
    * @return
    */
-  private Properties getMetricsProperties(Properties properties){
+  private static Properties getMetricsProperties(Properties properties){
     Properties metricsProperties = new Properties();
     metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
     metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
@@ -93,7 +93,7 @@ public class RegistryWsServletListener extends GbifServletListener {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
                               new DrupalMyBatisModule(properties),
-                              new ImsModule(),
+                              new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),
                               new ValidationModule(),
                               new EventModule(properties),

@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ims;
+package org.gbif.registry.directory;
+
+import org.gbif.directory.client.guice.DirectoryWsClientModule;
+
+import java.util.Properties;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 /**
- * Sets up the persistence layer using the properties supplied.
+ * Sets up the module to access the GBIF directory API.
  */
-public class ImsModule extends AbstractModule {
+public class DirectoryModule extends AbstractModule {
 
+  private final Properties properties;
+
+  public DirectoryModule(Properties properties){
+    this.properties = properties;
+  }
   @Override
   protected void configure() {
-    bind(Augmenter.class).to(AugmenterImpl.class).in(Scopes.SINGLETON);
+    install(new DirectoryWsClientModule(properties));
+    bind(Augmenter.class).to(DirectoryAugmenterImpl.class).in(Scopes.SINGLETON);
   }
+
 }

@@ -188,6 +188,14 @@
       <artifactId>registry-metadata</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.directory</groupId>
+      <artifactId>directory-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.directory</groupId>
+      <artifactId>directory-ws-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>

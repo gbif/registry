@@ -17,7 +17,6 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.ims.ImsModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
@@ -108,7 +107,7 @@ public class RegistryTestModules {
               bind(SecurityContext.class).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
-            new DrupalMockModule(), new RegistryMyBatisModule(p), new ImsModule(), new RegistrySearchModule(p),
+            new DrupalMockModule(), new RegistryMyBatisModule(p), new DirectoryMockModule(), new RegistrySearchModule(p),
             new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule(),
             new TitleLookupMockModule());
       } catch (IOException e) {
