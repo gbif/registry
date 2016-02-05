@@ -80,7 +80,7 @@
     <gbif-common-ws.version>0.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-common.version>0.21</gbif-common.version>
     <gbif-doi.version>1.1</gbif-doi.version>
-    <gbif-download-query-tools.version>1.8</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.9-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.9-SNAPSHOT</gbif-httputils.version>
     <gbif-metrics.version>0.23</gbif-metrics.version>
     <gbif-microservice.version>0.4</gbif-microservice.version>
