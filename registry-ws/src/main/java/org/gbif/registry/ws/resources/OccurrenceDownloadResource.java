@@ -10,7 +10,6 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;

@@ -12,7 +12,6 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-
 import org.gbif.api.model.common.DOI;
 
 import java.sql.CallableStatement;
@@ -20,7 +19,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.type.JdbcType;

@@ -21,12 +21,6 @@ import org.gbif.registry.ws.client.guice.RegistryWs;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
 
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;

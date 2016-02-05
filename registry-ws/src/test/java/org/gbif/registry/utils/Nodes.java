@@ -15,7 +15,6 @@ package org.gbif.registry.utils;
 import org.gbif.api.model.registry.Node;
 
 import java.util.Set;
-
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;

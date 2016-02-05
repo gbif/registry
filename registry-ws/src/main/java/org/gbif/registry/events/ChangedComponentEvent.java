@@ -15,9 +15,9 @@
  */
 package org.gbif.registry.events;
 
-import com.google.common.base.Preconditions;
-
 import java.util.UUID;
+
+import com.google.common.base.Preconditions;
 
 /**
  * This event is fired after network entity components such as contacts, identifiers, endpoints or tags

@@ -13,8 +13,8 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Node;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,7 +37,7 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
 
   /**
    * This method is not supported by the NodeMapper.
-   * 
+   *
    * @throws
    */
   @Override
@@ -45,7 +45,7 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
 
   /**
    * This method is not supported by the NodeMapper.
-   * 
+   *
    * @throws
    */
   @Override
@@ -53,7 +53,7 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
 
   /**
    * This method is not supported by the NodeMapper.
-   * 
+   *
    * @throws
    */
   @Override

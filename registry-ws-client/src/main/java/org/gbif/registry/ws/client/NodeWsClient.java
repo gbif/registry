@@ -24,11 +24,8 @@ import org.gbif.registry.ws.client.guice.RegistryWs;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

@@ -20,7 +20,6 @@ import org.gbif.ws.util.ExtraMediaTypes;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -74,7 +73,7 @@ public class EnumerationResource {
 
   /**
    * An inventory of the enumerations supported.
-   * 
+   *
    * @return The enumerations in the GBIF API.
    */
   @GET
@@ -117,7 +116,7 @@ public class EnumerationResource {
   /**
    * Gets the values of the named enumeration should the enumeration exist.
    * Note this is used by the AngularJS console.
-   * 
+   *
    * @param name Which should be the enumeration name in the GBIF vocabulary package (e.g. Country)
    * @return The enumeration values or null if the enumeration does not exist.
    */

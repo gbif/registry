@@ -25,7 +25,6 @@ import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;

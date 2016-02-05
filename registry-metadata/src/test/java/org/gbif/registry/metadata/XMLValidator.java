@@ -1,7 +1,5 @@
 package org.gbif.registry.metadata;
 
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.io.StringReader;
 import javax.xml.transform.stream.StreamSource;
@@ -10,6 +8,8 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.xml.sax.SAXException;
+
+import static org.junit.Assert.fail;
 
 /**
  * XML validation helper class.

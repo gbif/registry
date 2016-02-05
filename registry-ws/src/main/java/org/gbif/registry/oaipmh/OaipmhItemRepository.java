@@ -1,24 +1,5 @@
 package org.gbif.registry.oaipmh;
 
-import com.beust.jcommander.internal.Maps;
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.sun.jersey.api.client.ClientHandlerException;
-import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
-import org.dspace.xoai.dataprovider.exceptions.OAIException;
-import org.dspace.xoai.dataprovider.filter.ScopedFilter;
-import org.dspace.xoai.dataprovider.handlers.results.ListItemIdentifiersResult;
-import org.dspace.xoai.dataprovider.handlers.results.ListItemsResults;
-import org.dspace.xoai.dataprovider.model.Item;
-import org.dspace.xoai.dataprovider.model.ItemIdentifier;
-import org.dspace.xoai.dataprovider.model.Set;
-import org.dspace.xoai.dataprovider.repository.ItemRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -46,6 +27,26 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
+
+import com.beust.jcommander.internal.Maps;
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.sun.jersey.api.client.ClientHandlerException;
+import org.dspace.xoai.dataprovider.exceptions.IdDoesNotExistException;
+import org.dspace.xoai.dataprovider.exceptions.OAIException;
+import org.dspace.xoai.dataprovider.filter.ScopedFilter;
+import org.dspace.xoai.dataprovider.handlers.results.ListItemIdentifiersResult;
+import org.dspace.xoai.dataprovider.handlers.results.ListItemsResults;
+import org.dspace.xoai.dataprovider.model.Item;
+import org.dspace.xoai.dataprovider.model.ItemIdentifier;
+import org.dspace.xoai.dataprovider.model.Set;
+import org.dspace.xoai.dataprovider.repository.ItemRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of a XOAI ItemRepository for {@link Dataset}.

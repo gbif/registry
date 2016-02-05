@@ -21,7 +21,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;

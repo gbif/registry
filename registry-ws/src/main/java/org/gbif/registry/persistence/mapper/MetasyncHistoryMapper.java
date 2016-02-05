@@ -17,7 +17,6 @@ import org.gbif.api.model.registry.metasync.MetasyncHistory;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;

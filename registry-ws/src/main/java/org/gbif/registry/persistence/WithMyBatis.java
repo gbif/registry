@@ -26,7 +26,6 @@ import org.gbif.registry.persistence.mapper.TaggableMapper;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
@@ -81,7 +80,7 @@ public class WithMyBatis {
 
   /**
    * The simple search option of the list.
-   * 
+   *
    * @param mapper To use for the search
    * @param query A simple query string such as "Pontaurus"
    * @param page To support paging

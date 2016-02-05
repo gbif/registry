@@ -16,8 +16,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EditorAuthorizationFilterTest {

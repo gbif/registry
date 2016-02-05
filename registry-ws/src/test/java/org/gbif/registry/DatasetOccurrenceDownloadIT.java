@@ -29,7 +29,6 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;

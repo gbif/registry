@@ -15,7 +15,6 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;

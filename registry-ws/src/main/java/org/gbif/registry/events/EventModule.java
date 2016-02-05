@@ -18,7 +18,6 @@ package org.gbif.registry.events;
 import org.gbif.common.messaging.guice.PostalServiceModule;
 
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;

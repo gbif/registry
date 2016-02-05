@@ -7,7 +7,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.ws.varnish.VarnishPurger;
+import org.gbif.varnish.VarnishPurger;
 
 import java.net.URI;
 import java.util.HashSet;

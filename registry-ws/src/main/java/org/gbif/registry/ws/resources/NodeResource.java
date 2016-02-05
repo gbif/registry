@@ -22,7 +22,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.ims.Augmenter;
+import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -39,7 +39,6 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
@@ -55,6 +54,7 @@ import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @Singleton

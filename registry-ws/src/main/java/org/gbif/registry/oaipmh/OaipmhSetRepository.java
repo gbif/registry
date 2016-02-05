@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Singleton;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.common.base.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
 import org.dspace.xoai.dataprovider.model.Set;

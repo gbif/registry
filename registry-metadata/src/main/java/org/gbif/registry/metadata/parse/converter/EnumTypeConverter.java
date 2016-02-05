@@ -1,10 +1,11 @@
 package org.gbif.registry.metadata.parse.converter;
 
-import com.google.common.collect.Maps;
-import org.apache.commons.beanutils.converters.AbstractConverter;
 import org.gbif.api.util.VocabularyUtils;
 
 import java.util.Map;
+
+import com.google.common.collect.Maps;
+import org.apache.commons.beanutils.converters.AbstractConverter;
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion

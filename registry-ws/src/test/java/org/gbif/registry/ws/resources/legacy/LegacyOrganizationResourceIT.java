@@ -28,6 +28,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.assertEquals;
@@ -256,6 +257,8 @@ public class LegacyOrganizationResourceIT {
    */
   @Test
   public void testGetOrganizationPasswordReminderServerError() throws IOException, URISyntaxException, SAXException {
+    //Using mock-javamail to avoid remote connections
+    Mailbox.clearAll();
     // persist new organization (IPT hosting organization)
     Organization organization = Organizations.newPersistedInstance();
     Contact c = Contacts.newInstance();

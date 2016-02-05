@@ -1,9 +1,10 @@
 package org.gbif.registry.metadata.parse.converter;
 
-import com.google.common.collect.ImmutableMap;
 import org.gbif.api.vocabulary.PreservationMethodType;
 
 import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion

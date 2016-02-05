@@ -14,7 +14,6 @@ package org.gbif.registry.database;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import javax.sql.DataSource;
 
 import com.google.common.base.Throwables;
@@ -25,7 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Rule that will truncate the tables ready for a new test. It is expected to do this before each test by using the
  * following:
- * 
+ *
  * <pre>
  * @Rule
  * public DatabaseInitializer = new DatabaseInitializer(getDatasource()); // developer required to provide datasource

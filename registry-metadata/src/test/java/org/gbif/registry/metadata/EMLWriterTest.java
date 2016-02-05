@@ -6,10 +6,10 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.utils.file.FileUtils;
 
-import org.junit.Test;
-
 import java.io.StringWriter;
 import java.util.UUID;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 

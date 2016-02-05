@@ -18,7 +18,6 @@ import org.gbif.api.model.occurrence.Download;
 
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;

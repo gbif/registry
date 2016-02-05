@@ -1,12 +1,5 @@
 package org.gbif.registry.metadata;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -19,16 +12,19 @@ import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
 
-import org.junit.Test;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

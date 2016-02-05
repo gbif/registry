@@ -22,7 +22,6 @@ import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;

@@ -29,7 +29,6 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
@@ -44,6 +43,7 @@ import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 /**

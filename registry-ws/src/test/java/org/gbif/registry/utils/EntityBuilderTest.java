@@ -16,7 +16,6 @@ import org.gbif.api.model.registry.PrePersist;
 
 import java.util.Set;
 import java.util.UUID;
-
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;

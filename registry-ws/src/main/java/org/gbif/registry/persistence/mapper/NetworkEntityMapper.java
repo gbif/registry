@@ -18,7 +18,6 @@ import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
@@ -30,7 +29,7 @@ public interface NetworkEntityMapper<T extends NetworkEntity> {
 
   /**
    * This gets the instance in question. Note that this does return deleted items.
-   * 
+   *
    * @param key of the network entity to fetch
    * @return either the requested network entity or {@code null} if it couldn't be found
    */

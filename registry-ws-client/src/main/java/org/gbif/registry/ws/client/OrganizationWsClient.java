@@ -23,7 +23,6 @@ import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.QueryParamBuilder;
 
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.inject.Inject;

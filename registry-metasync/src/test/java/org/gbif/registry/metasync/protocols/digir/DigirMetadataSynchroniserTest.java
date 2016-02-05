@@ -20,7 +20,6 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.util.Constants;

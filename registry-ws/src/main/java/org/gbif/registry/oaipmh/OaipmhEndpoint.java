@@ -12,6 +12,23 @@
  */
 package org.gbif.registry.oaipmh;
 
+import org.gbif.api.exception.ServiceUnavailableException;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.Date;
+import javax.annotation.Nullable;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.lyncode.xml.exceptions.XmlWriteException;
@@ -33,19 +50,6 @@ import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
 import org.dspace.xoai.xml.XmlWritable;
 import org.dspace.xoai.xml.XmlWriter;
-import org.gbif.api.exception.ServiceUnavailableException;
-
-import javax.annotation.Nullable;
-import javax.ws.rs.*;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamSource;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.text.ParseException;
-import java.util.Date;
 
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.MetadataPrefix;

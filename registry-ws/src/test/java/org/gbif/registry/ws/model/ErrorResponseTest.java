@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.model;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
