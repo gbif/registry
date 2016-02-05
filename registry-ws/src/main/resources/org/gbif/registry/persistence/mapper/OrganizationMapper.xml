@@ -114,6 +114,12 @@
     WHERE o.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="title" resultType="String">
+    SELECT title
+    FROM organization
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="Organization">
     INSERT INTO organization(<include refid="WRITABLE_ORGANIZATION_FIELDS"/>)
     VALUES(<include refid="WRITABLE_ORGANIZATION_FIELD_TYPES"/>)

@@ -97,6 +97,12 @@
     WHERE n.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="title" resultType="String">
+    SELECT title
+    FROM network
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="Network">
     INSERT INTO network(<include refid="WRITABLE_NETWORK_FIELDS"/>)
     VALUES(<include refid="WRITABLE_NETWORK_FIELD_TYPES"/>)

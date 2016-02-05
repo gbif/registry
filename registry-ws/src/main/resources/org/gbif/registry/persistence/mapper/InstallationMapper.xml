@@ -72,6 +72,12 @@
     WHERE i.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="title" resultType="String">
+    SELECT title
+    FROM installation
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="Installation">
     INSERT INTO installation(<include refid="WRITABLE_INSTALLATION_FIELDS"/>)
     VALUES(<include refid="WRITABLE_INSTALLATION_FIELD_TYPES"/>)

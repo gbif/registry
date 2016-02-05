@@ -294,6 +294,11 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public String title(@Param("key") UUID key) {
+    return null;
+  }
+
+  @Override
   public void create(Dataset entity) {
 
   }

@@ -44,7 +44,9 @@ import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
@@ -69,6 +71,7 @@ import javax.ws.rs.core.SecurityContext;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
@@ -199,6 +202,18 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public T get(@PathParam("key") UUID key) {
     return WithMyBatis.get(mapper, key);
+  }
+
+  // we do a post not get cause we expect large numbers of keys to be sent
+  @POST
+  @Path("titles")
+  @Override
+  public Map<UUID, String> getTitles(Collection<UUID> keys) {
+    Map<UUID, String> titles = Maps.newHashMap();
+    for (UUID key : keys) {
+      titles.put(key, mapper.title(key));
+    }
+    return titles;
   }
 
   /**

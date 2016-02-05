@@ -32,6 +32,8 @@ import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import com.sun.jersey.api.client.GenericType;
 
@@ -87,6 +89,8 @@ class GenericTypes {
   public static final GenericType<PagingResponse<MetasyncHistory>> METASYNC_HISTORY =
     new GenericType<PagingResponse<MetasyncHistory>>() {
     };
+  public static final GenericType<Map<UUID, String>> TITLES_MAP_TYPE = new GenericType<Map<UUID, String>>() {
+  };
 
   private GenericTypes() {
     throw new UnsupportedOperationException("Can't initialize class");

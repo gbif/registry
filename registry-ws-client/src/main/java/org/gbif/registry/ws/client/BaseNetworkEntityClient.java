@@ -15,8 +15,10 @@ import org.gbif.ws.client.BaseWsGetClient;
 import org.gbif.ws.client.QueryParamBuilder;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -63,6 +65,11 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
   @Override
   public T get(UUID key) {
     return get(key.toString());
+  }
+
+  @Override
+  public Map<UUID, String> getTitles(Collection<UUID> collection) {
+    return post(GenericTypes.TITLES_MAP_TYPE, collection, "titles");
   }
 
   @Override

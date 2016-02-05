@@ -118,6 +118,12 @@
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="title" resultType="String">
+    SELECT title
+    FROM dataset
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="Dataset">
     INSERT INTO dataset(<include refid="WRITABLE_DATASET_FIELDS"/>)
     VALUES(<include refid="WRITABLE_DATASET_FIELD_TYPES"/>)

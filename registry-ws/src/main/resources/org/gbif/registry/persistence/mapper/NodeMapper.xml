@@ -69,6 +69,12 @@
     WHERE key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="title" resultType="String">
+    SELECT title
+    FROM node
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <!-- another taiwan country hack -->
   <select id="getByCountry" resultType="Node" resultMap="NODE_MAP">
     SELECT <include refid="NODE_FIELDS"/>

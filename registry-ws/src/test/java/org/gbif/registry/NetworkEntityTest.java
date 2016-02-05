@@ -45,6 +45,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
@@ -52,6 +53,7 @@ import javax.validation.ValidationException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -111,7 +113,6 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test(expected = ValidationException.class)
-
   public void createWithKey() {
     T e = newEntity();
     e.setKey(UUID.randomUUID()); // illegal to provide a key
@@ -124,12 +125,28 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     create(newEntity(), 2);
   }
 
+  @Test
+  public void testTitles() {
+    Map<UUID, String> titles = Maps.newHashMap();
+
+    assertEquals(titles, service.getTitles(titles.keySet()));
+
+    for (int i = 1; i<8; i++){
+      T ent = newEntity();
+      ent = create(ent, i);
+      titles.put(ent.getKey(), ent.getTitle());
+    }
+    assertEquals(titles, service.getTitles(titles.keySet()));
+
+    titles.remove(titles.keySet().iterator().next());
+    assertEquals(titles, service.getTitles(titles.keySet()));
+  }
+
   /**
    * Create an entity using a principal provider that will fail authorization. The principal provider with name "heinz"
    * won't authorize, because there is no user "heinz" in the test Drupal database with role administrator.
    */
   @Test
-
   public void testCreateBadRole() {
     // SimplePrincipalProvider configured for web service client tests only
     if (pp != null) {

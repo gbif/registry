@@ -19,7 +19,9 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.IdentifierType;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -138,6 +140,11 @@ public class DatasetIndexBuilder {
       } catch (ExecutionException e) {
         return null;
       }
+    }
+
+    @Override
+    public Map<UUID, String> getTitles(Collection<UUID> collection) {
+      throw new IllegalStateException("Method not supported in caching service");
     }
 
     @Override
