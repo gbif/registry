@@ -1,6 +1,6 @@
+org.gbif.registry.directory
 org.gbif.registry.doi
 org.gbif.registry.events
-org.gbif.registry.ims
 org.gbif.registry.oaipmh
 org.gbif.registry.oaipmh.guice
 org.gbif.registry.persistence

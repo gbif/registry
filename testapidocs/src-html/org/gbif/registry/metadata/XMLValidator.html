@@ -8,16 +8,16 @@
 <div class="sourceContainer">
 <pre><span class="sourceLineNo">001</span>package org.gbif.registry.metadata;<a name="line.1"></a>
 <span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import static org.junit.Assert.fail;<a name="line.3"></a>
-<span class="sourceLineNo">004</span><a name="line.4"></a>
-<span class="sourceLineNo">005</span>import java.io.IOException;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import java.io.StringReader;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import javax.xml.transform.stream.StreamSource;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import javax.xml.validation.Schema;<a name="line.8"></a>
-<span class="sourceLineNo">009</span>import javax.xml.validation.SchemaFactory;<a name="line.9"></a>
-<span class="sourceLineNo">010</span>import javax.xml.validation.Validator;<a name="line.10"></a>
+<span class="sourceLineNo">003</span>import java.io.IOException;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import java.io.StringReader;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import javax.xml.transform.stream.StreamSource;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import javax.xml.validation.Schema;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import javax.xml.validation.SchemaFactory;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import javax.xml.validation.Validator;<a name="line.8"></a>
+<span class="sourceLineNo">009</span><a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.xml.sax.SAXException;<a name="line.10"></a>
 <span class="sourceLineNo">011</span><a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.xml.sax.SAXException;<a name="line.12"></a>
+<span class="sourceLineNo">012</span>import static org.junit.Assert.fail;<a name="line.12"></a>
 <span class="sourceLineNo">013</span><a name="line.13"></a>
 <span class="sourceLineNo">014</span>/**<a name="line.14"></a>
 <span class="sourceLineNo">015</span> * XML validation helper class.<a name="line.15"></a>

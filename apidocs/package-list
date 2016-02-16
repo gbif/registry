@@ -1,8 +1,8 @@
 org.gbif.registry.cli
 org.gbif.registry.cli.configuration
+org.gbif.registry.directory
 org.gbif.registry.doi
 org.gbif.registry.events
-org.gbif.registry.ims
 org.gbif.registry.metadata
 org.gbif.registry.metadata.contact
 org.gbif.registry.metadata.parse

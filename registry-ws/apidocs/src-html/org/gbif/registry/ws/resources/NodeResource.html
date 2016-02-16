@@ -30,7 +30,7 @@
 <span class="sourceLineNo">022</span>import org.gbif.api.service.registry.NodeService;<a name="line.22"></a>
 <span class="sourceLineNo">023</span>import org.gbif.api.vocabulary.Country;<a name="line.23"></a>
 <span class="sourceLineNo">024</span>import org.gbif.api.vocabulary.IdentifierType;<a name="line.24"></a>
-<span class="sourceLineNo">025</span>import org.gbif.registry.ims.Augmenter;<a name="line.25"></a>
+<span class="sourceLineNo">025</span>import org.gbif.registry.directory.Augmenter;<a name="line.25"></a>
 <span class="sourceLineNo">026</span>import org.gbif.registry.persistence.mapper.CommentMapper;<a name="line.26"></a>
 <span class="sourceLineNo">027</span>import org.gbif.registry.persistence.mapper.ContactMapper;<a name="line.27"></a>
 <span class="sourceLineNo">028</span>import org.gbif.registry.persistence.mapper.DatasetMapper;<a name="line.28"></a>
@@ -47,22 +47,22 @@
 <span class="sourceLineNo">039</span><a name="line.39"></a>
 <span class="sourceLineNo">040</span>import java.util.List;<a name="line.40"></a>
 <span class="sourceLineNo">041</span>import java.util.UUID;<a name="line.41"></a>
-<span class="sourceLineNo">042</span><a name="line.42"></a>
-<span class="sourceLineNo">043</span>import javax.annotation.Nullable;<a name="line.43"></a>
-<span class="sourceLineNo">044</span>import javax.annotation.security.RolesAllowed;<a name="line.44"></a>
-<span class="sourceLineNo">045</span>import javax.validation.Valid;<a name="line.45"></a>
-<span class="sourceLineNo">046</span>import javax.validation.constraints.NotNull;<a name="line.46"></a>
-<span class="sourceLineNo">047</span>import javax.ws.rs.DELETE;<a name="line.47"></a>
-<span class="sourceLineNo">048</span>import javax.ws.rs.GET;<a name="line.48"></a>
-<span class="sourceLineNo">049</span>import javax.ws.rs.Path;<a name="line.49"></a>
-<span class="sourceLineNo">050</span>import javax.ws.rs.PathParam;<a name="line.50"></a>
-<span class="sourceLineNo">051</span>import javax.ws.rs.QueryParam;<a name="line.51"></a>
-<span class="sourceLineNo">052</span>import javax.ws.rs.core.Context;<a name="line.52"></a>
-<span class="sourceLineNo">053</span><a name="line.53"></a>
-<span class="sourceLineNo">054</span>import com.google.common.base.Strings;<a name="line.54"></a>
-<span class="sourceLineNo">055</span>import com.google.common.eventbus.EventBus;<a name="line.55"></a>
-<span class="sourceLineNo">056</span>import com.google.inject.Inject;<a name="line.56"></a>
-<span class="sourceLineNo">057</span>import com.google.inject.Singleton;<a name="line.57"></a>
+<span class="sourceLineNo">042</span>import javax.annotation.Nullable;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import javax.annotation.security.RolesAllowed;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import javax.validation.Valid;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>import javax.validation.constraints.NotNull;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>import javax.ws.rs.DELETE;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import javax.ws.rs.GET;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>import javax.ws.rs.Path;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import javax.ws.rs.PathParam;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import javax.ws.rs.QueryParam;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import javax.ws.rs.core.Context;<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>import com.google.common.base.Strings;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>import com.google.common.eventbus.EventBus;<a name="line.54"></a>
+<span class="sourceLineNo">055</span>import com.google.inject.Inject;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>import com.google.inject.Singleton;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
 <span class="sourceLineNo">058</span>import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;<a name="line.58"></a>
 <span class="sourceLineNo">059</span><a name="line.59"></a>
 <span class="sourceLineNo">060</span>@Singleton<a name="line.60"></a>

@@ -37,101 +37,100 @@
 <span class="sourceLineNo">029</span>import org.gbif.ws.client.filter.SimplePrincipalProvider;<a name="line.29"></a>
 <span class="sourceLineNo">030</span><a name="line.30"></a>
 <span class="sourceLineNo">031</span>import java.util.UUID;<a name="line.31"></a>
-<span class="sourceLineNo">032</span><a name="line.32"></a>
-<span class="sourceLineNo">033</span>import javax.annotation.Nullable;<a name="line.33"></a>
-<span class="sourceLineNo">034</span><a name="line.34"></a>
-<span class="sourceLineNo">035</span>import com.google.common.collect.ImmutableList;<a name="line.35"></a>
-<span class="sourceLineNo">036</span>import com.google.inject.Injector;<a name="line.36"></a>
-<span class="sourceLineNo">037</span>import org.junit.Test;<a name="line.37"></a>
-<span class="sourceLineNo">038</span>import org.junit.runner.RunWith;<a name="line.38"></a>
-<span class="sourceLineNo">039</span>import org.junit.runners.Parameterized;<a name="line.39"></a>
-<span class="sourceLineNo">040</span>import org.junit.runners.Parameterized.Parameters;<a name="line.40"></a>
-<span class="sourceLineNo">041</span><a name="line.41"></a>
-<span class="sourceLineNo">042</span>import static org.gbif.registry.guice.RegistryTestModules.webservice;<a name="line.42"></a>
-<span class="sourceLineNo">043</span>import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;<a name="line.43"></a>
-<span class="sourceLineNo">044</span><a name="line.44"></a>
-<span class="sourceLineNo">045</span>import static org.junit.Assert.assertEquals;<a name="line.45"></a>
-<span class="sourceLineNo">046</span><a name="line.46"></a>
-<span class="sourceLineNo">047</span>/**<a name="line.47"></a>
-<span class="sourceLineNo">048</span> * This is parameterized to run the same test routines for the following:<a name="line.48"></a>
-<span class="sourceLineNo">049</span> * &lt;ol&gt;<a name="line.49"></a>
-<span class="sourceLineNo">050</span> * &lt;li&gt;The persistence layer&lt;/li&gt;<a name="line.50"></a>
-<span class="sourceLineNo">051</span> * &lt;li&gt;The WS service layer&lt;/li&gt;<a name="line.51"></a>
-<span class="sourceLineNo">052</span> * &lt;li&gt;The WS service client layer&lt;/li&gt;<a name="line.52"></a>
-<span class="sourceLineNo">053</span> * &lt;/ol&gt;<a name="line.53"></a>
-<span class="sourceLineNo">054</span> */<a name="line.54"></a>
-<span class="sourceLineNo">055</span>@RunWith(Parameterized.class)<a name="line.55"></a>
-<span class="sourceLineNo">056</span>public class InstallationIT extends NetworkEntityTest&lt;Installation&gt; {<a name="line.56"></a>
-<span class="sourceLineNo">057</span><a name="line.57"></a>
-<span class="sourceLineNo">058</span>  private final OrganizationService organizationService;<a name="line.58"></a>
-<span class="sourceLineNo">059</span>  private final NodeService nodeService;<a name="line.59"></a>
-<span class="sourceLineNo">060</span><a name="line.60"></a>
-<span class="sourceLineNo">061</span>  @Parameters<a name="line.61"></a>
-<span class="sourceLineNo">062</span>  public static Iterable&lt;Object[]&gt; data() {<a name="line.62"></a>
-<span class="sourceLineNo">063</span>    final Injector webservice = webservice();<a name="line.63"></a>
-<span class="sourceLineNo">064</span>    final Injector client = webserviceClient();<a name="line.64"></a>
-<span class="sourceLineNo">065</span>    return ImmutableList.&lt;Object[]&gt;of(new Object[] {webservice.getInstance(InstallationResource.class),<a name="line.65"></a>
-<span class="sourceLineNo">066</span>      webservice.getInstance(OrganizationResource.class),<a name="line.66"></a>
-<span class="sourceLineNo">067</span>      webservice.getInstance(NodeResource.class),<a name="line.67"></a>
-<span class="sourceLineNo">068</span>      null},<a name="line.68"></a>
-<span class="sourceLineNo">069</span>      new Object[] {client.getInstance(InstallationService.class),<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        client.getInstance(OrganizationService.class),<a name="line.70"></a>
-<span class="sourceLineNo">071</span>        client.getInstance(NodeService.class),<a name="line.71"></a>
-<span class="sourceLineNo">072</span>        client.getInstance(SimplePrincipalProvider.class)});<a name="line.72"></a>
-<span class="sourceLineNo">073</span>  }<a name="line.73"></a>
-<span class="sourceLineNo">074</span><a name="line.74"></a>
-<span class="sourceLineNo">075</span>  public InstallationIT(InstallationService service, OrganizationService organizationService, NodeService nodeService,<a name="line.75"></a>
-<span class="sourceLineNo">076</span>    @Nullable SimplePrincipalProvider pp) {<a name="line.76"></a>
-<span class="sourceLineNo">077</span>    super(service, pp);<a name="line.77"></a>
-<span class="sourceLineNo">078</span>    this.organizationService = organizationService;<a name="line.78"></a>
-<span class="sourceLineNo">079</span>    this.nodeService = nodeService;<a name="line.79"></a>
-<span class="sourceLineNo">080</span>  }<a name="line.80"></a>
-<span class="sourceLineNo">081</span><a name="line.81"></a>
-<span class="sourceLineNo">082</span>  @Override<a name="line.82"></a>
-<span class="sourceLineNo">083</span>  protected Installation newEntity() {<a name="line.83"></a>
-<span class="sourceLineNo">084</span>    UUID nodeKey = nodeService.create(Nodes.newInstance());<a name="line.84"></a>
-<span class="sourceLineNo">085</span>    Organization o = Organizations.newInstance(nodeKey);<a name="line.85"></a>
-<span class="sourceLineNo">086</span>    UUID key = organizationService.create(o);<a name="line.86"></a>
-<span class="sourceLineNo">087</span>    Organization organization = organizationService.get(key);<a name="line.87"></a>
-<span class="sourceLineNo">088</span>    Installation i = Installations.newInstance(organization.getKey());<a name="line.88"></a>
-<span class="sourceLineNo">089</span>    return i;<a name="line.89"></a>
-<span class="sourceLineNo">090</span>  }<a name="line.90"></a>
-<span class="sourceLineNo">091</span><a name="line.91"></a>
-<span class="sourceLineNo">092</span>  /**<a name="line.92"></a>
-<span class="sourceLineNo">093</span>   * Tests that we can successfully disable and undisable an installation.<a name="line.93"></a>
-<span class="sourceLineNo">094</span>   */<a name="line.94"></a>
-<span class="sourceLineNo">095</span>  @Test<a name="line.95"></a>
-<span class="sourceLineNo">096</span>  public void disableInstallation() {<a name="line.96"></a>
-<span class="sourceLineNo">097</span>    Installation e = newEntity();<a name="line.97"></a>
-<span class="sourceLineNo">098</span>    UUID key = getService().create(e);<a name="line.98"></a>
-<span class="sourceLineNo">099</span>    e = getService().get(key);<a name="line.99"></a>
-<span class="sourceLineNo">100</span>    assertEquals("Should not be disabled to start", false, e.isDisabled());<a name="line.100"></a>
-<span class="sourceLineNo">101</span>    e.setDisabled(true);<a name="line.101"></a>
-<span class="sourceLineNo">102</span>    getService().update(e);<a name="line.102"></a>
-<span class="sourceLineNo">103</span>    e = getService().get(e.getKey());<a name="line.103"></a>
-<span class="sourceLineNo">104</span>    assertEquals("We just disabled it", true, e.isDisabled());<a name="line.104"></a>
-<span class="sourceLineNo">105</span>    e.setDisabled(false);<a name="line.105"></a>
-<span class="sourceLineNo">106</span>    getService().update(e);<a name="line.106"></a>
-<span class="sourceLineNo">107</span>    e = getService().get(e.getKey());<a name="line.107"></a>
-<span class="sourceLineNo">108</span>    assertEquals("We just un-disabled it", false, e.isDisabled());<a name="line.108"></a>
-<span class="sourceLineNo">109</span><a name="line.109"></a>
-<span class="sourceLineNo">110</span>  }<a name="line.110"></a>
-<span class="sourceLineNo">111</span><a name="line.111"></a>
-<span class="sourceLineNo">112</span>  // Easier to test this here than other places due to our utility factory<a name="line.112"></a>
-<span class="sourceLineNo">113</span>  @Test<a name="line.113"></a>
-<span class="sourceLineNo">114</span>  public void testHostedByInstallationList() {<a name="line.114"></a>
-<span class="sourceLineNo">115</span>    Installation installation = create(newEntity(), 1);<a name="line.115"></a>
-<span class="sourceLineNo">116</span>    Organization organization = organizationService.get(installation.getOrganizationKey());<a name="line.116"></a>
-<span class="sourceLineNo">117</span>    Node node = nodeService.get(organization.getEndorsingNodeKey());<a name="line.117"></a>
-<span class="sourceLineNo">118</span><a name="line.118"></a>
-<span class="sourceLineNo">119</span>    PagingResponse&lt;Installation&gt; resp = nodeService.installations(node.getKey(), new PagingRequest());<a name="line.119"></a>
-<span class="sourceLineNo">120</span>    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());<a name="line.120"></a>
-<span class="sourceLineNo">121</span><a name="line.121"></a>
-<span class="sourceLineNo">122</span>    resp = organizationService.installations(organization.getKey(), new PagingRequest());<a name="line.122"></a>
-<span class="sourceLineNo">123</span>    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());<a name="line.123"></a>
-<span class="sourceLineNo">124</span>  }<a name="line.124"></a>
-<span class="sourceLineNo">125</span><a name="line.125"></a>
-<span class="sourceLineNo">126</span>}<a name="line.126"></a>
+<span class="sourceLineNo">032</span>import javax.annotation.Nullable;<a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>import com.google.common.collect.ImmutableList;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import com.google.inject.Injector;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.junit.Test;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.junit.runner.RunWith;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.junit.runners.Parameterized;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.junit.runners.Parameterized.Parameters;<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>import static org.gbif.registry.guice.RegistryTestModules.webservice;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>import static org.junit.Assert.assertEquals;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>/**<a name="line.46"></a>
+<span class="sourceLineNo">047</span> * This is parameterized to run the same test routines for the following:<a name="line.47"></a>
+<span class="sourceLineNo">048</span> * &lt;ol&gt;<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * &lt;li&gt;The persistence layer&lt;/li&gt;<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * &lt;li&gt;The WS service layer&lt;/li&gt;<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * &lt;li&gt;The WS service client layer&lt;/li&gt;<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * &lt;/ol&gt;<a name="line.52"></a>
+<span class="sourceLineNo">053</span> */<a name="line.53"></a>
+<span class="sourceLineNo">054</span>@RunWith(Parameterized.class)<a name="line.54"></a>
+<span class="sourceLineNo">055</span>public class InstallationIT extends NetworkEntityTest&lt;Installation&gt; {<a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>  private final OrganizationService organizationService;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  private final NodeService nodeService;<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>  @Parameters<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  public static Iterable&lt;Object[]&gt; data() {<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    final Injector webservice = webservice();<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    final Injector client = webserviceClient();<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    return ImmutableList.&lt;Object[]&gt;of(new Object[] {webservice.getInstance(InstallationResource.class),<a name="line.64"></a>
+<span class="sourceLineNo">065</span>      webservice.getInstance(OrganizationResource.class),<a name="line.65"></a>
+<span class="sourceLineNo">066</span>      webservice.getInstance(NodeResource.class),<a name="line.66"></a>
+<span class="sourceLineNo">067</span>      null},<a name="line.67"></a>
+<span class="sourceLineNo">068</span>      new Object[] {client.getInstance(InstallationService.class),<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        client.getInstance(OrganizationService.class),<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        client.getInstance(NodeService.class),<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        client.getInstance(SimplePrincipalProvider.class)});<a name="line.71"></a>
+<span class="sourceLineNo">072</span>  }<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>  public InstallationIT(InstallationService service, OrganizationService organizationService, NodeService nodeService,<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    @Nullable SimplePrincipalProvider pp) {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    super(service, pp);<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    this.organizationService = organizationService;<a name="line.77"></a>
+<span class="sourceLineNo">078</span>    this.nodeService = nodeService;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>  }<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>  @Override<a name="line.81"></a>
+<span class="sourceLineNo">082</span>  protected Installation newEntity() {<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    UUID nodeKey = nodeService.create(Nodes.newInstance());<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    Organization o = Organizations.newInstance(nodeKey);<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    UUID key = organizationService.create(o);<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    Organization organization = organizationService.get(key);<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    Installation i = Installations.newInstance(organization.getKey());<a name="line.87"></a>
+<span class="sourceLineNo">088</span>    return i;<a name="line.88"></a>
+<span class="sourceLineNo">089</span>  }<a name="line.89"></a>
+<span class="sourceLineNo">090</span><a name="line.90"></a>
+<span class="sourceLineNo">091</span>  /**<a name="line.91"></a>
+<span class="sourceLineNo">092</span>   * Tests that we can successfully disable and undisable an installation.<a name="line.92"></a>
+<span class="sourceLineNo">093</span>   */<a name="line.93"></a>
+<span class="sourceLineNo">094</span>  @Test<a name="line.94"></a>
+<span class="sourceLineNo">095</span>  public void disableInstallation() {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    Installation e = newEntity();<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    UUID key = getService().create(e);<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    e = getService().get(key);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    assertEquals("Should not be disabled to start", false, e.isDisabled());<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    e.setDisabled(true);<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    getService().update(e);<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    e = getService().get(e.getKey());<a name="line.102"></a>
+<span class="sourceLineNo">103</span>    assertEquals("We just disabled it", true, e.isDisabled());<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    e.setDisabled(false);<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    getService().update(e);<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    e = getService().get(e.getKey());<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    assertEquals("We just un-disabled it", false, e.isDisabled());<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>  }<a name="line.109"></a>
+<span class="sourceLineNo">110</span><a name="line.110"></a>
+<span class="sourceLineNo">111</span>  // Easier to test this here than other places due to our utility factory<a name="line.111"></a>
+<span class="sourceLineNo">112</span>  @Test<a name="line.112"></a>
+<span class="sourceLineNo">113</span>  public void testHostedByInstallationList() {<a name="line.113"></a>
+<span class="sourceLineNo">114</span>    Installation installation = create(newEntity(), 1);<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    Organization organization = organizationService.get(installation.getOrganizationKey());<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    Node node = nodeService.get(organization.getEndorsingNodeKey());<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    PagingResponse&lt;Installation&gt; resp = nodeService.installations(node.getKey(), new PagingRequest());<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());<a name="line.119"></a>
+<span class="sourceLineNo">120</span><a name="line.120"></a>
+<span class="sourceLineNo">121</span>    resp = organizationService.installations(organization.getKey(), new PagingRequest());<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());<a name="line.122"></a>
+<span class="sourceLineNo">123</span>  }<a name="line.123"></a>
+<span class="sourceLineNo">124</span><a name="line.124"></a>
+<span class="sourceLineNo">125</span>}<a name="line.125"></a>
 
 
 

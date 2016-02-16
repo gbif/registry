@@ -39,625 +39,624 @@
 <span class="sourceLineNo">031</span>import java.util.Date;<a name="line.31"></a>
 <span class="sourceLineNo">032</span>import java.util.List;<a name="line.32"></a>
 <span class="sourceLineNo">033</span>import java.util.UUID;<a name="line.33"></a>
-<span class="sourceLineNo">034</span><a name="line.34"></a>
-<span class="sourceLineNo">035</span>import javax.xml.parsers.ParserConfigurationException;<a name="line.35"></a>
-<span class="sourceLineNo">036</span><a name="line.36"></a>
-<span class="sourceLineNo">037</span>import com.google.common.base.Charsets;<a name="line.37"></a>
-<span class="sourceLineNo">038</span>import com.google.common.collect.Lists;<a name="line.38"></a>
-<span class="sourceLineNo">039</span>import com.google.inject.Injector;<a name="line.39"></a>
-<span class="sourceLineNo">040</span>import org.apache.http.NameValuePair;<a name="line.40"></a>
-<span class="sourceLineNo">041</span>import org.apache.http.client.entity.UrlEncodedFormEntity;<a name="line.41"></a>
-<span class="sourceLineNo">042</span>import org.apache.http.message.BasicNameValuePair;<a name="line.42"></a>
-<span class="sourceLineNo">043</span>import org.codehaus.jackson.JsonNode;<a name="line.43"></a>
-<span class="sourceLineNo">044</span>import org.codehaus.jackson.map.ObjectMapper;<a name="line.44"></a>
-<span class="sourceLineNo">045</span>import org.junit.ClassRule;<a name="line.45"></a>
-<span class="sourceLineNo">046</span>import org.junit.Rule;<a name="line.46"></a>
-<span class="sourceLineNo">047</span>import org.junit.Test;<a name="line.47"></a>
-<span class="sourceLineNo">048</span>import org.xml.sax.SAXException;<a name="line.48"></a>
-<span class="sourceLineNo">049</span><a name="line.49"></a>
-<span class="sourceLineNo">050</span>import static org.junit.Assert.assertEquals;<a name="line.50"></a>
-<span class="sourceLineNo">051</span>import static org.junit.Assert.assertNotEquals;<a name="line.51"></a>
-<span class="sourceLineNo">052</span>import static org.junit.Assert.assertNotNull;<a name="line.52"></a>
-<span class="sourceLineNo">053</span>import static org.junit.Assert.assertTrue;<a name="line.53"></a>
-<span class="sourceLineNo">054</span><a name="line.54"></a>
-<span class="sourceLineNo">055</span>public class LegacyDatasetResourceIT {<a name="line.55"></a>
-<span class="sourceLineNo">056</span><a name="line.56"></a>
-<span class="sourceLineNo">057</span>  // Flushes the database on each run<a name="line.57"></a>
-<span class="sourceLineNo">058</span>  @ClassRule<a name="line.58"></a>
-<span class="sourceLineNo">059</span>  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());<a name="line.59"></a>
-<span class="sourceLineNo">060</span><a name="line.60"></a>
-<span class="sourceLineNo">061</span>  @ClassRule<a name="line.61"></a>
-<span class="sourceLineNo">062</span>  public static final RegistryServer registryServer = RegistryServer.INSTANCE;<a name="line.62"></a>
-<span class="sourceLineNo">063</span><a name="line.63"></a>
-<span class="sourceLineNo">064</span>  @Rule<a name="line.64"></a>
-<span class="sourceLineNo">065</span>  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());<a name="line.65"></a>
-<span class="sourceLineNo">066</span><a name="line.66"></a>
-<span class="sourceLineNo">067</span>  private final DatasetService datasetService;<a name="line.67"></a>
-<span class="sourceLineNo">068</span>  private final ObjectMapper objectMapper = new ObjectMapper();<a name="line.68"></a>
-<span class="sourceLineNo">069</span><a name="line.69"></a>
-<span class="sourceLineNo">070</span>  public LegacyDatasetResourceIT() throws ParserConfigurationException, SAXException {<a name="line.70"></a>
-<span class="sourceLineNo">071</span>    Injector i = RegistryTestModules.webservice();<a name="line.71"></a>
-<span class="sourceLineNo">072</span>    this.datasetService = i.getInstance(DatasetService.class);<a name="line.72"></a>
-<span class="sourceLineNo">073</span>  }<a name="line.73"></a>
-<span class="sourceLineNo">074</span><a name="line.74"></a>
-<span class="sourceLineNo">075</span>  /**<a name="line.75"></a>
-<span class="sourceLineNo">076</span>   * The test begins by persisting a new Organization, and installation associated to that Organization.<a name="line.76"></a>
-<span class="sourceLineNo">077</span>   * &lt;/br&gt;<a name="line.77"></a>
-<span class="sourceLineNo">078</span>   * Then, it sends a register Dataset (POST) request to create a new Dataset owned by this organization. The request<a name="line.78"></a>
-<span class="sourceLineNo">079</span>   * does not contain an installation key, but it can be inferred that it should use the key of the one and only<a name="line.79"></a>
-<span class="sourceLineNo">080</span>   * installation belonging to the publishing organization. The request also doesn't create any endpoints, that's done in<a name="line.80"></a>
-<span class="sourceLineNo">081</span>   * a separate legacy ws call. Therefore, the DatasetType defaults to METADATA.<a name="line.81"></a>
-<span class="sourceLineNo">082</span>   * &lt;/br&gt;<a name="line.82"></a>
-<span class="sourceLineNo">083</span>   * Upon receiving an HTTP Response, the test parses its XML content in order to extract the registered Dataset UUID<a name="line.83"></a>
-<span class="sourceLineNo">084</span>   * for example. The content is parsed exactly the same way as the GBRDS WS consumer would do it.<a name="line.84"></a>
-<span class="sourceLineNo">085</span>   * &lt;/br&gt;<a name="line.85"></a>
-<span class="sourceLineNo">086</span>   * Last, the test validates that the dataset was persisted correctly.<a name="line.86"></a>
-<span class="sourceLineNo">087</span>   */<a name="line.87"></a>
-<span class="sourceLineNo">088</span>  @Test<a name="line.88"></a>
-<span class="sourceLineNo">089</span>  public void testRegisterLegacyDataset() throws IOException, URISyntaxException, SAXException {<a name="line.89"></a>
-<span class="sourceLineNo">090</span>    // persist new organization (Dataset publishing organization)<a name="line.90"></a>
-<span class="sourceLineNo">091</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.91"></a>
-<span class="sourceLineNo">092</span>    UUID organizationKey = organization.getKey();<a name="line.92"></a>
-<span class="sourceLineNo">093</span><a name="line.93"></a>
-<span class="sourceLineNo">094</span>    // persist new installation of type IPT<a name="line.94"></a>
-<span class="sourceLineNo">095</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.95"></a>
-<span class="sourceLineNo">096</span>    UUID installationKey = installation.getKey();<a name="line.96"></a>
-<span class="sourceLineNo">097</span><a name="line.97"></a>
-<span class="sourceLineNo">098</span>    // populate params for ws, without installation key<a name="line.98"></a>
-<span class="sourceLineNo">099</span>    List&lt;NameValuePair&gt; data = buildLegacyDatasetParameters(organizationKey);<a name="line.99"></a>
-<span class="sourceLineNo">100</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.100"></a>
-<span class="sourceLineNo">101</span><a name="line.101"></a>
-<span class="sourceLineNo">102</span>    // construct request uri<a name="line.102"></a>
-<span class="sourceLineNo">103</span>    String uri = Requests.getRequestUri("/registry/resource");<a name="line.103"></a>
-<span class="sourceLineNo">104</span><a name="line.104"></a>
-<span class="sourceLineNo">105</span>    // send POST request with credentials<a name="line.105"></a>
-<span class="sourceLineNo">106</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.106"></a>
-<span class="sourceLineNo">107</span><a name="line.107"></a>
-<span class="sourceLineNo">108</span>    // parse newly registered IPT key (UUID)<a name="line.108"></a>
-<span class="sourceLineNo">109</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.109"></a>
-<span class="sourceLineNo">110</span>    assertNotNull("Registered Dataset key should be in response",<a name="line.110"></a>
-<span class="sourceLineNo">111</span>      UUID.fromString(Parsers.legacyDatasetResponseHandler.key));<a name="line.111"></a>
-<span class="sourceLineNo">112</span><a name="line.112"></a>
-<span class="sourceLineNo">113</span>    // some information that should have been updated<a name="line.113"></a>
-<span class="sourceLineNo">114</span>    Dataset dataset =<a name="line.114"></a>
-<span class="sourceLineNo">115</span>      validatePersistedLegacyDataset(UUID.fromString(Parsers.legacyDatasetResponseHandler.key), organizationKey,<a name="line.115"></a>
-<span class="sourceLineNo">116</span>        installationKey);<a name="line.116"></a>
-<span class="sourceLineNo">117</span><a name="line.117"></a>
-<span class="sourceLineNo">118</span>    // some additional information to check<a name="line.118"></a>
-<span class="sourceLineNo">119</span>    assertNotNull(dataset.getCreatedBy());<a name="line.119"></a>
-<span class="sourceLineNo">120</span>    assertNotNull(dataset.getModifiedBy());<a name="line.120"></a>
-<span class="sourceLineNo">121</span>  }<a name="line.121"></a>
-<span class="sourceLineNo">122</span><a name="line.122"></a>
-<span class="sourceLineNo">123</span>  /**<a name="line.123"></a>
-<span class="sourceLineNo">124</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.124"></a>
-<span class="sourceLineNo">125</span>   * associated to the Organization. A primary contact and endpoint is then added to the Dataset.<a name="line.125"></a>
-<span class="sourceLineNo">126</span>   * &lt;/br&gt;<a name="line.126"></a>
-<span class="sourceLineNo">127</span>   * Then, it sends an update Dataset (POST) request to update the same Dataset. The request does not have the primary<a name="line.127"></a>
-<span class="sourceLineNo">128</span>   * contact, endpoint, or installation key form parameters. Since the organization only has 1 installation anyways,<a name="line.128"></a>
-<span class="sourceLineNo">129</span>   * it will be inferred that the dataset belongs to this one.<a name="line.129"></a>
-<span class="sourceLineNo">130</span>   * &lt;/br&gt;<a name="line.130"></a>
-<span class="sourceLineNo">131</span>   * Upon receiving an HTTP Response, the test parses its XML content in order to extract the registered Dataset UUID<a name="line.131"></a>
-<span class="sourceLineNo">132</span>   * for example. It also ensures that the primary contact and endpoints still exist.<a name="line.132"></a>
-<span class="sourceLineNo">133</span>   */<a name="line.133"></a>
-<span class="sourceLineNo">134</span>  @Test<a name="line.134"></a>
-<span class="sourceLineNo">135</span>  public void testUpdateLegacyDatasetWithNoContactNoEndpointNoInstallationKey()<a name="line.135"></a>
-<span class="sourceLineNo">136</span>    throws IOException, URISyntaxException, SAXException {<a name="line.136"></a>
-<span class="sourceLineNo">137</span>    // persist new organization (IPT hosting organization)<a name="line.137"></a>
-<span class="sourceLineNo">138</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.138"></a>
-<span class="sourceLineNo">139</span>    UUID organizationKey = organization.getKey();<a name="line.139"></a>
-<span class="sourceLineNo">140</span><a name="line.140"></a>
-<span class="sourceLineNo">141</span>    // persist new installation of type IPT<a name="line.141"></a>
-<span class="sourceLineNo">142</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.142"></a>
-<span class="sourceLineNo">143</span>    UUID installationKey = installation.getKey();<a name="line.143"></a>
-<span class="sourceLineNo">144</span><a name="line.144"></a>
-<span class="sourceLineNo">145</span>    // persist new Dataset associated to installation<a name="line.145"></a>
-<span class="sourceLineNo">146</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.146"></a>
-<span class="sourceLineNo">147</span>    UUID datasetKey = dataset.getKey();<a name="line.147"></a>
-<span class="sourceLineNo">148</span>    // add primary contact to Dataset<a name="line.148"></a>
-<span class="sourceLineNo">149</span>    Contact c = Contacts.newInstance();<a name="line.149"></a>
-<span class="sourceLineNo">150</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.150"></a>
-<span class="sourceLineNo">151</span>    datasetService.addContact(datasetKey, c);<a name="line.151"></a>
-<span class="sourceLineNo">152</span>    // add endpoint to Dataset<a name="line.152"></a>
-<span class="sourceLineNo">153</span>    Endpoint e = Endpoints.newInstance();<a name="line.153"></a>
-<span class="sourceLineNo">154</span>    datasetService.addEndpoint(datasetKey, e);<a name="line.154"></a>
-<span class="sourceLineNo">155</span><a name="line.155"></a>
-<span class="sourceLineNo">156</span>    // validate it<a name="line.156"></a>
-<span class="sourceLineNo">157</span>    validateExistingDataset(dataset, organizationKey, installationKey);<a name="line.157"></a>
-<span class="sourceLineNo">158</span><a name="line.158"></a>
-<span class="sourceLineNo">159</span>    // before sending the update POST request, count the number of datasets, contacts and endpoints<a name="line.159"></a>
-<span class="sourceLineNo">160</span>    assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());<a name="line.160"></a>
-<span class="sourceLineNo">161</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.161"></a>
-<span class="sourceLineNo">162</span>    assertEquals(1, datasetService.listContacts(datasetKey).size());<a name="line.162"></a>
-<span class="sourceLineNo">163</span><a name="line.163"></a>
-<span class="sourceLineNo">164</span>    // some information never going to change<a name="line.164"></a>
-<span class="sourceLineNo">165</span>    Date created = dataset.getCreated();<a name="line.165"></a>
-<span class="sourceLineNo">166</span>    assertNotNull(created);<a name="line.166"></a>
-<span class="sourceLineNo">167</span>    String createdBy = dataset.getCreatedBy();<a name="line.167"></a>
-<span class="sourceLineNo">168</span>    assertNotNull(createdBy);<a name="line.168"></a>
-<span class="sourceLineNo">169</span><a name="line.169"></a>
-<span class="sourceLineNo">170</span>    // populate params for ws<a name="line.170"></a>
-<span class="sourceLineNo">171</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.171"></a>
-<span class="sourceLineNo">172</span>    // main<a name="line.172"></a>
-<span class="sourceLineNo">173</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.173"></a>
-<span class="sourceLineNo">174</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.174"></a>
-<span class="sourceLineNo">175</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.175"></a>
-<span class="sourceLineNo">176</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.176"></a>
-<span class="sourceLineNo">177</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.177"></a>
-<span class="sourceLineNo">178</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.178"></a>
-<span class="sourceLineNo">179</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.179"></a>
-<span class="sourceLineNo">180</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.180"></a>
-<span class="sourceLineNo">181</span>    // add additional ipt and organisation parameters<a name="line.181"></a>
-<span class="sourceLineNo">182</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.182"></a>
-<span class="sourceLineNo">183</span><a name="line.183"></a>
-<span class="sourceLineNo">184</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.184"></a>
-<span class="sourceLineNo">185</span><a name="line.185"></a>
-<span class="sourceLineNo">186</span>    // construct request uri<a name="line.186"></a>
-<span class="sourceLineNo">187</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.187"></a>
-<span class="sourceLineNo">188</span><a name="line.188"></a>
-<span class="sourceLineNo">189</span>    // send POST request with credentials<a name="line.189"></a>
-<span class="sourceLineNo">190</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.190"></a>
-<span class="sourceLineNo">191</span><a name="line.191"></a>
-<span class="sourceLineNo">192</span>    // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed<a name="line.192"></a>
-<span class="sourceLineNo">193</span>    String st = new String(result.content.getBytes(), Charsets.UTF_8);<a name="line.193"></a>
-<span class="sourceLineNo">194</span>    // parse updated registered Dataset key (UUID)<a name="line.194"></a>
-<span class="sourceLineNo">195</span><a name="line.195"></a>
-<span class="sourceLineNo">196</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);<a name="line.196"></a>
-<span class="sourceLineNo">197</span><a name="line.197"></a>
-<span class="sourceLineNo">198</span>    assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);<a name="line.198"></a>
-<span class="sourceLineNo">199</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.199"></a>
-<span class="sourceLineNo">200</span>    assertNotNull("Updated Dataset organizationKey should be in response",<a name="line.200"></a>
-<span class="sourceLineNo">201</span>      Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.201"></a>
-<span class="sourceLineNo">202</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.202"></a>
-<span class="sourceLineNo">203</span><a name="line.203"></a>
-<span class="sourceLineNo">204</span>    // make some additional assertions that the update was successful<a name="line.204"></a>
-<span class="sourceLineNo">205</span>    // retrieve installation anew<a name="line.205"></a>
-<span class="sourceLineNo">206</span>    dataset = datasetService.get(datasetKey);<a name="line.206"></a>
-<span class="sourceLineNo">207</span><a name="line.207"></a>
-<span class="sourceLineNo">208</span>    assertNotNull("Dataset should be present", dataset);<a name="line.208"></a>
-<span class="sourceLineNo">209</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.209"></a>
-<span class="sourceLineNo">210</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.210"></a>
-<span class="sourceLineNo">211</span>    assertEquals(DatasetType.OCCURRENCE, dataset.getType());<a name="line.211"></a>
-<span class="sourceLineNo">212</span>    assertEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.212"></a>
-<span class="sourceLineNo">213</span>    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());<a name="line.213"></a>
-<span class="sourceLineNo">214</span>    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.214"></a>
-<span class="sourceLineNo">215</span>    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());<a name="line.215"></a>
-<span class="sourceLineNo">216</span>    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());<a name="line.216"></a>
-<span class="sourceLineNo">217</span>    assertNotNull(dataset.getCreated());<a name="line.217"></a>
-<span class="sourceLineNo">218</span>    assertEquals(created.toString(), dataset.getCreated().toString());<a name="line.218"></a>
-<span class="sourceLineNo">219</span>    assertEquals(createdBy, dataset.getCreatedBy());<a name="line.219"></a>
-<span class="sourceLineNo">220</span>    assertNotNull(dataset.getModified());<a name="line.220"></a>
-<span class="sourceLineNo">221</span>  }<a name="line.221"></a>
-<span class="sourceLineNo">222</span><a name="line.222"></a>
-<span class="sourceLineNo">223</span>  /**<a name="line.223"></a>
-<span class="sourceLineNo">224</span>   * This test verifies http://dev.gbif.org/issues/browse/POR-2733 is solved.<a name="line.224"></a>
-<span class="sourceLineNo">225</span>   * &lt;/br&gt;<a name="line.225"></a>
-<span class="sourceLineNo">226</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.226"></a>
-<span class="sourceLineNo">227</span>   * associated to the Organization. An administrative primary contact with first name "Jan" and last name "Legind"<a name="line.227"></a>
-<span class="sourceLineNo">228</span>   * is then added to the Dataset.<a name="line.228"></a>
-<span class="sourceLineNo">229</span>   * &lt;/br&gt;<a name="line.229"></a>
-<span class="sourceLineNo">230</span>   * Then, it sends an update Dataset (POST) request to update the same Dataset. The request has the primary<a name="line.230"></a>
-<span class="sourceLineNo">231</span>   * contact name "Jan Legind" that used to try and override the first name "Jan".<a name="line.231"></a>
-<span class="sourceLineNo">232</span>   * &lt;/br&gt;<a name="line.232"></a>
-<span class="sourceLineNo">233</span>   * Upon receiving an HTTP Response, the test ensures the update was successful by parsing its XML content.<a name="line.233"></a>
-<span class="sourceLineNo">234</span>   * Then it ensures that the primary contact first name is still "Jan" not "Jan Legind".<a name="line.234"></a>
-<span class="sourceLineNo">235</span>   */<a name="line.235"></a>
-<span class="sourceLineNo">236</span>  @Test<a name="line.236"></a>
-<span class="sourceLineNo">237</span>  public void testUpdateLegacyDatasetWithExistingPrimaryContact()<a name="line.237"></a>
-<span class="sourceLineNo">238</span>    throws IOException, URISyntaxException, SAXException {<a name="line.238"></a>
-<span class="sourceLineNo">239</span>    // persist new organization (IPT hosting organization)<a name="line.239"></a>
-<span class="sourceLineNo">240</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.240"></a>
-<span class="sourceLineNo">241</span>    UUID organizationKey = organization.getKey();<a name="line.241"></a>
-<span class="sourceLineNo">242</span><a name="line.242"></a>
-<span class="sourceLineNo">243</span>    // persist new installation of type IPT<a name="line.243"></a>
-<span class="sourceLineNo">244</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.244"></a>
-<span class="sourceLineNo">245</span>    UUID installationKey = installation.getKey();<a name="line.245"></a>
-<span class="sourceLineNo">246</span><a name="line.246"></a>
-<span class="sourceLineNo">247</span>    // persist new Dataset associated to installation<a name="line.247"></a>
-<span class="sourceLineNo">248</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.248"></a>
-<span class="sourceLineNo">249</span>    UUID datasetKey = dataset.getKey();<a name="line.249"></a>
-<span class="sourceLineNo">250</span>    // add primary contact to Dataset<a name="line.250"></a>
-<span class="sourceLineNo">251</span>    Contact c = new Contact();<a name="line.251"></a>
-<span class="sourceLineNo">252</span>    c.setFirstName("Jan");<a name="line.252"></a>
-<span class="sourceLineNo">253</span>    c.setLastName("Legind");<a name="line.253"></a>
-<span class="sourceLineNo">254</span>    c.setEmail(Lists.newArrayList("jlegind@gbif.org"));<a name="line.254"></a>
-<span class="sourceLineNo">255</span>    c.setPrimary(true);<a name="line.255"></a>
-<span class="sourceLineNo">256</span>    c.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);<a name="line.256"></a>
-<span class="sourceLineNo">257</span>    datasetService.addContact(datasetKey, c);<a name="line.257"></a>
-<span class="sourceLineNo">258</span>    // add endpoint to Dataset<a name="line.258"></a>
-<span class="sourceLineNo">259</span>    Endpoint e = Endpoints.newInstance();<a name="line.259"></a>
-<span class="sourceLineNo">260</span>    datasetService.addEndpoint(datasetKey, e);<a name="line.260"></a>
-<span class="sourceLineNo">261</span><a name="line.261"></a>
-<span class="sourceLineNo">262</span>    // validate it<a name="line.262"></a>
-<span class="sourceLineNo">263</span>    validateExistingDataset(dataset, organizationKey, installationKey);<a name="line.263"></a>
-<span class="sourceLineNo">264</span><a name="line.264"></a>
-<span class="sourceLineNo">265</span>    // before sending the update POST request, count the number of datasets, contacts and endpoints<a name="line.265"></a>
-<span class="sourceLineNo">266</span>    assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());<a name="line.266"></a>
-<span class="sourceLineNo">267</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.267"></a>
-<span class="sourceLineNo">268</span>    assertEquals(1, datasetService.listContacts(datasetKey).size());<a name="line.268"></a>
-<span class="sourceLineNo">269</span><a name="line.269"></a>
-<span class="sourceLineNo">270</span>    Contact persisted = datasetService.listContacts(datasetKey).get(0);<a name="line.270"></a>
-<span class="sourceLineNo">271</span>    assertEquals("Jan", persisted.getFirstName());<a name="line.271"></a>
-<span class="sourceLineNo">272</span>    assertEquals("Legind", persisted.getLastName());<a name="line.272"></a>
-<span class="sourceLineNo">273</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, persisted.getType());<a name="line.273"></a>
-<span class="sourceLineNo">274</span><a name="line.274"></a>
-<span class="sourceLineNo">275</span>    // populate params for ws<a name="line.275"></a>
-<span class="sourceLineNo">276</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.276"></a>
-<span class="sourceLineNo">277</span>    // main fields<a name="line.277"></a>
-<span class="sourceLineNo">278</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.278"></a>
-<span class="sourceLineNo">279</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.279"></a>
-<span class="sourceLineNo">280</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.280"></a>
-<span class="sourceLineNo">281</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.281"></a>
-<span class="sourceLineNo">282</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.282"></a>
-<span class="sourceLineNo">283</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.283"></a>
-<span class="sourceLineNo">284</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.284"></a>
-<span class="sourceLineNo">285</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.285"></a>
-<span class="sourceLineNo">286</span>    // add additional ipt and organisation parameters<a name="line.286"></a>
-<span class="sourceLineNo">287</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.287"></a>
-<span class="sourceLineNo">288</span><a name="line.288"></a>
-<span class="sourceLineNo">289</span>    // primary contact with name "Jan Legind" and type "administrative"<a name="line.289"></a>
-<span class="sourceLineNo">290</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,<a name="line.290"></a>
-<span class="sourceLineNo">291</span>      Requests.DATASET_PRIMARY_CONTACT_TYPE));<a name="line.291"></a>
-<span class="sourceLineNo">292</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,<a name="line.292"></a>
-<span class="sourceLineNo">293</span>      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));<a name="line.293"></a>
-<span class="sourceLineNo">294</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,<a name="line.294"></a>
-<span class="sourceLineNo">295</span>      Requests.DATASET_PRIMARY_CONTACT_NAME)); // Jan Legind<a name="line.295"></a>
-<span class="sourceLineNo">296</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,<a name="line.296"></a>
-<span class="sourceLineNo">297</span>      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));<a name="line.297"></a>
-<span class="sourceLineNo">298</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,<a name="line.298"></a>
-<span class="sourceLineNo">299</span>      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));<a name="line.299"></a>
-<span class="sourceLineNo">300</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,<a name="line.300"></a>
-<span class="sourceLineNo">301</span>      Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));<a name="line.301"></a>
-<span class="sourceLineNo">302</span><a name="line.302"></a>
-<span class="sourceLineNo">303</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.303"></a>
-<span class="sourceLineNo">304</span><a name="line.304"></a>
-<span class="sourceLineNo">305</span>    // construct request uri<a name="line.305"></a>
-<span class="sourceLineNo">306</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.306"></a>
-<span class="sourceLineNo">307</span><a name="line.307"></a>
-<span class="sourceLineNo">308</span>    // send POST request with credentials<a name="line.308"></a>
-<span class="sourceLineNo">309</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.309"></a>
-<span class="sourceLineNo">310</span><a name="line.310"></a>
-<span class="sourceLineNo">311</span>    // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed<a name="line.311"></a>
-<span class="sourceLineNo">312</span>    String st = new String(result.content.getBytes(), Charsets.UTF_8);<a name="line.312"></a>
-<span class="sourceLineNo">313</span><a name="line.313"></a>
-<span class="sourceLineNo">314</span>    // parse updated registered Dataset key (UUID)<a name="line.314"></a>
-<span class="sourceLineNo">315</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);<a name="line.315"></a>
-<span class="sourceLineNo">316</span><a name="line.316"></a>
-<span class="sourceLineNo">317</span>    assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);<a name="line.317"></a>
-<span class="sourceLineNo">318</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.318"></a>
-<span class="sourceLineNo">319</span>    assertNotNull("Updated Dataset organizationKey should be in response",<a name="line.319"></a>
-<span class="sourceLineNo">320</span>      Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.320"></a>
-<span class="sourceLineNo">321</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.321"></a>
-<span class="sourceLineNo">322</span><a name="line.322"></a>
-<span class="sourceLineNo">323</span>    // make some additional assertions that the update was successful<a name="line.323"></a>
-<span class="sourceLineNo">324</span>    // retrieve installation anew<a name="line.324"></a>
-<span class="sourceLineNo">325</span>    dataset = datasetService.get(datasetKey);<a name="line.325"></a>
-<span class="sourceLineNo">326</span><a name="line.326"></a>
-<span class="sourceLineNo">327</span>    assertNotNull("Dataset should be present", dataset);<a name="line.327"></a>
-<span class="sourceLineNo">328</span><a name="line.328"></a>
-<span class="sourceLineNo">329</span>    // the contact should still have first name "Jan" and last name "Legind"<a name="line.329"></a>
-<span class="sourceLineNo">330</span>    assertEquals(1, dataset.getContacts().size());<a name="line.330"></a>
-<span class="sourceLineNo">331</span>    Contact updated = dataset.getContacts().get(0);<a name="line.331"></a>
-<span class="sourceLineNo">332</span>    assertEquals("Jan", updated.getFirstName());<a name="line.332"></a>
-<span class="sourceLineNo">333</span>    assertEquals("Legind", updated.getLastName());<a name="line.333"></a>
-<span class="sourceLineNo">334</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, updated.getType());<a name="line.334"></a>
-<span class="sourceLineNo">335</span>  }<a name="line.335"></a>
-<span class="sourceLineNo">336</span><a name="line.336"></a>
-<span class="sourceLineNo">337</span>  /**<a name="line.337"></a>
-<span class="sourceLineNo">338</span>   * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least<a name="line.338"></a>
-<span class="sourceLineNo">339</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.339"></a>
-<span class="sourceLineNo">340</span>   */<a name="line.340"></a>
-<span class="sourceLineNo">341</span>  @Test<a name="line.341"></a>
-<span class="sourceLineNo">342</span>  public void testGetLegacyDatasetsForOrganizationJSON() throws IOException, URISyntaxException, SAXException {<a name="line.342"></a>
-<span class="sourceLineNo">343</span>    // persist new organization (IPT hosting organization)<a name="line.343"></a>
-<span class="sourceLineNo">344</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.344"></a>
-<span class="sourceLineNo">345</span>    UUID organizationKey = organization.getKey();<a name="line.345"></a>
-<span class="sourceLineNo">346</span><a name="line.346"></a>
-<span class="sourceLineNo">347</span>    // persist new installation of type IPT<a name="line.347"></a>
-<span class="sourceLineNo">348</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.348"></a>
-<span class="sourceLineNo">349</span>    UUID installationKey = installation.getKey();<a name="line.349"></a>
-<span class="sourceLineNo">350</span><a name="line.350"></a>
-<span class="sourceLineNo">351</span>    // persist new Dataset associated to installation<a name="line.351"></a>
-<span class="sourceLineNo">352</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.352"></a>
-<span class="sourceLineNo">353</span>    UUID datasetKey = dataset.getKey();<a name="line.353"></a>
-<span class="sourceLineNo">354</span><a name="line.354"></a>
-<span class="sourceLineNo">355</span>    // construct request uri<a name="line.355"></a>
-<span class="sourceLineNo">356</span>    String uri = Requests.getRequestUri("/registry/resource.json?organisationKey=" + organizationKey.toString());<a name="line.356"></a>
-<span class="sourceLineNo">357</span><a name="line.357"></a>
-<span class="sourceLineNo">358</span>    // send GET request with no credentials<a name="line.358"></a>
-<span class="sourceLineNo">359</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.359"></a>
-<span class="sourceLineNo">360</span><a name="line.360"></a>
-<span class="sourceLineNo">361</span>    // JSON array expected, with single resource<a name="line.361"></a>
-<span class="sourceLineNo">362</span>    assertTrue(result.content.startsWith("[") &amp;&amp; result.content.endsWith("]"));<a name="line.362"></a>
-<span class="sourceLineNo">363</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.363"></a>
-<span class="sourceLineNo">364</span>    assertEquals(1, rootNode.size());<a name="line.364"></a>
-<span class="sourceLineNo">365</span>    // keys "key" and "name" expected<a name="line.365"></a>
-<span class="sourceLineNo">366</span>    assertEquals(datasetKey.toString(), rootNode.get(0).get("key").getTextValue());<a name="line.366"></a>
-<span class="sourceLineNo">367</span>    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get(0).get("organisationKey").getTextValue());<a name="line.367"></a>
-<span class="sourceLineNo">368</span>    assertEquals(dataset.getTitle(), rootNode.get(0).get("name").getTextValue());<a name="line.368"></a>
-<span class="sourceLineNo">369</span>  }<a name="line.369"></a>
-<span class="sourceLineNo">370</span><a name="line.370"></a>
-<span class="sourceLineNo">371</span>  /**<a name="line.371"></a>
-<span class="sourceLineNo">372</span>   * The test sends a get all datasets owned by organization (GET) request, the XML response having at the very least<a name="line.372"></a>
-<span class="sourceLineNo">373</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.373"></a>
-<span class="sourceLineNo">374</span>   */<a name="line.374"></a>
-<span class="sourceLineNo">375</span>  @Test<a name="line.375"></a>
-<span class="sourceLineNo">376</span>  public void testGetLegacyDatasetsForOrganizationXML() throws IOException, URISyntaxException, SAXException {<a name="line.376"></a>
-<span class="sourceLineNo">377</span>    // persist new organization (IPT hosting organization)<a name="line.377"></a>
-<span class="sourceLineNo">378</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.378"></a>
-<span class="sourceLineNo">379</span>    UUID organizationKey = organization.getKey();<a name="line.379"></a>
-<span class="sourceLineNo">380</span><a name="line.380"></a>
-<span class="sourceLineNo">381</span>    // persist new installation of type IPT<a name="line.381"></a>
-<span class="sourceLineNo">382</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.382"></a>
-<span class="sourceLineNo">383</span>    UUID installationKey = installation.getKey();<a name="line.383"></a>
-<span class="sourceLineNo">384</span><a name="line.384"></a>
-<span class="sourceLineNo">385</span>    // persist new Dataset associated to installation<a name="line.385"></a>
-<span class="sourceLineNo">386</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.386"></a>
-<span class="sourceLineNo">387</span>    UUID datasetKey = dataset.getKey();<a name="line.387"></a>
-<span class="sourceLineNo">388</span><a name="line.388"></a>
-<span class="sourceLineNo">389</span>    // construct request uri<a name="line.389"></a>
-<span class="sourceLineNo">390</span>    String uri = Requests.getRequestUri("/registry/resource?organisationKey=" + organizationKey.toString());<a name="line.390"></a>
-<span class="sourceLineNo">391</span><a name="line.391"></a>
-<span class="sourceLineNo">392</span>    // send GET request with no credentials<a name="line.392"></a>
-<span class="sourceLineNo">393</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.393"></a>
-<span class="sourceLineNo">394</span><a name="line.394"></a>
-<span class="sourceLineNo">395</span>    // TODO: Response must be wrapped with root &lt;resources&gt;, not &lt;legacyDatasetResponses&gt;<a name="line.395"></a>
-<span class="sourceLineNo">396</span>    assertTrue(result.content.contains("&lt;legacyDatasetResponses&gt;&lt;resource&gt;"));<a name="line.396"></a>
-<span class="sourceLineNo">397</span>    // verify character encoding here already, known to cause issue on some systems<a name="line.397"></a>
-<span class="sourceLineNo">398</span>    assertTrue(result.content.contains("Türkei"));<a name="line.398"></a>
-<span class="sourceLineNo">399</span><a name="line.399"></a>
-<span class="sourceLineNo">400</span>    // parse newly registered list of datasets<a name="line.400"></a>
-<span class="sourceLineNo">401</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.401"></a>
-<span class="sourceLineNo">402</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.402"></a>
-<span class="sourceLineNo">403</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.403"></a>
-<span class="sourceLineNo">404</span>    assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);<a name="line.404"></a>
-<span class="sourceLineNo">405</span>  }<a name="line.405"></a>
-<span class="sourceLineNo">406</span><a name="line.406"></a>
-<span class="sourceLineNo">407</span>  /**<a name="line.407"></a>
-<span class="sourceLineNo">408</span>   * The test sends a get dataset (GET) request, the JSON response having all of: key, organisationKey, name,<a name="line.408"></a>
-<span class="sourceLineNo">409</span>   * description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc.<a name="line.409"></a>
-<span class="sourceLineNo">410</span>   */<a name="line.410"></a>
-<span class="sourceLineNo">411</span>  @Test<a name="line.411"></a>
-<span class="sourceLineNo">412</span>  public void testGetLegacyDatasetJSON() throws IOException, URISyntaxException, SAXException {<a name="line.412"></a>
-<span class="sourceLineNo">413</span>    // persist new organization (IPT hosting organization)<a name="line.413"></a>
-<span class="sourceLineNo">414</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.414"></a>
-<span class="sourceLineNo">415</span>    UUID organizationKey = organization.getKey();<a name="line.415"></a>
-<span class="sourceLineNo">416</span><a name="line.416"></a>
-<span class="sourceLineNo">417</span>    // persist new installation of type IPT<a name="line.417"></a>
-<span class="sourceLineNo">418</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.418"></a>
-<span class="sourceLineNo">419</span>    UUID installationKey = installation.getKey();<a name="line.419"></a>
-<span class="sourceLineNo">420</span><a name="line.420"></a>
-<span class="sourceLineNo">421</span>    // persist new Dataset associated to installation<a name="line.421"></a>
-<span class="sourceLineNo">422</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.422"></a>
-<span class="sourceLineNo">423</span>    UUID datasetKey = dataset.getKey();<a name="line.423"></a>
-<span class="sourceLineNo">424</span><a name="line.424"></a>
-<span class="sourceLineNo">425</span>    // add primary contact to Dataset<a name="line.425"></a>
-<span class="sourceLineNo">426</span>    Contact c = Contacts.newInstance();<a name="line.426"></a>
-<span class="sourceLineNo">427</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.427"></a>
-<span class="sourceLineNo">428</span>    datasetService.addContact(dataset.getKey(), c);<a name="line.428"></a>
-<span class="sourceLineNo">429</span><a name="line.429"></a>
-<span class="sourceLineNo">430</span>    // construct request uri<a name="line.430"></a>
-<span class="sourceLineNo">431</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString() + ".json");<a name="line.431"></a>
-<span class="sourceLineNo">432</span><a name="line.432"></a>
-<span class="sourceLineNo">433</span>    // send GET request with no credentials<a name="line.433"></a>
-<span class="sourceLineNo">434</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.434"></a>
-<span class="sourceLineNo">435</span><a name="line.435"></a>
-<span class="sourceLineNo">436</span>    // JSON object expected, representing single dataset<a name="line.436"></a>
-<span class="sourceLineNo">437</span>    assertTrue(result.content.startsWith("{") &amp;&amp; result.content.endsWith("}"));<a name="line.437"></a>
-<span class="sourceLineNo">438</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.438"></a>
-<span class="sourceLineNo">439</span>    // keys "key" and "name" expected<a name="line.439"></a>
-<span class="sourceLineNo">440</span>    assertEquals(datasetKey.toString(), rootNode.get("key").getTextValue());<a name="line.440"></a>
-<span class="sourceLineNo">441</span>    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get("organisationKey").getTextValue());<a name="line.441"></a>
-<span class="sourceLineNo">442</span>    assertEquals(dataset.getTitle(), rootNode.get("name").getTextValue());<a name="line.442"></a>
-<span class="sourceLineNo">443</span>    assertEquals(dataset.getDescription(), rootNode.get("description").getTextValue());<a name="line.443"></a>
-<span class="sourceLineNo">444</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), rootNode.get("nameLanguage").getTextValue());<a name="line.444"></a>
-<span class="sourceLineNo">445</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), rootNode.get("descriptionLanguage").getTextValue());<a name="line.445"></a>
-<span class="sourceLineNo">446</span>    assertEquals(dataset.getHomepage().toString(), rootNode.get("homepageURL").getTextValue());<a name="line.446"></a>
-<span class="sourceLineNo">447</span>    assertEquals(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE, rootNode.get("primaryContactType").getTextValue());<a name="line.447"></a>
-<span class="sourceLineNo">448</span>    assertEquals("Tim Robertson", rootNode.get("primaryContactName").getTextValue());<a name="line.448"></a>
-<span class="sourceLineNo">449</span>    assertEquals("+45 28261487", rootNode.get("primaryContactPhone").getTextValue());<a name="line.449"></a>
-<span class="sourceLineNo">450</span>    assertEquals("trobertson@gbif.org", rootNode.get("primaryContactEmail").getTextValue());<a name="line.450"></a>
-<span class="sourceLineNo">451</span>    assertEquals("Universitetsparken 15", rootNode.get("primaryContactAddress").getTextValue());<a name="line.451"></a>
-<span class="sourceLineNo">452</span>    assertEquals("About 175cm, geeky, scruffy...", rootNode.get("primaryContactDescription").getTextValue());<a name="line.452"></a>
-<span class="sourceLineNo">453</span>  }<a name="line.453"></a>
-<span class="sourceLineNo">454</span><a name="line.454"></a>
-<span class="sourceLineNo">455</span>  /**<a name="line.455"></a>
-<span class="sourceLineNo">456</span>   * The test sends a get dataset (GET) request for a dataset that does not exist.<a name="line.456"></a>
-<span class="sourceLineNo">457</span>   * The JSON response having an error message, not a 404.<a name="line.457"></a>
-<span class="sourceLineNo">458</span>   */<a name="line.458"></a>
-<span class="sourceLineNo">459</span>  @Test<a name="line.459"></a>
-<span class="sourceLineNo">460</span>  public void testGetLegacyDatasetNotFoundJSON() throws IOException, URISyntaxException, SAXException {<a name="line.460"></a>
-<span class="sourceLineNo">461</span>    // construct request uri<a name="line.461"></a>
-<span class="sourceLineNo">462</span>    String uri = Requests.getRequestUri("/registry/resource/" + UUID.randomUUID().toString() + ".json");<a name="line.462"></a>
-<span class="sourceLineNo">463</span><a name="line.463"></a>
-<span class="sourceLineNo">464</span>    // send GET request with no credentials<a name="line.464"></a>
-<span class="sourceLineNo">465</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.465"></a>
-<span class="sourceLineNo">466</span><a name="line.466"></a>
-<span class="sourceLineNo">467</span>    // JSON object expected, representing single dataset<a name="line.467"></a>
-<span class="sourceLineNo">468</span>    assertTrue(result.content.equalsIgnoreCase("{\"error\":\"No resource matches the key provided\"}"));<a name="line.468"></a>
-<span class="sourceLineNo">469</span>  }<a name="line.469"></a>
-<span class="sourceLineNo">470</span><a name="line.470"></a>
-<span class="sourceLineNo">471</span>  /**<a name="line.471"></a>
-<span class="sourceLineNo">472</span>   * The test sends a get dataset (GET) request, the XML response having all of: key, organisationKey, name,<a name="line.472"></a>
-<span class="sourceLineNo">473</span>   * description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc.<a name="line.473"></a>
-<span class="sourceLineNo">474</span>   */<a name="line.474"></a>
-<span class="sourceLineNo">475</span>  @Test<a name="line.475"></a>
-<span class="sourceLineNo">476</span>  public void testGetLegacyDatasetXML() throws IOException, URISyntaxException, SAXException {<a name="line.476"></a>
-<span class="sourceLineNo">477</span>    // persist new organization (IPT hosting organization)<a name="line.477"></a>
-<span class="sourceLineNo">478</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.478"></a>
-<span class="sourceLineNo">479</span>    UUID organizationKey = organization.getKey();<a name="line.479"></a>
-<span class="sourceLineNo">480</span><a name="line.480"></a>
-<span class="sourceLineNo">481</span>    // persist new installation of type IPT<a name="line.481"></a>
-<span class="sourceLineNo">482</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.482"></a>
-<span class="sourceLineNo">483</span>    UUID installationKey = installation.getKey();<a name="line.483"></a>
-<span class="sourceLineNo">484</span><a name="line.484"></a>
-<span class="sourceLineNo">485</span>    // persist new Dataset associated to installation<a name="line.485"></a>
-<span class="sourceLineNo">486</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.486"></a>
-<span class="sourceLineNo">487</span>    UUID datasetKey = dataset.getKey();<a name="line.487"></a>
-<span class="sourceLineNo">488</span><a name="line.488"></a>
-<span class="sourceLineNo">489</span>    // add primary contact to Dataset<a name="line.489"></a>
-<span class="sourceLineNo">490</span>    Contact c = Contacts.newInstance();<a name="line.490"></a>
-<span class="sourceLineNo">491</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.491"></a>
-<span class="sourceLineNo">492</span>    datasetService.addContact(dataset.getKey(), c);<a name="line.492"></a>
-<span class="sourceLineNo">493</span><a name="line.493"></a>
-<span class="sourceLineNo">494</span>    // construct request uri<a name="line.494"></a>
-<span class="sourceLineNo">495</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.495"></a>
-<span class="sourceLineNo">496</span><a name="line.496"></a>
-<span class="sourceLineNo">497</span>    // send GET request with no credentials<a name="line.497"></a>
-<span class="sourceLineNo">498</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.498"></a>
-<span class="sourceLineNo">499</span><a name="line.499"></a>
-<span class="sourceLineNo">500</span>    // XML expected, parse Dataset<a name="line.500"></a>
-<span class="sourceLineNo">501</span>    assertTrue(result.content.contains("&lt;resource&gt;"));<a name="line.501"></a>
-<span class="sourceLineNo">502</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.502"></a>
-<span class="sourceLineNo">503</span><a name="line.503"></a>
-<span class="sourceLineNo">504</span>    assertEquals(dataset.getKey().toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.504"></a>
-<span class="sourceLineNo">505</span>    assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);<a name="line.505"></a>
-<span class="sourceLineNo">506</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), Parsers.legacyDatasetResponseHandler.nameLanguage);<a name="line.506"></a>
-<span class="sourceLineNo">507</span>    assertEquals(dataset.getDescription(), Parsers.legacyDatasetResponseHandler.description);<a name="line.507"></a>
-<span class="sourceLineNo">508</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), Parsers.legacyDatasetResponseHandler.descriptionLanguage);<a name="line.508"></a>
-<span class="sourceLineNo">509</span>    assertEquals(dataset.getHomepage().toString(), Parsers.legacyDatasetResponseHandler.homepageURL);<a name="line.509"></a>
-<span class="sourceLineNo">510</span>    assertEquals(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE,<a name="line.510"></a>
-<span class="sourceLineNo">511</span>      Parsers.legacyDatasetResponseHandler.primaryContactType);<a name="line.511"></a>
-<span class="sourceLineNo">512</span>    assertEquals("Tim Robertson", Parsers.legacyDatasetResponseHandler.primaryContactName);<a name="line.512"></a>
-<span class="sourceLineNo">513</span>    assertEquals("trobertson@gbif.org", Parsers.legacyDatasetResponseHandler.primaryContactEmail);<a name="line.513"></a>
-<span class="sourceLineNo">514</span>    assertEquals("Universitetsparken 15", Parsers.legacyDatasetResponseHandler.primaryContactAddress);<a name="line.514"></a>
-<span class="sourceLineNo">515</span>    assertEquals("+45 28261487", Parsers.legacyDatasetResponseHandler.primaryContactPhone);<a name="line.515"></a>
-<span class="sourceLineNo">516</span>    assertEquals("About 175cm, geeky, scruffy...", Parsers.legacyDatasetResponseHandler.primaryContactDescription);<a name="line.516"></a>
-<span class="sourceLineNo">517</span>  }<a name="line.517"></a>
-<span class="sourceLineNo">518</span><a name="line.518"></a>
-<span class="sourceLineNo">519</span>  /**<a name="line.519"></a>
-<span class="sourceLineNo">520</span>   * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least<a name="line.520"></a>
-<span class="sourceLineNo">521</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.521"></a>
-<span class="sourceLineNo">522</span>   */<a name="line.522"></a>
-<span class="sourceLineNo">523</span>  @Test<a name="line.523"></a>
-<span class="sourceLineNo">524</span>  public void testGetLegacyDatasetsForOrganizationThatDoesNotExist()<a name="line.524"></a>
-<span class="sourceLineNo">525</span>    throws IOException, URISyntaxException, SAXException {<a name="line.525"></a>
-<span class="sourceLineNo">526</span>    // construct request uri using Organization that doesn't exist<a name="line.526"></a>
-<span class="sourceLineNo">527</span>    String uri = Requests.getRequestUri("/registry/resource.json?organisationKey=" + UUID.randomUUID().toString());<a name="line.527"></a>
-<span class="sourceLineNo">528</span><a name="line.528"></a>
-<span class="sourceLineNo">529</span>    // send GET request with no credentials<a name="line.529"></a>
-<span class="sourceLineNo">530</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.530"></a>
-<span class="sourceLineNo">531</span><a name="line.531"></a>
-<span class="sourceLineNo">532</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.532"></a>
-<span class="sourceLineNo">533</span><a name="line.533"></a>
-<span class="sourceLineNo">534</span>    // JSON array expected, with single entry<a name="line.534"></a>
-<span class="sourceLineNo">535</span>    assertEquals(1, rootNode.size());<a name="line.535"></a>
-<span class="sourceLineNo">536</span>    String error = rootNode.toString();<a name="line.536"></a>
-<span class="sourceLineNo">537</span>    assertEquals("{\"error\":\"No organisation matches the key provided\"}", error);<a name="line.537"></a>
-<span class="sourceLineNo">538</span>  }<a name="line.538"></a>
-<span class="sourceLineNo">539</span><a name="line.539"></a>
-<span class="sourceLineNo">540</span>  /**<a name="line.540"></a>
-<span class="sourceLineNo">541</span>   * Populate a list of name value pairs used in the common ws requests for GBRDS dataset registrations and updates.<a name="line.541"></a>
-<span class="sourceLineNo">542</span>   *<a name="line.542"></a>
-<span class="sourceLineNo">543</span>   * @param organizationKey organization key<a name="line.543"></a>
-<span class="sourceLineNo">544</span>   * @return list of name value pairs<a name="line.544"></a>
-<span class="sourceLineNo">545</span>   */<a name="line.545"></a>
-<span class="sourceLineNo">546</span>  private List&lt;NameValuePair&gt; buildLegacyDatasetParameters(UUID organizationKey) {<a name="line.546"></a>
-<span class="sourceLineNo">547</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.547"></a>
-<span class="sourceLineNo">548</span>    // main<a name="line.548"></a>
-<span class="sourceLineNo">549</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.549"></a>
-<span class="sourceLineNo">550</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.550"></a>
-<span class="sourceLineNo">551</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.551"></a>
-<span class="sourceLineNo">552</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.552"></a>
-<span class="sourceLineNo">553</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.553"></a>
-<span class="sourceLineNo">554</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.554"></a>
-<span class="sourceLineNo">555</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.555"></a>
-<span class="sourceLineNo">556</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.556"></a>
-<span class="sourceLineNo">557</span><a name="line.557"></a>
-<span class="sourceLineNo">558</span>    // primary contact<a name="line.558"></a>
-<span class="sourceLineNo">559</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,<a name="line.559"></a>
-<span class="sourceLineNo">560</span>      Requests.DATASET_PRIMARY_CONTACT_TYPE));<a name="line.560"></a>
-<span class="sourceLineNo">561</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,<a name="line.561"></a>
-<span class="sourceLineNo">562</span>      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));<a name="line.562"></a>
-<span class="sourceLineNo">563</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,<a name="line.563"></a>
-<span class="sourceLineNo">564</span>      Requests.DATASET_PRIMARY_CONTACT_NAME));<a name="line.564"></a>
-<span class="sourceLineNo">565</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,<a name="line.565"></a>
-<span class="sourceLineNo">566</span>      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));<a name="line.566"></a>
-<span class="sourceLineNo">567</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,<a name="line.567"></a>
-<span class="sourceLineNo">568</span>      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));<a name="line.568"></a>
-<span class="sourceLineNo">569</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,<a name="line.569"></a>
-<span class="sourceLineNo">570</span>      Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));<a name="line.570"></a>
-<span class="sourceLineNo">571</span><a name="line.571"></a>
-<span class="sourceLineNo">572</span>    // add additional ipt and organisation parameters<a name="line.572"></a>
-<span class="sourceLineNo">573</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.573"></a>
-<span class="sourceLineNo">574</span>    return data;<a name="line.574"></a>
-<span class="sourceLineNo">575</span>  }<a name="line.575"></a>
-<span class="sourceLineNo">576</span><a name="line.576"></a>
-<span class="sourceLineNo">577</span>  /**<a name="line.577"></a>
-<span class="sourceLineNo">578</span>   * Retrieve persisted Legacy (GBRDS) dataset, and make a series of assertions to ensure it has been properly<a name="line.578"></a>
-<span class="sourceLineNo">579</span>   * persisted.<a name="line.579"></a>
-<span class="sourceLineNo">580</span>   *<a name="line.580"></a>
-<span class="sourceLineNo">581</span>   * @param datasetKey installation key (UUID)<a name="line.581"></a>
-<span class="sourceLineNo">582</span>   * @param organizationKey installation publishing organization key<a name="line.582"></a>
-<span class="sourceLineNo">583</span>   * @return validated installation<a name="line.583"></a>
-<span class="sourceLineNo">584</span>   */<a name="line.584"></a>
-<span class="sourceLineNo">585</span>  private Dataset validatePersistedLegacyDataset(UUID datasetKey, UUID organizationKey, UUID installationKey) {<a name="line.585"></a>
-<span class="sourceLineNo">586</span>    // retrieve installation anew<a name="line.586"></a>
-<span class="sourceLineNo">587</span>    Dataset dataset = datasetService.get(datasetKey);<a name="line.587"></a>
+<span class="sourceLineNo">034</span>import javax.xml.parsers.ParserConfigurationException;<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span>import com.google.common.base.Charsets;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import com.google.common.collect.Lists;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import com.google.inject.Injector;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.apache.http.NameValuePair;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>import org.apache.http.client.entity.UrlEncodedFormEntity;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>import org.apache.http.message.BasicNameValuePair;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import org.codehaus.jackson.JsonNode;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import org.codehaus.jackson.map.ObjectMapper;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import org.junit.ClassRule;<a name="line.44"></a>
+<span class="sourceLineNo">045</span>import org.junit.Rule;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>import org.junit.Test;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import org.xml.sax.SAXException;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>import static org.junit.Assert.assertEquals;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>import static org.junit.Assert.assertNotEquals;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>import static org.junit.Assert.assertNotNull;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import static org.junit.Assert.assertTrue;<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>public class LegacyDatasetResourceIT {<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>  // Flushes the database on each run<a name="line.56"></a>
+<span class="sourceLineNo">057</span>  @ClassRule<a name="line.57"></a>
+<span class="sourceLineNo">058</span>  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>  @ClassRule<a name="line.60"></a>
+<span class="sourceLineNo">061</span>  public static final RegistryServer registryServer = RegistryServer.INSTANCE;<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>  @Rule<a name="line.63"></a>
+<span class="sourceLineNo">064</span>  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());<a name="line.64"></a>
+<span class="sourceLineNo">065</span><a name="line.65"></a>
+<span class="sourceLineNo">066</span>  private final DatasetService datasetService;<a name="line.66"></a>
+<span class="sourceLineNo">067</span>  private final ObjectMapper objectMapper = new ObjectMapper();<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>  public LegacyDatasetResourceIT() throws ParserConfigurationException, SAXException {<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    Injector i = RegistryTestModules.webservice();<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    this.datasetService = i.getInstance(DatasetService.class);<a name="line.71"></a>
+<span class="sourceLineNo">072</span>  }<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>  /**<a name="line.74"></a>
+<span class="sourceLineNo">075</span>   * The test begins by persisting a new Organization, and installation associated to that Organization.<a name="line.75"></a>
+<span class="sourceLineNo">076</span>   * &lt;/br&gt;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>   * Then, it sends a register Dataset (POST) request to create a new Dataset owned by this organization. The request<a name="line.77"></a>
+<span class="sourceLineNo">078</span>   * does not contain an installation key, but it can be inferred that it should use the key of the one and only<a name="line.78"></a>
+<span class="sourceLineNo">079</span>   * installation belonging to the publishing organization. The request also doesn't create any endpoints, that's done in<a name="line.79"></a>
+<span class="sourceLineNo">080</span>   * a separate legacy ws call. Therefore, the DatasetType defaults to METADATA.<a name="line.80"></a>
+<span class="sourceLineNo">081</span>   * &lt;/br&gt;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>   * Upon receiving an HTTP Response, the test parses its XML content in order to extract the registered Dataset UUID<a name="line.82"></a>
+<span class="sourceLineNo">083</span>   * for example. The content is parsed exactly the same way as the GBRDS WS consumer would do it.<a name="line.83"></a>
+<span class="sourceLineNo">084</span>   * &lt;/br&gt;<a name="line.84"></a>
+<span class="sourceLineNo">085</span>   * Last, the test validates that the dataset was persisted correctly.<a name="line.85"></a>
+<span class="sourceLineNo">086</span>   */<a name="line.86"></a>
+<span class="sourceLineNo">087</span>  @Test<a name="line.87"></a>
+<span class="sourceLineNo">088</span>  public void testRegisterLegacyDataset() throws IOException, URISyntaxException, SAXException {<a name="line.88"></a>
+<span class="sourceLineNo">089</span>    // persist new organization (Dataset publishing organization)<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.90"></a>
+<span class="sourceLineNo">091</span>    UUID organizationKey = organization.getKey();<a name="line.91"></a>
+<span class="sourceLineNo">092</span><a name="line.92"></a>
+<span class="sourceLineNo">093</span>    // persist new installation of type IPT<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    UUID installationKey = installation.getKey();<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    // populate params for ws, without installation key<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    List&lt;NameValuePair&gt; data = buildLegacyDatasetParameters(organizationKey);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.99"></a>
+<span class="sourceLineNo">100</span><a name="line.100"></a>
+<span class="sourceLineNo">101</span>    // construct request uri<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    String uri = Requests.getRequestUri("/registry/resource");<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>    // send POST request with credentials<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>    // parse newly registered IPT key (UUID)<a name="line.107"></a>
+<span class="sourceLineNo">108</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.108"></a>
+<span class="sourceLineNo">109</span>    assertNotNull("Registered Dataset key should be in response",<a name="line.109"></a>
+<span class="sourceLineNo">110</span>      UUID.fromString(Parsers.legacyDatasetResponseHandler.key));<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>    // some information that should have been updated<a name="line.112"></a>
+<span class="sourceLineNo">113</span>    Dataset dataset =<a name="line.113"></a>
+<span class="sourceLineNo">114</span>      validatePersistedLegacyDataset(UUID.fromString(Parsers.legacyDatasetResponseHandler.key), organizationKey,<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        installationKey);<a name="line.115"></a>
+<span class="sourceLineNo">116</span><a name="line.116"></a>
+<span class="sourceLineNo">117</span>    // some additional information to check<a name="line.117"></a>
+<span class="sourceLineNo">118</span>    assertNotNull(dataset.getCreatedBy());<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    assertNotNull(dataset.getModifiedBy());<a name="line.119"></a>
+<span class="sourceLineNo">120</span>  }<a name="line.120"></a>
+<span class="sourceLineNo">121</span><a name="line.121"></a>
+<span class="sourceLineNo">122</span>  /**<a name="line.122"></a>
+<span class="sourceLineNo">123</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.123"></a>
+<span class="sourceLineNo">124</span>   * associated to the Organization. A primary contact and endpoint is then added to the Dataset.<a name="line.124"></a>
+<span class="sourceLineNo">125</span>   * &lt;/br&gt;<a name="line.125"></a>
+<span class="sourceLineNo">126</span>   * Then, it sends an update Dataset (POST) request to update the same Dataset. The request does not have the primary<a name="line.126"></a>
+<span class="sourceLineNo">127</span>   * contact, endpoint, or installation key form parameters. Since the organization only has 1 installation anyways,<a name="line.127"></a>
+<span class="sourceLineNo">128</span>   * it will be inferred that the dataset belongs to this one.<a name="line.128"></a>
+<span class="sourceLineNo">129</span>   * &lt;/br&gt;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>   * Upon receiving an HTTP Response, the test parses its XML content in order to extract the registered Dataset UUID<a name="line.130"></a>
+<span class="sourceLineNo">131</span>   * for example. It also ensures that the primary contact and endpoints still exist.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>   */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>  @Test<a name="line.133"></a>
+<span class="sourceLineNo">134</span>  public void testUpdateLegacyDatasetWithNoContactNoEndpointNoInstallationKey()<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    throws IOException, URISyntaxException, SAXException {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    // persist new organization (IPT hosting organization)<a name="line.136"></a>
+<span class="sourceLineNo">137</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    UUID organizationKey = organization.getKey();<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    // persist new installation of type IPT<a name="line.140"></a>
+<span class="sourceLineNo">141</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.141"></a>
+<span class="sourceLineNo">142</span>    UUID installationKey = installation.getKey();<a name="line.142"></a>
+<span class="sourceLineNo">143</span><a name="line.143"></a>
+<span class="sourceLineNo">144</span>    // persist new Dataset associated to installation<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    UUID datasetKey = dataset.getKey();<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    // add primary contact to Dataset<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    Contact c = Contacts.newInstance();<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    datasetService.addContact(datasetKey, c);<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    // add endpoint to Dataset<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    Endpoint e = Endpoints.newInstance();<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    datasetService.addEndpoint(datasetKey, e);<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>    // validate it<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    validateExistingDataset(dataset, organizationKey, installationKey);<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>    // before sending the update POST request, count the number of datasets, contacts and endpoints<a name="line.158"></a>
+<span class="sourceLineNo">159</span>    assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.160"></a>
+<span class="sourceLineNo">161</span>    assertEquals(1, datasetService.listContacts(datasetKey).size());<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>    // some information never going to change<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    Date created = dataset.getCreated();<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    assertNotNull(created);<a name="line.165"></a>
+<span class="sourceLineNo">166</span>    String createdBy = dataset.getCreatedBy();<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    assertNotNull(createdBy);<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>    // populate params for ws<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.170"></a>
+<span class="sourceLineNo">171</span>    // main<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.172"></a>
+<span class="sourceLineNo">173</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.174"></a>
+<span class="sourceLineNo">175</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.176"></a>
+<span class="sourceLineNo">177</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.179"></a>
+<span class="sourceLineNo">180</span>    // add additional ipt and organisation parameters<a name="line.180"></a>
+<span class="sourceLineNo">181</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.181"></a>
+<span class="sourceLineNo">182</span><a name="line.182"></a>
+<span class="sourceLineNo">183</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>    // construct request uri<a name="line.185"></a>
+<span class="sourceLineNo">186</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.186"></a>
+<span class="sourceLineNo">187</span><a name="line.187"></a>
+<span class="sourceLineNo">188</span>    // send POST request with credentials<a name="line.188"></a>
+<span class="sourceLineNo">189</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.189"></a>
+<span class="sourceLineNo">190</span><a name="line.190"></a>
+<span class="sourceLineNo">191</span>    // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed<a name="line.191"></a>
+<span class="sourceLineNo">192</span>    String st = new String(result.content.getBytes(), Charsets.UTF_8);<a name="line.192"></a>
+<span class="sourceLineNo">193</span>    // parse updated registered Dataset key (UUID)<a name="line.193"></a>
+<span class="sourceLineNo">194</span><a name="line.194"></a>
+<span class="sourceLineNo">195</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);<a name="line.195"></a>
+<span class="sourceLineNo">196</span><a name="line.196"></a>
+<span class="sourceLineNo">197</span>    assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);<a name="line.197"></a>
+<span class="sourceLineNo">198</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.198"></a>
+<span class="sourceLineNo">199</span>    assertNotNull("Updated Dataset organizationKey should be in response",<a name="line.199"></a>
+<span class="sourceLineNo">200</span>      Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.200"></a>
+<span class="sourceLineNo">201</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.201"></a>
+<span class="sourceLineNo">202</span><a name="line.202"></a>
+<span class="sourceLineNo">203</span>    // make some additional assertions that the update was successful<a name="line.203"></a>
+<span class="sourceLineNo">204</span>    // retrieve installation anew<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    dataset = datasetService.get(datasetKey);<a name="line.205"></a>
+<span class="sourceLineNo">206</span><a name="line.206"></a>
+<span class="sourceLineNo">207</span>    assertNotNull("Dataset should be present", dataset);<a name="line.207"></a>
+<span class="sourceLineNo">208</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.208"></a>
+<span class="sourceLineNo">209</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.209"></a>
+<span class="sourceLineNo">210</span>    assertEquals(DatasetType.OCCURRENCE, dataset.getType());<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    assertEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.211"></a>
+<span class="sourceLineNo">212</span>    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());<a name="line.214"></a>
+<span class="sourceLineNo">215</span>    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    assertNotNull(dataset.getCreated());<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    assertEquals(created.toString(), dataset.getCreated().toString());<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    assertEquals(createdBy, dataset.getCreatedBy());<a name="line.218"></a>
+<span class="sourceLineNo">219</span>    assertNotNull(dataset.getModified());<a name="line.219"></a>
+<span class="sourceLineNo">220</span>  }<a name="line.220"></a>
+<span class="sourceLineNo">221</span><a name="line.221"></a>
+<span class="sourceLineNo">222</span>  /**<a name="line.222"></a>
+<span class="sourceLineNo">223</span>   * This test verifies http://dev.gbif.org/issues/browse/POR-2733 is solved.<a name="line.223"></a>
+<span class="sourceLineNo">224</span>   * &lt;/br&gt;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>   * The test begins by persisting a new Organization, Installation associated to the Organization, and Dataset<a name="line.225"></a>
+<span class="sourceLineNo">226</span>   * associated to the Organization. An administrative primary contact with first name "Jan" and last name "Legind"<a name="line.226"></a>
+<span class="sourceLineNo">227</span>   * is then added to the Dataset.<a name="line.227"></a>
+<span class="sourceLineNo">228</span>   * &lt;/br&gt;<a name="line.228"></a>
+<span class="sourceLineNo">229</span>   * Then, it sends an update Dataset (POST) request to update the same Dataset. The request has the primary<a name="line.229"></a>
+<span class="sourceLineNo">230</span>   * contact name "Jan Legind" that used to try and override the first name "Jan".<a name="line.230"></a>
+<span class="sourceLineNo">231</span>   * &lt;/br&gt;<a name="line.231"></a>
+<span class="sourceLineNo">232</span>   * Upon receiving an HTTP Response, the test ensures the update was successful by parsing its XML content.<a name="line.232"></a>
+<span class="sourceLineNo">233</span>   * Then it ensures that the primary contact first name is still "Jan" not "Jan Legind".<a name="line.233"></a>
+<span class="sourceLineNo">234</span>   */<a name="line.234"></a>
+<span class="sourceLineNo">235</span>  @Test<a name="line.235"></a>
+<span class="sourceLineNo">236</span>  public void testUpdateLegacyDatasetWithExistingPrimaryContact()<a name="line.236"></a>
+<span class="sourceLineNo">237</span>    throws IOException, URISyntaxException, SAXException {<a name="line.237"></a>
+<span class="sourceLineNo">238</span>    // persist new organization (IPT hosting organization)<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    UUID organizationKey = organization.getKey();<a name="line.240"></a>
+<span class="sourceLineNo">241</span><a name="line.241"></a>
+<span class="sourceLineNo">242</span>    // persist new installation of type IPT<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    UUID installationKey = installation.getKey();<a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245"></a>
+<span class="sourceLineNo">246</span>    // persist new Dataset associated to installation<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.247"></a>
+<span class="sourceLineNo">248</span>    UUID datasetKey = dataset.getKey();<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    // add primary contact to Dataset<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    Contact c = new Contact();<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    c.setFirstName("Jan");<a name="line.251"></a>
+<span class="sourceLineNo">252</span>    c.setLastName("Legind");<a name="line.252"></a>
+<span class="sourceLineNo">253</span>    c.setEmail(Lists.newArrayList("jlegind@gbif.org"));<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    c.setPrimary(true);<a name="line.254"></a>
+<span class="sourceLineNo">255</span>    c.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);<a name="line.255"></a>
+<span class="sourceLineNo">256</span>    datasetService.addContact(datasetKey, c);<a name="line.256"></a>
+<span class="sourceLineNo">257</span>    // add endpoint to Dataset<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    Endpoint e = Endpoints.newInstance();<a name="line.258"></a>
+<span class="sourceLineNo">259</span>    datasetService.addEndpoint(datasetKey, e);<a name="line.259"></a>
+<span class="sourceLineNo">260</span><a name="line.260"></a>
+<span class="sourceLineNo">261</span>    // validate it<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    validateExistingDataset(dataset, organizationKey, installationKey);<a name="line.262"></a>
+<span class="sourceLineNo">263</span><a name="line.263"></a>
+<span class="sourceLineNo">264</span>    // before sending the update POST request, count the number of datasets, contacts and endpoints<a name="line.264"></a>
+<span class="sourceLineNo">265</span>    assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    assertEquals(1, datasetService.listEndpoints(datasetKey).size());<a name="line.266"></a>
+<span class="sourceLineNo">267</span>    assertEquals(1, datasetService.listContacts(datasetKey).size());<a name="line.267"></a>
+<span class="sourceLineNo">268</span><a name="line.268"></a>
+<span class="sourceLineNo">269</span>    Contact persisted = datasetService.listContacts(datasetKey).get(0);<a name="line.269"></a>
+<span class="sourceLineNo">270</span>    assertEquals("Jan", persisted.getFirstName());<a name="line.270"></a>
+<span class="sourceLineNo">271</span>    assertEquals("Legind", persisted.getLastName());<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, persisted.getType());<a name="line.272"></a>
+<span class="sourceLineNo">273</span><a name="line.273"></a>
+<span class="sourceLineNo">274</span>    // populate params for ws<a name="line.274"></a>
+<span class="sourceLineNo">275</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.275"></a>
+<span class="sourceLineNo">276</span>    // main fields<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.277"></a>
+<span class="sourceLineNo">278</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.278"></a>
+<span class="sourceLineNo">279</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.279"></a>
+<span class="sourceLineNo">280</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.280"></a>
+<span class="sourceLineNo">281</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.281"></a>
+<span class="sourceLineNo">282</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.282"></a>
+<span class="sourceLineNo">283</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.283"></a>
+<span class="sourceLineNo">284</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    // add additional ipt and organisation parameters<a name="line.285"></a>
+<span class="sourceLineNo">286</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.286"></a>
+<span class="sourceLineNo">287</span><a name="line.287"></a>
+<span class="sourceLineNo">288</span>    // primary contact with name "Jan Legind" and type "administrative"<a name="line.288"></a>
+<span class="sourceLineNo">289</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,<a name="line.289"></a>
+<span class="sourceLineNo">290</span>      Requests.DATASET_PRIMARY_CONTACT_TYPE));<a name="line.290"></a>
+<span class="sourceLineNo">291</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,<a name="line.291"></a>
+<span class="sourceLineNo">292</span>      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,<a name="line.293"></a>
+<span class="sourceLineNo">294</span>      Requests.DATASET_PRIMARY_CONTACT_NAME)); // Jan Legind<a name="line.294"></a>
+<span class="sourceLineNo">295</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,<a name="line.295"></a>
+<span class="sourceLineNo">296</span>      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));<a name="line.296"></a>
+<span class="sourceLineNo">297</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,<a name="line.297"></a>
+<span class="sourceLineNo">298</span>      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,<a name="line.299"></a>
+<span class="sourceLineNo">300</span>      Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));<a name="line.300"></a>
+<span class="sourceLineNo">301</span><a name="line.301"></a>
+<span class="sourceLineNo">302</span>    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));<a name="line.302"></a>
+<span class="sourceLineNo">303</span><a name="line.303"></a>
+<span class="sourceLineNo">304</span>    // construct request uri<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>    // send POST request with credentials<a name="line.307"></a>
+<span class="sourceLineNo">308</span>    HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);<a name="line.308"></a>
+<span class="sourceLineNo">309</span><a name="line.309"></a>
+<span class="sourceLineNo">310</span>    // if Jersey was responding with default UTF-8 (fine in Intellij, not fine via maven) conversion below not needed<a name="line.310"></a>
+<span class="sourceLineNo">311</span>    String st = new String(result.content.getBytes(), Charsets.UTF_8);<a name="line.311"></a>
+<span class="sourceLineNo">312</span><a name="line.312"></a>
+<span class="sourceLineNo">313</span>    // parse updated registered Dataset key (UUID)<a name="line.313"></a>
+<span class="sourceLineNo">314</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(st), Parsers.legacyDatasetResponseHandler);<a name="line.314"></a>
+<span class="sourceLineNo">315</span><a name="line.315"></a>
+<span class="sourceLineNo">316</span>    assertNotNull("Updated Dataset key should be in response", Parsers.legacyDatasetResponseHandler.key);<a name="line.316"></a>
+<span class="sourceLineNo">317</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    assertNotNull("Updated Dataset organizationKey should be in response",<a name="line.318"></a>
+<span class="sourceLineNo">319</span>      Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.319"></a>
+<span class="sourceLineNo">320</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.320"></a>
+<span class="sourceLineNo">321</span><a name="line.321"></a>
+<span class="sourceLineNo">322</span>    // make some additional assertions that the update was successful<a name="line.322"></a>
+<span class="sourceLineNo">323</span>    // retrieve installation anew<a name="line.323"></a>
+<span class="sourceLineNo">324</span>    dataset = datasetService.get(datasetKey);<a name="line.324"></a>
+<span class="sourceLineNo">325</span><a name="line.325"></a>
+<span class="sourceLineNo">326</span>    assertNotNull("Dataset should be present", dataset);<a name="line.326"></a>
+<span class="sourceLineNo">327</span><a name="line.327"></a>
+<span class="sourceLineNo">328</span>    // the contact should still have first name "Jan" and last name "Legind"<a name="line.328"></a>
+<span class="sourceLineNo">329</span>    assertEquals(1, dataset.getContacts().size());<a name="line.329"></a>
+<span class="sourceLineNo">330</span>    Contact updated = dataset.getContacts().get(0);<a name="line.330"></a>
+<span class="sourceLineNo">331</span>    assertEquals("Jan", updated.getFirstName());<a name="line.331"></a>
+<span class="sourceLineNo">332</span>    assertEquals("Legind", updated.getLastName());<a name="line.332"></a>
+<span class="sourceLineNo">333</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, updated.getType());<a name="line.333"></a>
+<span class="sourceLineNo">334</span>  }<a name="line.334"></a>
+<span class="sourceLineNo">335</span><a name="line.335"></a>
+<span class="sourceLineNo">336</span>  /**<a name="line.336"></a>
+<span class="sourceLineNo">337</span>   * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least<a name="line.337"></a>
+<span class="sourceLineNo">338</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.338"></a>
+<span class="sourceLineNo">339</span>   */<a name="line.339"></a>
+<span class="sourceLineNo">340</span>  @Test<a name="line.340"></a>
+<span class="sourceLineNo">341</span>  public void testGetLegacyDatasetsForOrganizationJSON() throws IOException, URISyntaxException, SAXException {<a name="line.341"></a>
+<span class="sourceLineNo">342</span>    // persist new organization (IPT hosting organization)<a name="line.342"></a>
+<span class="sourceLineNo">343</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.343"></a>
+<span class="sourceLineNo">344</span>    UUID organizationKey = organization.getKey();<a name="line.344"></a>
+<span class="sourceLineNo">345</span><a name="line.345"></a>
+<span class="sourceLineNo">346</span>    // persist new installation of type IPT<a name="line.346"></a>
+<span class="sourceLineNo">347</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.347"></a>
+<span class="sourceLineNo">348</span>    UUID installationKey = installation.getKey();<a name="line.348"></a>
+<span class="sourceLineNo">349</span><a name="line.349"></a>
+<span class="sourceLineNo">350</span>    // persist new Dataset associated to installation<a name="line.350"></a>
+<span class="sourceLineNo">351</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.351"></a>
+<span class="sourceLineNo">352</span>    UUID datasetKey = dataset.getKey();<a name="line.352"></a>
+<span class="sourceLineNo">353</span><a name="line.353"></a>
+<span class="sourceLineNo">354</span>    // construct request uri<a name="line.354"></a>
+<span class="sourceLineNo">355</span>    String uri = Requests.getRequestUri("/registry/resource.json?organisationKey=" + organizationKey.toString());<a name="line.355"></a>
+<span class="sourceLineNo">356</span><a name="line.356"></a>
+<span class="sourceLineNo">357</span>    // send GET request with no credentials<a name="line.357"></a>
+<span class="sourceLineNo">358</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.358"></a>
+<span class="sourceLineNo">359</span><a name="line.359"></a>
+<span class="sourceLineNo">360</span>    // JSON array expected, with single resource<a name="line.360"></a>
+<span class="sourceLineNo">361</span>    assertTrue(result.content.startsWith("[") &amp;&amp; result.content.endsWith("]"));<a name="line.361"></a>
+<span class="sourceLineNo">362</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.362"></a>
+<span class="sourceLineNo">363</span>    assertEquals(1, rootNode.size());<a name="line.363"></a>
+<span class="sourceLineNo">364</span>    // keys "key" and "name" expected<a name="line.364"></a>
+<span class="sourceLineNo">365</span>    assertEquals(datasetKey.toString(), rootNode.get(0).get("key").getTextValue());<a name="line.365"></a>
+<span class="sourceLineNo">366</span>    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get(0).get("organisationKey").getTextValue());<a name="line.366"></a>
+<span class="sourceLineNo">367</span>    assertEquals(dataset.getTitle(), rootNode.get(0).get("name").getTextValue());<a name="line.367"></a>
+<span class="sourceLineNo">368</span>  }<a name="line.368"></a>
+<span class="sourceLineNo">369</span><a name="line.369"></a>
+<span class="sourceLineNo">370</span>  /**<a name="line.370"></a>
+<span class="sourceLineNo">371</span>   * The test sends a get all datasets owned by organization (GET) request, the XML response having at the very least<a name="line.371"></a>
+<span class="sourceLineNo">372</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.372"></a>
+<span class="sourceLineNo">373</span>   */<a name="line.373"></a>
+<span class="sourceLineNo">374</span>  @Test<a name="line.374"></a>
+<span class="sourceLineNo">375</span>  public void testGetLegacyDatasetsForOrganizationXML() throws IOException, URISyntaxException, SAXException {<a name="line.375"></a>
+<span class="sourceLineNo">376</span>    // persist new organization (IPT hosting organization)<a name="line.376"></a>
+<span class="sourceLineNo">377</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.377"></a>
+<span class="sourceLineNo">378</span>    UUID organizationKey = organization.getKey();<a name="line.378"></a>
+<span class="sourceLineNo">379</span><a name="line.379"></a>
+<span class="sourceLineNo">380</span>    // persist new installation of type IPT<a name="line.380"></a>
+<span class="sourceLineNo">381</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.381"></a>
+<span class="sourceLineNo">382</span>    UUID installationKey = installation.getKey();<a name="line.382"></a>
+<span class="sourceLineNo">383</span><a name="line.383"></a>
+<span class="sourceLineNo">384</span>    // persist new Dataset associated to installation<a name="line.384"></a>
+<span class="sourceLineNo">385</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.385"></a>
+<span class="sourceLineNo">386</span>    UUID datasetKey = dataset.getKey();<a name="line.386"></a>
+<span class="sourceLineNo">387</span><a name="line.387"></a>
+<span class="sourceLineNo">388</span>    // construct request uri<a name="line.388"></a>
+<span class="sourceLineNo">389</span>    String uri = Requests.getRequestUri("/registry/resource?organisationKey=" + organizationKey.toString());<a name="line.389"></a>
+<span class="sourceLineNo">390</span><a name="line.390"></a>
+<span class="sourceLineNo">391</span>    // send GET request with no credentials<a name="line.391"></a>
+<span class="sourceLineNo">392</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.392"></a>
+<span class="sourceLineNo">393</span><a name="line.393"></a>
+<span class="sourceLineNo">394</span>    // TODO: Response must be wrapped with root &lt;resources&gt;, not &lt;legacyDatasetResponses&gt;<a name="line.394"></a>
+<span class="sourceLineNo">395</span>    assertTrue(result.content.contains("&lt;legacyDatasetResponses&gt;&lt;resource&gt;"));<a name="line.395"></a>
+<span class="sourceLineNo">396</span>    // verify character encoding here already, known to cause issue on some systems<a name="line.396"></a>
+<span class="sourceLineNo">397</span>    assertTrue(result.content.contains("Türkei"));<a name="line.397"></a>
+<span class="sourceLineNo">398</span><a name="line.398"></a>
+<span class="sourceLineNo">399</span>    // parse newly registered list of datasets<a name="line.399"></a>
+<span class="sourceLineNo">400</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.400"></a>
+<span class="sourceLineNo">401</span>    assertEquals(datasetKey.toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.401"></a>
+<span class="sourceLineNo">402</span>    assertEquals(organizationKey.toString(), Parsers.legacyDatasetResponseHandler.organisationKey);<a name="line.402"></a>
+<span class="sourceLineNo">403</span>    assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);<a name="line.403"></a>
+<span class="sourceLineNo">404</span>  }<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>  /**<a name="line.406"></a>
+<span class="sourceLineNo">407</span>   * The test sends a get dataset (GET) request, the JSON response having all of: key, organisationKey, name,<a name="line.407"></a>
+<span class="sourceLineNo">408</span>   * description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc.<a name="line.408"></a>
+<span class="sourceLineNo">409</span>   */<a name="line.409"></a>
+<span class="sourceLineNo">410</span>  @Test<a name="line.410"></a>
+<span class="sourceLineNo">411</span>  public void testGetLegacyDatasetJSON() throws IOException, URISyntaxException, SAXException {<a name="line.411"></a>
+<span class="sourceLineNo">412</span>    // persist new organization (IPT hosting organization)<a name="line.412"></a>
+<span class="sourceLineNo">413</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.413"></a>
+<span class="sourceLineNo">414</span>    UUID organizationKey = organization.getKey();<a name="line.414"></a>
+<span class="sourceLineNo">415</span><a name="line.415"></a>
+<span class="sourceLineNo">416</span>    // persist new installation of type IPT<a name="line.416"></a>
+<span class="sourceLineNo">417</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.417"></a>
+<span class="sourceLineNo">418</span>    UUID installationKey = installation.getKey();<a name="line.418"></a>
+<span class="sourceLineNo">419</span><a name="line.419"></a>
+<span class="sourceLineNo">420</span>    // persist new Dataset associated to installation<a name="line.420"></a>
+<span class="sourceLineNo">421</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.421"></a>
+<span class="sourceLineNo">422</span>    UUID datasetKey = dataset.getKey();<a name="line.422"></a>
+<span class="sourceLineNo">423</span><a name="line.423"></a>
+<span class="sourceLineNo">424</span>    // add primary contact to Dataset<a name="line.424"></a>
+<span class="sourceLineNo">425</span>    Contact c = Contacts.newInstance();<a name="line.425"></a>
+<span class="sourceLineNo">426</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.426"></a>
+<span class="sourceLineNo">427</span>    datasetService.addContact(dataset.getKey(), c);<a name="line.427"></a>
+<span class="sourceLineNo">428</span><a name="line.428"></a>
+<span class="sourceLineNo">429</span>    // construct request uri<a name="line.429"></a>
+<span class="sourceLineNo">430</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString() + ".json");<a name="line.430"></a>
+<span class="sourceLineNo">431</span><a name="line.431"></a>
+<span class="sourceLineNo">432</span>    // send GET request with no credentials<a name="line.432"></a>
+<span class="sourceLineNo">433</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.433"></a>
+<span class="sourceLineNo">434</span><a name="line.434"></a>
+<span class="sourceLineNo">435</span>    // JSON object expected, representing single dataset<a name="line.435"></a>
+<span class="sourceLineNo">436</span>    assertTrue(result.content.startsWith("{") &amp;&amp; result.content.endsWith("}"));<a name="line.436"></a>
+<span class="sourceLineNo">437</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.437"></a>
+<span class="sourceLineNo">438</span>    // keys "key" and "name" expected<a name="line.438"></a>
+<span class="sourceLineNo">439</span>    assertEquals(datasetKey.toString(), rootNode.get("key").getTextValue());<a name="line.439"></a>
+<span class="sourceLineNo">440</span>    assertEquals(dataset.getPublishingOrganizationKey().toString(), rootNode.get("organisationKey").getTextValue());<a name="line.440"></a>
+<span class="sourceLineNo">441</span>    assertEquals(dataset.getTitle(), rootNode.get("name").getTextValue());<a name="line.441"></a>
+<span class="sourceLineNo">442</span>    assertEquals(dataset.getDescription(), rootNode.get("description").getTextValue());<a name="line.442"></a>
+<span class="sourceLineNo">443</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), rootNode.get("nameLanguage").getTextValue());<a name="line.443"></a>
+<span class="sourceLineNo">444</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), rootNode.get("descriptionLanguage").getTextValue());<a name="line.444"></a>
+<span class="sourceLineNo">445</span>    assertEquals(dataset.getHomepage().toString(), rootNode.get("homepageURL").getTextValue());<a name="line.445"></a>
+<span class="sourceLineNo">446</span>    assertEquals(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE, rootNode.get("primaryContactType").getTextValue());<a name="line.446"></a>
+<span class="sourceLineNo">447</span>    assertEquals("Tim Robertson", rootNode.get("primaryContactName").getTextValue());<a name="line.447"></a>
+<span class="sourceLineNo">448</span>    assertEquals("+45 28261487", rootNode.get("primaryContactPhone").getTextValue());<a name="line.448"></a>
+<span class="sourceLineNo">449</span>    assertEquals("trobertson@gbif.org", rootNode.get("primaryContactEmail").getTextValue());<a name="line.449"></a>
+<span class="sourceLineNo">450</span>    assertEquals("Universitetsparken 15", rootNode.get("primaryContactAddress").getTextValue());<a name="line.450"></a>
+<span class="sourceLineNo">451</span>    assertEquals("About 175cm, geeky, scruffy...", rootNode.get("primaryContactDescription").getTextValue());<a name="line.451"></a>
+<span class="sourceLineNo">452</span>  }<a name="line.452"></a>
+<span class="sourceLineNo">453</span><a name="line.453"></a>
+<span class="sourceLineNo">454</span>  /**<a name="line.454"></a>
+<span class="sourceLineNo">455</span>   * The test sends a get dataset (GET) request for a dataset that does not exist.<a name="line.455"></a>
+<span class="sourceLineNo">456</span>   * The JSON response having an error message, not a 404.<a name="line.456"></a>
+<span class="sourceLineNo">457</span>   */<a name="line.457"></a>
+<span class="sourceLineNo">458</span>  @Test<a name="line.458"></a>
+<span class="sourceLineNo">459</span>  public void testGetLegacyDatasetNotFoundJSON() throws IOException, URISyntaxException, SAXException {<a name="line.459"></a>
+<span class="sourceLineNo">460</span>    // construct request uri<a name="line.460"></a>
+<span class="sourceLineNo">461</span>    String uri = Requests.getRequestUri("/registry/resource/" + UUID.randomUUID().toString() + ".json");<a name="line.461"></a>
+<span class="sourceLineNo">462</span><a name="line.462"></a>
+<span class="sourceLineNo">463</span>    // send GET request with no credentials<a name="line.463"></a>
+<span class="sourceLineNo">464</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.464"></a>
+<span class="sourceLineNo">465</span><a name="line.465"></a>
+<span class="sourceLineNo">466</span>    // JSON object expected, representing single dataset<a name="line.466"></a>
+<span class="sourceLineNo">467</span>    assertTrue(result.content.equalsIgnoreCase("{\"error\":\"No resource matches the key provided\"}"));<a name="line.467"></a>
+<span class="sourceLineNo">468</span>  }<a name="line.468"></a>
+<span class="sourceLineNo">469</span><a name="line.469"></a>
+<span class="sourceLineNo">470</span>  /**<a name="line.470"></a>
+<span class="sourceLineNo">471</span>   * The test sends a get dataset (GET) request, the XML response having all of: key, organisationKey, name,<a name="line.471"></a>
+<span class="sourceLineNo">472</span>   * description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc.<a name="line.472"></a>
+<span class="sourceLineNo">473</span>   */<a name="line.473"></a>
+<span class="sourceLineNo">474</span>  @Test<a name="line.474"></a>
+<span class="sourceLineNo">475</span>  public void testGetLegacyDatasetXML() throws IOException, URISyntaxException, SAXException {<a name="line.475"></a>
+<span class="sourceLineNo">476</span>    // persist new organization (IPT hosting organization)<a name="line.476"></a>
+<span class="sourceLineNo">477</span>    Organization organization = Organizations.newPersistedInstance();<a name="line.477"></a>
+<span class="sourceLineNo">478</span>    UUID organizationKey = organization.getKey();<a name="line.478"></a>
+<span class="sourceLineNo">479</span><a name="line.479"></a>
+<span class="sourceLineNo">480</span>    // persist new installation of type IPT<a name="line.480"></a>
+<span class="sourceLineNo">481</span>    Installation installation = Installations.newPersistedInstance(organizationKey);<a name="line.481"></a>
+<span class="sourceLineNo">482</span>    UUID installationKey = installation.getKey();<a name="line.482"></a>
+<span class="sourceLineNo">483</span><a name="line.483"></a>
+<span class="sourceLineNo">484</span>    // persist new Dataset associated to installation<a name="line.484"></a>
+<span class="sourceLineNo">485</span>    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);<a name="line.485"></a>
+<span class="sourceLineNo">486</span>    UUID datasetKey = dataset.getKey();<a name="line.486"></a>
+<span class="sourceLineNo">487</span><a name="line.487"></a>
+<span class="sourceLineNo">488</span>    // add primary contact to Dataset<a name="line.488"></a>
+<span class="sourceLineNo">489</span>    Contact c = Contacts.newInstance();<a name="line.489"></a>
+<span class="sourceLineNo">490</span>    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);<a name="line.490"></a>
+<span class="sourceLineNo">491</span>    datasetService.addContact(dataset.getKey(), c);<a name="line.491"></a>
+<span class="sourceLineNo">492</span><a name="line.492"></a>
+<span class="sourceLineNo">493</span>    // construct request uri<a name="line.493"></a>
+<span class="sourceLineNo">494</span>    String uri = Requests.getRequestUri("/registry/resource/" + datasetKey.toString());<a name="line.494"></a>
+<span class="sourceLineNo">495</span><a name="line.495"></a>
+<span class="sourceLineNo">496</span>    // send GET request with no credentials<a name="line.496"></a>
+<span class="sourceLineNo">497</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.497"></a>
+<span class="sourceLineNo">498</span><a name="line.498"></a>
+<span class="sourceLineNo">499</span>    // XML expected, parse Dataset<a name="line.499"></a>
+<span class="sourceLineNo">500</span>    assertTrue(result.content.contains("&lt;resource&gt;"));<a name="line.500"></a>
+<span class="sourceLineNo">501</span>    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyDatasetResponseHandler);<a name="line.501"></a>
+<span class="sourceLineNo">502</span><a name="line.502"></a>
+<span class="sourceLineNo">503</span>    assertEquals(dataset.getKey().toString(), Parsers.legacyDatasetResponseHandler.key);<a name="line.503"></a>
+<span class="sourceLineNo">504</span>    assertEquals(dataset.getTitle(), Parsers.legacyDatasetResponseHandler.name);<a name="line.504"></a>
+<span class="sourceLineNo">505</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), Parsers.legacyDatasetResponseHandler.nameLanguage);<a name="line.505"></a>
+<span class="sourceLineNo">506</span>    assertEquals(dataset.getDescription(), Parsers.legacyDatasetResponseHandler.description);<a name="line.506"></a>
+<span class="sourceLineNo">507</span>    assertEquals(dataset.getLanguage().getIso2LetterCode(), Parsers.legacyDatasetResponseHandler.descriptionLanguage);<a name="line.507"></a>
+<span class="sourceLineNo">508</span>    assertEquals(dataset.getHomepage().toString(), Parsers.legacyDatasetResponseHandler.homepageURL);<a name="line.508"></a>
+<span class="sourceLineNo">509</span>    assertEquals(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE,<a name="line.509"></a>
+<span class="sourceLineNo">510</span>      Parsers.legacyDatasetResponseHandler.primaryContactType);<a name="line.510"></a>
+<span class="sourceLineNo">511</span>    assertEquals("Tim Robertson", Parsers.legacyDatasetResponseHandler.primaryContactName);<a name="line.511"></a>
+<span class="sourceLineNo">512</span>    assertEquals("trobertson@gbif.org", Parsers.legacyDatasetResponseHandler.primaryContactEmail);<a name="line.512"></a>
+<span class="sourceLineNo">513</span>    assertEquals("Universitetsparken 15", Parsers.legacyDatasetResponseHandler.primaryContactAddress);<a name="line.513"></a>
+<span class="sourceLineNo">514</span>    assertEquals("+45 28261487", Parsers.legacyDatasetResponseHandler.primaryContactPhone);<a name="line.514"></a>
+<span class="sourceLineNo">515</span>    assertEquals("About 175cm, geeky, scruffy...", Parsers.legacyDatasetResponseHandler.primaryContactDescription);<a name="line.515"></a>
+<span class="sourceLineNo">516</span>  }<a name="line.516"></a>
+<span class="sourceLineNo">517</span><a name="line.517"></a>
+<span class="sourceLineNo">518</span>  /**<a name="line.518"></a>
+<span class="sourceLineNo">519</span>   * The test sends a get all datasets owned by organization (GET) request, the JSON response having at the very least<a name="line.519"></a>
+<span class="sourceLineNo">520</span>   * the dataset key, publishing organization key, dataset title, and dataset description.<a name="line.520"></a>
+<span class="sourceLineNo">521</span>   */<a name="line.521"></a>
+<span class="sourceLineNo">522</span>  @Test<a name="line.522"></a>
+<span class="sourceLineNo">523</span>  public void testGetLegacyDatasetsForOrganizationThatDoesNotExist()<a name="line.523"></a>
+<span class="sourceLineNo">524</span>    throws IOException, URISyntaxException, SAXException {<a name="line.524"></a>
+<span class="sourceLineNo">525</span>    // construct request uri using Organization that doesn't exist<a name="line.525"></a>
+<span class="sourceLineNo">526</span>    String uri = Requests.getRequestUri("/registry/resource.json?organisationKey=" + UUID.randomUUID().toString());<a name="line.526"></a>
+<span class="sourceLineNo">527</span><a name="line.527"></a>
+<span class="sourceLineNo">528</span>    // send GET request with no credentials<a name="line.528"></a>
+<span class="sourceLineNo">529</span>    HttpUtil.Response result = Requests.http.get(uri);<a name="line.529"></a>
+<span class="sourceLineNo">530</span><a name="line.530"></a>
+<span class="sourceLineNo">531</span>    JsonNode rootNode = objectMapper.readTree(result.content);<a name="line.531"></a>
+<span class="sourceLineNo">532</span><a name="line.532"></a>
+<span class="sourceLineNo">533</span>    // JSON array expected, with single entry<a name="line.533"></a>
+<span class="sourceLineNo">534</span>    assertEquals(1, rootNode.size());<a name="line.534"></a>
+<span class="sourceLineNo">535</span>    String error = rootNode.toString();<a name="line.535"></a>
+<span class="sourceLineNo">536</span>    assertEquals("{\"error\":\"No organisation matches the key provided\"}", error);<a name="line.536"></a>
+<span class="sourceLineNo">537</span>  }<a name="line.537"></a>
+<span class="sourceLineNo">538</span><a name="line.538"></a>
+<span class="sourceLineNo">539</span>  /**<a name="line.539"></a>
+<span class="sourceLineNo">540</span>   * Populate a list of name value pairs used in the common ws requests for GBRDS dataset registrations and updates.<a name="line.540"></a>
+<span class="sourceLineNo">541</span>   *<a name="line.541"></a>
+<span class="sourceLineNo">542</span>   * @param organizationKey organization key<a name="line.542"></a>
+<span class="sourceLineNo">543</span>   * @return list of name value pairs<a name="line.543"></a>
+<span class="sourceLineNo">544</span>   */<a name="line.544"></a>
+<span class="sourceLineNo">545</span>  private List&lt;NameValuePair&gt; buildLegacyDatasetParameters(UUID organizationKey) {<a name="line.545"></a>
+<span class="sourceLineNo">546</span>    List&lt;NameValuePair&gt; data = new ArrayList&lt;NameValuePair&gt;();<a name="line.546"></a>
+<span class="sourceLineNo">547</span>    // main<a name="line.547"></a>
+<span class="sourceLineNo">548</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));<a name="line.548"></a>
+<span class="sourceLineNo">549</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DOI_PARAM, Requests.DOI));<a name="line.549"></a>
+<span class="sourceLineNo">550</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE));<a name="line.550"></a>
+<span class="sourceLineNo">551</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));<a name="line.551"></a>
+<span class="sourceLineNo">552</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM,<a name="line.552"></a>
+<span class="sourceLineNo">553</span>      Requests.DATASET_DESCRIPTION_LANGUAGE));<a name="line.553"></a>
+<span class="sourceLineNo">554</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));<a name="line.554"></a>
+<span class="sourceLineNo">555</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));<a name="line.555"></a>
+<span class="sourceLineNo">556</span><a name="line.556"></a>
+<span class="sourceLineNo">557</span>    // primary contact<a name="line.557"></a>
+<span class="sourceLineNo">558</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,<a name="line.558"></a>
+<span class="sourceLineNo">559</span>      Requests.DATASET_PRIMARY_CONTACT_TYPE));<a name="line.559"></a>
+<span class="sourceLineNo">560</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,<a name="line.560"></a>
+<span class="sourceLineNo">561</span>      Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));<a name="line.561"></a>
+<span class="sourceLineNo">562</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,<a name="line.562"></a>
+<span class="sourceLineNo">563</span>      Requests.DATASET_PRIMARY_CONTACT_NAME));<a name="line.563"></a>
+<span class="sourceLineNo">564</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,<a name="line.564"></a>
+<span class="sourceLineNo">565</span>      Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));<a name="line.565"></a>
+<span class="sourceLineNo">566</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,<a name="line.566"></a>
+<span class="sourceLineNo">567</span>      Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));<a name="line.567"></a>
+<span class="sourceLineNo">568</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM,<a name="line.568"></a>
+<span class="sourceLineNo">569</span>      Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION));<a name="line.569"></a>
+<span class="sourceLineNo">570</span><a name="line.570"></a>
+<span class="sourceLineNo">571</span>    // add additional ipt and organisation parameters<a name="line.571"></a>
+<span class="sourceLineNo">572</span>    data.add(new BasicNameValuePair(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));<a name="line.572"></a>
+<span class="sourceLineNo">573</span>    return data;<a name="line.573"></a>
+<span class="sourceLineNo">574</span>  }<a name="line.574"></a>
+<span class="sourceLineNo">575</span><a name="line.575"></a>
+<span class="sourceLineNo">576</span>  /**<a name="line.576"></a>
+<span class="sourceLineNo">577</span>   * Retrieve persisted Legacy (GBRDS) dataset, and make a series of assertions to ensure it has been properly<a name="line.577"></a>
+<span class="sourceLineNo">578</span>   * persisted.<a name="line.578"></a>
+<span class="sourceLineNo">579</span>   *<a name="line.579"></a>
+<span class="sourceLineNo">580</span>   * @param datasetKey installation key (UUID)<a name="line.580"></a>
+<span class="sourceLineNo">581</span>   * @param organizationKey installation publishing organization key<a name="line.581"></a>
+<span class="sourceLineNo">582</span>   * @return validated installation<a name="line.582"></a>
+<span class="sourceLineNo">583</span>   */<a name="line.583"></a>
+<span class="sourceLineNo">584</span>  private Dataset validatePersistedLegacyDataset(UUID datasetKey, UUID organizationKey, UUID installationKey) {<a name="line.584"></a>
+<span class="sourceLineNo">585</span>    // retrieve installation anew<a name="line.585"></a>
+<span class="sourceLineNo">586</span>    Dataset dataset = datasetService.get(datasetKey);<a name="line.586"></a>
+<span class="sourceLineNo">587</span><a name="line.587"></a>
 <span class="sourceLineNo">588</span><a name="line.588"></a>
-<span class="sourceLineNo">589</span><a name="line.589"></a>
-<span class="sourceLineNo">590</span>    assertNotNull("Dataset should be present", dataset);<a name="line.590"></a>
-<span class="sourceLineNo">591</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.591"></a>
-<span class="sourceLineNo">592</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.592"></a>
-<span class="sourceLineNo">593</span>    assertEquals(DatasetType.METADATA, dataset.getType());<a name="line.593"></a>
-<span class="sourceLineNo">594</span>    assertEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.594"></a>
-<span class="sourceLineNo">595</span>    assertEquals(new DOI(Requests.DOI), dataset.getDoi()); // ensure that we handle the parsing<a name="line.595"></a>
-<span class="sourceLineNo">596</span>    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());<a name="line.596"></a>
-<span class="sourceLineNo">597</span>    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.597"></a>
-<span class="sourceLineNo">598</span>    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());<a name="line.598"></a>
-<span class="sourceLineNo">599</span>    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());<a name="line.599"></a>
-<span class="sourceLineNo">600</span>    assertNotNull(dataset.getCreated());<a name="line.600"></a>
-<span class="sourceLineNo">601</span>    assertNotNull(dataset.getModified());<a name="line.601"></a>
-<span class="sourceLineNo">602</span><a name="line.602"></a>
-<span class="sourceLineNo">603</span>    // check dataset's primary contact was properly persisted<a name="line.603"></a>
-<span class="sourceLineNo">604</span>    Contact contact = dataset.getContacts().get(0);<a name="line.604"></a>
-<span class="sourceLineNo">605</span>    assertNotNull("Dataset primary contact should be present", contact);<a name="line.605"></a>
-<span class="sourceLineNo">606</span>    assertNotNull(contact.getKey());<a name="line.606"></a>
-<span class="sourceLineNo">607</span>    assertTrue(contact.isPrimary());<a name="line.607"></a>
-<span class="sourceLineNo">608</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());<a name="line.608"></a>
-<span class="sourceLineNo">609</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());<a name="line.609"></a>
-<span class="sourceLineNo">610</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());<a name="line.610"></a>
-<span class="sourceLineNo">611</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());<a name="line.611"></a>
-<span class="sourceLineNo">612</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION, contact.getDescription());<a name="line.612"></a>
-<span class="sourceLineNo">613</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());<a name="line.613"></a>
-<span class="sourceLineNo">614</span>    assertNotNull(contact.getCreated());<a name="line.614"></a>
-<span class="sourceLineNo">615</span>    assertNotNull(contact.getCreatedBy());<a name="line.615"></a>
-<span class="sourceLineNo">616</span>    assertNotNull(contact.getModified());<a name="line.616"></a>
-<span class="sourceLineNo">617</span>    assertNotNull(contact.getModifiedBy());<a name="line.617"></a>
-<span class="sourceLineNo">618</span><a name="line.618"></a>
-<span class="sourceLineNo">619</span>    return dataset;<a name="line.619"></a>
-<span class="sourceLineNo">620</span>  }<a name="line.620"></a>
-<span class="sourceLineNo">621</span><a name="line.621"></a>
-<span class="sourceLineNo">622</span>  /**<a name="line.622"></a>
-<span class="sourceLineNo">623</span>   * Retrieve dataset presumed already to exist, and make a series of assertions to ensure it is valid.<a name="line.623"></a>
-<span class="sourceLineNo">624</span>   *<a name="line.624"></a>
-<span class="sourceLineNo">625</span>   * @param dataset dataset<a name="line.625"></a>
-<span class="sourceLineNo">626</span>   * @param organizationKey publishing organization key<a name="line.626"></a>
-<span class="sourceLineNo">627</span>   * @param installationKey installation key<a name="line.627"></a>
-<span class="sourceLineNo">628</span>   */<a name="line.628"></a>
-<span class="sourceLineNo">629</span>  private void validateExistingDataset(Dataset dataset, UUID organizationKey, UUID installationKey) {<a name="line.629"></a>
-<span class="sourceLineNo">630</span>    assertNotNull("Dataset should be present", dataset);<a name="line.630"></a>
-<span class="sourceLineNo">631</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.631"></a>
-<span class="sourceLineNo">632</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.632"></a>
-<span class="sourceLineNo">633</span>    assertEquals(DatasetType.OCCURRENCE, dataset.getType());<a name="line.633"></a>
-<span class="sourceLineNo">634</span>    // expected to change on update<a name="line.634"></a>
-<span class="sourceLineNo">635</span>    assertNotEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.635"></a>
-<span class="sourceLineNo">636</span>    assertNotEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.636"></a>
-<span class="sourceLineNo">637</span>    assertNotEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage());<a name="line.637"></a>
-<span class="sourceLineNo">638</span>    assertNotEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl());<a name="line.638"></a>
-<span class="sourceLineNo">639</span>    Date modified = dataset.getModified();<a name="line.639"></a>
-<span class="sourceLineNo">640</span>    assertNotNull(modified);<a name="line.640"></a>
-<span class="sourceLineNo">641</span>    String modifiedBy = dataset.getModifiedBy();<a name="line.641"></a>
-<span class="sourceLineNo">642</span>    assertNotNull(modifiedBy);<a name="line.642"></a>
-<span class="sourceLineNo">643</span>    assertTrue(dataset.getContacts().isEmpty());<a name="line.643"></a>
-<span class="sourceLineNo">644</span>    assertTrue(dataset.getEndpoints().isEmpty());<a name="line.644"></a>
-<span class="sourceLineNo">645</span>    // not expected to change<a name="line.645"></a>
-<span class="sourceLineNo">646</span>    assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());<a name="line.646"></a>
-<span class="sourceLineNo">647</span>    assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());<a name="line.647"></a>
-<span class="sourceLineNo">648</span>    assertEquals(Datasets.DATASET_CITATION.getIdentifier(), dataset.getCitation().getIdentifier());<a name="line.648"></a>
-<span class="sourceLineNo">649</span>    assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());<a name="line.649"></a>
-<span class="sourceLineNo">650</span>    assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());<a name="line.650"></a>
-<span class="sourceLineNo">651</span>  }<a name="line.651"></a>
-<span class="sourceLineNo">652</span>}<a name="line.652"></a>
+<span class="sourceLineNo">589</span>    assertNotNull("Dataset should be present", dataset);<a name="line.589"></a>
+<span class="sourceLineNo">590</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.590"></a>
+<span class="sourceLineNo">591</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.591"></a>
+<span class="sourceLineNo">592</span>    assertEquals(DatasetType.METADATA, dataset.getType());<a name="line.592"></a>
+<span class="sourceLineNo">593</span>    assertEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.593"></a>
+<span class="sourceLineNo">594</span>    assertEquals(new DOI(Requests.DOI), dataset.getDoi()); // ensure that we handle the parsing<a name="line.594"></a>
+<span class="sourceLineNo">595</span>    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());<a name="line.595"></a>
+<span class="sourceLineNo">596</span>    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.596"></a>
+<span class="sourceLineNo">597</span>    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());<a name="line.597"></a>
+<span class="sourceLineNo">598</span>    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());<a name="line.598"></a>
+<span class="sourceLineNo">599</span>    assertNotNull(dataset.getCreated());<a name="line.599"></a>
+<span class="sourceLineNo">600</span>    assertNotNull(dataset.getModified());<a name="line.600"></a>
+<span class="sourceLineNo">601</span><a name="line.601"></a>
+<span class="sourceLineNo">602</span>    // check dataset's primary contact was properly persisted<a name="line.602"></a>
+<span class="sourceLineNo">603</span>    Contact contact = dataset.getContacts().get(0);<a name="line.603"></a>
+<span class="sourceLineNo">604</span>    assertNotNull("Dataset primary contact should be present", contact);<a name="line.604"></a>
+<span class="sourceLineNo">605</span>    assertNotNull(contact.getKey());<a name="line.605"></a>
+<span class="sourceLineNo">606</span>    assertTrue(contact.isPrimary());<a name="line.606"></a>
+<span class="sourceLineNo">607</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());<a name="line.607"></a>
+<span class="sourceLineNo">608</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());<a name="line.608"></a>
+<span class="sourceLineNo">609</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());<a name="line.609"></a>
+<span class="sourceLineNo">610</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());<a name="line.610"></a>
+<span class="sourceLineNo">611</span>    assertEquals(Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION, contact.getDescription());<a name="line.611"></a>
+<span class="sourceLineNo">612</span>    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());<a name="line.612"></a>
+<span class="sourceLineNo">613</span>    assertNotNull(contact.getCreated());<a name="line.613"></a>
+<span class="sourceLineNo">614</span>    assertNotNull(contact.getCreatedBy());<a name="line.614"></a>
+<span class="sourceLineNo">615</span>    assertNotNull(contact.getModified());<a name="line.615"></a>
+<span class="sourceLineNo">616</span>    assertNotNull(contact.getModifiedBy());<a name="line.616"></a>
+<span class="sourceLineNo">617</span><a name="line.617"></a>
+<span class="sourceLineNo">618</span>    return dataset;<a name="line.618"></a>
+<span class="sourceLineNo">619</span>  }<a name="line.619"></a>
+<span class="sourceLineNo">620</span><a name="line.620"></a>
+<span class="sourceLineNo">621</span>  /**<a name="line.621"></a>
+<span class="sourceLineNo">622</span>   * Retrieve dataset presumed already to exist, and make a series of assertions to ensure it is valid.<a name="line.622"></a>
+<span class="sourceLineNo">623</span>   *<a name="line.623"></a>
+<span class="sourceLineNo">624</span>   * @param dataset dataset<a name="line.624"></a>
+<span class="sourceLineNo">625</span>   * @param organizationKey publishing organization key<a name="line.625"></a>
+<span class="sourceLineNo">626</span>   * @param installationKey installation key<a name="line.626"></a>
+<span class="sourceLineNo">627</span>   */<a name="line.627"></a>
+<span class="sourceLineNo">628</span>  private void validateExistingDataset(Dataset dataset, UUID organizationKey, UUID installationKey) {<a name="line.628"></a>
+<span class="sourceLineNo">629</span>    assertNotNull("Dataset should be present", dataset);<a name="line.629"></a>
+<span class="sourceLineNo">630</span>    assertEquals(organizationKey, dataset.getPublishingOrganizationKey());<a name="line.630"></a>
+<span class="sourceLineNo">631</span>    assertEquals(installationKey, dataset.getInstallationKey());<a name="line.631"></a>
+<span class="sourceLineNo">632</span>    assertEquals(DatasetType.OCCURRENCE, dataset.getType());<a name="line.632"></a>
+<span class="sourceLineNo">633</span>    // expected to change on update<a name="line.633"></a>
+<span class="sourceLineNo">634</span>    assertNotEquals(Requests.DATASET_NAME, dataset.getTitle());<a name="line.634"></a>
+<span class="sourceLineNo">635</span>    assertNotEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());<a name="line.635"></a>
+<span class="sourceLineNo">636</span>    assertNotEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage());<a name="line.636"></a>
+<span class="sourceLineNo">637</span>    assertNotEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl());<a name="line.637"></a>
+<span class="sourceLineNo">638</span>    Date modified = dataset.getModified();<a name="line.638"></a>
+<span class="sourceLineNo">639</span>    assertNotNull(modified);<a name="line.639"></a>
+<span class="sourceLineNo">640</span>    String modifiedBy = dataset.getModifiedBy();<a name="line.640"></a>
+<span class="sourceLineNo">641</span>    assertNotNull(modifiedBy);<a name="line.641"></a>
+<span class="sourceLineNo">642</span>    assertTrue(dataset.getContacts().isEmpty());<a name="line.642"></a>
+<span class="sourceLineNo">643</span>    assertTrue(dataset.getEndpoints().isEmpty());<a name="line.643"></a>
+<span class="sourceLineNo">644</span>    // not expected to change<a name="line.644"></a>
+<span class="sourceLineNo">645</span>    assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());<a name="line.645"></a>
+<span class="sourceLineNo">646</span>    assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());<a name="line.646"></a>
+<span class="sourceLineNo">647</span>    assertEquals(Datasets.DATASET_CITATION.getIdentifier(), dataset.getCitation().getIdentifier());<a name="line.647"></a>
+<span class="sourceLineNo">648</span>    assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());<a name="line.648"></a>
+<span class="sourceLineNo">649</span>    assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());<a name="line.649"></a>
+<span class="sourceLineNo">650</span>  }<a name="line.650"></a>
+<span class="sourceLineNo">651</span>}<a name="line.651"></a>
 
 
 

@@ -24,58 +24,57 @@
 <span class="sourceLineNo">016</span><a name="line.16"></a>
 <span class="sourceLineNo">017</span>import java.util.Set;<a name="line.17"></a>
 <span class="sourceLineNo">018</span>import java.util.UUID;<a name="line.18"></a>
-<span class="sourceLineNo">019</span><a name="line.19"></a>
-<span class="sourceLineNo">020</span>import javax.validation.ConstraintViolation;<a name="line.20"></a>
-<span class="sourceLineNo">021</span>import javax.validation.ConstraintViolationException;<a name="line.21"></a>
-<span class="sourceLineNo">022</span>import javax.validation.Validation;<a name="line.22"></a>
-<span class="sourceLineNo">023</span>import javax.validation.Validator;<a name="line.23"></a>
-<span class="sourceLineNo">024</span>import javax.validation.ValidatorFactory;<a name="line.24"></a>
-<span class="sourceLineNo">025</span>import javax.validation.groups.Default;<a name="line.25"></a>
-<span class="sourceLineNo">026</span><a name="line.26"></a>
-<span class="sourceLineNo">027</span>import org.apache.bval.jsr303.ApacheValidationProvider;<a name="line.27"></a>
-<span class="sourceLineNo">028</span>import org.junit.Test;<a name="line.28"></a>
-<span class="sourceLineNo">029</span>import org.slf4j.Logger;<a name="line.29"></a>
-<span class="sourceLineNo">030</span>import org.slf4j.LoggerFactory;<a name="line.30"></a>
-<span class="sourceLineNo">031</span><a name="line.31"></a>
-<span class="sourceLineNo">032</span>/**<a name="line.32"></a>
-<span class="sourceLineNo">033</span> * Tests that the builders in this package provide valid objects.<a name="line.33"></a>
-<span class="sourceLineNo">034</span> */<a name="line.34"></a>
-<span class="sourceLineNo">035</span>public class EntityBuilderTest {<a name="line.35"></a>
-<span class="sourceLineNo">036</span><a name="line.36"></a>
-<span class="sourceLineNo">037</span>  private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);<a name="line.37"></a>
-<span class="sourceLineNo">038</span><a name="line.38"></a>
-<span class="sourceLineNo">039</span>  @Test<a name="line.39"></a>
-<span class="sourceLineNo">040</span>  public void testBuilders() {<a name="line.40"></a>
-<span class="sourceLineNo">041</span>    test(Comments.newInstance());<a name="line.41"></a>
-<span class="sourceLineNo">042</span>    test(Contacts.newInstance());<a name="line.42"></a>
-<span class="sourceLineNo">043</span>    test(Datasets.newInstance(UUID.randomUUID(), UUID.randomUUID()));<a name="line.43"></a>
-<span class="sourceLineNo">044</span>    test(Endpoints.newInstance());<a name="line.44"></a>
-<span class="sourceLineNo">045</span>    test(Identifiers.newInstance());<a name="line.45"></a>
-<span class="sourceLineNo">046</span>    test(Installations.newInstance(UUID.randomUUID()));<a name="line.46"></a>
-<span class="sourceLineNo">047</span>    test(MachineTags.newInstance());<a name="line.47"></a>
-<span class="sourceLineNo">048</span>    test(Networks.newInstance());<a name="line.48"></a>
-<span class="sourceLineNo">049</span>    test(Nodes.newInstance());<a name="line.49"></a>
-<span class="sourceLineNo">050</span>    test(Organizations.newInstance(UUID.randomUUID()));<a name="line.50"></a>
-<span class="sourceLineNo">051</span>  }<a name="line.51"></a>
-<span class="sourceLineNo">052</span><a name="line.52"></a>
-<span class="sourceLineNo">053</span>  private &lt;T&gt; void test(T entity) {<a name="line.53"></a>
-<span class="sourceLineNo">054</span>    ValidatorFactory validatorFactory =<a name="line.54"></a>
-<span class="sourceLineNo">055</span>      Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory();<a name="line.55"></a>
-<span class="sourceLineNo">056</span>    Validator validator = validatorFactory.getValidator();<a name="line.56"></a>
-<span class="sourceLineNo">057</span><a name="line.57"></a>
-<span class="sourceLineNo">058</span>    Set&lt;ConstraintViolation&lt;T&gt;&gt; violations = validator.validate(entity, PrePersist.class, Default.class);<a name="line.58"></a>
-<span class="sourceLineNo">059</span>    for (ConstraintViolation&lt;T&gt; cv : violations) {<a name="line.59"></a>
-<span class="sourceLineNo">060</span>      LOG.info("Class[{}] property[{}] failed validation with[{}]",<a name="line.60"></a>
-<span class="sourceLineNo">061</span>        entity.getClass().getSimpleName(),<a name="line.61"></a>
-<span class="sourceLineNo">062</span>        String.valueOf(cv.getPropertyPath()),<a name="line.62"></a>
-<span class="sourceLineNo">063</span>        cv.getMessage());<a name="line.63"></a>
-<span class="sourceLineNo">064</span>    }<a name="line.64"></a>
-<span class="sourceLineNo">065</span>    if (!violations.isEmpty()) {<a name="line.65"></a>
-<span class="sourceLineNo">066</span>      throw new ConstraintViolationException(violations);<a name="line.66"></a>
-<span class="sourceLineNo">067</span>    }<a name="line.67"></a>
-<span class="sourceLineNo">068</span>  }<a name="line.68"></a>
-<span class="sourceLineNo">069</span><a name="line.69"></a>
-<span class="sourceLineNo">070</span>}<a name="line.70"></a>
+<span class="sourceLineNo">019</span>import javax.validation.ConstraintViolation;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import javax.validation.ConstraintViolationException;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import javax.validation.Validation;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import javax.validation.Validator;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import javax.validation.ValidatorFactory;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import javax.validation.groups.Default;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.apache.bval.jsr303.ApacheValidationProvider;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.junit.Test;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.slf4j.Logger;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.slf4j.LoggerFactory;<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>/**<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * Tests that the builders in this package provide valid objects.<a name="line.32"></a>
+<span class="sourceLineNo">033</span> */<a name="line.33"></a>
+<span class="sourceLineNo">034</span>public class EntityBuilderTest {<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span>  private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>  @Test<a name="line.38"></a>
+<span class="sourceLineNo">039</span>  public void testBuilders() {<a name="line.39"></a>
+<span class="sourceLineNo">040</span>    test(Comments.newInstance());<a name="line.40"></a>
+<span class="sourceLineNo">041</span>    test(Contacts.newInstance());<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    test(Datasets.newInstance(UUID.randomUUID(), UUID.randomUUID()));<a name="line.42"></a>
+<span class="sourceLineNo">043</span>    test(Endpoints.newInstance());<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    test(Identifiers.newInstance());<a name="line.44"></a>
+<span class="sourceLineNo">045</span>    test(Installations.newInstance(UUID.randomUUID()));<a name="line.45"></a>
+<span class="sourceLineNo">046</span>    test(MachineTags.newInstance());<a name="line.46"></a>
+<span class="sourceLineNo">047</span>    test(Networks.newInstance());<a name="line.47"></a>
+<span class="sourceLineNo">048</span>    test(Nodes.newInstance());<a name="line.48"></a>
+<span class="sourceLineNo">049</span>    test(Organizations.newInstance(UUID.randomUUID()));<a name="line.49"></a>
+<span class="sourceLineNo">050</span>  }<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>  private &lt;T&gt; void test(T entity) {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    ValidatorFactory validatorFactory =<a name="line.53"></a>
+<span class="sourceLineNo">054</span>      Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory();<a name="line.54"></a>
+<span class="sourceLineNo">055</span>    Validator validator = validatorFactory.getValidator();<a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>    Set&lt;ConstraintViolation&lt;T&gt;&gt; violations = validator.validate(entity, PrePersist.class, Default.class);<a name="line.57"></a>
+<span class="sourceLineNo">058</span>    for (ConstraintViolation&lt;T&gt; cv : violations) {<a name="line.58"></a>
+<span class="sourceLineNo">059</span>      LOG.info("Class[{}] property[{}] failed validation with[{}]",<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        entity.getClass().getSimpleName(),<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        String.valueOf(cv.getPropertyPath()),<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        cv.getMessage());<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    }<a name="line.63"></a>
+<span class="sourceLineNo">064</span>    if (!violations.isEmpty()) {<a name="line.64"></a>
+<span class="sourceLineNo">065</span>      throw new ConstraintViolationException(violations);<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    }<a name="line.66"></a>
+<span class="sourceLineNo">067</span>  }<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>}<a name="line.69"></a>
 
 
 

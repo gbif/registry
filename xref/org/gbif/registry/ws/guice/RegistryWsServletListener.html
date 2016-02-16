@@ -23,10 +23,10 @@
 <a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> org.gbif.drupal.guice.DrupalMyBatisModule;
 <a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> org.gbif.metrics.ws.client.guice.MetricsWsClientModule;
 <a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> org.gbif.occurrence.query.TitleLookupModule;
-<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.doi.DoiModule;
-<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.events.EventModule;
-<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.events.VarnishPurgeModule;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.ims.ImsModule;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.directory.DirectoryModule;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.doi.DoiModule;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.events.EventModule;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.events.VarnishPurgeModule;
 <a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.oaipmh.guice.OaipmhModule;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> org.gbif.registry.search.guice.RegistrySearchModule;
@@ -80,7 +80,7 @@
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>  <em class="jxr_javadoccomment">   * @param properties</em>
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">   * @return</em>
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">   */</em>
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>    <strong class="jxr_keyword">private</strong> Properties getMetricsProperties(Properties properties){
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> Properties getMetricsProperties(Properties properties){
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>      Properties metricsProperties = <strong class="jxr_keyword">new</strong> Properties();
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>      metricsProperties.setProperty(<span class="jxr_string">"metrics.ws.url"</span>, properties.getProperty(API_URL_PROPERTY));
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>      metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
@@ -101,7 +101,7 @@
 <a class="jxr_linenumber" name="L93" href="#L93">93</a>      <strong class="jxr_keyword">return</strong> Lists.newArrayList(<strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/registry/doi/DoiModule.html">DoiModule</a>(properties),
 <a class="jxr_linenumber" name="L94" href="#L94">94</a>                                <strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/registry/persistence/guice/RegistryMyBatisModule.html">RegistryMyBatisModule</a>(properties),
 <a class="jxr_linenumber" name="L95" href="#L95">95</a>                                <strong class="jxr_keyword">new</strong> DrupalMyBatisModule(properties),
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>                                <strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/registry/ims/ImsModule.html">ImsModule</a>(),
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>                                <strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/registry/directory/DirectoryModule.html">DirectoryModule</a>(properties),
 <a class="jxr_linenumber" name="L97" href="#L97">97</a>                                StringTrimInterceptor.newMethodInterceptingModule(),
 <a class="jxr_linenumber" name="L98" href="#L98">98</a>                                <strong class="jxr_keyword">new</strong> ValidationModule(),
 <a class="jxr_linenumber" name="L99" href="#L99">99</a>                                <strong class="jxr_keyword">new</strong> <a href="../../../../../org/gbif/registry/events/EventModule.html">EventModule</a>(properties),
