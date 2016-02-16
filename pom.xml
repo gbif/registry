@@ -69,23 +69,23 @@
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>3.3.2</commons-lang.version>
     <commons-validator.version>1.4.0</commons-validator.version>
-    <drupal-mybatis.version>0.18-SNAPSHOT</drupal-mybatis.version>
+    <drupal-mybatis.version>0.19</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.23</freemarker.version>
-    <gbif-api.version>0.34-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.36</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
-    <gbif-common-mybatis.version>0.20</gbif-common-mybatis.version>
-    <gbif-common-search.version>0.27-SNAPSHOT</gbif-common-search.version>
-    <gbif-common-service.version>0.14</gbif-common-service.version>
-    <gbif-common-ws.version>0.28-SNAPSHOT</gbif-common-ws.version>
-    <gbif-common.version>0.21</gbif-common.version>
+    <gbif-common-mybatis.version>0.26</gbif-common-mybatis.version>
+    <gbif-common-search.version>0.27</gbif-common-search.version>
+    <gbif-common-service.version>0.16</gbif-common-service.version>
+    <gbif-common-ws.version>0.30</gbif-common-ws.version>
+    <gbif-common.version>0.23</gbif-common.version>
     <gbif-doi.version>1.1</gbif-doi.version>
-    <gbif-download-query-tools.version>1.9-SNAPSHOT</gbif-download-query-tools.version>
-    <gbif-httputils.version>0.9-SNAPSHOT</gbif-httputils.version>
+    <gbif-download-query-tools.version>1.10</gbif-download-query-tools.version>
+    <gbif-httputils.version>0.9</gbif-httputils.version>
     <gbif-metrics.version>0.23</gbif-metrics.version>
-    <gbif-microservice.version>0.4</gbif-microservice.version>
-    <gbif-parsers.version>0.17</gbif-parsers.version>
-    <gbif-postal-service.version>0.17</gbif-postal-service.version>
+    <gbif-microservice.version>0.5</gbif-microservice.version>
+    <gbif-parsers.version>0.20</gbif-parsers.version>
+    <gbif-postal-service.version>0.20</gbif-postal-service.version>
     <gbif-directory.version>0.1-SNAPSHOT</gbif-directory.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
