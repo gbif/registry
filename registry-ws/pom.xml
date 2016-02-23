@@ -154,6 +154,12 @@
     <dependency>
       <groupId>commons-validator</groupId>
       <artifactId>commons-validator</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javax.validation</groupId>
@@ -194,6 +200,12 @@
     <dependency>
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-ws-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -352,6 +364,12 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
