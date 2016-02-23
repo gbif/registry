@@ -179,6 +179,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
       for(ParticipantPerson participantPerson : participant.getPeople()) {
         Person person = personService.get(participantPerson.getPersonId());
         Contact contact = new Contact();
+        contact.setKey(person.getId());
         contact.addAddress(person.getAddress());
         contact.setCountry(person.getCountryCode());
         if(person.getEmail() != null) {
