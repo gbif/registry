@@ -187,27 +187,28 @@
 <a class="jxr_linenumber" name="L179" href="#L179">179</a>       <strong class="jxr_keyword">for</strong>(ParticipantPerson participantPerson : participant.getPeople()) {
 <a class="jxr_linenumber" name="L180" href="#L180">180</a>         Person person = personService.get(participantPerson.getPersonId());
 <a class="jxr_linenumber" name="L181" href="#L181">181</a>         Contact contact = <strong class="jxr_keyword">new</strong> Contact();
-<a class="jxr_linenumber" name="L182" href="#L182">182</a>         contact.addAddress(person.getAddress());
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>         contact.setCountry(person.getCountryCode());
-<a class="jxr_linenumber" name="L184" href="#L184">184</a>         <strong class="jxr_keyword">if</strong>(person.getEmail() != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L185" href="#L185">185</a>           contact.addEmail(person.getEmail());
-<a class="jxr_linenumber" name="L186" href="#L186">186</a>         }
-<a class="jxr_linenumber" name="L187" href="#L187">187</a>         contact.setFirstName(person.getFirstName());
-<a class="jxr_linenumber" name="L188" href="#L188">188</a>         contact.setLastName(person.getSurname());
-<a class="jxr_linenumber" name="L189" href="#L189">189</a>         <strong class="jxr_keyword">if</strong>(person.getPhone() != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L190" href="#L190">190</a>           contact.addPhone(person.getPhone());
-<a class="jxr_linenumber" name="L191" href="#L191">191</a>         }
-<a class="jxr_linenumber" name="L192" href="#L192">192</a>         contact.setModified(person.getModified());
-<a class="jxr_linenumber" name="L193" href="#L193">193</a>         contact.setOrganization(participant.getName());
-<a class="jxr_linenumber" name="L194" href="#L194">194</a>         <strong class="jxr_keyword">if</strong>( participantPerson.getRole() != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L195" href="#L195">195</a>           contact.setType(PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole()));
-<a class="jxr_linenumber" name="L196" href="#L196">196</a>         }
-<a class="jxr_linenumber" name="L197" href="#L197">197</a>         contacts.add(contact);
-<a class="jxr_linenumber" name="L198" href="#L198">198</a>       }
-<a class="jxr_linenumber" name="L199" href="#L199">199</a>     }
-<a class="jxr_linenumber" name="L200" href="#L200">200</a>     <strong class="jxr_keyword">return</strong> contacts;
-<a class="jxr_linenumber" name="L201" href="#L201">201</a>   }
-<a class="jxr_linenumber" name="L202" href="#L202">202</a> }
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>         contact.setKey(person.getId());
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>         contact.addAddress(person.getAddress());
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>         contact.setCountry(person.getCountryCode());
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>         <strong class="jxr_keyword">if</strong>(person.getEmail() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>           contact.addEmail(person.getEmail());
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>         }
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>         contact.setFirstName(person.getFirstName());
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>         contact.setLastName(person.getSurname());
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>         <strong class="jxr_keyword">if</strong>(person.getPhone() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>           contact.addPhone(person.getPhone());
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>         }
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>         contact.setModified(person.getModified());
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>         contact.setOrganization(participant.getName());
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>         <strong class="jxr_keyword">if</strong>( participantPerson.getRole() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>           contact.setType(PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole()));
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>         }
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>         contacts.add(contact);
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>       }
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>     }
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>     <strong class="jxr_keyword">return</strong> contacts;
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>   }
+<a class="jxr_linenumber" name="L203" href="#L203">203</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2016 <a href="http://www.gbif.org">Global Biodiversity Information Facility</a>. All rights reserved.</div>
