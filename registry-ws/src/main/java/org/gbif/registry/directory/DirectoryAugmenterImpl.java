@@ -64,7 +64,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
         try {
           return Integer.parseInt(id.getIdentifier());
         } catch (NumberFormatException e) {
-          LOG.error("IMS Participant ID is no integer: %s", id.getIdentifier());
+          LOG.error("Directory participantId is no integer: %s", id.getIdentifier());
         }
       }
     }
@@ -72,39 +72,42 @@ public class DirectoryAugmenterImpl implements Augmenter {
   }
 
   @Override
-  public Node augment(Node node) {
-    if (node != null) {
+  public Node augment(Node registryNode) {
+    if (registryNode != null) {
       try {
-        Integer participantID = findParticipantID(node);
+        Integer participantID = findParticipantID(registryNode);
         if (participantID != null) {
           Participant participant = participantService.get(participantID);
-          List<Contact> contacts = Lists.newArrayList();
           if (participant != null) {
+            List<Contact> contacts = Lists.newArrayList();
             // update node with Directory info if it exists
             List<org.gbif.api.model.directory.Node> participantNodes = getParticipantNodes(participant);
-            node.setParticipantTitle(participant.getName());
+            registryNode.setParticipantTitle(participant.getName());
             contacts.addAll(getContactsForParticipant(participant));
 
-            node.setAbbreviation(participant.getAbbreviatedName());
-            node.setDescription(participant.getComments());
+            registryNode.setAbbreviation(participant.getAbbreviatedName());
+            registryNode.setDescription(participant.getComments());
             if(participant.getMembershipStart() != null) {
-              node.setParticipantSince(getParticipantSinceYear(participant.getMembershipStart()));
+              registryNode.setParticipantSince(getParticipantSinceYear(participant.getMembershipStart()));
             }
             if(!participantNodes.isEmpty()){
               contacts.addAll(getContactsForNode(participantNodes));
-              node.setAddress(getNodesAddresses(participantNodes));
-              node.setHomepage(getWebUrls(participant,participantNodes));
-              node.setEmail(getEmails(participantNodes));
-              node.setPhone(getPhones(participantNodes));
+              registryNode.setAddress(getNodesAddresses(participantNodes));
+              registryNode.setHomepage(getWebUrls(participant,participantNodes));
+              registryNode.setEmail(getEmails(participantNodes));
+              registryNode.setPhone(getPhones(participantNodes));
             }
-            node.setContacts(contacts);
+            else{
+              LOG.info("Empty node for participantId %d", participantID);
+            }
+            registryNode.setContacts(contacts);
           }
         }
       } catch (Exception e) {
-        LOG.error("Failed to augment node %s with Directory information", node.getKey(), e);
+        LOG.error("Failed to augment node %s with Directory information", registryNode.getKey(), e);
       }
     }
-    return node;
+    return registryNode;
   }
 
   /**
@@ -217,14 +220,19 @@ public class DirectoryAugmenterImpl implements Augmenter {
       Contact contact;
       ContactType contactType;
       for(org.gbif.api.model.directory.Node currentNode : nodes) {
-        for (NodePerson nodePerson : currentNode.getPeople()) {
-          person = personService.get(nodePerson.getPersonId());
-          contactType = null;
-          if (nodePerson.getRole() != null) {
-            contactType = NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+        if(currentNode.getPeople() != null) {
+          for (NodePerson nodePerson : currentNode.getPeople()) {
+            person = personService.get(nodePerson.getPersonId());
+            contactType = null;
+            if (nodePerson.getRole() != null) {
+              contactType = NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+            }
+            contact = personToContact(person, currentNode.getName(), contactType);
+            contacts.add(contact);
           }
-          contact = personToContact(person, currentNode.getName(), contactType);
-          contacts.add(contact);
+        }
+        else{
+          LOG.info("No people found for nodeId %d", currentNode.getId());
         }
       }
     }
