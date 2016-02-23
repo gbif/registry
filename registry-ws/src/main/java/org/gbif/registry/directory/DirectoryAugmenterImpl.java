@@ -1,5 +1,6 @@
 package org.gbif.registry.directory;
 
+import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.directory.ParticipantPerson;
 import org.gbif.api.model.directory.Person;
@@ -11,6 +12,7 @@ import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.api.vocabulary.directory.ParticipantPersonRole;
 
 import java.net.URI;
@@ -30,9 +32,17 @@ public class DirectoryAugmenterImpl implements Augmenter {
   /**
    * Maps contact types to participant roles.
    */
-  private static final ImmutableMap<ParticipantPersonRole,ContactType> PARTICIPANT_ROLE_TO_CONTACT_TYPE = ImmutableMap.of(ParticipantPersonRole.ADDITIONAL_DELEGATE, ContactType.ADDITIONAL_DELEGATE, ParticipantPersonRole.HEAD_OF_DELEGATION, ContactType.HEAD_OF_DELEGATION, ParticipantPersonRole.TEMPORARY_DELEGATE, ContactType.TEMPORARY_DELEGATE, ParticipantPersonRole.TEMPORARY_HEAD_OF_DELEGATION, ContactType.TEMPORARY_HEAD_OF_DELEGATION);
-  private static Logger LOG = LoggerFactory.getLogger(DirectoryAugmenterImpl.class);
+  private static final ImmutableMap<ParticipantPersonRole,ContactType> PARTICIPANT_ROLE_TO_CONTACT_TYPE =
+          ImmutableMap.of(ParticipantPersonRole.ADDITIONAL_DELEGATE, ContactType.ADDITIONAL_DELEGATE,
+                  ParticipantPersonRole.HEAD_OF_DELEGATION, ContactType.HEAD_OF_DELEGATION,
+                  ParticipantPersonRole.TEMPORARY_DELEGATE, ContactType.TEMPORARY_DELEGATE,
+                  ParticipantPersonRole.TEMPORARY_HEAD_OF_DELEGATION, ContactType.TEMPORARY_HEAD_OF_DELEGATION);
 
+  private static final ImmutableMap<NodePersonRole,ContactType> NODE_ROLE_TO_CONTACT_TYPE =
+          ImmutableMap.of(NodePersonRole.NODE_MANAGER, ContactType.NODE_MANAGER,
+                  NodePersonRole.NODE_STAFF, ContactType.NODE_STAFF);
+
+  private static Logger LOG = LoggerFactory.getLogger(DirectoryAugmenterImpl.class);
 
   private ParticipantService participantService;
   private NodeService nodeService;
@@ -68,22 +78,26 @@ public class DirectoryAugmenterImpl implements Augmenter {
         Integer participantID = findParticipantID(node);
         if (participantID != null) {
           Participant participant = participantService.get(participantID);
+          List<Contact> contacts = Lists.newArrayList();
           if (participant != null) {
             // update node with Directory info if it exists
             List<org.gbif.api.model.directory.Node> participantNodes = getParticipantNodes(participant);
             node.setParticipantTitle(participant.getName());
-            node.setContacts(getContactsFromPersons(participant));
+            contacts.addAll(getContactsForParticipant(participant));
+
             node.setAbbreviation(participant.getAbbreviatedName());
             node.setDescription(participant.getComments());
             if(participant.getMembershipStart() != null) {
               node.setParticipantSince(getParticipantSinceYear(participant.getMembershipStart()));
             }
-            node.setAddress(getNodesAddresses(participantNodes));
-            node.setHomepage(getWebUrls(participant,participantNodes));
             if(!participantNodes.isEmpty()){
+              contacts.addAll(getContactsForNode(participantNodes));
+              node.setAddress(getNodesAddresses(participantNodes));
+              node.setHomepage(getWebUrls(participant,participantNodes));
               node.setEmail(getEmails(participantNodes));
               node.setPhone(getPhones(participantNodes));
             }
+            node.setContacts(contacts);
           }
         }
       } catch (Exception e) {
@@ -173,31 +187,75 @@ public class DirectoryAugmenterImpl implements Augmenter {
   /**
    * Transforms the persons associated to a participant into a list of contacts.
    */
-  private List<Contact> getContactsFromPersons(Participant participant){
+  private List<Contact> getContactsForParticipant(Participant participant){
     List<Contact> contacts = Lists.newArrayList();
     if(participant.getPeople() != null){
+      Person person;
+      Contact contact;
+      ContactType contactType;
       for(ParticipantPerson participantPerson : participant.getPeople()) {
-        Person person = personService.get(participantPerson.getPersonId());
-        Contact contact = new Contact();
-        contact.setKey(person.getId());
-        contact.addAddress(person.getAddress());
-        contact.setCountry(person.getCountryCode());
-        if(person.getEmail() != null) {
-          contact.addEmail(person.getEmail());
-        }
-        contact.setFirstName(person.getFirstName());
-        contact.setLastName(person.getSurname());
-        if(person.getPhone() != null) {
-          contact.addPhone(person.getPhone());
-        }
-        contact.setModified(person.getModified());
-        contact.setOrganization(participant.getName());
+        person = personService.get(participantPerson.getPersonId());
+        contactType = null;
         if( participantPerson.getRole() != null) {
-          contact.setType(PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole()));
+          contactType = PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
         }
+        contact = personToContact(person, participant.getName(), contactType);
         contacts.add(contact);
       }
     }
     return contacts;
+  }
+
+  /**
+   * Transforms the persons associated to a participant into a list of contacts.
+   * @param nodes it theory it should never be more than one
+   */
+  private List<Contact> getContactsForNode(List<org.gbif.api.model.directory.Node> nodes){
+    List<Contact> contacts = Lists.newArrayList();
+    if(nodes != null){
+      Person person;
+      Contact contact;
+      ContactType contactType;
+      for(org.gbif.api.model.directory.Node currentNode : nodes) {
+        for (NodePerson nodePerson : currentNode.getPeople()) {
+          person = personService.get(nodePerson.getPersonId());
+          contactType = null;
+          if (nodePerson.getRole() != null) {
+            contactType = NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+          }
+          contact = personToContact(person, currentNode.getName(), contactType);
+          contacts.add(contact);
+        }
+      }
+    }
+    return contacts;
+  }
+
+  /**
+   * Transform a Directory Person into a Registry Contact.
+   * @param person
+   * @param organization
+   * @param contactType
+   * @return
+   */
+  private Contact personToContact(Person person, String organization, ContactType contactType){
+    Contact contact = new Contact();
+    contact.setKey(person.getId());
+    contact.addAddress(person.getAddress());
+    contact.setCountry(person.getCountryCode());
+    if(person.getEmail() != null) {
+      contact.addEmail(person.getEmail());
+    }
+    contact.setFirstName(person.getFirstName());
+    contact.setLastName(person.getSurname());
+    if(person.getPhone() != null) {
+      contact.addPhone(person.getPhone());
+    }
+    contact.setModified(person.getModified());
+    contact.setOrganization(organization);
+    if( contactType != null) {
+      contact.setType(contactType);
+    }
+    return contact;
   }
 }
