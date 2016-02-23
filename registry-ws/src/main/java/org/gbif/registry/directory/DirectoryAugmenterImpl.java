@@ -210,17 +210,17 @@ public class DirectoryAugmenterImpl implements Augmenter {
   }
 
   /**
-   * Transforms the persons associated to a participant into a list of contacts.
-   * @param nodes it theory it should never be more than one
+   * Transforms the persons associated to a node(s) into a list of contacts.
+   * @param directoryNodes it theory it should never be more than one
    */
-  private List<Contact> getContactsForNode(List<org.gbif.api.model.directory.Node> nodes){
+  private List<Contact> getContactsForNode(List<org.gbif.api.model.directory.Node> directoryNodes){
     List<Contact> contacts = Lists.newArrayList();
-    if(nodes != null){
+    if(directoryNodes != null){
       Person person;
       Contact contact;
       ContactType contactType;
-      for(org.gbif.api.model.directory.Node currentNode : nodes) {
-        if(currentNode.getPeople() != null) {
+      for(org.gbif.api.model.directory.Node currentNode : directoryNodes) {
+        if(currentNode.getPeople() != null && !currentNode.getPeople().isEmpty()) {
           for (NodePerson nodePerson : currentNode.getPeople()) {
             person = personService.get(nodePerson.getPersonId());
             contactType = null;
