@@ -7,6 +7,7 @@ import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.directory.DirectoryRegistryConstantsMapping;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import java.util.List;
@@ -20,8 +21,11 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.bp.LocalTime;
+import org.threeten.bp.temporal.ChronoUnit;
 
 /**
  * WORK-IN-PROGRESS
@@ -32,8 +36,14 @@ import org.slf4j.LoggerFactory;
 public class DirectoryUpdateService extends AbstractIdleService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DirectoryUpdateService.class);
+  //avoid using 0
+  private static final int DEFAULT_START_HOUR = 5;
+  private static final int DEFAULT_START_MINUTE = 34;
 
   private static final int DEFAULT_MAX_LIMIT = 1000;
+  private final Integer frequencyInHour;
+  private final Integer startHour;
+  private final Integer startMinute;
 
   private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -49,16 +59,28 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     Injector registryInj = Guice.createInjector(cfg.db.createMyBatisModule());
     nodeMapper = registryInj.getInstance(NodeMapper.class);
+
+    this.frequencyInHour = cfg.frequencyInHour;
+
+    String[] timeParts = cfg.startTime.split(":");
+    startHour = NumberUtils.toInt(timeParts[0], DEFAULT_START_HOUR);
+    startMinute = NumberUtils.toInt(timeParts[1], DEFAULT_START_MINUTE);
   }
 
   @Override
   protected void startUp() throws Exception {
+
+    LocalTime t = LocalTime.of(startHour, startMinute);
+    long initialDelay = LocalTime.now().until(t, ChronoUnit.MINUTES);
+
+    LOG.info("DirectoryUpdateService Starting in " + initialDelay + " minutes");
+
     scheduler.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
         applyUpdates();
       }
-    }, 1, 1, TimeUnit.MINUTES);
+    }, initialDelay, frequencyInHour*(ChronoUnit.MINUTES.getDuration().getSeconds()), TimeUnit.MINUTES);
   }
 
   @Override
@@ -99,6 +121,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
       if(participantId != null){
         participant = participantsById.get(participantId);
         directoryNode = nodeByParticipantsId.get(participantId);
+        // should we handle participant without node ?
         if(participant != null && directoryNode != null) {
           if (shouldUpdateNode(registryNode, participant, directoryNode)) {
             LOG.info("Requires update: " + registryNode.getTitle() + " should be update to " + directoryNode.getName());
@@ -120,9 +143,32 @@ public class DirectoryUpdateService extends AbstractIdleService {
    * @param directoryNode
    * @return
    */
-  protected boolean shouldUpdateNode(org.gbif.api.model.registry.Node registryNode, Participant participant, Node directoryNode){
-    return !Objects.equals(registryNode.getTitle(), directoryNode.getName())
-            || !Objects.equals(registryNode.getCountry(), participant.getCountryCode());
+  private boolean shouldUpdateNode(org.gbif.api.model.registry.Node registryNode, Participant participant, Node directoryNode) {
+    return !Objects.equals(
+            registryNode.getTitle(), directoryNode.getName())
+            || !Objects.equals(registryNode.getCountry(), participant.getCountryCode())
+            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
+              registryNode.getParticipationStatus())
+            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()),
+              registryNode.getType())
+            || !Objects.equals(registryNode.getGbifRegion(), participant.getGbifRegion());
+  }
+
+  /**
+   * Update a Registry Node from a Directory Participant and Node.
+   *
+   * @param registryNode
+   * @param participant
+   * @param directoryNode
+   */
+  private void updateRegistryNode(org.gbif.api.model.registry.Node registryNode, Participant participant, Node directoryNode){
+    registryNode.setTitle(directoryNode.getName());
+    registryNode.setCountry(participant.getCountryCode());
+    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
+    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
+    registryNode.setGbifRegion(participant.getGbifRegion());
+
+   // participant.getContinent()
   }
 
   private static Integer findParticipantId(org.gbif.api.model.registry.Node node) {
@@ -137,4 +183,5 @@ public class DirectoryUpdateService extends AbstractIdleService {
     }
     return null;
   }
+
 }

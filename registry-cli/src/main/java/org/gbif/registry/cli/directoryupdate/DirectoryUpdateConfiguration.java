@@ -38,6 +38,14 @@ public class DirectoryUpdateConfiguration {
   @Parameter(names = "--directory-app-secret")
   public String directoryAppSecret;
 
+  @NotNull
+  @Parameter(names = "--start-time")
+  public String startTime;
+
+  @NotNull
+  @Parameter(names = "--frequency-in-hour")
+  public Integer frequencyInHour = 24;
+
   public Injector createInjector() {
     Properties props = new Properties();
     props.put(DirectoryWsClientModule.DIRECTORY_URL_KEY, directoryWsUrl);
