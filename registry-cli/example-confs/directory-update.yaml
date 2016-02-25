@@ -1,0 +1,8 @@
+db:
+  serverName: pg1.gbif-dev.org
+  databaseName: dev_registry
+  user: registry
+  password: h56jebHD6h
+directoryWsUrl: http://api.gbif-dev.org/v1/directory/
+directoryAppKey: my-key
+directoryAppSecret: my-secret

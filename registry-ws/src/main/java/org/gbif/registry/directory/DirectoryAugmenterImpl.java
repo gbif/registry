@@ -12,13 +12,10 @@ import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.directory.NodePersonRole;
-import org.gbif.api.vocabulary.directory.ParticipantPersonRole;
 
 import java.net.URI;
 import java.util.List;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
@@ -29,18 +26,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class DirectoryAugmenterImpl implements Augmenter {
 
-  /**
-   * Maps contact types to participant roles.
-   */
-  private static final ImmutableMap<ParticipantPersonRole,ContactType> PARTICIPANT_ROLE_TO_CONTACT_TYPE =
-          ImmutableMap.of(ParticipantPersonRole.ADDITIONAL_DELEGATE, ContactType.ADDITIONAL_DELEGATE,
-                  ParticipantPersonRole.HEAD_OF_DELEGATION, ContactType.HEAD_OF_DELEGATION,
-                  ParticipantPersonRole.TEMPORARY_DELEGATE, ContactType.TEMPORARY_DELEGATE,
-                  ParticipantPersonRole.TEMPORARY_HEAD_OF_DELEGATION, ContactType.TEMPORARY_HEAD_OF_DELEGATION);
 
-  private static final ImmutableMap<NodePersonRole,ContactType> NODE_ROLE_TO_CONTACT_TYPE =
-          ImmutableMap.of(NodePersonRole.NODE_MANAGER, ContactType.NODE_MANAGER,
-                  NodePersonRole.NODE_STAFF, ContactType.NODE_STAFF);
 
   private static Logger LOG = LoggerFactory.getLogger(DirectoryAugmenterImpl.class);
 
@@ -200,7 +186,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
         person = personService.get(participantPerson.getPersonId());
         contactType = null;
         if( participantPerson.getRole() != null) {
-          contactType = PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
+          contactType = DirectoryRegistryConstantsMapping.PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
         }
         contact = personToContact(person, participant.getName(), contactType);
         contacts.add(contact);
@@ -225,7 +211,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
             person = personService.get(nodePerson.getPersonId());
             contactType = null;
             if (nodePerson.getRole() != null) {
-              contactType = NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+              contactType = DirectoryRegistryConstantsMapping.NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
             }
             contact = personToContact(person, currentNode.getName(), contactType);
             contacts.add(contact);
