@@ -4,7 +4,7 @@
     <resetJUL>true</resetJUL>
   </contextListener>
 
-  <property name="defaultPattern" value="%-5level [%date{'yyyy-dd-MM HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
+  <property name="defaultPattern" value="%-5level [%date{'yyyy-MM-dd HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
 
   <appender name="DOI" class="ch.qos.logback.classic.net.SMTPAppender">
     <asynchronousSending>false</asynchronousSending>
