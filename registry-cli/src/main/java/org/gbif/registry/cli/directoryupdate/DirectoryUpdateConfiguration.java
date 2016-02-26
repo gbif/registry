@@ -56,4 +56,9 @@ public class DirectoryUpdateConfiguration {
     LOG.info("Connecting to Directory services at {}", directoryWsUrl);
     return injClient;
   }
+
+  public Injector createMyBatisInjector() {
+    return Guice.createInjector(db.createMyBatisModule());
+  }
+
 }

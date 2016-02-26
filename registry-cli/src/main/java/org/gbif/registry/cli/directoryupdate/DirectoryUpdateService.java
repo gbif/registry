@@ -20,8 +20,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
   //avoid using 0
   private static final int DEFAULT_START_HOUR = 5;
   private static final int DEFAULT_START_MINUTE = 34;
+  private static final int DEFAULT_FREQUENCY = 24;
 
   private static final int DEFAULT_MAX_LIMIT = 1000;
   private final Integer frequencyInHour;
@@ -61,21 +63,29 @@ public class DirectoryUpdateService extends AbstractIdleService {
     directoryParticipantService = directoryUpdaterInj.getInstance(ParticipantService.class);
     directoryNodeService = directoryUpdaterInj.getInstance(org.gbif.api.service.directory.NodeService.class);
 
-    Injector registryInj = Guice.createInjector(cfg.db.createMyBatisModule());
+    Injector registryInj = cfg.createMyBatisInjector();
     nodeMapper = registryInj.getInstance(NodeMapper.class);
 
-    this.frequencyInHour = cfg.frequencyInHour;
+    this.frequencyInHour = ObjectUtils.defaultIfNull(cfg.frequencyInHour, DEFAULT_FREQUENCY);
 
-    String[] timeParts = cfg.startTime.split(":");
-    startHour = NumberUtils.toInt(timeParts[0], DEFAULT_START_HOUR);
-    startMinute = NumberUtils.toInt(timeParts[1], DEFAULT_START_MINUTE);
+    if(StringUtils.contains(cfg.startTime, ":")) {
+      String[] timeParts = cfg.startTime.split(":");
+      startHour = NumberUtils.toInt(timeParts[0], DEFAULT_START_HOUR);
+      startMinute = NumberUtils.toInt(timeParts[1], DEFAULT_START_MINUTE);
+    }
+    else{
+      startHour = null;
+      startMinute = null;
+    }
   }
 
   @Override
   protected void startUp() throws Exception {
-
-    LocalTime t = LocalTime.of(startHour, startMinute);
-    long initialDelay = LocalTime.now().until(t, ChronoUnit.MINUTES);
+    long initialDelay = 0;
+    if(startHour != null && startMinute != null) {
+      LocalTime t = LocalTime.of(startHour, startMinute);
+      initialDelay = LocalTime.now().until(t, ChronoUnit.MINUTES);
+    }
 
     //if the delay is passed,
     if (initialDelay < 0) {
