@@ -50,7 +50,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
         try {
           return Integer.parseInt(id.getIdentifier());
         } catch (NumberFormatException e) {
-          LOG.error("Directory participantId is no integer: %s", id.getIdentifier());
+          LOG.error("Directory participantId is no integer: {}", id.getIdentifier());
         }
       }
     }
@@ -84,13 +84,13 @@ public class DirectoryAugmenterImpl implements Augmenter {
               registryNode.setPhone(getPhones(participantNodes));
             }
             else{
-              LOG.info("Empty node for participantId %d", participantID);
+              LOG.info("Empty node for participantId {}", participantID);
             }
             registryNode.setContacts(contacts);
           }
         }
       } catch (Exception e) {
-        LOG.error("Failed to augment node %s with Directory information", registryNode.getKey(), e);
+        LOG.error("Failed to augment node {} with Directory information", registryNode.getKey(), e);
       }
     }
     return registryNode;
@@ -218,7 +218,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
           }
         }
         else{
-          LOG.info("No people found for nodeId %d", currentNode.getId());
+          LOG.info("No people found for nodeId {}", currentNode.getId());
         }
       }
     }
