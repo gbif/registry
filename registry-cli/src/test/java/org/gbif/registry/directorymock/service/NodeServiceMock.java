@@ -40,7 +40,7 @@ public class NodeServiceMock implements NodeService {
   }
 
   @Override
-  public PagingResponse<Node> list(Pageable pageable) {
+  public PagingResponse<Node> list(String q, Pageable pageable) {
     return new PagingResponse<Node>(new PagingRequest(), (long)nodes.size(), nodes);
   }
 

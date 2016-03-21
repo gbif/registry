@@ -40,7 +40,7 @@ public class ParticipantServiceMock implements ParticipantService {
   }
 
   @Override
-  public PagingResponse<Participant> list(Pageable pageable) {
+  public PagingResponse<Participant> list(String q, Pageable pageable) {
     return new PagingResponse<Participant>(new PagingRequest(), (long)participants.size(), participants);
   }
 }
