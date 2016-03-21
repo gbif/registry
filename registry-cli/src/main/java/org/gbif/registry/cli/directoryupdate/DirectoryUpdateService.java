@@ -113,8 +113,8 @@ public class DirectoryUpdateService extends AbstractIdleService {
    */
   public void applyUpdates() {
     //get all participant from the Directory
-    PagingResponse<Participant> participants = directoryParticipantService.list(new PagingRequest(0, DEFAULT_MAX_LIMIT));
-    PagingResponse<Node> nodes = directoryNodeService.list(new PagingRequest(0, DEFAULT_MAX_LIMIT));
+    PagingResponse<Participant> participants = directoryParticipantService.list(null, new PagingRequest(0, DEFAULT_MAX_LIMIT));
+    PagingResponse<Node> nodes = directoryNodeService.list(null, new PagingRequest(0, DEFAULT_MAX_LIMIT));
 
     Map<Integer, Participant> participantsById = Maps.newHashMap();
     Map<Integer, Node> nodeByParticipantsId = Maps.newHashMap();

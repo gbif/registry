@@ -132,6 +132,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
   }
 
   /**
+   * TODO should be a Set
    * Gets all the web pages/urls of participant and its nodes.
    */
   private static List<URI> getWebUrls(Participant participant, List<org.gbif.api.model.directory.Node> participantNodes){
@@ -144,7 +145,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
         addresses.add(URI.create(node.getNodeUrl()));
       }
     }
-    return  addresses;
+    return addresses;
   }
 
   /**

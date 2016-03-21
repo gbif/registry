@@ -99,7 +99,7 @@ public class IptResource {
             endpoint.setModifiedBy(user);
             installationService.addEndpoint(key, endpoint);
           }
-          LOG.info("IPT installation registered successfully, key=%s", key.toString());
+          LOG.info("IPT installation registered successfully, key={}", key.toString());
           // construct GenericEntity response object expected by IPT
           GenericEntity<IptEntityResponse> entity =
             new GenericEntity<IptEntityResponse>(new IptEntityResponse(key.toString())) {
@@ -248,7 +248,7 @@ public class IptResource {
             archiveEndpoint.setModifiedBy(user);
             datasetService.addEndpoint(key, archiveEndpoint);
           }
-          LOG.info("Dataset registered successfully, key=%s", key.toString());
+          LOG.info("Dataset registered successfully, key={}", key.toString());
           // construct response object expected by IPT
           IptEntityResponse entity = new IptEntityResponse(key.toString());
           // return Response
@@ -354,7 +354,7 @@ public class IptResource {
           datasetService.addEndpoint(datasetKey, archiveEndpoint);
         }
 
-        LOG.info("Dataset updated successfully, key=%s", datasetKey.toString());
+        LOG.info("Dataset updated successfully, key={}", datasetKey.toString());
         return Response.noContent().cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
       } else {
         LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
@@ -385,7 +385,7 @@ public class IptResource {
         // logically delete dataset. Contacts and endpoints remain, referring to logically deleted dataset
         datasetService.delete(datasetKey);
 
-        LOG.info("Dataset deleted successfully, key=%s", datasetKey.toString());
+        LOG.info("Dataset deleted successfully, key={}", datasetKey.toString());
         return Response.status(Response.Status.OK).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
 
       } else {
