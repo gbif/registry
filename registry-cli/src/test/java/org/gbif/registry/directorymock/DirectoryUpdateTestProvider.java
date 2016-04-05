@@ -3,9 +3,11 @@ package org.gbif.registry.directorymock;
 import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.registry.cli.directoryupdate.DirectoryUpdateConfiguration;
+import org.gbif.registry.directorymock.mapper.RegistryIdentifierMockMapper;
 import org.gbif.registry.directorymock.mapper.RegistryNodeMockMapper;
 import org.gbif.registry.directorymock.service.NodeServiceMock;
 import org.gbif.registry.directorymock.service.ParticipantServiceMock;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import com.google.inject.AbstractModule;
@@ -54,6 +56,7 @@ public class DirectoryUpdateTestProvider {
     @Override
     protected void configure() {
       bind(NodeMapper.class).to(RegistryNodeMockMapper.class).in(Scopes.SINGLETON);
+      bind(IdentifierMapper.class).to(RegistryIdentifierMockMapper.class).in(Scopes.SINGLETON);
     }
   }
 
@@ -65,7 +68,6 @@ public class DirectoryUpdateTestProvider {
     protected void configure() {
       bind(NodeService.class).to(NodeServiceMock.class).in(Scopes.SINGLETON);
       bind(ParticipantService.class).to(ParticipantServiceMock.class).in(Scopes.SINGLETON);
-      bind(NodeMapper.class).to(RegistryNodeMockMapper.class).in(Scopes.SINGLETON);
     }
   }
 

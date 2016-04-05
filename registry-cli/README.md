@@ -8,4 +8,5 @@ The project is built as a single JAR, and run using a configuration file.  Examp
 
 ````shell
 java -jar registry-cli.jar doi-updater --log-config logback-doi-updater.xml --conf registry-doi-updater.yaml
+java -jar registry-cli.jar directory-update --log-config logback-directory-update.xml --conf directory-update.yaml
 ````

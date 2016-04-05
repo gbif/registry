@@ -8,17 +8,22 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.DirectoryRegistryConstantsMapping;
+import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.inject.Injector;
 import org.apache.commons.lang3.ObjectUtils;
@@ -57,6 +62,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
   private org.gbif.api.service.directory.NodeService directoryNodeService;
 
   private NodeMapper nodeMapper;
+  private IdentifierMapper identifierMapper;
 
   public DirectoryUpdateService(DirectoryUpdateConfiguration cfg) {
     Injector directoryUpdaterInj = cfg.createInjector();
@@ -65,6 +71,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     Injector registryInj = cfg.createMyBatisInjector();
     nodeMapper = registryInj.getInstance(NodeMapper.class);
+    identifierMapper = registryInj.getInstance(IdentifierMapper.class);
 
     this.frequencyInHour = ObjectUtils.defaultIfNull(cfg.frequencyInHour, DEFAULT_FREQUENCY);
 
@@ -118,7 +125,6 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     Map<Integer, Participant> participantsById = Maps.newHashMap();
     Map<Integer, Node> nodeByParticipantsId = Maps.newHashMap();
-
     for (Participant participant : participants.getResults()) {
       participantsById.put(participant.getId(), participant);
     }
@@ -135,11 +141,13 @@ public class DirectoryUpdateService extends AbstractIdleService {
     Integer participantId;
     Participant participant;
     Node directoryNode;
+    Set<Integer> participantFoundInRegistry = Sets.newHashSet();
     for (org.gbif.api.model.registry.Node registryNode : registryNodes) {
       participantId = findParticipantId(registryNode);
       if (participantId != null) {
         participant = participantsById.get(participantId);
         directoryNode = nodeByParticipantsId.get(participantId);
+        participantFoundInRegistry.add(participantId);
         if (participant != null) {
           if (shouldUpdateNode(registryNode, participant, directoryNode)) {
             updateRegistryNode(registryNode, participant, directoryNode);
@@ -150,6 +158,13 @@ public class DirectoryUpdateService extends AbstractIdleService {
       }
     }
 
+    //create Node in the Registry if present in the Directory
+    //copy keys (participantId)
+    for(Integer remainingParticipantId : Sets.difference(participantsById.keySet(), participantFoundInRegistry)){
+      participant = participantsById.get(remainingParticipantId);
+      directoryNode = nodeByParticipantsId.get(remainingParticipantId);
+      createRegistryNode(participant, directoryNode);
+    }
   }
 
   /**
@@ -189,6 +204,35 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     nodeMapper.update(registryNode);
     LOG.info("Node {} ({}) updated by {}", registryNode.getTitle(), registryNode.getKey(), DIRECTORY_UPDATE_USER);
+  }
+
+  /**
+   * Create a Registry Node from a Directory Participant and Node.
+   *
+   * @param participant
+   * @param directoryNode
+   */
+  private void createRegistryNode(Participant participant, @Nullable Node directoryNode) {
+    org.gbif.api.model.registry.Node registryNode = new org.gbif.api.model.registry.Node();
+
+    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
+    registryNode.setTitle(titleFromDirectory);
+    registryNode.setCountry(participant.getCountryCode());
+    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
+    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
+    registryNode.setGbifRegion(participant.getGbifRegion());
+    registryNode.setCreatedBy(DIRECTORY_UPDATE_USER);
+
+    UUID registryNodeKey = WithMyBatis.create(nodeMapper, registryNode);
+
+    Identifier registryIdentifier = new Identifier();
+    registryIdentifier.setType(IdentifierType.GBIF_PARTICIPANT);
+    registryIdentifier.setIdentifier(participant.getId().toString());
+    registryIdentifier.setCreatedBy(DIRECTORY_UPDATE_USER);
+
+    WithMyBatis.addIdentifier(identifierMapper, nodeMapper, registryNodeKey, registryIdentifier);
+
+    LOG.info("Node {} ({}) created by {}", registryNode.getTitle(), registryNode.getKey(), DIRECTORY_UPDATE_USER);
   }
 
   private static Integer findParticipantId(org.gbif.api.model.registry.Node node) {

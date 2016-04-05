@@ -25,8 +25,9 @@ import org.apache.ibatis.annotations.Param;
  */
 public class RegistryNodeMockMapper implements NodeMapper {
 
-  private List<Node> nodes;
+  private List<Node> nodes = Lists.newArrayList();
   private List<Node> updated = Lists.newArrayList();
+  private List<Node> created = Lists.newArrayList();
 
   public void setNodes(List<Node> nodes){
     this.nodes = nodes;
@@ -154,7 +155,7 @@ public class RegistryNodeMockMapper implements NodeMapper {
 
   @Override
   public void create(Node entity) {
-
+    created.add(entity);
   }
 
   @Override
@@ -212,7 +213,18 @@ public class RegistryNodeMockMapper implements NodeMapper {
     return null;
   }
 
+  /**
+   * Return updated nodes in context of mock and tests
+   * @return
+   */
   public List<Node> getUpdatedNodes(){
     return updated;
+  }
+
+  /**
+   * Return created nodes in context of mock and tests
+   */
+  public List<Node> getCreatedNodes(){
+    return created;
   }
 }
