@@ -40,7 +40,7 @@ import org.threeten.bp.temporal.ChronoUnit;
  * data if required.
  * This service will NOT remove nodes that are not available in the Directory.
  *
- * Only a limited set of fields are updated see {@link #shouldUpdateNode} and {@link #updateRegistryNode}
+ * Only a limited set of fields are updated see {@link #shouldUpdateRegistryNode} and {@link #fillRegistryNode}
  */
 public class DirectoryUpdateService extends AbstractIdleService {
 
@@ -149,7 +149,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
         directoryNode = nodeByParticipantsId.get(participantId);
         participantFoundInRegistry.add(participantId);
         if (participant != null) {
-          if (shouldUpdateNode(registryNode, participant, directoryNode)) {
+          if (shouldUpdateRegistryNode(registryNode, participant, directoryNode)) {
             updateRegistryNode(registryNode, participant, directoryNode);
           }
         } else {
@@ -168,38 +168,15 @@ public class DirectoryUpdateService extends AbstractIdleService {
   }
 
   /**
-   * Check if a registry Node requires an update.
+   * Update a Registry Node (in the database) from a Directory Participant and Node.
    *
-   */
-  private boolean shouldUpdateNode(org.gbif.api.model.registry.Node registryNode, Participant participant,
-                                   @Nullable Node directoryNode) {
-
-    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
-    return !Objects.equals(
-            registryNode.getTitle(), titleFromDirectory)
-            || !Objects.equals(registryNode.getCountry(), participant.getCountryCode())
-            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
-            registryNode.getParticipationStatus())
-            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()),
-            registryNode.getType())
-            || !Objects.equals(registryNode.getGbifRegion(), participant.getGbifRegion());
-  }
-
-  /**
-   * Update a Registry Node from a Directory Participant and Node.
-   * registryNode title is set to the name of the Node from the Directory with a fallback on participant name is
-   * no node is available in the Directory.
-   *
+   * @param registryNode
+   * @param participant
+   * @param directoryNode
    */
   private void updateRegistryNode(org.gbif.api.model.registry.Node registryNode, Participant participant,
                                   @Nullable Node directoryNode) {
-    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
-    registryNode.setTitle(titleFromDirectory);
-    registryNode.setCountry(participant.getCountryCode());
-    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
-    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
-    registryNode.setGbifRegion(participant.getGbifRegion());
-
+    registryNode = fillRegistryNode(registryNode, participant, directoryNode);
     registryNode.setModifiedBy(DIRECTORY_UPDATE_USER);
 
     nodeMapper.update(registryNode);
@@ -207,20 +184,15 @@ public class DirectoryUpdateService extends AbstractIdleService {
   }
 
   /**
-   * Create a Registry Node from a Directory Participant and Node.
+   * Create a Registry Node (in the database) from a Directory Participant and Node.
    *
    * @param participant
    * @param directoryNode
    */
   private void createRegistryNode(Participant participant, @Nullable Node directoryNode) {
-    org.gbif.api.model.registry.Node registryNode = new org.gbif.api.model.registry.Node();
 
-    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
-    registryNode.setTitle(titleFromDirectory);
-    registryNode.setCountry(participant.getCountryCode());
-    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
-    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
-    registryNode.setGbifRegion(participant.getGbifRegion());
+    org.gbif.api.model.registry.Node registryNode = fillRegistryNode(new org.gbif.api.model.registry.Node(),
+            participant, directoryNode);
     registryNode.setCreatedBy(DIRECTORY_UPDATE_USER);
 
     UUID registryNodeKey = WithMyBatis.create(nodeMapper, registryNode);
@@ -234,6 +206,54 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     LOG.info("Node {} ({}) created by {}", registryNode.getTitle(), registryNode.getKey(), DIRECTORY_UPDATE_USER);
   }
+
+  /**
+   * Check if a registry Node requires an update.
+   * Must be in sync with {@link #fillRegistryNode(org.gbif.api.model.registry.Node, Participant, Node)}
+   * @param registryNode
+   * @param participant
+   * @param directoryNode
+   * @return
+   */
+  private boolean shouldUpdateRegistryNode(org.gbif.api.model.registry.Node registryNode, Participant participant,
+                                   @Nullable Node directoryNode) {
+
+    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
+    String abbrFromDirectory = directoryNode != null ? directoryNode.getAcronym() : participant.getAbbreviatedName();
+    return !Objects.equals(registryNode.getTitle(), titleFromDirectory)
+            || !Objects.equals(registryNode.getAbbreviation(), abbrFromDirectory)
+            || !Objects.equals(registryNode.getCountry(), participant.getCountryCode())
+            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
+            registryNode.getParticipationStatus())
+            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()),
+            registryNode.getType())
+            || !Objects.equals(registryNode.getGbifRegion(), participant.getGbifRegion());
+  }
+
+  /**
+   * Note: registryNode title and abbreviation are set from the Node from the Directory with a fallback on Participant
+   * if no Node is available in the Directory.
+   * Must be in sync with {@link #shouldUpdateRegistryNode(org.gbif.api.model.registry.Node, Participant, Node)}
+   * @param registryNode
+   * @param participant
+   * @param directoryNode
+   * @return
+   */
+  private org.gbif.api.model.registry.Node fillRegistryNode(org.gbif.api.model.registry.Node registryNode,
+                                                            Participant participant, @Nullable Node directoryNode){
+    String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
+    String abbrFromDirectory = directoryNode != null ? directoryNode.getAcronym() : participant.getAbbreviatedName();
+
+    registryNode.setTitle(titleFromDirectory);
+    registryNode.setAbbreviation(abbrFromDirectory);
+    registryNode.setCountry(participant.getCountryCode());
+    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
+    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
+    registryNode.setGbifRegion(participant.getGbifRegion());
+
+    return registryNode;
+  }
+
 
   private static Integer findParticipantId(org.gbif.api.model.registry.Node node) {
     for (Identifier id : node.getIdentifiers()) {

@@ -28,9 +28,6 @@
   <dt>Modified by</dt>
   <dd>{{node.modifiedBy}}</dd>
 </dl>
-<div class="form-actions" ng-show="node.deleted==null">
-  <small><a href="" ng-click="transitionTo('edit')">Edit these details</a></small>
-</div>      
 
 <div class="form-actions" ng-show="node.deleted!=null">
     <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this node</a></small>
