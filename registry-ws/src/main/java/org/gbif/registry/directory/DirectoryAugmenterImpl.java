@@ -15,11 +15,14 @@ import org.gbif.api.vocabulary.IdentifierType;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +82,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
             if(!participantNodes.isEmpty()){
               contacts.addAll(getContactsForNode(participantNodes));
               registryNode.setAddress(getNodesAddresses(participantNodes));
-              registryNode.setHomepage(getWebUrls(participant,participantNodes));
+              registryNode.setHomepage(Lists.newArrayList(getWebUrls(participant, participantNodes)));
               registryNode.setEmail(getEmails(participantNodes));
               registryNode.setPhone(getPhones(participantNodes));
             }
@@ -121,7 +124,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
   }
 
   /**
-   * Gets all the addresses associated to a participant.
+   * Collect all the unique addresses associated to a participant.
    */
   private static List<String> getNodesAddresses(List<org.gbif.api.model.directory.Node> participantNodes){
     List<String> addresses = Lists.newArrayList();
@@ -132,20 +135,29 @@ public class DirectoryAugmenterImpl implements Augmenter {
   }
 
   /**
-   * TODO should be a Set
-   * Gets all the web pages/urls of participant and its nodes.
+   * Gets all the unique web pages/urls of participant and its nodes.
    */
-  private static List<URI> getWebUrls(Participant participant, List<org.gbif.api.model.directory.Node> participantNodes){
-    List<URI> addresses = Lists.newArrayList();
-    if(participant.getParticipantUrl() != null) {
-      addresses.add(URI.create(participant.getParticipantUrl()));
-    }
-    for(org.gbif.api.model.directory.Node node : participantNodes) {
-      if(node.getNodeUrl() != null) {
-        addresses.add(URI.create(node.getNodeUrl()));
+  private static Set<URI> getWebUrls(Participant participant, List<org.gbif.api.model.directory.Node> participantNodes){
+    Set<URI> webUrls = Sets.newHashSet();
+    if(StringUtils.isNotBlank(participant.getParticipantUrl())) {
+      try {
+        webUrls.add(URI.create(participant.getParticipantUrl()));
+      }
+      catch (IllegalArgumentException iaEx){
+        LOG.warn("ParticipantId {} contains invalid participantUrl {}", participant.getId(), participant.getParticipantUrl());
       }
     }
-    return addresses;
+    for(org.gbif.api.model.directory.Node node : participantNodes) {
+      if(StringUtils.isNotBlank(node.getNodeUrl())) {
+        try {
+          webUrls.add(URI.create(node.getNodeUrl()));
+        }
+        catch (IllegalArgumentException iaEx){
+          LOG.warn("NodeId {} contains invalid nodeUrl {}", node.getId(), node.getNodeUrl());
+        }
+      }
+    }
+    return webUrls;
   }
 
   /**
