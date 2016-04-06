@@ -250,6 +250,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
     registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
     registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
     registryNode.setGbifRegion(participant.getGbifRegion());
+    registryNode.setContinent(DirectoryRegistryConstantsMapping.GBIF_REGION_CONTINENT.get(participant.getGbifRegion()));
 
     return registryNode;
   }

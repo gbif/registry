@@ -1,6 +1,8 @@
 package org.gbif.registry.directory;
 
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Continent;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
@@ -41,5 +43,14 @@ public class DirectoryRegistryConstantsMapping {
   public static final ImmutableBiMap<ParticipantType, NodeType> PARTICIPATION_TYPE =
           ImmutableBiMap.of(ParticipantType.COUNTRY, NodeType.COUNTRY,
                   ParticipantType.OTHER, NodeType.OTHER);
+
+  public static final ImmutableBiMap<GbifRegion, Continent> GBIF_REGION_CONTINENT =
+          new ImmutableBiMap.Builder()
+                  .put(GbifRegion.AFRICA, Continent.AFRICA)
+                  .put(GbifRegion.ASIA, Continent.ASIA)
+                  .put(GbifRegion.EUROPE, Continent.EUROPE)
+                  .put(GbifRegion.LATIN_AMERICA, Continent.SOUTH_AMERICA)
+                  .put(GbifRegion.NORTH_AMERICA, Continent.NORTH_AMERICA)
+                  .put(GbifRegion.OCEANIA, Continent.OCEANIA).build();
 
   }
