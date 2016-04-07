@@ -219,9 +219,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
                                    @Nullable Node directoryNode) {
 
     String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
-    String abbrFromDirectory = directoryNode != null ? directoryNode.getAcronym() : participant.getAbbreviatedName();
     return !Objects.equals(registryNode.getTitle(), titleFromDirectory)
-            || !Objects.equals(registryNode.getAbbreviation(), abbrFromDirectory)
             || !Objects.equals(registryNode.getCountry(), participant.getCountryCode())
             || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
             registryNode.getParticipationStatus())
@@ -245,7 +243,6 @@ public class DirectoryUpdateService extends AbstractIdleService {
     String abbrFromDirectory = directoryNode != null ? directoryNode.getAcronym() : participant.getAbbreviatedName();
 
     registryNode.setTitle(titleFromDirectory);
-    registryNode.setAbbreviation(abbrFromDirectory);
     registryNode.setCountry(participant.getCountryCode());
     registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
     registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
