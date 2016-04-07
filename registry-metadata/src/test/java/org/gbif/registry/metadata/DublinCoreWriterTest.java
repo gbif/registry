@@ -35,7 +35,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class DublinCoreWriterTest {
 
-  private static final String OAI_DC_SCHEMA = "http://www.openarchives.org/OAI/2.0/oai_dc.xsd";
+  //take if from the test/resources folder since the live one was down for days in April 2016
+  //http://www.openarchives.org/OAI/2.0/oai_dc.xsd
+  private static final String OAI_2_0_DC_SCHEMA = "xsd/oai_dc.xsd";
 
   @Test
   public void testWrite() throws Exception {
@@ -120,8 +122,9 @@ public class DublinCoreWriterTest {
 
     assertEquals(expectedFileContent, actualFileContent);
 
+
     // ensure we have a valid XML file according to the schema
-    XMLValidator.assertXMLAgainstXSD(writer.toString(), OAI_DC_SCHEMA);
+    XMLValidator.assertXMLAgainstXSD(writer.toString(), org.gbif.utils.file.FileUtils.classpath2Filepath(OAI_2_0_DC_SCHEMA));
 
   }
 
