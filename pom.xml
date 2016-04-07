@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>35</version>
+    <version>37</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -72,13 +72,13 @@
     <drupal-mybatis.version>0.19</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.0</findbugs-jsr305.version>
     <freemarker.version>2.3.23</freemarker.version>
-    <gbif-api.version>0.36</gbif-api.version>
+    <gbif-api.version>0.37</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.26</gbif-common-mybatis.version>
     <gbif-common-search.version>0.27</gbif-common-search.version>
     <gbif-common-service.version>0.16</gbif-common-service.version>
-    <gbif-common-ws.version>0.31-SNAPSHOT</gbif-common-ws.version>
-    <gbif-common.version>0.23</gbif-common.version>
+    <gbif-common-ws.version>0.31</gbif-common-ws.version>
+    <gbif-common.version>0.26</gbif-common.version>
     <gbif-doi.version>1.2</gbif-doi.version>
     <gbif-download-query-tools.version>1.10</gbif-download-query-tools.version>
     <gbif-httputils.version>0.9</gbif-httputils.version>
@@ -86,7 +86,7 @@
     <gbif-microservice.version>0.5</gbif-microservice.version>
     <gbif-parsers.version>0.20</gbif-parsers.version>
     <gbif-postal-service.version>0.20</gbif-postal-service.version>
-    <gbif-directory.version>0.3</gbif-directory.version>
+    <gbif-directory.version>0.4</gbif-directory.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>3.0</guice.version>
