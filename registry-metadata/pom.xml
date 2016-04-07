@@ -85,7 +85,7 @@
     </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils-core</artifactId>
+      <artifactId>commons-beanutils</artifactId>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
