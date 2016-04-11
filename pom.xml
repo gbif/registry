@@ -82,7 +82,6 @@
     <gbif-doi.version>1.2</gbif-doi.version>
     <gbif-download-query-tools.version>1.10</gbif-download-query-tools.version>
     <gbif-httputils.version>0.9</gbif-httputils.version>
-    <gbif-metrics.version>0.23</gbif-metrics.version>
     <gbif-microservice.version>0.5</gbif-microservice.version>
     <gbif-parsers.version>0.20</gbif-parsers.version>
     <gbif-postal-service.version>0.20</gbif-postal-service.version>
@@ -220,11 +219,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-search</artifactId>
         <version>${gbif-common-search.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.metrics</groupId>
-        <artifactId>metrics-ws-client</artifactId>
-        <version>${gbif-metrics.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.directory</groupId>

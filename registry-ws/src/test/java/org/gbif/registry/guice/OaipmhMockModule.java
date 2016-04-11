@@ -1,12 +1,10 @@
 package org.gbif.registry.guice;
 
-import org.gbif.api.model.metrics.cube.ReadBuilder;
-import org.gbif.api.model.metrics.cube.Rollup;
-import org.gbif.api.service.metrics.CubeService;
+import org.gbif.registry.metrics.OccurrenceMetricsClient;
 import org.gbif.registry.oaipmh.OaipmhItemRepository;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
 
-import java.util.List;
+import java.util.UUID;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -29,19 +27,13 @@ public class OaipmhMockModule extends AbstractModule {
     bind(RepositoryConfiguration.class).toInstance(repositoryConfiguration);
     bind(ItemRepository.class).to(OaipmhItemRepository.class).in(Scopes.SINGLETON);
     bind(SetRepository.class).to(OaipmhSetRepository.class).in(Scopes.SINGLETON);
-    bind(CubeService.class).to(MockCubeService.class).in(Scopes.SINGLETON);
+    bind(OccurrenceMetricsClient.class).to(MockOccurrenceMetricsClient.class).in(Scopes.SINGLETON);
   }
 
-  private static class MockCubeService implements CubeService {
-
+  private static class MockOccurrenceMetricsClient implements OccurrenceMetricsClient {
     @Override
-    public long get(ReadBuilder readBuilder) throws IllegalArgumentException {
-      return 0;
-    }
-
-    @Override
-    public List<Rollup> getSchema() {
-      return null;
+    public Long getCountForDataset(UUID datasetKey) throws IllegalArgumentException {
+      return 0l;
     }
   }
 

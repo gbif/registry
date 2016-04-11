@@ -13,13 +13,13 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.drupal.guice.DrupalMyBatisModule;
-import org.gbif.metrics.ws.client.guice.MetricsWsClientModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
+import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
@@ -27,6 +27,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
+import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.server.guice.GbifServletListener;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   private static Properties getMetricsProperties(Properties properties){
     Properties metricsProperties = new Properties();
     metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
-    metricsProperties.setProperty(MetricsWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
+    metricsProperties.setProperty(GbifWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
     return metricsProperties;
   }
 
@@ -101,7 +102,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new SecurityModule(properties),
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
-                              new MetricsWsClientModule(getMetricsProperties(properties)),
+                              new OccurrenceMetricsModule(getMetricsProperties(properties)),
                               new OaipmhModule(properties));
   }
 

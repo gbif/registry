@@ -7,11 +7,12 @@ import org.gbif.api.model.metrics.cube.OccurrenceCube;
 import org.gbif.api.model.metrics.cube.ReadBuilder;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.metrics.CubeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.metadata.DublinCoreWriter;
 import org.gbif.registry.metadata.EMLWriter;
+import org.gbif.registry.metrics.OccurenceMetricsWsClient;
+import org.gbif.registry.metrics.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -67,17 +68,17 @@ public class OaipmhItemRepository implements ItemRepository {
   private final DatasetResource datasetResource;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
-  private final CubeService cubeService;
+  private final OccurrenceMetricsClient occurenceMetricsClient;
 
   private final EMLWriter emlWriter;
   private final DublinCoreWriter dublinCoreWriter;
 
   @Inject
-  public OaipmhItemRepository(DatasetResource datasetResource, DatasetMapper datasetMapper, OrganizationMapper organizationMapper, CubeService cubeService ) {
+  public OaipmhItemRepository(DatasetResource datasetResource, DatasetMapper datasetMapper, OrganizationMapper organizationMapper, OccurrenceMetricsClient occurenceMetricsClient ) {
     this.datasetResource = datasetResource;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
-    this.cubeService = cubeService;
+    this.occurenceMetricsClient = occurenceMetricsClient;
 
     // should eventually be injected
     emlWriter = EMLWriter.newInstance();
@@ -350,7 +351,7 @@ public class OaipmhItemRepository implements ItemRepository {
     ReadBuilder readBuilder = new ReadBuilder();
     readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
     try {
-      long occurrenceCount = cubeService.get(readBuilder);
+      Long occurrenceCount = occurenceMetricsClient.getCountForDataset(dataset.getKey());
       if (occurrenceCount > 0) {
         additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, occurrenceCount);
       }

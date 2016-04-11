@@ -240,8 +240,6 @@ public class DirectoryUpdateService extends AbstractIdleService {
   private org.gbif.api.model.registry.Node fillRegistryNode(org.gbif.api.model.registry.Node registryNode,
                                                             Participant participant, @Nullable Node directoryNode){
     String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
-    String abbrFromDirectory = directoryNode != null ? directoryNode.getAcronym() : participant.getAbbreviatedName();
-
     registryNode.setTitle(titleFromDirectory);
     registryNode.setCountry(participant.getCountryCode());
     registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
@@ -251,7 +249,6 @@ public class DirectoryUpdateService extends AbstractIdleService {
 
     return registryNode;
   }
-
 
   private static Integer findParticipantId(org.gbif.api.model.registry.Node node) {
     for (Identifier id : node.getIdentifiers()) {
