@@ -34,7 +34,7 @@
   </appender>
 
   <appender name="SOCKET" class="ch.qos.logback.classic.net.SocketAppender">
-    <remoteHost>b6g8.gbif.org</remoteHost>
+    <remoteHost>crawlerlog-vh.gbif.org</remoteHost>
     <port>10819</port>
     <reconnectionDelay>10000</reconnectionDelay>
     <includeCallerData>false</includeCallerData>
