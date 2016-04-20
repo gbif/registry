@@ -15,6 +15,28 @@
     WHERE doi = #{doi,jdbcType=OTHER}
   </select>
 
+  <select id="list" resultType="map" parameterType="Pageable">
+    SELECT doi, target, status, target
+    FROM gbif_doi
+    <where>
+    <if test="status != null" >
+      status=#{type,jdbcType=OTHER}
+    </if>
+    <if test="type != null" >
+      AND type=#{type,jdbcType=OTHER}
+    </if>
+    </where>
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="getMetadata" resultType="String">
+    SELECT metadata
+    FROM gbif_doi
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="map" useGeneratedKeys="false">
     INSERT INTO gbif_doi (doi, type, status)
     VALUES(#{doi,jdbcType=OTHER}, #{type,jdbcType=OTHER}, 'NEW')

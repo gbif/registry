@@ -30,6 +30,11 @@ public class DoiUpdateListenerTest {
     }
 
     @Override
+    public String getMetadata(DOI doi) throws DoiException {
+      throw new DoiException("Not implemented yet");
+    }
+
+    @Override
     public void reserve(DOI doi, String metadata) throws DoiException {
       throw new DoiException("Not implemented yet");
     }

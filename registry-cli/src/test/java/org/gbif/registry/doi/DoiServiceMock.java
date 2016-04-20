@@ -26,6 +26,11 @@ public class DoiServiceMock implements DoiService {
   }
 
   @Override
+  public String getMetadata(DOI doi) throws DoiException {
+    return null;
+  }
+
+  @Override
   public void reserve(DOI doi, String metadata) throws DoiException {
     DataCiteValidator.validateMetadata(metadata);
   }

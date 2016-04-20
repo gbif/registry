@@ -9,6 +9,8 @@ import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.guice.RegistryTestModules;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import com.google.inject.Injector;
 import org.junit.Before;
@@ -45,6 +47,18 @@ public class DoiMapperTest {
     assertNotNull(data);
     assertEquals(DoiStatus.NEW, data.getStatus());
     assertNull(data.getTarget());
+  }
+
+  @Test
+  public void testList() throws Exception {
+    DOI doi = new DOI("10.998/dead.pool");
+    assertNull(mapper.get(doi));
+    mapper.create(doi, DoiType.DATASET);
+    List<Map<String, Object>> data = mapper.list(null, DoiType.DATASET, null);
+
+    assertNotNull(data);
+    assertEquals(1, data.size());
+    //assertNull(data.getTarget());
   }
 
   @Test
