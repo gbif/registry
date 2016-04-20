@@ -15,10 +15,19 @@
  */
 package org.gbif.registry.persistence.mapper;
 
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.vocabulary.IdentifierType;
+
+import java.util.List;
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
 
 public interface IdentifierMapper {
 
   int createIdentifier(Identifier identifier);
+  List<Identifier> list(@Nullable @Param("type") IdentifierType type,
+                         @Nullable @Param("identifier") String identifier, @Nullable @Param("page") Pageable page);
 
 }

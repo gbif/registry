@@ -21,4 +21,20 @@
     INSERT INTO identifier(<include refid="WRITABLE_IDENTIFIER_FIELDS"/>)
     VALUES(<include refid="WRITABLE_IDENTIFIER_FIELD_TYPES"/>)
   </insert>
+
+  <select id="list" resultType="Identifier" parameterType="Pageable">
+    SELECT key,type,identifier,created,created_by
+    FROM identifier
+    <where>
+      <if test="type != null" >
+        type=#{type, jdbcType=OTHER}
+      </if>
+      <if test="identifier != null" >
+        AND identifier=#{identifier}
+      </if>
+    </where>
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
 </mapper>

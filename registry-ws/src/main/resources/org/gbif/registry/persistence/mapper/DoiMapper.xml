@@ -20,7 +20,7 @@
     FROM gbif_doi
     <where>
     <if test="status != null" >
-      status=#{type,jdbcType=OTHER}
+      status=#{status,jdbcType=OTHER}
     </if>
     <if test="type != null" >
       AND type=#{type,jdbcType=OTHER}
