@@ -118,6 +118,13 @@
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 
+  <!--  Note: you can get entities which are deleted -->
+  <select id="getByDOI" resultMap="DATASET_MAP">
+    SELECT <include refid="DATASET_FIELDS"/>
+    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE d.doi = #{doi}
+  </select>
+
   <select id="title" resultType="String">
     SELECT title
     FROM dataset

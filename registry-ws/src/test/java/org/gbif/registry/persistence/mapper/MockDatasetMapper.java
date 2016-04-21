@@ -104,6 +104,11 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public Dataset getByDOI(@Param("doi") String doi) {
+    return null;
+  }
+
+  @Override
   public int countWithFilter(@Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type) {
     if( country != null){
       Long count =  datasetsByCountry.get(country);

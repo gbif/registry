@@ -26,6 +26,11 @@ public class DoiServiceMock implements DoiService {
   }
 
   @Override
+  public boolean exists(DOI doi) throws DoiException {
+    return false;
+  }
+
+  @Override
   public String getMetadata(DOI doi) throws DoiException {
     return null;
   }

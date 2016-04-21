@@ -76,6 +76,15 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
     @Nullable @Param("installationKey") UUID installationKey,
     @Nullable @Param("dateFrom")Date from, @Nullable @Param("dateTo")Date to, @Nullable @Param("page") Pageable page);
 
+
+  /**
+   * Get a Dataset object from its DOI.
+   *
+   * @param doi
+   * @return
+   */
+  Dataset getByDOI(@Param("doi") String doi);
+
   /**
    * Count all datasets having all non null filters given.
    */
