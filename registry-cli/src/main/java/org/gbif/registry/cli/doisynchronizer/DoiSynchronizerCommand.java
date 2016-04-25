@@ -1,6 +1,7 @@
 package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * For the moment this Command only allows to print a report all all DOI with the FAILED status.
  *
  */
 @MetaInfServices(Command.class)
@@ -74,6 +76,12 @@ public class DoiSynchronizerCommand extends BaseCommand {
     List<DOIGbifDataciteDiagnostic> diagnosticResult = runDOIStatusDiagnostic();
     printFailedStatusDoiReport(diagnosticResult);
 
+//    for(DOIGbifDataciteDiagnostic d : diagnosticResult){
+//      if(d.getDoi().equals(new DOI("10.15468/1mtkaw"))){
+//        fixFailedStatusDoi(d);
+//      }
+//    }
+
   }
 
   /**
@@ -88,20 +96,25 @@ public class DoiSynchronizerCommand extends BaseCommand {
         System.out.println("Dataset key:" + result.getRelatedDataset().getKey());
         System.out.println("DOI found at Datacite?:" + result.isDoiExistsAtDatacite());
         if(result.isDoiExistsAtDatacite()) {
+          System.out.println("DOI Status at Datacite?:" + result.getDataciteDoiStatus());
           System.out.println("Datacite Metadata equals?:" + result.isMetadataEquals());
         }
         System.out.println("Is current Dataset DOI?:" +result.isCurrentDOI());
-        System.out.println("Is current Dataset DOI a GBIF DOI?:" + result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX));
+        System.out.println("Is current Dataset DOI a GBIF DOI?:" +
+                result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX));
         System.out.println("-------------------------------------------");
       }
       else{
         System.out.println("No dataset found:" + " " + result.getDoi());
       }
     }
+
+    System.out.println("Total number of datasets: " + diagnosticResult.size());
   }
 
   /**
    * Compare the metadata linked to a DOI between what we have in the database and what is stored at Datacite.
+   *
    * @param doi
    * @return
    */
@@ -118,18 +131,27 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   /**
    * Schedule a registration of the DOI.
+   *
    * @param result
    */
   private void fixFailedStatusDoi(DOIGbifDataciteDiagnostic result){
     if(result.getRelatedDataset() != null){
+
+      //if the DOI exists at Datacite, force the status to registered to allow it to get updated
+      if(result.doiExistsAtDatacite && result.getDataciteDoiStatus() == DoiStatus.REGISTERED) {
+        DoiData doiData = doiMapper.get(result.getDoi());
+        doiMapper.update(result.getDoi(), new DoiData(DoiStatus.REGISTERED, doiData.getTarget()), "");
+      }
+
       //if the DOI to fix is NOT the current one and the current DOI is NOT a GBIF DOI
       if(!result.isCurrentDOI() && !result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX)){
-        //DataCiteMetadata dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
-       // scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey() );
+        DataCiteMetadata dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
+        scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
+        System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
       }
       else{
         DataCiteMetadata dataciteMetadata = buildMetadata(result.getRelatedDataset());
-        scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey() );
+        scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
         System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
       }
     }
@@ -197,6 +219,13 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     if(doiGbifDataciteDiagnostic.isDoiExistsAtDatacite()) {
       doiGbifDataciteDiagnostic.setMetadataEquals(compareMetadataWithDatacite(doi));
+
+      try {
+        DoiData doiStatus = dataCiteService.resolve(doi);
+        doiGbifDataciteDiagnostic.setDataciteDoiStatus(doiStatus.getStatus());
+      } catch (DoiException e) {
+        e.printStackTrace();
+      }
     }
 
     return doiGbifDataciteDiagnostic;
@@ -233,7 +262,8 @@ public class DoiSynchronizerCommand extends BaseCommand {
   }
 
   /**
-   * Contains all the result from the diagnostic of a DOI.
+   * Contains all the result from the diagnostic of a single DOI.
+   *
    */
   private static class DOIGbifDataciteDiagnostic {
 
@@ -241,6 +271,8 @@ public class DoiSynchronizerCommand extends BaseCommand {
     private Dataset relatedDataset;
 
     private boolean doiExistsAtDatacite;
+
+    private DoiStatus dataciteDoiStatus;
     private boolean metadataEquals;
 
     private boolean isCurrentDOI;
@@ -285,6 +317,12 @@ public class DoiSynchronizerCommand extends BaseCommand {
       this.isCurrentDOI = isCurrentDOI;
     }
 
+    public DoiStatus getDataciteDoiStatus() {
+      return dataciteDoiStatus;
+    }
 
+    public void setDataciteDoiStatus(DoiStatus dataciteDoiStatus) {
+      this.dataciteDoiStatus = dataciteDoiStatus;
+    }
   }
 }
