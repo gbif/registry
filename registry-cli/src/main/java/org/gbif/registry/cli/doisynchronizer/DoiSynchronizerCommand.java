@@ -76,18 +76,17 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     setup();
 
-    List<DOIGbifDataciteDiagnostic> diagnosticResult = runDOIStatusDiagnostic();
+    List<DOIGbifDataciteDiagnostic> datasetDiagnosticResult = runDOIStatusDiagnostic(DoiType.DATASET);
 
     if(config.printReport) {
-      printFailedStatusDoiReport(diagnosticResult);
+      printFailedStatusDoiReport(datasetDiagnosticResult);
     }
 
     // Should we try to fix those DOI ?
     if(config.fixDOI){
-      for(DOIGbifDataciteDiagnostic d : diagnosticResult){
-       // if(d.getDoi().equals(new DOI("10.15468/1mtkaw"))){
-        //  fixFailedStatusDoi(d);
-      //  }
+      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult){
+        // waiting for code review
+        // fixFailedStatusDoi(d);
       }
     }
   }
@@ -117,7 +116,6 @@ public class DoiSynchronizerCommand extends BaseCommand {
         System.out.println("No dataset found: " + result.getDoi());
       }
     }
-
     System.out.println("Total number of datasets: " + diagnosticResult.size());
   }
 
@@ -190,13 +188,15 @@ public class DoiSynchronizerCommand extends BaseCommand {
   }
 
   /**
-   * Get the list of DOIGbifDataciteDiagnostic.
+   * Get the list of DOIGbifDataciteDiagnostic for a specific DoiType.
+   *
+   * @param doiType
    *
    */
-  private List<DOIGbifDataciteDiagnostic> runDOIStatusDiagnostic(){
+  private List<DOIGbifDataciteDiagnostic> runDOIStatusDiagnostic(DoiType doiType){
     List<DOIGbifDataciteDiagnostic> list = Lists.newArrayList();
-    //get all the DOI with the FAILED status. Note that they are all GBIF DOI.
-    List<Map<String,Object>> failedDoiList = doiMapper.list(DoiStatus.FAILED, DoiType.DATASET, null);
+    //get all the DOI with the FAILED status. Note that they are all GBIF assigned DOI.
+    List<Map<String,Object>> failedDoiList = doiMapper.list(DoiStatus.FAILED, doiType, null);
     DOI doi;
     for(Map<String,Object> failedDoi : failedDoiList ) {
       doi = new DOI((String) failedDoi.get("doi"));
@@ -254,10 +254,9 @@ public class DoiSynchronizerCommand extends BaseCommand {
     return doiGbifDataciteDiagnostic;
   }
 
-  //copied from Registry DatasetResource
-
   /**
    * If the old DOI was a GBIF one and the new one is different, update its metadata with a version relationship.
+   * Code copied from Registry DatasetResource.
    * @param dataset (that includes the new non GBIF DOI)
    * @return
    */
