@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
+ *
  */
 public class DoiSynchronizerConfiguration {
 
@@ -36,6 +37,14 @@ public class DoiSynchronizerConfiguration {
   @Valid
   @NotNull
   public String portalurl;
+
+  @Parameter(names = {"--print-report"}, required = false)
+  @Valid
+  public boolean printReport = true;
+
+  @Parameter(names = {"--fix-doi"}, required = false)
+  @Valid
+  public boolean fixDOI = false;
 
   @ParametersDelegate
   @Valid
