@@ -15,19 +15,21 @@ import org.gbif.registry.ws.util.DataCiteConverter;
 
 import java.net.URI;
 
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 /**
- * Message callback implementation to take DOI updates and send them to DataCite. Updates the status of the DOI in
- * the registry database.
+ * Message callback implementation to take DOI updates and send them to DataCite.
+ * Updates the status of the DOI in the registry database.
  */
 public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DoiUpdateListener.class);
     private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
+    private static final int MAX_RETRY = 4;
     private final long timeToRetryInMs;
 
     private final DoiService doiService;
@@ -50,7 +52,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         }
 
         boolean descriptionTruncated = false;
-        for (int retry = 1; retry < 4; retry++) {
+        for (int retry = 1; retry < MAX_RETRY; retry++) {
             try {
                 switch (msg.getStatus()) {
                     case REGISTERED:
@@ -75,7 +77,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
             } catch (DoiHttpException e) {
                 writeFailedStatus(msg.getDoi(), msg.getTarget(), msg.getMetadata());
-                if (e.getStatus() == 413) {
+                if (HttpStatus.SC_REQUEST_TOO_LONG == e.getStatus()) {
                     LOG.warn(DOI_SMTP, "Metadata of length {} is exceeding max datacite limit in attempt #{} "
                                     + "while updating {} to {} with target {}. "
                                     + "Trying again {}",
@@ -145,7 +147,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
                 }
             } catch (DoiHttpException e) {
                 // in case of a 404 swallow
-                if (e.getStatus() == 404) {
+                if (HttpStatus.SC_NOT_FOUND == e.getStatus()) {
                     LOG.warn(DOI_SMTP, "Trying to delete DOI {} failed because it doesn't exist in DataCite; deleting locally",
                             doi, e);
                     doiMapper.delete(doi);
@@ -157,11 +159,12 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     }
 
     /**
+     * Register or Update the DOI with the DOI Service (Datacite).
      *
      * @param doi
      * @param target
      * @param xml
-     * @param currState
+     * @param currState current state of the DOI in the database
      * @throws DoiException
      */
     private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
@@ -181,7 +184,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
                 LOG.info("Registered doi {} with target {}", doi, target);
                 break;
             case FAILED:
-                retryFailedDOI(doi, target, xml);
+                retryRegisterOrUpdate(doi, target, xml);
                 break;
             default:
                 LOG.warn("Can't register or update the DOI {} with state {}", doi, doiStatus);
@@ -191,8 +194,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     }
 
     /**
-     *
-     * Retry a DOI flagged as "FAILED" in the database.
+     * Retry to Register or Update a DOI flagged as "FAILED" in the database.
      * If the DOI doesn't exist on the DOI Service (e.g. Datacite) it will register it.
      * If the DOI already exist it will try an update.
      * If any error occurs it will be logged and the method exit.
@@ -201,10 +203,11 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
      * @param target
      * @param xml
      */
-    private void retryFailedDOI(DOI doi, URI target, String xml) {
+    private void retryRegisterOrUpdate(DOI doi, URI target, String xml) {
         try {
             //check the latest status from the DOIService
             if (doiService.exists(doi)) {
+                //check the latest status from the DOIService
                 DoiData doiServiceData = doiService.resolve(doi);
                 if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
                     doiService.update(doi, xml);
