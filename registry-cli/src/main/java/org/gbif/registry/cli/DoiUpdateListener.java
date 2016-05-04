@@ -156,19 +156,68 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         }
     }
 
+    /**
+     *
+     * @param doi
+     * @param target
+     * @param xml
+     * @param currState
+     * @throws DoiException
+     */
     private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
-        if (DoiStatus.REGISTERED == currState.getStatus()) {
-            // the DOI was already registered, so we only need to update the target url if changed and the metadata
-            if (!target.equals(currState.getTarget())) {
-                doiService.update(doi, target);
-            }
-            doiService.update(doi, xml);
-            LOG.info("Updated doi {} with target {}", doi, target);
-        } else {
-            doiService.register(doi, target, xml);
-            LOG.info("Registered doi {} with target {}", doi, target);
+        final DoiStatus doiStatus = currState.getStatus();
+        switch (doiStatus){
+            case REGISTERED:
+                // the DOI was already registered, so we only need to update the target url if changed and the metadata
+                if (!target.equals(currState.getTarget())) {
+                    doiService.update(doi, target);
+                }
+                doiService.update(doi, xml);
+                LOG.info("Updated doi {} with target {}", doi, target);
+                break;
+            case NEW:
+            case RESERVED:
+                doiService.register(doi, target, xml);
+                LOG.info("Registered doi {} with target {}", doi, target);
+                break;
+            case FAILED:
+                retryFailedDOI(doi, target, xml);
+                break;
+            default:
+                LOG.warn("Can't register or update the DOI {} with state {}", doi, doiStatus);
         }
         // store the new state in our registry
         doiMapper.update(doi, new DoiData(DoiStatus.REGISTERED, target), xml);
+    }
+
+    /**
+     *
+     * Retry a DOI flagged as "FAILED" in the database.
+     * If the DOI doesn't exist on the DOI Service (e.g. Datacite) it will register it.
+     * If the DOI already exist it will try an update.
+     * If any error occurs it will be logged and the method exit.
+     *
+     * @param doi
+     * @param target
+     * @param xml
+     */
+    private void retryFailedDOI(DOI doi, URI target, String xml) {
+        try {
+            //check the latest status from the DOIService
+            if (doiService.exists(doi)) {
+                DoiData doiServiceData = doiService.resolve(doi);
+                if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
+                    doiService.update(doi, xml);
+                    LOG.info("Updated doi {} with target {}", doi, target);
+                } else {
+                    LOG.info("Failed to update doi {} with target {}. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
+                }
+            } else {
+                doiService.register(doi, target, xml);
+                LOG.info("Registered doi {} with target {}", doi, target);
+            }
+        } catch (DoiException doiEx) {
+            LOG.warn("Failed to retry failed DOI {} registration/update", doi, doiEx);
+        }
     }
 }
