@@ -172,6 +172,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         switch (doiStatus){
             case REGISTERED:
                 // the DOI was already registered, so we only need to update the target url if changed and the metadata
+                // TODO review this part, is it useful?
                 if (!target.equals(currState.getTarget())) {
                     doiService.update(doi, target);
                 }
@@ -195,6 +196,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
     /**
      * Retry to Register or Update a DOI flagged as "FAILED" in the database.
+     * Do not use this method to fix a Reserved DOI that should be updated.
      * If the DOI doesn't exist on the DOI Service (e.g. Datacite) it will register it.
      * If the DOI already exist it will try an update.
      * If any error occurs it will be logged and the method exit.
@@ -205,7 +207,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
      */
     private void retryRegisterOrUpdate(DOI doi, URI target, String xml) {
         try {
-            //check the latest status from the DOIService
+            // Check if the DOI is known by the DOI service. Known means RESERVED or REGISTERED.
             if (doiService.exists(doi)) {
                 //check the latest status from the DOIService
                 DoiData doiServiceData = doiService.resolve(doi);
