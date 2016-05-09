@@ -615,32 +615,41 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         reactivatePreviousGbifDoiOrMintNew(existingIds, dataset);
         // add old DOI to list of alt identifiers
         if (oldDoi != null) {
-          addAltId(oldDoi, dataset.getKey(), user);
+          addDOIAsAlternateId(oldDoi, dataset.getKey(), user);
         }
       }
-
     } else if (oldDoi != null && !dataset.getDoi().equals(oldDoi)) {
       // the doi has changed. Add old DOI to list of alt identifiers
-      addAltId(oldDoi, dataset.getKey(), user);
+      addDOIAsAlternateId(oldDoi, dataset.getKey(), user);
       removeAltIdIfExists(dataset.getKey(), dataset.getDoi(), existingIds);
     }
     // update database for core dataset only
     super.update(dataset);
 
+    handleDoiStatus(dataset, oldDoi);
+  }
+
+  /**
+   * Check the status of the DOI and schedule registration if required.
+   *
+   * @param dataset
+   * @param previousDoi the DOI as found in postgres for the dataset before this update
+   */
+  private void handleDoiStatus(Dataset dataset, @Nullable final DOI previousDoi){
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
-    if (oldDoi != null && doiGenerator.isGbif(oldDoi) && !dataset.getDoi().equals(oldDoi)) {
-      scheduleRegistration(oldDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
-        dataset.getKey());
+    if (previousDoi != null && doiGenerator.isGbif(previousDoi) && !dataset.getDoi().equals(previousDoi)) {
+      scheduleRegistration(previousDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
+              dataset.getKey());
     }
     // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
     if (doiGenerator.isGbif(dataset.getDoi())) {
       // if DOIs changed establish relationship
       DataCiteMetadata metadata;
       // to get the latest timestamps we need to read a new copy of the dataset
-      if (oldDoi == null || dataset.getDoi().equals(oldDoi)) {
+      if (previousDoi == null || dataset.getDoi().equals(previousDoi)) {
         metadata = buildMetadata(get(dataset.getKey()));
       } else {
-        metadata = buildMetadata(get(dataset.getKey()), oldDoi, RelationType.IS_NEW_VERSION_OF);
+        metadata = buildMetadata(get(dataset.getKey()), previousDoi, RelationType.IS_NEW_VERSION_OF);
       }
       scheduleRegistration(dataset.getDoi(), metadata, dataset.getKey());
     }
@@ -658,7 +667,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Add old DOI to list of alt identifiers in dataset.
    */
-  private void addAltId(DOI altId, UUID datasetKey, String user) {
+  private void addDOIAsAlternateId(DOI altId, UUID datasetKey, String user) {
     // update alt ids of dataset
     Identifier id = new Identifier();
     id.setType(IdentifierType.DOI);
@@ -816,6 +825,44 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     } else {
       LOG.warn("Registry is configured to run without messaging capabilities.  Unable to crawl dataset[{}]",
         datasetKey);
+    }
+  }
+
+  /**
+   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
+   * synchronisation of the DOI related data.
+   * @param datasetKey
+   */
+  @POST
+  @Path("{key}/doisync")
+  @RolesAllowed({ADMIN_ROLE})
+  public void syncDOIData(@PathParam("key") UUID datasetKey) {
+    Dataset dataset = super.get(datasetKey);
+    if (dataset == null) {
+      throw new IllegalArgumentException("Dataset " + datasetKey + " not existing");
+    }
+    if(dataset.getDoi() == null){
+      throw new IllegalArgumentException("DOI must already be assigned." );
+    }
+
+    if(doiGenerator.isGbif(dataset.getDoi())){
+      handleDoiStatus(dataset, dataset.getDoi());
+    }
+    else{
+      //Try to get GBIF DOI from the identifiers
+      List<Identifier> identifiers = dataset.getIdentifiers();
+      DOI gbifDoi = null;
+      for(Identifier identifier : identifiers){
+        if(identifier.getType() == IdentifierType.DOI && doiGenerator.isGbif(new DOI(identifier.getIdentifier()))){
+          gbifDoi = new DOI(identifier.getIdentifier());
+        }
+      }
+      if(gbifDoi != null){
+        // handle the DOI status with the gbifDoi as old/previous DOI.
+        handleDoiStatus(dataset, gbifDoi);
+      }else{
+        LOG.info("Ignoring DOI synchronization for dataset {}. No GBIF DOI found.", datasetKey);
+      }
     }
   }
 
