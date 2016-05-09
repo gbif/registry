@@ -9,15 +9,19 @@ import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 
 import java.net.URI;
+import java.util.List;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * Class that implements a mock doi service that validates metadata xml.
  */
 public class DoiServiceMock implements DoiService {
   public static final URI MOCK_TARGET = URI.create("http://www.gbif.org");
+
+  private List<DOI> registeredDoi = Lists.newArrayList();
 
   @Nullable
   @Override
@@ -50,6 +54,7 @@ public class DoiServiceMock implements DoiService {
     Preconditions.checkNotNull(doi);
     Preconditions.checkNotNull(target);
     DataCiteValidator.validateMetadata(metadata);
+    registeredDoi.add(doi);
   }
 
   @Override
@@ -57,6 +62,7 @@ public class DoiServiceMock implements DoiService {
     Preconditions.checkNotNull(doi);
     DataCiteValidator.toXml(doi, metadata);
     Preconditions.checkNotNull(target);
+    registeredDoi.add(doi);
   }
 
   @Override
@@ -83,4 +89,7 @@ public class DoiServiceMock implements DoiService {
     Preconditions.checkNotNull(target);
   }
 
+  public List<DOI> getRegisteredDoi() {
+    return registeredDoi;
+  }
 }

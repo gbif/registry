@@ -162,6 +162,8 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * Register or Update the DOI with the DOI Service (Datacite).
    *
    * @param currState current state of the DOI in the database
+   *
+   * @throws DoiException
    */
   private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
     final DoiStatus doiStatus = currState.getStatus();
@@ -196,25 +198,23 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * If the DOI doesn't exist on the DOI Service (e.g. Datacite) it will register it.
    * If the DOI already exist it will try an update.
    * If any error occurs it will be logged and the method exit.
+   *
+   * @throws DoiException
    */
-  private void retryRegisterOrUpdate(DOI doi, URI target, String xml) {
-    try {
-      // Check if the DOI is known by the DOI service. Known means RESERVED or REGISTERED.
-      if (doiService.exists(doi)) {
-        //check the latest status from the DOIService
-        DoiData doiServiceData = doiService.resolve(doi);
-        if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
-          doiService.update(doi, xml);
-          LOG.info("Updated doi {} with target {}", doi, target);
-        } else {
-          LOG.info("Failed to update doi {} with target {}. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
-        }
+  private void retryRegisterOrUpdate(DOI doi, URI target, String xml) throws DoiException {
+    // Check if the DOI is known by the DOI service. Known means RESERVED or REGISTERED.
+    if (doiService.exists(doi)) {
+      //check the latest status from the DOIService
+      DoiData doiServiceData = doiService.resolve(doi);
+      if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
+        doiService.update(doi, xml);
+        LOG.info("Updated doi {} with target {}", doi, target);
       } else {
-        doiService.register(doi, target, xml);
-        LOG.info("Registered doi {} with target {}", doi, target);
+        LOG.info("Failed to update doi {} with target {}. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
       }
-    } catch (DoiException doiEx) {
-      LOG.warn("Failed to retry failed DOI {} registration/update", doi, doiEx);
+    } else {
+      doiService.register(doi, target, xml);
+      LOG.info("Registered doi {} with target {}", doi, target);
     }
   }
 }
