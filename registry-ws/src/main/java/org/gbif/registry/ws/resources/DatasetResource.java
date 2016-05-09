@@ -97,6 +97,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -838,12 +839,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @RolesAllowed({ADMIN_ROLE})
   public void syncDOIData(@PathParam("key") UUID datasetKey) {
     Dataset dataset = super.get(datasetKey);
-    if (dataset == null) {
-      throw new IllegalArgumentException("Dataset " + datasetKey + " not existing");
-    }
-    if(dataset.getDoi() == null){
-      throw new IllegalArgumentException("DOI must already be assigned." );
-    }
+    Preconditions.checkArgument(dataset != null, "Dataset " + datasetKey + " not existing");
+    Preconditions.checkArgument(dataset.getDoi() != null, "DOI must already be assigned.");
 
     if(doiGenerator.isGbif(dataset.getDoi())){
       handleDoiStatus(dataset, dataset.getDoi());
