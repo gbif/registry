@@ -98,6 +98,8 @@ public class VarnishPurgeListener {
     this.installationService = installationService;
     this.datasetService = datasetService;
     eventBus.register(this);
+
+    LOG.warn("VarnishPurgeListener apiBaseUrl {}", apiBaseUrl);
     purger = new VarnishPurger(client, apiBaseUrl);
   }
 
@@ -226,6 +228,9 @@ public class VarnishPurgeListener {
    * we deal with the right urls.
    */
   private void purgeEntityAndBanLists(Class cl, UUID key) {
+
+    LOG.warn("Target path {}", path(cl.getSimpleName().toLowerCase(), key));
+
     // purge entity detail
     purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
 
@@ -246,5 +251,4 @@ public class VarnishPurgeListener {
       return t != null && super.add(t);
     }
   }
-
 }
