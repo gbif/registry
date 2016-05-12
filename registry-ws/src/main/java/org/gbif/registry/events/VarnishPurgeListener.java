@@ -116,14 +116,20 @@ public class VarnishPurgeListener {
 
   @Subscribe
   public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
 
-    if (event.getObjectClass().equals(Organization.class)) {
-      cascadeOrganizationChange((Organization)event.getOldObject(), (Organization)event.getNewObject());
-    } else if (event.getObjectClass().equals(Dataset.class)) {
-      cascadeDatasetChange((Dataset)event.getOldObject(), (Dataset)event.getNewObject());
-    } else if (event.getObjectClass().equals(Installation.class)) {
-      cascadeInstallationChange((Installation)event.getOldObject(), (Installation)event.getNewObject());
+    try {
+      purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+
+      if (event.getObjectClass().equals(Organization.class)) {
+        cascadeOrganizationChange((Organization) event.getOldObject(), (Organization) event.getNewObject());
+      } else if (event.getObjectClass().equals(Dataset.class)) {
+        cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
+      } else if (event.getObjectClass().equals(Installation.class)) {
+        cascadeInstallationChange((Installation) event.getOldObject(), (Installation) event.getNewObject());
+      }
+    }
+    catch (Exception ex){
+      LOG.error("Varnish update", ex);
     }
   }
 
@@ -222,7 +228,6 @@ public class VarnishPurgeListener {
   private void purgeEntityAndBanLists(Class cl, UUID key) {
     // purge entity detail
     purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
-    LOG.warn("Try to PURGE {}", path(cl.getSimpleName().toLowerCase(), key));
 
     // banRegex lists and searches
     purger.ban(String.format("%s(/search|/suggest)?[^/]*$", cl.getSimpleName().toLowerCase()));
