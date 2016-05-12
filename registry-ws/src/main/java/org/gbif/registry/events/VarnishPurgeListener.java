@@ -222,6 +222,7 @@ public class VarnishPurgeListener {
   private void purgeEntityAndBanLists(Class cl, UUID key) {
     // purge entity detail
     purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
+    LOG.warn("Try to PURGE {}", path(cl.getSimpleName().toLowerCase(), key));
 
     // banRegex lists and searches
     purger.ban(String.format("%s(/search|/suggest)?[^/]*$", cl.getSimpleName().toLowerCase()));
@@ -240,4 +241,5 @@ public class VarnishPurgeListener {
       return t != null && super.add(t);
     }
   }
+
 }
