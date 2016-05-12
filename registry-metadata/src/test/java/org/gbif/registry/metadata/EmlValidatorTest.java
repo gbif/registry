@@ -1,7 +1,5 @@
 package org.gbif.registry.metadata;
 
-import java.net.URL;
-
 import org.junit.Test;
 
 public class EmlValidatorTest {
@@ -25,7 +23,7 @@ public class EmlValidatorTest {
 
   @Test
   public void testValidateIptEml() throws Exception {
-    EmlValidator.validate(new URL("https://gbif-providertoolkit.googlecode.com/svn/trunk/gbif-ipt/src/test/resources/resources/res1/eml-1.1.xml").openStream());
+    EmlValidator.validate(getClass().getClassLoader().getResourceAsStream("eml/ipt-eml-1.1.xml"));
   }
 
   @Test(expected = InvalidEmlException.class)
