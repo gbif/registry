@@ -7,6 +7,8 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
@@ -14,8 +16,6 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.DataCiteConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -46,17 +46,17 @@ public class GbifDataCiteDOIHandlerStrategy implements DataCiteDOIHandlerStrateg
           Download.Status.FAILED);
 
   private final DoiGenerator doiGenerator;
-  private final OrganizationMapper organizationMapper;
-  private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
+  private final OrganizationService organizationService;
+  private final OccurrenceDownloadService occurrenceDownloadService;
   private final TitleLookup titleLookup;
 
   @Inject
-  public GbifDataCiteDOIHandlerStrategy(DoiGenerator doiGenerator, OrganizationMapper organizationMapper,
-                                        DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+  public GbifDataCiteDOIHandlerStrategy(DoiGenerator doiGenerator, OrganizationService organizationService,
+                                        OccurrenceDownloadService occurrenceDownloadService,
                                         TitleLookup titleLookup) {
     this.doiGenerator = doiGenerator;
-    this.organizationMapper = organizationMapper;
-    this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.organizationService = organizationService;
+    this.occurrenceDownloadService = occurrenceDownloadService;
     this.titleLookup = titleLookup;
   }
 
@@ -67,7 +67,7 @@ public class GbifDataCiteDOIHandlerStrategy implements DataCiteDOIHandlerStrateg
     PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
 
     while (response == null || !response.isEmpty()) {
-      response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
+      response = occurrenceDownloadService.listDatasetUsages(download.getKey(), pagingRequest).getResults();
       usages.addAll(response);
       pagingRequest.nextPage();
     }
@@ -82,7 +82,7 @@ public class GbifDataCiteDOIHandlerStrategy implements DataCiteDOIHandlerStrateg
 
   @Override
   public DataCiteMetadata buildMetadata(Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType) {
-    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());
+    Organization publisher = organizationService.get(dataset.getPublishingOrganizationKey());
     DataCiteMetadata m = DataCiteConverter.convert(dataset, publisher);
     // add previous relationship
     if (related != null) {

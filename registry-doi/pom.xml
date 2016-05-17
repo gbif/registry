@@ -83,13 +83,7 @@
       <groupId>org.mybatis</groupId>
       <artifactId>mybatis</artifactId>
     </dependency>
-
-    <!-- not sure it's an awesome idea, but we need the mapper interface -->
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-ws</artifactId>
-    </dependency>
-
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
