@@ -38,8 +38,9 @@ public class DoiModule extends AbstractModule {
   protected void configure() {
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
     bind(DataCiteDOIHandlerStrategy.class).to(GbifDataCiteDOIHandlerStrategy.class).in(Scopes.SINGLETON);
+    bind(DoiService.class).to(RegistryDoiService.class);
 
-    bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
+            bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
   }
 

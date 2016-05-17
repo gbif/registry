@@ -9,9 +9,8 @@ import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.registry.doi.DoiService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.events.MessageSendingEventListener;
-import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,9 +35,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * DOI metadata updates and registration via RabbitMQ.
  */
 public class DoiGeneratorMQ implements DoiGenerator {
-  private static final Logger LOG = LoggerFactory.getLogger(MessageSendingEventListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DoiGeneratorMQ.class);
 
-  private final DoiMapper mapper;
+  private final DoiService doiService;
   private final URI datasetTarget;
   private final URI downloadTarget;
   private final String prefix;
@@ -50,10 +49,10 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final MessagePublisher messagePublisher = null;
 
   @Inject
-  public DoiGeneratorMQ(DoiMapper mapper, @Named("portal.url") URI portal, @Named("doi.prefix") String prefix) {
+  public DoiGeneratorMQ(DoiService doiService, @Named("portal.url") URI portal, @Named("doi.prefix") String prefix) {
     checkArgument(prefix.startsWith("10."), "DOI prefix must begin with 10.");
     this.prefix = prefix;
-    this.mapper = mapper;
+    this.doiService = doiService;
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     datasetTarget = portal.resolve("dataset/");
@@ -65,7 +64,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     for (int x=0; x<100; x++) {
       DOI doi = random(shoulder);
       try {
-        mapper.create(doi, type);
+        doiService.create(doi, type);
         return doi;
       } catch (PersistenceException e) {
         // might have hit a unique constraint, try another doi
@@ -93,7 +92,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   @Override
   public void failed(DOI doi, InvalidMetadataException e) {
     // Updates the doi table to FAILED status and uses the error stacktrace as the xml for debugging.
-    mapper.update(doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
+    doiService.update(doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
   }
 
   /**
