@@ -1,4 +1,4 @@
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.generator;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -7,8 +7,7 @@ import org.gbif.doi.service.InvalidMetadataException;
 import java.util.UUID;
 
 /**
- * Registry internal service that guarantees to issue unique new DOIs and deals with scheduling
- * DOI metadata updates and registration via RabbitMQ.
+ * Service that guarantees to issue unique new DOIs and deals with scheduling DOI metadata updates and registration.
  */
 public interface DoiGenerator {
 

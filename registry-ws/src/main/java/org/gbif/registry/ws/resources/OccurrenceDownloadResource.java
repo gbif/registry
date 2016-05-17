@@ -11,7 +11,8 @@ import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.registry.doi.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
+import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
@@ -19,7 +20,6 @@ import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -46,10 +46,6 @@ import com.google.inject.Singleton;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
@@ -68,17 +64,11 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookup titleLookup;
   private final UserService userService;
+  private final DataCiteDOIHandlerStrategy doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
-  //Download final/failed states
-  private final EnumSet<Download.Status> FAILED_STATES = EnumSet.of(Download.Status.KILLED, Download.Status.CANCELLED,
-                                                                    Download.Status.FAILED);
   //Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
-
-  //DOI logging marker
-  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
-  private static Logger LOG = LoggerFactory.getLogger(DoiGenerator.class);
 
   // we use the optional injection only for tests !!!
   @Inject(optional = true)
@@ -87,14 +77,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Inject
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiGenerator doiGenerator, UserService userService, TitleLookup titleLookup) {
+    DoiGenerator doiGenerator, DataCiteDOIHandlerStrategy doiHandlingStrategy, UserService userService, TitleLookup titleLookup) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.doiHandlingStrategy = doiHandlingStrategy;
     this.doiGenerator = doiGenerator;
     this.userService = userService;
     this.titleLookup = titleLookup;
   }
-
 
   @POST
   @Trim
@@ -156,27 +146,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
     User user = userService.get(securityContext.getUserPrincipal().getName());
-    updateDownloadDOI(download, currentDownload, user);
+    doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
 
-  /**
-   * Updates the download DOI according to the download status.
-   * If the download succeeded its DOI is registered; if the download status is one the FAILED_STATES
-   * the DOI is removed, otherwise doesn't nothing.
-   */
-  private void updateDownloadDOI(Download download, Download previousDownload, User user){
-    if(download.isAvailable() && previousDownload.getStatus() != Download.Status.SUCCEEDED){
-      try {
-        doiGenerator.registerDownload(download.getDoi(), buildMetadata(download, user), download.getKey());
-      } catch(Exception error) {
-        LOG.error(DOI_SMTP, "Invalid metadata for download {} with doi {} ", download.getKey(), download.getDoi(),  error);
-      }
-
-    } else if(FAILED_STATES.contains(download.getStatus())){
-      doiGenerator.delete(download.getDoi());
-    }
-  }
 
   /**
    * Creates the DataCite metadata for a download object.

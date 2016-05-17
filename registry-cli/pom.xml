@@ -164,10 +164,6 @@
       <artifactId>gbif-cli</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-doi</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
       <exclusions>
@@ -180,6 +176,10 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-doi</artifactId>
     </dependency>
     <!-- false positive from maven dep:analyze -->
     <dependency>

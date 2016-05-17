@@ -1,4 +1,4 @@
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.generator;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
@@ -9,6 +9,7 @@ import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.events.MessageSendingEventListener;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
@@ -30,6 +31,10 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Registry internal service that guarantees to issue unique new DOIs and deals with scheduling
+ * DOI metadata updates and registration via RabbitMQ.
+ */
 public class DoiGeneratorMQ implements DoiGenerator {
   private static final Logger LOG = LoggerFactory.getLogger(MessageSendingEventListener.class);
 

@@ -46,8 +46,8 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.doi.service.InvalidMetadataException;
-import org.gbif.registry.doi.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
+import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -97,7 +97,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -140,6 +139,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
+  private final DataCiteDOIHandlerStrategy doiHandlerStrategy;
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -152,7 +152,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     MachineTagMapper machineTagMapper, TagMapper tagMapper, IdentifierMapper identifierMapper,
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
     DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
-    EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiGenerator doiGenerator) {
+    EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiGenerator doiGenerator,
+    DataCiteDOIHandlerStrategy doiHandlingStrategy) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
       Dataset.class, eventBus, userAuthService);
     this.searchService = searchService;
@@ -165,6 +166,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.networkMapper = networkMapper;
     this.organizationMapper = organizationMapper;
     this.doiGenerator = doiGenerator;
+    this.doiHandlerStrategy = doiHandlingStrategy;
   }
 
   @GET
@@ -548,7 +550,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
-    scheduleRegistration(dataset.getDoi(), buildMetadata(get(key)), key);
+    doiHandlerStrategy.scheduleDatasetRegistration(dataset.getDoi(), buildMetadata(get(key)), key);
     return key;
   }
 
@@ -627,42 +629,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // update database for core dataset only
     super.update(dataset);
 
-    handleDoiStatus(dataset, oldDoi);
-  }
-
-  /**
-   * Check the status of the DOI and schedule registration if required.
-   *
-   * @param dataset
-   * @param previousDoi the DOI as found in postgres for the dataset before this update
-   */
-  private void handleDoiStatus(Dataset dataset, @Nullable final DOI previousDoi){
-    // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
-    if (previousDoi != null && doiGenerator.isGbif(previousDoi) && !dataset.getDoi().equals(previousDoi)) {
-      scheduleRegistration(previousDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
-              dataset.getKey());
-    }
-    // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
-    if (doiGenerator.isGbif(dataset.getDoi())) {
-      // if DOIs changed establish relationship
-      DataCiteMetadata metadata;
-      // to get the latest timestamps we need to read a new copy of the dataset
-      if (previousDoi == null || dataset.getDoi().equals(previousDoi)) {
-        metadata = buildMetadata(get(dataset.getKey()));
-      } else {
-        metadata = buildMetadata(get(dataset.getKey()), previousDoi, RelationType.IS_NEW_VERSION_OF);
-      }
-      scheduleRegistration(dataset.getDoi(), metadata, dataset.getKey());
-    }
-  }
-
-  private void scheduleRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
-    try {
-      doiGenerator.registerDataset(doi, metadata, datasetKey);
-    } catch (InvalidMetadataException e) {
-      LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}, dataset {}", doi, datasetKey, e);
-      doiGenerator.failed(doi, e);
-    }
+    // to get the latest timestamps we need to read a new copy of the dataset
+    doiHandlerStrategy.datasetChanged(get(dataset.getKey()), oldDoi);
   }
 
   /**
@@ -834,34 +802,34 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * synchronisation of the DOI related data.
    * @param datasetKey
    */
-  @POST
-  @Path("{key}/doisync")
-  @RolesAllowed({ADMIN_ROLE})
-  public void syncDOIData(@PathParam("key") UUID datasetKey) {
-    Dataset dataset = super.get(datasetKey);
-    Preconditions.checkArgument(dataset != null, "Dataset " + datasetKey + " not existing");
-    Preconditions.checkArgument(dataset.getDoi() != null, "DOI must already be assigned.");
-
-    if(doiGenerator.isGbif(dataset.getDoi())){
-      handleDoiStatus(dataset, dataset.getDoi());
-    }
-    else{
-      //Try to get GBIF DOI from the identifiers
-      List<Identifier> identifiers = dataset.getIdentifiers();
-      DOI gbifDoi = null;
-      for(Identifier identifier : identifiers){
-        if(identifier.getType() == IdentifierType.DOI && doiGenerator.isGbif(new DOI(identifier.getIdentifier()))){
-          gbifDoi = new DOI(identifier.getIdentifier());
-        }
-      }
-      if(gbifDoi != null){
-        // handle the DOI status with the gbifDoi as old/previous DOI.
-        handleDoiStatus(dataset, gbifDoi);
-      }else{
-        LOG.info("Ignoring DOI synchronization for dataset {}. No GBIF DOI found.", datasetKey);
-      }
-    }
-  }
+//  @POST
+//  @Path("{key}/doisync")
+//  @RolesAllowed({ADMIN_ROLE})
+//  public void syncDOIData(@PathParam("key") UUID datasetKey) {
+//    Dataset dataset = super.get(datasetKey);
+//    Preconditions.checkArgument(dataset != null, "Dataset " + datasetKey + " not existing");
+//    Preconditions.checkArgument(dataset.getDoi() != null, "DOI must already be assigned.");
+//
+//    if(doiGenerator.isGbif(dataset.getDoi())){
+//      handleDoiStatus(dataset, dataset.getDoi());
+//    }
+//    else{
+//      //Try to get GBIF DOI from the identifiers
+//      List<Identifier> identifiers = dataset.getIdentifiers();
+//      DOI gbifDoi = null;
+//      for(Identifier identifier : identifiers){
+//        if(identifier.getType() == IdentifierType.DOI && doiGenerator.isGbif(new DOI(identifier.getIdentifier()))){
+//          gbifDoi = new DOI(identifier.getIdentifier());
+//        }
+//      }
+//      if(gbifDoi != null){
+//        // handle the DOI status with the gbifDoi as old/previous DOI.
+//        handleDoiStatus(dataset, gbifDoi);
+//      }else{
+//        LOG.info("Ignoring DOI synchronization for dataset {}. No GBIF DOI found.", datasetKey);
+//      }
+//    }
+//  }
 
   @POST
   @Path("{datasetKey}/process")

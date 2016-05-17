@@ -48,6 +48,7 @@
     <module>registry-ws-client</module>
     <module>registry-examples</module>
     <module>registry-cli</module>
+    <module>registry-doi</module>
   </modules>
 
   <!--
@@ -178,6 +179,11 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-doi</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

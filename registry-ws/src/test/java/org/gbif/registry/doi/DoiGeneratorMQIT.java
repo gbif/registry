@@ -2,6 +2,7 @@ package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.guice.RegistryTestModules;
 
 import java.util.Set;
