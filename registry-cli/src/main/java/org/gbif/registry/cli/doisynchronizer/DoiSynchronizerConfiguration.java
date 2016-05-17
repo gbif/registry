@@ -6,8 +6,8 @@ import org.gbif.doi.service.ServiceConfig;
 import org.gbif.doi.service.datacite.DataCiteService;
 import org.gbif.registry.cli.configuration.DataCiteConfiguration;
 import org.gbif.registry.cli.configuration.DbConfiguration;
-import org.gbif.registry.doi.DoiGenerator;
-import org.gbif.registry.doi.DoiGeneratorMQ;
+import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.generator.DoiGeneratorMQ;
 
 import java.net.URI;
 import javax.validation.Valid;

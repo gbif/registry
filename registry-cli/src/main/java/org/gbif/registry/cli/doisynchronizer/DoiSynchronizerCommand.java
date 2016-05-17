@@ -14,8 +14,8 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteService;
-import org.gbif.registry.doi.DoiGenerator;
 import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.MetaInfServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * This Command allows to print a report of all DOI with the FAILED status and/or fix them.
@@ -149,14 +150,6 @@ public class DoiSynchronizerCommand extends BaseCommand {
   private void fixFailedStatusDoi(DOIGbifDataciteDiagnostic result){
 
     if(result.getRelatedDataset() != null){
-      // If the DOI exists at Datacite, force the status to REGISTERED in our database to allow it to get updated
-      // (only if the target URI registered at Datacite is for that dataset)
-      if(result.doiExistsAtDatacite && result.getDataciteDoiStatus() == DoiStatus.REGISTERED &&
-              result.getDataciteTarget().toString().endsWith(result.getRelatedDataset().getKey().toString())) {
-        DoiData doiData = doiMapper.get(result.getDoi());
-        doiMapper.update(result.getDoi(), new DoiData(DoiStatus.REGISTERED, doiData.getTarget()), "");
-      }
-
       DataCiteMetadata dataciteMetadata;
       // If the DOI to fix is NOT the current one and the current DOI is NOT a GBIF DOI
       // This happens when a dataset is sent to GBIF and later updated with a non-GBIF DOI.
@@ -221,6 +214,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
     }
 
     List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
+    //Could they conflict??
     if(!datasets.isEmpty()) {
       if(datasets.size() == 1){
         doiGbifDataciteDiagnostic.setRelatedDataset(datasets.get(0));
