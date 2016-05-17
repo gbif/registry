@@ -204,7 +204,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   private void retryRegisterOrUpdate(DOI doi, URI target, String xml) throws DoiException {
     // Check if the DOI is known by the DOI service. Known means RESERVED or REGISTERED.
     if (doiService.exists(doi)) {
-      //check the latest status from the DOIService
+      //check the latest status from the DoiService
       DoiData doiServiceData = doiService.resolve(doi);
       if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
         doiService.update(doi, xml);

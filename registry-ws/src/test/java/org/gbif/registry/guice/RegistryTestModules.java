@@ -44,6 +44,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.bval.guice.ValidationModule;
@@ -57,6 +58,7 @@ import org.apache.ibatis.io.Resources;
  * <li>A management configuration to allow utilities to manipulate the database (Liquibase etc)</li>
  * </ol>
  * Everything is cached, and reused on subsequent calls.
+ * This is used for Integration testing.
  */
 public class RegistryTestModules {
 
@@ -104,7 +106,7 @@ public class RegistryTestModules {
               bind(DatasetResource.class);
               bind(NetworkResource.class);
               bind(IptResource.class);
-              bind(SecurityContext.class).toInstance(mockAdmin());
+              bind(SecurityContext.class).annotatedWith(Names.named("guiceInjectedSecurityContext")).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
             new DrupalMockModule(), new RegistryMyBatisModule(p), new DirectoryMockModule(), new RegistrySearchModule(p),

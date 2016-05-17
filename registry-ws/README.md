@@ -53,3 +53,9 @@ with a Maven profile similar to:
   </properties>
 </profile>
 ````
+
+# Tests
+
+ - Test Guice bindings: `org.gbif.registry.ws.guice.RegistryWsServletListenerTest`
+ - Guice configuration for Integration testings: `org.gbif.registry.guice.RegistryTestModules`
+ - ServletListener run by Grizlly to test WS clioent: `org.gbif.registry.guice.TestRegistryWsServletListener`

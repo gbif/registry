@@ -88,7 +88,6 @@ public class OccurrenceDownloadIT {
     this.simplePrincipalProvider = simplePrincipalProvider;
   }
 
-
   @Parameters
   public static Iterable<Object[]> data() {
     final Injector webservice = webservice();

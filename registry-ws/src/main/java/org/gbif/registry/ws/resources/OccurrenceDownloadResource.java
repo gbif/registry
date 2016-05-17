@@ -43,6 +43,7 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
@@ -70,6 +71,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   //Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
 
+  // This Guice injection is only used for testing purpose
+  @Inject(optional = true)
+  @Named("guiceInjectedSecurityContext")
   @Context
   private SecurityContext securityContext;
 
