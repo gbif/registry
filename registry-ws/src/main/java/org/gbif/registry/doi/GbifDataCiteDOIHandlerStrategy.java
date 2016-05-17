@@ -1,4 +1,4 @@
-package org.gbif.registry.doi.handler;
+package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
@@ -14,8 +14,8 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.registry.doi.DataCiteConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
 
 import java.util.EnumSet;
 import java.util.List;

@@ -11,8 +11,8 @@ import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
@@ -70,8 +70,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   //Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
 
-  // we use the optional injection only for tests !!!
-  @Inject(optional = true)
   @Context
   private SecurityContext securityContext;
 

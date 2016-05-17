@@ -12,10 +12,11 @@
  */
 package org.gbif.registry.doi;
 
+import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
 import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
-import org.gbif.registry.doi.handler.GbifDataCiteDOIHandlerStrategy;
+import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 
 import java.net.URI;
 import java.util.Properties;
@@ -36,11 +37,15 @@ public class DoiModule extends AbstractModule {
 
   @Override
   protected void configure() {
+
+    // Bind the OccurrenceDownloadResource as OccurrenceDownloadService
+    bind(OccurrenceDownloadService.class).to(OccurrenceDownloadResource.class);
+
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
     bind(DataCiteDOIHandlerStrategy.class).to(GbifDataCiteDOIHandlerStrategy.class).in(Scopes.SINGLETON);
     bind(DoiService.class).to(RegistryDoiService.class);
 
-            bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
+    bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
   }
 
