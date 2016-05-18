@@ -4,6 +4,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import org.apache.ibatis.annotations.Param;
 /**
  * MyBatis mapper to store DOIs and their status in the registry db.
  */
-public interface DoiMapper {
+public interface DoiMapper extends DoiPersistenceService {
   DoiData get (@Param("doi") DOI doi);
   List<Map<String, Object>> list (@Nullable @Param("status") DoiStatus status, @Nullable @Param("type") DoiType type,
                                   @Nullable @Param("page") Pageable page);

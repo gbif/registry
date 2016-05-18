@@ -15,7 +15,7 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -33,10 +33,10 @@ import org.slf4j.MarkerFactory;
 /**
  *
  */
-public class GbifDataCiteDOIHandlerStrategy implements DataCiteDOIHandlerStrategy {
+public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy {
 
   //DOI logging marker
-  private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDOIHandlerStrategy.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDoiHandlerStrategy.class);
   private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   //Page size to iterate over dataset usages
@@ -51,7 +51,7 @@ public class GbifDataCiteDOIHandlerStrategy implements DataCiteDOIHandlerStrateg
   private final TitleLookup titleLookup;
 
   @Inject
-  public GbifDataCiteDOIHandlerStrategy(DoiGenerator doiGenerator, OrganizationService organizationService,
+  public GbifDataCiteDoiHandlerStrategy(DoiGenerator doiGenerator, OrganizationService organizationService,
                                         OccurrenceDownloadService occurrenceDownloadService,
                                         TitleLookup titleLookup) {
     this.doiGenerator = doiGenerator;

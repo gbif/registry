@@ -15,20 +15,23 @@ package org.gbif.registry.doi;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
-import org.gbif.registry.doi.handler.DataCiteDOIHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 
 import java.net.URI;
 import java.util.Properties;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 /**
- * Exposes a DoiGenerator service requiring an existing MessagePublisher and DoiMapper being bound.
+ * Assemble the classes related to DOI.
+ * Requires an existing MessagePublisher, DoiMapper, OrganizationService, OccurrenceDownloadResource,
+ * TitleLookup being bound.
  */
-public class DoiModule extends AbstractModule {
+public class DoiModule extends PrivateModule {
   private final Properties properties;
 
   public DoiModule(Properties properties) {
@@ -39,14 +42,18 @@ public class DoiModule extends AbstractModule {
   protected void configure() {
 
     // Bind the OccurrenceDownloadResource as OccurrenceDownloadService
-    bind(OccurrenceDownloadService.class).to(OccurrenceDownloadResource.class);
+    bind(OccurrenceDownloadService.class).to(OccurrenceDownloadResource.class).in(Scopes.SINGLETON);
 
-    bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
-    bind(DataCiteDOIHandlerStrategy.class).to(GbifDataCiteDOIHandlerStrategy.class).in(Scopes.SINGLETON);
-    bind(DoiService.class).to(RegistryDoiService.class);
+    bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
 
     bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
+
+    bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
+    bind(DataCiteDoiHandlerStrategy.class).to(GbifDataCiteDoiHandlerStrategy.class).in(Scopes.SINGLETON);
+
+    expose(DoiGenerator.class);
+    expose(DataCiteDoiHandlerStrategy.class);
   }
 
 }
