@@ -51,7 +51,7 @@ public class DoiModule extends PrivateModule {
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
 
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
-    bind(DataCiteDoiHandlerStrategy.class).to(GbifDataCiteDoiHandlerStrategy_.class).in(Scopes.SINGLETON);
+    bind(DataCiteDoiHandlerStrategy.class).to(GbifDataCiteDoiHandlerStrategy.class).in(Scopes.SINGLETON);
 
     expose(DoiGenerator.class);
     expose(DataCiteDoiHandlerStrategy.class);

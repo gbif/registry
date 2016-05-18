@@ -33,10 +33,10 @@ import org.slf4j.MarkerFactory;
 /**
  *
  */
-public class GbifDataCiteDoiHandlerStrategy_ implements DataCiteDoiHandlerStrategy {
+public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy {
 
   //DOI logging marker
-  private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDoiHandlerStrategy_.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDoiHandlerStrategy.class);
   private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   //Page size to iterate over dataset usages
@@ -51,9 +51,9 @@ public class GbifDataCiteDoiHandlerStrategy_ implements DataCiteDoiHandlerStrate
   private final TitleLookup titleLookup;
 
   @Inject
-  public GbifDataCiteDoiHandlerStrategy_(DoiGenerator doiGenerator, OrganizationService organizationService,
-                                         OccurrenceDownloadService occurrenceDownloadService,
-                                         TitleLookup titleLookup) {
+  public GbifDataCiteDoiHandlerStrategy(DoiGenerator doiGenerator, OrganizationService organizationService,
+                                        OccurrenceDownloadService occurrenceDownloadService,
+                                        TitleLookup titleLookup) {
     this.doiGenerator = doiGenerator;
     this.organizationService = organizationService;
     this.occurrenceDownloadService = occurrenceDownloadService;
