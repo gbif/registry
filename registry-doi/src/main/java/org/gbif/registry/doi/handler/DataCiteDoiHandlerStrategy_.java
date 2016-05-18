@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * Business logic for DOI handling with DataCite built on top of {@link org.gbif.registry.doi.generator.DoiGenerator}.
  *
  */
-public interface DataCiteDoiHandlerStrategy {
+public interface DataCiteDoiHandlerStrategy_ {
 
   /**
    * Build the DataCiteMetadata for a Download.

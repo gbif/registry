@@ -12,7 +12,7 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy_;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
@@ -65,7 +65,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookup titleLookup;
   private final UserService userService;
-  private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
+  private final DataCiteDoiHandlerStrategy_ doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
   //Page size to iterate over dataset usages
@@ -79,7 +79,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Inject
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, UserService userService, TitleLookup titleLookup) {
+    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy_ doiHandlingStrategy, UserService userService, TitleLookup titleLookup) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;

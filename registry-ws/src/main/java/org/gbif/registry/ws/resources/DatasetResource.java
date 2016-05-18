@@ -46,7 +46,7 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy_;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
@@ -139,7 +139,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
-  private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
+  private final DataCiteDoiHandlerStrategy_ doiHandlerStrategy;
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -153,7 +153,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
     DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
     EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiGenerator doiGenerator,
-    DataCiteDoiHandlerStrategy doiHandlingStrategy) {
+    DataCiteDoiHandlerStrategy_ doiHandlingStrategy) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
       Dataset.class, eventBus, userAuthService);
     this.searchService = searchService;

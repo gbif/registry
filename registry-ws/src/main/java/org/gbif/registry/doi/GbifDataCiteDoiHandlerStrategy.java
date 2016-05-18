@@ -15,7 +15,7 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy_;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.slf4j.MarkerFactory;
 /**
  *
  */
-public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy {
+public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy_ {
 
   //DOI logging marker
   private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDoiHandlerStrategy.class);

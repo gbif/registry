@@ -15,7 +15,7 @@ package org.gbif.registry.doi;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy_;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 
@@ -51,10 +51,10 @@ public class DoiModule extends PrivateModule {
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
 
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
-    bind(DataCiteDoiHandlerStrategy.class).to(GbifDataCiteDoiHandlerStrategy.class).in(Scopes.SINGLETON);
+    bind(DataCiteDoiHandlerStrategy_.class).to(GbifDataCiteDoiHandlerStrategy.class).in(Scopes.SINGLETON);
 
     expose(DoiGenerator.class);
-    expose(DataCiteDoiHandlerStrategy.class);
+    expose(DataCiteDoiHandlerStrategy_.class);
   }
 
 }
