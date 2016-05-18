@@ -6,8 +6,10 @@ import org.gbif.doi.service.ServiceConfig;
 import org.gbif.doi.service.datacite.DataCiteService;
 import org.gbif.registry.cli.configuration.DataCiteConfiguration;
 import org.gbif.registry.cli.configuration.DbConfiguration;
+import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
 import javax.validation.Valid;
@@ -87,6 +89,7 @@ public class DoiSynchronizerConfiguration {
     @Override
     protected void configure() {
       bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
+      bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
 
       bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(DOI.GBIF_PREFIX);
       bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(portalurl));

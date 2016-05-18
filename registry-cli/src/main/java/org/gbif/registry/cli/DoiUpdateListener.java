@@ -167,6 +167,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    */
   private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
     final DoiStatus doiStatus = currState.getStatus();
+    LOG.info("registerOrUpdate DOI {} with state {}", doi, currState.getStatus());
     switch (doiStatus) {
       case REGISTERED:
         // the DOI was already registered, so we only need to update the target url if changed and the metadata

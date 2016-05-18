@@ -44,6 +44,7 @@ public class DoiModule extends PrivateModule {
     // Bind the OccurrenceDownloadResource as OccurrenceDownloadService
     bind(OccurrenceDownloadService.class).to(OccurrenceDownloadResource.class).in(Scopes.SINGLETON);
 
+    // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
 
     bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
