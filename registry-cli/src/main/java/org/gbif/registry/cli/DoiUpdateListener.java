@@ -167,6 +167,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    */
   private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
     final DoiStatus doiStatus = currState.getStatus();
+    boolean registered = true;
     LOG.info("registerOrUpdate DOI {} with state {}", doi, currState.getStatus());
     switch (doiStatus) {
       case REGISTERED:
@@ -184,13 +185,15 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         LOG.info("Registered doi {} with target {}", doi, target);
         break;
       case FAILED:
-        retryRegisterOrUpdate(doi, target, xml);
+        registered = retryRegisterOrUpdate(doi, target, xml);
         break;
       default:
         LOG.warn("Can't register or update the DOI {} with state {}", doi, doiStatus);
     }
     // store the new state in our registry
-    doiMapper.update(doi, new DoiData(DoiStatus.REGISTERED, target), xml);
+    if(registered) {
+      doiMapper.update(doi, new DoiData(DoiStatus.REGISTERED, target), xml);
+    }
   }
 
   /**
@@ -201,8 +204,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * If any error occurs it will be logged and the method exit.
    *
    * @throws DoiException
+   * @return true if this method is able to retry the registration/update, false otherwise
    */
-  private void retryRegisterOrUpdate(DOI doi, URI target, String xml) throws DoiException {
+  private boolean retryRegisterOrUpdate(DOI doi, URI target, String xml) throws DoiException {
     // Check if the DOI is known by the DOI service. Known means RESERVED or REGISTERED.
     if (doiService.exists(doi)) {
       //check the latest status from the DoiService
@@ -212,10 +216,13 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         LOG.info("Updated doi {} with target {}", doi, target);
       } else {
         LOG.info("Failed to update doi {} with target {}. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
+        return false;
       }
     } else {
       doiService.register(doi, target, xml);
       LOG.info("Registered doi {} with target {}", doi, target);
     }
+    return true;
   }
+
 }
