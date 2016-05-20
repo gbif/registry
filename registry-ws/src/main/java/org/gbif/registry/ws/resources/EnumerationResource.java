@@ -14,7 +14,9 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -56,15 +58,11 @@ public class EnumerationResource {
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
-  private static final Function<DwcTerm, TermWrapper> TRANSFORM_DWC_TERM = new Function<DwcTerm, TermWrapper>() {
-    @Override
-    public TermWrapper apply(DwcTerm term) {
-      return new TermWrapper(term);
-    }
-  };
-
   private static Set<TermWrapper> TERM_LIST = ImmutableSet.copyOf(
-          Iterables.transform(ImmutableList.copyOf(DwcTerm.values()), TRANSFORM_DWC_TERM));
+          Iterables.concat(
+                  Iterables.transform(ImmutableList.copyOf(DwcTerm.values()), buildDwcTermToTermWrapperFunction()),
+                  Iterables.transform(ImmutableList.copyOf(DcTerm.values()), buildDcTermToTermWrapperFunction()),
+                  Iterables.transform(ImmutableList.copyOf(GbifTerm.values()), buildGbifTermToTermWrapperFunction())));
 
   private static List<Map<String, String>> COUNTRIES;
   static {
@@ -150,10 +148,36 @@ public class EnumerationResource {
     }
   }
 
+  private static  Function<DwcTerm, TermWrapper> buildDwcTermToTermWrapperFunction(){
+    return new Function<DwcTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(DwcTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
+  private static  Function<DcTerm, TermWrapper> buildDcTermToTermWrapperFunction(){
+    return new Function<DcTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(DcTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
+  private static  Function<GbifTerm, TermWrapper> buildGbifTermToTermWrapperFunction(){
+    return new Function<GbifTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(GbifTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
   /**
    * Since Term force a serializer @JsonSerialize(using= TermSerializer.class) we want to control how we structure
    * the answer.
-   * We currently only support DwcTerm
    */
   private static class TermWrapper {
 
@@ -163,6 +187,19 @@ public class EnumerationResource {
     private Boolean isClass;
 
     public TermWrapper(DwcTerm term){
+      simpleName = term.simpleName();
+      qualifiedName = term.qualifiedName();
+      group = term.getGroup();
+      isClass = term.isClass();
+    }
+
+    public TermWrapper(DcTerm term){
+      simpleName = term.simpleName();
+      qualifiedName = term.qualifiedName();
+      isClass = term.isClass();
+    }
+
+    public TermWrapper(GbifTerm term){
       simpleName = term.simpleName();
       qualifiedName = term.qualifiedName();
       group = term.getGroup();
