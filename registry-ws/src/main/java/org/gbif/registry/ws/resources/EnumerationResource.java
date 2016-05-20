@@ -14,6 +14,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -27,8 +28,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.ClassPath;
@@ -52,6 +56,15 @@ public class EnumerationResource {
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
+  private static final Function<DwcTerm, TermWrapper> TRANSFORM_DWC_TERM = new Function<DwcTerm, TermWrapper>() {
+    @Override
+    public TermWrapper apply(DwcTerm term) {
+      return new TermWrapper(term);
+    }
+  };
+
+  private static Set<TermWrapper> TERM_LIST = ImmutableSet.copyOf(
+          Iterables.transform(ImmutableList.copyOf(DwcTerm.values()), TRANSFORM_DWC_TERM));
 
   private static List<Map<String, String>> COUNTRIES;
   static {
@@ -113,6 +126,12 @@ public class EnumerationResource {
     return COUNTRIES;
   }
 
+  @Path("term")
+  @GET
+  public Set<TermWrapper> listTerms() {
+    return TERM_LIST;
+  }
+
   /**
    * Gets the values of the named enumeration should the enumeration exist.
    * Note this is used by the AngularJS console.
@@ -128,6 +147,41 @@ public class EnumerationResource {
       return PATH_MAPPING.get(name);
     } else {
       return null;
+    }
+  }
+
+  /**
+   * Since Term force a serializer @JsonSerialize(using= TermSerializer.class) we want to control how we structure
+   * the answer.
+   * We currently only support DwcTerm
+   */
+  private static class TermWrapper {
+
+    private String qualifiedName;
+    private String simpleName;
+    private String group;
+    private Boolean isClass;
+
+    public TermWrapper(DwcTerm term){
+      simpleName = term.simpleName();
+      qualifiedName = term.qualifiedName();
+      group = term.getGroup();
+      isClass = term.isClass();
+    }
+
+    public String getSimpleName() {
+      return simpleName;
+    }
+    public String getQualifiedName(){
+      return qualifiedName;
+    }
+
+    public String getGroup() {
+      return group;
+    }
+
+    public Boolean getIsClass() {
+      return isClass;
     }
   }
 }
