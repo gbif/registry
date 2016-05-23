@@ -31,6 +31,7 @@ import org.slf4j.MarkerFactory;
 
 
 /**
+ * GBIF Business logic for DOI handling with DataCite in the Registry.
  *
  */
 public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy {

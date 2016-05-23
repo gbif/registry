@@ -198,10 +198,12 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
   /**
    * Retry to Register or Update a DOI flagged as "FAILED" in the database.
-   * Do not use this method to fix a Reserved DOI that should be updated.
+   * Do not use this method to fix a RESERVED DOI that should be updated (will be rejected).
+   * As opposed to registerOrUpdate, this method will ask the doiService for the status of
+   * the DOI since when the status is FAILED we loose the 'real' status before the failure.
    * If the DOI doesn't exist on the DOI Service (e.g. Datacite) it will register it.
    * If the DOI already exist it will try an update.
-   * If any error occurs it will be logged and the method exit.
+   * If any error occurs it will be logged and the will method with false.
    *
    * @throws DoiException
    * @return true if this method is able to retry the registration/update, false otherwise
@@ -211,11 +213,12 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     if (doiService.exists(doi)) {
       //check the latest status from the DoiService
       DoiData doiServiceData = doiService.resolve(doi);
+      // for the moment we only deal with REGISTERED status
       if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
         doiService.update(doi, xml);
         LOG.info("Updated doi {} with target {}", doi, target);
       } else {
-        LOG.info("Failed to update doi {} with target {}. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
+        LOG.info("Failed to update doi {} with target {}. Only doi with state REGISTERED can be retried. Datacite status: {}. ", doi, target, doiServiceData.getStatus());
         return false;
       }
     } else {

@@ -83,6 +83,45 @@ public class EnumerationResource {
   }
 
   /**
+   * Function to "wrap" a DwcTerm inside a TermWrapper.
+   * @return
+   */
+  private static  Function<DwcTerm, TermWrapper> buildDwcTermToTermWrapperFunction(){
+    return new Function<DwcTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(DwcTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
+  /**
+   * Function to "wrap" a DcTerm inside a TermWrapper.
+   * @return
+   */
+  private static  Function<DcTerm, TermWrapper> buildDcTermToTermWrapperFunction(){
+    return new Function<DcTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(DcTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
+  /**
+   * Function to "wrap" a GbifTerm inside a TermWrapper.
+   * @return
+   */
+  private static  Function<GbifTerm, TermWrapper> buildGbifTermToTermWrapperFunction(){
+    return new Function<GbifTerm, TermWrapper>() {
+      @Override
+      public TermWrapper apply(GbifTerm term) {
+        return new TermWrapper(term);
+      }
+    };
+  }
+
+  /**
    * An inventory of the enumerations supported.
    *
    * @return The enumerations in the GBIF API.
@@ -148,36 +187,10 @@ public class EnumerationResource {
     }
   }
 
-  private static  Function<DwcTerm, TermWrapper> buildDwcTermToTermWrapperFunction(){
-    return new Function<DwcTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(DwcTerm term) {
-        return new TermWrapper(term);
-      }
-    };
-  }
-
-  private static  Function<DcTerm, TermWrapper> buildDcTermToTermWrapperFunction(){
-    return new Function<DcTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(DcTerm term) {
-        return new TermWrapper(term);
-      }
-    };
-  }
-
-  private static  Function<GbifTerm, TermWrapper> buildGbifTermToTermWrapperFunction(){
-    return new Function<GbifTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(GbifTerm term) {
-        return new TermWrapper(term);
-      }
-    };
-  }
-
   /**
    * Since Term force a serializer @JsonSerialize(using= TermSerializer.class) we want to control how we structure
    * the answer.
+   * This class is immutable.
    */
   private static class TermWrapper {
 
