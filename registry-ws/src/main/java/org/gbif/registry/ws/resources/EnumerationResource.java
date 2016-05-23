@@ -17,6 +17,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -58,6 +59,13 @@ public class EnumerationResource {
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
+  // Uses reflection to find the enumerations in the API
+  private static Map<String, Set<Term>> TERMS_MAPPING = terms();
+
+  /**
+   * Sub-set of {@link Term} that represents the terms that can be used in Gbif service response.
+   * Maybe we should include all of them?
+   */
   private static Set<TermWrapper> TERM_LIST = ImmutableSet.copyOf(
           Iterables.concat(
                   Iterables.transform(ImmutableList.copyOf(DwcTerm.values()), buildDwcTermToTermWrapperFunction()),
@@ -154,6 +162,28 @@ public class EnumerationResource {
     }
   }
 
+  // reflect over the package to find Term implementation
+  private static Map<String, Set<Term>> terms() {
+    try {
+      ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
+      ImmutableMap.Builder<String, Set<Term>> builder = ImmutableMap.builder();
+
+      List<ClassInfo> infos = cp.getTopLevelClasses(DwcTerm.class.getPackage().getName()).asList();
+      for (ClassInfo info : infos) {
+        Class<?> possibleTermClass = info.load();
+        if (possibleTermClass.isAssignableFrom(Term.class)) {
+          builder.put(info.getSimpleName(), ImmutableSet.copyOf(((Class<? extends Term>) info.load()).getEnumConstants()));
+        }
+
+      }
+      return builder.build();
+    } catch (Exception e) {
+      LOG.error("Unable to read the classpath for terms", e);
+      return ImmutableMap.of(); // empty
+    }
+  }
+
+
   /**
    * @return list of country informations based on our enum.
    */
@@ -163,10 +193,26 @@ public class EnumerationResource {
     return COUNTRIES;
   }
 
+  /**
+   * List all the Term predefined in TERM_LIST.
+   *
+   * @return
+   */
   @Path("term")
   @GET
-  public Set<TermWrapper> listTerms() {
-    return TERM_LIST;
+  public Set<String> listTermInventory() {
+    return TERMS_MAPPING.keySet();
+  }
+
+  @Path("term/{name}")
+  @GET
+  @NullToNotFound
+  public Set<Term> getTerms(@PathParam("name") @NotNull String name) {
+    if (TERMS_MAPPING.containsKey(name)) {
+      return TERMS_MAPPING.get(name);
+    } else {
+      return null;
+    }
   }
 
   /**
