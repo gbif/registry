@@ -70,6 +70,8 @@ public class RegistryTestModules {
   private static Injector management;
   private static HikariDataSource managementDatasource;
 
+  public static final String WS_URL = "http://localhost:" + RegistryServer.getPort();
+
   /**
    * @return An injector that is bound for the mybatis layer and exposes mappers.
    */

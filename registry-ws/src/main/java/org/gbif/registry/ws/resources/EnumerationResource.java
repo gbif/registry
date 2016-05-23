@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A resource that provides a JSON serialization of all Enumerations in the GBIF API suitable for building Javascript
  * based clients. This has no Java client, since Java clients have access to the Enums directly.
- * Reflection is used to generate the inventory of enumerations.
+ * Reflection can be used to generate the inventory of enumerations.
  */
 @Path("enumeration")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})

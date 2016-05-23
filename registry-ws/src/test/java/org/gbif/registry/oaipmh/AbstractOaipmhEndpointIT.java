@@ -93,7 +93,6 @@ public abstract class AbstractOaipmhEndpointIT {
   @Parameters
   public static Iterable<Object[]> data() {
     final Injector webservice = webservice();
-    //final Injector client = webserviceClient();
     return ImmutableList.<Object[]>of(new Object[]{
             webservice.getInstance(NodeService.class),
             webservice.getInstance(OrganizationService.class),

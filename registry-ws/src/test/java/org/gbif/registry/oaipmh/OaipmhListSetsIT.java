@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the ListSets verb of the OAI-PMH endpoint.
  *
- * @author cgendreau
  */
 public class OaipmhListSetsIT  extends AbstractOaipmhEndpointIT {
 
