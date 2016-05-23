@@ -14,10 +14,6 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -31,11 +27,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.ClassPath;
@@ -59,19 +52,6 @@ public class EnumerationResource {
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
-  // Uses reflection to find the enumerations in the API
-  private static Map<String, Set<Term>> TERMS_MAPPING = terms();
-
-  /**
-   * Sub-set of {@link Term} that represents the terms that can be used in Gbif service response.
-   * Maybe we should include all of them?
-   */
-  private static Set<TermWrapper> TERM_LIST = ImmutableSet.copyOf(
-          Iterables.concat(
-                  Iterables.transform(ImmutableList.copyOf(DwcTerm.values()), buildDwcTermToTermWrapperFunction()),
-                  Iterables.transform(ImmutableList.copyOf(DcTerm.values()), buildDcTermToTermWrapperFunction()),
-                  Iterables.transform(ImmutableList.copyOf(GbifTerm.values()), buildGbifTermToTermWrapperFunction())));
-
   private static List<Map<String, String>> COUNTRIES;
   static {
     List<Map<String, String>> countries = Lists.newArrayList();
@@ -88,45 +68,6 @@ public class EnumerationResource {
       }
     }
     COUNTRIES = ImmutableList.copyOf(countries);
-  }
-
-  /**
-   * Function to "wrap" a DwcTerm inside a TermWrapper.
-   * @return
-   */
-  private static  Function<DwcTerm, TermWrapper> buildDwcTermToTermWrapperFunction(){
-    return new Function<DwcTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(DwcTerm term) {
-        return new TermWrapper(term);
-      }
-    };
-  }
-
-  /**
-   * Function to "wrap" a DcTerm inside a TermWrapper.
-   * @return
-   */
-  private static  Function<DcTerm, TermWrapper> buildDcTermToTermWrapperFunction(){
-    return new Function<DcTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(DcTerm term) {
-        return new TermWrapper(term);
-      }
-    };
-  }
-
-  /**
-   * Function to "wrap" a GbifTerm inside a TermWrapper.
-   * @return
-   */
-  private static  Function<GbifTerm, TermWrapper> buildGbifTermToTermWrapperFunction(){
-    return new Function<GbifTerm, TermWrapper>() {
-      @Override
-      public TermWrapper apply(GbifTerm term) {
-        return new TermWrapper(term);
-      }
-    };
   }
 
   /**
@@ -162,28 +103,6 @@ public class EnumerationResource {
     }
   }
 
-  // reflect over the package to find Term implementation
-  private static Map<String, Set<Term>> terms() {
-    try {
-      ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
-      ImmutableMap.Builder<String, Set<Term>> builder = ImmutableMap.builder();
-
-      List<ClassInfo> infos = cp.getTopLevelClasses(DwcTerm.class.getPackage().getName()).asList();
-      for (ClassInfo info : infos) {
-        Class<?> possibleTermClass = info.load();
-        if (possibleTermClass.isAssignableFrom(Term.class)) {
-          builder.put(info.getSimpleName(), ImmutableSet.copyOf(((Class<? extends Term>) info.load()).getEnumConstants()));
-        }
-
-      }
-      return builder.build();
-    } catch (Exception e) {
-      LOG.error("Unable to read the classpath for terms", e);
-      return ImmutableMap.of(); // empty
-    }
-  }
-
-
   /**
    * @return list of country informations based on our enum.
    */
@@ -191,28 +110,6 @@ public class EnumerationResource {
   @GET
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
-  }
-
-  /**
-   * List all the Term predefined in TERM_LIST.
-   *
-   * @return
-   */
-  @Path("term")
-  @GET
-  public Set<String> listTermInventory() {
-    return TERMS_MAPPING.keySet();
-  }
-
-  @Path("term/{name}")
-  @GET
-  @NullToNotFound
-  public Set<Term> getTerms(@PathParam("name") @NotNull String name) {
-    if (TERMS_MAPPING.containsKey(name)) {
-      return TERMS_MAPPING.get(name);
-    } else {
-      return null;
-    }
   }
 
   /**
@@ -233,51 +130,4 @@ public class EnumerationResource {
     }
   }
 
-  /**
-   * Since Term force a serializer @JsonSerialize(using= TermSerializer.class) we want to control how we structure
-   * the answer.
-   * This class is immutable.
-   */
-  private static class TermWrapper {
-
-    private String qualifiedName;
-    private String simpleName;
-    private String group;
-    private Boolean isClass;
-
-    public TermWrapper(DwcTerm term){
-      simpleName = term.simpleName();
-      qualifiedName = term.qualifiedName();
-      group = term.getGroup();
-      isClass = term.isClass();
-    }
-
-    public TermWrapper(DcTerm term){
-      simpleName = term.simpleName();
-      qualifiedName = term.qualifiedName();
-      isClass = term.isClass();
-    }
-
-    public TermWrapper(GbifTerm term){
-      simpleName = term.simpleName();
-      qualifiedName = term.qualifiedName();
-      group = term.getGroup();
-      isClass = term.isClass();
-    }
-
-    public String getSimpleName() {
-      return simpleName;
-    }
-    public String getQualifiedName(){
-      return qualifiedName;
-    }
-
-    public String getGroup() {
-      return group;
-    }
-
-    public Boolean getIsClass() {
-      return isClass;
-    }
-  }
 }
