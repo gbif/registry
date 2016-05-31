@@ -78,12 +78,14 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
 
 
   /**
-   * Get a Dataset object from its DOI.
+   * Get a Dataset list from a DOI.
+   * Multiple dataset could share the same DOI since this is not enforced.
+   *
    *
    * @param doi
    * @return
    */
-  Dataset getByDOI(@Param("doi") String doi);
+  List<Dataset> listByDOI(@Param("doi") String doi);
 
   /**
    * Count all datasets having all non null filters given.

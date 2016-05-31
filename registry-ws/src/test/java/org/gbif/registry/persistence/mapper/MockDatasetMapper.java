@@ -104,7 +104,7 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public Dataset getByDOI(@Param("doi") String doi) {
+  public List<Dataset> listByDOI(@Param("doi") String doi) {
     return null;
   }
 
