@@ -4,27 +4,21 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
-import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.DoiException;
-import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteService;
 import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.ws.util.DataCiteConverter;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
@@ -48,6 +42,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   private final DoiSynchronizerConfiguration config = new DoiSynchronizerConfiguration();
   private DoiMapper doiMapper;
+  private DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategy;
   private DatasetMapper datasetMapper;
   private OrganizationMapper organizationMapper;
   private DataCiteService dataCiteService;
@@ -64,8 +59,9 @@ public class DoiSynchronizerCommand extends BaseCommand {
   }
 
   private void setup(){
-    Injector registryInj = config.createMyBatisInjector();
+    Injector registryInj = config.createRegistryInjector();
     doiMapper = registryInj.getInstance(DoiMapper.class);
+    dataCiteDoiHandlerStrategy = registryInj.getInstance(DataCiteDoiHandlerStrategy.class);
     datasetMapper = registryInj.getInstance(DatasetMapper.class);
     organizationMapper = registryInj.getInstance(OrganizationMapper.class);
     doiGenerator = registryInj.getInstance(DoiGenerator.class);
@@ -85,7 +81,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     // Should we try to fix those DOI ?
     if(config.fixDOI){
-      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult){
+      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult) {
         // waiting for code review
         // fixFailedStatusDoi(d);
       }
@@ -99,7 +95,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
    */
   private void printFailedStatusDoiReport(List<DOIGbifDataciteDiagnostic> diagnosticResult){
     for(DOIGbifDataciteDiagnostic result : diagnosticResult ){
-      if(result.getRelatedDataset() != null){
+      if(result.isLinkedToASingleDataset()){
         System.out.println("------ Failed DOI: " + result.getDoi().getDoiName() + "------");
         System.out.println("Dataset key: " + result.getRelatedDataset().getKey());
         System.out.println("DOI found at Datacite?: " + result.isDoiExistsAtDatacite());
@@ -114,7 +110,15 @@ public class DoiSynchronizerCommand extends BaseCommand {
         System.out.println("-------------------------------------------");
       }
       else{
-        System.out.println("No dataset found: " + result.getDoi());
+        if(result.getRelatedDatasetList() != null && result.getRelatedDatasetList().size() != 0){
+          System.out.println("------ DOI used by multiple datasets: " + result.getDoi().getDoiName() + "------");
+          for(Dataset dataset : result.getRelatedDatasetList()){
+            System.out.println("Dataset key: " + dataset.getKey());
+          }
+        }
+        else {
+          System.out.println("No dataset found: " + result.getDoi());
+        }
       }
     }
     System.out.println("Total number of datasets: " + diagnosticResult.size());
@@ -140,9 +144,6 @@ public class DoiSynchronizerCommand extends BaseCommand {
   /**
    * Try to fix a DOI based on the {@link DOIGbifDataciteDiagnostic}.
    *
-   * If the DOI exists at Datacite AND its status is REGISTERED (at Datacite) we force the status in our database
-   * to allow an update by the DoiUpdater (other cli). Otherwise, it will result in another attempt to register the same
-   * DOI a second time which will trigger an exception.
    *
    *
    * @param result
@@ -150,33 +151,24 @@ public class DoiSynchronizerCommand extends BaseCommand {
   private void fixFailedStatusDoi(DOIGbifDataciteDiagnostic result){
 
     if(result.getRelatedDataset() != null){
-      DataCiteMetadata dataciteMetadata;
-      // If the DOI to fix is NOT the current one and the current DOI is NOT a GBIF DOI
-      // This happens when a dataset is sent to GBIF and later updated with a non-GBIF DOI.
-      if(!result.isCurrentDOI() && !result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX)){
-        dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
+      if(result.isCurrentDOI()){
+        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), null);
+        System.out.println("datasetChanged triggered on dataCiteDoiHandlerStrategy");
       }
       else{
-        dataciteMetadata = buildMetadata(result.getRelatedDataset());
-      }
-      scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
-      System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
-    }
-  }
+        System.out.println("not implemented yet");
 
-  /**
-   * Schedule a registration of the DOI with Datacite.
-   *
-   * @param doi
-   * @param metadata
-   * @param datasetKey
-   */
-  private void scheduleRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
-    try {
-      doiGenerator.registerDataset(doi, metadata, datasetKey);
-    } catch (InvalidMetadataException e) {
-      LOG.error("Failed to schedule DOI update for {}, dataset {}", doi, datasetKey, e);
-      doiGenerator.failed(doi, e);
+      }
+//      if(!result.isCurrentDOI() && !result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX)){
+//        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), result.getDoi());
+//        //dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
+//      }
+//      else{
+//        dataciteMetadata = buildMetadata(result.getRelatedDataset());
+//        dataCiteDoiHandlerStrategy.
+//      }
+     // scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
+     // System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
     }
   }
 
@@ -216,21 +208,13 @@ public class DoiSynchronizerCommand extends BaseCommand {
     List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
     //Could they conflict??
     if(!datasets.isEmpty()) {
-      if(datasets.size() == 1){
-        doiGbifDataciteDiagnostic.setRelatedDataset(datasets.get(0));
-      }
-      else{
-        LOG.warn("More than 1 dataset linked to DOI " + doi.getDoiName());
-      }
+      doiGbifDataciteDiagnostic.setRelatedDataset(datasets);
     }
     else{
-      Dataset dataset = datasetMapper.getByDOI(doi.getDoiName());
-      if(dataset != null){
-        doiGbifDataciteDiagnostic.setRelatedDataset(dataset);
-      }
+      doiGbifDataciteDiagnostic.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
     }
 
-    if(doiGbifDataciteDiagnostic.getRelatedDataset() != null){
+    if(doiGbifDataciteDiagnostic.isLinkedToASingleDataset()){
       doiGbifDataciteDiagnostic.setIsCurrentDOI(doi.equals(doiGbifDataciteDiagnostic.getRelatedDataset().getDoi()));
     }
 
@@ -249,42 +233,13 @@ public class DoiSynchronizerCommand extends BaseCommand {
   }
 
   /**
-   * If the old DOI was a GBIF one and the new one is different, update its metadata with a version relationship.
-   * Code copied from Registry DatasetResource.
-   * @param dataset (that includes the new non GBIF DOI)
-   * @return
-   */
-  private DataCiteMetadata buildMetadataForNonGbifDOI(Dataset dataset) {
-    Preconditions.checkArgument(!DOI.GBIF_PREFIX.equals(dataset.getDoi().getPrefix()));
-
-    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());
-    DataCiteMetadata m = DataCiteConverter.convert(dataset, publisher);
-    // add previous relationship
-
-    m.getRelatedIdentifiers().getRelatedIdentifier()
-            .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-                            .withRelationType(RelationType.IS_PREVIOUS_VERSION_OF)
-                            .withValue(dataset.getDoi().getDoiName())
-                            .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-                            .build()
-            );
-
-    return m;
-  }
-
-  private DataCiteMetadata buildMetadata(Dataset dataset) {
-    Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());
-    return DataCiteConverter.convert(dataset, publisher);
-  }
-
-  /**
    * Contains all the result from the diagnostic of a single DOI.
    *
    */
   private static class DOIGbifDataciteDiagnostic {
 
     private DOI doi;
-    private Dataset relatedDataset;
+    private List<Dataset> relatedDataset;
 
     private boolean doiExistsAtDatacite;
 
@@ -303,11 +258,21 @@ public class DoiSynchronizerCommand extends BaseCommand {
       return doi;
     }
 
-    public Dataset getRelatedDataset() {
+    public List<Dataset> getRelatedDatasetList() {
       return relatedDataset;
     }
 
-    public void setRelatedDataset(Dataset relatedDataset) {
+    public boolean isLinkedToASingleDataset(){
+      return relatedDataset != null && relatedDataset.size() == 1;
+    }
+
+    public Dataset getRelatedDataset() {
+      Preconditions.checkArgument(relatedDataset.size() == 1,
+              "This method can only be used when there is a single related dataset");
+      return relatedDataset.get(0);
+    }
+
+    public void setRelatedDataset(List<Dataset> relatedDataset) {
       this.relatedDataset = relatedDataset;
     }
 

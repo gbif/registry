@@ -1,17 +1,18 @@
 package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.User;
+import org.gbif.api.service.common.UserService;
 import org.gbif.common.messaging.guice.PostalServiceModule;
 import org.gbif.doi.service.ServiceConfig;
 import org.gbif.doi.service.datacite.DataCiteService;
+import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.cli.configuration.DataCiteConfiguration;
 import org.gbif.registry.cli.configuration.DbConfiguration;
-import org.gbif.registry.doi.DoiPersistenceService;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.generator.DoiGeneratorMQ;
-import org.gbif.registry.persistence.mapper.DoiMapper;
+import org.gbif.registry.doi.DoiModule;
 
-import java.net.URI;
+import java.util.Properties;
+import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -20,8 +21,6 @@ import com.beust.jcommander.ParametersDelegate;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -39,6 +38,11 @@ public class DoiSynchronizerConfiguration {
   @Valid
   @NotNull
   public String portalurl;
+
+  @Parameter(names = "--api-root")
+  @Valid
+  @NotNull
+  public String apiRoot;
 
   @Parameter(names = {"--print-report"}, required = false)
   @Valid
@@ -63,8 +67,8 @@ public class DoiSynchronizerConfiguration {
   @NotNull
   public PostalServiceConfiguration postalservice = new PostalServiceConfiguration();
 
-  public Injector createMyBatisInjector() {
-    return Guice.createInjector(db.createMyBatisModule(), new DoiModule());
+  public Injector createRegistryInjector() {
+    return Guice.createInjector(db.createMyBatisModule(), new InnerRegistryModule());
   }
 
   public DataCiteService createDataCiteService() {
@@ -82,19 +86,45 @@ public class DoiSynchronizerConfiguration {
   }
 
   /**
-   * Guice module for DOI
+   * Guice module for Registry related classes (except Mappers)
    */
-  private class DoiModule  extends AbstractModule {
+  private class InnerRegistryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-      bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
-      bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
+      bind(UserService.class).to(EmptyUserService.class);
 
-      bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(DOI.GBIF_PREFIX);
-      bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(portalurl));
-
+      Properties prop = new Properties();
+      prop.put("doi.prefix", DOI.GBIF_PREFIX);
+      prop.put("portal.url", portalurl);
+      install(new DoiModule(prop));
       install(new PostalServiceModule(PostalServiceConfiguration.SYNC_PREFIX, postalservice.toProperties()));
+      install(new TitleLookupModule(true, apiRoot));
+    }
+  }
+
+  /**
+   * User service that will reject all authentication.
+   *
+   */
+  private static class EmptyUserService implements UserService {
+
+    @Nullable
+    @Override
+    public User authenticate(String s, String s1) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public User get(String s) {
+      return null;
+    }
+
+    @Nullable
+    @Override
+    public User getBySession(String s) {
+      return null;
     }
   }
 
