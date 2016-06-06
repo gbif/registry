@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -51,14 +52,19 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   private final OccurrenceDownloadService occurrenceDownloadService;
   private final TitleLookup titleLookup;
 
+  // Used to exclude constituents of selected datasets (e.g. GBIF Backbone Taxonomy)
+  private final List<UUID> parentDatasetExcludeList;
+
   @Inject
   public GbifDataCiteDoiHandlerStrategy(DoiGenerator doiGenerator, OrganizationMapper organizationMapper,
                                         OccurrenceDownloadService occurrenceDownloadService,
-                                        TitleLookup titleLookup) {
+                                        TitleLookup titleLookup,
+                                        @Named("parentDatasetExcludeList")List<UUID> parentDatasetExcludeList) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
     this.titleLookup = titleLookup;
+    this.parentDatasetExcludeList = parentDatasetExcludeList;
   }
 
   @Override
@@ -100,6 +106,13 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
 
   @Override
   public void datasetChanged(Dataset dataset, @Nullable DOI previousDoi) {
+    // When configured, we can skip the DOI logic for some dataset when the getParentDatasetKey is in the
+    // parentDatasetExcludeList
+    if(dataset.getParentDatasetKey() != null && parentDatasetExcludeList != null &&
+            parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
+      return;
+    }
+
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
     if (previousDoi != null && doiGenerator.isGbif(previousDoi) && !dataset.getDoi().equals(previousDoi)) {
       scheduleDatasetRegistration(previousDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),

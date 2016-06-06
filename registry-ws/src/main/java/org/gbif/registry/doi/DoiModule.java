@@ -20,11 +20,15 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Assemble the classes related to DOI.
@@ -32,6 +36,7 @@ import com.google.inject.name.Names;
  * TitleLookup being bound.
  */
 public class DoiModule extends PrivateModule {
+
   private final Properties properties;
 
   public DoiModule(Properties properties) {
@@ -50,11 +55,34 @@ public class DoiModule extends PrivateModule {
     bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
 
+    bind(List.class).annotatedWith(Names.named("parentDatasetExcludeList"))
+            .toInstance(extractList(properties.getProperty("doi.dataset.parentExcludeList")));
+
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
     bind(DataCiteDoiHandlerStrategy.class).to(GbifDataCiteDoiHandlerStrategy.class).in(Scopes.SINGLETON);
 
     expose(DoiGenerator.class);
     expose(DataCiteDoiHandlerStrategy.class);
+  }
+
+  /**
+   * Generate a list of dataset UUID from a comma separated list
+   * @param propertyValue
+   * @return a new list, never null
+   * @throws IllegalArgumentException if an element is not a UUID
+   */
+  private List<UUID> extractList(String propertyValue){
+    List<UUID> parentExcludeList = Lists.newArrayList();
+
+    if (StringUtils.isBlank(propertyValue)) {
+      return parentExcludeList;
+    }
+
+    String[] values = propertyValue.split(",");
+    for(String value : values){
+      parentExcludeList.add(UUID.fromString(value.trim()));
+    }
+    return parentExcludeList;
   }
 
 }
