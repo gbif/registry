@@ -33,7 +33,6 @@ import org.slf4j.MarkerFactory;
 
 /**
  * GBIF Business logic for DOI handling with DataCite in the Registry.
- *
  */
 public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrategy {
 
@@ -59,7 +58,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   public GbifDataCiteDoiHandlerStrategy(DoiGenerator doiGenerator, OrganizationMapper organizationMapper,
                                         OccurrenceDownloadService occurrenceDownloadService,
                                         TitleLookup titleLookup,
-                                        @Named("parentDatasetExcludeList")List<UUID> parentDatasetExcludeList) {
+                                        @Named("parentDatasetExcludeList") List<UUID> parentDatasetExcludeList) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
@@ -108,8 +107,9 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   public void datasetChanged(Dataset dataset, @Nullable DOI previousDoi) {
     // When configured, we can skip the DOI logic for some dataset when the getParentDatasetKey is in the
     // parentDatasetExcludeList
-    if(dataset.getParentDatasetKey() != null && parentDatasetExcludeList != null &&
+    if (dataset.getParentDatasetKey() != null && parentDatasetExcludeList != null &&
             parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
+      LOG.info("Dataset {} parentDatasetKey is part of the ignore list: ignoring DOI related action(s). ", dataset.getKey());
       return;
     }
 
