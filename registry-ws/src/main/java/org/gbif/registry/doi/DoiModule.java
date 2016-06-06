@@ -27,6 +27,7 @@ import java.util.UUID;
 import com.google.common.collect.Lists;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,7 +56,7 @@ public class DoiModule extends PrivateModule {
     bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));
 
-    bind(List.class).annotatedWith(Names.named("parentDatasetExcludeList"))
+    bind(new TypeLiteral<List<UUID>>(){}).annotatedWith(Names.named("parentDatasetExcludeList"))
             .toInstance(extractList(properties.getProperty("doi.dataset.parentExcludeList")));
 
     bind(DoiGenerator.class).to(DoiGeneratorMQ.class).in(Scopes.SINGLETON);
