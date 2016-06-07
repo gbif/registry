@@ -99,7 +99,6 @@ public class VarnishPurgeListener {
     this.datasetService = datasetService;
     eventBus.register(this);
 
-    LOG.warn("VarnishPurgeListener apiBaseUrl {}", apiBaseUrl);
     purger = new VarnishPurger(client, apiBaseUrl);
   }
 
@@ -119,19 +118,14 @@ public class VarnishPurgeListener {
   @Subscribe
   public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
 
-    try {
-      purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
 
-      if (event.getObjectClass().equals(Organization.class)) {
-        cascadeOrganizationChange((Organization) event.getOldObject(), (Organization) event.getNewObject());
-      } else if (event.getObjectClass().equals(Dataset.class)) {
-        cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
-      } else if (event.getObjectClass().equals(Installation.class)) {
-        cascadeInstallationChange((Installation) event.getOldObject(), (Installation) event.getNewObject());
-      }
-    }
-    catch (Exception ex){
-      LOG.error("Varnish update", ex);
+    if (event.getObjectClass().equals(Organization.class)) {
+      cascadeOrganizationChange((Organization) event.getOldObject(), (Organization) event.getNewObject());
+    } else if (event.getObjectClass().equals(Dataset.class)) {
+      cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
+    } else if (event.getObjectClass().equals(Installation.class)) {
+      cascadeInstallationChange((Installation) event.getOldObject(), (Installation) event.getNewObject());
     }
   }
 
@@ -228,8 +222,6 @@ public class VarnishPurgeListener {
    * we deal with the right urls.
    */
   private void purgeEntityAndBanLists(Class cl, UUID key) {
-
-    LOG.warn("Target path {}", path(cl.getSimpleName().toLowerCase(), key));
 
     // purge entity detail
     purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
