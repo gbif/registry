@@ -87,7 +87,8 @@ public class DirectoryAugmenterImpl implements Augmenter {
               registryNode.setPhone(getPhones(participantNodes));
             }
             else{
-              LOG.info("Empty node for participantId {}", participantID);
+              // this can be as expected (e.g. former participant)
+              LOG.debug("Empty node for participantId {}", participantID);
             }
             registryNode.setContacts(contacts);
           }
@@ -231,7 +232,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
           }
         }
         else{
-          LOG.info("No people found for nodeId {}", currentNode.getId());
+          LOG.debug("No people found for nodeId {}", currentNode.getId());
         }
       }
     }

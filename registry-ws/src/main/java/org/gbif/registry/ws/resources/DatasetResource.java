@@ -46,8 +46,9 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DataCiteConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -65,7 +66,6 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.io.ByteArrayInputStream;
@@ -110,8 +110,6 @@ import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
@@ -128,7 +126,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
-  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;

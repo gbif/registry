@@ -15,6 +15,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.registry.doi.DataCiteConverter;
 
 import java.net.URI;
 import java.util.Date;

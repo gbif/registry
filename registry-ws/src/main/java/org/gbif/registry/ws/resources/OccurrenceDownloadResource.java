@@ -2,25 +2,21 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
-import org.gbif.registry.ws.util.DataCiteConverter;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
@@ -39,7 +35,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -150,24 +145,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     User user = userService.get(securityContext.getUserPrincipal().getName());
     doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
-  }
-
-
-  /**
-   * Creates the DataCite metadata for a download object.
-   */
-  private DataCiteMetadata buildMetadata(Download download, User user) {
-    List<DatasetOccurrenceDownloadUsage> response = null;
-    List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
-    PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
-
-    while (response == null || !response.isEmpty()) {
-      response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
-      usages.addAll(response);
-      pagingRequest.nextPage();
-    }
-
-    return DataCiteConverter.convert(download, user, usages, titleLookup);
   }
 
   @GET

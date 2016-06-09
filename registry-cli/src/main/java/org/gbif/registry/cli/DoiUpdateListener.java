@@ -11,7 +11,7 @@ import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.registry.ws.util.DataCiteConverter;
+import org.gbif.registry.doi.DataCiteConverter;
 
 import java.net.URI;
 
