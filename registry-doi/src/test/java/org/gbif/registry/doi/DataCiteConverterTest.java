@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.util;
+package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
@@ -15,7 +15,6 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.registry.doi.DataCiteConverter;
 
 import java.net.URI;
 import java.util.Date;
