@@ -24,7 +24,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
@@ -43,10 +42,6 @@ import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
-import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.registry.doi.DataCiteConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.metadata.EMLWriter;
@@ -404,7 +399,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       throw new IllegalArgumentException("Unreadable document", e);
     }
 
-
     // first, determine if this document is already stored, returning it with no action
     // we do this, because updating metadata when nothing has changed, results in registry change events being
     // propagated which can trigger crawlers which will run an update etc.
@@ -547,28 +541,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
-    doiHandlerStrategy.scheduleDatasetRegistration(dataset.getDoi(), buildMetadata(get(key)), key);
+    doiHandlerStrategy.scheduleDatasetRegistration(dataset.getDoi(), doiHandlerStrategy.buildMetadata(get(key)), key);
     return key;
-  }
-
-  private DataCiteMetadata buildMetadata(Dataset d) {
-    return buildMetadata(d, null, null);
-  }
-
-  private DataCiteMetadata buildMetadata(Dataset d, @Nullable DOI related, @Nullable RelationType relationType) {
-    Organization publisher = organizationMapper.get(d.getPublishingOrganizationKey());
-    DataCiteMetadata m = DataCiteConverter.convert(d, publisher);
-    // add previous relationship
-    if (related != null) {
-      m.getRelatedIdentifiers().getRelatedIdentifier()
-        .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-          .withRelationType(relationType)
-          .withValue(related.getDoiName())
-          .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-          .build()
-      );
-    }
-    return m;
   }
 
   @Override
