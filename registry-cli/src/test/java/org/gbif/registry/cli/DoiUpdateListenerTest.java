@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,6 +23,12 @@ import static org.mockito.Mockito.when;
 public class DoiUpdateListenerTest {
 
   class MockImpl implements DoiService {
+
+    private DOI lastRegisteredDOI = null;
+
+    public DOI getLastRegisteredDOI() {
+      return lastRegisteredDOI;
+    }
 
     @Nullable
     @Override
@@ -51,12 +58,12 @@ public class DoiUpdateListenerTest {
 
     @Override
     public void register(DOI doi, URI target, String metadata) throws DoiException {
-      throw new DoiException("Not implemented yet");
+      this.lastRegisteredDOI = doi;
     }
 
     @Override
     public void register(DOI doi, URI target, DataCiteMetadata metadata) throws DoiExistsException, DoiException {
-      throw new DoiException("Not implemented yet");
+      this.lastRegisteredDOI = doi;
     }
 
     @Override
@@ -82,14 +89,16 @@ public class DoiUpdateListenerTest {
 
   @Test
   public void testHandleMessage() throws Exception {
+    DOI testDOI = new DOI("10.5072/1234");
     DoiMapper doiMapper = mock(DoiMapper.class);
     when(doiMapper.get(any(DOI.class))).thenReturn(new DoiData(DoiStatus.NEW, null));
 
-    DoiUpdateListener listener = new DoiUpdateListener(new MockImpl(), doiMapper, 10);
+    MockImpl mockService = new MockImpl();
+    DoiUpdateListener listener = new DoiUpdateListener(mockService, doiMapper, 10);
     ChangeDoiMessage msg = new ChangeDoiMessage(DoiStatus.REGISTERED,
-      new DOI("10.5072/1234"),
-      "",
-      URI.create("http:??gbif.org"));
+            testDOI, "", URI.create("http:??gbif.org"));
     listener.handleMessage(msg);
+    assertEquals(testDOI, mockService.getLastRegisteredDOI());
   }
+
 }
