@@ -1,4 +1,4 @@
-package org.gbif.registry.cli.configuration;
+package org.gbif.registry.cli.common;
 
 import java.util.concurrent.TimeUnit;
 

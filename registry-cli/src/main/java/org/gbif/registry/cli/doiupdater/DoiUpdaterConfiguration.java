@@ -1,6 +1,9 @@
-package org.gbif.registry.cli.configuration;
+package org.gbif.registry.cli.doiupdater;
 
 import org.gbif.common.messaging.config.MessagingConfiguration;
+import org.gbif.registry.cli.common.DataCiteConfiguration;
+import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.cli.common.GangliaConfiguration;
 
 import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
@@ -24,7 +27,7 @@ public class DoiUpdaterConfiguration {
   @ParametersDelegate
   @Valid
   @NotNull
-  public DbConfiguration db = new DbConfiguration();
+  public DbConfiguration registry = new DbConfiguration();
 
   @ParametersDelegate
   @Valid

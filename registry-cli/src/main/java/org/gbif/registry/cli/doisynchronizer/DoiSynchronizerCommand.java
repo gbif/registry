@@ -3,20 +3,26 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.api.model.common.User;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.common.UserService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.datacite.DataCiteService;
+import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
+import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDOIDiagnosticResult;
+import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDatasetDOIDiagnosticResult;
+import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDownloadDOIDiagnosticResult;
+import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -41,13 +47,15 @@ public class DoiSynchronizerCommand extends BaseCommand {
   private static final Logger LOG = LoggerFactory.getLogger(DoiSynchronizerCommand.class);
 
   private final DoiSynchronizerConfiguration config = new DoiSynchronizerConfiguration();
-  private DoiMapper doiMapper;
+  private DoiPersistenceService doiPersistenceService;
   private DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategy;
+
   private DatasetMapper datasetMapper;
-  private OrganizationMapper organizationMapper;
+  private OccurrenceDownloadMapper downloadMapper;
+  private UserService userService;
   private DataCiteService dataCiteService;
 
-  private DoiGenerator doiGenerator;
+  private DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
 
   public DoiSynchronizerCommand() {
     super("doi-synchronizer");
@@ -58,14 +66,19 @@ public class DoiSynchronizerCommand extends BaseCommand {
     return config;
   }
 
-  private void setup(){
-    Injector registryInj = config.createRegistryInjector();
-    doiMapper = registryInj.getInstance(DoiMapper.class);
-    dataCiteDoiHandlerStrategy = registryInj.getInstance(DataCiteDoiHandlerStrategy.class);
-    datasetMapper = registryInj.getInstance(DatasetMapper.class);
-    organizationMapper = registryInj.getInstance(OrganizationMapper.class);
-    doiGenerator = registryInj.getInstance(DoiGenerator.class);
-    dataCiteService = config.createDataCiteService();
+  private void setup() {
+
+    DoiSynchronizerModule bindings = new DoiSynchronizerModule(config);
+
+    Injector inj = bindings.getInjector();
+
+    doiPersistenceService = inj.getInstance(DoiPersistenceService.class);
+    dataCiteDoiHandlerStrategy = inj.getInstance(DataCiteDoiHandlerStrategy.class);
+    datasetMapper = inj.getInstance(DatasetMapper.class);
+    downloadMapper = inj.getInstance(OccurrenceDownloadMapper.class);
+    userService = inj.getInstance(UserService.class);
+
+    dataCiteService = CommonBuilder.createDataCiteService(config.datacite);
   }
 
   @Override
@@ -73,55 +86,103 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     setup();
 
-    List<DOIGbifDataciteDiagnostic> datasetDiagnosticResult = runDOIStatusDiagnostic(DoiType.DATASET);
-
-    if(config.printReport) {
-      printFailedStatusDoiReport(datasetDiagnosticResult);
+    if(StringUtils.isNotBlank(config.doi)){
+      try {
+        DOI doi = new DOI(config.doi);
+        reportDOIStatus(doi);
+      }
+      catch (IllegalArgumentException iaEx){
+        System.out.println(config.doi + " is not a valid DOI");
+      }
     }
 
-    // Should we try to fix those DOI ?
-    if(config.fixDOI){
-      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult) {
-        // waiting for code review
-        // fixFailedStatusDoi(d);
-      }
+    //List<DOIGbifDataciteDiagnostic> datasetDiagnosticResult = runDOIStatusDiagnostic(DoiType.DATASET);
+
+//    System.out.println("DOI:" + config.doi);
+//
+//    if(config.printReport) {
+//      printFailedStatusDoiReport(datasetDiagnosticResult);
+//    }
+//
+//    // Should we try to fix those DOI ?
+//    if(config.fixDOI){
+//      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult) {
+//        // waiting for code review
+//        // fixFailedStatusDoi(d);
+//      }
+//    }
+  }
+
+  private void reportDOIStatus(DOI doi){
+    GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
+
+    if(doiDiagnostic != null){
+      diagnosticPrinter.printReport(doiDiagnostic);
+    }
+    else{
+      System.out.println("No report can be generated. Nothing found for DOI " + doi);
+    }
+  }
+
+  private void sendDOIMessage(DOI doi){
+    DoiType doiType = doiPersistenceService.getType(doi);
+    if(doiType == null){
+      return;
+    }
+
+    switch (doiType){
+      case DATASET: reapplyDatasetDOIStrategy(doi);
+        break;
+      case DOWNLOAD:
     }
   }
 
   /**
-   * Print in the console a diagnostic report based on the diagnostic results.
-   *
-   * @param diagnosticResult
+   * Re-apply the DataCite DOI handling strategy if possible.
+   * @param doi
+   * @return DataCite DOI handling strategy applied?
    */
-  private void printFailedStatusDoiReport(List<DOIGbifDataciteDiagnostic> diagnosticResult){
-    for(DOIGbifDataciteDiagnostic result : diagnosticResult ){
-      if(result.isLinkedToASingleDataset()){
-        System.out.println("------ Failed DOI: " + result.getDoi().getDoiName() + "------");
-        System.out.println("Dataset key: " + result.getRelatedDataset().getKey());
-        System.out.println("DOI found at Datacite?: " + result.isDoiExistsAtDatacite());
-        if(result.isDoiExistsAtDatacite()) {
-          System.out.println("DOI Status at Datacite?: " + result.getDataciteDoiStatus());
-          System.out.println("Datacite Metadata equals?: " + result.isMetadataEquals());
-          System.out.println("Datacite target URI: " + result.getDataciteTarget());
-        }
-        System.out.println("Is current Dataset DOI?: " +result.isCurrentDOI());
-        System.out.println("Is current Dataset DOI a GBIF DOI?: " +
-                result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX));
-        System.out.println("-------------------------------------------");
-      }
-      else{
-        if(result.getRelatedDatasetList() != null && result.getRelatedDatasetList().size() != 0){
-          System.out.println("------ DOI used by multiple datasets: " + result.getDoi().getDoiName() + "------");
-          for(Dataset dataset : result.getRelatedDatasetList()){
-            System.out.println("Dataset key: " + dataset.getKey());
-          }
-        }
-        else {
-          System.out.println("No dataset found: " + result.getDoi());
-        }
-      }
+  private boolean reapplyDatasetDOIStrategy(DOI doi){
+    Preconditions.checkNotNull(doi, "DOI can't be null");
+
+    List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
+    if(datasets.isEmpty()){
+      return false;
     }
-    System.out.println("Total number of datasets: " + diagnosticResult.size());
+
+    Dataset firstDataset = datasets.iterator().next();
+    if(datasets.size() == 1 && doi.equals(firstDataset.getDoi())){
+      dataCiteDoiHandlerStrategy.datasetChanged(firstDataset, null);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Re-apply the Download DOI strategy from dataCiteDoiHandlerStrategy.
+   * @param doi
+   * @return success or not
+   */
+  private boolean reapplyDownloadDOIStrategy(DOI doi){
+
+    Preconditions.checkNotNull(doi, "DOI can't be null");
+
+    Download download = downloadMapper.getByDOI(doi);
+    if(download == null){
+      return false;
+    }
+
+    // only handle download with status SUCCEEDED
+    if(!Download.Status.SUCCEEDED.equals(download.getStatus())){
+      return false;
+    }
+
+    //retrieve User
+    String creatorName = download.getRequest().getCreator();
+    User user = userService.get(creatorName);
+
+    dataCiteDoiHandlerStrategy.downloadChanged(download, null, user);
+    return true;
   }
 
   /**
@@ -131,7 +192,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
    * @return
    */
   private boolean compareMetadataWithDatacite(DOI doi){
-    String registryDoiMetadata = doiMapper.getMetadata(doi);
+    String registryDoiMetadata = doiPersistenceService.getMetadata(doi);
     String dataciteDoiMetadata = null;
     try {
       dataciteDoiMetadata = dataCiteService.getMetadata(doi);
@@ -142,23 +203,23 @@ public class DoiSynchronizerCommand extends BaseCommand {
   }
 
   /**
-   * Try to fix a DOI based on the {@link DOIGbifDataciteDiagnostic}.
+   * Try to fix a DOI based on the {@link GbifDOIDiagnosticResult}.
    *
    *
    *
    * @param result
    */
-  private void fixFailedStatusDoi(DOIGbifDataciteDiagnostic result){
+  private void fixFailedStatusDoi(GbifDOIDiagnosticResult result){
 
-    if(result.getRelatedDataset() != null){
-      if(result.isCurrentDOI()){
-        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), null);
-        System.out.println("datasetChanged triggered on dataCiteDoiHandlerStrategy");
-      }
-      else{
-        System.out.println("not implemented yet");
-
-      }
+//    if(result.getRelatedDataset() != null){
+//      if(result.isCurrentDOI()){
+//        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), null);
+//        System.out.println("datasetChanged triggered on dataCiteDoiHandlerStrategy");
+//      }
+//      else{
+//        System.out.println("not implemented yet");
+//
+//      }
 //      if(!result.isCurrentDOI() && !result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX)){
 //        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), result.getDoi());
 //        //dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
@@ -169,7 +230,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
 //      }
      // scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
      // System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
-    }
+//    }
   }
 
   /**
@@ -178,14 +239,14 @@ public class DoiSynchronizerCommand extends BaseCommand {
    * @param doiType
    *
    */
-  private List<DOIGbifDataciteDiagnostic> runDOIStatusDiagnostic(DoiType doiType){
-    List<DOIGbifDataciteDiagnostic> list = Lists.newArrayList();
+  private List<GbifDOIDiagnosticResult> runDOIStatusDiagnostic(DoiType doiType){
+    List<GbifDOIDiagnosticResult> list = Lists.newArrayList();
     //get all the DOI with the FAILED status. Note that they are all GBIF assigned DOI.
-    List<Map<String,Object>> failedDoiList = doiMapper.list(DoiStatus.FAILED, doiType, null);
+    List<Map<String,Object>> failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, doiType, null);
     DOI doi;
     for(Map<String,Object> failedDoi : failedDoiList ) {
       doi = new DOI((String) failedDoi.get("doi"));
-      list.add(runDOIGbifDataciteDiagnostic(doi));
+      list.add(generateGbifDOIDiagnostic(doi));
     }
     return list;
   }
@@ -196,26 +257,33 @@ public class DoiSynchronizerCommand extends BaseCommand {
    * @param doi
    * @return
    */
-  private DOIGbifDataciteDiagnostic runDOIGbifDataciteDiagnostic(DOI doi) {
+  private GbifDOIDiagnosticResult generateGbifDOIDiagnostic(DOI doi) {
+    GbifDOIDiagnosticResult doiGbifDataciteDiagnostic = null;
 
-    DOIGbifDataciteDiagnostic doiGbifDataciteDiagnostic = new DOIGbifDataciteDiagnostic(doi);
+    DoiType doiType = doiPersistenceService.getType(doi);
+    if(doiType != null) {
+      switch (doiType) {
+        case DATASET:
+          doiGbifDataciteDiagnostic = createGbifDOIDatasetDiagnostic(doi);
+          break;
+        case DOWNLOAD:
+          doiGbifDataciteDiagnostic = createGbifDOIDownloadDiagnostic(doi);
+          break;
+        default:
+      }
+    }
+
+    if(doiGbifDataciteDiagnostic == null){
+      return null;
+    }
+
+    DoiData doiData = doiPersistenceService.get(doi);
+    doiGbifDataciteDiagnostic.setDoiData(doiData);
+
     try {
       doiGbifDataciteDiagnostic.setDoiExistsAtDatacite(dataCiteService.exists(doi));
     } catch (DoiException e) {
       LOG.warn("Can not check existence of DOI " + doi.getDoiName(), e);
-    }
-
-    List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
-    //Could they conflict??
-    if(!datasets.isEmpty()) {
-      doiGbifDataciteDiagnostic.setRelatedDataset(datasets);
-    }
-    else{
-      doiGbifDataciteDiagnostic.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
-    }
-
-    if(doiGbifDataciteDiagnostic.isLinkedToASingleDataset()){
-      doiGbifDataciteDiagnostic.setIsCurrentDOI(doi.equals(doiGbifDataciteDiagnostic.getRelatedDataset().getDoi()));
     }
 
     if(doiGbifDataciteDiagnostic.isDoiExistsAtDatacite()) {
@@ -232,88 +300,32 @@ public class DoiSynchronizerCommand extends BaseCommand {
     return doiGbifDataciteDiagnostic;
   }
 
-  /**
-   * Contains all the result from the diagnostic of a single DOI.
-   *
-   */
-  private static class DOIGbifDataciteDiagnostic {
+  private GbifDOIDiagnosticResult createGbifDOIDatasetDiagnostic(DOI doi) {
+    GbifDatasetDOIDiagnosticResult datasetDiagnosticResult = new GbifDatasetDOIDiagnosticResult(doi);
 
-    private DOI doi;
-    private List<Dataset> relatedDataset;
-
-    private boolean doiExistsAtDatacite;
-
-    private DoiStatus dataciteDoiStatus;
-
-    private URI dataciteTarget;
-    private boolean metadataEquals;
-
-    private boolean isCurrentDOI;
-
-    public DOIGbifDataciteDiagnostic(DOI doi){
-      this.doi = doi;
+    List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
+    //Could they conflict??
+    if(!datasets.isEmpty()) {
+      datasetDiagnosticResult.setRelatedDataset(datasets);
+    }
+    else{
+      datasetDiagnosticResult.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
     }
 
-    public DOI getDoi(){
-      return doi;
+    if(datasetDiagnosticResult.isLinkedToASingleDataset()){
+      datasetDiagnosticResult.setIsCurrentDOI(doi.equals(datasetDiagnosticResult.getRelatedDataset().getDoi()));
     }
 
-    public List<Dataset> getRelatedDatasetList() {
-      return relatedDataset;
-    }
-
-    public boolean isLinkedToASingleDataset(){
-      return relatedDataset != null && relatedDataset.size() == 1;
-    }
-
-    public Dataset getRelatedDataset() {
-      Preconditions.checkArgument(relatedDataset.size() == 1,
-              "This method can only be used when there is a single related dataset");
-      return relatedDataset.get(0);
-    }
-
-    public void setRelatedDataset(List<Dataset> relatedDataset) {
-      this.relatedDataset = relatedDataset;
-    }
-
-    public boolean isDoiExistsAtDatacite() {
-      return doiExistsAtDatacite;
-    }
-
-    public void setDoiExistsAtDatacite(boolean doiExistsAtDatacite) {
-      this.doiExistsAtDatacite = doiExistsAtDatacite;
-    }
-
-    public boolean isMetadataEquals() {
-      return metadataEquals;
-    }
-
-    public void setMetadataEquals(boolean metadataEquals) {
-      this.metadataEquals = metadataEquals;
-    }
-
-    public boolean isCurrentDOI() {
-      return isCurrentDOI;
-    }
-
-    public void setIsCurrentDOI(boolean isCurrentDOI) {
-      this.isCurrentDOI = isCurrentDOI;
-    }
-
-    public DoiStatus getDataciteDoiStatus() {
-      return dataciteDoiStatus;
-    }
-
-    public void setDataciteDoiStatus(DoiStatus dataciteDoiStatus) {
-      this.dataciteDoiStatus = dataciteDoiStatus;
-    }
-
-    public URI getDataciteTarget() {
-      return dataciteTarget;
-    }
-
-    public void setDataciteTarget(URI dataciteTarget) {
-      this.dataciteTarget = dataciteTarget;
-    }
+    return datasetDiagnosticResult;
   }
+
+  private GbifDOIDiagnosticResult createGbifDOIDownloadDiagnostic(DOI doi) {
+    GbifDownloadDOIDiagnosticResult downloadDiagnosticResult = new GbifDownloadDOIDiagnosticResult(doi);
+
+    Download download = downloadMapper.getByDOI(doi);
+    downloadDiagnosticResult.setDownload(download);
+
+    return downloadDiagnosticResult;
+  }
+
 }

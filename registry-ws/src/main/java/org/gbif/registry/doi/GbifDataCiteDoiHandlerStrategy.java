@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -135,17 +136,18 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   /**
    * Updates the download DOI according to the download status.
    * If the download succeeded its DOI is registered; if the download status is one the FAILED_STATES
-   * the DOI is removed, otherwise doesn't nothing.
+   * the DOI is removed, otherwise does nothing.
    */
   @Override
   public void downloadChanged(Download download, Download previousDownload, User user) {
-    if (download.isAvailable() && previousDownload.getStatus() != Download.Status.SUCCEEDED) {
+    Preconditions.checkNotNull(download, "download can not be null");
+
+    if (download.isAvailable() && (previousDownload == null || previousDownload.getStatus() != Download.Status.SUCCEEDED)) {
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download, user), download.getKey());
       } catch (Exception error) {
         LOG.error(DOI_SMTP, "Invalid metadata for download {} with doi {} ", download.getKey(), download.getDoi(), error);
       }
-
     } else if (FAILED_STATES.contains(download.getStatus())) {
       doiGenerator.delete(download.getDoi());
     }

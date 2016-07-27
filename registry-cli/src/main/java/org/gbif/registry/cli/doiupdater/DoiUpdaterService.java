@@ -1,7 +1,8 @@
-package org.gbif.registry.cli;
+package org.gbif.registry.cli.doiupdater;
 
 import org.gbif.common.messaging.MessageListener;
-import org.gbif.registry.cli.configuration.DoiUpdaterConfiguration;
+import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import com.google.common.util.concurrent.AbstractIdleService;
@@ -26,10 +27,12 @@ public class DoiUpdaterService extends AbstractIdleService {
   protected void startUp() throws Exception {
     config.ganglia.start();
 
-    Injector inj = Guice.createInjector(config.db.createMyBatisModule());
+    Injector inj = Guice.createInjector(
+      new RegistryMyBatisModule(config.registry.toRegistryProperties()));
+
     listener = new MessageListener(config.messaging.getConnectionParameters());
     listener.listen(config.queueName, 1,
-      new DoiUpdateListener(config.datacite.createService(), inj.getInstance(DoiMapper.class), config.timeToRetryInMs));
+      new DoiUpdateListener(CommonBuilder.createDataCiteService(config.datacite), inj.getInstance(DoiMapper.class), config.timeToRetryInMs));
   }
 
   @Override

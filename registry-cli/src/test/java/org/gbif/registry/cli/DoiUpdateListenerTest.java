@@ -8,6 +8,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiExistsException;
 import org.gbif.doi.service.DoiService;
+import org.gbif.registry.cli.doiupdater.DoiUpdateListener;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;

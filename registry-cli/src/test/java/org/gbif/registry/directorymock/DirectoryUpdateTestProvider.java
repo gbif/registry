@@ -2,7 +2,6 @@ package org.gbif.registry.directorymock;
 
 import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
-import org.gbif.registry.cli.directoryupdate.DirectoryUpdateConfiguration;
 import org.gbif.registry.directorymock.mapper.RegistryIdentifierMockMapper;
 import org.gbif.registry.directorymock.mapper.RegistryNodeMockMapper;
 import org.gbif.registry.directorymock.service.NodeServiceMock;
@@ -15,38 +14,18 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Provider that exposes generated test Injector.
  */
 public class DirectoryUpdateTestProvider {
 
-  private static Injector injClient;
-  private static Injector injMyBatis;
-
-  public static DirectoryUpdateConfiguration getMockDirectoryUpdateConfiguration(){
-
-    DirectoryUpdateConfiguration directoryUpdateConfiguration = mock(DirectoryUpdateConfiguration.class);
-    when(directoryUpdateConfiguration.createInjector()).thenReturn(getMockInjector());
-    when(directoryUpdateConfiguration.createMyBatisInjector()).thenReturn(getMyBatisInjector());
-
-    return directoryUpdateConfiguration;
-  }
+  private static Injector injector;
 
   public static Injector getMockInjector() {
-    if( injClient == null) {
-      injClient = Guice.createInjector(new DirectoryMockModule());
+    if( injector == null) {
+      injector = Guice.createInjector(new DirectoryMockModule(), new RegistryMyBatisMockModule());
     }
-    return injClient;
-  }
-
-  public static Injector getMyBatisInjector(){
-    if( injMyBatis == null ){
-      injMyBatis = Guice.createInjector(new RegistryMyBatisMockModule());
-    }
-    return injMyBatis;
+    return injector;
   }
 
   /**

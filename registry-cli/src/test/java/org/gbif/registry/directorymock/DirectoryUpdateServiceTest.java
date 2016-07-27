@@ -31,17 +31,13 @@ public class DirectoryUpdateServiceTest {
   @Test
   public void testDirectoryUpdate(){
 
-    DirectoryUpdateConfiguration cfg = DirectoryUpdateTestProvider
-            .getMockDirectoryUpdateConfiguration();
+    Injector mockInjector = DirectoryUpdateTestProvider.getMockInjector();
 
-    DirectoryUpdateService serviceUnderTest = new DirectoryUpdateService(cfg);
+    DirectoryUpdateService serviceUnderTest = new DirectoryUpdateService(new DirectoryUpdateConfiguration(), mockInjector);
 
-    Injector registryInj = DirectoryUpdateTestProvider.getMyBatisInjector();
-    RegistryNodeMockMapper nodeMapper = (RegistryNodeMockMapper)registryInj.getInstance(NodeMapper.class);
-
-    Injector directoryUpdaterInj = DirectoryUpdateTestProvider.getMockInjector();
-    ParticipantServiceMock directoryParticipantService = (ParticipantServiceMock)directoryUpdaterInj.getInstance(ParticipantService.class);
-    NodeServiceMock directoryNodeService = (NodeServiceMock)directoryUpdaterInj.getInstance(org.gbif.api.service.directory.NodeService.class);
+    RegistryNodeMockMapper nodeMapper = (RegistryNodeMockMapper)mockInjector.getInstance(NodeMapper.class);
+    ParticipantServiceMock directoryParticipantService = (ParticipantServiceMock)mockInjector.getInstance(ParticipantService.class);
+    NodeServiceMock directoryNodeService = (NodeServiceMock)mockInjector.getInstance(org.gbif.api.service.directory.NodeService.class);
 
     //generate and set mock data
     List<Participant> mockParticipants = Lists.newArrayList(MockDataGenerator.generateDirectoryParticipant("P 1", 1),
@@ -81,18 +77,14 @@ public class DirectoryUpdateServiceTest {
   @Test
   public void testDirectoryCreate(){
 
-    DirectoryUpdateConfiguration cfg = DirectoryUpdateTestProvider
-            .getMockDirectoryUpdateConfiguration();
+    Injector mockInjector = DirectoryUpdateTestProvider.getMockInjector();
+    DirectoryUpdateService serviceUnderTest = new DirectoryUpdateService(new DirectoryUpdateConfiguration(), mockInjector);
 
-    DirectoryUpdateService serviceUnderTest = new DirectoryUpdateService(cfg);
+    RegistryNodeMockMapper nodeMapper = (RegistryNodeMockMapper)mockInjector.getInstance(NodeMapper.class);
+    RegistryIdentifierMockMapper identifierMapper = (RegistryIdentifierMockMapper)mockInjector.getInstance(IdentifierMapper.class);
 
-    Injector registryInj = DirectoryUpdateTestProvider.getMyBatisInjector();
-    RegistryNodeMockMapper nodeMapper = (RegistryNodeMockMapper)registryInj.getInstance(NodeMapper.class);
-    RegistryIdentifierMockMapper identifierMapper = (RegistryIdentifierMockMapper)registryInj.getInstance(IdentifierMapper.class);
-
-    Injector directoryUpdaterInj = DirectoryUpdateTestProvider.getMockInjector();
-    ParticipantServiceMock directoryParticipantService = (ParticipantServiceMock)directoryUpdaterInj.getInstance(ParticipantService.class);
-    NodeServiceMock directoryNodeService = (NodeServiceMock)directoryUpdaterInj.getInstance(org.gbif.api.service.directory.NodeService.class);
+    ParticipantServiceMock directoryParticipantService = (ParticipantServiceMock)mockInjector.getInstance(ParticipantService.class);
+    NodeServiceMock directoryNodeService = (NodeServiceMock)mockInjector.getInstance(org.gbif.api.service.directory.NodeService.class);
 
     //generate and set mock data
     List<Participant> mockParticipants = Lists.newArrayList(MockDataGenerator.generateDirectoryParticipant("P 1", 1),

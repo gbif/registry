@@ -1,4 +1,4 @@
-package org.gbif.registry.cli;
+package org.gbif.registry.cli.doiupdater;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
