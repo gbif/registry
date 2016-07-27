@@ -19,6 +19,7 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface DoiMapper extends DoiPersistenceService {
   DoiData get (@Param("doi") DOI doi);
+  DoiType getType (@Param("doi") DOI doi);
   List<Map<String, Object>> list (@Nullable @Param("status") DoiStatus status, @Nullable @Param("type") DoiType type,
                                   @Nullable @Param("page") Pageable page);
   String getMetadata(@Param("doi") DOI doi);

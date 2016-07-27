@@ -16,6 +16,8 @@ public interface DoiPersistenceService {
 
   DoiData get(DOI doi);
 
+  DoiType getType (DOI doi);
+
   String getMetadata(DOI doi);
 
   List<Map<String, Object>> list(@Nullable DoiStatus status, @Nullable DoiType type,

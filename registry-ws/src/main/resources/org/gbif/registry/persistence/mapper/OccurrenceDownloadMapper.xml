@@ -60,7 +60,7 @@
   <select id="getByDOI" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
-    WHERE key = #{doi,jdbcType=VARCHAR}
+    WHERE doi = #{doi,jdbcType=VARCHAR}
   </select>
 
   <insert id="create" parameterType="Download">

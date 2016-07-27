@@ -16,7 +16,6 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
-import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 
 import java.net.URI;
@@ -33,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * Assemble the classes related to DOI.
- * Requires an existing MessagePublisher, DoiMapper, OrganizationService, OccurrenceDownloadResource,
+ * Requires an existing MessagePublisher, DoiPersistenceService, OrganizationService, OccurrenceDownloadResource,
  * TitleLookup being bound.
  */
 public class DoiModule extends PrivateModule {
@@ -49,9 +48,6 @@ public class DoiModule extends PrivateModule {
 
     // Bind the OccurrenceDownloadResource as OccurrenceDownloadService
     bind(OccurrenceDownloadService.class).to(OccurrenceDownloadResource.class).in(Scopes.SINGLETON);
-
-    // Bind the DoiMapper as DoiPersistenceService
-    bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
 
     bind(String.class).annotatedWith(Names.named("doi.prefix")).toInstance(properties.getProperty("doi.prefix"));
     bind(URI.class).annotatedWith(Names.named("portal.url")).toInstance(URI.create(properties.getProperty("portal.url")));

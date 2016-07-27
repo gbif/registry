@@ -43,6 +43,8 @@ import org.gbif.mybatis.type.StringArrayTypeHandler;
 import org.gbif.mybatis.type.UriArrayTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.registry.doi.DoiPersistenceService;
+import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -69,6 +71,8 @@ import org.gbif.service.guice.PrivateServiceModule;
 import java.net.URI;
 import java.util.Properties;
 import java.util.UUID;
+
+import com.google.inject.Scopes;
 
 /**
  * Sets up the persistence layer using the properties supplied.
@@ -139,6 +143,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("MetasyncHistory").to(MetasyncHistory.class);
       addAlias("DoiData").to(DoiData.class);
       addAlias("DOI").to(DOI.class);
+      addAlias("DoiType").to(DoiType.class);
       addAlias("Pageable").to(Pageable.class);
       addAlias("UUID").to(UUID.class);
       addAlias("Country").to(Country.class);
@@ -199,6 +204,10 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(MetasyncHistoryMapper.class);
     expose(UserRightsMapper.class);
     expose(DoiMapper.class);
+
+    // Bind the DoiMapper as DoiPersistenceService
+    bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
+    expose(DoiPersistenceService.class);
   }
 
 }

@@ -37,6 +37,12 @@
     WHERE doi = #{doi,jdbcType=OTHER}
   </select>
 
+  <select id="getType" resultType="DoiType">
+    SELECT type
+    FROM gbif_doi
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </select>
+
   <insert id="create" parameterType="map" useGeneratedKeys="false">
     INSERT INTO gbif_doi (doi, type, status)
     VALUES(#{doi,jdbcType=OTHER}, #{type,jdbcType=OTHER}, 'NEW')
