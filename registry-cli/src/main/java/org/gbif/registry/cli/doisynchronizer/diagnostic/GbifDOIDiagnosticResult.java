@@ -23,7 +23,6 @@ public abstract class GbifDOIDiagnosticResult {
   private DoiStatus dataciteDoiStatus;
   private URI dataciteTarget;
   private boolean metadataEquals;
-  private boolean isCurrentDOI;
 
   /**
    * Mechanism to let concrete classes provide contextual content to the diagnostic
@@ -61,14 +60,6 @@ public abstract class GbifDOIDiagnosticResult {
 
   public void setMetadataEquals(boolean metadataEquals) {
     this.metadataEquals = metadataEquals;
-  }
-
-  public boolean isCurrentDOI() {
-    return isCurrentDOI;
-  }
-
-  public void setIsCurrentDOI(boolean isCurrentDOI) {
-    this.isCurrentDOI = isCurrentDOI;
   }
 
   public DoiStatus getDataciteDoiStatus() {

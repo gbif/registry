@@ -19,6 +19,7 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
   private static final Joiner JOINER = Joiner.on(',');
   private List<Dataset> relatedDataset;
+  private boolean isCurrentDOI;
 
   public GbifDatasetDOIDiagnosticResult(DOI doi){
     super(doi);
@@ -42,6 +43,14 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
     this.relatedDataset = relatedDataset;
   }
 
+  public boolean isCurrentDOI() {
+    return isCurrentDOI;
+  }
+
+  public void setIsCurrentDOI(boolean isCurrentDOI) {
+    this.isCurrentDOI = isCurrentDOI;
+  }
+
   public List<String> getContextInformation(){
 
     List<String> contextInformation = Lists.newArrayList();
@@ -61,6 +70,9 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
     if(!isLinkedToASingleDataset()){
       contextInformation.add("WARNING: DOI used by multiple datasets");
+    }
+    else{
+      contextInformation.add("Is current DOI?: " + isCurrentDOI());
     }
     return contextInformation;
   }

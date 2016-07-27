@@ -37,8 +37,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This Command allows to print a report of all DOI with the FAILED status and/or fix them.
- * Currently limited to Dataset.
- * There is currently no way to specify a single DOI through the command line.
  *
  */
 @MetaInfServices(Command.class)
@@ -86,33 +84,25 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     setup();
 
-    if(StringUtils.isNotBlank(config.doi)){
+    if (StringUtils.isNotBlank(config.doi)) {
       try {
         DOI doi = new DOI(config.doi);
         reportDOIStatus(doi);
-      }
-      catch (IllegalArgumentException iaEx){
+
+        if (config.fixDOI) {
+          System.out.println("Attempt to fix DOI " + doi.getDoiName());
+          System.out.println("Attempt result: " + (tryFixDOI(doi) ? "success" : "failed"));
+        }
+      } catch (IllegalArgumentException iaEx) {
         System.out.println(config.doi + " is not a valid DOI");
       }
     }
-
-    //List<DOIGbifDataciteDiagnostic> datasetDiagnosticResult = runDOIStatusDiagnostic(DoiType.DATASET);
-
-//    System.out.println("DOI:" + config.doi);
-//
-//    if(config.printReport) {
-//      printFailedStatusDoiReport(datasetDiagnosticResult);
-//    }
-//
-//    // Should we try to fix those DOI ?
-//    if(config.fixDOI){
-//      for(DOIGbifDataciteDiagnostic d : datasetDiagnosticResult) {
-//        // waiting for code review
-//        // fixFailedStatusDoi(d);
-//      }
-//    }
   }
 
+  /**
+   * Report the current status of a DOI
+   * @param doi
+   */
   private void reportDOIStatus(DOI doi){
     GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
 
@@ -124,17 +114,22 @@ public class DoiSynchronizerCommand extends BaseCommand {
     }
   }
 
-  private void sendDOIMessage(DOI doi){
+  /**
+   * Try to fix a DOI if possible
+   * @param doi
+   * @return
+   */
+  private boolean tryFixDOI(DOI doi){
     DoiType doiType = doiPersistenceService.getType(doi);
     if(doiType == null){
-      return;
+      return false;
     }
 
     switch (doiType){
-      case DATASET: reapplyDatasetDOIStrategy(doi);
-        break;
-      case DOWNLOAD:
+      case DATASET: return reapplyDatasetDOIStrategy(doi);
+      case DOWNLOAD: return reapplyDownloadDOIStrategy(doi);
     }
+    return false;
   }
 
   /**
@@ -174,12 +169,18 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
     // only handle download with status SUCCEEDED
     if(!Download.Status.SUCCEEDED.equals(download.getStatus())){
+      LOG.error("Download with DOI {} status is {}", doi, download.getStatus());
       return false;
     }
 
     //retrieve User
     String creatorName = download.getRequest().getCreator();
     User user = userService.get(creatorName);
+
+    if(user == null){
+      LOG.error("No user with creator name {} can be found", creatorName);
+      return false;
+    }
 
     dataCiteDoiHandlerStrategy.downloadChanged(download, null, user);
     return true;

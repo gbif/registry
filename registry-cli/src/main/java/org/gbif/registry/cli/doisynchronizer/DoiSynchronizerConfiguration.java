@@ -25,14 +25,6 @@ public class DoiSynchronizerConfiguration {
   @NotNull
   public String apiRoot;
 
-  @Parameter(names = {"--print-report"}, required = false)
-  @Valid
-  public boolean printReport = true;
-
-  @Parameter(names = {"--fix-doi"}, required = false)
-  @Valid
-  public boolean fixDOI = false;
-
   @Valid
   @NotNull
   public DbConfiguration registry = new DbConfiguration();
@@ -56,5 +48,8 @@ public class DoiSynchronizerConfiguration {
   @NotNull
   public String doi = "";
 
+  @Parameter(names = {"--fix-doi"}, required = false)
+  @Valid
+  public boolean fixDOI = false;
 
 }
