@@ -7,12 +7,12 @@ messaging:
 ganglia:
   host: b5g2.gbif.org
   port: 8649
-db:
+registry:
   serverName: pg1.gbif-dev.org
   databaseName: dev_registry
-  user: registry
-  password: h56jebHD6h
+  user: user
+  password: pw
 datacite:
-  username: DK.GBIF
-  password: gbif1234
+  username: dataciteuser
+  password: datacitepassword
 
