@@ -1,10 +1,8 @@
-package org.gbif.registry.directorymock;
+package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.model.directory.Node;
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.service.directory.ParticipantService;
-import org.gbif.registry.cli.directoryupdate.DirectoryUpdateConfiguration;
-import org.gbif.registry.cli.directoryupdate.DirectoryUpdateService;
 import org.gbif.registry.directorymock.mapper.RegistryIdentifierMockMapper;
 import org.gbif.registry.directorymock.mapper.RegistryNodeMockMapper;
 import org.gbif.registry.directorymock.service.NodeServiceMock;

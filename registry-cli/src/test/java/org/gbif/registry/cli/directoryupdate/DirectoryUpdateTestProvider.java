@@ -1,4 +1,4 @@
-package org.gbif.registry.directorymock;
+package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;

@@ -1,4 +1,4 @@
-package org.gbif.registry.directorymock.mapper;
+package org.gbif.registry.cli.directoryupdate.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
