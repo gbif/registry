@@ -313,10 +313,6 @@ public class DoiSynchronizerCommand extends BaseCommand {
       datasetDiagnosticResult.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
     }
 
-    if(datasetDiagnosticResult.isLinkedToASingleDataset()){
-      datasetDiagnosticResult.setIsCurrentDOI(doi.equals(datasetDiagnosticResult.getRelatedDataset().getDoi()));
-    }
-
     return datasetDiagnosticResult;
   }
 

@@ -29,6 +29,7 @@ public class DoiDiagnosticPrinter {
       out.println("Datacite Metadata equals?: " + result.isMetadataEquals());
       out.println("Datacite target URI: " + result.getDataciteTarget());
     }
+    out.println("------------");
   }
 
 }

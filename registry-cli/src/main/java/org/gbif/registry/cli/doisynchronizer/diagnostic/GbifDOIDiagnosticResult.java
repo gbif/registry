@@ -16,13 +16,13 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public abstract class GbifDOIDiagnosticResult {
 
-  private DOI doi;
-  private DoiData doiData;
+  protected DOI doi;
+  protected DoiData doiData;
 
-  private boolean doiExistsAtDatacite;
-  private DoiStatus dataciteDoiStatus;
-  private URI dataciteTarget;
-  private boolean metadataEquals;
+  protected boolean doiExistsAtDatacite;
+  protected DoiStatus dataciteDoiStatus;
+  protected URI dataciteTarget;
+  protected boolean metadataEquals;
 
   /**
    * Mechanism to let concrete classes provide contextual content to the diagnostic
