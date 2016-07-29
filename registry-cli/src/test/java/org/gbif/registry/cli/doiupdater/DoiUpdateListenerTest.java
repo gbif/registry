@@ -8,7 +8,6 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiExistsException;
 import org.gbif.doi.service.DoiService;
-import org.gbif.registry.cli.doiupdater.DoiUpdateListener;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
@@ -22,6 +21,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DoiUpdateListenerTest {
+
+  @Test
+  public void testHandleMessage() throws Exception {
+    DOI testDOI = new DOI("10.5072/1234");
+    DoiMapper doiMapper = mock(DoiMapper.class);
+    when(doiMapper.get(any(DOI.class))).thenReturn(new DoiData(DoiStatus.NEW, null));
+
+    MockImpl mockService = new MockImpl();
+    DoiUpdateListener listener = new DoiUpdateListener(mockService, doiMapper, 10);
+    ChangeDoiMessage msg = new ChangeDoiMessage(DoiStatus.REGISTERED,
+            testDOI, "", URI.create("http:??gbif.org"));
+    listener.handleMessage(msg);
+    assertEquals(testDOI, mockService.getLastRegisteredDOI());
+  }
 
   class MockImpl implements DoiService {
 
@@ -88,18 +101,6 @@ public class DoiUpdateListenerTest {
     }
   }
 
-  @Test
-  public void testHandleMessage() throws Exception {
-    DOI testDOI = new DOI("10.5072/1234");
-    DoiMapper doiMapper = mock(DoiMapper.class);
-    when(doiMapper.get(any(DOI.class))).thenReturn(new DoiData(DoiStatus.NEW, null));
 
-    MockImpl mockService = new MockImpl();
-    DoiUpdateListener listener = new DoiUpdateListener(mockService, doiMapper, 10);
-    ChangeDoiMessage msg = new ChangeDoiMessage(DoiStatus.REGISTERED,
-            testDOI, "", URI.create("http:??gbif.org"));
-    listener.handleMessage(msg);
-    assertEquals(testDOI, mockService.getLastRegisteredDOI());
-  }
 
 }
