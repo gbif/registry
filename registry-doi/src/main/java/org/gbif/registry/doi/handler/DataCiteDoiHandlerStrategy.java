@@ -17,6 +17,12 @@ import javax.annotation.Nullable;
 public interface DataCiteDoiHandlerStrategy {
 
   /**
+   * Tells is a DOI is using a predefined prefix.
+   * @return
+   */
+  boolean isUsingMyPrefix(DOI doi);
+
+  /**
    * Build the DataCiteMetadata for a Download.
    *
    * @param download

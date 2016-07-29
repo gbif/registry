@@ -20,8 +20,18 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
   private static final Joiner JOINER = Joiner.on(',');
   private List<Dataset> relatedDataset;
 
+  private boolean doiIsInAlternateIdentifiers;
+
   public GbifDatasetDOIDiagnosticResult(DOI doi){
     super(doi);
+  }
+
+  public boolean isDoiIsInAlternateIdentifiers() {
+    return doiIsInAlternateIdentifiers;
+  }
+
+  public void setDoiIsInAlternateIdentifiers(boolean doiIsInAlternateIdentifiers) {
+    this.doiIsInAlternateIdentifiers = doiIsInAlternateIdentifiers;
   }
 
   public List<Dataset> getRelatedDatasetList() {
@@ -30,6 +40,12 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
   public boolean isLinkedToASingleDataset(){
     return relatedDataset != null && relatedDataset.size() == 1;
+  }
+
+  public boolean isCurrentDOI(){
+    Preconditions.checkArgument(relatedDataset.size() == 1,
+            "This method can only be used when there is a single related dataset");
+    return doi.equals(getRelatedDataset().getDoi());
   }
 
   public Dataset getRelatedDataset() {
@@ -59,15 +75,17 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
     contextInformation.add("Dataset key: " + JOINER.join(relatedDatasetKeys));
 
-    if(!isLinkedToASingleDataset()){
-      contextInformation.add("WARNING: DOI used by multiple datasets");
-    }
-    else{
-      boolean isCurrentDOI = doi.equals(getRelatedDataset().getDoi());
-      contextInformation.add("Is current DOI?: " + isCurrentDOI);
+    if(isLinkedToASingleDataset()){
+      boolean isCurrentDOI = isCurrentDOI();
+      contextInformation.add("Is current DOI in Dataset table?: " + isCurrentDOI);
       if(!isCurrentDOI) {
         contextInformation.add("Current DOI: " + getRelatedDataset().getDoi().getDoiName());
       }
+      contextInformation.add("DOI (" + doi.getDoiName() + ") is in dataset alternative identifiers?: "
+              + isDoiIsInAlternateIdentifiers());
+    }
+    else{
+      contextInformation.add("WARNING: DOI used by multiple datasets");
     }
     return contextInformation;
   }

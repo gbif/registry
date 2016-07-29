@@ -68,6 +68,11 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   }
 
   @Override
+  public boolean isUsingMyPrefix(DOI doi){
+    return doiGenerator.isGbif(doi);
+  }
+
+  @Override
   public DataCiteMetadata buildMetadata(Download download, User user) {
     List<DatasetOccurrenceDownloadUsage> response = null;
     List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();

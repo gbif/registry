@@ -582,7 +582,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
-      if (oldDoi != null && doiGenerator.isGbif(oldDoi)) {
+      if (oldDoi != null && doiHandlerStrategy.isUsingMyPrefix(oldDoi)) {
         dataset.setDoi(oldDoi);
       } else {
         // we have a non GBIF DOI before that we need to deprecate
@@ -641,7 +641,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     for (Identifier id : existingIds) {
       if (DOI.isParsable(id.getIdentifier())) {
         DOI doi = new DOI(id.getIdentifier());
-        if (doiGenerator.isGbif(doi)) {
+        if (doiHandlerStrategy.isUsingMyPrefix(doi)) {
           // remove from id list and make primary DOI
           LOG.info("Reactivating old GBIF DOI {} for dataset {}", doi, d.getKey());
           datasetMapper.deleteIdentifier(d.getKey(), id.getKey());

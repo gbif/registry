@@ -6,6 +6,7 @@ import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.common.UserService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.cli.BaseCommand;
@@ -145,10 +146,52 @@ public class DoiSynchronizerCommand extends BaseCommand {
       return false;
     }
 
-    Dataset firstDataset = datasets.iterator().next();
-    if(datasets.size() == 1 && doi.equals(firstDataset.getDoi())){
-      dataCiteDoiHandlerStrategy.datasetChanged(firstDataset, null);
-      return true;
+    //only try if we have only 1 Dataset for the DOI
+    if(datasets.size() == 1){
+      Dataset dataset = datasets.iterator().next();
+      DOI datasetDoi = dataset.getDoi();
+      if(doi.equals(datasetDoi)) {
+        dataCiteDoiHandlerStrategy.datasetChanged(dataset, null);
+        return true;
+      }
+      //DOI changed
+      else {
+        // The dataset DOI is not issued by GBIF
+        if(!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)){
+          boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
+          boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
+          // check we are in a known state which means:
+          // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
+          // the logic is applied by the registry
+          if(doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers){
+            dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
+            return true;
+          }
+        }
+        else{
+          LOG.error("Can not handle cases where the DOI changed but the list of alternate identifiers is not updated");
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if a DOI can be found in the list of dataset identifiers.
+   *
+   * @param doi
+   * @param dataset
+   * @return
+   */
+  private boolean isIdentifierDOIFound(DOI doi, Dataset dataset){
+    List<Identifier> identifiers = dataset.getIdentifiers();
+    for(Identifier currentIdentifier : identifiers){
+      if(IdentifierType.DOI.equals(currentIdentifier.getType())){
+        if(currentIdentifier.getIdentifier().equals(doi.toString())){
+          return true;
+        }
+      }
     }
     return false;
   }
@@ -311,6 +354,10 @@ public class DoiSynchronizerCommand extends BaseCommand {
     }
     else{
       datasetDiagnosticResult.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
+    }
+
+    if(datasetDiagnosticResult.isLinkedToASingleDataset()){
+      datasetDiagnosticResult.setDoiIsInAlternateIdentifiers(isIdentifierDOIFound(doi, datasetDiagnosticResult.getRelatedDataset()));
     }
 
     return datasetDiagnosticResult;
