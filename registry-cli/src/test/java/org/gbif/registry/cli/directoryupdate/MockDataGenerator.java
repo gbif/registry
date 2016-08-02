@@ -1,4 +1,4 @@
-package org.gbif.registry.directorymock;
+package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.registry.Identifier;

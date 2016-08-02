@@ -1,4 +1,4 @@
-package org.gbif.registry.directorymock.service;
+package org.gbif.registry.cli.directoryupdate.service;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
