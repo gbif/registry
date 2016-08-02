@@ -15,6 +15,7 @@ import org.xml.sax.SAXException;
 
 /**
  * GBIF Metadata Profile schema validator utility.
+ * Warning: this class should only be used in unit tests, because the validator is not thread safe.
  */
 public class EmlValidator {
   private static final Logger LOG = LoggerFactory.getLogger(EmlValidator.class);
