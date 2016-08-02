@@ -68,6 +68,6 @@
  <dc:rights></dc:rights>
  
  <!-- A legal document giving official permission to do something with the resource. -->
- <dc:license></dc:license>
+ <dc:license>http://creativecommons.org/publicdomain/zero/1.0/legalcode</dc:license>
  
 </metadata>

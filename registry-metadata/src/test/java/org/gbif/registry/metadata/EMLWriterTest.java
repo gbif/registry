@@ -20,7 +20,7 @@ public class EMLWriterTest {
 
   @Test
   public void testWrite() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
     d.setKey(UUID.randomUUID());
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
@@ -28,7 +28,7 @@ public class EMLWriterTest {
 
   @Test
   public void testWriteNullContact() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
     d.setKey(UUID.randomUUID());
     d.getContacts().clear();
     StringWriter writer = new StringWriter();
@@ -37,7 +37,7 @@ public class EMLWriterTest {
 
   @Test
   public void testNullAddress() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/sample.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
     d.setKey(UUID.randomUUID());
     Contact c = d.getContacts().get(0);
     c.getAddress().add(null);
