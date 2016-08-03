@@ -150,7 +150,7 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addBeanPropertySetter("eml/dataset/additionalInfo/para", "additionalInfo");
 
     // License
-    digester.addCallMethod("eml/dataset/intellectualRights/para", "setLicenseAndRights", 2);
+    digester.addCallMethod("eml/dataset/intellectualRights/para", "setLicense", 2);
     digester.addCallParam("eml/dataset/intellectualRights/para/ulink/citetitle", 1);
     digester.addCallParam("eml/dataset/intellectualRights/para/ulink", 0, "url");
 

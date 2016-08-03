@@ -323,14 +323,13 @@ public class DatasetWrapper {
   }
 
   /**
-   * Only sets license and rights fields when a supported or unsupported license detected in machine readable license,
-   * supplied in two parts: URI (ulink@url) and title (ulink/citetite).
+   * Sets license detected from machine readable license supplied in two parts: URI (ulink@url), title (ulink/citetite).
+   * Note only supported and unsupported licenses are set.
    *
    * @param uriString license URI
    * @param title     license title
    */
-  public void setLicenseAndRights(@Nullable String uriString, @Nullable String title) {
-    LOG.debug("Parsing license supplied in two parts: 1) URL: {}, 2) title: {}", uriString, title);
+  public void setLicense(@Nullable String uriString, @Nullable String title) {
     LicenseParser licenseParser = LicenseParser.getInstance();
 
     URI uri = null;
@@ -341,24 +340,19 @@ public class DatasetWrapper {
     }
 
     License license = licenseParser.parseUriThenTitle(uri, title);
+    // TODO ensure license not overwritten by UNSPECIFIED and UNSUPPORTED license in datasetService.insertMetadata()
 
     switch (license) {
       case UNSPECIFIED:
-        LOG.debug("No license detected");
+        LOG.warn("No machine readable license was detected!");
         break;
       case UNSUPPORTED:
-        LOG.debug("Unsupported License detected: {}", license.name());
+        LOG.warn("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
         target.setLicense(license);
-        if (!Strings.isNullOrEmpty(title)) {
-          target.setRights(title);
-        }
         break;
       default:
-        LOG.debug("Supported License detected: {}", license.name());
+        LOG.info("A supported machine readable license was detected: {}", license.name());
         target.setLicense(license);
-        if (!Strings.isNullOrEmpty(license.getLicenseTitle())) {
-          target.setRights(license.getLicenseTitle());
-        }
         break;
     }
   }

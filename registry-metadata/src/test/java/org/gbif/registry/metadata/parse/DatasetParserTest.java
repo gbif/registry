@@ -470,8 +470,8 @@ public class DatasetParserTest {
     assertEquals("Provide data to the whole world.", dataset.getPurpose());
     assertEquals("Where can the additional information possibly come from?!", dataset.getAdditionalInfo());
 
-    // License and rights parsed from intellectualRights
-    // No machine readable license in sample EML, so both license and rights are set to null
+    // Both License and rights are set to null because there was no machine readable license in sample EML
+    // intellectualRights and because dataset rights statements are no longer supported
     assertNull(dataset.getLicense());
     assertNull(dataset.getRights());
 
@@ -516,14 +516,14 @@ public class DatasetParserTest {
   }
 
   /**
-   * Tests parser still sets Dataset.rights equal to title of license when unsupported license is specified in EML.
+   * Tests parser sets Dataset.rights equal to null when unsupported license is specified in EML.
    */
   @Test
   public void testUnsupportedLicenseSet() throws IOException {
     Dataset dataset =
       DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample5-v1.1.xml"));
     assertEquals(License.UNSUPPORTED, dataset.getLicense());
-    assertEquals("Open Data Commons Open Database License (ODbL) 1.0", dataset.getRights());
+    assertNull(dataset.getRights());
   }
 
   /**
@@ -534,7 +534,7 @@ public class DatasetParserTest {
     Dataset dataset =
       DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
-    assertEquals(License.CC_BY_4_0.getLicenseTitle(), dataset.getRights());
+    assertNull(dataset.getRights());
   }
 
   /**
@@ -617,7 +617,7 @@ public class DatasetParserTest {
   private void verifyV11(Dataset dataset) {
     // Tests parser can set License by lookup by license URI, when machine readable license EML is well formatted.
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
-    assertEquals(License.CC_BY_4_0.getLicenseTitle(), dataset.getRights());
+    assertNull(dataset.getRights());
 
     assertEquals(MaintenanceUpdateFrequency.NOT_PLANNED, dataset.getMaintenanceUpdateFrequency());
     assertEquals("Data are updated in uneven intervals.", dataset.getMaintenanceDescription());

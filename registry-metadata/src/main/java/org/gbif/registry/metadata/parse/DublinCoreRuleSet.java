@@ -44,11 +44,11 @@ public class DublinCoreRuleSet extends RuleSetBase {
       digester.addCallMethod("*/created", "setPubDateAsString", 0);
 
       // License parsed from rights?
-      digester.addCallMethod("*/rights", "setLicenseAndRights", 2);
+      digester.addCallMethod("*/rights", "setLicense", 2);
       digester.addCallParam("*/rights", 1);
 
       // License parsed from license?
-      digester.addCallMethod("*/license", "setLicenseAndRights", 2);
+      digester.addCallMethod("*/license", "setLicense", 2);
       digester.addCallParam("*/license", 0);
 
       digester.addCallMethod("*/bibliographicCitation", "addBibCitation", 0);
