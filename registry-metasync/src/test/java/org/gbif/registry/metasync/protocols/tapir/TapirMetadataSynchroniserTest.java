@@ -6,6 +6,7 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.HttpGetMatcher;
 import org.gbif.registry.metasync.util.Constants;
@@ -78,19 +79,50 @@ public class TapirMetadataSynchroniserTest {
     assertThat(syncResult.deletedDatasets).isEmpty();
     assertThat(syncResult.existingDatasets).isEmpty();
     assertThat(syncResult.addedDatasets).hasSize(1);
-    assertThat(syncResult.addedDatasets.get(0).getContacts()).hasSize(2);
-    assertThat(syncResult.addedDatasets.get(0).getMachineTags()).hasSize(2);
-    assertThat(syncResult.addedDatasets.get(0).getDoi()).isEqualTo(new DOI("10.1234/doi"));
+
+    Dataset ds1 = syncResult.addedDatasets.get(0);
+    assertThat(ds1.getTitle()).isEqualTo("Natural History Museum Rotterdam");
+    assertThat(ds1.getLicense()).isNull();
+    assertThat(ds1.getRights()).isNull();
+    assertThat(ds1.getContacts()).hasSize(2);
+    assertThat(ds1.getMachineTags()).hasSize(2);
+    assertThat(ds1.getDoi()).isEqualTo(new DOI("10.1234/doi"));
 
     // Assert the declared record count machine tag was found, and that its value was 167348
     MachineTag count = null;
-    for (MachineTag tag : syncResult.addedDatasets.get(0).getMachineTags()) {
+    for (MachineTag tag : ds1.getMachineTags()) {
       if (tag.getName().equalsIgnoreCase(Constants.DECLARED_COUNT)) {
         count = tag;
       }
     }
     assertThat(count).isNotNull();
     assertThat(Integer.valueOf(count.getValue())).isEqualTo(167348);
+  }
+
+  /**
+   * This tests adding a new Dataset that has been assigned a license detected from the rights field.
+   */
+  @Test
+  public void testAddedDatasetsWithLicense() throws Exception {
+    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr?op=capabilities")))).thenReturn(
+      prepareResponse(200, "tapir/capabilities1.xml"));
+    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr")))).thenReturn(
+      prepareResponse(200, "tapir/metadata2.xml"));
+    when(client.execute(argThat(HttpGetMatcher.matchUrl(
+      "http://localhost/nmr?op=s&t=http%3A%2F%2Frs.gbif.org%2Ftemplates%2Ftapir%2Fdwc%2F1.4%2Fsci_name_range.xml&count=true&start=0&limit=1&lower=AAA&upper=zzz"))))
+      .thenReturn(prepareResponse(200, "tapir/search1.xml"));
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
+    assertThat(syncResult.deletedDatasets).isEmpty();
+    assertThat(syncResult.existingDatasets).isEmpty();
+    assertThat(syncResult.addedDatasets).hasSize(1);
+
+    Dataset ds1 = syncResult.addedDatasets.get(0);
+    assertThat(ds1.getTitle()).isEqualTo("Natural History Museum Rotterdam (2)");
+    assertThat(ds1.getLicense()).isEqualTo(License.CC_BY_4_0);
+    assertThat(ds1.getRights()).isNull();
+    assertThat(ds1.getContacts()).hasSize(2);
+    assertThat(ds1.getMachineTags()).hasSize(2);
+    assertThat(ds1.getDoi()).isEqualTo(new DOI("10.1234/doi"));
   }
 
   @Test

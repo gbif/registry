@@ -9,6 +9,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.util.Constants;
 
@@ -56,6 +57,8 @@ public class RegistryUpdater {
    * Endpoints: only 1 endpoint exists per dataset.
    * </br>
    * Identifiers:
+   * </br>
+   * License: can be overwritten from the metadata response, but only when a supported license was detected.
    *
    * @param result SyncResult
    */
@@ -79,7 +82,25 @@ public class RegistryUpdater {
         existingDataset.setTitle(updated.getTitle());
         existingDataset.setDescription(updated.getDescription());
         existingDataset.setLogoUrl(updated.getLogoUrl());
-        existingDataset.setRights(updated.getRights());
+
+        // rights is deprecated, and should be be overwritten to null
+        existingDataset.setRights(null);
+
+        // only override existing license when a supported license was detected
+        License updatedLicense = (updated.getLicense() == null) ? License.UNSPECIFIED : updated.getLicense();
+        switch (updatedLicense) {
+          case UNSPECIFIED:
+            LOG.warn("License not updated - no machine readable license was detected!");
+            break;
+          case UNSUPPORTED:
+            LOG.warn("License not updated - no supported machine readable license was detected!");
+            break;
+          default:
+            LOG.info("License {} updated from machine readable license detected {}", existingDataset.getLicense(), updatedLicense);
+            existingDataset.setLicense(updatedLicense);
+            break;
+        }
+
         // perform update
         datasetService.update(existingDataset);
 
@@ -195,6 +216,10 @@ public class RegistryUpdater {
       dataset.setPublishingOrganizationKey(result.installation.getOrganizationKey());
       dataset.setInstallationKey(result.installation.getKey());
       dataset.setType(DatasetType.OCCURRENCE);
+
+      // default license to CC-BY 4.0 whenever it hasn't been specified
+      // TODO set license default inside datasetService.create
+      if (dataset.getLicense().equals(License.UNSPECIFIED)) dataset.setLicense(License.CC_BY_4_0);
 
       UUID uuid = datasetService.create(dataset);
       LOG.info("Created new Dataset with id [{}]", uuid);

@@ -19,8 +19,11 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metasync.api.SyncResult;
 
 import java.io.IOException;
@@ -91,6 +94,12 @@ public class BiocaseMetadataSynchroniserTest {
     assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
     assertThat(dataset.getCitation().getText()).isEqualTo("All credit to Markus Doring");
     assertThat(dataset.getDoi()).isNull();
+
+    // License set to UNSPECIFIED because no machine readable license detected in metadata
+    // Note: all new datasets without a license get assigned default license (CC-BY 4.0) when registered/persisted
+    assertThat(dataset.getLicense()).isEqualTo(License.UNSPECIFIED);
+    assertThat(dataset.getRights()).isNull();
+
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(1);
     assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
@@ -139,6 +148,81 @@ public class BiocaseMetadataSynchroniserTest {
     assertThat(dataset.getTitle()).isEqualTo("Mammals housed at MHNG, Geneva");
     assertThat(dataset.getCitation().getText()).isEqualTo(
       "Ruedi M. Mammals housed at MHNG, Geneva. Muséum d'histoire naturelle de la Ville de Genève");
+    // endpoints
+    assertThat(dataset.getEndpoints().size()).isEqualTo(1);
+    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
+  }
+
+  /**
+   * This tests a BioCASe endpoint that supports the old style inventory and ABCD 2.06 and adds a new dataset
+   * that has been assigned a license using License/Text.
+   */
+  @Test
+  public void testAddedDataset4() throws Exception {
+    when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/inventory1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/dataset4.xml"));
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
+    assertThat(syncResult.exception).isNull();
+    assertThat(syncResult.deletedDatasets).isEmpty();
+    assertThat(syncResult.existingDatasets).isEmpty();
+    assertThat(syncResult.addedDatasets).hasSize(1);
+
+    Dataset dataset = syncResult.addedDatasets.get(0);
+    assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
+    // dectected license CC0 1.0 in License/Text="CC0"
+    assertThat(dataset.getLicense()).isEqualTo(License.CC0_1_0);
+    assertThat(dataset.getRights()).isNull();
+    // endpoints
+    assertThat(dataset.getEndpoints().size()).isEqualTo(1);
+    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
+  }
+
+  /**
+   * This tests a BioCASe endpoint that supports the old style inventory and ABCD 2.06 and adds a new dataset
+   * that has been assigned a license using License/URI.
+   */
+  @Test
+  public void testAddedDataset5() throws Exception {
+    when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/inventory1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/dataset5.xml"));
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
+    assertThat(syncResult.exception).isNull();
+    assertThat(syncResult.deletedDatasets).isEmpty();
+    assertThat(syncResult.existingDatasets).isEmpty();
+    assertThat(syncResult.addedDatasets).hasSize(1);
+
+    Dataset dataset = syncResult.addedDatasets.get(0);
+    assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
+    // dectected license CC-BY-NC 4.0 in License/URI="http://creativecommons.org/licenses/by-nc/4.0/legalcode"
+    assertThat(dataset.getLicense()).isEqualTo(License.CC_BY_NC_4_0);
+    assertThat(dataset.getRights()).isNull();
+    // endpoints
+    assertThat(dataset.getEndpoints().size()).isEqualTo(1);
+    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
+  }
+
+  /**
+   * This tests a BioCASe endpoint that supports the old style inventory and ABCD 2.06 and adds a new dataset
+   * that has been assigned a license detected from the rights field.
+   */
+  @Test
+  public void testAddedDataset6() throws Exception {
+    when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/inventory1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/dataset6.xml"));
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
+    assertThat(syncResult.exception).isNull();
+    assertThat(syncResult.deletedDatasets).isEmpty();
+    assertThat(syncResult.existingDatasets).isEmpty();
+    assertThat(syncResult.addedDatasets).hasSize(1);
+
+    Dataset dataset = syncResult.addedDatasets.get(0);
+    assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
+    // dectected license CC-BY 4.0 in rights="CC-BY"
+    assertThat(dataset.getLicense()).isEqualTo(License.CC_BY_4_0);
+    assertThat(dataset.getRights()).isNull();
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(1);
     assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);

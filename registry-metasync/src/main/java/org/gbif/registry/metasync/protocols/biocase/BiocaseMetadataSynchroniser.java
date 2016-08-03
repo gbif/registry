@@ -23,6 +23,8 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.SyncResult;
@@ -243,7 +245,24 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setDescription(metadata.getDetails());
     dataset.setHomepage(metadata.getHomepage());
     dataset.setLogoUrl(metadata.getLogoUrl());
-    dataset.setRights(metadata.getRights());
+
+    // Respect publisher issued dataset license.
+    // Best practice is to supply a machine readable license specifying license URI and Text
+    License license = getLicenseParser().parseUriThenTitle(metadata.getLicenseUri(), metadata.getLicenseText());
+    if (!license.equals(License.UNSPECIFIED)) {
+      LOG.info("Machine readable license {} parsed from License/URI {} & License/Text {}", license,
+        metadata.getLicenseUri(), metadata.getLicenseText());
+    }
+    // ..alternatively, a machine readable license can be detected in rights
+    else {
+      ParseResult<License> licenseFromRights = getLicenseParser().parse(metadata.getRights());
+      if (licenseFromRights.isSuccessful()) {
+        license = licenseFromRights.getPayload();
+        LOG.info("Machine readable license {} parsed from rights {}", license, metadata.getRights());
+      }
+    }
+    dataset.setLicense(license);
+
     // Respect publisher issued DOIs if provided.
     if (DOI.isParsable(metadata.getDatasetGUID())) {
       dataset.setDoi(new DOI(metadata.getDatasetGUID()));
@@ -276,7 +295,14 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setDescription(metadata.getDescription());
     dataset.setHomepage(metadata.getHomepage());
     dataset.setLogoUrl(metadata.getLogoUrl());
-    dataset.setRights(metadata.getRights());
+
+    // Respect publisher issued dataset license, it can be detected in rights
+    ParseResult<License> licenseFromRights = getLicenseParser().parse(metadata.getRights());
+    if (licenseFromRights.isSuccessful()) {
+      License license = licenseFromRights.getPayload();
+      LOG.info("Machine readable license {} parsed from rights {}", license, metadata.getRights());
+      dataset.setLicense(license);
+    }
 
     Citation citation = new Citation();
     citation.setText(metadata.getCitationText());
