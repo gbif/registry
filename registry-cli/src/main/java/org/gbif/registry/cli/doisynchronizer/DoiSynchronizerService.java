@@ -127,36 +127,46 @@ public class DoiSynchronizerService {
   private boolean reapplyDatasetDOIStrategy(DOI doi){
     Preconditions.checkNotNull(doi, "DOI can't be null");
 
-    List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
-    if(datasets.isEmpty()){
+    List<Dataset> datasetsFromDOI = datasetMapper.listByDOI(doi.getDoiName());
+    List<Dataset> datasetsFromAltIdentifier = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
+
+    //check that we have something to work on
+    if(datasetsFromDOI.isEmpty() && datasetsFromAltIdentifier.isEmpty()){
       return false;
     }
 
-    //only try if we have only 1 Dataset for the DOI
-    if(datasets.size() == 1){
-      Dataset dataset = datasets.iterator().next();
-      DOI datasetDoi = dataset.getDoi();
-      if(doi.equals(datasetDoi)) {
-        dataCiteDoiHandlerStrategy.datasetChanged(dataset, null);
-        return true;
-      }
-      //DOI changed
-      else {
-        // The dataset DOI is not issued by GBIF
-        if(!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)){
-          boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
-          boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
-          // check we are in a known state which means:
-          // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
-          // the logic is applied by the registry
-          if(doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers){
-            dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
-            return true;
-          }
+    //ensure we only have 1 dataset linked to this DOI
+    if(datasetsFromDOI.size() + datasetsFromAltIdentifier.size() != 1){
+      return false;
+    }
+
+    //get the Dataset from the right source
+    Dataset dataset = !datasetsFromDOI.isEmpty() ? datasetsFromDOI.get(0) : datasetsFromAltIdentifier.get(0);
+
+    DOI datasetDoi = dataset.getDoi();
+    if(doi.equals(datasetDoi)) {
+      dataCiteDoiHandlerStrategy.datasetChanged(dataset, null);
+      return true;
+    }
+    //DOI changed
+    else {
+      // The dataset DOI is not issued by GBIF
+      if(!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)){
+        boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
+        boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
+        // check we are in a known state which means:
+        // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
+        // the logic is applied by the registry
+        if(doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers){
+          dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
+          return true;
         }
         else{
           LOG.error("Can not handle cases where the DOI changed but the list of alternate identifiers is not updated");
         }
+      }
+      else{
+        LOG.error("Can not handle cases where the DOI changed to a GBIF DOI");
       }
     }
 
@@ -233,37 +243,6 @@ public class DoiSynchronizerService {
   }
 
   /**
-   * Try to fix a DOI based on the {@link GbifDOIDiagnosticResult}.
-   *
-   *
-   *
-   * @param result
-   */
-  private void fixFailedStatusDoi(GbifDOIDiagnosticResult result){
-
-//    if(result.getRelatedDataset() != null){
-//      if(result.isCurrentDOI()){
-//        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), null);
-//        System.out.println("datasetChanged triggered on dataCiteDoiHandlerStrategy");
-//      }
-//      else{
-//        System.out.println("not implemented yet");
-//
-//      }
-//      if(!result.isCurrentDOI() && !result.getRelatedDataset().getDoi().getPrefix().equals(DOI.GBIF_PREFIX)){
-//        dataCiteDoiHandlerStrategy.datasetChanged(result.getRelatedDataset(), result.getDoi());
-//        //dataciteMetadata = buildMetadataForNonGbifDOI(result.getRelatedDataset());
-//      }
-//      else{
-//        dataciteMetadata = buildMetadata(result.getRelatedDataset());
-//        dataCiteDoiHandlerStrategy.
-//      }
-    // scheduleRegistration(result.getDoi(), dataciteMetadata, result.getRelatedDataset().getKey());
-    // System.out.println("Scheduled Registration for DOI " + result.getDoi().getDoiName());
-//    }
-  }
-
-  /**
    * Get the list of DOIGbifDataciteDiagnostic for a specific DoiType.
    *
    * @param doiType
@@ -333,14 +312,9 @@ public class DoiSynchronizerService {
   private GbifDOIDiagnosticResult createGbifDOIDatasetDiagnostic(DOI doi) {
     GbifDatasetDOIDiagnosticResult datasetDiagnosticResult = new GbifDatasetDOIDiagnosticResult(doi);
 
-    List<Dataset> datasets = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
-    //Could they conflict??
-    if(!datasets.isEmpty()) {
-      datasetDiagnosticResult.setRelatedDataset(datasets);
-    }
-    else{
-      datasetDiagnosticResult.setRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
-    }
+    //Try to load the Dataset from its DOI and alternate identifier
+    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
+    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null));
 
     if(datasetDiagnosticResult.isLinkedToASingleDataset()){
       datasetDiagnosticResult.setDoiIsInAlternateIdentifiers(isIdentifierDOIFound(doi, datasetDiagnosticResult.getRelatedDataset()));

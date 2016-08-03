@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
   private static final Joiner JOINER = Joiner.on(',');
-  private List<Dataset> relatedDataset;
+  private List<Dataset> relatedDataset = Lists.newArrayList();
 
   private boolean doiIsInAlternateIdentifiers;
 
@@ -54,8 +54,25 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
     return relatedDataset.get(0);
   }
 
-  public void setRelatedDataset(List<Dataset> relatedDataset) {
-    this.relatedDataset = relatedDataset;
+  /**
+   * Append a dataset to the list of datasets related to the DOI.
+   * @param datasets
+   */
+  public void appendRelatedDataset(List<Dataset> datasets) {
+
+    for(Dataset dataset : datasets){
+      boolean found = false;
+      // base the comparison on the dataset key only
+      for(Dataset currDataset : relatedDataset){
+        if(currDataset.getKey().equals(dataset.getKey())){
+          found = true;
+          break;
+        }
+      }
+      if(!found){
+        relatedDataset.add(dataset);
+      }
+    }
   }
 
   public List<String> getContextInformation(){
