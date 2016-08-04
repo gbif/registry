@@ -764,4 +764,46 @@ public class DatasetParserTest {
     assertTrue(dataset.getDescription().endsWith("(Method 0)."));
 
   }
+
+  /**
+   * Tests parser can handle EML documents exported from BioCASe.
+   */
+  @Test
+  public void testHandlingBiocaseEml() throws IOException {
+    Dataset dataset =
+      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample8-v1.1.xml"));
+
+    // Title
+    assertEquals("BoBO - Botanic Garden and Botanical Museum Berlin-Dahlem Observations", dataset.getTitle());
+
+    // Description
+    assertNotNull(dataset.getDescription());
+    assertTrue(dataset.getDescription().startsWith("BoBO aims at providing biodiversity observation data to GBIF"));
+
+    // License
+    assertEquals(License.CC0_1_0, dataset.getLicense());
+    assertNull(dataset.getRights()); // free-text rights statements are no longer supported by GBIF
+
+    // Creator equal to organisation
+    Contact creator = dataset.getContacts().get(0);
+    assertEquals(ContactType.ORIGINATOR, creator.getType());
+    assertTrue(creator.isPrimary());
+    assertEquals("Botanic Garden and Botanical Museum Berlin-Dahlem", creator.getOrganization());
+
+    // Metadata provider equal to organisation
+    Contact provider = dataset.getContacts().get(1);
+    assertEquals(ContactType.METADATA_AUTHOR, provider.getType());
+    assertTrue(provider.isPrimary());
+    assertEquals("Gabi Droege, Wolf-Henning Kusber", provider.getOrganization()); // TODO fix - not an organisation
+
+    // Contact equal to person
+    Contact contact = dataset.getContacts().get(2);
+    assertEquals(ContactType.POINT_OF_CONTACT, contact.getType());
+    assertTrue(contact.isPrimary());
+    assertEquals("Gabi Droege, Wolf-Henning Kusber", contact.getLastName()); // TODO fix - should be split into 2 contacts
+
+    assertNotNull(dataset.getCitation());
+    assertNotNull(dataset.getCitation().getText());
+    assertTrue(dataset.getCitation().getText().startsWith("Droege, G., Güntsch, A., Holetschek, J., Kusber"));
+  }
 }

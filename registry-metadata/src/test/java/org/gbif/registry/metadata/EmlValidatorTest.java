@@ -19,6 +19,7 @@ public class EmlValidatorTest {
   public void testValidateEmlMetadataProfileSamplesV11() throws Exception {
     EmlValidator.validate(getClass().getClassLoader().getResourceAsStream("eml-metadata-profile/sample4-v1.1.xml"), EMLProfileVersion.GBIF_1_1);
     EmlValidator.validate(getClass().getClassLoader().getResourceAsStream("eml-metadata-profile/sample7-v1.1.xml"), EMLProfileVersion.GBIF_1_1);
+    EmlValidator.validate(getClass().getClassLoader().getResourceAsStream("eml-metadata-profile/sample8-v1.1.xml"), EMLProfileVersion.GBIF_1_1);
   }
 
   @Test(expected = InvalidEmlException.class)
