@@ -42,10 +42,8 @@ public class SimpleAbcd206Metadata {
   private String phone;
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Copyrights/Copyright/Text")
   private String rights;
-  // TODO confirm path with Jörg
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Licenses/License/Text")
   private String licenseText;
-  // TODO confirm path with Jörg
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Licenses/License/URI")
   private URI licenseUri;
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Citations/Citation/Text")

@@ -180,7 +180,7 @@ public class BiocaseMetadataSynchroniserTest {
 
   /**
    * This tests a BioCASe endpoint that supports the old style inventory and ABCD 2.06 and adds a new dataset
-   * that has been assigned a license using License/URI.
+   * that has been assigned a license using License/URI (using https!).
    */
   @Test
   public void testAddedDataset5() throws Exception {
@@ -195,8 +195,8 @@ public class BiocaseMetadataSynchroniserTest {
 
     Dataset dataset = syncResult.addedDatasets.get(0);
     assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
-    // dectected license CC-BY-NC 4.0 in License/URI="http://creativecommons.org/licenses/by-nc/4.0/legalcode"
-    assertThat(dataset.getLicense()).isEqualTo(License.CC_BY_NC_4_0);
+    // dectected license CC0 1.0 in License/URI="https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    assertThat(dataset.getLicense()).isEqualTo(License.CC0_1_0);
     assertThat(dataset.getRights()).isNull();
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(1);

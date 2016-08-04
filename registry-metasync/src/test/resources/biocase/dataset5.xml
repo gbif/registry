@@ -62,9 +62,10 @@
               </abcd:Citation>
             </abcd:Citations>
             <abcd:Licenses>
-              <abcd:License abcd:language="English">
-                <abcd:Text>Restricted to non-commercial usage only</abcd:Text>
-                <abcd:URI>http://creativecommons.org/licenses/by-nc/4.0/legalcode</abcd:URI>
+              <abcd:License language="en">
+                <abcd:Text>The textual data in this database are released under the Creative Commons CC0 licence [http://creativecommons.org/publicdomain/zero/1.0/]. Image parts provided by this server with the given resolution have been released under the Creative Commons cc by-sa 3.0 (generic) licence [http://creativecommons.org/licenses/by-sa/3.0/de/].</abcd:Text>
+                <abcd:Details>Creative Commons CC0 licence</abcd:Details>
+                <abcd:URI>https://creativecommons.org/publicdomain/zero/1.0/legalcode</abcd:URI>
               </abcd:License>
             </abcd:Licenses>
           </abcd:IPRStatements>
