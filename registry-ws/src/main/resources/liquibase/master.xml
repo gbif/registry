@@ -42,4 +42,5 @@
   <include file="liquibase/036-add-download-format.xml"/>
   <include file="liquibase/037-add-event-type.xml"/>
   <include file="liquibase/038-add-affiliate-participation-status.xml"/>
+  <include file="liquibase/039-add-dataset-license.xml"/>
 </databaseChangeLog>

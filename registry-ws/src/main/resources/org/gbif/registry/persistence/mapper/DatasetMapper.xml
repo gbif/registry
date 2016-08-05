@@ -25,7 +25,7 @@
     key,parent_dataset_key,duplicate_of_dataset_key,installation_key,publishing_organization_key,
     external,type,sub_type,title,alias,abbreviation,description,language,
     homepage,logo_url,citation,citation_identifier,rights,locked_for_auto_update,created,created_by,
-    modified,modified_by,doi
+    modified,modified_by,doi,license,maintenance_update_frequency
   </sql>
 
   <sql id="DATASET_FIELDS">
@@ -34,7 +34,7 @@
     d.homepage,d.logo_url,
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
-    d.modified,d.modified_by,d.deleted,d.doi
+    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency
   </sql>
 
   <!--
@@ -77,7 +77,9 @@
     modified = now(),
     modified_by = #{modifiedBy},
     deleted = null, <!-- if we're updating it can't be deleted -->
-    doi = #{doi,jdbcType=VARCHAR}
+    doi = #{doi,jdbcType=VARCHAR},
+    license = #{license,jdbcType=OTHER},
+    maintenance_update_frequency = #{maintenanceUpdateFrequency,jdbcType=OTHER}
   </sql>
 
   <sql id="WRITABLE_DATASET_FIELD_TYPES">
@@ -104,7 +106,9 @@
     #{createdBy},
     now(), <!-- modified -->
     #{createdBy},
-    #{doi,jdbcType=VARCHAR}
+    #{doi,jdbcType=VARCHAR},
+    #{license,jdbcType=OTHER},
+    #{maintenanceUpdateFrequency,jdbcType=OTHER}
   </sql>
 
   <select id="countConstituents" resultType="int">

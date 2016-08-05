@@ -10,6 +10,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -141,8 +142,10 @@ public class LegacyDatasetResourceIT {
     Installation installation = Installations.newPersistedInstance(organizationKey);
     UUID installationKey = installation.getKey();
 
-    // persist new Dataset associated to installation
+    // persist new Dataset associated to installation, assigned CC-BY-NC 4.0
     Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    assertEquals(License.CC_BY_NC_4_0, dataset.getLicense());
+
     UUID datasetKey = dataset.getKey();
     // add primary contact to Dataset
     Contact c = Contacts.newInstance();
@@ -598,6 +601,9 @@ public class LegacyDatasetResourceIT {
     assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
     assertNotNull(dataset.getCreated());
     assertNotNull(dataset.getModified());
+    // The persisted Legacy (GBRDS) dataset gets assigned GBIF-default license CC-BY 4.0.
+    // Note Legacy (GBRDS) datasets can only be assigned license via EML metadata document, and parsed/set during crawling
+    assertEquals(License.CC_BY_4_0, dataset.getLicense());
 
     // check dataset's primary contact was properly persisted
     Contact contact = dataset.getContacts().get(0);
@@ -639,6 +645,11 @@ public class LegacyDatasetResourceIT {
     assertNotNull(modified);
     String modifiedBy = dataset.getModifiedBy();
     assertNotNull(modifiedBy);
+    // The existing Legacy (GBRDS) dataset was assigned CC-BY-NC 4.0 license.
+    // It isn't overwritten by update, because Legacy (GBRDS) datasets can be only be assigned license via EML metadata
+    // document, and parsed/set during crawling
+    assertEquals(License.CC_BY_NC_4_0, dataset.getLicense());
+
     assertTrue(dataset.getContacts().isEmpty());
     assertTrue(dataset.getEndpoints().isEmpty());
     // not expected to change
