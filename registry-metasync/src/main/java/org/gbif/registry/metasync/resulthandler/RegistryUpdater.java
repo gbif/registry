@@ -102,7 +102,11 @@ public class RegistryUpdater {
         }
 
         // perform update
-        datasetService.update(existingDataset);
+        try {
+          datasetService.update(existingDataset);
+        } catch (Exception e) {
+          LOG.error("Updating dataset {} failed: {}", existingDataset.getKey(), e);
+        }
 
         // Contacts are derived 100% from the metadata
         // delete existing contacts, and replace with new/updated contacts
@@ -218,8 +222,9 @@ public class RegistryUpdater {
       dataset.setType(DatasetType.OCCURRENCE);
 
       // default license to CC-BY 4.0 whenever it hasn't been specified
-      // TODO set license default inside datasetService.create
-      if (dataset.getLicense().equals(License.UNSPECIFIED)) dataset.setLicense(License.CC_BY_4_0);
+      if (dataset.getLicense() == null || dataset.getLicense() == License.UNSPECIFIED) {
+        dataset.setLicense(License.CC_BY_4_0);
+      }
 
       UUID uuid = datasetService.create(dataset);
       LOG.info("Created new Dataset with id [{}]", uuid);

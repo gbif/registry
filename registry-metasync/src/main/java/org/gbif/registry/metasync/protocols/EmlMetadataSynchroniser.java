@@ -1,0 +1,83 @@
+package org.gbif.registry.metasync.protocols;
+
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Metadata;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.metasync.api.MetadataException;
+import org.gbif.registry.metasync.api.MetadataProtocolHandler;
+import org.gbif.registry.metasync.api.SyncResult;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * IPT and HTTP synchronisation starts by iterating through all GBIF {@link Dataset} served by the installation.
+ * Each GBIF {@link Dataset} is then augmented by its preferred metadata document, typically an EML document.
+ */
+public class EmlMetadataSynchroniser implements MetadataProtocolHandler {
+
+  private static final Logger LOG = LoggerFactory.getLogger(EmlMetadataSynchroniser.class);
+  private final DatasetService datasetService;
+
+  public EmlMetadataSynchroniser(DatasetService datasetService) {
+    this.datasetService = datasetService;
+  }
+
+  @Override
+  public boolean canHandle(Installation installation) {
+    return installation.getType() == InstallationType.IPT_INSTALLATION
+           || installation.getType() == InstallationType.HTTP_INSTALLATION;
+  }
+
+  @Nullable
+  @Override
+  public SyncResult syncInstallation(Installation installation, List<Dataset> datasets) throws MetadataException {
+    checkArgument(installation.getType() == InstallationType.IPT_INSTALLATION
+                  || installation.getType() == InstallationType.HTTP_INSTALLATION,
+      "Only supports IPT or HTTP Installations");
+
+    int count = augmentDatasets(datasets);
+    LOG.info("Updated {} out of {} datasets hosted by installation {}", count, datasets.size(), installation.getKey());
+
+    // return empty SyncResult. Datasets are updated in the database already when augmented
+    List<Dataset> added = Lists.newArrayList();
+    List<Dataset> deleted = Lists.newArrayList();
+    Map<Dataset, Dataset> updated = Maps.newHashMap();
+    return new SyncResult(updated, added, deleted, installation);
+  }
+
+  /**
+   * Augments the Datasets hosted by this Installation with their preferred metadata document stored in the Registry.
+   * Datasets are updated in the database when augmented.
+   * </br>
+   * NOTE: code commented out depends on new method in DatasetService, currently only implemented locally
+   */
+  private int augmentDatasets(Iterable<Dataset> datasets) {
+    int count = 0;
+    for (Dataset dataset : datasets) {
+      List<Metadata> docs = datasetService.listMetadata(dataset.getKey(), null);
+      if (!docs.isEmpty()) {
+        try {
+          //InputStream preferred = datasetService.getMetadataDocument(docs.get(0).getKey());
+          //Metadata inserted = datasetService.insertMetadata(dataset.getKey(), preferred, true);
+          //LOG.info("Updated dataset {} from preferred metadata document of type {}", dataset.getKey(), inserted.getType());
+          count++;
+        } catch (Exception e) {
+          LOG.error("Error augmenting dataset {}: {}", dataset.getKey(), e);
+        }
+      }
+    }
+    return count;
+  }
+}

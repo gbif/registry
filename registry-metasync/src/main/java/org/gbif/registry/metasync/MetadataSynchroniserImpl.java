@@ -11,6 +11,7 @@ import org.gbif.registry.metasync.api.MetadataProtocolHandler;
 import org.gbif.registry.metasync.api.MetadataSynchroniser;
 import org.gbif.registry.metasync.api.SyncResult;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -81,7 +82,23 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
     int count = 0;
     do {
       results = installationService.list(page);
-      // TODO:Check for null result
+
+      // skip installations that don't serve any datasets!
+      Iterator<Installation> iter = results.getResults().iterator();
+      while (iter.hasNext()) {
+        Installation i = iter.next();
+        if (!i.isDisabled() && i.getDeleted() != null) {
+          PagingResponse<Dataset> datasets = installationService.getHostedDatasets(i.getKey(), new PagingRequest(0, 1));
+          if (datasets.getResults().isEmpty()) {
+            LOG.warn("Excluding installation [key={}] because it serves 0 datasets!", i.getKey());
+            iter.remove();
+          }
+        } else {
+          LOG.warn("Excluding disabled/deleted installation [key={}]!", i.getKey());
+          iter.remove();
+        }
+      }
+
       for (final Installation installation : results.getResults()) {
         completionService.submit(new Callable<SyncResult>() {
 
@@ -89,7 +106,7 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
           public SyncResult call() throws Exception {
             try {
               return synchroniseInstallation(installation.getKey());
-            } catch (IllegalArgumentException e) {
+            } catch (Exception e) {
               return new SyncResult(installation, new MetadataException(e, ErrorCode.OTHER_ERROR));
             }
           }
@@ -173,14 +190,17 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
    */
   private List<Dataset> getHostedDatasets(UUID key) {
     PagingRequest page = new PagingRequest(0, PAGING_LIMIT);
-    PagingResponse<Dataset> results;
+    PagingResponse<Dataset> results = null;
     List<Dataset> hostedDatasets = Lists.newArrayList();
     do {
-      results = installationService.getHostedDatasets(key, page);
-      hostedDatasets.addAll(results.getResults());
-      page.nextPage();
-    } while (!results.isEndOfRecords());
+      try {
+        results = installationService.getHostedDatasets(key, page);
+        hostedDatasets.addAll(results.getResults());
+        page.nextPage();
+      } catch (Exception e) {
+        LOG.error("Error getting hosted datasets for installation {}, offset {} limit {}", key, page.getOffset(), page.getLimit());
+      }
+    } while (results != null && !results.isEndOfRecords());
     return hostedDatasets;
   }
-
 }
