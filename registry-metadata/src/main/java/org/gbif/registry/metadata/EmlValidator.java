@@ -1,9 +1,9 @@
 package org.gbif.registry.metadata;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.StringReader;
-import javax.xml.transform.Source;
+import java.io.UnsupportedEncodingException;
+import javax.annotation.concurrent.NotThreadSafe;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -15,54 +15,80 @@ import org.xml.sax.SAXException;
 
 /**
  * GBIF Metadata Profile schema validator utility.
- * Warning: this class should only be used in unit tests, because the validator is not thread safe.
+ *
  */
+@NotThreadSafe
 public class EmlValidator {
+
   private static final Logger LOG = LoggerFactory.getLogger(EmlValidator.class);
   private static final String SCHEMA_LANG = "http://www.w3.org/2001/XMLSchema";
-  private static Validator EML_VALIDATOR;
-  private static EMLProfileVersion VERSION;
+
+  private final Validator validator;
 
   /**
-   * Validate source against latest version of GBIF Metadata Profile: 1.1.
+   * Return an instance of {@link EmlValidator} for a specific {@link EMLProfileVersion}.
+   * {@link EmlValidator} instances are NOT thread safe.
+   * @param version
+   * @return
+   * @throws SAXException
    */
-  public static void validate(String xml, EMLProfileVersion version) throws InvalidEmlException {
-    validate(new StreamSource(new StringReader(xml)), version);
+  public static EmlValidator newValidator(EMLProfileVersion version) throws SAXException {
+    SchemaFactory factory = SchemaFactory.newInstance(SCHEMA_LANG);
+    Schema schema = factory.newSchema(new StreamSource(version.getSchemaLocation()));
+    return new EmlValidator(schema.newValidator());
   }
 
   /**
-   * Validate source, using specified version of GBIF Metadata Profile.
+   * Private constructor, use {@link #newValidator(EMLProfileVersion)}
    */
-  public static void validate(InputStream xml, EMLProfileVersion version) throws InvalidEmlException {
-    validate(new StreamSource(xml), version);
+  private EmlValidator(Validator validator) {
+    this.validator = validator;
   }
 
   /**
-   * Validate source, using specified version of GBIF Metadata Profile.
+   * Validate a EML document provided as String.
+   * @param emlAsString
+   * @throws InvalidEmlException
    */
-  public static void validate(Source source, EMLProfileVersion version) throws InvalidEmlException {
+  public void validate(String emlAsString) throws InvalidEmlException {
+    StreamSource streamSource = toSourceStream(emlAsString);
+    if (streamSource != null) {
+      validate(streamSource);
+    }
+    else{
+      throw new InvalidEmlException("Can't create StreamSource");
+    }
+  }
+
+  /**
+   * Validate a EML document provided as InputStream.
+   * @param inputStream
+   * @throws InvalidEmlException
+   */
+  public void validate(InputStream inputStream) throws InvalidEmlException {
+    validate(new StreamSource(inputStream));
+  }
+
+  /**
+   * Validate a EML document provided as StreamSource.
+   * @param streamSource
+   * @throws InvalidEmlException
+   */
+  public void validate(StreamSource streamSource) throws InvalidEmlException {
     try {
-      getValidator(version).validate(source);
-      LOG.debug("EML XML passed validation");
+      validator.validate(streamSource);
     } catch (Exception e) {
       throw new InvalidEmlException(e);
     }
   }
 
-  /**
-   * @return Validator using specified version of GBIF Metadata Profile.
-   */
-  private static Validator getValidator(EMLProfileVersion version) throws IOException, SAXException {
-    if (EML_VALIDATOR == null || VERSION.compareTo(version) != 0) {
-      LOG.info("New validator instance using version {}", version.getVersion());
-      // define the type of schema - we use W3C:
-      // resolve validation driver:
-      SchemaFactory factory = SchemaFactory.newInstance(SCHEMA_LANG);
-      // create schema by reading it from gbif online resources:
-      Schema schema = factory.newSchema(new StreamSource(version.getSchemaLocation()));
-      VERSION = version;
-      EML_VALIDATOR = schema.newValidator();
+  private StreamSource toSourceStream(String xmlAsString) {
+    try {
+      return new StreamSource(new ByteArrayInputStream(xmlAsString.getBytes("UTF-8")));
+    } catch (UnsupportedEncodingException e) {
+      LOG.error("Can't get UTF-8 bytes from String", e);
     }
-    return EML_VALIDATOR;
+    return null;
   }
+
 }

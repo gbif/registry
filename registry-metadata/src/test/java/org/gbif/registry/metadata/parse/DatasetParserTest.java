@@ -204,14 +204,12 @@ public class DatasetParserTest {
       EMLWriter.write(dataset, writer);
 
       final String eml = writer.toString();
-      System.out.println(eml);
       // validate new file, written in XML GBIF Metadata Profile v1.1
-      EmlValidator.validate(eml, EMLProfileVersion.GBIF_1_1);
+      EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1).validate(eml);
       InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
       Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
       // ensure new properties in v1.0.1 still properly set
       verifyV101(dataset2);
-
     } catch (Exception e) {
       e.printStackTrace();
       fail();
@@ -585,9 +583,8 @@ public class DatasetParserTest {
       EMLWriter.write(dataset, writer);
 
       final String eml = writer.toString();
-      System.out.println(eml);
       // validate new file
-      EmlValidator.validate(eml, EMLProfileVersion.GBIF_1_1);
+      EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1).validate(eml);
       InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
       Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
       // ensure new properties in v1.1 still properly set
