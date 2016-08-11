@@ -109,7 +109,7 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
 
   @Override
   public InputStream getMetadataDocument(int metadataKey) {
-    return InputStreamUtils.wrapStream(getResource("metadata", String.valueOf(metadataKey)));
+    return InputStreamUtils.wrapStream(getResource("metadata", String.valueOf(metadataKey), "document"));
   }
 
   @Override

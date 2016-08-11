@@ -2,6 +2,8 @@ package org.gbif.registry.metadata;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.eml.temporal.DateRange;
+import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriodType;
@@ -20,12 +22,13 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 
 /**
- * A simple tool to serialize a dataset object into an EML GBIF profile compliant xml document.
+ * A simple tool to serialize a dataset object into an XML document compliant with the latest version of the GBIF
+ * Metadata Profile, currently version 1.1.
  */
 public class EMLWriter {
 
   private static final String TEMPLATE_PATH = "/gbif-eml-profile-template";
-  private static final String EML_TEMPLATE = String.format("eml-dataset-%s.ftl", EMLProfileVersion.GBIF_1_0_2.getVersion());
+  private static final String EML_TEMPLATE = String.format("eml-dataset-%s.ftl", EMLProfileVersion.GBIF_1_1.getVersion());
   private final Configuration freemarkerConfig;
   private final boolean useDoiAsIdentifier;
 
@@ -95,22 +98,52 @@ public class EMLWriter {
       return contactAdapter.getResourceCreator();
     }
 
+    /**
+     * @return list of primary creators {@link Contact} of type ContactType.ORIGINATOR
+     */
+    public List<Contact> getPrimaryCreators() {
+      return contactAdapter.getPrimaryCreators();
+    }
+
     public Contact getAdministrativeContact() {
       return contactAdapter.getAdministrativeContact();
+    }
+
+    /**
+     * @return list of primary contacts {@link Contact} of type ContactType.POINT_OF_CONTACT
+     */
+    public List<Contact> getPrimaryContacts() {
+      return contactAdapter.getPrimaryContacts();
     }
 
     public Contact getMetadataProvider() {
       return contactAdapter.getFirstPreferredType(ContactType.METADATA_AUTHOR);
     }
 
-    public List getFormationPeriods() {
+    /**
+     * @return list of primary metadataProviders {@link Contact} of type ContactType.METADATA_AUTHOR
+     */
+    public List<Contact> getPrimaryMetadataProviders() {
+      return contactAdapter.getPrimaryMetadataProviders();
+    }
+
+    /**
+     * @return list of all formation periods {@link VerbatimTimePeriodType} of type VerbatimTimePeriodType.FORMATION_PERIOD
+     */
+    public List<VerbatimTimePeriod> getFormationPeriods() {
       return getTimePeriods(VerbatimTimePeriodType.FORMATION_PERIOD);
     }
 
-    public List getLivingTimePeriods() {
+    /**
+     * @return list of all formation periods {@link VerbatimTimePeriodType} of type VerbatimTimePeriodType.LIVING_TIME_PERIOD
+     */
+    public List<VerbatimTimePeriod> getLivingTimePeriods() {
       return getTimePeriods(VerbatimTimePeriodType.LIVING_TIME_PERIOD);
     }
 
+    /**
+     * @return list of all {@link VerbatimTimePeriodType} of specified type
+     */
     private List<VerbatimTimePeriod> getTimePeriods(VerbatimTimePeriodType type) {
       List<VerbatimTimePeriod> periods = Lists.newArrayList();
       for (TemporalCoverage tc : dataset.getTemporalCoverages()) {
@@ -124,6 +157,19 @@ public class EMLWriter {
       return periods;
     }
 
+    /**
+     * @return list of all {@link SingleDate} and {@link DateRange} {@link TemporalCoverage} or an empty list if none
+     * found
+     */
+    public List<TemporalCoverage> getSingleDateAndDateRangeCoverages() {
+      List<TemporalCoverage> periods = Lists.newArrayList();
+      for (TemporalCoverage tc : dataset.getTemporalCoverages()) {
+        if (tc instanceof DateRange || tc instanceof SingleDate) {
+          periods.add(tc);
+        }
+      }
+      return periods;
+    }
   }
 
   /**
@@ -152,8 +198,8 @@ public class EMLWriter {
   public static void write(Dataset dataset, Writer writer, boolean _useDoiAsIdentifier) throws IOException {
     Preconditions.checkNotNull(dataset, "Dataset can't be null");
 
-    Map<String, Object> map = ImmutableMap.of
-            ("dataset", dataset, "eml", new EmlDatasetWrapper(dataset), "useDoiAsIdentifier", _useDoiAsIdentifier);
+    Map<String, Object> map = ImmutableMap.of("dataset", dataset, "eml", new EmlDatasetWrapper(dataset),
+      "useDoiAsIdentifier", _useDoiAsIdentifier);
 
     try {
       FTL.getTemplate(EML_TEMPLATE).process(map, writer);

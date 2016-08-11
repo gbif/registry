@@ -9,6 +9,7 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.ws.model.IptEntityResponse;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyInstallation;
@@ -200,6 +201,10 @@ public class IptResource {
    * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact and publishing
    * organization key are mandatory. Only after both the dataset and primary contact have been persisted is a
    * Response with Status.CREATED returned.
+   * </br>
+   * Before being persisted, the dataset is assigned license CC-BY 4.0. This GBIF-default license gets replaced
+   * by the publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT EML
+   * metadata document always includes a machine readable license.
    *
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
@@ -224,8 +229,12 @@ public class IptResource {
       // primary contact, publishing organization key, and installationKey are mandatory
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils.isValid(dataset, organizationService, installationService)) {
+        // generate a new GBIF API Dataset instance, derived from the LegacyDataset
+        Dataset apiDataset = dataset.toApiDataset();
+        // assign GBIF-default license
+        apiDataset.setLicense(License.CC_BY_4_0);
         // persist dataset
-        UUID key = datasetService.create(dataset.toApiDataset());
+        UUID key = datasetService.create(apiDataset);
         // persist contact
         if (key != null) {
           // set primary contact's required fields
@@ -272,6 +281,10 @@ public class IptResource {
    * mandatory (supplied in the credentials not the parameters). The contacts are preserved from the existing dataset,
    * careful not to duplicate contacts. Only after both the dataset and primary contact have been updated is a Response
    * with Status.OK returned.
+   * </br>
+   * This update does not change the IPT Dataset license. The license gets updated every time the dataset is crawled
+   * using the publisher assigned license found in the EML metadata document. Since IPT 2.2, the IPT EML
+   * metadata document always includes a machine readable license.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey

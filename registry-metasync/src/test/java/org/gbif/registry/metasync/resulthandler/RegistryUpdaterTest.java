@@ -12,8 +12,10 @@ import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.HttpGetMatcher;
+import org.gbif.registry.metasync.protocols.biocase.BiocaseMetadataSynchroniser;
 import org.gbif.registry.metasync.protocols.tapir.TapirMetadataSynchroniser;
 import org.gbif.registry.metasync.util.Constants;
 
@@ -27,6 +29,7 @@ import com.google.common.io.Resources;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
@@ -37,6 +40,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.argThat;
@@ -135,6 +139,69 @@ public class RegistryUpdaterTest {
   }
 
   /**
+   * Update existing BioCASe dataset with license CC-BY 4.0, from a dataset with UNSPECIFIED license.
+   * Check license is not overwritten (stays CC-BY 4.0). Check rights is overwritten to null because dataset
+   * rights (free-text) statements are no longer supported.
+   * </br>
+   * The test verifies that the Dataset update was successful, counting the number of web service method invocations.
+   * We can assume the service does its job correctly and just assert that the update was called one time.
+   * </br>
+   * TODO: Other licensing scenarios to test:
+   * </br>
+   * Update existing dataset with license CC-BY, from a dataset with UNSUPPORTED license.
+   * Check license is not overwritten (stays CC-BY).
+   * </br>
+   * Update existing dataset with license UNSUPPORTED, from a dataset with CC-BY-NC license.
+   * Check license updated to CC-BY-NC.
+   * </br>
+   * Update existing dataset with license UNSPECIFIED, from a dataset with CC-BY-NC license.
+   * Check license updated to CC-BY-NC.
+   * </br>
+   * Update existing dataset with license CC-BY, from a dataset with CC-BY-NC license.
+   * Check license updated to CC-BY-NC.
+   */
+  @Test
+  public void testUpdateBiocaseDatasetDoesNotOverrideLicense() throws Exception {
+    Installation installation = new Installation();
+    installation.setType(InstallationType.BIOCASE_INSTALLATION);
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl(URI.create("http://localhost"));
+    installation.addEndpoint(endpoint);
+    HttpClient client = mock(HttpClient.class);
+    when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/inventory1.xml"))
+      .thenReturn(prepareResponse(200, "biocase/dataset1.xml"));
+    BiocaseMetadataSynchroniser synchroniser = new BiocaseMetadataSynchroniser(client);
+
+    // mock existing persisted dataset
+    Dataset dataset = new Dataset();
+    dataset.setTitle("Pontaurus");
+    dataset.setRights("Images are copyrighted!");
+    dataset.setLicense(License.CC_BY_4_0);
+
+    // perform installation sync (metadata update)
+    SyncResult syncResult = synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
+
+    // ensure updated dataset recognized as existing already
+    assertThat(syncResult.existingDatasets).hasSize(1);
+    assertThat(syncResult.deletedDatasets).isEmpty();
+    assertThat(syncResult.addedDatasets).isEmpty();
+
+    // ensure updated dataset wasn't assigned a new License (no machine readable license existed in metadata response)
+    // and rights statement was set to null
+    Dataset updated = syncResult.existingDatasets.get(dataset);
+    assertThat(updated.getTitle()).isEqualTo("Pontaurus");
+    assertThat(updated.getLicense()).isEqualTo(License.UNSPECIFIED);
+    assertThat(updated.getRights()).isNull();
+
+    // update Dataset in Registry, and assert existing license stays CC-BY (not overwritten by updated dataset)
+    updater.saveUpdatedDatasets(syncResult);
+
+    // update dataset updated 1 time
+    verify(updater.getDatasetService(), times(1)).update(any(Dataset.class));
+  }
+
+  /**
    * Synchronize a TAPIR installation, whose single existing Dataset has been migrated to DwC-A already. An endpoint of
    * type DwC-A is evidence of migration. Since the Dataset has been migrated, its metadata won't be updated from
    * TAPIR anymore.
@@ -160,12 +227,14 @@ public class RegistryUpdaterTest {
   }
 
   /**
-   * Prepare TAPIR Dataset for use in tests, having 1 contact, 1 identifier, 2 machine tags, 1 tag, and 1 endpoint.
+   * Prepare TAPIR Dataset assigned CC-BY-NC 4.0 license for use in tests, having 1 contact, 1 identifier,
+   * 2 machine tags, 1 tag, and 1 endpoint.
    */
   private Dataset prepareDataset() {
     // create TAPIR dataset with single endpoint
     Dataset dataset = new Dataset();
     dataset.setKey(UUID.randomUUID());
+    dataset.setLicense(License.CC_BY_NC_4_0); // notNull
     dataset.setTitle("Beavers");
     dataset.addEndpoint(endpoint);
 

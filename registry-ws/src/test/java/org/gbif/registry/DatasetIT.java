@@ -30,6 +30,8 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.search.DatasetIndexUpdateListener;
@@ -47,13 +49,17 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -451,6 +457,67 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
+  public void testLicenseChanges() {
+    Dataset src = newEntity();
+
+    // start with dataset with null license
+    src.setLicense(null);
+
+    // register dataset
+    final UUID key = create(src, 1).getKey();
+
+    // ensure default license CC-BY 4.0 was assigned
+    System.out.println("Service type: " + service.getClass().toString());
+    Dataset dataset = service.get(key);
+    assertEquals(License.CC_BY_4_0, dataset.getLicense());
+
+    // try updating dataset, setting license to NULL - ensure original license was preserved
+    dataset.setLicense(null);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(License.CC_BY_4_0, dataset.getLicense());
+
+    // try updating dataset with different, less restrictive license CC0 1.0 - ensure license was replaced
+    dataset.setLicense(License.CC0_1_0);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(License.CC0_1_0, dataset.getLicense());
+
+    // try updating dataset with an UNSUPPORTED license - ensure original license CC0 1.0 was preserved
+    dataset.setLicense(License.UNSUPPORTED);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(License.CC0_1_0, dataset.getLicense());
+
+    // try updating dataset with an UNSPECIFIED license - ensure original license CC0 1.0 was preserved
+    dataset.setLicense(License.UNSPECIFIED);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(License.CC0_1_0, dataset.getLicense());
+  }
+
+  @Test
+  public void testMaintenanceUpdateFrequencyChanges() {
+    Dataset src = newEntity();
+    assertNull(src.getMaintenanceUpdateFrequency());
+    final UUID key = create(src, 1).getKey();
+    Dataset dataset = service.get(key);
+    assertNull(src.getMaintenanceUpdateFrequency());
+
+    // try updating maintenanceUpdateFrequency - ensure value persisted
+    dataset.setMaintenanceUpdateFrequency(MaintenanceUpdateFrequency.AS_NEEDED);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(MaintenanceUpdateFrequency.AS_NEEDED, dataset.getMaintenanceUpdateFrequency());
+
+    // try updating maintenanceUpdateFrequency again - ensure value replaced
+    dataset.setMaintenanceUpdateFrequency(MaintenanceUpdateFrequency.BIANNUALLY);
+    service.update(dataset);
+    dataset = service.get(key);
+    assertEquals(MaintenanceUpdateFrequency.BIANNUALLY, dataset.getMaintenanceUpdateFrequency());
+  }
+
+  @Test
   public void test404() throws IOException {
     assertNull(service.get(UUID.randomUUID()));
   }
@@ -458,31 +525,94 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   @Test
   public void testMetadata() throws IOException {
     Dataset d1 = create(newEntity(), 1);
+    assertEquals(License.CC_BY_NC_4_0, d1.getLicense());
+    List<Metadata> metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
+    assertEquals("No EML uploaded yes", 0, metadata.size());
 
-    // upload a valid EML doc
+    // upload a valid EML document (without a machine readable license)
     service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
 
-    // verify our dataset has changed
+    // verify dataset was updated from parsed document
     Dataset d2 = service.get(d1.getKey());
     assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);
     assertEquals("Tanzanian Entomological Collection", d2.getTitle());
     assertEquals("Created data should not change", d1.getCreated(), d2.getCreated());
     assertTrue("Dataset modification date should change", d1.getModified().before(d2.getModified()));
 
-    // check metadata
-    List<Metadata> metadata = service.listMetadata(d1.getKey(), MetadataType.DC);
-    assertTrue("No Dublin Core uplaoded yet", metadata.isEmpty());
+    // verify license stayed the same, because no machine readable license was detected in EML document
+    assertEquals(License.CC_BY_NC_4_0, d2.getLicense());
 
+    // verify EML document was stored successfully
     metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
     assertEquals("Exactly one EML uploaded", 1, metadata.size());
     assertEquals("Wrong metadata type", MetadataType.EML, metadata.get(0).getType());
 
-    // upload subsequent DC document which has less priority than the previous EML doc
+    // check number of stored DC documents
+    metadata = service.listMetadata(d1.getKey(), MetadataType.DC);
+    assertTrue("No Dublin Core uplaoded yet", metadata.isEmpty());
+
+    // upload subsequent DC document which has less priority than the previous EML document
     service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/worms_dc.xml"));
-    // verify our dataset has not changed
+
+    // verify dataset has NOT changed
     Dataset d3 = service.get(d1.getKey());
     assertEquals("Tanzanian Entomological Collection", d3.getTitle());
     assertEquals("Created data should not change", d1.getCreated(), d3.getCreated());
+
+    // verify DC document was stored successfully
+    metadata = service.listMetadata(d1.getKey(), MetadataType.DC);
+    assertEquals("Exactly one DC uploaded", 1, metadata.size());
+    assertEquals("Wrong metadata type", MetadataType.DC, metadata.get(0).getType());
+
+    // upload 2nd EML doc (with a machine readable license), which has higher priority than the previous EML doc
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample-v1.1.xml"));
+
+    // verify dataset was updated from parsed document
+    Dataset d4 = service.get(d1.getKey());
+    assertEquals("Sample Metadata RLS", d4.getTitle());
+
+    // verify license was updated because CC-BY 4.0 license was detected in EML document
+    assertEquals(License.CC_BY_4_0, d4.getLicense());
+
+    // verify EML document replaced EML docuemnt of less priority
+    metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
+    assertEquals("Exactly one EML uploaded", 1, metadata.size());
+
+    // upload 3rd EML doc (with a machine readable UNSUPPORTED license), which has higher priority than the previous EML doc
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample-v1.1-unsupported-license.xml"));
+
+    // verify dataset was updated from parsed document
+    Dataset d5 = service.get(d1.getKey());
+    assertEquals("Sample Metadata RLS (2)", d5.getTitle());
+
+    // verify license was NOT updated because UNSUPPORTED license was detected in EML document (only supported license
+    // can overwrite existing license)
+    assertEquals(License.CC_BY_4_0, d5.getLicense());
+
+    // verify EML document replaced EML document of less priority
+    metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
+    assertEquals("Exactly one EML uploaded", 1, metadata.size());
+    int lastEmlMetadataDocKey = metadata.get(0).getKey();
+
+    // upload exact same EML doc again, but make sure it does NOT update dataset!
+    Dataset lastUpated = service.get(d1.getKey());
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample-v1.1-unsupported-license.xml"));
+
+    // verify dataset was NOT updated from parsed document
+    Dataset d6 = service.get(d1.getKey());
+    assertTrue(d6.getModified().compareTo(lastUpated.getModified()) == 0);
+
+    // verify EML document NOT replaced
+    List<Metadata> metadata2 = service.listMetadata(d1.getKey(), MetadataType.EML);
+    int emlMetadataDocKey = metadata2.get(0).getKey();
+    assertEquals(lastEmlMetadataDocKey, emlMetadataDocKey);
+
+    // verify original EML document can be retrieved by WS request (verify POR-3170 fixed)
+    InputStream persistedDocument = service.getMetadataDocument(emlMetadataDocKey);
+    String persistedDocumentContent = CharStreams.toString(new InputStreamReader(persistedDocument, Charsets.UTF_8));
+    InputStream originalDocument = FileUtils.classpathStream("metadata/sample-v1.1-unsupported-license.xml");
+    String originalDocumentContent = CharStreams.toString(new InputStreamReader(originalDocument, Charsets.UTF_8));
+    assertEquals(originalDocumentContent, persistedDocumentContent);
   }
 
   /**
