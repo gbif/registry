@@ -49,13 +49,17 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -585,9 +589,30 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // can overwrite existing license)
     assertEquals(License.CC_BY_4_0, d5.getLicense());
 
-    // verify EML document replaced EML docuemnt of less priority
+    // verify EML document replaced EML document of less priority
     metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
     assertEquals("Exactly one EML uploaded", 1, metadata.size());
+    int lastEmlMetadataDocKey = metadata.get(0).getKey();
+
+    // upload exact same EML doc again, but make sure it does NOT update dataset!
+    Dataset lastUpated = service.get(d1.getKey());
+    service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample-v1.1-unsupported-license.xml"));
+
+    // verify dataset was NOT updated from parsed document
+    Dataset d6 = service.get(d1.getKey());
+    assertTrue(d6.getModified().compareTo(lastUpated.getModified()) == 0);
+
+    // verify EML document NOT replaced
+    List<Metadata> metadata2 = service.listMetadata(d1.getKey(), MetadataType.EML);
+    int emlMetadataDocKey = metadata2.get(0).getKey();
+    assertEquals(lastEmlMetadataDocKey, emlMetadataDocKey);
+
+    // verify original EML document can be retrieved by WS request (verify POR-3170 fixed)
+    InputStream persistedDocument = service.getMetadataDocument(emlMetadataDocKey);
+    String persistedDocumentContent = CharStreams.toString(new InputStreamReader(persistedDocument, Charsets.UTF_8));
+    InputStream originalDocument = FileUtils.classpathStream("metadata/sample-v1.1-unsupported-license.xml");
+    String originalDocumentContent = CharStreams.toString(new InputStreamReader(originalDocument, Charsets.UTF_8));
+    assertEquals(originalDocumentContent, persistedDocumentContent);
   }
 
   /**
