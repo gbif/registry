@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.registry.metadata.parse.converter.ContactTypeConverter;
@@ -30,6 +31,7 @@ import org.gbif.registry.metadata.parse.converter.DateConverter;
 import org.gbif.registry.metadata.parse.converter.GreedyUriConverter;
 import org.gbif.registry.metadata.parse.converter.IdentifierTypeConverter;
 import org.gbif.registry.metadata.parse.converter.LanguageTypeConverter;
+import org.gbif.registry.metadata.parse.converter.MaintenanceUpdateFrequencyConverter;
 import org.gbif.registry.metadata.parse.converter.PreservationMethodTypeConverter;
 
 import java.net.URI;
@@ -78,9 +80,14 @@ public class EMLRuleSet extends RuleSetBase {
     ConvertUtils.register(intConverter, Integer.class);
 
     // handles the Collection.specimenPreservationType string -> PreservationMethodType enum conversion
-    PreservationMethodTypeConverter preservationMethodTypeConverter = new PreservationMethodTypeConverter(PreservationMethodType.OTHER);
+    PreservationMethodTypeConverter preservationMethodTypeConverter =
+      new PreservationMethodTypeConverter(PreservationMethodType.OTHER);
     ConvertUtils.register(preservationMethodTypeConverter, PreservationMethodType.class);
+
+    MaintenanceUpdateFrequencyConverter frequencyConverter = new MaintenanceUpdateFrequencyConverter();
+    ConvertUtils.register(frequencyConverter, MaintenanceUpdateFrequency.class);
   }
+
   /**
    * Creates a new digester with all rules to parse an EML document.
    */
@@ -137,16 +144,15 @@ public class EMLRuleSet extends RuleSetBase {
     addContactRules(digester, "eml/dataset/contact", "addPreferredAdministrativeContact");
 
     digester.addBeanPropertySetter("eml/dataset/purpose/para", "purpose");
+
+    digester.addBeanPropertySetter("eml/dataset/maintenance/description/para", "maintenanceDescription");
+    digester.addBeanPropertySetter("eml/dataset/maintenance/maintenanceUpdateFrequency", "maintenanceUpdateFrequency");
     digester.addBeanPropertySetter("eml/dataset/additionalInfo/para", "additionalInfo");
 
-    // POR-2792: We prefer to use the title if it is given, otherwise we'll take the blurb
-    // Digester provides no easy way of concatenating the content across the elements, and this is seen
-    // as an acceptable solution, recognising that one could craft EML that would make this behaviour
-    // unacceptable.  However, the risk of that is considered tiny.
-    digester.addBeanPropertySetter("eml/dataset/intellectualRights/para/ulink/citetitle", "rights");
-    // Note: because this fires on leaving the element, any ulink/citetitle will already have populated the value
-    digester.addCallMethod("eml/dataset/intellectualRights/para", "setRightsIfEmpty", 1);
-    digester.addCallParam("eml/dataset/intellectualRights/para", 0);
+    // License
+    digester.addCallMethod("eml/dataset/intellectualRights/para", "setLicense", 2);
+    digester.addCallParam("eml/dataset/intellectualRights/para/ulink/citetitle", 1);
+    digester.addCallParam("eml/dataset/intellectualRights/para/ulink", 0, "url");
 
     // KeywordCollections
     addKeywordCollectionRules(digester, "eml/dataset/keywordSet", "addKeywordCollection");
@@ -351,6 +357,8 @@ public class EMLRuleSet extends RuleSetBase {
    */
   private void addProjectRules(Digester digester, String prefix, String parentMethod) {
     digester.addObjectCreate(prefix, Project.class);
+    digester.addCallMethod(prefix, "setIdentifier", 1);
+    digester.addCallParam(prefix, 0, "id");
     digester.addBeanPropertySetter(prefix + "/title", "title");
     addContactRules(digester, prefix + "/personnel", "addContact");
     digester.addBeanPropertySetter(prefix + "/funding/para", "funding");

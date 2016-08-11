@@ -42,8 +42,15 @@ public class DublinCoreRuleSet extends RuleSetBase {
       digester.addCallMethod("*/isFormatOf", "addDataUrl", 0, new Class[]{URI.class});
       digester.addCallMethod("*/creator", "addCreator", 0);
       digester.addCallMethod("*/created", "setPubDateAsString", 0);
-      digester.addBeanPropertySetter("*/rights", "rights");
-      digester.addCallMethod("*/license", "addLicense", 0);
+
+      // License parsed from rights?
+      digester.addCallMethod("*/rights", "setLicense", 2);
+      digester.addCallParam("*/rights", 1);
+
+      // License parsed from license?
+      digester.addCallMethod("*/license", "setLicense", 2);
+      digester.addCallParam("*/license", 0);
+
       digester.addCallMethod("*/bibliographicCitation", "addBibCitation", 0);
       digester.addCallMethod("*/identifier", "addIdentifier", 0);
     }

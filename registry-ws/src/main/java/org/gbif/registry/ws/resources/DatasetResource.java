@@ -38,6 +38,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
@@ -92,6 +93,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -322,6 +324,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     target.setLogoUrl(supplementary.getLogoUrl());
     target.setCitation(supplementary.getCitation());
     target.setRights(supplementary.getRights());
+    target.setLicense(supplementary.getLicense());
+    target.setMaintenanceUpdateFrequency(supplementary.getMaintenanceUpdateFrequency());
     target.setLockedForAutoUpdate(supplementary.isLockedForAutoUpdate());
     target.setCreated(supplementary.getCreated());
     target.setCreatedBy(supplementary.getCreatedBy());
@@ -455,6 +459,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.setCreated(dataset.getCreated());
       updDataset.setModifiedBy(user);
       updDataset.setModified(new Date());
+
+      // keep original license, unless a supported license detected in preferred metadata
+      if (!replaceLicense(dataset.getLicense(), updDataset.getLicense())) {
+        LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
+          updDataset.getLicense(), dataset.getLicense());
+        updDataset.setLicense(dataset.getLicense());
+      }
+
       // persist contacts, overwriting any existing ones
       replaceContacts(datasetKey, updDataset.getContacts(), user);
       addIdentifiers(datasetKey, updDataset.getIdentifiers(), user);
@@ -529,14 +541,45 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
-   * Deal with DOI business rules
-   * http://dev.gbif.org/issues/browse/POR-2554
+   * Decide whether the current license should be overwritten based on following rule(s):
+   * Only overwrite current license is overwriting license is a GBIF-supported license.
+   *
+   * @param current license
+   * @param overwriting license
+   */
+  private boolean replaceLicense(@NotNull License current, @Nullable License overwriting) {
+    Preconditions.checkNotNull(current);
+    if (overwriting == null) {
+      return false;
+    }
+
+    switch (overwriting) {
+      case UNSPECIFIED:
+        break;
+      case UNSUPPORTED:
+        break;
+      default:
+        return true;
+    }
+    return false;
+  }
+
+  /**
+   * Creates a new Dataset.
+   * </br>
+   * Before creating it, method:
+   * 1. assigns it a {@link DOI} as per <a href="http://dev.gbif.org/issues/browse/POR-2554">GBIF DOI business rules</a>
+   * 2. ensures it has a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License business rules</a>
    */
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public UUID create(@Valid Dataset dataset) {
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiGenerator.newDatasetDOI());
+    }
+    // assign CC-BY 4.0 (default license) when license not specified yet
+    if (dataset.getLicense() == null || dataset.getLicense().equals(License.UNSPECIFIED)) {
+      dataset.setLicense(License.CC_BY_4_0);
     }
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
@@ -551,6 +594,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
+    }
+    // replace current license? Only if dataset being updated has a supported license
+    if (!replaceLicense(old.getLicense(), dataset.getLicense())) {
+      LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.", dataset.getLicense(),
+        old.getLicense());
+      dataset.setLicense(old.getLicense());
     }
     update(dataset, old.getIdentifiers(), old.getDoi(), dataset.getModifiedBy());
   }

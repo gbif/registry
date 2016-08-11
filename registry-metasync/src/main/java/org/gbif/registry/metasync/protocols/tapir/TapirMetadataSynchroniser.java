@@ -23,6 +23,8 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.SyncResult;
@@ -223,6 +225,20 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setDescription(metadata.getDescriptions().toString());
     dataset.setHomepage(metadata.getAccessPoint());
     dataset.setLanguage(metadata.getDefaultLanguage());
+
+    // Respect publisher issued dataset license, possibly provided in rights
+    if (!metadata.getRights().getValues().isEmpty()) {
+      for (String value : metadata.getRights().getValues().values()) {
+        ParseResult<License> licenseFromRights = getLicenseParser().parse(value);
+        if (licenseFromRights.isSuccessful()) {
+          License license = licenseFromRights.getPayload();
+          LOG.info("Machine readable license {} parsed from rights: {}", license, value);
+          dataset.setLicense(license);
+          break;
+        }
+      }
+    }
+
     // Respect publisher issued DOIs if provided.
     if (DOI.isParsable(metadata.getIdentifier())) {
       dataset.setDoi(new DOI(metadata.getIdentifier()));

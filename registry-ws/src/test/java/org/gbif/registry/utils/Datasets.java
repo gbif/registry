@@ -17,6 +17,7 @@ import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.resources.DatasetResource;
 
@@ -34,6 +35,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final String DATASET_ABBREVIATION = "BGBM";
   public static final Language DATASET_LANGUAGE = Language.DANISH;
   public static final String DATASET_RIGHTS = "The rights";
+  public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
 
@@ -49,6 +51,7 @@ public class Datasets extends JsonBackedData<Dataset> {
     d.setPublishingOrganizationKey(publishingOrganizationKey);
     d.setInstallationKey(installationKey);
     d.setDoi(DATASET_DOI);
+    d.setLicense(DATASET_LICENSE);
     return d;
   }
 

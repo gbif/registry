@@ -14,6 +14,7 @@ package org.gbif.registry.metasync.protocols;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.MetadataProtocolHandler;
@@ -52,9 +53,11 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseProtocolHandler.class);
   private final HttpClient httpClient;
+  private final LicenseParser licenseParser;
 
   protected BaseProtocolHandler(HttpClient httpClient) {
     this.httpClient = httpClient;
+    this.licenseParser = LicenseParser.getInstance();
   }
 
   /**
@@ -152,4 +155,10 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
     return loader.newDigester();
   }
 
+  /**
+   * @return instance of LicenseParser
+   */
+  protected LicenseParser getLicenseParser() {
+    return licenseParser;
+  }
 }

@@ -21,8 +21,11 @@ import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.registry.metadata.CleanUtils;
@@ -37,6 +40,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -204,16 +208,6 @@ public class DatasetWrapper {
     }
   }
 
-  public void addLicense(String license) {
-    if (!Strings.isNullOrEmpty(license)) {
-      if (Strings.isNullOrEmpty(target.getRights())) {
-        target.setRights(license);
-      } else {
-        target.setRights(target.getRights() + " \n" + license);
-      }
-    }
-  }
-
   public void addDataUrl(URI uri) {
     if (uri != null) {
       DataDescription d = new DataDescription();
@@ -222,17 +216,16 @@ public class DatasetWrapper {
     }
   }
 
-
   /**
    * Similar to addContact() except that it is always used to set preferred flag to true on Contact, and type to
-   * ADMINISTRATIVE_POINT_OF_CONTACT.
+   * POINT_OF_CONTACT.
    *
    * @param contact Contact
    */
   public void addPreferredAdministrativeContact(Contact contact) {
     contact.setPrimary(true);
     // set type to administrative
-    contact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
+    contact.setType(ContactType.POINT_OF_CONTACT);
     addContact(contact);
   }
 
@@ -330,11 +323,37 @@ public class DatasetWrapper {
   }
 
   /**
-   * Will only set the rights, if it is currently NULL otherwise will do nothing.
+   * Sets license detected from machine readable license supplied in two parts: URI (ulink@url), title (ulink/citetite).
+   * Note only supported and unsupported licenses are set.
+   *
+   * @param uriString license URI
+   * @param title     license title
    */
-  public void setRightsIfEmpty(String rights) {
-    if (target.getRights() == null) {
-      target.setRights(rights);
+  public void setLicense(@Nullable String uriString, @Nullable String title) {
+    LicenseParser licenseParser = LicenseParser.getInstance();
+
+    URI uri = null;
+    try {
+      uri = (Strings.isNullOrEmpty(uriString)) ? null : URI.create(uriString);
+    } catch (IllegalArgumentException e) {
+      LOG.error("Bad URI found when parsing eml/dataset/intellectualRights/para/ulink@url attribute: {}", uriString);
+    }
+
+    License license = licenseParser.parseUriThenTitle(uri, title);
+    // TODO ensure license not overwritten by UNSPECIFIED and UNSUPPORTED license in datasetService.insertMetadata()
+
+    switch (license) {
+      case UNSPECIFIED:
+        LOG.warn("No machine readable license was detected!");
+        break;
+      case UNSUPPORTED:
+        LOG.warn("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
+        target.setLicense(license);
+        break;
+      default:
+        LOG.info("A supported machine readable license was detected: {}", license.name());
+        target.setLicense(license);
+        break;
     }
   }
 
@@ -409,6 +428,14 @@ public class DatasetWrapper {
 
   public void setPurpose(String purpose) {
     target.setPurpose(purpose);
+  }
+
+  public void setMaintenanceDescription(String maintenanceDescription) {
+    target.setMaintenanceDescription(maintenanceDescription);
+  }
+
+  public void setMaintenanceUpdateFrequency(MaintenanceUpdateFrequency maintenanceUpdateFrequency) {
+    target.setMaintenanceUpdateFrequency(maintenanceUpdateFrequency);
   }
 
   public void setSamplingDescription(SamplingDescription samplingDescription) {

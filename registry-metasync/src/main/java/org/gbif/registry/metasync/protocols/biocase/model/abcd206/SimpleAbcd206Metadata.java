@@ -42,6 +42,10 @@ public class SimpleAbcd206Metadata {
   private String phone;
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Copyrights/Copyright/Text")
   private String rights;
+  @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Licenses/License/Text")
+  private String licenseText;
+  @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Licenses/License/URI")
+  private URI licenseUri;
   @BeanPropertySetter(pattern = BASE_PATH + "Metadata/IPRStatements/Citations/Citation/Text")
   private String citationText;
   @BeanPropertySetter(pattern = BASE_PATH + "Units/Unit[0]/RecordBasis")
@@ -55,6 +59,22 @@ public class SimpleAbcd206Metadata {
 
   public void setBasisOfRecord(String basisOfRecord) {
     this.basisOfRecord = basisOfRecord;
+  }
+
+  public String getLicenseText() {
+    return licenseText;
+  }
+
+  public void setLicenseText(String licenseText) {
+    this.licenseText = licenseText;
+  }
+
+  public URI getLicenseUri() {
+    return licenseUri;
+  }
+
+  public void setLicenseUri(URI licenseUri) {
+    this.licenseUri = licenseUri;
   }
 
   public String getCitationText() {

@@ -29,7 +29,7 @@ public class ContactAdapter {
    * Get the list of AssociatedParties.
    * This is defined as all non-primary {@link Contact}.
    *
-   * @return first preferred ResourceCreator found or null if none were found
+   * @return list of AssociatedParties or empty list if none found
    */
   public List<Contact> getAssociatedParties() {
     List<Contact> contacts = Lists.newArrayList();
@@ -114,4 +114,45 @@ public class ContactAdapter {
     return pref;
   }
 
+  /**
+   * Get the list of creators equal to all primary {@link Contact} of type ContactType.ORIGINATOR.
+   *
+   * @return all primary creators found or empty list if none were found
+   */
+  public List<Contact> getPrimaryCreators() {
+    return getAllPrimaryType(ContactType.ORIGINATOR);
+  }
+
+  /**
+   * Get the list of contacts equal to all primary {@link Contact} of type ContactType.ORIGINATOR.
+   *
+   * @return all primary contacts found or empty list if none were found
+   */
+  public List<Contact> getPrimaryContacts() {
+    return getAllPrimaryType(ContactType.POINT_OF_CONTACT);
+  }
+
+  /**
+   * Get the list of metadataProvider equal to all primary {@link Contact} of type ContactType.METADATA_AUTHOR.
+   *
+   * @return all primary metadataProviders found or empty list if none were found
+   */
+  public List<Contact> getPrimaryMetadataProviders() {
+    return getAllPrimaryType(ContactType.METADATA_AUTHOR);
+  }
+
+  /**
+   * Get all primary {@link Contact} for the provided type.
+   *
+   * @return all primary {@link Contact} for specified type or empty list if none found
+   */
+  public List<Contact> getAllPrimaryType(ContactType type) {
+    List<Contact> primary = Lists.newArrayList();
+    for (Contact c : contactList) {
+      if (c.isPrimary() && type == c.getType()) {
+        primary.add(c);
+      }
+    }
+    return primary;
+  }
 }

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+        This is a complete sample of the GBIF Extended Metadata Profile for the IPT 1.0.1 represented as EML
+        This is the reference sample for Unit testing on consumption and output of the IPT
+        The content of this metadata are NOT real data, but drafted just for this sample
+        -->
 <eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.0.1/eml-gbif-profile.xsd"
@@ -13,6 +18,9 @@
 
     <title xml:lang="en">Tanzanian Entomological Collection</title>
     <title xml:lang="de">Entymologische Sammlung Tansania</title>
+
+    <!-- The creator is the person who created the resource (not necessarily the
+author of this metadata about the resource) -->
     <creator>
       <individualName>
         <givenName>DavidTheCreator</givenName>
@@ -48,8 +56,6 @@
       <phone>+4528261487</phone>
       <electronicMailAddress>trobertson@gbif.org</electronicMailAddress>
       <onlineUrl>http://www.gbif.org</onlineUrl>
-      <userId directory="http://orcid.org">0000-0001-5337-1153</userId>
-      <userId directory="gbif">153</userId>
     </metadataProvider>
 
     <!-- Note that associated parties have roles -->
@@ -59,14 +65,14 @@
         <surName>Döring</surName>
       </individualName>
       <address>
-        <deliveryPoint>Universitestparken 15, 2nd floor</deliveryPoint>
+        <deliveryPoint>2nd floor</deliveryPoint>
         <city>Copenhagen</city>
         <administrativeArea>Copenhagen</administrativeArea>
         <postalCode>2100</postalCode>
         <country>DK</country>
       </address>
       <phone>+45 35321 487</phone>
-      <electronicMailAddress>mdoering@mailinator.com</electronicMailAddress>
+      <electronicMailAddress>mdoering@gbif.org</electronicMailAddress>
       <onlineUrl>http://www.gbif.org</onlineUrl>
       <!-- The IPT will define a controlled vocabulary for this term -->
       <role>principalInvestigator</role>
@@ -81,14 +87,16 @@
       <role>pointOfContact</role>
     </associatedParty>
 
+    <!-- Identified in the Other section of the GBIF Extended Metadata Doc -->
     <pubDate>2010-02-02</pubDate>
+
+    <!-- Identified in the Other section of the GBIF Extended Metadata Doc -->
+    <!-- This is the RESOURCE language and not the metadata language which is at the bottom -->
     <language>en_US</language>
 
     <!-- The brief overview -->
     <abstract>
       <para>Specimens in jars.</para>
-      <para>Collected over years.</para>
-      <para>Still being curated.</para>
     </abstract>
 
     <!-- Keywords can optionally reference a thesaurus -->
@@ -360,7 +368,7 @@ Could be this can find a better home in the future -->
         <formationPeriod>During the 70s</formationPeriod>
 
         <!-- derived from NHC  -->
-        <specimenPreservationMethod>alcohol</specimenPreservationMethod>
+        <specimenPreservationMethod>alcoholic beverages</specimenPreservationMethod>
         <!-- derived from NHC  -->
         <livingTimePeriod>Jurassic</livingTimePeriod>
         <!-- for quantifying natural history collections datasets  -->
