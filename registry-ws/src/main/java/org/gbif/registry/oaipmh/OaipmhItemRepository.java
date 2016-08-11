@@ -81,7 +81,7 @@ public class OaipmhItemRepository implements ItemRepository {
     this.occurenceMetricsClient = occurenceMetricsClient;
 
     // should eventually be injected
-    emlWriter = EMLWriter.newInstance();
+    emlWriter = EMLWriter.newInstance(false, true);
     dublinCoreWriter = DublinCoreWriter.newInstance();
   }
 
@@ -373,7 +373,7 @@ public class OaipmhItemRepository implements ItemRepository {
     xml.write("</oaidc>\n");
 
     xml.write("<eml>\n");
-    emlWriter.write(dataset, xml);
+    emlWriter.writeTo(dataset, xml);
     xml.write("</eml>\n");
 
     xml.write("</root>\n");

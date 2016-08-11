@@ -9,11 +9,15 @@ import org.gbif.utils.file.FileUtils;
 import java.io.StringWriter;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EMLWriterTest {
+
+  private static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
   EMLWriter emlWriter = EMLWriter.newInstance();
   EMLWriter emlWriterDOI = EMLWriter.newInstance(true);
@@ -24,6 +28,17 @@ public class EMLWriterTest {
     d.setKey(UUID.randomUUID());
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
+    assertTrue(StringUtils.startsWith(writer.toString().trim(), XML_DECLARATION));
+  }
+
+  @Test
+  public void testWriteOmitXmlDeclaration() throws Exception {
+    EMLWriter emlWriter = EMLWriter.newInstance(false, true);
+    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    d.setKey(UUID.randomUUID());
+    StringWriter writer = new StringWriter();
+    emlWriter.writeTo(d, writer);
+    assertFalse(StringUtils.startsWith(writer.toString().trim(), XML_DECLARATION));
   }
 
   @Test
