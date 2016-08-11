@@ -120,7 +120,7 @@
       <userId directory="${directory}">${id}</userId>
     </#if>
   </#macro>
-<?xml version="1.0" encoding="UTF-8"?>
+
         <eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
