@@ -93,7 +93,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -461,7 +460,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.setModified(new Date());
 
       // keep original license, unless a supported license detected in preferred metadata
-      if (!replaceLicense(dataset.getLicense(), updDataset.getLicense())) {
+      if (!replaceLicense(updDataset.getLicense())) {
         LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
           updDataset.getLicense(), dataset.getLicense());
         updDataset.setLicense(dataset.getLicense());
@@ -544,24 +543,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * Decide whether the current license should be overwritten based on following rule(s):
    * Only overwrite current license is overwriting license is a GBIF-supported license.
    *
-   * @param current license
-   * @param overwriting license
+   * @param license license
    */
-  private boolean replaceLicense(@NotNull License current, @Nullable License overwriting) {
-    Preconditions.checkNotNull(current);
-    if (overwriting == null) {
+  private boolean replaceLicense(@Nullable License license) {
+
+    if (license == null) {
       return false;
     }
 
-    switch (overwriting) {
-      case UNSPECIFIED:
-        break;
-      case UNSUPPORTED:
-        break;
-      default:
-        return true;
-    }
-    return false;
+    return license.isConcrete();
   }
 
   /**
@@ -596,7 +586,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
     }
     // replace current license? Only if dataset being updated has a supported license
-    if (!replaceLicense(old.getLicense(), dataset.getLicense())) {
+    if (!replaceLicense(dataset.getLicense())) {
       LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.", dataset.getLicense(),
         old.getLicense());
       dataset.setLicense(old.getLicense());
@@ -816,40 +806,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         datasetKey);
     }
   }
-
-  /**
-   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
-   * synchronisation of the DOI related data.
-   * @param datasetKey
-   */
-//  @POST
-//  @Path("{key}/doisync")
-//  @RolesAllowed({ADMIN_ROLE})
-//  public void syncDOIData(@PathParam("key") UUID datasetKey) {
-//    Dataset dataset = super.get(datasetKey);
-//    Preconditions.checkArgument(dataset != null, "Dataset " + datasetKey + " not existing");
-//    Preconditions.checkArgument(dataset.getDoi() != null, "DOI must already be assigned.");
-//
-//    if(doiGenerator.isGbif(dataset.getDoi())){
-//      handleDoiStatus(dataset, dataset.getDoi());
-//    }
-//    else{
-//      //Try to get GBIF DOI from the identifiers
-//      List<Identifier> identifiers = dataset.getIdentifiers();
-//      DOI gbifDoi = null;
-//      for(Identifier identifier : identifiers){
-//        if(identifier.getType() == IdentifierType.DOI && doiGenerator.isGbif(new DOI(identifier.getIdentifier()))){
-//          gbifDoi = new DOI(identifier.getIdentifier());
-//        }
-//      }
-//      if(gbifDoi != null){
-//        // handle the DOI status with the gbifDoi as old/previous DOI.
-//        handleDoiStatus(dataset, gbifDoi);
-//      }else{
-//        LOG.info("Ignoring DOI synchronization for dataset {}. No GBIF DOI found.", datasetKey);
-//      }
-//    }
-//  }
 
   @POST
   @Path("{datasetKey}/process")
