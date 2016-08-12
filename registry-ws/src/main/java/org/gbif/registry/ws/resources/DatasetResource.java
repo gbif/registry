@@ -412,6 +412,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         if (existingContent != null) {
           if (existingContent.equals(new String(data))) {
             LOG.debug("This metadata document already exists - returning existing");
+            //experimental C.G.
+            Dataset d2 = DatasetParser.parse(type, new ByteArrayInputStream(data));
+            if(!dataset.equals(d2)){
+              LOG.warn("The metadata document already exists but interpretation seems different, datasetKey: {}", datasetKey);
+            }
             return existing;
           }
         }
@@ -443,28 +448,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       // we retrieve the preferred document and only update if this new metadata is the preferred one
       // e.g. we could put a DC document while an EML document exists that takes preference
       Dataset updDataset = getPreferredMetadataDataset(datasetKey);
-      // keep some of the original properties
-      updDataset.setKey(dataset.getKey());
-      updDataset.setParentDatasetKey(dataset.getParentDatasetKey());
-      updDataset.setDuplicateOfDatasetKey(dataset.getDuplicateOfDatasetKey());
-      updDataset.setInstallationKey(dataset.getInstallationKey());
-      updDataset.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-      updDataset.setExternal(dataset.isExternal());
-      updDataset.setNumConstituents(dataset.getNumConstituents());
-      updDataset.setType(dataset.getType());
-      updDataset.setSubtype(dataset.getSubtype());
-      updDataset.setLockedForAutoUpdate(dataset.isLockedForAutoUpdate());
-      updDataset.setCreatedBy(dataset.getCreatedBy());
-      updDataset.setCreated(dataset.getCreated());
+      updDataset = preserveGBIFDatasetProperties(updDataset, dataset);
+
       updDataset.setModifiedBy(user);
       updDataset.setModified(new Date());
 
-      // keep original license, unless a supported license detected in preferred metadata
-      if (!replaceLicense(updDataset.getLicense())) {
-        LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
-          updDataset.getLicense(), dataset.getLicense());
-        updDataset.setLicense(dataset.getLicense());
-      }
 
       // persist contacts, overwriting any existing ones
       replaceContacts(datasetKey, updDataset.getContacts(), user);
@@ -482,6 +470,39 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
 
     return metadata;
+  }
+
+  /**
+   * When we get a new Metadata document, this method is responsible to preserve the GBIF properties on the
+   * dataset object to make sure they are not overwritten.
+   *
+   * @param updatedDataset normally instantiated from a metadata document
+   * @param existingDataset current {@link Dataset} object from the database.
+   * @return same instance as updatedDataset but with GBIF properties preserved (taken from existingDataset)
+   */
+  private Dataset preserveGBIFDatasetProperties(Dataset updatedDataset, Dataset existingDataset){
+    // keep properties that we do not allow to update via metadata
+    updatedDataset.setKey(existingDataset.getKey());
+    updatedDataset.setParentDatasetKey(existingDataset.getParentDatasetKey());
+    updatedDataset.setDuplicateOfDatasetKey(existingDataset.getDuplicateOfDatasetKey());
+    updatedDataset.setInstallationKey(existingDataset.getInstallationKey());
+    updatedDataset.setPublishingOrganizationKey(existingDataset.getPublishingOrganizationKey());
+    updatedDataset.setExternal(existingDataset.isExternal());
+    updatedDataset.setNumConstituents(existingDataset.getNumConstituents());
+    updatedDataset.setType(existingDataset.getType());
+    updatedDataset.setSubtype(existingDataset.getSubtype());
+    updatedDataset.setLockedForAutoUpdate(existingDataset.isLockedForAutoUpdate());
+    updatedDataset.setCreatedBy(existingDataset.getCreatedBy());
+    updatedDataset.setCreated(existingDataset.getCreated());
+
+    // keep original license, unless a supported license detected in preferred metadata
+    if (!replaceLicense(updatedDataset.getLicense())) {
+      LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
+              updatedDataset.getLicense(), existingDataset.getLicense());
+      updatedDataset.setLicense(existingDataset.getLicense());
+    }
+
+    return updatedDataset;
   }
 
   private <T extends LenientEquals> boolean containedIn(T id, Collection<T> ids) {
