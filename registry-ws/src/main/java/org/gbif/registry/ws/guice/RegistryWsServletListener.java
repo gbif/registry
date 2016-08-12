@@ -12,17 +12,19 @@
  */
 package org.gbif.registry.ws.guice;
 
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
-import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
+import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
+import org.gbif.registry.ws.mixins.DatasetMixin;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -32,9 +34,11 @@ import org.gbif.ws.server.guice.GbifServletListener;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -87,6 +91,11 @@ public class RegistryWsServletListener extends GbifServletListener {
   @VisibleForTesting
   public RegistryWsServletListener(Properties properties) {
     super(properties, PACKAGES, true, null, requestFilters);
+  }
+
+  @Override
+  protected Map<Class<?>, Class<?>> getMixIns() {
+    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class);
   }
 
   @Override
