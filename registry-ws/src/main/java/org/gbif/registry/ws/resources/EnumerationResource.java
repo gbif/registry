@@ -14,6 +14,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.License;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -110,6 +111,19 @@ public class EnumerationResource {
   @GET
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
+  }
+
+  /**
+   * @return list of 'deserialised' License enums: uses License URL or just the enum name if no URL exists
+   */
+  @Path("licenses")
+  @GET
+  public List<String> deserialisedLicenses() {
+    List<String> licenses = Lists.newArrayList();
+    for (License license : License.values()) {
+      licenses.add((license.getLicenseUrl() == null) ? license.name() : license.getLicenseUrl());
+    }
+    return  licenses;
   }
 
   /**

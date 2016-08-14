@@ -33,6 +33,14 @@
 
 
 	<span ng-show="advancedMode || dataset.key == undefined">
+
+    <label class='control-label' for='license'>License</label>
+    <div class='controls'>
+      <select ng-model="dataset.license" ng-options="o | prettifyLicense for o in licenses"></select>
+      <p><span class="label label-important">Important</span> <span class="text-error">Changing this will update all occurrence records<span></p>
+      </label>
+    </div>
+
     <label class='control-label' for='lockedForAutoUpdate'>Lock auto updates</label>
     <div class='controls'>
       <label class="checkbox">

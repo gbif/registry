@@ -168,6 +168,9 @@ angular.module('dataset', [
   Restangular.all("enumeration/basic/Language").getList().then(function(data){
     $scope.languages = data;
   });
+  Restangular.all("enumeration/licenses").getList().then(function(data){
+    $scope.licenses = data;
+  });
 
 	// transitions to a new view, correctly setting up the path
   $scope.transitionTo = function (target) {
@@ -292,11 +295,15 @@ angular.module('dataset', [
   Restangular.all("enumeration/basic/Language").getList().then(function(data){
     $scope.languages = data;
   });
+  Restangular.all("enumeration/licenses").getList().then(function(data){
+    $scope.licenses = data;
+  });
 
 	// sensible defaults for creation
 	$scope.dataset = {};
 	$scope.dataset.type="OCCURRENCE";
 	$scope.dataset.language="ENGLISH";
+  $scope.dataset.license="http://creativecommons.org/licenses/by/4.0/legalcode";
 
   $scope.save = function (dataset) {
     if (dataset != undefined) {
@@ -313,4 +320,15 @@ angular.module('dataset', [
   $scope.cancelEdit = function() {
     $state.transitionTo('dataset-search.search');
   }
+})
+
+.filter('prettifyLicense', function () {
+  return function(name) {
+    switch (name) {
+      case "http://creativecommons.org/publicdomain/zero/1.0/legalcode": return "CC0 1.0";
+      case "http://creativecommons.org/licenses/by/4.0/legalcode": return "CC-BY 4.0";
+      case "http://creativecommons.org/licenses/by-nc/4.0/legalcode": return "CC-BY-NC 4.0";
+      default: return name;
+    }
+  };
 });
