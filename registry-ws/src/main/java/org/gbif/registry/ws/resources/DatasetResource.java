@@ -412,13 +412,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         if (existingContent != null) {
           if (existingContent.equals(new String(data))) {
             LOG.debug("This metadata document already exists - returning existing");
-
-            //experimental C.G.
-            Dataset d1 = merge(DatasetParser.parse(type, in), dataset);
-            Dataset d2 = preserveGBIFDatasetProperties(d1, dataset);
-            if(!d1.lenientEquals(d2)){
-              LOG.warn("The metadata document already exists but interpretation seems different, datasetKey: {}", datasetKey);
-            }
             return existing;
           }
         }
