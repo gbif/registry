@@ -153,6 +153,12 @@
       <p class='muted'><small>The language used for the likes of description, citation etc</small></p>
     </div>
 
+    <label class='control-label' for='maintenanceUpdateFrequency'>Update frequency</label>
+    <div class='controls'>
+      <select ng-model="dataset.maintenanceUpdateFrequency" ng-options="o for o in maintenanceUpdateFrequencies"></select>
+      <p class='muted'><small>The frequency with which changes and additions are made</small></p>
+    </div>
+
 
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>

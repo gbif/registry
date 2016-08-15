@@ -171,6 +171,9 @@ angular.module('dataset', [
   Restangular.all("enumeration/license").getList().then(function(data){
     $scope.licenses = data;
   });
+  Restangular.all("enumeration/basic/MaintenanceUpdateFrequency").getList().then(function(data){
+    $scope.maintenanceUpdateFrequencies = data;
+  });
 
 	// transitions to a new view, correctly setting up the path
   $scope.transitionTo = function (target) {
@@ -298,12 +301,16 @@ angular.module('dataset', [
   Restangular.all("enumeration/license").getList().then(function(data){
     $scope.licenses = data;
   });
+  Restangular.all("enumeration/basic/MaintenanceUpdateFrequency").getList().then(function(data){
+    $scope.maintenanceUpdateFrequencies = data;
+  });
 
 	// sensible defaults for creation
 	$scope.dataset = {};
 	$scope.dataset.type="OCCURRENCE";
 	$scope.dataset.language="ENGLISH";
   $scope.dataset.license="http://creativecommons.org/licenses/by/4.0/legalcode";
+  $scope.dataset.maintenanceUpdateFrequency="AS_NEEDED";
 
   $scope.save = function (dataset) {
     if (dataset != undefined) {
