@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 public class EnumerationResource {
 
   private static Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
+  private static final List<License> LICENSES = ImmutableList.copyOf(License.values());
 
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
@@ -124,6 +125,12 @@ public class EnumerationResource {
       licenses.add((license.getLicenseUrl() == null) ? license.name() : license.getLicenseUrl());
     }
     return  licenses;
+  }
+
+  @Path("license")
+  @GET
+  public List<License> listLicenses() {
+    return LICENSES;
   }
 
   /**
