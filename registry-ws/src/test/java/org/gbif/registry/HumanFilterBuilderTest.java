@@ -18,9 +18,8 @@ public class HumanFilterBuilderTest {
   /**
    * Test all available search parameters and make sure we have a bundle entry for all possible enum values.
    * Test copied from download-query-tools, but added here again as we might have a different GBIF API version in use.
-   * TODO add enum entry for Protocol to resource bundle
    */
-  @Ignore("Resource bundle missing enum entry for Protocol")
+  @Test
   public void testEnumResourceBundle() throws Exception {
     for (OccurrenceSearchParameter p : OccurrenceSearchParameter.values()) {
       if (p.type().isEnum()) {
