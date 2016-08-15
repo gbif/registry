@@ -168,7 +168,7 @@ angular.module('dataset', [
   Restangular.all("enumeration/basic/Language").getList().then(function(data){
     $scope.languages = data;
   });
-  Restangular.all("enumeration/licenses").getList().then(function(data){
+  Restangular.all("enumeration/license").getList().then(function(data){
     $scope.licenses = data;
   });
 
@@ -295,7 +295,7 @@ angular.module('dataset', [
   Restangular.all("enumeration/basic/Language").getList().then(function(data){
     $scope.languages = data;
   });
-  Restangular.all("enumeration/licenses").getList().then(function(data){
+  Restangular.all("enumeration/license").getList().then(function(data){
     $scope.licenses = data;
   });
 

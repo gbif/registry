@@ -21,6 +21,7 @@ import org.gbif.ws.util.ExtraMediaTypes;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -28,6 +29,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -49,7 +51,17 @@ import org.slf4j.LoggerFactory;
 public class EnumerationResource {
 
   private static Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
-  private static final List<License> LICENSES = ImmutableList.copyOf(License.values());
+
+  //List of Licenses as String
+  private static final List<String> LICENSES = ImmutableList.copyOf(
+          Lists.transform(Lists.newArrayList(License.values()),
+                  new Function<License, String>() {
+                    @Nullable
+                    @Override
+                    public String apply(License license) {
+                      return license.isConcrete() ? license.getLicenseUrl() : license.name();
+                    }
+                  }));
 
   // Uses reflection to find the enumerations in the API
   private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
@@ -106,7 +118,7 @@ public class EnumerationResource {
   }
 
   /**
-   * @return list of country informations based on our enum.
+   * @return list of country information based on our enum.
    */
   @Path("country")
   @GET
@@ -117,19 +129,9 @@ public class EnumerationResource {
   /**
    * @return list of 'deserialised' License enums: uses License URL or just the enum name if no URL exists
    */
-  @Path("licenses")
-  @GET
-  public List<String> deserialisedLicenses() {
-    List<String> licenses = Lists.newArrayList();
-    for (License license : License.values()) {
-      licenses.add((license.getLicenseUrl() == null) ? license.name() : license.getLicenseUrl());
-    }
-    return  licenses;
-  }
-
   @Path("license")
   @GET
-  public List<License> listLicenses() {
+  public List<String> listLicenses() {
     return LICENSES;
   }
 
