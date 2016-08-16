@@ -283,7 +283,7 @@ public class DatasetParserTest {
     assertEquals("+4528261487", contact.getPhone().get(0));
     assertEquals("dremsen@gbif.org", contact.getEmail().get(0));
     assertTrue(contact.isPrimary());
-    assertEquals(ContactType.POINT_OF_CONTACT, contact.getType());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
 
     // test limited agent with role tests
     contact = contactList.get(2);
@@ -633,7 +633,7 @@ public class DatasetParserTest {
 
     // test Creator #2
     Contact creator2 = contactList.get(1);
-    assertTrue(creator2.isPrimary());
+    assertFalse(creator2.isPrimary());
     assertEquals(ContactType.ORIGINATOR, creator2.getType());
     assertEquals("Creator 2", creator2.getFirstName());
     assertEquals("Stuart-Smith", creator2.getLastName());
@@ -651,7 +651,7 @@ public class DatasetParserTest {
 
     // test Metadata Provider #2
     Contact provider2 = contactList.get(3);
-    assertTrue(provider2.isPrimary());
+    assertFalse(provider2.isPrimary());
     assertEquals(ContactType.METADATA_AUTHOR, provider2.getType());
     assertEquals("Provider 2", provider2.getFirstName());
     assertEquals("Stuart-Smith", provider2.getLastName());
@@ -681,7 +681,7 @@ public class DatasetParserTest {
     // test Contact #1
     Contact contact1 = contactList.get(6);
     assertTrue(contact1.isPrimary());
-    assertEquals(ContactType.POINT_OF_CONTACT, contact1.getType());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact1.getType());
     assertEquals("Contact 1", contact1.getFirstName());
     assertEquals("Edgar", contact1.getLastName());
     assertNotNull(contact1.getUserId());
@@ -689,8 +689,8 @@ public class DatasetParserTest {
 
     // test Contact #2
     Contact contact2 = contactList.get(7);
-    assertTrue(contact2.isPrimary());
-    assertEquals(ContactType.POINT_OF_CONTACT, contact2.getType());
+    assertFalse(contact2.isPrimary());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact2.getType());
     assertEquals("Contact 2", contact2.getFirstName());
     assertEquals("Stuart-Smith", contact2.getLastName());
     assertNotNull(contact2.getUserId());
@@ -795,7 +795,7 @@ public class DatasetParserTest {
 
     // Contact equal to person
     Contact contact = dataset.getContacts().get(2);
-    assertEquals(ContactType.POINT_OF_CONTACT, contact.getType());
+    assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
     assertTrue(contact.isPrimary());
     assertEquals("Gabi Droege, Wolf-Henning Kusber", contact.getLastName()); // TODO fix - should be split into 2 contacts
 

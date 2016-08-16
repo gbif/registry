@@ -27,18 +27,29 @@ public class ContactAdapter {
 
   /**
    * Get the list of AssociatedParties.
-   * This is defined as all non-primary {@link Contact}.
+   * This is defined as all non-primary {@link Contact}, excluding contacts with types the following types
+   * considered primary types: Originator, MetadataAuthor and AdministrativePointOfContact.
    *
    * @return list of AssociatedParties or empty list if none found
    */
   public List<Contact> getAssociatedParties() {
     List<Contact> contacts = Lists.newArrayList();
     for (Contact c : this.contactList) {
-      if (!c.isPrimary()) {
+      if (!c.isPrimary() && !isPreferredContactType(c.getType())) {
         contacts.add(c);
       }
     }
     return contacts;
+  }
+
+  /**
+   * @return true if contact type is considered a preferred type, or false otherwise
+   */
+  private boolean isPreferredContactType(ContactType type) {
+    return (type != null &&
+            (type == ContactType.ORIGINATOR
+             || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
+             || type == ContactType.METADATA_AUTHOR));
   }
 
   /**
@@ -115,41 +126,41 @@ public class ContactAdapter {
   }
 
   /**
-   * Get the list of creators equal to all primary {@link Contact} of type ContactType.ORIGINATOR.
+   * Get the list of {@link Contact} of type ContactType.ORIGINATOR.
    *
-   * @return all primary creators found or empty list if none were found
+   * @return all creators found or empty list if none were found
    */
-  public List<Contact> getPrimaryCreators() {
-    return getAllPrimaryType(ContactType.ORIGINATOR);
+  public List<Contact> getCreators() {
+    return getAllType(ContactType.ORIGINATOR);
   }
 
   /**
-   * Get the list of contacts equal to all primary {@link Contact} of type ContactType.ORIGINATOR.
+   * Get the list of {@link Contact} of type ContactType.ADMINISTRATIVE_POINT_OF_CONTACT.
    *
-   * @return all primary contacts found or empty list if none were found
+   * @return all contacts found or empty list if none were found
    */
-  public List<Contact> getPrimaryContacts() {
-    return getAllPrimaryType(ContactType.POINT_OF_CONTACT);
+  public List<Contact> getContacts() {
+    return getAllType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
   }
 
   /**
-   * Get the list of metadataProvider equal to all primary {@link Contact} of type ContactType.METADATA_AUTHOR.
+   * Get the list of {@link Contact} of type ContactType.METADATA_AUTHOR.
    *
-   * @return all primary metadataProviders found or empty list if none were found
+   * @return all metadataProviders found or empty list if none were found
    */
-  public List<Contact> getPrimaryMetadataProviders() {
-    return getAllPrimaryType(ContactType.METADATA_AUTHOR);
+  public List<Contact> getMetadataProviders() {
+    return getAllType(ContactType.METADATA_AUTHOR);
   }
 
   /**
-   * Get all primary {@link Contact} for the provided type.
+   * Get all {@link Contact} for the provided type.
    *
-   * @return all primary {@link Contact} for specified type or empty list if none found
+   * @return all {@link Contact} for specified type or empty list if none found
    */
-  public List<Contact> getAllPrimaryType(ContactType type) {
+  public List<Contact> getAllType(ContactType type) {
     List<Contact> primary = Lists.newArrayList();
     for (Contact c : contactList) {
-      if (c.isPrimary() && type == c.getType()) {
+      if (type == c.getType()) {
         primary.add(c);
       }
     }

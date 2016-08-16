@@ -136,14 +136,14 @@
     </#if>
   </#list>
     <title>${dataset.title!}</title>
-    <#-- The creator is the person who created the resource (not necessarily the author of this metadata about the resource). -->
-    <#list eml.getPrimaryCreators() as creator>
+    <#-- The creators are the persons who created the resource (not necessarily the author of this metadata about the resource). -->
+    <#list eml.getCreators() as creator>
     <creator>
       <@contact ct=creator!/>
     </creator>
     </#list>
-    <#-- The contact responsible for the creation of the metadata. -->
-    <#list eml.getPrimaryMetadataProviders() as metadataProvider>
+    <#-- The contacts responsible for the creation of the metadata. -->
+    <#list eml.getMetadataProviders() as metadataProvider>
     <metadataProvider>
       <@contact ct=metadataProvider!/>
     </metadataProvider>
@@ -272,8 +272,8 @@
           <maintenanceUpdateFrequency>${maintenanceUpdateFrequencyEmlValue}</maintenanceUpdateFrequency>
       </maintenance>
   </#if>
-  <#-- Current primary contact for the dataset. The creator of the resource might be dead, left the organisation or doesnt want to be bothered. -->
-  <#list eml.getPrimaryContacts() as pointOfContact>
+  <#-- Current primary contacts for the dataset. The creator of the resource might be dead, left the organisation or doesnt want to be bothered. -->
+  <#list eml.getContacts() as pointOfContact>
       <contact>
         <@contact ct=pointOfContact!/>
       </contact>

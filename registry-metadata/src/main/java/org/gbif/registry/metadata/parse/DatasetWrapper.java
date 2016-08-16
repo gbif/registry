@@ -217,44 +217,62 @@ public class DatasetWrapper {
   }
 
   /**
-   * Similar to addContact() except that it is always used to set preferred flag to true on Contact, and type to
-   * POINT_OF_CONTACT.
+   * Similar to addContact() except that it sets type to ADMINISTRATIVE_POINT_OF_CONTACT, and sets isPrimary flag
+   * to true only if this is the first contact of type ADMINISTRATIVE_POINT_OF_CONTACT in dataset's contact list.
    *
    * @param contact Contact
    */
   public void addPreferredAdministrativeContact(Contact contact) {
-    contact.setPrimary(true);
+    boolean primaryExists = isPrimaryExisting(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, target.getContacts());
+    contact.setPrimary(!primaryExists);
     // set type to administrative
-    contact.setType(ContactType.POINT_OF_CONTACT);
+    contact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
     addContact(contact);
   }
 
   /**
-   * Similar to addContact() except that it is always used to set preferred flag to true on Contact, and type to
-   * METADATA_AUTHOR.
+   * Similar to addContact() except that it sets type to METADATA_AUTHOR, and sets isPrimary flag to true only if this
+   * is the first contact of type METADATA_AUTHOR in dataset's contact list.
    *
    * @param contact Contact
    */
   public void addPreferredMetadataContact(Contact contact) {
-    // set preferred = true
-    contact.setPrimary(true);
+    boolean primaryExists = isPrimaryExisting(ContactType.METADATA_AUTHOR, target.getContacts());
+    contact.setPrimary(!primaryExists);
     // set type to administrative
     contact.setType(ContactType.METADATA_AUTHOR);
     addContact(contact);
   }
 
   /**
-   * Similar to addContact() except that it is always used to set preferred flag to true on Contact, and type to
-   * ORIGINATOR.
+   * Similar to addContact() except that it sets type to ORIGINATOR, and sets isPrimary flag to true only if this
+   * is the first contact of type ORIGINATOR in dataset's contact list.
    *
-   * @param contact Contjoact
+   * @param contact Contact
    */
   public void addPreferredOriginatorContact(Contact contact) {
-    // set preferred = true
-    contact.setPrimary(true);
+    boolean primaryExists = isPrimaryExisting(ContactType.ORIGINATOR, target.getContacts());
+    contact.setPrimary(!primaryExists);
     // set type to administrative
     contact.setType(ContactType.ORIGINATOR);
     addContact(contact);
+  }
+
+  /**
+   * Check if primary contact of particular type exists already in list of Contacts.
+   *
+   * @param contactType type to check for
+   * @param contacts list of Contacts
+   *
+   * @return true if primary contact of particular type exists already, false otherwise
+   */
+  private boolean isPrimaryExisting(ContactType contactType, List<Contact> contacts) {
+    for (Contact c : contacts) {
+      if (c.getType() != null && c.getType() == contactType && c.isPrimary()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public void addTaxonomicCoverages(TaxonomicCoverages taxonomicCoverages) {

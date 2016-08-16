@@ -51,19 +51,25 @@ public class ContactTests {
     assertTrue("Contact should be empty when none added", contacts.isEmpty());
 
     // test additions, both being primary
-    service.addContact(entity.getKey(), Contacts.newInstance());
-    service.addContact(entity.getKey(), Contacts.newInstance());
+    Integer key1 = service.addContact(entity.getKey(), Contacts.newInstance());
+    Integer key2 = service.addContact(entity.getKey(), Contacts.newInstance());
+
+    // ordered by ascending created date (first contact appears first)
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
     assertEquals("2 contacts have been added", 2, contacts.size());
-    assertFalse("Older contact should not be primary anymore", contacts.get(1).isPrimary());
-    assertTrue("Newer contact should be primary", contacts.get(0).isPrimary());
 
-    // test deletion, ensuring correct one is deleted
-    service.deleteContact(entity.getKey(), contacts.get(1).getKey());
+    assertEquals(key1, contacts.get(0).getKey());
+    assertEquals(key2, contacts.get(1).getKey());
+
+    assertFalse("Older contact (added first) should not be primary anymore", contacts.get(0).isPrimary());
+    assertTrue("Newer contact (added second) should now be primary", contacts.get(1).isPrimary());
+
+    // test deletion, ensuring non-primary contact is deleted, and primary contact remains
+    service.deleteContact(entity.getKey(), contacts.get(0).getKey());
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
-    assertEquals("1 contact should remain after the deletion", 1, contacts.size());
+    assertEquals("1 primary contact should remain after the deletion", 1, contacts.size());
     Contact expected = Contacts.newInstance();
     Contact created = contacts.get(0);
     assertLenientEquals("Created contact does not read as expected", expected, created);

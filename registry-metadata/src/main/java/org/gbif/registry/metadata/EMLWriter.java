@@ -130,10 +130,10 @@ public class EMLWriter {
     }
 
     /**
-     * @return list of primary creators {@link Contact} of type ContactType.ORIGINATOR
+     * @return list of {@link Contact} of type ContactType.ORIGINATOR
      */
-    public List<Contact> getPrimaryCreators() {
-      return contactAdapter.getPrimaryCreators();
+    public List<Contact> getCreators() {
+      return contactAdapter.getCreators();
     }
 
     public Contact getAdministrativeContact() {
@@ -141,10 +141,10 @@ public class EMLWriter {
     }
 
     /**
-     * @return list of primary contacts {@link Contact} of type ContactType.POINT_OF_CONTACT
+     * @return list of {@link Contact} of type ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
      */
-    public List<Contact> getPrimaryContacts() {
-      return contactAdapter.getPrimaryContacts();
+    public List<Contact> getContacts() {
+      return contactAdapter.getContacts();
     }
 
     public Contact getMetadataProvider() {
@@ -152,10 +152,10 @@ public class EMLWriter {
     }
 
     /**
-     * @return list of primary metadataProviders {@link Contact} of type ContactType.METADATA_AUTHOR
+     * @return list of {@link Contact} of type ContactType.METADATA_AUTHOR
      */
-    public List<Contact> getPrimaryMetadataProviders() {
-      return contactAdapter.getPrimaryMetadataProviders();
+    public List<Contact> getMetadataProviders() {
+      return contactAdapter.getMetadataProviders();
     }
 
     /**
