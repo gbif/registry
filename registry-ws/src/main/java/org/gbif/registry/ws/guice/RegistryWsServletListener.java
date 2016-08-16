@@ -24,12 +24,12 @@ import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
-import org.gbif.registry.ws.mixins.DatasetMixin;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
+import org.gbif.ws.mixin.DatasetMixin;
 import org.gbif.ws.server.guice.GbifServletListener;
 
 import java.io.IOException;
