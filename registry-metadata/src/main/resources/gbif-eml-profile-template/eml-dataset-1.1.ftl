@@ -313,7 +313,7 @@
       <project <#if dataset.project.identifier?has_content>id="${dataset.project.identifier}"</#if>>
           <title>${dataset.project.title!}</title>
           <#-- The project personnel involved in a research project with a defined role. -->
-          <#list dataset.project.contacts as personnel>
+          <#list dataset.project.contacts! as personnel>
           <personnel>
             <@contact ct=personnel withRole=true/>
           </personnel>

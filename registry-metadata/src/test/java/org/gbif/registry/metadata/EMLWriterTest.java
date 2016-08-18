@@ -3,6 +3,7 @@ package org.gbif.registry.metadata;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.eml.Project;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.utils.file.FileUtils;
 
@@ -46,6 +47,17 @@ public class EMLWriterTest {
     Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
     d.setKey(UUID.randomUUID());
     d.getContacts().clear();
+    StringWriter writer = new StringWriter();
+    emlWriter.writeTo(d, writer);
+  }
+
+  @Test
+  public void testWriteEmlProject() throws Exception {
+    Dataset d = new Dataset();
+    d.setKey(UUID.randomUUID());
+    Project project = new Project();
+    project.setTitle("my project");
+    d.setProject(project);
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
   }
