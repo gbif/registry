@@ -124,6 +124,7 @@
     <field name="metadata" type="text" indexed="true" stored="false" required="false" multiValued="false" />
     <field name="publishing_country" type="int" indexed="true" stored="true" required="false" multiValued="false" docValues="true"/>
     <field name="country" type="int" indexed="true" stored="true" required="false" multiValued="true" docValues="true"/>
+    <field name="license" type="int" indexed="true" stored="true" required="false" docValues="true"/>
   </fields>
 
   <!-- Field to use to determine and enforce document uniqueness. Unless this

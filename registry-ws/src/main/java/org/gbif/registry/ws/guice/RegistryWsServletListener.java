@@ -13,6 +13,8 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.search.DatasetSearchRequest;
+import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
@@ -95,7 +97,7 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected Map<Class<?>, Class<?>> getMixIns() {
-    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class);
+    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class, DatasetSearchResult.class, DatasetMixin.class);
   }
 
   @Override

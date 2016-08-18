@@ -4,6 +4,7 @@ import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.common.search.model.FacetField;
 import org.gbif.common.search.model.FacetField.Method;
 import org.gbif.common.search.model.FullTextSearchField;
@@ -32,7 +33,8 @@ import org.apache.solr.client.solrj.beans.Field;
     @FacetField(name = "DECADE", field = "decade", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "COUNTRY", field = "country", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "PUBLISHING_COUNTRY", field = "publishing_country", sort = FacetField.SortOrder.INDEX,
-      method = Method.ENUM)
+      method = Method.ENUM),
+    @FacetField(name = "LICENSE", field = "license", sort = FacetField.SortOrder.INDEX, method = Method.ENUM)
   },
   fulltextFields = {
     @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 1000.0d,
@@ -129,5 +131,10 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
   @Field("dataset_type")
   public void setType(Integer datasetTypeOrdinal) {
     setType(datasetTypeOrdinal == null ? null : DatasetType.values()[datasetTypeOrdinal]);
+  }
+
+  @Field("license")
+  public void setLicense(Integer licenseOrdinal) {
+    setLicense(licenseOrdinal == null ? null : License.values()[licenseOrdinal]);
   }
 }

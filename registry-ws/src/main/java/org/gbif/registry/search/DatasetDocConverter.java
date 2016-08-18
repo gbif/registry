@@ -51,8 +51,9 @@ class DatasetDocConverter {
     // enums
     .put("dataset_type", "type")
     .put("dataset_subtype", "subtype")
+    .put("license", "license")
     .build();
-  private final Set<String> enumFields = ImmutableSet.of("dataset_type", "dataset_subtype");
+  private final Set<String> enumFields = ImmutableSet.of("dataset_type", "dataset_subtype","license");
 
   public DatasetDocConverter(
     NetworkEntityService<Organization> organizationService, NetworkEntityService<Installation> installationService,
