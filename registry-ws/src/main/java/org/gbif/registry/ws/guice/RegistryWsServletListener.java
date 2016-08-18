@@ -97,7 +97,8 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected Map<Class<?>, Class<?>> getMixIns() {
-    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class, DatasetSearchResult.class, DatasetMixin.class);
+    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class,
+                                               DatasetSearchResult.class, DatasetMixin.class);
   }
 
   @Override

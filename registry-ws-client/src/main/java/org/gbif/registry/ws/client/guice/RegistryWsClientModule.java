@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.client.guice;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
@@ -82,7 +83,8 @@ public class RegistryWsClientModule extends GbifWsClientModule {
 
   @Override
   protected Map<Class<?>, Class<?>> getMixIns() {
-    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class);
+    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class,
+                                               DatasetSearchResult.class, DatasetMixin.class);
   }
 
   // To allow the prefixing of the properties
