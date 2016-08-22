@@ -1,4 +1,4 @@
-package org.gbif.registry.metasync.protocols;
+package org.gbif.registry.metasync.protocols.dwca;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -9,7 +9,6 @@ import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.MetadataProtocolHandler;
 import org.gbif.registry.metasync.api.SyncResult;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -22,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
+ * Moved to test package since this should not be used in production, EML are synchronised using another path.
+ * It can be useful to run locally to test some changes though.
+ *
  * IPT and HTTP synchronisation starts by iterating through all GBIF {@link Dataset} served by the installation.
  * Each GBIF {@link Dataset} is then augmented by its preferred metadata document, typically an EML document.
  */

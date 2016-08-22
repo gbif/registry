@@ -15,7 +15,6 @@ package org.gbif.registry.metasync;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.registry.metasync.api.SyncResult;
-import org.gbif.registry.metasync.protocols.EmlMetadataSynchroniser;
 import org.gbif.registry.metasync.protocols.biocase.BiocaseMetadataSynchroniser;
 import org.gbif.registry.metasync.protocols.digir.DigirMetadataSynchroniser;
 import org.gbif.registry.metasync.protocols.tapir.TapirMetadataSynchroniser;
@@ -68,8 +67,6 @@ public final class Runner {
     synchroniser.registerProtocolHandler(new BiocaseMetadataSynchroniser(clientFactory.provideHttpClient()));
 
     DatasetService datasetService = injector.getInstance(DatasetService.class);
-    // Commented out below, because it depends on new method in DatasetService, currently only implemented locally
-    //synchroniser.registerProtocolHandler(new EmlMetadataSynchroniser(datasetService));
 
     List<SyncResult> syncResults = synchroniser.synchroniseAllInstallations(100);
     LOG.info("Done syncing. Processing results");

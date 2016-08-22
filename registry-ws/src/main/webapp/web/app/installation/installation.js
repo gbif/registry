@@ -113,6 +113,7 @@ angular.module('installation', [
       case "HTTP_INSTALLATION": return "HTTP";
       case "IPT_INSTALLATION": return "IPT";
       case "DIGIR_INSTALLATION": return "DiGIR";
+      case "SYMBIOTA_INSTALLATION": return "Symbiota";
       default: return name;
     }
   };
