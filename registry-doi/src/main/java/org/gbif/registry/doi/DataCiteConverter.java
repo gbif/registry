@@ -131,9 +131,17 @@ public class DataCiteConverter {
         if (d.getDataLanguage() != null) {
             b.withLanguage(d.getDataLanguage().getIso3LetterCode());
         }
-        if (!Strings.isNullOrEmpty(d.getRights())) {
+
+        if(d.getLicense() != null && d.getLicense().isConcrete()){
+          b.withRightsList().addRights()
+                  .withRightsURI(d.getLicense().getLicenseUrl()).withValue(d.getLicense().getLicenseTitle());
+        } else{
+          //this is still require for metadata only resource
+          if (!Strings.isNullOrEmpty(d.getRights())) {
             b.withRightsList().addRights().withValue(d.getRights()).end();
+          }
         }
+
         Set<DataCiteMetadata.Subjects.Subject> subjects = Sets.newHashSet();
         for (KeywordCollection kcol : d.getKeywordCollections()) {
             for (String k : kcol.getKeywords()) {

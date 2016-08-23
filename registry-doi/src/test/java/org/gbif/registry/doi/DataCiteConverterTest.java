@@ -11,6 +11,7 @@ import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
@@ -59,6 +60,7 @@ public class DataCiteConverterTest {
         d.setCreatedBy("Markus");
         d.setLanguage(Language.NORWEGIAN);
         d.setDataLanguage(Language.NORWEGIAN);
+        d.setLicense(License.CC0_1_0);
 
         DataCiteMetadata m = convertAndValidate(doi, d, publisher);
         assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
@@ -79,8 +81,8 @@ public class DataCiteConverterTest {
         assertEquals("10.1234/5678", m.getIdentifier().getValue());
         assertEquals(Lists.<Double>newArrayList(1d, 3d, 2d, 4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationBox());
         assertEquals(d.getDescription(), m.getDescriptions().getDescription().get(0).getContent().get(0));
+        assertEquals(License.CC0_1_0.getLicenseUrl(), m.getRightsList().getRights().get(0).getRightsURI());
     }
-
 
     private DataCiteMetadata convertAndValidate(DOI doi, Dataset d, Organization publisher) throws InvalidMetadataException {
         DataCiteMetadata m = DataCiteConverter.convert(d, publisher);
@@ -133,6 +135,28 @@ public class DataCiteConverterTest {
         assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
         assertTrue(xml.contains(String.valueOf(du1.getNumberRecords())));
         assertTrue(xml.contains(String.valueOf(du2.getNumberRecords())));
+    }
+
+    @Test
+    public void testDatasetLicense() throws Exception {
+        Organization publisher = new Organization();
+        publisher.setTitle("My Publisher");
+        publisher.setKey(UUID.randomUUID());
+
+        final DOI doi = new DOI("10.1234/5679");
+        Dataset d = new Dataset();
+        d.setKey(UUID.randomUUID());
+        d.setType(DatasetType.METADATA);
+        d.setTitle("My Metadata");
+        d.setCreated(new Date());
+        d.setModified(new Date());
+        d.setCreatedBy("Jim");
+        d.setLanguage(Language.ENGLISH);
+        d.setDataLanguage(Language.ENGLISH);
+        d.setRights("Copyright ©");
+
+        DataCiteMetadata m = convertAndValidate(doi, d, publisher);
+        assertEquals("Copyright ©", m.getRightsList().getRights().get(0).getValue());
     }
 
     @Test
