@@ -4,7 +4,7 @@
 <hr/>
 <p ng-show="dataset.deleted!=null">
   <span class="label label-important">Important</span> <span class="text-error">This dataset was deleted {{dataset.deleted | timeAgo}}.</span><br/>
-  <small class="muted">{{dataset.deleted}}</small>
+  <small class="muted">{{dataset.deleted}} by {{dataset.modifiedBy}}.</small>
 </p>
 
 <dl class="dl-horizontal spaced-list">
