@@ -187,6 +187,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     service.delete(n1.getKey());
     T n4 = service.get(n1.getKey()); // one can get a deleted entity
     n1.setDeleted(n4.getDeleted());
+    n1.setModified(n4.getModified());
     assertEquals("Persisted does not reflect original after a deletion", n1, n4);
     // check that one cannot see the deleted entity in a list
     assertEquals("List service does not reflect the number of created entities",
