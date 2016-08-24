@@ -187,6 +187,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Consumes(MediaType.WILDCARD)
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public void delete(@PathParam("key") UUID key, @Context SecurityContext security) {
+    // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
+    // the api delete(UUID) should be changed eventually
+    T objectToDelete = get(key);
+    objectToDelete.setModifiedBy(security.getUserPrincipal().getName());
+    WithMyBatis.update(mapper, objectToDelete);
+
+    delete(key);
+  }
+
   @Override
   public void delete(@PathParam("key") UUID key) {
     T objectToDelete = get(key);
