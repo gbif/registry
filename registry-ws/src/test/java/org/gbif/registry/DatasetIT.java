@@ -63,6 +63,7 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import org.apache.ibatis.io.Resources;
 import org.apache.solr.client.solrj.SolrClient;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -341,8 +342,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     assertEquals("SOLR does not have the expected number of results for country[" + country +
-      "] and publishingCountry[" + publishingCountry + "]", Long.valueOf(expected),
-      resp.getCount());
+                 "] and publishingCountry[" + publishingCountry + "]", Long.valueOf(expected), resp.getCount());
   }
 
   @Override
@@ -494,6 +494,48 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     service.update(dataset);
     dataset = service.get(key);
     assertEquals(License.CC0_1_0, dataset.getLicense());
+  }
+
+  /**
+   * Test verifies method updateFromPreferredMetadata updates the dataset by reinterpreting its preferred metadata
+   * document. In particular the test ensures the dataset license is updated properly as per the metadata document.
+   * </br>
+   * Note method updateFromPreferredMetadata is only implemented in the web service layer - not client!
+   */
+  @Test
+  public void testUpdateFromPreferredMetadata() throws IOException {
+    try {
+      Dataset src = newEntity();
+
+      // start with dataset with CC0 license
+      src.setLicense(License.CC0_1_0);
+
+      // register dataset
+      final UUID key = create(src, 1).getKey();
+
+      // ensure license CC0 was assigned
+      Dataset dataset = service.get(key);
+      assertEquals(License.CC0_1_0, dataset.getLicense());
+
+      // insert metadata document, which sets license to more restrictive license CC-BY - ensure license was replaced
+      InputStream is = Resources.getResourceAsStream("metadata/sample-v1.1.xml");
+      service.insertMetadata(key, is);
+      dataset = service.get(key);
+      assertEquals(License.CC_BY_4_0, dataset.getLicense());
+
+      // update dataset, overwritting license back to CC0
+      dataset.setLicense(License.CC0_1_0);
+      service.update(dataset);
+      dataset = service.get(key);
+      assertEquals(License.CC0_1_0, dataset.getLicense());
+
+      // last, update dataset from preferred metadata document, ensuring license gets reset to CC-BY
+      service.updateFromPreferredMetadata(key);
+      dataset = service.get(key);
+      assertEquals(License.CC_BY_4_0, dataset.getLicense());
+    } catch (UnsupportedOperationException e) {
+      // skip web service client test, because updateFromPreferredMetadata is not implemented in web service client
+    }
   }
 
   @Test

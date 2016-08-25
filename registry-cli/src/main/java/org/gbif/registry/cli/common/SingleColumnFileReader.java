@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.base.Charsets;
@@ -54,15 +55,16 @@ public class SingleColumnFileReader {
 
   /**
    * Reads all (non empty) lines of a file and returns the entire content as List.
-   * @param fileName
+   * @param filePath file path
    * @param toType function to transform a String into the expected type
-   * @param <T>
-   * @return
-   * @throws IOException
+   * @param <T> expected type
+   * @return list of content in expected type
+   * @throws IOException if file not found or there was a problem reading from file
    */
-  public static <T> List<T> readFile(String fileName, final Function<String, T> toType) throws IOException {
+  public static <T> List<T> readFile(String filePath, final Function<String, T> toType) throws IOException {
     Preconditions.checkNotNull(toType);
-    return Resources.readLines(Resources.getResource(fileName), Charsets.UTF_8,
+    Preconditions.checkNotNull(filePath);
+    return Resources.readLines(Paths.get(filePath).toUri().toURL(), Charsets.UTF_8,
             new LineProcessor<List<T>>() {
 
               List<T> list = Lists.newArrayList();

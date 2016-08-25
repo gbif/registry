@@ -76,6 +76,11 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
   }
 
   @Override
+  public void updateFromPreferredMetadata(UUID uuid) {
+    throw new UnsupportedOperationException("Method not available in ws client");
+  }
+
+  @Override
   public PagingResponse<Dataset> listByCountry(Country country, @Nullable DatasetType type, @Nullable Pageable page) {
     return get(GenericTypes.PAGING_DATASET, null, QueryParamBuilder.create("country", country, "type", type)
       .build(), page);
