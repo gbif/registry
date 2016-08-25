@@ -1,11 +1,13 @@
 package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.common.messaging.guice.PostalServiceModule;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
+import org.gbif.registry.ws.resources.DatasetResource;
 
 import java.util.Properties;
 
@@ -44,6 +46,8 @@ public class DoiSynchronizerModule {
       install(new DoiModule(prop));
       install(new PostalServiceModule(PostalServiceConfiguration.SYNC_PREFIX, config.postalservice.toProperties()));
       install(new TitleLookupModule(true, config.apiRoot));
+
+      bind(DatasetService.class).to(DatasetResource.class);
     }
   }
 }

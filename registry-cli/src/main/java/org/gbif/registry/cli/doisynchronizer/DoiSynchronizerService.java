@@ -12,6 +12,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.datacite.DataCiteService;
 import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.cli.common.SingleColumnFileReader;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDOIDiagnosticResult;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDatasetDOIDiagnosticResult;
@@ -22,6 +23,7 @@ import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -71,18 +73,73 @@ public class DoiSynchronizerService {
    * Runs the actual service
    */
   public void doRun(){
-    if (StringUtils.isNotBlank(config.doi)) {
-      try {
-        DOI doi = new DOI(config.doi);
-        reportDOIStatus(doi);
-
-        if (config.fixDOI) {
-          System.out.println("Attempt to fix DOI " + doi.getDoiName());
-          System.out.println("Attempt result: " + (tryFixDOI(doi) ? "success" : "failed"));
+    if (validateDOIParameters()) {
+      // Single DOI
+      if(StringUtils.isNotBlank(config.doi)) {
+        handleDOI(config.doi);
+      } //DOI list
+      else if(StringUtils.isNotBlank(config.doiList)){
+        List<DOI> doiList = SingleColumnFileReader.readDOIs(config.doiList);
+        for(DOI doi : doiList){
+          handleDOI(doi);
         }
-      } catch (IllegalArgumentException iaEx) {
-        System.out.println(config.doi + " is not a valid DOI");
       }
+    }
+  }
+
+  /**
+   * Check the current status of the DOI related configurations from the instance of
+   * {@link DoiSynchronizerConfiguration}. The method is intended to be used on command line and will print
+   * messages using System.out.
+   *
+   * @return
+   */
+  private boolean validateDOIParameters(){
+    if (StringUtils.isNotBlank(config.doi) && StringUtils.isNotBlank(config.doiList)) {
+      System.out.println(" --doi and --doi-list can not be used at the same time");
+      return false;
+    }
+
+    if(StringUtils.isNotBlank(config.doi)){
+      if(!DOI.isParsable(config.doi)){
+        System.out.println(config.doi + " is not a valid DOI");
+        return false;
+      }
+    }
+    else if(StringUtils.isNotBlank(config.doiList)){
+      if(!new File(config.doiList).exists()){
+        System.out.println("DOI list can not be found: " + config.doiList);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Handle a single DOIm provided as String
+   * @param doiAsString
+   */
+  private void handleDOI(String doiAsString){
+    try {
+      handleDOI(new DOI(doiAsString));
+    }
+    catch (IllegalArgumentException iaEx) {
+      System.out.println(config.doi + " is not a valid DOI");
+      return;
+    }
+  }
+
+  /**
+   * Handle a single DOI
+   * @param doi
+   */
+  private void handleDOI(DOI doi){
+    if(!config.skipDiagnostic) {
+      reportDOIStatus(doi);
+    }
+
+    if (config.fixDOI) {
+      diagnosticPrinter.printDOIFixAttemptReport(doi, tryFixDOI(doi));
     }
   }
 

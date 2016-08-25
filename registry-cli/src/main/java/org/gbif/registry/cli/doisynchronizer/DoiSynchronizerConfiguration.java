@@ -48,8 +48,16 @@ public class DoiSynchronizerConfiguration {
   @NotNull
   public String doi = "";
 
+  @Parameter(names = "--doi-list", required = false)
+  @NotNull
+  public String doiList = "";
+
   @Parameter(names = {"--fix-doi"}, required = false)
   @Valid
   public boolean fixDOI = false;
+
+  @Parameter(names = {"--skip-dia"}, required = false)
+  @Valid
+  public boolean skipDiagnostic = false;
 
 }
