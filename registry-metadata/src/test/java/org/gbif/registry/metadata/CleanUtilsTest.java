@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class CleanUtilsTest {
@@ -36,8 +37,10 @@ public class CleanUtilsTest {
   public void testRemoveEmptyStringsCitation() throws Exception {
     Citation c = new Citation();
     c.setText("");
+    c.setIdentifier("");
     CleanUtils.removeEmptyStrings(c);
 
+    assertNotNull(c);
     assertNull(c.getText());
     assertNull(c.getIdentifier());
   }

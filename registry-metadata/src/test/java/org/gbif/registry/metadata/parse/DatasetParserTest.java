@@ -569,6 +569,19 @@ public class DatasetParserTest {
   }
 
   /**
+   * Tests parser does NOT set Dataset.Citation.identifier and Dataset.Citation.text equal to empty strings
+   * when invalid citation element supplied in EML. Both fields should be set to NULL.
+   */
+  @Test
+  public void tesInvalidCitationSet() throws IOException {
+    Dataset dataset =
+      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
+    assertNotNull(dataset.getCitation());
+    assertNull(dataset.getCitation().getText());
+    assertNull(dataset.getCitation().getIdentifier());
+  }
+
+  /**
    * Roundtripping test for GBIF Metadata Profile version 1.1
    */
   @Test
@@ -760,6 +773,13 @@ public class DatasetParserTest {
     assertTrue(dataset.getDescription().contains("worldwide.</br>Abundance")); // HTML break tag concatenates para
     assertTrue(dataset.getDescription().endsWith("(Method 0)."));
 
+    // Citation
+    assertNotNull(dataset.getCitation());
+    assertEquals("http://doi.org/10.15468/qjgwba", dataset.getCitation().getIdentifier());
+    assertEquals("Edgar G J, Stuart-Smith R D (2014): Reef Life Survey: Global reef fish dataset. v2.0. Reef Life Survey. Dataset/Samplingevent. http://doi.org/10.15468/qjgwba", dataset.getCitation().getText());
+
+    // Bibliographic citations
+    assertEquals(7, dataset.getBibliographicCitations().size());
   }
 
   /**

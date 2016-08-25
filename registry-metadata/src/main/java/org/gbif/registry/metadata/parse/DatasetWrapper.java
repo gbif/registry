@@ -295,8 +295,10 @@ public class DatasetWrapper {
     target.setBibliographicCitations(bibliographicCitations);
   }
 
-  public void setCitation(Citation citation) {
-    CleanUtils.removeEmptyStrings(citation);
+  public void setCitation(String text, String identifier) {
+    Citation citation = new Citation();
+    citation.setText(Strings.emptyToNull(text));
+    citation.setIdentifier(Strings.emptyToNull(identifier));
     target.setCitation(citation);
   }
 

@@ -16,6 +16,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
+import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Metadata;
@@ -55,6 +56,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import com.google.common.base.Charsets;
@@ -532,6 +534,51 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       datasetResource.updateFromPreferredMetadata(key, "DatasetIT");
       dataset = service.get(key);
       assertEquals(License.CC_BY_4_0, dataset.getLicense());
+  }
+
+  /**
+   * Test checks behaviour updating Citation with valid and invalid identifier.
+   * In the database, there is a min length 1 character constraint on Dataset.citation_identifier.
+   */
+  @Test
+  public void testDatasetCitationIdentifierConstraint() throws IOException {
+    Dataset src = newEntity();
+
+    // register dataset
+    final UUID key = create(src, 1).getKey();
+
+    Dataset dataset = service.get(key);
+    assertNotNull(dataset.getCitation());
+
+    // set Citation identifier to null
+    Citation c = dataset.getCitation();
+    c.setIdentifier(null);
+    dataset.setCitation(c);
+    service.update(dataset);
+
+    // check update succeeds
+    dataset = service.get(key);
+    assertNotNull(dataset.getCitation());
+    assertEquals("This is a citation text", dataset.getCitation().getText());
+    assertNull(dataset.getCitation().getIdentifier());
+
+    // set Citation identifier to single character
+    c = dataset.getCitation();
+    c.setIdentifier("");
+    dataset.setCitation(c);
+
+    // update dataset...
+    ConstraintViolationException exception = null;
+    try {
+      service.update(dataset);
+    } catch (ConstraintViolationException e) {
+      exception = e;
+    }
+    // /...and check it fails, however, constraint violation can only be thrown by web service because client
+    // trims Citation fields via StringTrimInterceptor
+    if (service.equals(webservice().getBinding(DatasetService.class).getProvider().get())) {
+      assertNotNull(exception);
+    }
   }
 
   @Test

@@ -8,6 +8,7 @@
           This sample metadata document is a variation of sample4-1.1.xml with the following differences:
            * it has a malformed license URL
            * it has an invalid maintenanceUpdateFrequency (invalid XML)
+           * it has an invalid citation (invalid XML)
           -->
   <dataset>
     <alternateIdentifier>doi:10.15468/qjgwba</alternateIdentifier>
@@ -301,7 +302,7 @@
       <gbif>
         <dateStamp>2014-06-25T01:18:37.647+02:00</dateStamp>
         <hierarchyLevel>dataset</hierarchyLevel>
-        <citation identifier="http://doi.org/10.15468/qjgwba">Edgar G J, Stuart-Smith R D (2014): Reef Life Survey: Global reef fish dataset. v2.0. Reef Life Survey. Dataset/Samplingevent. http://doi.org/10.15468/qjgwba</citation>
+        <citation identifier=""></citation>
         <bibliography>
           <citation identifier="doi:10.1038/sdata.2014.7">Edgar, GJ and Stuart-Smith, RD, “Systematic global assessment of reef fish communities by the Reef Life Survey program”, Scientific Data, 1 Article 140007. doi:10.1038/sdata.2014.7 ISSN 2052-4463 (2014)</citation>
           <citation identifier="doi:10.1038/nature13022">Edgar, GJ and Stuart-Smith, RD and Willis, TJ* and Kininmonth, S* and Baker, SC and Banks, S* and Barrett, NS and Becerro, MA* and Bernard, ATF* and Berkhout, J and Buxton, CD and Campbell, SJ* and Cooper, AT and Davey, M and Edgar, SC* and Forsterra, G* and Galvan, DE* and Irigoyen, AJ* and Kushner, DJ* and Moura, R* and Parnell, PE* and Shears, NT* and Soler, G and Strain, EMA* and Thomson, RJ, “Global conservation outcomes depend on marine protected areas with five key features”, Nature, 506 (7487) pp. 216-220. doi:10.1038/nature13022 ISSN 0028-0836 (2014)</citation>
