@@ -443,7 +443,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     } else {
       // we retrieve the preferred document and only update if this new metadata is the preferred one
       // e.g. we could put a DC document while an EML document exists that takes preference
-      updateFromPreferredMetadata(datasetKey);
+      updateFromPreferredMetadata(datasetKey, user);
       LOG.info("Dataset {} updated with base information from metadata document {}", datasetKey, metaKey);
     }
 
