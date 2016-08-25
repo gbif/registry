@@ -529,7 +529,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
       // last, update dataset from preferred metadata document, ensuring license gets reset to CC-BY
       DatasetResource datasetResource = webservice().getBinding(DatasetResource.class).getProvider().get();
-      datasetResource.updateFromPreferredMetadata(dataset, "DatasetIT");
+      datasetResource.updateFromPreferredMetadata(key, "DatasetIT");
       dataset = service.get(key);
       assertEquals(License.CC_BY_4_0, dataset.getLicense());
   }

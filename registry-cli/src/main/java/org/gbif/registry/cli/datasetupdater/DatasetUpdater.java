@@ -56,7 +56,7 @@ public class DatasetUpdater {
     } else if (dataset.isLockedForAutoUpdate()) {
       LOG.error("Dataset [key={}] has been locked!", key);
     } else {
-      datasetResource.updateFromPreferredMetadata(dataset, "dataset-updater cli");
+      datasetResource.updateFromPreferredMetadata(key, "dataset-updater cli");
       LOG.info("Updated dataset [key={}]!", dataset.getKey());
       updateCounter++;
     }
