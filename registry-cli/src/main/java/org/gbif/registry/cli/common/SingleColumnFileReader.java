@@ -10,7 +10,11 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.LineProcessor;
+import com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,5 +50,36 @@ public class SingleColumnFileReader {
       LOG.error("Error while reading DOI key file [{}]. Exiting", fileName, e);
     }
     return doiList;
+  }
+
+  /**
+   * Reads all (non empty) lines of a file and returns the entire content as List.
+   * @param fileName
+   * @param toType function to transform a String into the expected type
+   * @param <T>
+   * @return
+   * @throws IOException
+   */
+  public static <T> List<T> readFile(String fileName, final Function<String, T> toType) throws IOException {
+    Preconditions.checkNotNull(toType);
+    return Resources.readLines(Resources.getResource(fileName), Charsets.UTF_8,
+            new LineProcessor<List<T>>() {
+
+              List<T> list = Lists.newArrayList();
+
+              @Override
+              public boolean processLine(String line) throws IOException {
+                T obj = toType.apply(line);
+                if( obj != null){
+                  list.add(obj);
+                }
+                return true;
+              }
+
+              @Override
+              public List<T> getResult() {
+                return list;
+              }
+            });
   }
 }
