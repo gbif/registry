@@ -30,12 +30,12 @@ public class DatasetUpdaterIT {
     updater = DatasetUpdater.build(cfg);
 
     // set dataset license to CC0!
-    Dataset ds = updater.getDatasetService().get(UUID.fromString(cfg.key));
+    Dataset ds = updater.getDatasetResource().get(UUID.fromString(cfg.key));
     ds.setLicense(License.CC0_1_0);
-    updater.getDatasetService().update(ds);
+    updater.getDatasetResource().update(ds);
 
     // assert license was set properly
-    ds = updater.getDatasetService().get(UUID.fromString(cfg.key));
+    ds = updater.getDatasetResource().get(UUID.fromString(cfg.key));
     assertEquals(License.CC0_1_0, ds.getLicense());
   }
 
@@ -47,7 +47,7 @@ public class DatasetUpdaterIT {
   @Ignore
   public void testUpdateSingleDataset() {
     updater.update(UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a"));
-    Dataset ds = updater.getDatasetService().get(UUID.fromString(cfg.key));
+    Dataset ds = updater.getDatasetResource().get(UUID.fromString(cfg.key));
     assertEquals(License.CC_BY_NC_4_0, ds.getLicense());
   }
 
@@ -61,7 +61,7 @@ public class DatasetUpdaterIT {
     List<UUID> keys = Lists.newArrayList();
     keys.add(UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a"));
     updater.update(keys);
-    Dataset ds = updater.getDatasetService().get(UUID.fromString(cfg.key));
+    Dataset ds = updater.getDatasetResource().get(UUID.fromString(cfg.key));
     assertEquals(License.CC_BY_NC_4_0, ds.getLicense());
   }
 

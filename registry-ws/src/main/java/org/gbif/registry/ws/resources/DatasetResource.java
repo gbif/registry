@@ -443,7 +443,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     } else {
       // we retrieve the preferred document and only update if this new metadata is the preferred one
       // e.g. we could put a DC document while an EML document exists that takes preference
-      updateFromPreferredMetadata(datasetKey, user);
+      updateFromPreferredMetadata(dataset, user);
       LOG.info("Dataset {} updated with base information from metadata document {}", datasetKey, metaKey);
     }
 
@@ -484,39 +484,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
-   * Intended to be used exclusively by Registry CLI. Sets the modifying user equal to "UNKNOWN USER".
-   */
-  @Override
-  public void updateFromPreferredMetadata(UUID uuid) {
-    updateFromPreferredMetadata(uuid, "UNKNOWN USER");
-  }
-
-  /**
+   * Updates dataset by reinterpreting its preferred metadata document, if it exists.
    *
-   * @param uuid the dataset to update
+   * @param dataset the dataset to update
    * @param user the modifier
    */
-  private void updateFromPreferredMetadata(UUID uuid, String user) {
-    Dataset dataset = super.get(uuid);
-    if (dataset == null) {
-      throw new NotFoundException("Dataset " + uuid + " not existing");
-    } else if (dataset.getDeleted() != null) {
-      throw new NotFoundException("Dataset " + uuid + " has been deleted");
-    }
-
-    // retrieve preferred metadata document, if it exists
-    Dataset updDataset = getPreferredMetadataDataset(uuid);
-
+  public void updateFromPreferredMetadata(@NotNull Dataset dataset, @NotNull String user) {
+    Dataset updDataset = getPreferredMetadataDataset(dataset.getKey());
     if (updDataset != null) {
       updDataset = preserveGBIFDatasetProperties(updDataset, dataset);
-
       updDataset.setModifiedBy(user);
       updDataset.setModified(new Date());
 
       // persist contacts, overwriting any existing ones
-      replaceContacts(uuid, updDataset.getContacts(), user);
-      addIdentifiers(uuid, updDataset.getIdentifiers(), user);
-      addTags(uuid, updDataset.getTags(), user);
+      replaceContacts(dataset.getKey(), updDataset.getContacts(), user);
+      addIdentifiers(dataset.getKey(), updDataset.getIdentifiers(), user);
+      addTags(dataset.getKey(), updDataset.getTags(), user);
 
       // now update the core dataset only, remove associated data to avoid confusion and potential validation problems
       updDataset.getContacts().clear();
@@ -525,7 +508,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.getMachineTags().clear();
       update(updDataset);
     } else {
-      LOG.debug("Dataset [key={}] has no preferred metadata document, skipping update!", uuid);
+      LOG.debug("Dataset [key={}] has no preferred metadata document, skipping update!", dataset.getKey());
     }
   }
 

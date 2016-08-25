@@ -497,14 +497,12 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   /**
-   * Test verifies method updateFromPreferredMetadata updates the dataset by reinterpreting its preferred metadata
-   * document. In particular the test ensures the dataset license is updated properly as per the metadata document.
-   * </br>
-   * Note method updateFromPreferredMetadata is only implemented in the web service layer - not client!
+   * Test calls DatasetResource.updateFromPreferredMetadata directly, to ensure it updates the dataset by
+   * reinterpreting its preferred metadata document. In particular the test ensures the dataset license is updated
+   * properly as per the metadata document.
    */
   @Test
   public void testUpdateFromPreferredMetadata() throws IOException {
-    try {
       Dataset src = newEntity();
 
       // start with dataset with CC0 license
@@ -530,12 +528,10 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       assertEquals(License.CC0_1_0, dataset.getLicense());
 
       // last, update dataset from preferred metadata document, ensuring license gets reset to CC-BY
-      service.updateFromPreferredMetadata(key);
+      DatasetResource datasetResource = webservice().getBinding(DatasetResource.class).getProvider().get();
+      datasetResource.updateFromPreferredMetadata(dataset, "DatasetIT");
       dataset = service.get(key);
       assertEquals(License.CC_BY_4_0, dataset.getLicense());
-    } catch (UnsupportedOperationException e) {
-      // skip web service client test, because updateFromPreferredMetadata is not implemented in web service client
-    }
   }
 
   @Test

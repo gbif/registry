@@ -1,7 +1,7 @@
 package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.registry.DatasetService;
+import org.gbif.registry.ws.resources.DatasetResource;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +19,7 @@ public class DatasetUpdater {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetUpdater.class);
   private int updateCounter;
-  private final DatasetService datasetService;
+  private final DatasetResource datasetResource;
 
   public static DatasetUpdater build(DatasetUpdaterConfiguration cfg) {
     return new DatasetUpdater(cfg);
@@ -28,7 +28,7 @@ public class DatasetUpdater {
   private DatasetUpdater(DatasetUpdaterConfiguration cfg) {
     LOG.info("Connecting to registry {}.{} as user {}", cfg.db.serverName, cfg.db.databaseName, cfg.db.user);
     Injector inj = new DatasetUpdaterModule(cfg).getInjector();
-    datasetService = inj.getInstance(DatasetService.class);
+    datasetResource = inj.getInstance(DatasetResource.class);
   }
 
   /**
@@ -48,7 +48,7 @@ public class DatasetUpdater {
    * @param key key of dataset to update
    */
   public void update(UUID key) {
-    Dataset dataset = datasetService.get(key);
+    Dataset dataset = datasetResource.get(key);
     if (dataset == null) {
       LOG.error("Dataset [key={}] not existing!", key);
     } else if (dataset.getDeleted() != null) {
@@ -56,7 +56,7 @@ public class DatasetUpdater {
     } else if (dataset.isLockedForAutoUpdate()) {
       LOG.error("Dataset [key={}] has been locked!", key);
     } else {
-      datasetService.updateFromPreferredMetadata(key);
+      datasetResource.updateFromPreferredMetadata(dataset, "dataset-updater cli");
       LOG.info("Updated dataset [key={}]!", dataset.getKey());
       updateCounter++;
     }
@@ -70,7 +70,7 @@ public class DatasetUpdater {
   }
 
   @VisibleForTesting
-  public DatasetService getDatasetService() {
-    return datasetService;
+  public DatasetResource getDatasetResource() {
+    return datasetResource;
   }
 }
