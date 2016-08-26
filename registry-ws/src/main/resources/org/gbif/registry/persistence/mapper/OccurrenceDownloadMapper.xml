@@ -16,7 +16,7 @@
   </resultMap>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified
   </sql>
 
 
@@ -32,12 +32,14 @@
     size = #{size,jdbcType=BIGINT},
     doi = #{doi,jdbcType=VARCHAR},
     total_records = #{totalRecords,jdbcType=INTEGER},
+    license = #{license,jdbcType=OTHER},
     modified = now()
   </sql>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELD_TYPES">
     #{key,jdbcType=VARCHAR},
     #{doi,jdbcType=VARCHAR},
+    #{license,jdbcType=OTHER},
   	#{request.predicate,jdbcType=VARCHAR},
     #{status,jdbcType=OTHER},
     #{downloadLink,jdbcType=VARCHAR},

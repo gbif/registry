@@ -20,6 +20,7 @@ import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -115,6 +116,7 @@ public class OccurrenceDownloadIT {
     download.setRequest(request);
     download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
+    download.setLicense(License.CC0_1_0);
     return download;
   }
 
