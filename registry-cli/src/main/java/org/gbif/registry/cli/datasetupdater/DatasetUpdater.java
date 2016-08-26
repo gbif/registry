@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Injector;
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +57,13 @@ public class DatasetUpdater {
     } else if (dataset.isLockedForAutoUpdate()) {
       LOG.error("Dataset [key={}] has been locked!", key);
     } else {
-      datasetResource.updateFromPreferredMetadata(key, "dataset-updater cli");
-      LOG.info("Updated dataset [key={}]!", dataset.getKey());
-      updateCounter++;
+      try {
+        datasetResource.updateFromPreferredMetadata(key, "dataset-updater cli");
+        LOG.info("Updated dataset [key={}]!", key);
+        updateCounter++;
+      } catch (PersistenceException e) {
+        LOG.error("Persistence exception occurred trying to update dataset [key={}]: {}", key, e);
+      }
     }
   }
 
