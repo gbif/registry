@@ -126,9 +126,7 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addRule("eml/dataset/abstract", new SetRootRule("addDescription", ParagraphContainer.class));
 
     // Citation
-    digester.addCallMethod("eml/additionalMetadata/metadata/gbif/citation", "setCitation", 2);
-    digester.addCallParam("eml/additionalMetadata/metadata/gbif/citation", 0);
-    digester.addCallParam("eml/additionalMetadata/metadata/gbif/citation", 1, "identifier");
+    addCitationRules(digester, "eml/additionalMetadata/metadata/gbif/citation", "setCitation");
 
     // digester.addBeanPropertySetter("eml/additionalMetadata/metadata/gbif/hierarchyLevel", "hierarchyLevel");
 

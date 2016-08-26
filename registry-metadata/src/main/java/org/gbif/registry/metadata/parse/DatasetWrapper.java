@@ -51,6 +51,10 @@ import org.slf4j.LoggerFactory;
 /**
  * A delegating wrapper to a Dataset that can be instructed to override existing content or not.
  * This allows an existing Dataset to be augmented by new content.
+ *
+ * Warning: Apache Digester can(I can not confirm it is always) call the setter of a parent object before the setter
+ * of nested objects.
+ * e.g. setCitation will be called before the setIdentifier and setText on the Citation object.
  */
 public class DatasetWrapper {
 
@@ -295,10 +299,7 @@ public class DatasetWrapper {
     target.setBibliographicCitations(bibliographicCitations);
   }
 
-  public void setCitation(String text, String identifier) {
-    Citation citation = new Citation();
-    citation.setText(Strings.emptyToNull(text));
-    citation.setIdentifier(Strings.emptyToNull(identifier));
+  public void setCitation(Citation citation) {
     target.setCitation(citation);
   }
 
@@ -517,6 +518,10 @@ public class DatasetWrapper {
   public void postProcess() {
     updateTaxonomicCoverageRanks();
     updatePrimaryDOI();
+
+    if(target.getCitation() != null) {
+      CleanUtils.removeEmptyStrings(target.getCitation());
+    }
   }
 
   private void updateTaxonomicCoverageRanks() {
