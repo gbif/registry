@@ -10,6 +10,7 @@ import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
@@ -45,10 +46,10 @@ public class DataCiteConverter {
 
   private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download";
   private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
-  private static final String RIGHTS = "The data included in this download are provided to the user under a Creative Commons BY-NC 4.0 license which means that you are free to use, share, and adapt the data provided that you give reasonable and appropriate credit (attribution) and that you do not use the material for commercial purposes (non-commercial).\n\nData from some individual datasets included in this download may be licensed under less restrictive terms; review the details below.";
-  private static final String RIGHTS_URL = "http://creativecommons.org/licenses/by-nc/4.0";
+  private static final License DEFAULT_DOWNLOAD_LICENSE = License.CC_BY_NC_4_0;
+  private static final String LICENSE_INFO = "Data from some individual datasets included in this download may be licensed under less restrictive terms.";
   private static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
-  private static final String DWAC_FORMAT = "Darwin Core Archive";
+  private static final String DWCA_FORMAT = "Darwin Core Archive";
 
   private static String fdate(Date date) {
     return DateFormatUtils.ISO_DATE_FORMAT.format(date);
@@ -242,10 +243,11 @@ public class DataCiteConverter {
             .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end()
             .end().withDates().addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
             .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
-            .end().withFormats().addFormat(DWAC_FORMAT).end().withSizes().addSize(Long.toString(d.getSize())).end()
-            .withRightsList()
-            .addRights(DataCiteMetadata.RightsList.Rights.builder().withValue(RIGHTS).withRightsURI(RIGHTS_URL).build()).end();
+            .end().withFormats().addFormat(DWCA_FORMAT).end().withSizes().addSize(Long.toString(d.getSize())).end();
 
+    License downloadLicense = d.getLicense() != null && d.getLicense().isConcrete() ? d.getLicense() : DEFAULT_DOWNLOAD_LICENSE;
+    b.withRightsList().addRights()
+              .withRightsURI(downloadLicense.getLicenseUrl()).withValue(downloadLicense.getLicenseTitle()).end();
 
     final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
             .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
@@ -253,6 +255,10 @@ public class DataCiteConverter {
                     d.getTotalRecords(), getFilterQuery(d, titleLookup)))
             .addContent(String.format("The dataset includes %s records from %s constituent datasets:",
                     d.getTotalRecords(), d.getNumberDatasets()));
+    
+    if(downloadLicense != License.CC0_1_0){
+      db.addContent(LICENSE_INFO);
+    }
 
     if (!usedDatasets.isEmpty()) {
       final DataCiteMetadata.RelatedIdentifiers.Builder<?> relBuilder = b.withRelatedIdentifiers();
