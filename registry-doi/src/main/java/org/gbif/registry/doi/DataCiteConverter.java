@@ -255,11 +255,6 @@ public class DataCiteConverter {
                     d.getTotalRecords(), getFilterQuery(d, titleLookup)))
             .addContent(String.format("The dataset includes %s records from %s constituent datasets:",
                     d.getTotalRecords(), d.getNumberDatasets()));
-    
-    if(downloadLicense != License.CC0_1_0){
-      db.addContent(LICENSE_INFO);
-    }
-
     if (!usedDatasets.isEmpty()) {
       final DataCiteMetadata.RelatedIdentifiers.Builder<?> relBuilder = b.withRelatedIdentifiers();
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
@@ -274,6 +269,7 @@ public class DataCiteConverter {
           db.addContent("\n " + du.getNumberRecords() + " records from " + du.getDatasetTitle() + ".");
         }
       }
+      db.addContent(LICENSE_INFO);
     }
 
     return b.build();

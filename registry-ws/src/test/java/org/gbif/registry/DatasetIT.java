@@ -469,7 +469,6 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     final UUID key = create(src, 1).getKey();
 
     // ensure default license CC-BY 4.0 was assigned
-    System.out.println("Service type: " + service.getClass().toString());
     Dataset dataset = service.get(key);
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
 
