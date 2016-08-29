@@ -90,6 +90,7 @@ angular.module('contact', ['services.notifications'])
       case "PUBLISHER": return "Publisher";
       case "USER": return "User";
       case "PROGRAMMER": return "Programmer";
+      case "CURATOR": return "Curator";
       case "DATA_ADMINISTRATOR": return "Data administrator";
       case "SYSTEM_ADMINISTRATOR": return "System administrator";
       case "TEMPORARY_HEAD_OF_DELEGATION": return "Temporary head of delegation";

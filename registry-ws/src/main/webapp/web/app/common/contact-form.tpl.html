@@ -95,6 +95,12 @@
 	    <p class="muted"><small></small></p>
 	  </div>
 
+	  <label class="control-label" for="userId">* User ID</label>
+	  <div class="controls">
+		<input maxlength="255" id="userId" type="text" ng-model="contact.userId" ng-list=";">
+		<p class="muted"><small></small></p>
+	  </div>
+
 	<div class="form-actions">
 	  <button class="btn primary-btn" ng-click="close()">Cancel</button>
 	  <button class="btn primary-btn" ng-click="save(contact)" type="submit">Save</button>
