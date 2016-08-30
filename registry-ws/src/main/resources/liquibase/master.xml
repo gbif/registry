@@ -46,4 +46,5 @@
   <include file="liquibase/040-add-curator-role.xml"/>
   <include file="liquibase/041-add-symbiota.xml"/>
   <include file="liquibase/042-add-download-license.xml"/>
+  <include file="liquibase/043-download-license-constraint.xml"/>
 </databaseChangeLog>

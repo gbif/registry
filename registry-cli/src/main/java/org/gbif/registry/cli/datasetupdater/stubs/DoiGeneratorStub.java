@@ -14,12 +14,12 @@ public class DoiGeneratorStub implements DoiGenerator {
 
   @Override
   public DOI newDatasetDOI() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public DOI newDownloadDOI() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -34,16 +34,16 @@ public class DoiGeneratorStub implements DoiGenerator {
 
   @Override
   public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void delete(DOI doi) {
-
+    throw new UnsupportedOperationException();
   }
 }
