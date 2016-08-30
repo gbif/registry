@@ -500,6 +500,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     Dataset updDataset = getPreferredMetadataDataset(uuid);
     if (updDataset != null) {
       updDataset = preserveGBIFDatasetProperties(updDataset, dataset);
+      //keep the DOI only if none can be extracted from the metadata
+      if(updDataset.getDoi() == null && dataset.getDoi() != null){
+        updDataset.setDoi(dataset.getDoi());
+      }
+
       updDataset.setModifiedBy(user);
       updDataset.setModified(new Date());
 
@@ -513,6 +518,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       updDataset.getIdentifiers().clear();
       updDataset.getTags().clear();
       updDataset.getMachineTags().clear();
+
       update(updDataset);
     } else {
       LOG.debug("Dataset [key={}] has no preferred metadata document, skipping update!", uuid);
