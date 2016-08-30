@@ -116,7 +116,6 @@ public class OccurrenceDownloadIT {
     download.setRequest(request);
     download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
-    download.setLicense(License.CC0_1_0);
     return download;
   }
 
@@ -249,6 +248,7 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setSize(200L);
     occurrenceDownload.setTotalRecords(600L);
     occurrenceDownload.setDoi(new DOI("doi:10.1234/1ASCDU"));
+    occurrenceDownload.setLicense(License.CC0_1_0);
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertTrue(occurrenceDownload2.getStatus() == Download.Status.RUNNING);
