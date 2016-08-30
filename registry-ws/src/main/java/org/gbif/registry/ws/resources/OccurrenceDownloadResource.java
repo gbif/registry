@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.vocabulary.License;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
@@ -91,6 +92,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public void create(@Valid @NotNull @Trim Download occurrenceDownload) {
     occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
+    occurrenceDownload.setLicense(License.UNSPECIFIED);
     occurrenceDownloadMapper.create(occurrenceDownload);
   }
 
