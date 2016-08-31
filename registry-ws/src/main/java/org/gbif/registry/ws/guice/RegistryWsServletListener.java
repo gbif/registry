@@ -12,8 +12,8 @@
  */
 package org.gbif.registry.ws.guice;
 
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.occurrence.query.TitleLookupModule;
@@ -32,6 +32,7 @@ import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.mixin.DatasetMixin;
+import org.gbif.ws.mixin.LicenseMixin;
 import org.gbif.ws.server.guice.GbifServletListener;
 
 import java.io.IOException;
@@ -97,8 +98,11 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected Map<Class<?>, Class<?>> getMixIns() {
-    return ImmutableMap.<Class<?>, Class<?>>of(Dataset.class, DatasetMixin.class,
-                                               DatasetSearchResult.class, DatasetMixin.class);
+    return ImmutableMap.<Class<?>, Class<?>>of(
+            Dataset.class, DatasetMixin.class,
+            DatasetSearchResult.class, DatasetMixin.class,
+            Download.class, LicenseMixin.class
+    );
   }
 
   @Override
