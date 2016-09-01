@@ -12,9 +12,6 @@
  */
 package org.gbif.registry.ws.client.guice;
 
-import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
@@ -37,13 +34,11 @@ import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.GbifWsClientModule;
-import org.gbif.ws.mixin.DatasetMixin;
-import org.gbif.ws.mixin.LicenseMixin;
+import org.gbif.ws.mixin.Mixins;
 
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
@@ -84,11 +79,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
 
   @Override
   protected Map<Class<?>, Class<?>> getMixIns() {
-    return ImmutableMap.<Class<?>, Class<?>>of(
-            Dataset.class, DatasetMixin.class,
-            DatasetSearchResult.class, DatasetMixin.class,
-            Download.class, LicenseMixin.class
-    );
+    return Mixins.getPredefinedMixins();
   }
 
   // To allow the prefixing of the properties
