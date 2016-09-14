@@ -60,4 +60,8 @@ public class DoiSynchronizerConfiguration {
   @Valid
   public boolean skipDiagnostic = false;
 
+  @Parameter(names = {"--export"}, required = false)
+  @Valid
+  public boolean export = false;
+
 }

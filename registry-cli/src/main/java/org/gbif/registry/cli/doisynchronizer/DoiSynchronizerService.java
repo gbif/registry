@@ -24,12 +24,16 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.inject.Injector;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +104,11 @@ public class DoiSynchronizerService {
       return false;
     }
 
+    if (config.export && StringUtils.isNotBlank(config.doiList)) {
+      System.out.println(" --export can not be used with --doi-list");
+      return false;
+    }
+
     if(StringUtils.isNotBlank(config.doi)){
       if(!DOI.isParsable(config.doi)){
         System.out.println(config.doi + " is not a valid DOI");
@@ -138,6 +147,17 @@ public class DoiSynchronizerService {
       reportDOIStatus(doi);
     }
 
+    if(config.export){
+      String registryDoiMetadata = doiPersistenceService.getMetadata(doi);
+      if(!Strings.isNullOrEmpty(registryDoiMetadata)){
+        try {
+          FileUtils.writeStringToFile(new File(doi.getDoiName().replace("/","_") + "_export.xml"), registryDoiMetadata, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
     if (config.fixDOI) {
       diagnosticPrinter.printDOIFixAttemptReport(doi, tryFixDOI(doi));
     }
@@ -147,7 +167,7 @@ public class DoiSynchronizerService {
    * Report the current status of a DOI
    * @param doi
    */
-  private void reportDOIStatus(DOI doi){
+  private GbifDOIDiagnosticResult reportDOIStatus(DOI doi){
     GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
 
     if(doiDiagnostic != null){
@@ -156,6 +176,7 @@ public class DoiSynchronizerService {
     else{
       System.out.println("No report can be generated. Nothing found for DOI " + doi);
     }
+    return doiDiagnostic;
   }
 
   /**
@@ -279,6 +300,7 @@ public class DoiSynchronizerService {
     }
 
     dataCiteDoiHandlerStrategy.downloadChanged(download, null, user);
+
     return true;
   }
 
