@@ -11,9 +11,9 @@
   <version>2.57-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>Registry EML Metadata</name>
+  <name>Registry DOI</name>
   <url>http://sites.gbif.org/registry/registry-metadata</url>
-  <description>Support for parsing and writing EML and other metadata formats to our dataset class</description>
+  <description>Registry DOI related business</description>
 
   <distributionManagement>
     <site>
@@ -78,6 +78,11 @@
     <dependency>
       <groupId>org.mybatis</groupId>
       <artifactId>mybatis</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-metadata</artifactId>
     </dependency>
 
     <dependency>

@@ -365,16 +365,15 @@ public class DatasetWrapper {
 
     switch (license) {
       case UNSPECIFIED:
-        LOG.info("No machine readable license was detected!");
+        LOG.debug("No machine readable license was detected!");
         break;
       case UNSUPPORTED:
-        LOG.info("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
+        LOG.debug("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
         target.setLicense(license);
         break;
       default:
-        LOG.info("A supported machine readable license was detected: {}", license.name());
+        LOG.debug("A supported machine readable license was detected: {}", license.name());
         target.setLicense(license);
-        break;
     }
   }
 

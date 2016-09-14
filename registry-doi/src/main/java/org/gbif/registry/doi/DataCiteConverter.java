@@ -3,6 +3,7 @@ package org.gbif.registry.doi;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
@@ -14,6 +15,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
+import org.gbif.doi.metadata.datacite.ObjectFactory;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
@@ -21,19 +23,24 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.HumanFilterBuilder;
 import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.bind.JAXBException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -43,6 +50,16 @@ import org.slf4j.LoggerFactory;
 public class DataCiteConverter {
 
   private static final Logger LOG = LoggerFactory.getLogger(DataCiteConverter.class);
+
+  private static final ObjectFactory FACTORY = new ObjectFactory();
+
+  //http://orcid.org/0000-0002-7101-9767
+  public static final String ORCID_NAME_IDENTIFIER_SCHEME = "ORCID";
+  public static final String RESEARCHERID_NAME_IDENTIFIER_SCHEME = "ResearcherID";
+
+  // Patterns must return 2 groups: scheme and id
+  public static final Map<Pattern, String> SUPPORTED_SCHEMES = ImmutableMap.of(
+          Pattern.compile("^(http[s]?:\\/\\/orcid.org\\/)([\\d\\-]+$)"), ORCID_NAME_IDENTIFIER_SCHEME);
 
   private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download";
   private static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
@@ -94,18 +111,32 @@ public class DataCiteConverter {
               .withDates()
               .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
               .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
-              .end()
-              .withCreators()
+              .end();
+    }
+
+    // handle contacts
+    if(d.getContacts() != null && !d.getContacts().isEmpty()){
+      ContactAdapter contactAdapter = new ContactAdapter(d.getContacts());
+
+      Contact resourceCreator = contactAdapter.getResourceCreator();
+      if(resourceCreator != null){
+        b.withCreators().addCreator(toDataCiteCreator(resourceCreator)).end().end();
+      }
+    }
+    else{ // creator is mandatory
+      b.withCreators()
               .addCreator()
               .withCreatorName(d.getCreatedBy())
               .withNameIdentifier()
               .withValue(d.getCreatedBy())
               .withSchemeURI("gbif.org")
               .withNameIdentifierScheme("GBIF")
-              .end()
-              .end()
-              .end();
+              .end()// withNameIdentifier
+              .end()// withCreatorName
+              .end()// addCreator
+              .end(); // withCreators
     }
+
     if (d.getPubDate() != null) {
       // use pub date for publication year if it exists
       b.withPublicationYear(getYear(d.getPubDate()));
@@ -273,6 +304,57 @@ public class DataCiteConverter {
     }
 
     return b.build();
+  }
+
+  /**
+   * Transforms a Contact into a Datacite Creator.
+   * @param contact
+   * @return
+   */
+  private static DataCiteMetadata.Creators.Creator toDataCiteCreator(Contact contact){
+    DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
+    creator.setCreatorName(ContactAdapter.formatContactName(contact));
+    // affiliation is optional
+    if (!Strings.isNullOrEmpty(contact.getOrganization())) {
+      creator.getAffiliation().add(contact.getOrganization());
+    }
+
+    for(String userId : contact.getUserId()){
+      DataCiteMetadata.Creators.Creator.NameIdentifier nId = userIdToNameIdentifier(userId);
+      if(nId != null){
+        creator.setNameIdentifier(nId);
+        //we take the first we can support
+        break;
+      }
+    }
+    return creator;
+  }
+
+
+  /**
+   * Transforms an userId in the form of https://orcid.org/0000-0000-0000-00001 into a Datacite NameIdentifier object.
+   * @param userId
+   * @return a NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
+   */
+  @VisibleForTesting
+  protected static DataCiteMetadata.Creators.Creator.NameIdentifier userIdToNameIdentifier(String userId){
+    if(Strings.isNullOrEmpty(userId)){
+      return null;
+    }
+
+    for(Pattern pattern : SUPPORTED_SCHEMES.keySet()){
+      Matcher matcher = pattern.matcher(userId);
+      if(matcher.matches()){
+        DataCiteMetadata.Creators.Creator.NameIdentifier nid =
+                FACTORY.createDataCiteMetadataCreatorsCreatorNameIdentifier();
+        // group 0 = the entire string
+        nid.setSchemeURI(matcher.group(1));
+        nid.setValue(matcher.group(2));
+        nid.setNameIdentifierScheme(SUPPORTED_SCHEMES.get(pattern));
+        return nid;
+      }
+    }
+    return null;
   }
 
   /**

@@ -4,11 +4,13 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
@@ -45,7 +47,7 @@ public class DataCiteConverterTest {
     }
 
     @Test
-    public void testConvert() throws Exception {
+    public void testConvertDataset() throws Exception {
         Organization publisher = new Organization();
         publisher.setTitle("X-Publisher");
         publisher.setKey(UUID.randomUUID());
@@ -57,10 +59,15 @@ public class DataCiteConverterTest {
         d.setTitle("my title");
         d.setCreated(new Date());
         d.setModified(new Date());
-        d.setCreatedBy("Markus");
+        d.setCreatedBy("Markus GBIF User");
         d.setLanguage(Language.NORWEGIAN);
         d.setDataLanguage(Language.NORWEGIAN);
         d.setLicense(License.CC0_1_0);
+
+        Contact contact = new Contact();
+        contact.setFirstName("Markus");
+        contact.setType(ContactType.ORIGINATOR);
+        d.getContacts().add(contact);
 
         DataCiteMetadata m = convertAndValidate(doi, d, publisher);
         assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
@@ -130,7 +137,6 @@ public class DataCiteConverterTest {
 
         DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
         String xml = DataCiteValidator.toXml(download.getDoi(), metadata);
-        System.out.println(xml);
         assertTrue(xml.contains(du1.getDatasetDOI().getDoiName()));
         assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
         assertTrue(xml.contains(String.valueOf(du1.getNumberRecords())));
@@ -160,6 +166,14 @@ public class DataCiteConverterTest {
     }
 
     @Test
+    public void testUserIdToNameIdentifier() throws Exception {
+        DataCiteMetadata.Creators.Creator.NameIdentifier nid =
+                DataCiteConverter.userIdToNameIdentifier("http://orcid.org/0000-0000-0000-0001");
+        assertEquals("http://orcid.org/", nid.getSchemeURI());
+        assertEquals("0000-0000-0000-0001", nid.getValue());
+    }
+
+    @Test
     public void testTruncateDesription() throws Exception {
         DOI doi = new DOI("10.15468/dl.v8zc57");
         String xml = Resources.toString(Resources.getResource("metadata/datacite-large.xml"), Charsets.UTF_8);
@@ -177,7 +191,6 @@ public class DataCiteConverterTest {
         DOI doi = new DOI("10.15468/dl.v8zc57");
         String xml = Resources.toString(Resources.getResource("metadata/datacite-large.xml"), Charsets.UTF_8);
         String xml2 = DataCiteConverter.truncateConstituents(doi, xml, URI.create("http://gbif.org"));
-        System.out.println(xml2);
         DataCiteValidator.validateMetadata(xml2);
         assertTrue(xml2.contains("for full list of all constituents"));
         assertFalse(xml2.contains("University of Ghent"));
