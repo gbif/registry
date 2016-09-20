@@ -110,9 +110,11 @@ public class DataCiteConverter {
     DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder()
             .withTitles().withTitle(DataCiteMetadata.Titles.Title.builder().withValue(d.getTitle()).build()).end()
             .withPublisher(publisher.getTitle())
-                    // default to this year, e.g. when creating new datasets. This field is required!
+            // default to this year, e.g. when creating new datasets. This field is required!
             .withPublicationYear(getYear(new Date()))
-            .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).withValue(d.getType().name()).end();
+            .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).withValue(d.getType().name()).end()
+            //empty list of RelatedIdentifiers is expected but callers
+            .withRelatedIdentifiers().end();
 
     if (d.getCreated() != null) {
       b.withPublicationYear(getYear(d.getModified()))
