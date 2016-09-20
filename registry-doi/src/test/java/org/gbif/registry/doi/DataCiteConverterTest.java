@@ -174,10 +174,15 @@ public class DataCiteConverterTest {
 
   @Test
   public void testUserIdToNameIdentifier() throws Exception {
-    DataCiteMetadata.Creators.Creator.NameIdentifier nid =
-            DataCiteConverter.userIdToNameIdentifier("http://orcid.org/0000-0000-0000-0001");
-    assertEquals("http://orcid.org/", nid.getSchemeURI());
-    assertEquals("0000-0000-0000-0001", nid.getValue());
+    DataCiteMetadata.Creators.Creator.NameIdentifier creatorNid =
+            DataCiteConverter.userIdToCreatorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
+    assertEquals("http://orcid.org/", creatorNid.getSchemeURI());
+    assertEquals("0000-0000-0000-0001", creatorNid.getValue());
+
+    DataCiteMetadata.Contributors.Contributor.NameIdentifier contributorNid =
+            DataCiteConverter.userIdToContributorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
+    assertEquals("http://orcid.org/", contributorNid.getSchemeURI());
+    assertEquals("0000-0000-0000-0001", contributorNid.getValue());
   }
 
   @Test
