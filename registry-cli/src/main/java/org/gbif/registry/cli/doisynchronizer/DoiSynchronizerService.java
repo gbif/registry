@@ -29,7 +29,6 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.Injector;
@@ -88,6 +87,9 @@ public class DoiSynchronizerService {
           handleDOI(doi);
         }
       }
+      else if(config.listFailedDOI){
+        printFailedDOI();
+      }
     }
   }
 
@@ -99,6 +101,13 @@ public class DoiSynchronizerService {
    * @return
    */
   private boolean validateDOIParameters(){
+
+    if(config.listFailedDOI && (StringUtils.isNotBlank(config.doi) || StringUtils.isNotBlank(config.doiList) ||
+            config.export || config.fixDOI)){
+      System.out.println(" --list-failed-doi must be used alone");
+      return false;
+    }
+
     if (StringUtils.isNotBlank(config.doi) && StringUtils.isNotBlank(config.doiList)) {
       System.out.println(" --doi and --doi-list can not be used at the same time");
       return false;
@@ -322,21 +331,28 @@ public class DoiSynchronizerService {
   }
 
   /**
-   * Get the list of DOIGbifDataciteDiagnostic for a specific DoiType.
-   *
-   * @param doiType
+   * Get the list of failed DOI for a DoiType.
    *
    */
-  private List<GbifDOIDiagnosticResult> runDOIStatusDiagnostic(DoiType doiType){
-    List<GbifDOIDiagnosticResult> list = Lists.newArrayList();
+  private void printFailedDOI(){
     //get all the DOI with the FAILED status. Note that they are all GBIF assigned DOI.
-    List<Map<String,Object>> failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, doiType, null);
+
+    //dataset first
+    List<Map<String,Object>> failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, DoiType.DATASET, null);
     DOI doi;
+    System.out.println("Dateset DOI with status FAILED:");
     for(Map<String,Object> failedDoi : failedDoiList ) {
       doi = new DOI((String) failedDoi.get("doi"));
-      list.add(generateGbifDOIDiagnostic(doi));
+      System.out.println(doi.getDoiName());
     }
-    return list;
+
+    //Downloads
+    failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, DoiType.DOWNLOAD, null);
+    System.out.println("Download DOI with status FAILED:");
+    for(Map<String,Object> failedDoi : failedDoiList ) {
+      doi = new DOI((String) failedDoi.get("doi"));
+      System.out.println(doi.getDoiName());
+    }
   }
 
   /**

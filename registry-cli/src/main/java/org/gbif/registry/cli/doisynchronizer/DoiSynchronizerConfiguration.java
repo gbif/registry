@@ -64,4 +64,7 @@ public class DoiSynchronizerConfiguration {
   @Valid
   public boolean export = false;
 
+  @Parameter(names = {"--list-failed-doi"}, required = false)
+  @Valid
+  public boolean listFailedDOI = false;
 }
