@@ -76,6 +76,16 @@ public class DataCiteConverterTest {
     contact.setType(ContactType.METADATA_AUTHOR);
     d.getContacts().add(contact);
 
+    //add an author with no name
+    contact = new Contact();
+    contact.setType(ContactType.ORIGINATOR);
+    d.getContacts().add(contact);
+
+    //add a contributor with no name
+    contact = new Contact();
+    contact.setType(ContactType.METADATA_AUTHOR);
+    d.getContacts().add(contact);
+
     DataCiteMetadata m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
     assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName());
@@ -97,6 +107,10 @@ public class DataCiteConverterTest {
     assertEquals(Lists.<Double>newArrayList(1d, 3d, 2d, 4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationBox());
     assertEquals(d.getDescription(), m.getDescriptions().getDescription().get(0).getContent().get(0));
     assertEquals(License.CC0_1_0.getLicenseUrl(), m.getRightsList().getRights().get(0).getRightsURI());
+
+    // -2 is to subtract those with no name (they should be ignored)
+    assertEquals(d.getContacts().size() -2, m.getCreators().getCreator().size() +
+            m.getContributors().getContributor().size());
 
     assertNotNull("RelatedIdentifiers is expected to be not null", m.getRelatedIdentifiers());
   }

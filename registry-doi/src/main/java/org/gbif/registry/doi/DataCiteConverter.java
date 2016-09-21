@@ -125,20 +125,22 @@ public class DataCiteConverter {
     }
 
     // handle contacts
+    boolean creatorFound = false;
     if(d.getContacts() != null && !d.getContacts().isEmpty()){
       ContactAdapter contactAdapter = new ContactAdapter(d.getContacts());
 
       //handle Creators
       List<Contact> resourceCreators = contactAdapter.getCreators();
       DataCiteMetadata.Creators.Builder creatorsBuilder = b.withCreators();
+      DataCiteMetadata.Creators.Creator creator;
       for(Contact resourceCreator : resourceCreators) {
-        creatorsBuilder.addCreator(toDataCiteCreator(resourceCreator)).end();
+        creator = toDataCiteCreator(resourceCreator);
+        if(creator != null){
+          creatorsBuilder.addCreator(creator).end();
+          creatorFound = true;
+        }
       }
       creatorsBuilder.end();
-      // creator is mandatory, build a default one
-      if(resourceCreators.isEmpty()){
-        b.withCreators().addCreator(getDefaultGBIFDataCiteCreator(d.getCreatedBy())).end().end();
-      }
 
       //handle Contributors
       List<Contact> contributors = Lists.newArrayList(d.getContacts());
@@ -146,14 +148,19 @@ public class DataCiteConverter {
 
       if(!contributors.isEmpty()) {
         DataCiteMetadata.Contributors.Builder contributorsBuilder = b.withContributors();
-        for (Contact contributor : contributors) {
-          contributorsBuilder.addContributor(toDataCiteContributor(contributor)).end();
+        DataCiteMetadata.Contributors.Contributor contributor;
+        for (Contact contact : contributors) {
+          contributor = toDataCiteContributor(contact);
+          if(contributor != null) {
+            contributorsBuilder.addContributor(contributor).end();
+          }
         }
         contributorsBuilder.end();
       }
-
     }
-    else{ // creator is mandatory, build a default one
+
+    if(!creatorFound){
+      // creator is mandatory, build a default one
       b.withCreators().addCreator(getDefaultGBIFDataCiteCreator(d.getCreatedBy())).end().end();
     }
 
@@ -330,11 +337,17 @@ public class DataCiteConverter {
    * Transforms a Contact into a Datacite Creator.
    *
    * @param contact
-   * @return
+   * @return Creator instance or null if it is not possible to build one
    */
   private static DataCiteMetadata.Creators.Creator toDataCiteCreator(Contact contact){
     DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
     creator.setCreatorName(ContactAdapter.formatContactName(contact));
+
+    //CreatorName is mandatory
+    if(Strings.isNullOrEmpty(creator.getCreatorName())){
+      return null;
+    }
+
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
       creator.getAffiliation().add(contact.getOrganization());
@@ -372,11 +385,16 @@ public class DataCiteConverter {
    * Transforms a Contact into a Datacite Contributor.
    *
    * @param contact
-   * @return
+   * @return  Contributor instance or null if it is not possible to build one
    */
   private static DataCiteMetadata.Contributors.Contributor toDataCiteContributor(Contact contact){
     DataCiteMetadata.Contributors.Contributor contributor = FACTORY.createDataCiteMetadataContributorsContributor();
     contributor.setContributorName(ContactAdapter.formatContactName(contact));
+
+    //CreatorName is mandatory
+    if(Strings.isNullOrEmpty(contributor.getContributorName())){
+      return null;
+    }
 
     ContributorType contributorType = REGISTRY_DATACITE_ROLE_MAPPING.containsKey(contact.getType()) ?
             REGISTRY_DATACITE_ROLE_MAPPING.get(contact.getType()) : ContributorType.RELATED_PERSON;
