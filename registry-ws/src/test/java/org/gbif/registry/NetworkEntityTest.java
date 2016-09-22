@@ -454,6 +454,18 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   // Repeatable entity creation with verification tests
   protected T create(T orig, int expectedCount) {
+    return create(orig, expectedCount, null);
+  }
+
+  /**
+   * Repeatable entity creation with verification tests + support for processed properties.
+   * 
+   * @param orig
+   * @param expectedCount
+   * @param processedProperties expected values of properties that are processed so they would not match the original
+   * @return
+   */
+  protected T create(T orig, int expectedCount, Map<String, Object> processedProperties) {
     try {
       @SuppressWarnings("unchecked")
       T entity = (T) BeanUtils.cloneBean(orig);
@@ -464,10 +476,22 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
       assertNotNull(written.getCreated());
       assertNotNull(written.getModified());
       assertNull(written.getDeleted());
+
+      if(processedProperties != null) {
+        String writtenProperty;
+        for (String prop : processedProperties.keySet()) {
+          writtenProperty = BeanUtils.getProperty(written, prop);
+          //check that the value of the process property is what we expect
+          assertEquals(processedProperties.get(prop), writtenProperty);
+          // copy property to the entity so it will pass the assertLenientEquals
+          BeanUtils.setProperty(entity, prop, writtenProperty);
+        }
+      }
+
       assertLenientEquals("Persisted does not reflect original", entity, written);
       assertEquals("List service does not reflect the number of created entities",
-        expectedCount,
-        service.list(new PagingRequest()).getResults().size());
+              expectedCount,
+              service.list(new PagingRequest()).getResults().size());
       return written;
     } catch (Exception e) {
       throw Throwables.propagate(e);

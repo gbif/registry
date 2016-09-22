@@ -61,6 +61,7 @@ import javax.validation.ValidationException;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -365,6 +366,20 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // the dataset
     Dataset d = Datasets.newInstance(organizationKey, installationKey);
     return d;
+  }
+
+  @Test
+  public void testDatasetHTMLSanitizer() {
+    Dataset dataset = newEntity();
+    dataset.setDescription("<h1 style=\"color:red\">headline</h1><br/>" +
+            "<p>paragraph with <a href=\"link-to-somewhere\">link</a> and <em>italics</em></p>" +
+            "<script>//my script</script>" +
+            "<iframe src=\"perdu.com\">");
+
+    String expectedParagraph = "headline<br />paragraph with <a href=\"link-to-somewhere\">link</a> and <em>italics</em>";
+
+    dataset = create(dataset, 1, ImmutableMap.<String, Object>of("description", expectedParagraph));
+    assertEquals(expectedParagraph, dataset.getDescription());
   }
 
   @Test

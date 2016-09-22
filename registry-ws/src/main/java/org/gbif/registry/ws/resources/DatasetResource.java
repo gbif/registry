@@ -104,6 +104,8 @@ import com.google.inject.Singleton;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +124,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
+
+  //HTML sanitizer policy for paragraph
+  private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
+          .allowElements("br", "a", "em", "i")
+          .allowAttributes("href").onElements("a")
+          .toFactory();
+
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
@@ -612,6 +621,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (dataset.getLicense() == null || dataset.getLicense().equals(License.UNSPECIFIED)) {
       dataset.setLicense(License.CC_BY_4_0);
     }
+
+    sanitizeDataset(dataset);
+
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
@@ -677,6 +689,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       addDOIAsAlternateId(oldDoi, dataset.getKey(), user);
       removeAltIdIfExists(dataset.getKey(), dataset.getDoi(), existingIds);
     }
+
+    sanitizeDataset(dataset);
+
     // update database for core dataset only
     super.update(dataset);
 
@@ -734,6 +749,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     DOI doi = doiGenerator.newDatasetDOI();
     LOG.info("Create new GBIF DOI {} for dataset {}", doi, d.getKey());
     d.setDoi(doi);
+  }
+
+  /**
+   * Sanitize data on Dataset object mainly to restrict HTML tags that can be used.
+   *
+   * @param dataset
+   */
+  private void sanitizeDataset(Dataset dataset) {
+    if (!Strings.isNullOrEmpty(dataset.getDescription())) {
+      dataset.setDescription(PARAGRAPH_HTML_SANITIZER.sanitize(dataset.getDescription()));
+    }
   }
 
   /**
