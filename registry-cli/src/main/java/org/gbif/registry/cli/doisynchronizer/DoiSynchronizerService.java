@@ -159,8 +159,10 @@ public class DoiSynchronizerService {
     if(config.export){
       String registryDoiMetadata = doiPersistenceService.getMetadata(doi);
       if(!Strings.isNullOrEmpty(registryDoiMetadata)){
+        File exportTo = new File(doi.getDoiName().replace("/","_") + "_export.xml");
         try {
-          FileUtils.writeStringToFile(new File(doi.getDoiName().replace("/","_") + "_export.xml"), registryDoiMetadata, Charset.forName("UTF-8"));
+          FileUtils.writeStringToFile(exportTo, registryDoiMetadata, Charset.forName("UTF-8"));
+          System.out.println("Exported file saved in " + exportTo.getAbsolutePath());
         } catch (IOException e) {
           e.printStackTrace();
         }
