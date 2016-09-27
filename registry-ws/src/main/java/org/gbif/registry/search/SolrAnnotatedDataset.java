@@ -34,7 +34,8 @@ import org.apache.solr.client.solrj.beans.Field;
     @FacetField(name = "COUNTRY", field = "country", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
     @FacetField(name = "PUBLISHING_COUNTRY", field = "publishing_country", sort = FacetField.SortOrder.INDEX,
       method = Method.ENUM),
-    @FacetField(name = "LICENSE", field = "license", sort = FacetField.SortOrder.INDEX, method = Method.ENUM)
+    @FacetField(name = "LICENSE", field = "license", sort = FacetField.SortOrder.INDEX, method = Method.ENUM),
+    @FacetField(name = "PROJECT_ID", field = "project_id", sort = FacetField.SortOrder.INDEX, method = Method.ENUM)
   },
   fulltextFields = {
     @FullTextSearchField(field = "dataset_title", highlightField = "dataset_title", exactMatchScore = 1000.0d,
@@ -45,7 +46,8 @@ import org.apache.solr.client.solrj.beans.Field;
     @FullTextSearchField(field = "hosting_organization_title", partialMatching = WildcardPadding.NONE,
       exactMatchScore = 2.0d),
     @FullTextSearchField(field = "description", partialMatching = WildcardPadding.NONE),
-    @FullTextSearchField(field = "metadata", partialMatching = WildcardPadding.NONE, exactMatchScore = 0.5d)
+    @FullTextSearchField(field = "metadata", partialMatching = WildcardPadding.NONE, exactMatchScore = 0.5d),
+    @FullTextSearchField(field = "project_id", partialMatching = WildcardPadding.NONE)
   })
 public class SolrAnnotatedDataset extends DatasetSearchResult {
 
@@ -136,5 +138,10 @@ public class SolrAnnotatedDataset extends DatasetSearchResult {
   @Field("license")
   public void setLicense(Integer licenseOrdinal) {
     setLicense(licenseOrdinal == null ? null : License.values()[licenseOrdinal]);
+  }
+
+  @Field("project_id")
+  public void setProjectIdentifier(String identifier) {
+    super.setProjectIdentifier(identifier == null ? null : identifier);
   }
 }

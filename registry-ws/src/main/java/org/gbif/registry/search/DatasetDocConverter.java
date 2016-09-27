@@ -85,6 +85,9 @@ class DatasetDocConverter {
           }
         }
       }
+      if (d.getProject() != null && d.getProject().getIdentifier() != null) {
+        doc.addField("project_id", d.getProject().getIdentifier());
+      }
     } catch (Exception e) {
       LOG.error("Error converting dataset {} to solr document", d.getKey(), e);
       throw new RuntimeException(e);
