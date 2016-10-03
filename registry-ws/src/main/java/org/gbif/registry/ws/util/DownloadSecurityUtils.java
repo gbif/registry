@@ -50,6 +50,7 @@ public class DownloadSecurityUtils {
     if (download.getRequest() != null
       && !isUserAuthorizedInContext(securityContext, download.getRequest().getCreator())) {
       download.getRequest().setNotificationAddresses(null);
+      download.getRequest().setCreator(null);
     }
   }
 
