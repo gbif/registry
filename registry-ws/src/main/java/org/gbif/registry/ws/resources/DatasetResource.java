@@ -195,7 +195,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @NullToNotFound
   @Override
   public Dataset get(@PathParam("key") UUID key) {
-    return merge(getPreferredMetadataDataset(key), super.get(key));
+    Dataset dataset = merge(getPreferredMetadataDataset(key), super.get(key));
+    if (dataset == null) {
+      return null;
+    }
+    return sanitizeDataset(dataset);
   }
 
 
@@ -622,8 +626,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       dataset.setLicense(License.CC_BY_4_0);
     }
 
-    sanitizeDataset(dataset);
-
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
@@ -690,8 +692,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       removeAltIdIfExists(dataset.getKey(), dataset.getDoi(), existingIds);
     }
 
-    sanitizeDataset(dataset);
-
     // update database for core dataset only
     super.update(dataset);
 
@@ -755,11 +755,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * Sanitize data on Dataset object mainly to restrict HTML tags that can be used.
    *
    * @param dataset
+   * @return the original dataset with its content sanitized
    */
-  private void sanitizeDataset(Dataset dataset) {
+  private Dataset sanitizeDataset(Dataset dataset) {
     if (!Strings.isNullOrEmpty(dataset.getDescription())) {
       dataset.setDescription(PARAGRAPH_HTML_SANITIZER.sanitize(dataset.getDescription()));
     }
+    return dataset;
   }
 
   /**
