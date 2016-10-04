@@ -18,30 +18,16 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.utils.file.ClosableReportingIterator;
-import org.gbif.utils.file.FileUtils;
-import org.gbif.utils.file.csv.CSVReader;
-import org.gbif.utils.file.csv.CSVReaderFactory;
-import org.gbif.utils.file.properties.PropertiesUtil;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
 import java.net.URI;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,7 +39,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DataCiteConverterTest {
-  private static final Logger LOG = LoggerFactory.getLogger(DataCiteConverterTest.class);
 
   @Test
   public void testGetYear() throws Exception {
@@ -240,78 +225,5 @@ public class DataCiteConverterTest {
     assertFalse(xml2.contains("University of Ghent"));
     assertFalse(xml2.contains("10.15468/siye1z"));
     assertEquals(2310, xml2.length());
-  }
-
-  /**
-   * Creates DataCite metadata XML document for custom download by reading download properties from
-   * customDownload.properties and list of used datasets from usedDatasets.txt.
-   */
-  @Test
-  public void testConvertCustomDownload() throws IOException, InvalidMetadataException {
-    // gather custom download properties
-    Properties properties = PropertiesUtil.loadProperties("customdownload/download.properties");
-    DOI doi = new DOI(properties.getProperty("downloadDoi"));
-    String size = properties.getProperty("downloadSizeInBytes");
-    String numberRecords = properties.getProperty("downloadNumberRecords");
-    String creatorName = properties.getProperty("creatorName");
-    String creatorUserId = properties.getProperty("creatorUserId");
-    Date now = new Date();
-
-    List<DatasetOccurrenceDownloadUsage> usedDatasets = getUsedDatasets();
-    assertEquals(2, usedDatasets.size());
-    assertEquals(UUID.fromString("01536750-8af5-430c-b0e2-077dee7f7d5f"), usedDatasets.get(0).getDatasetKey());
-    assertEquals("Registros biológicos del Humedal Santa Maria del Lago 1999-2013", usedDatasets.get(0).getDatasetTitle());
-    assertEquals(new DOI("10.15468/uvzgpk").getDoiName(), usedDatasets.get(0).getDatasetDOI().getDoiName());
-    assertEquals(1, usedDatasets.get(0).getNumberRecords());
-
-    DataCiteMetadata metadata =
-      DataCiteConverter.convertCustomDownload(doi, size, numberRecords, creatorName, creatorUserId, now, usedDatasets);
-    String xml = DataCiteValidator.toXml(doi, metadata);
-
-    // write XML file to tmp directory
-    File output = org.gbif.utils.file.FileUtils.createTempDir();
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    String nowAsString = df.format(now);
-    File xmlFile = new File(output, "custom_download-"+nowAsString+".xml");
-    Writer writer = FileUtils.startNewUtf8File(xmlFile);
-    writer.write(xml);
-    writer.close();
-    LOG.info("DataCite metadata file written to: " + xmlFile.getAbsolutePath());
-  }
-
-  /**
-   * @return list of DatasetOccurrenceDownloadUsage populated from usedDatasets.txt
-   */
-  private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException {
-    // load the .txt file to process
-    InputStream fis = DataCiteConverterTest.class.getResourceAsStream("/customdownload/usedDatasets.txt");
-    // create an iterator on the file
-    CSVReader reader = CSVReaderFactory.build(fis, "UTF-8", "\t", null, 1);
-
-    List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
-    ClosableReportingIterator<String[]> iter = reader.iterator();
-    while (iter.hasNext()) {
-      String[] record = iter.next();
-      DatasetOccurrenceDownloadUsage usage = new DatasetOccurrenceDownloadUsage();
-
-      // Dataset key @ column #1 (index 0)
-      UUID datasetKey = UUID.fromString(record[0]);
-      usage.setDatasetKey(datasetKey);
-
-      // Dataset title @ column #2 (index 1)
-      String datasetTitle = record[1];
-      usage.setDatasetTitle(datasetTitle);
-
-      // Dataset DOI @ column #3 (index 2)
-      DOI datasetDoi = new DOI(record[2]);
-      usage.setDatasetDOI(datasetDoi);
-
-      // Number of records @ column #4 (index 3)
-      Long numberRecords = Long.valueOf(record[3]);
-      usage.setNumberRecords(numberRecords);
-
-      usages.add(usage);
-    }
-    return usages;
   }
 }
