@@ -10,12 +10,13 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 
-import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 /**
  * Class that enables creation of a DataCite metadata instance for a custom download.
@@ -40,7 +41,7 @@ public class CustomDownloadDataCiteConverter {
    */
   @VisibleForTesting
   public static DataCiteMetadata convert(DOI doi, String size, String numberRecords, String creatorName,
-    String creatorUserId, Date created, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+    String creatorUserId, Calendar created, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
     Preconditions.checkNotNull(doi, "Custom download DOI required to build valid DataCite metadata");
     Preconditions.checkNotNull(size, "Custom download size required to build valid DataCite metadata");
     Preconditions.checkNotNull(numberRecords, "Custom download record count required to build valid DataCite metadata");
@@ -54,13 +55,17 @@ public class CustomDownloadDataCiteConverter {
         .withValue(doi.getDoiName()).end().withTitles()
         .withTitle(DataCiteMetadata.Titles.Title.builder().withValue(CUSTOM_DOWNLOAD_TITLE).build()).end()
         .withSubjects().addSubject().withValue("GBIF").withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("biodiversity")
-        .withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("species occurrences").withLang(DataCiteConverter.ENGLISH).end().end()
+        .withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("species occurrences").withLang(
+        DataCiteConverter.ENGLISH).end().end()
         .withCreators().addCreator().withCreatorName(creatorName)
         .withNameIdentifier(DataCiteConverter.userIdToCreatorNameIdentifier(creatorUserId)).end().end()
-        .withPublisher(DataCiteConverter.GBIF_PUBLISHER).withPublicationYear(DataCiteConverter.getYear(created)).withResourceType()
-        .withResourceTypeGeneral(ResourceType.DATASET).end().withDates().addDate().withDateType(DateType.CREATED)
-        .withValue(DataCiteConverter.fdate(
-          created)).end().addDate().withDateType(DateType.UPDATED).withValue(DataCiteConverter.fdate(created)).end().end()
+        .withPublisher(DataCiteConverter.GBIF_PUBLISHER)
+        .withPublicationYear(String.valueOf(created.get(Calendar.YEAR)))
+        .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
+        .withDates()
+        .addDate().withDateType(DateType.CREATED).withValue(DateFormatUtils.ISO_DATE_FORMAT.format(created)).end()
+        .addDate().withDateType(DateType.UPDATED).withValue(DateFormatUtils.ISO_DATE_FORMAT.format(created)).end()
+        .end()
         .withFormats().addFormat(DOWNLOAD_FORMAT).end().withSizes().addSize(size).end();
 
     // License always set to most restrictive (CC BY-NC 4.0)

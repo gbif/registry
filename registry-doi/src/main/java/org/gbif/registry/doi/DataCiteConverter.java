@@ -87,7 +87,7 @@ public class DataCiteConverter {
   protected static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWCA_FORMAT = "Darwin Core Archive";
 
-  protected static String fdate(Date date) {
+  private static String fdate(Date date) {
     return DateFormatUtils.ISO_DATE_FORMAT.format(date);
   }
 
