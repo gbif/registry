@@ -51,8 +51,8 @@ public class CustomDownloadDataCiteConverterTest {
   }
 
   /**
-   * Creates DataCite metadata XML document for custom download by reading download properties from
-   * customDownload.properties and list of used datasets from usedDatasets.txt.
+   * Creates DataCite metadata XML document and homepage markdown file for custom download by reading
+   * download properties from customDownload.properties and list of used datasets from usedDatasets.txt.
    */
   @Test
   public void createCustomDownload()
