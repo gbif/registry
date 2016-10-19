@@ -14,6 +14,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
@@ -84,6 +85,21 @@ public class EnumerationResource {
     COUNTRIES = ImmutableList.copyOf(countries);
   }
 
+  private static List<Map<String, String>> LANGUAGES;
+  static {
+    List<Map<String, String>> langs = Lists.newArrayList();
+    for (Language l : Language.values()) {
+      Map<String, String> info = Maps.newHashMap();
+      info.put("iso2", l.getIso2LetterCode());
+      info.put("iso3", l.getIso3LetterCode());
+      info.put("title", l.getTitleEnglish());
+      info.put("titleNative", l.getTitleNative());
+      info.put("enumName", l.name());
+      langs.add(info);
+    }
+    LANGUAGES = ImmutableList.copyOf(langs);
+  }
+
   /**
    * An inventory of the enumerations supported.
    *
@@ -124,6 +140,15 @@ public class EnumerationResource {
   @GET
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
+  }
+
+  /**
+   * @return list of language information based on our enum.
+   */
+  @Path("language")
+  @GET
+  public List<Map<String, String>> listLanguages() {
+    return LANGUAGES;
   }
 
   /**
