@@ -17,7 +17,7 @@ public class ParagraphContainerTest {
     assertEquals("Hello", container.toString());
 
     container.appendParagraph("world!");
-    assertEquals("Hello</br>world!", container.toString());
+    assertEquals("Hello<br />world!", container.toString());
   }
 
 }
