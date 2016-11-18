@@ -266,7 +266,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         // the list is sorted by priority already, just pick the first!
         stream = getMetadataDocument(docs.get(0).getKey());
         return DatasetParser.build(stream);
-      } catch (IOException e) {
+      } catch (IOException | IllegalArgumentException e) {
         LOG.error("Stored metadata document {} cannot be read", docs.get(0).getKey(), e);
       } finally {
         Closeables.closeQuietly(stream);
