@@ -127,7 +127,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   //HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
-          .allowElements("br", "a", "em", "i")
+          .allowCommonBlockElements() // "p", "div", "h1", ...
+          .allowCommonInlineFormattingElements() // "b", "i" ...
+          .allowElements("a")
+          .allowUrlProtocols("https", "http")
           .allowAttributes("href").onElements("a")
           .toFactory();
 

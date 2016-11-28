@@ -376,7 +376,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
             "<script>//my script</script>" +
             "<iframe src=\"perdu.com\">");
 
-    String expectedParagraph = "headline<br />paragraph with <a href=\"link-to-somewhere\">link</a> and <em>italics</em>";
+    String expectedParagraph = "<h1>headline</h1><br /><p>paragraph with <a href=\"http://www.gbif.org\">link</a> and <em>italics</em></p>";
 
     dataset = create(dataset, 1, ImmutableMap.<String, Object>of("description", expectedParagraph));
     assertEquals(expectedParagraph, dataset.getDescription());
