@@ -14,10 +14,14 @@ public class ParagraphContainerTest {
     assertNull(container.toString());
 
     container.appendParagraph("Hello");
-    assertEquals("Hello", container.toString());
+    assertEquals("<p>Hello</p>", container.toString());
 
     container.appendParagraph("world!");
-    assertEquals("Hello<br />world!", container.toString());
+    assertEquals("<p>Hello</p>\n<p>world!</p>", container.toString());
+
+    //make sure we won't use <p> is there is already one
+    container.appendParagraph(" <p>is it me</p>");
+    assertEquals("<p>Hello</p>\n<p>world!</p>\n<p>is it me</p>", container.toString());
   }
 
 }
