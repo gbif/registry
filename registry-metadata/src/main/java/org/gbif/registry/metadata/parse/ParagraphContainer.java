@@ -22,10 +22,7 @@ public class ParagraphContainer {
 
   public void appendParagraph(String para) {
     if (!Strings.isNullOrEmpty(para)) {
-      String paragraph = para.trim();
-      paragraph = StringUtils.prependIfMissing(paragraph, "<p>");
-      paragraph = StringUtils.appendIfMissing(paragraph, "</p>");
-      paragraphs.add(paragraph);
+      paragraphs.add(para.trim());
     }
   }
 
@@ -33,6 +30,23 @@ public class ParagraphContainer {
     if (paragraphs.isEmpty()) {
       return null;
     }
-    return PARA_JOIN.join(paragraphs);
+
+    //do not wrap in HTML if we only have one element
+    if(paragraphs.size() == 1) {
+      return paragraphs.get(0);
+    }
+
+    // replace with StringJoiner when we move to Java 8
+    List<String> wrappedParagraphs = Lists.newArrayList();
+    for(String para : paragraphs) {
+      wrappedParagraphs.add(wrapInHtmlParagraph(para));
+    }
+    return PARA_JOIN.join(wrappedParagraphs);
+  }
+
+  private String wrapInHtmlParagraph(String para) {
+    String paragraph = StringUtils.prependIfMissing(para, "<p>");
+    paragraph = StringUtils.appendIfMissing(paragraph, "</p>");
+    return paragraph;
   }
 }

@@ -404,7 +404,7 @@ public class DatasetParserTest {
     assertEquals(3, dataset.getSamplingDescription().getMethodSteps().size());
     assertEquals("Took picture, identified", dataset.getSamplingDescription().getMethodSteps().get(0));
     assertEquals("Themometer based test", dataset.getSamplingDescription().getMethodSteps().get(1));
-    assertEquals("Visual based test<br />and one more time", dataset.getSamplingDescription().getMethodSteps().get(2));
+    assertEquals("<p>Visual based test</p>\n<p>and one more time</p>", dataset.getSamplingDescription().getMethodSteps().get(2));
     assertEquals("Daily Obersevation of Pigeons Eating Habits", dataset.getSamplingDescription().getStudyExtent());
     assertEquals("44KHz is what a CD has... I was more like one a day if I felt like it",
       dataset.getSamplingDescription().getSampling());
@@ -769,9 +769,9 @@ public class DatasetParserTest {
 
     // Multiple paragraphs in description
     assertNotNull(dataset.getDescription());
-    assertTrue(dataset.getDescription().startsWith("This dataset contains"));
-    assertTrue(dataset.getDescription().contains("worldwide.<br />Abundance")); // HTML break tag concatenates para
-    assertTrue(dataset.getDescription().endsWith("(Method 0)."));
+    assertTrue(dataset.getDescription().startsWith("<p>This dataset contains"));
+    assertTrue(dataset.getDescription().contains("worldwide.</p>\n<p>Abundance")); // HTML break tag concatenates para
+    assertTrue(dataset.getDescription().endsWith("(Method 0).</p>"));
 
     // Citation
     assertNotNull(dataset.getCitation());
