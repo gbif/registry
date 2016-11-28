@@ -372,7 +372,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   public void testDatasetHTMLSanitizer() {
     Dataset dataset = newEntity();
     dataset.setDescription("<h1 style=\"color:red\">headline</h1><br/>" +
-            "<p>paragraph with <a href=\"link-to-somewhere\">link</a> and <em>italics</em></p>" +
+            "<p>paragraph with <a href=\"http://www.gbif.org\">link</a> and <em>italics</em></p>" +
             "<script>//my script</script>" +
             "<iframe src=\"perdu.com\">");
 
