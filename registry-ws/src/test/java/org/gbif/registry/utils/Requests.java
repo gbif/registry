@@ -18,7 +18,7 @@ public class Requests {
   public static final String DATASET_LOGO_URL = "http://www.logo.com/1";
   public static final String DATASET_PRIMARY_CONTACT_TYPE = "administrative";
   public static final String DATASET_PRIMARY_CONTACT_NAME = "Jan Legind";
-  public static final List<String> DATASET_PRIMARY_CONTACT_EMAIL = Lists.newArrayList("jlegind@gbif.org");
+  public static final List<String> DATASET_PRIMARY_CONTACT_EMAIL = Lists.newArrayList("elyk-kaarb@euskadi.eus");
   public static final List<String> DATASET_PRIMARY_CONTACT_PHONE = Lists.newArrayList("90909090");
   public static final List<String> DATASET_PRIMARY_CONTACT_ADDRESS = Lists.newArrayList("Universitetsparken 15, 2100, Denmark");
   // GBRDS Datasets only
