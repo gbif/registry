@@ -15,23 +15,17 @@ import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.UpdateEvent;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.sun.jersey.api.NotFoundException;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +38,9 @@ import org.slf4j.LoggerFactory;
 public class DatasetIndexUpdateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexUpdateListener.class);
-  private final SolrClient solrClient;
-  private final DatasetDocConverter docConverter;
 
   // Used to build a new index before consuming if required
-  private final DatasetIndexBuilder indexBuilder;
-  private final boolean performIndexSync;
+  private final DatasetIndexService indexService;
 
   // The backlog of mutations to apply to the index
   private final BlockingQueue<Object> queue = new LinkedBlockingQueue<Object>();
@@ -65,17 +56,12 @@ public class DatasetIndexUpdateListener {
   private final DatasetService datasetService;
 
   @Inject
-  public DatasetIndexUpdateListener(DatasetIndexBuilder indexBuilder,
-    @Named("performIndexSync") boolean performIndexSync,
-    @Named("Dataset") SolrClient solrClient,
+  public DatasetIndexUpdateListener(DatasetIndexService indexService,
     OrganizationService organizationService,
     InstallationService installationService,
     DatasetService datasetService,
     EventBus eventBus) {
-    this.indexBuilder = indexBuilder;
-    this.performIndexSync = performIndexSync;
-    this.solrClient = solrClient;
-    docConverter = new DatasetDocConverter(organizationService, installationService, datasetService);
+    this.indexService = indexService;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
@@ -137,15 +123,6 @@ public class DatasetIndexUpdateListener {
 
     @Override
     public void run() {
-      // Rebuild the index before consuming changes unless instructed to skip
-      if (performIndexSync) {
-        try {
-          indexBuilder.build();
-        } catch (Exception e) {
-          throw Throwables.propagate(e);
-        }
-      }
-
       LOG.info("Starting dataset index queue consumer.  Current queue size[{}]", queue.size());
       try {
         while (true) {
@@ -154,14 +131,14 @@ public class DatasetIndexUpdateListener {
           if (event.getClass().equals(CreateEvent.class)) {
             @SuppressWarnings("unchecked")
             CreateEvent<Dataset> dsEvent = (CreateEvent<Dataset>) event;
-            createOrReplaceDataset(dsEvent.getNewObject());
+            indexService.add(dsEvent.getNewObject());
 
           } else if (event.getClass().equals(UpdateEvent.class)) {
             // Handle dataset, organization and installation updates
             if (((UpdateEvent<?>) event).getObjectClass().equals(Dataset.class)) {
               @SuppressWarnings("unchecked")
               UpdateEvent<Dataset> dsEvent = (UpdateEvent<Dataset>) event;
-              createOrReplaceDataset(dsEvent.getNewObject());
+              indexService.add(dsEvent.getNewObject());
 
             } else if (((UpdateEvent<?>) event).getObjectClass().equals(Organization.class)) {
 
@@ -182,7 +159,7 @@ public class DatasetIndexUpdateListener {
             UUID key = ((ChangedComponentEvent)event).getTargetEntityKey();
             try {
               Dataset d = datasetService.get( key );
-              createOrReplaceDataset(d);
+              indexService.add(d);
             } catch (NotFoundException e) {
               LOG.error("Cannot update missing dataset {}", key);
             }
@@ -190,7 +167,7 @@ public class DatasetIndexUpdateListener {
           } else if (event.getClass().equals(DeleteEvent.class)) {
             @SuppressWarnings("unchecked")
             DeleteEvent<Dataset> dsEvent = (DeleteEvent<Dataset>) event;
-            deleteDataset(dsEvent.getOldObject());
+            indexService.delete(dsEvent.getOldObject().getKey());
           }
 
           // and now we can safely declare update the queued event count, since it is serviced
@@ -214,7 +191,7 @@ public class DatasetIndexUpdateListener {
           if (!results.getResults().isEmpty()) {
             LOG.debug("Found page of {} datasets hosted by installation[{}]", results.getResults().size(), event
               .getOldObject().getKey());
-            updateDatasets(results.getResults());
+            indexService.add(results.getResults());
           }
           page.nextPage();
         } while (!results.isEndOfRecords());
@@ -233,7 +210,7 @@ public class DatasetIndexUpdateListener {
         if (!results.getResults().isEmpty()) {
           LOG.debug("Found page of {} datasets hosted by organization[{}]", results.getResults().size(), oEvent
             .getOldObject().getKey());
-          updateDatasets(results.getResults());
+          indexService.add(results.getResults());
         }
         page.nextPage();
       } while (!results.isEndOfRecords());
@@ -245,45 +222,11 @@ public class DatasetIndexUpdateListener {
         if (!results.getResults().isEmpty()) {
           LOG.debug("Found page of {} datasets owned by organization[{}]", results.getResults().size(), oEvent
             .getOldObject().getKey());
-          updateDatasets(results.getResults());
+          indexService.add(results.getResults());
         }
         page.nextPage();
       } while (!results.isEndOfRecords());
     }
 
-    private void createOrReplaceDataset(Dataset dataset) {
-      if (dataset != null) {
-        SolrInputDocument doc = docConverter.build(dataset);
-        try {
-          solrClient.add(doc);
-          solrClient.commit();
-        } catch (Exception e) {
-          LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
-        }
-      }
-    }
-
-    private void updateDatasets(List<Dataset> datasets) {
-      LOG.debug("Batch updating {} datasets in SOLR", datasets.size());
-      List<SolrInputDocument> docs = Lists.newArrayList();
-      for (Dataset d : datasets) {
-        docs.add(docConverter.build(d));
-      }
-      try {
-        solrClient.add(docs);
-        solrClient.commit();
-      } catch (Exception e) {
-        LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
-      }
-    }
-
-    private void deleteDataset(Dataset dataset) {
-      try {
-        solrClient.deleteById(String.valueOf(dataset.getKey()));
-        solrClient.commit();
-      } catch (Exception e) {
-        LOG.error("CRITICAL: Unable to delete from SOLR - index is now out of sync", e);
-      }
-    }
   }
 }

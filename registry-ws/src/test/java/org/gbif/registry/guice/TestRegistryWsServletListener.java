@@ -31,12 +31,9 @@ import java.util.Properties;
 import javax.servlet.ServletContextEvent;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.bval.guice.ValidationModule;
-import org.apache.solr.client.solrj.SolrClient;
 
 /**
  * The Registry WS module for testing in Grizzly.
@@ -83,7 +80,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     super.contextInitialized(servletContextEvent);
     RegistryServer.INSTANCE
-      .setSolrClient(getInjector().getInstance(Key.get(SolrClient.class, Names.named("Dataset"))));
+      .setSolrClient(getInjector().getInstance(RegistrySearchModule.DATASET_KEY));
     RegistryServer.INSTANCE.setDatasetUpdater(getInjector().getInstance(DatasetIndexUpdateListener.class));
   }
 

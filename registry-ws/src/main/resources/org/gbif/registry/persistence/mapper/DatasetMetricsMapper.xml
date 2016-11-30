@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetMetricsMapper">
+
+  <resultMap id="METRICS_MAP" type="DatasetMetrics" autoMapping="true">
+    <id property="datasetKey" column="dataset_key"/>
+  </resultMap>
+
+  <select id="get" resultMap="METRICS_MAP">
+    SELECT *
+    FROM dataset_metrics
+    WHERE dataset_key = #{key,jdbcType=OTHER}
+  </select>
+
+  <insert id="create" parameterType="DatasetMetrics">
+    INSERT INTO dataset_metrics (dataset_key, record_count, taxon_keys, countries)
+    VALUES(#{metrics.datasetKey,jdbcType=OTHER}, #{metrics.recordCount}, #{metrics.taxonKeys,jdbcType=OTHER}, #{metrics.countries,jdbcType=OTHER})
+  </insert>
+
+  <delete id="delete">
+    DELETE dataset_metrics
+    WHERE dataset_key = #{key,jdbcType=OTHER}
+  </delete>
+
+  <delete id="truncate">
+    TRUNCATE dataset_metrics
+  </delete>
+
+</mapper>

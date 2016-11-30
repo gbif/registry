@@ -1,7 +1,6 @@
 package org.gbif.registry.search;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
@@ -18,7 +17,6 @@ import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.IdentifierType;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -36,67 +33,107 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.sun.jersey.api.NotFoundException;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * A builder that will clear and build a new dataset index by paging over the given service.
+ * A service that modifies the solr index, adding, updating or removing dataset documents.
  */
 @Singleton
-public class DatasetIndexBuilder {
+public class DatasetIndexService {
 
-  // controls how many results we request while paging over the WS
-  private static final int WS_PAGE_SIZE = 100;
-  private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexBuilder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexService.class);
   private final SolrClient solrClient;
   private final DatasetService datasetService;
-  private final DatasetDocConverter docConverter;
+  private final CachingNetworkEntityService<Installation> installationService;
+  private final CachingNetworkEntityService<Organization> organizationService;
+  private final DatasetDocConverter docConverter = new DatasetDocConverter();
 
   @Inject
-  public DatasetIndexBuilder(@Named("Dataset") SolrClient solrClient, DatasetService datasetService,
-    InstallationService installationService, OrganizationService organizationService) {
+  public DatasetIndexService(@Named("dataset") SolrClient solrClient,
+                             DatasetService datasetService, InstallationService installationService, OrganizationService organizationService) {
     this.solrClient = solrClient;
     this.datasetService = datasetService;
-    // We can use a cache at startup
-    docConverter =
-      new DatasetDocConverter(new CachingNetworkEntityService<Organization>(organizationService),
-        new CachingNetworkEntityService<Installation>(installationService), datasetService);
+    // use a cache for repeated org lookups
+    this.installationService = new CachingNetworkEntityService<Installation>(installationService);
+    this.organizationService = new CachingNetworkEntityService<Organization>(organizationService);
   }
 
-  public void build() throws SolrServerException, IOException {
-    LOG.info("Building a new Dataset index");
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    pageAndIndex();
-    solrClient.commit();
-    solrClient.optimize();
-    LOG.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
-  }
-
-  /**
-   * Pages over all datasets and adds to SOLR.
-   */
-  private void pageAndIndex() throws IOException, SolrServerException {
-    PagingRequest page = new PagingRequest(0, WS_PAGE_SIZE);
-    PagingResponse<Dataset> response = null;
-    do {
-      LOG.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
-      response = datasetService.list(page);
-      // Batching updates to SOLR proves quicker with batches of 100 - 1000 showing similar performance
-      List<SolrInputDocument> batch = Lists.newArrayList();
-      for (Dataset ds : response.getResults()) {
-        batch.add(docConverter.build(ds));
+  public void add(Dataset dataset) {
+    if (dataset != null) {
+      try {
+        solrClient.add(toDoc(dataset));
+        solrClient.commit();
+      } catch (Exception e) {
+        LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
       }
-      if (!batch.isEmpty()) {
-        solrClient.add(batch);
+    }
+  }
+
+  public void add(Collection<Dataset> datasets) {
+    LOG.debug("Batch updating {} datasets in SOLR", datasets.size());
+    List<SolrInputDocument> docs = Lists.newArrayList();
+    for (Dataset d : datasets) {
+      docs.add(toDoc(d));
+    }
+    if (!docs.isEmpty()) {
+      try {
+        solrClient.add(docs);
         solrClient.commit(); // to allow eager users (or impatient developers) to see search data on startup quickly
+      } catch (Exception e) {
+        LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
       }
-      page.nextPage();
+    }
+  }
 
-    } while (!response.isEndOfRecords());
+  public void delete(UUID datasetKey) {
+    try {
+      solrClient.deleteById(String.valueOf(datasetKey));
+      solrClient.commit();
+    } catch (Exception e) {
+      LOG.error("CRITICAL: Unable to delete from SOLR - index is now out of sync", e);
+    }
+  }
+
+  private SolrInputDocument toDoc(Dataset d) {
+      // see http://dev.gbif.org/issues/browse/REG-405 which explains why we defend against NotFoundExceptions below
+
+    Organization publisher = null;
+      try {
+        publisher = d.getPublishingOrganizationKey() != null ? organizationService.get(d.getPublishingOrganizationKey()) : null;
+      } catch (NotFoundException e) {
+        // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
+        LOG.warn("Service reports organization[{}] cannot be found for dataset[{}]", d.getPublishingOrganizationKey(),
+            d.getKey());
+      }
+
+      Installation installation = null;
+      try {
+        installation = d.getInstallationKey() != null ? installationService.get(d.getInstallationKey()) : null;
+      } catch (NotFoundException e) {
+        // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
+        LOG.warn("Service reports installation[{}] cannot be found for dataset[{}]", d.getInstallationKey(), d.getKey());
+      }
+
+      Organization host = null;
+      try {
+        host = installation != null && installation.getOrganizationKey() != null ? organizationService.get(installation
+            .getOrganizationKey()) : null;
+      } catch (NotFoundException e) {
+        // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
+        LOG.warn("Service reports organization[{}] cannot be found for installation[{}]",
+            installation.getOrganizationKey(), installation.getKey());
+      }
+
+    return docConverter.build(d,
+        datasetService.getMetadataDocument(d.getKey()),
+        publisher,
+        host
+    );
   }
 
   /**
