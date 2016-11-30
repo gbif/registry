@@ -270,6 +270,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         stream = getMetadataDocument(docs.get(0).getKey());
         return DatasetParser.build(stream);
       } catch (IOException | IllegalArgumentException e) {
+        //Not sure if we should not propagate an Exception to return a 500 instead
         LOG.error("Stored metadata document {} cannot be read", docs.get(0).getKey(), e);
       } finally {
         Closeables.closeQuietly(stream);
