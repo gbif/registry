@@ -1,7 +1,7 @@
 package org.gbif.registry.cli.directoryupdate;
 
-import org.gbif.directory.client.guice.DirectoryWsClientModule;
 import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.cli.common.DirectoryConfiguration;
 
 import java.util.Properties;
 import javax.validation.Valid;
@@ -20,17 +20,10 @@ public class DirectoryUpdateConfiguration {
   @NotNull
   public DbConfiguration db = new DbConfiguration();
 
+  @ParametersDelegate
+  @Valid
   @NotNull
-  @Parameter(names = "--directory-ws-url")
-  public String directoryWsUrl;
-
-  @NotNull
-  @Parameter(names = "--directory-app-key")
-  public String directoryAppKey;
-
-  @NotNull
-  @Parameter(names = "--directory-app-secret")
-  public String directoryAppSecret;
+  public DirectoryConfiguration directory = new DirectoryConfiguration();
 
   @NotNull
   @Parameter(names = "--start-time")
@@ -41,11 +34,7 @@ public class DirectoryUpdateConfiguration {
   public Integer frequencyInHour = 24;
 
   public Properties toProperties(){
-    Properties props = new Properties();
-    props.put(DirectoryWsClientModule.DIRECTORY_URL_KEY, directoryWsUrl);
-    props.put(DirectoryWsClientModule.DIRECTORY_APP_KEY, directoryAppKey);
-    props.put(DirectoryWsClientModule.DIRECTORY_SECRET, directoryAppSecret);
-    return props;
+    return directory.toProperties();
   }
 
 }

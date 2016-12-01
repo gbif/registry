@@ -40,6 +40,11 @@ public class EventModule extends AbstractModule {
     this.properties = properties;
   }
 
+  public static EventModule withoutRabbit(Properties properties) {
+    properties.setProperty(MESSAGING_ENABLED_PROPERTY, "false");
+    return new EventModule(properties);
+  }
+
   @Override
   protected void configure() {
     bind(EventBus.class).toInstance(eventBus);

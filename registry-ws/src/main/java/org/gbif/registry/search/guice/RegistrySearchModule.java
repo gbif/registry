@@ -87,27 +87,33 @@ public class RegistrySearchModule extends PrivateModule {
    * Map the String property "fromProperty" to and String named annotation "name".
    */
   private void bindString(String fromProperty , String name){
-    String from = properties.getProperty(fromProperty);
-    bind(String.class).annotatedWith(Names.named(name)).toInstance(from);
-    expose(String.class).annotatedWith(Names.named(name));
+    if (properties.containsKey(fromProperty)) {
+      String from = properties.getProperty(fromProperty);
+      bind(String.class).annotatedWith(Names.named(name)).toInstance(from);
+      expose(String.class).annotatedWith(Names.named(name));
+    }
   }
 
   /**
    * Map the String property "fromProperty" to and Boolean named annotation "name".
    */
   private void bindBool(String fromProperty , String name){
-    boolean from = Boolean.valueOf(properties.getProperty(fromProperty));
-    bind(Boolean.class).annotatedWith(Names.named(name)).toInstance(from);
-    expose(Boolean.class).annotatedWith(Names.named(name));
+    if (properties.containsKey(fromProperty)) {
+      boolean from = Boolean.valueOf(properties.getProperty(fromProperty));
+      bind(Boolean.class).annotatedWith(Names.named(name)).toInstance(from);
+      expose(Boolean.class).annotatedWith(Names.named(name));
+    }
   }
 
   /**
    * Map the String property "fromProperty" to and Integer named annotation "name".
    */
   private void bindInt(String fromProperty , String name){
-    int from = Integer.valueOf(properties.getProperty(fromProperty));
-    bind(Integer.class).annotatedWith(Names.named(name)).toInstance(from);
-    expose(Integer.class).annotatedWith(Names.named(name));
+    if (properties.containsKey(fromProperty)) {
+      int from = Integer.valueOf(properties.getProperty(fromProperty));
+      bind(Integer.class).annotatedWith(Names.named(name)).toInstance(from);
+      expose(Integer.class).annotatedWith(Names.named(name));
+    }
   }
 
 }

@@ -153,6 +153,7 @@ public class DatasetIndexService implements AutoCloseable{
 
   @Override
   public void close() throws Exception {
+    LOG.info("Shutting down index service threadpool");
     threadPool.shutdown();
   }
 

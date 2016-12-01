@@ -6,13 +6,11 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.search.DatasetIndexService;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +37,7 @@ public class DatasetIndexBuilder {
   /**
    * Pages over all datasets and adds them to SOLR.
    */
-  public void build() throws SolrServerException, IOException {
+  public void build() throws Exception {
     LOG.info("Building a new Dataset index");
     Stopwatch stopwatch = Stopwatch.createStarted();
     PagingRequest page = new PagingRequest(0, PAGE_SIZE);
@@ -54,6 +52,7 @@ public class DatasetIndexBuilder {
 
     } while (!response.isEndOfRecords());
     LOG.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
+    indexService.close();
   }
 
 }
