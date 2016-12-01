@@ -31,11 +31,12 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.search.DatasetIndexUpdateListener;
+import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.SolrInitializer;
 import org.gbif.registry.search.guice.RegistrySearchModule;
@@ -105,7 +106,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
-  private final DatasetIndexUpdateListener datasetIndexUpdater;
+  private final DatasetIndexService datasetIndexService;
 
   @Parameters
   public static Iterable<Object[]> data() {
@@ -119,7 +120,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
         webservice.getInstance(NodeResource.class),
         webservice.getInstance(InstallationResource.class),
         webservice.getInstance(RegistrySearchModule.DATASET_KEY),
-        webservice.getInstance(DatasetIndexUpdateListener.class),
+        webservice.getInstance(DatasetIndexService.class),
         null // SimplePrincipalProvider only set in web service client
       }
       ,
@@ -143,7 +144,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     NodeService nodeService,
     InstallationService installationService,
     @Nullable SolrClient solrClient,
-    @Nullable DatasetIndexUpdateListener datasetIndexUpdater,
+    @Nullable DatasetIndexService indexService,
     @Nullable SimplePrincipalProvider pp) {
     super(service, pp);
     this.service = service;
@@ -153,10 +154,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     this.installationService = installationService;
     // if no SOLR are given for the test, use the SOLR in Grizzly
     solrClient = solrClient == null ? RegistryServer.INSTANCE.getSolrClient() : solrClient;
-    this.datasetIndexUpdater =
-      datasetIndexUpdater == null ? RegistryServer.INSTANCE.getDatasetUpdater() : datasetIndexUpdater;
-
-    solrRule = new SolrInitializer(solrClient, this.datasetIndexUpdater);
+    this.datasetIndexService = indexService == null ? RegistryServer.INSTANCE.getIndexService() : indexService;
+    solrRule = new SolrInitializer(solrClient, this.datasetIndexService);
   }
 
   @Test
@@ -243,11 +242,28 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
+  public void testLargeTitles() {
+    Dataset d = newEntity();
+    d.setType(DatasetType.OCCURRENCE);
+    d = create(d, 1);
+
+    testSearch(d.getTitle());
+    testSearch("Pontaurus needs more than 255 characters for it's title");
+    testSearch("\"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"");
+    testSearch("Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei");
+    testSearch("PonTaurus");
+    testSearch("Pon Taurus");
+    testSearch("Bolkar Daglari Aladaglari");
+    testSearch("PonTaurus Bolkar Daglari Aladaglari");
+  }
+
+  @Test
   public void testEventTypeSearch() {
     Dataset d = newEntity();
     d.setType(DatasetType.SAMPLING_EVENT);
     d = create(d, 1);
-    assertSearch(d.getTitle(), 1); // 1 result expected for a simple search
+
+    assertSearch(d.getTitle(), 1);
 
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.addTypeFilter(DatasetType.SAMPLING_EVENT);
@@ -264,6 +280,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d = create(d, 1);
     final UUID pubKey = d.getPublishingOrganizationKey();
     final UUID instKey = d.getInstallationKey();
+    final UUID nodeKey = organizationService.get(pubKey).getEndorsingNodeKey();
 
     d = new Dataset();
     d.setPublishingOrganizationKey(pubKey);
@@ -283,7 +300,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setKey(null);
     d.setTitle("Bird tracking - GPS tracking of Lesser Black-backed Gulls and Herring Gulls breeding at the southern North Sea coast");
     d.setDescription("Bird tracking - GPS tracking of Lesser Black-backed Gulls and Herring Gulls breeding at the southern North Sea coast is a species occurrence dataset published by the Research Institute for Nature and Forest (INBO) and described in Stienen et al. 2016 (http://doi.org/10.3897/zookeys.555.6173) The dataset contains close to 2.5 million occurrences, recorded by 101 GPS trackers mounted on 75 Lesser Black-backed Gulls and 26 Herring Gulls breeding at the Belgian and Dutch coast (see https://inbo.cartodb.com/u/lifewatch/viz/da04f120-ea70-11e4-a3f2-0e853d047bba/public_map for a visualization of the data). The trackers were developed by the University of Amsterdam Bird Tracking System (UvA-BiTS, http://www.uva-bits.nl). These automatically record and transmit bird movements, which allows us and others to study their habitat use and migration behaviour in great detail. Our bird tracking network is operational since 2013. It is funded for LifeWatch by the Hercules Foundation and maintained in collaboration with UvA-BiTS and the Flanders Marine Institute (VLIZ). The recorded data are periodically released in bulk as open data (http://dataset.inbo.be/bird-tracking-gull-occurrences), and are also accessible through CartoDB and the Global Biodiversity Information Facility (GBIF, http://doi.org/10.15468/02omly). See the dataset metadata for contact information, scope and methodology. Issues with the dataset can be reported at https://github.com/LifeWatchINBO/data-publication/tree/master/datasets/bird-tracking-gull-occurrences");
-    service.create(d);
+    final UUID gpsKey = service.create(d);
 
     d.setKey(null);
     d.setTitle("BID-AF2015-0004-NAC- données de Dénombrements Internationaux des Oiseaux d'Eau en Afrique");
@@ -291,17 +308,35 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setLicense(License.CC_BY_NC_4_0);
     service.create(d);
 
+    final Organization plazi = new Organization();
+    plazi.setTitle("Plazi.org taxonomic treatments database");
+    plazi.setCountry(Country.SWITZERLAND);
+    plazi.setEndorsingNodeKey(nodeKey);
+    plazi.setEndorsementApproved(true);
+    plazi.setLanguage(Language.ENGLISH);
+    plazi.setPassword("passw0rd");
+    plazi.setKey(organizationService.create(plazi));
 
-    assertAll(5l);
+    d.setKey(null);
+    d.setTitle("A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae");
+    d.setPublishingOrganizationKey(plazi.getKey());
+    d.setDescription("This dataset contains the digitized treatments in Plazi based on the original journal article Zefa, Edison, Redü, Darlan Rutz, Costa, Maria Kátia Matiotti Da, Fontanetti, Carmem S., Gottschalk, Marco Silva, Padilha, Giovanna Boff, Fernandes, Anelise, Martins, Luciano De P. (2014): A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae. Zootaxa 3847 (1): 125-132, DOI: http://dx.doi.org/10.11646/zootaxa.3847.1.7");
+    d.setLicense(License.CC0_1_0);
+    service.create(d);
+
+    assertAll(6l);
     assertSearch("Hund", 1);
     assertSearch("bli bla blub", 2);
     assertSearch("PonTaurus", 1);
     assertSearch("Pontaurus needs more than 255 characters", 1);
     assertSearch("very, very long title", 1);
-    List<DatasetSearchResult> docs = assertSearch("GPS", 2);
-
     assertSearch("Bird tracking", 1);
-
+    assertSearch("Plazi", 1);
+    assertSearch("plazi.org", 1);
+    assertSearch("Kátia", 1);
+    assertSearch("10.11646/zootaxa.3847.1.7", 1);
+    List<DatasetSearchResult> docs = assertSearch("GPS", 2);
+    assertEquals(gpsKey, docs.get(0).getKey());
   }
 
   @Test
@@ -323,22 +358,28 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // update publishing organization title should be captured
     Organization publisher = organizationService.get(d.getPublishingOrganizationKey());
     assertSearch(publisher.getTitle(), 1);
-    String oldTitle = publisher.getTitle();
-    publisher.setTitle("NEW-OWNER-TITLE");
+    publisher.setTitle("OWNERTITLE");
     organizationService.update(publisher);
-    assertSearch(oldTitle, 0);
     assertSearch(publisher.getTitle(), 1);
+
+    publisher.setTitle("BGBM");
+    organizationService.update(publisher);
+    assertSearch(publisher.getTitle(), 1);
+    assertSearch("OWNERTITLE", 0);
 
     // update hosting organization title should be captured
     Installation installation = installationService.get(d.getInstallationKey());
     assertNotNull("Installation should be present", installation);
     Organization host = organizationService.get(installation.getOrganizationKey());
     assertSearch(host.getTitle(), 1);
-    oldTitle = host.getTitle();
-    host.setTitle("NEW-HOST-TITLE");
+    host.setTitle("HOSTTITLE");
     organizationService.update(host);
-    assertSearch(oldTitle, 0);
     assertSearch(host.getTitle(), 1);
+
+    host.setTitle("BGBM");
+    organizationService.update(host);
+    assertSearch(host.getTitle(), 1);
+    assertSearch("HOSTTITLE", 0);
 
     // check a deletion removes the dataset for search
     service.delete(d.getKey());
@@ -353,7 +394,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     UUID nodeKey = nodeService.create(Nodes.newInstance());
     Organization o = Organizations.newInstance(nodeKey);
-    o.setTitle("A-NEW-ORG");
+    o.setTitle("ANEWORG");
     UUID organizationKey = organizationService.create(o);
     assertSearch(o.getTitle(), 0); // No datasets hosted by that organization yet
 
@@ -369,7 +410,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    * Utility to verify that after waiting for SOLR to update, the given query returns the expected count of results.
    */
   private List<DatasetSearchResult> assertSearch(String query, int expected) {
-    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater); // SOLR updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ(query);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
@@ -378,8 +419,20 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     return resp.getResults();
   }
 
+  /**
+   * Utility to verify that after waiting for SOLR to update, the given query returns the expected count of results.
+   */
+  private void testSearch(String query) {
+    System.out.println("\n*****\n"+query);
+    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.setQ(query);
+
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+  }
+
   private void assertAll(Long expected) {
-    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater); // SOLR updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ("*");
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
@@ -393,7 +446,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    * Utility to verify that after waiting for SOLR to update, the given query returns the expected count of results.
    */
   private void assertSearch(Country publishingCountry, Country country, int expected) {
-    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexUpdater); // SOLR updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     if (country != null) {
       req.addCountryFilter(country);

@@ -1,30 +1,23 @@
 package org.gbif.registry.search;
 
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.util.iterables.Iterables;
+import org.gbif.utils.concurrent.NamedThreadFactory;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -35,6 +28,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,58 +38,63 @@ import org.slf4j.LoggerFactory;
  * A service that modifies the solr index, adding, updating or removing dataset documents.
  */
 @Singleton
-public class DatasetIndexService {
+public class DatasetIndexService implements AutoCloseable{
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexService.class);
   private final SolrClient solrClient;
   private final DatasetService datasetService;
-  private final CachingNetworkEntityService<Installation> installationService;
-  private final CachingNetworkEntityService<Organization> organizationService;
+  private final InstallationService installationService;
+  private final OrganizationService organizationService;
+  private final GetCache<Installation> installationCache;
+  private final GetCache<Organization> organizationCache;
   private final DatasetDocConverter docConverter = new DatasetDocConverter();
+  private final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+  // Executes each submitted task (agent synchronization) using one of possibly several pooled threads
+  private ThreadPoolExecutor threadPool;
 
   @Inject
   public DatasetIndexService(@Named("dataset") SolrClient solrClient,
                              DatasetService datasetService, InstallationService installationService, OrganizationService organizationService) {
     this.solrClient = solrClient;
     this.datasetService = datasetService;
-    // use a cache for repeated org lookups
-    this.installationService = new CachingNetworkEntityService<Installation>(installationService);
-    this.organizationService = new CachingNetworkEntityService<Organization>(organizationService);
+    this.installationService = installationService;
+    this.organizationService = organizationService;
+    // use a cache for repeated lookups
+    this.installationCache = new GetCache<Installation>(installationService);
+    this.organizationCache = new GetCache<Organization>(organizationService);
+
+    //TODO: make this configurable
+    int maxPoolSize = 1;
+    threadPool = new ThreadPoolExecutor(1, maxPoolSize, 10, TimeUnit.SECONDS, queue, new NamedThreadFactory("dataset-index-service"));
   }
 
   public void add(Dataset dataset) {
     if (dataset != null) {
-      try {
-        solrClient.add(toDoc(dataset));
-        solrClient.commit();
-      } catch (Exception e) {
-        LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
-      }
+      threadPool.submit(new IndexDatasetJob(dataset));
     }
   }
 
   public void add(Collection<Dataset> datasets) {
-    LOG.debug("Batch updating {} datasets in SOLR", datasets.size());
-    List<SolrInputDocument> docs = Lists.newArrayList();
-    for (Dataset d : datasets) {
-      docs.add(toDoc(d));
-    }
-    if (!docs.isEmpty()) {
-      try {
-        solrClient.add(docs);
-        solrClient.commit(); // to allow eager users (or impatient developers) to see search data on startup quickly
-      } catch (Exception e) {
-        LOG.error("CRITICAL: Unable to update SOLR - index is now out of sync", e);
-      }
+    if (datasets != null && !datasets.isEmpty()) {
+      threadPool.submit(new IndexDatasetJob(datasets));
     }
   }
 
   public void delete(UUID datasetKey) {
-    try {
-      solrClient.deleteById(String.valueOf(datasetKey));
-      solrClient.commit();
-    } catch (Exception e) {
-      LOG.error("CRITICAL: Unable to delete from SOLR - index is now out of sync", e);
+    if (datasetKey != null) {
+      threadPool.submit(new DeleteDatasetJob(datasetKey));
+    }
+  }
+
+  public void trigger(Organization org) {
+    if (org != null) {
+      threadPool.submit(new IndexOrganizationJob(org));
+    }
+  }
+
+  public void trigger(Installation installation) {
+    if (installation != null) {
+      threadPool.submit(new IndexInstallationJob(installation));
     }
   }
 
@@ -104,7 +103,7 @@ public class DatasetIndexService {
 
     Organization publisher = null;
       try {
-        publisher = d.getPublishingOrganizationKey() != null ? organizationService.get(d.getPublishingOrganizationKey()) : null;
+        publisher = d.getPublishingOrganizationKey() != null ? organizationCache.get(d.getPublishingOrganizationKey()) : null;
       } catch (NotFoundException e) {
         // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
         LOG.warn("Service reports organization[{}] cannot be found for dataset[{}]", d.getPublishingOrganizationKey(),
@@ -113,7 +112,7 @@ public class DatasetIndexService {
 
       Installation installation = null;
       try {
-        installation = d.getInstallationKey() != null ? installationService.get(d.getInstallationKey()) : null;
+        installation = d.getInstallationKey() != null ? installationCache.get(d.getInstallationKey()) : null;
       } catch (NotFoundException e) {
         // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
         LOG.warn("Service reports installation[{}] cannot be found for dataset[{}]", d.getInstallationKey(), d.getKey());
@@ -121,7 +120,7 @@ public class DatasetIndexService {
 
       Organization host = null;
       try {
-        host = installation != null && installation.getOrganizationKey() != null ? organizationService.get(installation
+        host = installation != null && installation.getOrganizationKey() != null ? organizationCache.get(installation
             .getOrganizationKey()) : null;
       } catch (NotFoundException e) {
         // server side, interceptors may trigger on a @nulltoNotFoundException which we code defensively for, but smells
@@ -136,41 +135,156 @@ public class DatasetIndexService {
     );
   }
 
+  private List<SolrInputDocument> toDocs(Iterable<Dataset> datasets) {
+    List<SolrInputDocument> docs = Lists.newArrayList();
+    for (Dataset d : datasets) {
+      docs.add(toDoc(d));
+    }
+    return docs;
+  }
+
+  /**
+   * Allows an external process to observe if there are pending actions in the queue or currently running in the executor.
+   * It is only anticipated that integration tests will use this method.
+   */
+  public boolean isActive() {
+    return !queue.isEmpty() || threadPool.getActiveCount() > 0;
+  }
+
+  @Override
+  public void close() throws Exception {
+    threadPool.shutdown();
+  }
+
+  private void commit() throws IOException, SolrServerException {
+    // Use soft commits
+    solrClient.commit(false, true, true);
+  }
+
+  private void addDocs(Collection<SolrInputDocument> docs) throws IOException, SolrServerException {
+    if (docs != null && !docs.isEmpty()) {
+      solrClient.add(docs);
+    }
+  }
+
+  private class IndexDatasetJob implements Runnable {
+    private final Collection<Dataset> datasets;
+
+    private IndexDatasetJob(Dataset dataset) {
+      this(Lists.<Dataset>newArrayList(dataset));
+    }
+
+    private IndexDatasetJob(Collection<Dataset> datasets) {
+      this.datasets = datasets;
+    }
+
+    @Override
+    public void run() {
+      try {
+        solrClient.add(toDocs(datasets));
+        commit();
+      } catch (Exception e) {
+        LOG.error("Unable to update {} datasets - index is now out of sync", datasets.size(), e);
+      }
+    }
+  }
+
+  private class DeleteDatasetJob implements Runnable {
+    private final UUID key;
+
+    private DeleteDatasetJob(UUID key) {
+      this.key = key;
+    }
+    @Override
+    public void run() {
+      try {
+        solrClient.deleteById(key.toString());
+        commit();
+      } catch (Exception e) {
+        LOG.error("Unable to delete dataset {} from SOLR - index is now out of sync", key, e);
+      }
+    }
+  }
+
+  private class IndexOrganizationJob implements Runnable {
+    private final Organization organization;
+
+    private IndexOrganizationJob(Organization organization) {
+      this.organization = organization;
+    }
+
+    @Override
+    public void run() {
+      // first purge cache
+      organizationCache.purge(organization.getKey());
+
+      // Update published datasets for the organization
+      try {
+        LOG.debug("Updating published datasets for organization {}", organization.getKey());
+        Iterable<Dataset> datasets = Iterables.publishedDatasets(organization.getKey(), null, organizationService);
+        addDocs(toDocs(datasets));
+      } catch (Exception e) {
+        LOG.error("Unable to update published datasets for organization {} - index is now out of sync", organization.getKey(), e);
+      }
+
+      // Update hosted datasets for the organization
+      try {
+        LOG.debug("Updating hosted datasets for organization {}: {}", organization.getKey(), organization.getTitle());
+        Iterable<Dataset> datasets = Iterables.hostedDatasets(organization.getKey(), null, organizationService);
+        addDocs(toDocs(datasets));
+        commit();
+      } catch (Exception e) {
+        LOG.error("Unable to update hosted datasets for organization {} - index is now out of sync", organization.getKey(), e);
+      }
+    }
+  }
+
+  private class IndexInstallationJob implements Runnable {
+    private final Installation installation;
+
+    private IndexInstallationJob(Installation installation) {
+      this.installation = installation;
+    }
+
+    @Override
+    public void run() {
+      // first purge cache
+      installationCache.purge(installation.getKey());
+
+      // Update hosted datasets for the organization
+      try {
+        LOG.debug("Updating hosted datasets for installation {}", installation.getKey());
+        Iterable<Dataset> datasets = Iterables.hostedDatasets(installation.getKey(), null, installationService);
+        addDocs(toDocs(datasets));
+        commit();
+      } catch (Exception e) {
+        LOG.error("Unable to update hosted datasets for installation {} - index is now out of sync", installation.getKey(), e);
+      }
+    }
+  }
+
   /**
    * A lightweight cache to help improve performance of the builder.
    *
    * @param <T> The type of entity being wrapped
    */
-  private static class CachingNetworkEntityService<T> implements NetworkEntityService<T> {
-
+  private class GetCache<T> {
     private final NetworkEntityService<T> service;
     private final LoadingCache<UUID, T> cache = CacheBuilder.newBuilder()
-      .maximumSize(1000)
-      .expireAfterWrite(10, TimeUnit.MINUTES)
-      .build(
-        new CacheLoader<UUID, T>() {
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build(
+            new CacheLoader<UUID, T>() {
 
-          @Override
-          public T load(UUID key) throws Exception {
-            return service.get(key);
-          }
-        });
-
-    public CachingNetworkEntityService(NetworkEntityService<T> service) {
+              @Override
+              public T load(UUID key) throws Exception {
+                return service.get(key);
+              }
+            });
+    public GetCache(NetworkEntityService<T> service) {
       this.service = service;
     }
 
-    @Override
-    public UUID create(T entity) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void delete(UUID key) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
     public T get(UUID key) {
       try {
         return cache.get(key);
@@ -179,151 +293,9 @@ public class DatasetIndexService {
       }
     }
 
-    @Override
-    public Map<UUID, String> getTitles(Collection<UUID> collection) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public PagingResponse<T> list(Pageable page) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void update(T entity) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public PagingResponse<T> search(String query, Pageable page) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addComment(@NotNull UUID targetEntityKey, @NotNull Comment comment) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteComment(@NotNull UUID targetEntityKey, int commentKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<Comment> listComments(@NotNull UUID targetEntityKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addContact(@NotNull UUID targetEntityKey, @NotNull Contact contact) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void updateContact(@NotNull UUID targetEntityKey, @NotNull Contact contact) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteContact(@NotNull UUID targetEntityKey, int contactKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<Contact> listContacts(@NotNull UUID targetEntityKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addEndpoint(@NotNull UUID targetEntityKey, @NotNull Endpoint endpoint) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteEndpoint(@NotNull UUID targetEntityKey, int endpointKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<Endpoint> listEndpoints(@NotNull UUID targetEntityKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addIdentifier(@NotNull UUID targetEntityKey, @NotNull Identifier identifier) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteIdentifier(@NotNull UUID targetEntityKey, int identifierKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<Identifier> listIdentifiers(@NotNull UUID targetEntityKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull MachineTag machineTag) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addMachineTag(
-      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteMachineTag(@NotNull UUID targetEntityKey, int machineTagKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteMachineTags(
-      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<MachineTag> listMachineTags(@NotNull UUID targetEntityKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addTag(@NotNull UUID targetEntityKey, @NotNull String value) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public int addTag(@NotNull UUID targetEntityKey, @NotNull Tag tag) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public void deleteTag(@NotNull UUID taggedEntityKey, int tagKey) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public List<Tag> listTags(@NotNull UUID taggedEntityKey, @Nullable String owner) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
-      throw new IllegalStateException("Method not supported in caching service");
-    }
-
-    @Override
-    public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
-      throw new IllegalStateException("Method not supported in caching service");
+    public void purge(UUID key) {
+      cache.invalidate(key);
     }
   }
+
 }

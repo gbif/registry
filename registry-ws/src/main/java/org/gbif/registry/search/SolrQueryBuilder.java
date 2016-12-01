@@ -58,10 +58,16 @@ import static org.gbif.ws.util.WebserviceParameter.DEFAULT_SEARCH_PARAM_VALUE;
 public class SolrQueryBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(SolrQueryBuilder.class);
 
-  private static final String QUERY_PARSER   = "dismax";
+  private static final String QUERY_PARSER   = "edismax";
   private static final String QUERY_FIELDS = "title^10 keyword^5 description publishing_organization_title hosting_organization_title project_id metadata^0.5";
-  private static final String PHRASE_FIELDS = "title^100";
-  private static final String BOOST_FUNCTION = ""; //"log(10+record_count)";
+  private static final String PHRASE_FIELDS = "title^100 description";
+  private static final String PHRASE_SLOP = "100";
+  private static final String PHRASE_FIELDS_SHINGLE = "title^10 description^1.5";
+  private static final String PHRASE_SLOP_SHINGLE = "10";
+  private static final String BOOST_FUNCTION = "log(sum(2,record_count))";
+  private static final String MINIMUM_SHOULD_MATCH = "25%";
+  private static final String TIE_BREAKER = "0.2";
+
   private static final String SUGGEST_QUERY_FIELDS   = "title_ngram title^10";
   private static final String SUGGEST_PHRASE_FIELDS  = "title^100";
 
@@ -82,6 +88,8 @@ public class SolrQueryBuilder {
     // dismax fields
     query.set(DisMaxParams.QF, QUERY_FIELDS);
     query.set(DisMaxParams.PF, PHRASE_FIELDS);
+    query.set(DisMaxParams.MM, MINIMUM_SHOULD_MATCH);
+    query.set(DisMaxParams.PS, PHRASE_SLOP);
 
     // request facets
     requestFacets(request, query);
@@ -121,6 +129,9 @@ public class SolrQueryBuilder {
 
     // boost larger datasets
     query.set(DisMaxParams.BF, BOOST_FUNCTION);
+
+    // Tie Breaker
+    query.set(DisMaxParams.TIE, TIE_BREAKER);
 
     // paging
     QueryUtils.setQueryPaging(request, query);

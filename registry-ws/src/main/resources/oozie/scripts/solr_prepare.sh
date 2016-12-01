@@ -13,8 +13,19 @@ $SOLR_HOME/server/scripts/cloud-scripts/zkcli.sh  -zkhost $ZK_HOST -cmd upconfig
 
 curl -s """$SOLR_HTTP_URL"/admin/collections?action=CREATE\&name="$SOLR_COLLECTION_TODAY"\&"$SOLR_COLLECTION_OPTS"\&collection.configName="$SOLR_COLLECTION_TODAY"""
 
-
-curl -s """$SOLR_HTTP_URL"/admin/collections?action=CREATEALIAS\&name="$SOLR_COLLECTION"\&collections="$SOLR_COLLECTION_TODAY"""
-
-
 echo "collectionToday=$SOLR_COLLECTION_TODAY"
+
+
+
+
+
+
+SOLR_HOME=/opt/cloudera/parcels/SOLR5/
+SOLR_HTTP_URL=http://uatsolr-vh.gbif.org:8983/solr
+ZK_HOST="prodmaster1-vh.gbif.org:2181,prodmaster2-vh.gbif.org:2181,prodmaster3-vh.gbif.org:2181/uatsolr"
+SOLR_COLLECTION=registry_ng
+SOLR_COLLECTION_OPTS="numShards=1&replicationFactor=1&maxShardsPerNode=1"
+
+
+$SOLR_HOME/server/scripts/cloud-scripts/zkcli.sh  -zkhost $ZK_HOST -cmd upconfig -confname $SOLR_COLLECTION -confdir ./conf/
+curl -s """$SOLR_HTTP_URL"/admin/collections?action=CREATE\&name="$SOLR_COLLECTION"\&"$SOLR_COLLECTION_OPTS"\&collection.configName="$SOLR_COLLECTION"""

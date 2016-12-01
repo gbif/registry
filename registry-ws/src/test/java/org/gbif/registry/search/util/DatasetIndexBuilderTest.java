@@ -1,6 +1,6 @@
 package org.gbif.registry.search.util;
 
-import org.gbif.registry.search.DatasetIndexUpdateListener;
+import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.SolrInitializer;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 
@@ -33,7 +33,7 @@ public class DatasetIndexBuilderTest {
   public void initTest() {
     solrRule = new SolrInitializer(
         inj.getInstance(RegistrySearchModule.DATASET_KEY),
-        inj.getInstance(DatasetIndexUpdateListener.class)
+        inj.getInstance(DatasetIndexService.class)
     );
   }
 

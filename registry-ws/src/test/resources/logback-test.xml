@@ -21,7 +21,7 @@
     <resetJUL>true</resetJUL>
   </contextListener>
 
-  <property name="defaultPattern" value="%-5level [%date{'yyyy-MM-dd HH:mm:ss,SSSZ'}] [%thread] %logger: %msg%n%xEx"/>
+  <property name="defaultPattern" value="%-5level [%thread] %logger{5}: %msg%n%xEx"/>
 
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -29,9 +29,12 @@
     </encoder>
   </appender>
 
+  <!--
   <logger name="org.gbif" level="DEBUG"/>
-  <logger name="org.apache.solr" level="WARN"/>  
-  <logger name="org.gbif.common.search.builder" level="INFO"/>
+  -->
+  <logger name="org.apache.solr" level="WARN"/>
+  <logger name="org.gbif.common.search" level="INFO"/>
+  <logger name="org.gbif.registry.search" level="DEBUG"/>
   <logger name="org.gbif.registry.persistence.mapper" level="INFO"/>
   <logger name="org.apache.tomcat.util.digester.Digester" level="WARN"/>
 

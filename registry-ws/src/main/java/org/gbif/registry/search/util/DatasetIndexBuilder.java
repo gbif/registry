@@ -30,7 +30,8 @@ public class DatasetIndexBuilder {
   private final DatasetService datasetService;
 
   @Inject
-  public DatasetIndexBuilder(DatasetService datasetService, DatasetIndexService indexService) {
+  public DatasetIndexBuilder(DatasetService datasetService,
+                             DatasetIndexService indexService) {
     this.datasetService = datasetService;
     this.indexService = indexService;
   }
@@ -47,6 +48,7 @@ public class DatasetIndexBuilder {
       LOG.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
       response = datasetService.list(page);
       // Batching updates to SOLR proves quicker with batches of 100 - 1000 showing similar performance
+      LOG.debug("Indexing {} datasets starting at offset {}", page.getLimit(), page.getOffset());
       indexService.add(response.getResults());
       page.nextPage();
 

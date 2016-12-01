@@ -46,36 +46,32 @@
       </analyzer>
     </fieldType>
 
-    <!-- A fully tokenized and normalized text field for searching -->
-    <fieldType name="text2" class="solr.TextField" positionIncrementGap="100">
-      <analyzer type="index">
-        <tokenizer class="solr.LetterTokenizerFactory" />
-        <filter class="solr.WordDelimiterFilterFactory"
-                generateWordParts="1" generateNumberParts="1" catenateWords="1"
-                catenateNumbers="1" catenateAll="0" splitOnCaseChange="1" />
-        <filter class="solr.ASCIIFoldingFilterFactory" />
-        <filter class="solr.LowerCaseFilterFactory" />
-        <filter class="solr.PorterStemFilterFactory" />
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.LetterTokenizerFactory" />
-        <filter class="solr.WordDelimiterFilterFactory"
-                generateWordParts="1" generateNumberParts="1" catenateWords="0"
-                catenateNumbers="0" catenateAll="0" splitOnCaseChange="1" />
-        <filter class="solr.ASCIIFoldingFilterFactory" />
-        <filter class="solr.LowerCaseFilterFactory" />
-        <filter class="solr.PorterStemFilterFactory" />
-      </analyzer>
-    </fieldType>
-
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" words="stopwords.txt"/>
+        <!--
+        <filter class="solr.WordDelimiterFilterFactory"
+                preserveOriginal="1" stemEnglishPossessive="0"
+                generateWordParts="1" generateNumberParts="1" splitOnCaseChange="1" splitOnNumerics="1"
+                catenateWords="0" catenateNumbers="0" catenateAll="0"  />
+                -->
+        <filter class="solr.ASCIIFoldingFilterFactory" />
         <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PorterStemFilterFactory" />
       </analyzer>
       <analyzer type="query">
         <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" words="stopwords.txt"/>
+        <!--
+        <filter class="solr.WordDelimiterFilterFactory"
+                preserveOriginal="1" stemEnglishPossessive="1"
+                generateWordParts="1" generateNumberParts="1" splitOnCaseChange="1" splitOnNumerics="1"
+                catenateWords="0" catenateNumbers="0" catenateAll="0"  />
+                -->
+        <filter class="solr.ASCIIFoldingFilterFactory" />
         <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PorterStemFilterFactory" />
       </analyzer>
     </fieldType>
 
@@ -128,7 +124,7 @@
   <defaultSearchField>title</defaultSearchField>
 
   <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
-  <solrQueryParser defaultOperator="AND" />
+  <solrQueryParser defaultOperator="OR" />
 
   <copyField source="title" dest="title_ngram" />
 </schema>

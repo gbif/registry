@@ -19,11 +19,11 @@ public class DatasetSearchUpdateUtils {
   /**
    * Waits for SOLR update threads to finish.
    */
-  public static void awaitUpdates(DatasetIndexUpdateListener datasetIndexUpdater) {
-    Preconditions.checkNotNull(datasetIndexUpdater, "Index updater is required");
+  public static void awaitUpdates(DatasetIndexService indexService) {
+    Preconditions.checkNotNull(indexService, "Index service is required");
     try {
       Stopwatch stopWatch = Stopwatch.createStarted();
-      while (datasetIndexUpdater.queuedUpdates() > 0) {
+      while (indexService.isActive()) {
         Thread.sleep(SOLR_UPDATE_POLL_MSECS);
         if (stopWatch.elapsed(TimeUnit.SECONDS) > SOLR_UPDATE_TIMEOUT_SECS) {
           throw new IllegalStateException("Failing test due to unreasonable timeout on SOLR update");

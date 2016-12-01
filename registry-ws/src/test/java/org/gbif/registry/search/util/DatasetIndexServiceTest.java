@@ -4,7 +4,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.DatasetIndexService;
-import org.gbif.registry.search.DatasetIndexUpdateListener;
 import org.gbif.registry.search.SolrInitializer;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.utils.text.StringUtils;
@@ -41,7 +40,7 @@ public class DatasetIndexServiceTest {
   public void initTest() {
     solrRule = new SolrInitializer(
         inj.getInstance(RegistrySearchModule.DATASET_KEY),
-        inj.getInstance(DatasetIndexUpdateListener.class)
+        inj.getInstance(DatasetIndexService.class)
     );
   }
 

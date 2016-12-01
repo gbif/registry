@@ -16,7 +16,7 @@ import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
-import org.gbif.registry.search.DatasetIndexUpdateListener;
+import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.registry.ws.guice.SecurityModule;
@@ -46,14 +46,25 @@ import org.apache.bval.guice.ValidationModule;
 public class TestRegistryWsServletListener extends GbifServletListener {
 
   public static final String APPLICATION_PROPERTIES = "registry-test.properties";
+  private static final String SOLR_HOME_PROPERTY = "solr.dataset.home";
 
   @SuppressWarnings("unchecked")
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
     .<Class<? extends ContainerRequestFilter>>newArrayList(LegacyAuthorizationFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
-    super(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES),
+    super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
       "org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh", true, null, requestFilters);
+  }
+
+  /**
+   * In integration tests we run 2 solr indices concurrently. One for webservice tests and one for ws-client tests within grizzly.
+   * We need to use different solr homes for those 2 so they do not interfere with data & locking problems.
+   * @param props
+   */
+  private static Properties renameSolrHome(Properties props) {
+    props.setProperty(SOLR_HOME_PROPERTY, props.get(SOLR_HOME_PROPERTY)+"2");
+    return props;
   }
 
   @Override
@@ -79,9 +90,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   @Override
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     super.contextInitialized(servletContextEvent);
-    RegistryServer.INSTANCE
-      .setSolrClient(getInjector().getInstance(RegistrySearchModule.DATASET_KEY));
-    RegistryServer.INSTANCE.setDatasetUpdater(getInjector().getInstance(DatasetIndexUpdateListener.class));
+    RegistryServer.INSTANCE.setSolrClient(getInjector().getInstance(RegistrySearchModule.DATASET_KEY));
+    RegistryServer.INSTANCE.setIndexService(getInjector().getInstance(DatasetIndexService.class));
   }
 
 }
