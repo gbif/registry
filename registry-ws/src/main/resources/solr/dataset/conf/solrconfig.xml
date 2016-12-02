@@ -4,6 +4,8 @@
 
   <dataDir>${solr.data.dir:}</dataDir>
 
+  <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-dataimporthandler-.*\.jar" />
+
   <xi:include href="hdfs_directory_factory.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback>
       <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.MMapDirectoryFactory}" />
