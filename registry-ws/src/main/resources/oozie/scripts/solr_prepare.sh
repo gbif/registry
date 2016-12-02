@@ -34,6 +34,8 @@ curl -s """$SOLR_HTTP_URL"/admin/collections?action=CREATE\&name="$SOLR_COLLECTI
 
 http://uatsolr02-vh.gbif.org:8983/solr/#/registry_ng_shard1_replica1/analysis?analysis.fieldname=title&verbose_output=1
 
+http://uatsolr02-vh.gbif.org:8983/solr/registry_ng/dataimport?command=status
 http://uatsolr02-vh.gbif.org:8983/solr/registry_ng/dataimport?command=full-import&clean=false
+http://uatsolr02-vh.gbif.org:8983/solr/registry_ng/dataimport?command=reload-config
 
 http://uatsolr02-vh.gbif.org:8983/solr/admin/collections?action=RELOAD&name=registry_ng

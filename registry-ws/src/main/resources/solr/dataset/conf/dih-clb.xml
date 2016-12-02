@@ -23,10 +23,10 @@
   <document>
     <entity name="dataset"
             transformer="script:atomicTaxonKey"
-            query="SELECT dataset_key, string_agg(nub_fk::text, ',') AS taxon_key, count(*) AS record_count
+            query="SELECT dataset_key AS key, string_agg(nub_fk::text, ',') AS taxon_key, count(*) AS record_count
             FROM nub_rel
             GROUP BY dataset_key">
-      <field column="key" name="dataset_key" />
+      <field column="key" name="key" />
       <field column="taxon_key" splitBy="," sourceColName="taxon_key"/>
       <field column="record_count" sourceColName="record_count"/>
     </entity>
