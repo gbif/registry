@@ -4,7 +4,7 @@
 
   <dataDir>${solr.data.dir:}</dataDir>
 
-  <lib dir="${solr.install.dir:../../../..}/dist/" regex="solr-dataimporthandler-.*\.jar" />
+  <lib dir="${solr.install.dir:../../..}/dist/" regex="solr-dataimporthandler-.*\.jar" />
 
   <xi:include href="hdfs_directory_factory.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
     <xi:fallback>
@@ -118,9 +118,11 @@
    DIH for checklist bank datasets
    Requires postgres JDBC jar in <solr-home>/lib directory !!!
   -->
-  <requestHandler name="/dataimport/clb" class="org.apache.solr.handler.dataimport.DataImportHandler">
+  <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
     <lst name="defaults">
       <str name="config">dih-clb.xml</str>
+      <str name="clean">false</str>
+      <str name="command">full-import</str>
     </lst>
   </requestHandler>
 
