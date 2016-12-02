@@ -109,6 +109,19 @@
     </lst>
   </requestHandler>
 
+  <!-- analysis handler to gain insight into the index -->
+  <requestHandler name="/analysis/field" class="solr.FieldAnalysisRequestHandler" />
+
+  <!--
+   DIH for checklist bank datasets
+   Requires postgres JDBC jar in <solr-home>/lib directory !!!
+  -->
+  <requestHandler name="/dataimport/clb" class="org.apache.solr.handler.dataimport.DataImportHandler">
+    <lst name="defaults">
+      <str name="config">dih-clb.xml</str>
+    </lst>
+  </requestHandler>
+
   <!-- Highlighting Component
 
        http://wiki.apache.org/solr/HighlightingParameters

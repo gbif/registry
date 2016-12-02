@@ -19,6 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -32,6 +33,8 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.gbif.registry.search.guice.RegistrySearchModule.INDEXING_THREADS_PROP;
 
 
 /**
@@ -53,8 +56,9 @@ public class DatasetIndexService implements AutoCloseable{
   private ThreadPoolExecutor threadPool;
 
   @Inject
-  public DatasetIndexService(@Named("dataset") SolrClient solrClient,
+  public DatasetIndexService(@Named("dataset") SolrClient solrClient, @Named(INDEXING_THREADS_PROP) int maxPoolSize,
                              DatasetService datasetService, InstallationService installationService, OrganizationService organizationService) {
+    Preconditions.checkArgument(maxPoolSize>0 && maxPoolSize<100, "max pool size needs to be in the range of 1-100");
     this.solrClient = solrClient;
     this.datasetService = datasetService;
     this.installationService = installationService;
@@ -63,8 +67,6 @@ public class DatasetIndexService implements AutoCloseable{
     this.installationCache = new GetCache<Installation>(installationService);
     this.organizationCache = new GetCache<Organization>(organizationService);
 
-    //TODO: make this configurable
-    int maxPoolSize = 1;
     threadPool = new ThreadPoolExecutor(1, maxPoolSize, 10, TimeUnit.SECONDS, queue, new NamedThreadFactory("dataset-index-service"));
   }
 

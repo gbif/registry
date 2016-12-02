@@ -1,4 +1,4 @@
-package org.gbif.registry.search.util;
+package org.gbif.registry.search.backfill;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;

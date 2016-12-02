@@ -1,0 +1,35 @@
+<dataConfig>
+  <dataSource type="JdbcDataSource"
+              driver="org.postgresql.Driver"
+              url="jdbc:postgresql://pg1.gbif-uat.org:5432/uat_checklistbank"
+              user="clb"
+              password="%BBJu2MgstXJ"
+              readOnly="true"/>
+  <script><![CDATA[
+  var atomicTaxonKey = function (row) {
+      var atomicKeys = new java.util.HashMap();
+      var keys = String(row.get('taxon_key'));
+      atomicKeys.put('add', keys);
+
+      var atomicCount = new java.util.HashMap();
+      var count = String(row.get('record_count'));
+      atomicCount.put('add', count);
+
+      row.put('taxon_key', atomicKeys);
+      row.put('record_count', atomicCount);
+  };
+  ]]>
+  </script>
+  <document>
+    <entity name="dataset"
+            transformer="script:atomicTaxonKey"
+            query="SELECT dataset_key, string_agg(nub_fk::text, ',') AS taxkeys, count(*) as record_count
+            FROM nub_rel
+            WHERE dataset_key='${dataimporter.request.datasetKey}'
+            GROUP BY dataset_key">
+      <field column="dataset_key" name="dataset_key" />
+      <field column="taxon_key" splitBy="," sourceColName="taxkeys"/>
+      <field column="record_count" sourceColName="record_count"/>
+    </entity>
+  </document>
+</dataConfig>

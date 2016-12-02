@@ -11,7 +11,7 @@ import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
-import org.gbif.registry.search.util.DatasetIndexBuilder;
+import org.gbif.registry.search.backfill.DatasetIndexBuilder;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.Properties;

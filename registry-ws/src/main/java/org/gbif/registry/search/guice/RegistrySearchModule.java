@@ -7,7 +7,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.common.search.solr.SolrConfig;
 import org.gbif.common.search.solr.SolrModule;
-import org.gbif.registry.search.util.DatasetIndexBuilder;
+import org.gbif.registry.search.backfill.DatasetIndexBuilder;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.DatasetIndexUpdateListener;
 import org.gbif.registry.search.DatasetSearchServiceImpl;
@@ -33,6 +33,7 @@ public class RegistrySearchModule extends PrivateModule {
   public static final String DATASET_BINDING_NAME = "dataset";
   public static final Key<SolrClient> DATASET_KEY = Key.get(SolrClient.class, Names.named(DATASET_BINDING_NAME));
 
+  public static final String INDEXING_THREADS_PROP = "solr.indexing.threads";
   private static final String SOLR_DATASET_PREFIX = "solr.dataset.";
   private static final String SOLR_PUBLISHER_PREFIX = "solr.publisher.";
   private final Properties properties;
@@ -67,6 +68,8 @@ public class RegistrySearchModule extends PrivateModule {
     expose(DatasetIndexBuilder.class);
     expose(DatasetIndexService.class);
 
+    // solr indexing threads
+    bindInt(INDEXING_THREADS_PROP, INDEXING_THREADS_PROP);
 
     // 6 email properties:
     // use dev email?

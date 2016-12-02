@@ -1,4 +1,4 @@
-package org.gbif.registry.search.util;
+package org.gbif.registry.search.backfill;
 
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.SolrInitializer;
