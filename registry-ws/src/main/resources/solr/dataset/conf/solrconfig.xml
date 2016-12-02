@@ -122,7 +122,8 @@
     <lst name="defaults">
       <str name="config">dih-clb.xml</str>
       <str name="clean">false</str>
-      <str name="command">full-import</str>
+      <str name="command">status</str>
+      <str name="wt">json</str>
     </lst>
   </requestHandler>
 
