@@ -1,4 +1,4 @@
-package org.gbif.registry.cli.indexbuilder;
+package org.gbif.registry.cli.datasetindex;
 
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
@@ -37,7 +37,7 @@ public class IndexBuilderCommand extends BaseCommand {
   }
 
   public IndexBuilderCommand(IndexBuilderConfig cfg) {
-    super("index-builder");
+    super("dataset-index");
     this.cfg = cfg;
   }
 
@@ -65,8 +65,8 @@ public class IndexBuilderCommand extends BaseCommand {
     } catch (Exception e) {
       LOG.error("Failed to run index builder", e);
     }
-
   }
+
 
   static class StubModule extends AbstractModule {
 

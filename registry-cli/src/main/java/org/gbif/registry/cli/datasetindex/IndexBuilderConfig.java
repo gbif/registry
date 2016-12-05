@@ -1,4 +1,4 @@
-package org.gbif.registry.cli.indexbuilder;
+package org.gbif.registry.cli.datasetindex;
 
 import org.gbif.common.search.solr.SolrConfig;
 import org.gbif.registry.cli.common.DbConfiguration;
