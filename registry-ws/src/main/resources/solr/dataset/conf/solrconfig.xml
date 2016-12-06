@@ -4,36 +4,43 @@
 
   <dataDir>${solr.data.dir:}</dataDir>
 
-  <!--  In memory index -->
-  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
+  <lib dir="${solr.install.dir:../../..}/dist/" regex="solr-dataimporthandler-.*\.jar" />
+
+  <xi:include href="hdfs_directory_factory.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <xi:fallback>
+      <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.MMapDirectoryFactory}" />
+    </xi:fallback>
+  </xi:include>
 
   <indexConfig>
-    <ramBufferSizeMB>1024</ramBufferSizeMB>
-    <!--  No need to take file locks, we are single instance in memory -->
-    <lockType>single</lockType>
-    <unlockOnStartup>true</unlockOnStartup>
+    <ramBufferSizeMB>128</ramBufferSizeMB>
+    <lockType>${solr.lock.type:hdfs}</lockType>
   </indexConfig>
 
-  <jmx />
-
   <!-- The default high-performance update handler -->
-  <updateHandler class="solr.DirectUpdateHandler2"/>
+  <updateHandler class="solr.DirectUpdateHandler2">
+    <!-- Enables a transaction log, used for real-time get and atomic updates -->
+    <updateLog>
+      <str name="dir">${solr.ulog.dir:}</str>
+      <int name="numVersionBuckets">${solr.ulog.numVersionBuckets:65536}</int>
+    </updateLog>
+  </updateHandler>
 
   <query>
     <maxBooleanClauses>1024</maxBooleanClauses>
 
     <filterCache class="solr.FastLRUCache"
-                 size="1024"
+                 size="4096"
                  initialSize="512"
                  autowarmCount="0"/>
 
     <queryResultCache class="solr.LRUCache"
-                     size="1024"
+                     size="8192"
                      initialSize="512"
                      autowarmCount="0"/>
 
     <documentCache class="solr.LRUCache"
-                   size="1024"
+                   size="2048"
                    initialSize="512"
                    autowarmCount="0"/>
 
@@ -89,6 +96,19 @@
     </lst>
     <lst name="defaults">
       <str name="echoParams">all</str>
+    </lst>
+  </requestHandler>
+
+  <!-- analysis handler to gain insight into the index -->
+  <requestHandler name="/analysis/field" class="solr.FieldAnalysisRequestHandler" />
+
+  <!--
+   DIH for checklist bank datasets
+   Requires postgres JDBC jar in <solr-home>/lib directory !!!
+  -->
+  <requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
+    <lst name="defaults">
+      <str name="config">dih-clb.xml</str>
     </lst>
   </requestHandler>
 

@@ -93,6 +93,9 @@ public class RegistryTestModules {
    * @return An injector that is bound for the webservice layer without SOLR capabilities.
    */
   public static synchronized Injector webservice() {
+    //Setting this property because the default value in the solrconfig.xml is solr.lock.type=hdfs
+    System.setProperty("solr.lock.type", "native");
+
     if (webservice == null) {
       try {
         final Properties p = new Properties();

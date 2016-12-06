@@ -1,4 +1,4 @@
-package org.gbif.registry.cli.datasetupdater.stubs;
+package org.gbif.registry.cli.common.stubs;
 
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;

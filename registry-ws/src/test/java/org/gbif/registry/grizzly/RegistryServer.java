@@ -13,7 +13,7 @@
 package org.gbif.registry.grizzly;
 
 import org.gbif.registry.guice.TestRegistryWsServletListener;
-import org.gbif.registry.search.DatasetIndexUpdateListener;
+import org.gbif.registry.search.DatasetIndexService;
 
 import java.io.IOException;
 
@@ -51,7 +51,7 @@ public class RegistryServer implements TestRule {
   public static final RegistryServer INSTANCE = new RegistryServer();
 
   private SolrClient solrClient;
-  private DatasetIndexUpdateListener datasetUpdater;
+  private DatasetIndexService indexService;
 
   /**
    * Gets the port that grizzly will run on. This will either be {@link #DEFAULT_PORT} or the value supplied as a
@@ -96,8 +96,8 @@ public class RegistryServer implements TestRule {
     this.solrClient = solrClient;
   }
 
-  public synchronized void setDatasetUpdater(DatasetIndexUpdateListener datasetUpdater) {
-    this.datasetUpdater = datasetUpdater;
+  public synchronized void setIndexService(DatasetIndexService indexService) {
+    this.indexService = indexService;
   }
 
   /**
@@ -125,8 +125,8 @@ public class RegistryServer implements TestRule {
     return solrClient;
   }
 
-  public DatasetIndexUpdateListener getDatasetUpdater() {
-    Preconditions.checkNotNull(datasetUpdater, "Misuse of class. DatasetIndexUpdateListener has not been set");
-    return datasetUpdater;
+  public DatasetIndexService getIndexService() {
+    Preconditions.checkNotNull(indexService, "Misuse of class. DatasetIndexService has not been set");
+    return indexService;
   }
 }
