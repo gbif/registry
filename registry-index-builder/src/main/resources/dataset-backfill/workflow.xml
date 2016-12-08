@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.4.5" name="checklistbank-index-builder-${environment}">
+
+  <global>
+    <job-tracker>${wf:conf("hadoop.jobtracker")}</job-tracker>
+    <name-node>${wf:conf("hdfs.namenode")}</name-node>
+    <configuration>
+      <property>
+        <name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>
+        <value>true</value>
+      </property>
+    </configuration>
+  </global>
+
+  <start to="create_collection" />
+
+  <action name="create_collection">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <exec>solr_prepare.sh</exec>
+      <argument>${wf:conf("solr.home")}</argument>
+      <argument>${wf:conf("solr.http.url")}</argument>
+      <argument>${wf:conf("solr.dataset.home")}</argument>
+      <argument>${wf:conf("solr.collection")}</argument>
+      <argument>${wf:conf("solr.collection.opts")}</argument>
+      <file>solr_prepare.sh</file>
+    </shell>
+    <ok to="index_datasets" />
+    <error to="kill" />
+  </action>
+
+  <action name="index_datasets">
+    <java>
+      <main-class>org.gbif.registry.search.dataset.DatasetIndexBuilder</main-class>
+      <arg>${wf:conf("environment")}.properties</arg>
+    </java>
+    <ok to="clb_metrics"/>
+    <error to="kill"/>
+  </action>
+
+  <fork name="metrics">
+    <path start="clb_metrics" />
+    <path start="occ_metrics" />
+  </fork>
+
+  <action name="clb_metrics">
+    <java>
+      <main-class>org.gbif.registry.search.dataset.DatasetIndexChecklistUpdater</main-class>
+      <arg>${wf:conf("environment")}.properties</arg>
+    </java>
+    <ok to="end"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="occ_metrics">
+    <hive2 xmlns="uri:oozie:hive2-action:0.1">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <jdbc-url>jdbc:hive2://server:10000/default</jdbc-url>
+      <password>${hivepassword}</password>
+      <script>/data/sql/dayly.sql</script>
+      <param>database=${database}</param>
+      <param>day=${day}</param>
+    </hive2>
+    <ok to="metrics_done"/>
+    <error to="kill"/>
+  </action>
+
+  <join name="metrics_done" to="end" />
+
+  <kill name="kill">
+    <message>Registry dataset index building failed:[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <end name="end" />
+
+</workflow-app>

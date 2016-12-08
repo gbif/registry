@@ -7,7 +7,6 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.common.search.solr.SolrConfig;
 import org.gbif.common.search.solr.SolrModule;
-import org.gbif.registry.search.backfill.DatasetIndexBuilder;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.DatasetIndexUpdateListener;
 import org.gbif.registry.search.DatasetSearchServiceImpl;
@@ -34,7 +33,7 @@ public class RegistrySearchModule extends PrivateModule {
   public static final Key<SolrClient> DATASET_KEY = Key.get(SolrClient.class, Names.named(DATASET_BINDING_NAME));
 
   public static final String INDEXING_THREADS_PROP = "solr.indexing.threads";
-  private static final String SOLR_DATASET_PREFIX = "solr.dataset.";
+  public static final String SOLR_DATASET_PREFIX = "solr.dataset.";
   private static final String SOLR_PUBLISHER_PREFIX = "solr.publisher.";
   private final Properties properties;
 
@@ -55,7 +54,6 @@ public class RegistrySearchModule extends PrivateModule {
 
     bind(DatasetSearchService.class).to(DatasetSearchServiceImpl.class).in(Scopes.SINGLETON);
     bind(DatasetIndexUpdateListener.class).asEagerSingleton();
-    bind(DatasetIndexBuilder.class).in(Scopes.SINGLETON);
     bind(DatasetIndexService.class).in(Scopes.SINGLETON);
 
     expose(OrganizationService.class); // for testing
@@ -65,7 +63,6 @@ public class RegistrySearchModule extends PrivateModule {
     expose(DatasetSearchService.class);
     expose(DatasetIndexUpdateListener.class); // for testing
     expose(DATASET_KEY); // for testing
-    expose(DatasetIndexBuilder.class);
     expose(DatasetIndexService.class);
 
     // solr indexing threads

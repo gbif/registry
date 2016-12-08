@@ -1,10 +1,10 @@
 package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.service.registry.DatasetSearchService;
-import org.gbif.registry.cli.common.stubs.DoiGeneratorStub;
-import org.gbif.registry.cli.common.stubs.DoiHandlerStrategyStub;
-import org.gbif.registry.cli.common.stubs.EditorAuthorizationServiceStub;
-import org.gbif.registry.cli.common.stubs.SearchServiceStub;
+import org.gbif.registry.stubs.DoiGeneratorStub;
+import org.gbif.registry.stubs.DoiHandlerStrategyStub;
+import org.gbif.registry.stubs.EditorAuthorizationServiceStub;
+import org.gbif.registry.stubs.SearchServiceStub;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
