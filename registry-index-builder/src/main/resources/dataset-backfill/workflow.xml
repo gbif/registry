@@ -12,13 +12,13 @@
     </configuration>
   </global>
 
-  <start to="create_collection" />
+  <start to="index_datasets" />
 
   <action name="create_collection">
     <shell xmlns="uri:oozie:shell-action:0.3">
       <exec>solr_prepare.sh</exec>
       <argument>${wf:conf("solr.home")}</argument>
-      <argument>${wf:conf("solr.http.url")}</argument>
+      <argument>${wf:conf("solr.url")}</argument>
       <argument>${wf:conf("solr.dataset.home")}</argument>
       <argument>${wf:conf("solr.collection")}</argument>
       <argument>${wf:conf("solr.collection.opts")}</argument>
