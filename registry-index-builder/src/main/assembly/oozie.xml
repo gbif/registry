@@ -34,13 +34,6 @@
     </fileSet>
   </fileSets>
 
-  <files>
-    <file>
-      <source>${project.build.outputDirectory}/oozie/conf/log4j.properties</source>
-      <outputDirectory>lib</outputDirectory>
-    </file>
-  </files>
-
   <dependencySets>
     <dependencySet>
       <outputDirectory>lib</outputDirectory>
