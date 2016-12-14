@@ -13,7 +13,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.util.TimeSeriesExtractor;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import org.apache.solr.common.SolrDocument;
@@ -114,9 +114,9 @@ class DatasetDocConverter {
     d.setHostingOrganizationKey(toUUID(doc.getFieldValue("hosting_organization_key")));
     d.setHostingOrganizationTitle(str(doc.getFieldValue("hosting_organization_title")));
     d.setDescription(str(doc.getFieldValue("description")));
-    addInts(d.getDecades(), doc, "decade");
-    addEnums(Country.class, d.getCountryCoverage(), doc, "country_coverage");
-    addStrings(d.getKeywords(), doc, "keyword");
+    d.setDecades(ints(doc, "decade"));
+    d.setCountryCoverage(enums(Country.class, doc, "country_coverage"));
+    d.setKeywords(strings(doc, "keyword"));
     d.setLicense(toEnum(License.class, (Integer)doc.getFieldValue("license")));
     d.setProjectIdentifier(str("project_id"));
     d.setRecordCount((Integer)doc.getFieldValue("record_count"));
@@ -208,7 +208,8 @@ class DatasetDocConverter {
     return null;
   }
 
-  private static void addStrings(Collection<String> data, SolrDocument doc, String field) {
+  private static List<String> strings(SolrDocument doc, String field) {
+    List<String> data = Lists.newArrayList();
     if (doc.getFieldValues(field) != null) {
       for (Object val : doc.getFieldValues(field)) {
         if (val != null) {
@@ -216,9 +217,11 @@ class DatasetDocConverter {
         }
       }
     }
+    return data;
   }
 
-  private static void addInts(Collection<Integer> data, SolrDocument doc, String field) {
+  private static List<Integer> ints(SolrDocument doc, String field) {
+    List<Integer> data = Lists.newArrayList();
     if (doc.getFieldValues(field) != null) {
       for (Object val : doc.getFieldValues(field)) {
         if (val != null) {
@@ -226,14 +229,17 @@ class DatasetDocConverter {
         }
       }
     }
+    return data;
   }
 
-  private static <T extends Enum<?>> void addEnums(Class<T> vocab, Collection<T> data, SolrDocument doc, String field) {
+  private static <T extends Enum<?>> Set<T> enums(Class<T> vocab, SolrDocument doc, String field) {
+    Set<T> data = Sets.newHashSet();
     if (doc.getFieldValues(field) != null) {
       for (Object val : doc.getFieldValues(field)) {
         data.add(vocab.getEnumConstants()[(Integer) val]);
       }
     }
+    return data;
   }
 
 }
