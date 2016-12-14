@@ -1,6 +1,7 @@
 # GBIF Registry Web Services
 
-This project provides the web service and JavaScript-based admin console for the registry, which operates against PostgreSQL.
+This project provides the web service and JavaScript-based admin console for the registry, which operates against PostgreSQL
+and a cloud solr instance.
 
 ## **Warnings**
 

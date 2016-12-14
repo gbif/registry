@@ -5,6 +5,7 @@ import org.gbif.checklistbank.config.ClbConfiguration;
 import org.gbif.common.search.solr.SolrConfig;
 import org.gbif.registry.search.WorkflowUtils;
 
+import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -38,10 +39,9 @@ public class DatasetIndexChecklistUpdater {
     updater.close();
   }
 
-  public static void main (String[] args) {
+  public static void run (Properties props) {
     try {
       // read properties and check args
-      Properties props = WorkflowUtils.loadProperties(args);
       SolrConfig solr = SolrConfig.fromProperties(props, SOLR_DATASET_PREFIX);
       ClbConfiguration clb = ClbConfiguration.fromProperties(props);
 
@@ -49,11 +49,15 @@ public class DatasetIndexChecklistUpdater {
       LOG.info("Updating checklists in dataset index {} on {}", solr.collection, solr.serverHome);
       idxBuilder.build();
       LOG.info("Checklist indexing completed successfully.");
-      System.exit(0);
 
     } catch (Exception e) {
       LOG.error("Failed to run checklist index updater", e);
       System.exit(1);
     }
+  }
+
+  public static void main (String[] args) throws IOException {
+    run(WorkflowUtils.loadProperties(args));
+    System.exit(0);
   }
 }

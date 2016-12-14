@@ -11,6 +11,8 @@ public class DatasetIndexApp {
 
     // run checklist updaters just as in oozie
     DatasetIndexChecklistUpdater.main(args);
+
+    System.exit(0);
   }
 
 }

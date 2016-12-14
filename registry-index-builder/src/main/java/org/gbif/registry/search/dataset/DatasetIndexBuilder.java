@@ -12,6 +12,7 @@ import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.WorkflowUtils;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 
+import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -61,10 +62,9 @@ public class DatasetIndexBuilder {
     indexService.close();
   }
 
-  public static void main (String[] args) {
+  public static void run (Properties props) {
     try {
       // read properties and check args
-      Properties props = WorkflowUtils.loadProperties(args);
       Injector inj = Guice.createInjector(
           new RegistryMyBatisModule(props),
           new RegistrySearchModule(props),
@@ -79,11 +79,15 @@ public class DatasetIndexBuilder {
       idxBuilder.build();
 
       LOG.info("Indexing completed successfully.");
-      System.exit(0);
 
     } catch (Exception e) {
       LOG.error("Failed to run index builder", e);
       System.exit(1);
     }
+  }
+
+  public static void main (String[] args) throws IOException {
+    run(WorkflowUtils.loadProperties(args));
+    System.exit(0);
   }
 }
