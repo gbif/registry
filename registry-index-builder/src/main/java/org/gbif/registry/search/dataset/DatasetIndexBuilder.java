@@ -58,8 +58,9 @@ public class DatasetIndexBuilder {
       page.nextPage();
 
     } while (!response.isEndOfRecords());
+
+    indexService.closeAndAwaitTermination();
     LOG.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
-    indexService.close();
   }
 
   public static void run (Properties props) {

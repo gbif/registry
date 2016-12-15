@@ -41,7 +41,7 @@ import static org.gbif.registry.search.guice.RegistrySearchModule.INDEXING_THREA
  * A service that modifies the solr index, adding, updating or removing dataset documents.
  */
 @Singleton
-public class DatasetIndexService implements AutoCloseable{
+public class DatasetIndexService implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetIndexService.class);
   private final SolrClient solrClient;
@@ -151,6 +151,17 @@ public class DatasetIndexService implements AutoCloseable{
    */
   public boolean isActive() {
     return !queue.isEmpty() || threadPool.getActiveCount() > 0;
+  }
+
+  /**
+   * Closes the service and waits until all index jobs have been completed before returning.
+   */
+  public void closeAndAwaitTermination() throws Exception {
+    close();
+    if (!threadPool.awaitTermination(2, TimeUnit.HOURS)) {
+      LOG.error("Forcing shut down of dataset indexing thread pool after 2 hours of indexing. Dataset index is out of sync!");
+      threadPool.shutdownNow();
+    }
   }
 
   @Override
