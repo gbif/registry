@@ -78,7 +78,7 @@
     <commons-io.version>2.5</commons-io.version>
     <commons-lang.version>3.4</commons-lang.version>
     <commons-validator.version>1.5.1</commons-validator.version>
-    <drupal-mybatis.version>0.19</drupal-mybatis.version>
+    <drupal-mybatis.version>0.20-SNAPSHOT</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
     <gbif-api.version>0.48</gbif-api.version>
@@ -221,6 +221,22 @@
           </exclusion>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.neo4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.neo4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.neo4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.neo4j</groupId>
             <artifactId>*</artifactId>
           </exclusion>
           <exclusion>
