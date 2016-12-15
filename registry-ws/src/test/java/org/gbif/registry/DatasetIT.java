@@ -242,12 +242,14 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void testSearchParameter() {
+  public void testSearchParameter() throws InterruptedException {
     Dataset d = newEntity(Country.SOUTH_AFRICA);
     d.setType(DatasetType.CHECKLIST);
     d.setLicense(License.CC0_1_0);
     d.setLanguage(Language.AFRIKAANS);
     d = create(d, 1);
+
+    Thread.sleep(100);
 
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.GERMANY);
@@ -360,8 +362,15 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertEquals(gpsKey, docs.get(0).getKey());
   }
 
+  private void update(Organization publisher) throws InterruptedException {
+    organizationService.update(publisher);
+    // jenkins sometimes fails to update solr in time for the query to include the modified index.
+    // allow for some extra time (it should have no bad impact on the real time index)
+    Thread.sleep(100);
+  }
+
   @Test
-  public void testSearchListener() {
+  public void testSearchListener() throws InterruptedException {
     Dataset d = newEntity();
     d = create(d, 1);
 
@@ -380,11 +389,11 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Organization publisher = organizationService.get(d.getPublishingOrganizationKey());
     assertSearch(publisher.getTitle(), 1);
     publisher.setTitle("OWNERTITLE");
-    organizationService.update(publisher);
+    update(publisher);
     assertSearch(publisher.getTitle(), 1);
 
     publisher.setTitle("BGBM");
-    organizationService.update(publisher);
+    update(publisher);
     assertSearch(publisher.getTitle(), 1);
     assertSearch("OWNERTITLE", 0);
 
@@ -394,11 +403,11 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Organization host = organizationService.get(installation.getOrganizationKey());
     assertSearch(host.getTitle(), 1);
     host.setTitle("HOSTTITLE");
-    organizationService.update(host);
+    update(host);
     assertSearch(host.getTitle(), 1);
 
     host.setTitle("BGBM");
-    organizationService.update(host);
+    update(host);
     assertSearch(host.getTitle(), 1);
     assertSearch("HOSTTITLE", 0);
 
