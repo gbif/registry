@@ -26,11 +26,8 @@
 
   <fileSets>
     <fileSet>
-      <directory>${project.build.outputDirectory}/oozie/</directory>
+      <directory>${project.build.outputDirectory}/dataset-backfill/</directory>
       <outputDirectory>/</outputDirectory>
-      <excludes>
-        <exclude>solr/</exclude>
-      </excludes>
     </fileSet>
   </fileSets>
 
@@ -40,6 +37,5 @@
       <fileMode>0644</fileMode>
     </dependencySet>
   </dependencySets>
-
 
 </assembly>
