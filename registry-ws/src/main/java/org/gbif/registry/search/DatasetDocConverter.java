@@ -118,7 +118,7 @@ class DatasetDocConverter {
     d.setCountryCoverage(enums(Country.class, doc, "country_coverage"));
     d.setKeywords(strings(doc, "keyword"));
     d.setLicense(toEnum(License.class, (Integer)doc.getFieldValue("license")));
-    d.setProjectIdentifier(str("project_id"));
+    d.setProjectIdentifier(str(doc.getFieldValue("project_id")));
     d.setRecordCount((Integer)doc.getFieldValue("record_count"));
 
     return d;
