@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<workflow-app xmlns="uri:oozie:workflow:0.4.5" name="checklistbank-index-builder-${environment}">
+<workflow-app xmlns="uri:oozie:workflow:0.4.5" name="registry-index-builder-${environment}">
 
   <global>
     <job-tracker>${wf:conf("hadoop.jobtracker")}</job-tracker>
