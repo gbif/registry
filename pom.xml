@@ -39,6 +39,13 @@
       <id>gbif-thirdparty</id>
       <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
+    <repository>
+      <id>cloudera-release</id>
+      <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <modules>
