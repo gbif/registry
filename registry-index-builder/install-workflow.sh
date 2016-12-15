@@ -1,7 +1,7 @@
+#!/usr/bin/env bash
 #exit on any failure
 set -e
 
-#!/bin/bash
 P=$1
 TOKEN=$2
 
@@ -34,7 +34,7 @@ hdfs dfs -copyFromLocal $P.properties /registry-index-builder-$P/lib/
 echo "Delete existing collection"
 curl -s """${solr_url}"/admin/collections?action=DELETE\&name="${solr_collection}"""
 
-echo "Delete existing collection"
+echo "Copy solr configs to Zookeeper"
 ${solr_home}/server/scripts/cloud-scripts/zkcli.sh  -zkhost ${zk_host} -cmd upconfig -confname ${solr_collection} -confdir ../registry-ws/src/main/resources/solr/dataset/conf/
 
 echo "Create collection"

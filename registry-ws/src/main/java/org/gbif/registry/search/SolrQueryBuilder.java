@@ -19,6 +19,8 @@ import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
 import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.common.search.solr.QueryUtils;
 
 import java.util.List;
@@ -37,11 +39,11 @@ import org.slf4j.LoggerFactory;
 import static org.gbif.common.search.solr.QueryUtils.DEFAULT_FACET_COUNT;
 import static org.gbif.common.search.solr.QueryUtils.DEFAULT_FACET_SORT;
 import static org.gbif.common.search.solr.QueryUtils.PARAMS_AND_JOINER;
+import static org.gbif.common.search.solr.QueryUtils.PARAMS_JOINER;
+import static org.gbif.common.search.solr.QueryUtils.PARAMS_OR_JOINER;
 import static org.gbif.common.search.solr.QueryUtils.perFieldParamName;
 import static org.gbif.common.search.solr.QueryUtils.taggedField;
 import static org.gbif.common.search.solr.QueryUtils.toParenthesesQuery;
-import static org.gbif.common.search.solr.QueryUtils.PARAMS_JOINER;
-import static org.gbif.common.search.solr.QueryUtils.PARAMS_OR_JOINER;
 import static org.gbif.common.search.solr.QueryUtils.toPhraseQuery;
 import static org.gbif.common.search.solr.SolrConstants.BLANK;
 import static org.gbif.common.search.solr.SolrConstants.DEFAULT_QUERY;
@@ -160,8 +162,10 @@ public class SolrQueryBuilder {
    * Adds the filter query to SolrQuery object.
    * Creates a conjunction of disjunctions: disjunctions(ORs) are created for the filter applied to the same field;
    * those disjunctions are joint in a big conjunction.
+   *
+   * @throws IllegalArgumentException if request is bad, e.g. wrongly typed data for given filter parameters
    */
-  private static void setFacetFilterQuery(SearchRequest<DatasetSearchParameter> request, SolrQuery solrQuery) {
+  private static void setFacetFilterQuery(SearchRequest<DatasetSearchParameter> request, SolrQuery solrQuery) throws IllegalArgumentException {
     Multimap<DatasetSearchParameter, String> params = request.getParameters();
     if (params != null) {
       List<String> and = Lists.newArrayList();
@@ -196,7 +200,17 @@ public class SolrQueryBuilder {
             // parse value into typed instance
             String filterVal;
             if (Enum.class.isAssignableFrom(param.type())) {
-              Enum<?> e = VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) param.type());
+              Enum<?> e;
+              if (Country.class.isAssignableFrom(param.type())) {
+                e = Country.fromIsoCode(value);
+              } else if (Language.class.isAssignableFrom(param.type())) {
+                e = Language.fromIsoCode(value);
+              } else {
+                e = VocabularyUtils.lookupEnum(value, (Class<? extends Enum<?>>) param.type());
+              }
+              if (e==null) {
+                throw new IllegalArgumentException("Invalid " + param.name() + " parameter value " + value);
+              }
               filterVal = String.valueOf(e.ordinal());
 
             } else if (UUID.class.isAssignableFrom(param.type())) {

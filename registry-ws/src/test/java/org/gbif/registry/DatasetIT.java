@@ -242,7 +242,28 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void testLargeTitles() {
+  public void testSearchParameter() {
+    Dataset d = newEntity(Country.SOUTH_AFRICA);
+    d.setType(DatasetType.CHECKLIST);
+    d.setLicense(License.CC0_1_0);
+    d.setLanguage(Language.AFRIKAANS);
+    d = create(d, 1);
+
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addPublishingCountryFilter(Country.GERMANY);
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(0),
+        resp.getCount());
+
+    req.addPublishingCountryFilter(Country.SOUTH_AFRICA);
+    req.addTypeFilter(DatasetType.CHECKLIST);
+    resp = searchService.search(req);
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1),
+        resp.getCount());
+  }
+
+  @Test
+  public void testSearchLargeTitles() {
     Dataset d = newEntity();
     d.setType(DatasetType.OCCURRENCE);
     d = create(d, 1);
@@ -460,18 +481,25 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
                  "] and publishingCountry[" + publishingCountry + "]", Long.valueOf(expected), resp.getCount());
   }
 
-  @Override
-  protected Dataset newEntity() {
+  private Dataset newEntity(@Nullable Country publisherCountry) {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(Nodes.newInstance());
     // publishing organization (required field)
     Organization o = Organizations.newInstance(nodeKey);
+    if (publisherCountry != null) {
+      o.setCountry(publisherCountry);
+    }
     UUID organizationKey = organizationService.create(o);
 
     Installation i = Installations.newInstance(organizationKey);
     UUID installationKey = installationService.create(i);
 
     return newEntity(organizationKey, installationKey);
+  }
+
+  @Override
+  protected Dataset newEntity() {
+    return newEntity(null);
   }
 
   private Dataset newEntity(UUID organizationKey, UUID installationKey) {
