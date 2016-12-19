@@ -18,7 +18,7 @@ zk_host=`cat $P.properties| grep "solr.dataset.home" | cut -d'=' -f2-`
 
 echo "Assembling jar for $ENV"
 
-mvn -Poozie clean package -DskipTests assembly:single
+mvn -U -Poozie clean package -DskipTests assembly:single
 
 if hdfs dfs -test -d /registry-index-builder-$P/; then
    echo "Removing content of current Oozie workflow directory"

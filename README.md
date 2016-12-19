@@ -18,7 +18,9 @@ See also: http://www.gbif.org/infrastructure/registry
 
 3. Set up a local copy of the GBIF Portal Drupal MySQL database, which is used for authentication.
 
-4. Create a Maven profile similar to:
+4. Set up a solr collection hosted either in a simple [http solr server](http://lucene.apache.org/solr/quickstart.html) or in a Solr cloud. Follow the [registry-index-builder](registry-index-builder/README.md) to create and populate such a collection. See the [maven POM](pom.xml) for the minimum solr version required by the current registry code.
+
+5. Create a Maven profile similar to:
 
 ````xml
   <profile>
@@ -39,4 +41,4 @@ See also: http://www.gbif.org/infrastructure/registry
   </profile>
 ````
 
-5. Run `mvn clean install`.
+6. Run `mvn clean install`.
