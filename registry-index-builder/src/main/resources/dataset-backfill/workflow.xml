@@ -12,14 +12,14 @@
     </configuration>
   </global>
 
-  <start to="index_datasets" />
+  <start to="metrics" />
 
   <action name="index_datasets">
     <java>
       <main-class>org.gbif.registry.search.dataset.DatasetIndexBuilder</main-class>
       <arg>${wf:conf("environment")}.properties</arg>
     </java>
-    <ok to="clb_metrics"/>
+    <ok to="metrics"/>
     <error to="kill"/>
   </action>
 
@@ -30,7 +30,7 @@
 
   <action name="clb_metrics">
     <java>
-      <main-class>org.gbif.registry.search.dataset.DatasetIndexChecklistUpdater</main-class>
+      <main-class>org.gbif.registry.search.dataset.checklist.DatasetIndexChecklistUpdater</main-class>
       <arg>${wf:conf("environment")}.properties</arg>
     </java>
     <ok to="end"/>
@@ -38,15 +38,10 @@
   </action>
 
   <action name="occ_metrics">
-    <hive2 xmlns="uri:oozie:hive2-action:0.1">
-      <job-tracker>${jobTracker}</job-tracker>
-      <name-node>${nameNode}</name-node>
-      <jdbc-url>jdbc:hive2://server:10000/default</jdbc-url>
-      <password>${hivepassword}</password>
-      <script>/data/sql/dayly.sql</script>
-      <param>database=${database}</param>
-      <param>day=${day}</param>
-    </hive2>
+    <java>
+      <main-class>org.gbif.registry.search.dataset.occurrence.DatasetIndexOccurrenceUpdater</main-class>
+      <arg>${wf:conf("environment")}.properties</arg>
+    </java>
     <ok to="metrics_done"/>
     <error to="kill"/>
   </action>

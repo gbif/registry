@@ -95,7 +95,6 @@
     <gbif-parsers.version>0.29</gbif-parsers.version>
     <gbif-postal-service.version>0.22</gbif-postal-service.version>
     <gbif-directory.version>0.8</gbif-directory.version>
-    <gbif-checklistbank.version>2.48-SNAPSHOT</gbif-checklistbank.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>4.0</guice.version>
@@ -201,33 +200,6 @@
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-doi</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.checklistbank</groupId>
-        <artifactId>checklistbank-cli</artifactId>
-        <version>${gbif-checklistbank.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro-maven-plugin</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.neo4j</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
