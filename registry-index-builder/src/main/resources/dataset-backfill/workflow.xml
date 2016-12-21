@@ -33,7 +33,7 @@
       <main-class>org.gbif.registry.search.dataset.checklist.DatasetIndexChecklistUpdater</main-class>
       <arg>${wf:conf("environment")}.properties</arg>
     </java>
-    <ok to="end"/>
+    <ok to="metrics_done"/>
     <error to="kill"/>
   </action>
 

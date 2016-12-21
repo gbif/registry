@@ -63,17 +63,20 @@ public class DatasetIndexBuilder {
     LOG.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
+  public static Injector registryInjector(Properties props) {
+    return Guice.createInjector(
+        new RegistryMyBatisModule(props),
+        new RegistrySearchModule(props),
+        new DirectoryModule(props),
+        new StubModule(),
+        EventModule.withoutRabbit(props)
+    );
+  }
+
   public static void run (Properties props) {
     try {
       // read properties and check args
-      Injector inj = Guice.createInjector(
-          new RegistryMyBatisModule(props),
-          new RegistrySearchModule(props),
-          new DirectoryModule(props),
-          new StubModule(),
-          EventModule.withoutRabbit(props)
-      );
-
+      Injector inj = registryInjector(props);
       SolrConfig solr = SolrConfig.fromProperties(props, SOLR_DATASET_PREFIX);
       DatasetIndexBuilder idxBuilder = new DatasetIndexBuilder(inj.getInstance(DatasetService.class), inj.getInstance(DatasetIndexService.class));
       LOG.info("Building new solr index for collection {} on {}", solr.collection, solr.serverHome);
