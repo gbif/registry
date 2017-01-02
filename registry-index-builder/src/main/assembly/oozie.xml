@@ -36,10 +36,6 @@
       <excludes>
         <exclude>org.apache.avro:*</exclude>
         <exclude>org.apache.solr:*</exclude>
-        <exclude>org.neo4j:*</exclude>
-        <exclude>org.gbif.checklistbank:checklistbank-solr</exclude>
-        <exclude>org.gbif.checklistbank:checklistbank-solr-plugins</exclude>
-        <exclude>org.gbif.checklistbank:checklistbank-nub</exclude>
       </excludes>
       <outputDirectory>lib</outputDirectory>
       <fileMode>0644</fileMode>
