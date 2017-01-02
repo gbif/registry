@@ -23,14 +23,12 @@ import org.gbif.common.search.SearchException;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.inject.Inject;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +37,6 @@ public class DatasetSearchServiceImpl implements DatasetSearchService {
   private static final Logger LOG = LoggerFactory.getLogger(DatasetSearchServiceImpl.class);
   private static final int DEFAULT_SUGGEST_LIMIT = 10;
   private static final int MAX_SUGGEST_LIMIT = 100;
-
-  private static final boolean DEBUG = false;
 
   /*
   * Solr server instance, this abstract type is used because it can hold instance of:
@@ -68,28 +64,10 @@ public class DatasetSearchServiceImpl implements DatasetSearchService {
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(DatasetSearchRequest request) {
     SolrQuery solrQuery = queryBuilder.build(request);
-    if (DEBUG) {
-      solrQuery.setShowDebugInfo(true);
-      solrQuery.addField("*,score");
-    }
 
     QueryResponse solrResp = query(solrQuery);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = responseBuilder.buildSearch(request, solrResp);
 
-    if (DEBUG) {
-      LOG.debug("Solr DEBUGGING");
-      LOG.debug("Results={}, maxScore={}", solrResp.getResults().getNumFound(), solrResp.getResults().getMaxScore());
-      for (Map.Entry<String, Object> entry : solrResp.getDebugMap().entrySet()) {
-        if (entry.getKey().equalsIgnoreCase("explain")) continue;
-        LOG.debug("{}: {}", entry.getKey(), entry.getValue());
-      }
-      for (SolrDocument doc : solrResp.getResults()) {
-        LOG.debug("Doc {}: {}", doc.getFieldValue("score"), doc.getFieldValue("title"));
-      }
-      for (DatasetSearchResult res : resp.getResults()) {
-        LOG.debug("{}", res);
-      }
-    }
     return resp;
   }
 

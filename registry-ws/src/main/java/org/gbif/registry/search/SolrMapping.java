@@ -1,6 +1,8 @@
 package org.gbif.registry.search;
 
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Language;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,14 +38,24 @@ public class SolrMapping {
   public static final List<String> HIGHLIGHT_FIELDS = ImmutableList.of("description", "vernacular_name");
 
   /**
-   * Converts a solr string value into the proper java instance.
+   * Converts an internal solr string value into the string representation used in our API.
    */
   public static String interpretSolrValue(DatasetSearchParameter param, String value) {
     if (Strings.isNullOrEmpty(value)) return null;
 
     if (Enum.class.isAssignableFrom(param.type())) {
       Class<Enum<?>> vocab = (Class<Enum<?>>) param.type();
-      return vocab.getEnumConstants()[Integer.valueOf(value)].name();
+      Enum<?> enumValue = vocab.getEnumConstants()[Integer.valueOf(value)];
+      // If the Enum is either a Country or a Language, its iso2Letter code it's used.
+      if (Country.class.equals(param.type())) {
+        return ((Country) enumValue).getIso2LetterCode();
+
+      } else if (Language.class.equals(param.type())) {
+        return ((Language) enumValue).getIso2LetterCode();
+
+      } else {
+        return enumValue.name();
+      }
 
     } else if (UUID.class.isAssignableFrom(param.type())) {
       return UUID.fromString(value).toString();
