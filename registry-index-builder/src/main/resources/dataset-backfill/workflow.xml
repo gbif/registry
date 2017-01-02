@@ -12,7 +12,7 @@
     </configuration>
   </global>
 
-  <start to="metrics" />
+  <start to="index_datasets" />
 
   <action name="index_datasets">
     <java>
