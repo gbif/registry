@@ -29,11 +29,6 @@
 
   <properties>
     <maven-shade-plugin.version>2.3</maven-shade-plugin.version>
-    <spark.version>1.6.1</spark.version>
-    <spark_sql.version>1.5.0</spark_sql.version>
-    <!-- fixed to the version coming with Spark -->
-    <jackson.spark.version>2.4.4</jackson.spark.version>
-    <scala.tools.version>2.10</scala.tools.version>
   </properties>
 
   <build>
@@ -210,45 +205,6 @@
       <artifactId>HikariCP</artifactId>
       <scope>compile</scope>
     </dependency>
-
-    <!-- Spark dependencies -->
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_${scala.tools.version}</artifactId>
-      <version>${spark.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_${scala.tools.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.databricks</groupId>
-      <artifactId>spark-csv_${scala.tools.version}</artifactId>
-      <version>${spark_sql.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-yarn_${scala.tools.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_${scala.tools.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-hive_${scala.tools.version}</artifactId>
-      <version>${spark.version}</version>
-    </dependency>
-
   </dependencies>
 
   <profiles>
