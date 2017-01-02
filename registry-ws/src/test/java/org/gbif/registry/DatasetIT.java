@@ -242,6 +242,50 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
+  public void testMultiCountryFacet() {
+    Dataset d = newEntity(Country.ALGERIA);
+    d.setType(DatasetType.CHECKLIST);
+    d = create(d, 1);
+
+    d = newEntity(Country.GERMANY);
+    d.setType(DatasetType.CHECKLIST);
+    d = create(d, 2);
+
+    d = newEntity(Country.FRANCE);
+    d.setType(DatasetType.OCCURRENCE);
+    d = create(d, 3);
+
+    d = newEntity(Country.GHANA);
+    d.setType(DatasetType.OCCURRENCE);
+    d = create(d, 4);
+
+    DatasetSearchRequest req = new DatasetSearchRequest();
+    req.addPublishingCountryFilter(Country.ANGOLA);
+    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
+    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(0), resp.getCount());
+    assertEquals("SOLR does not have the expected number of facets for query[" + req + "]", 1, resp.getFacets().size());
+    assertEquals("SOLR does not have the expected number of facet values for query[" + req + "]", 0, resp.getFacets().get(0).getCounts().size());
+
+    req = new DatasetSearchRequest();
+    req.addPublishingCountryFilter(Country.ALGERIA);
+    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
+    req.addFacets(DatasetSearchParameter.LICENSE);
+    resp = searchService.search(req);
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1), resp.getCount());
+    assertEquals("SOLR does not have the expected number of facets for query[" + req + "]", 2, resp.getFacets().size());
+
+    req = new DatasetSearchRequest();
+    req.addPublishingCountryFilter(Country.GERMANY);
+    req.setMultiSelectFacets(true);
+    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
+
+    resp = searchService.search(req);
+    assertEquals("SOLR does not have the expected number of results for query[" + req + "]", Long.valueOf(1), resp.getCount());
+    assertEquals("SOLR does not have the expected number of facet values for query[" + req + "]", 4, resp.getFacets().get(0).getCounts().size());
+  }
+
+  @Test
   public void testSearchParameter() throws InterruptedException {
     Dataset d = newEntity(Country.SOUTH_AFRICA);
     d.setType(DatasetType.CHECKLIST);
