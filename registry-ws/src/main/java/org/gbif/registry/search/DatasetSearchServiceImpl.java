@@ -59,6 +59,7 @@ public class DatasetSearchServiceImpl implements DatasetSearchService {
    * parameter and responses are handled in the request and response objects.
    *
    * @param request the request that contains the search parameters
+   *
    * @return the SearchResponse of the search operation
    */
   @Override
@@ -88,5 +89,24 @@ public class DatasetSearchServiceImpl implements DatasetSearchService {
     return responseBuilder.buildSuggest(response);
   }
 
-_key
+  private QueryResponse query(SolrQuery query) {
+    try {
+      // Executes the search operation in Solr
+      LOG.debug("Solr query executed: {}", query);
+      return solrClient.query(query);
+
+    } catch (SolrServerException e) {
+      if (e.getRootCause() instanceof IllegalArgumentException) {
+        LOG.error("Bad query", e);
+        throw (IllegalArgumentException) e.getRootCause();
+      } else {
+        LOG.error("Error querying solr {}", query, e);
+        throw new SearchException(e);
+      }
+
+    } catch (IOException e) {
+      LOG.error("Error querying solr {}", query, e);
+      throw new SearchException(e);
+    }
+  }
 }

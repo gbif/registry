@@ -26,7 +26,7 @@
 
   <fileSets>
     <fileSet>
-      <directory>${project.build.outputDirectory}/dataset-backfill/</directory>
+      <directory>${project.build.outputDirectory}/oozie/</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
   </fileSets>
