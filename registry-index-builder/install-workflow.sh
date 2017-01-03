@@ -41,5 +41,5 @@ ${solr_home}/server/scripts/cloud-scripts/zkcli.sh  -zkhost ${zk_host} -cmd upco
 echo "Create collection"
 curl -s """${solr_url}"/admin/collections?action=CREATE\&name="${solr_collection}"\&"${solr_opts}"\&collection.configName="${solr_collection}"""
 
-echo "Executing Oozie workflow"
+echo "Running Oozie workflow"
 oozie job --oozie ${oozie_url} -config $P.properties -D oozie.wf.application.path=${namenode}/registry-index-builder-$P/ -run

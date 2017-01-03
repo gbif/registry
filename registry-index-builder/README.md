@@ -28,8 +28,8 @@ The configuration file used by this workflow requires the following settings:
   
 ```
 # oozie
-hdfs.namenode=hdfs://nameservice1
-hadoop.jobtracker=c1n2.gbif.org:8032
+namenode=hdfs://nameservice1
+jobtracker=c1n2.gbif.org:8032
 oozie.url=http://c1n2.gbif.org:11000/oozie
 oozie.use.system.libpath=true
 oozie.wf.application.path=hdfs://nameservice1/registry-index-builder-dev/
@@ -75,3 +75,13 @@ checklistbank.db.dataSource.user=clb
 checklistbank.db.dataSource.password=*****
 checklistbank.db.maximumPoolSize=2
 ```
+
+## Installing the Oozie coordinator job
+The same workflow can be executed as an Oozie coordinator job running once daily using the same configs as for the workflow above.
+The existing solr collection will not be dropped but all 3 main steps will be executed:
+  - loop over all datasets using mybatis and load them into solr
+  - go through all checklist datasets in ChecklistBank and update the taxon key coverage field of the respective documents in solr
+  - go through all occurrence datasets, for each query the occurrence solr server for all distinct taxon keys & year values and update the taxon key coverage field of the respective documents in solr
+
+To install the coordinator job, removing any previous coordinator job, 
+use the script [install-coordinator.sh](install-coordinator.sh)  ```./install-coordinator.sh dev gitOAuthToken``` which again requires the 2 command line parameters described above.
