@@ -2,14 +2,15 @@
 #exit on any failure
 set -e
 
-P=$1
+ENV=$1
 TOKEN=$2
 
 echo "Getting latest registry-index-builder workflow properties file from github"
-curl -s -H "Authorization: token $TOKEN" -H 'Accept: application/vnd.github.v3.raw' -O -L https://api.github.com/repos/gbif/gbif-configuration/contents/registry-index-builder/$P.properties
+curl -s -H "Authorization: token $TOKEN" -H 'Accept: application/vnd.github.v3.raw' -O -L https://api.github.com/repos/gbif/gbif-configuration/contents/registry-index-builder/$ENV.properties
 
 #extract the oozie.url value from the properties file
-oozie_url=`cat $P.properties| grep "oozie.url" | cut -d'=' -f2-`
+oozie_url=`cat $ENV.properties| grep "oozie.url" | cut -d'=' -f2-`
+namenode=`cat $P.properties| grep "hdfs.namenode" | cut -d'=' -f2-`
 
 echo "Assembling jar for $ENV"
 
@@ -23,16 +24,18 @@ if [ -n "$WID" ]; then
   oozie job -oozie ${oozie_url} -kill $WID
 fi
 
-if hdfs dfs -test -d /registry-index-builder-$P/; then
+if hdfs dfs -test -d /registry-index-builder-$ENV/; then
    echo "Removing content of current Oozie workflow directory"
-   hdfs dfs -rm -f -r /registry-index-builder-$P/*
+   hdfs dfs -rm -f -r /registry-index-builder-$ENV/*
 else
    echo "Creating workflow directory"
-   hdfs dfs -mkdir /registry-index-builder-$P/
+   hdfs dfs -mkdir /registry-index-builder-$ENV/
 fi
 echo "Copying new Oozie workflow to HDFS"
-hdfs dfs -copyFromLocal target/oozie-workflow/* /registry-index-builder-$P/
-hdfs dfs -copyFromLocal $P.properties /registry-index-builder-$P/lib/
+hdfs dfs -copyFromLocal target/oozie-workflow/* /registry-index-builder-$ENV/
+hdfs dfs -copyFromLocal $ENV.properties /registry-index-builder-$ENV/lib/
 
 echo "Executing Oozie workflow"
-oozie job --oozie ${oozie_url} -config $P.properties -run
+oozie job --oozie ${oozie_url} -config $ENV.properties -D oozie.coord.application.path=${namenode}/registry-index-builder-$ENV/ -run
+
+

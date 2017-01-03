@@ -15,8 +15,9 @@ solr_collection=`cat $P.properties| grep "solr.dataset.collection" | cut -d'=' -
 solr_opts=`cat $P.properties| grep "solr.opts" | cut -d'=' -f2-`
 solr_home=`cat $P.properties| grep "solr.home" | cut -d'=' -f2-`
 zk_host=`cat $P.properties| grep "solr.dataset.home" | cut -d'=' -f2-`
+namenode=`cat $P.properties| grep "hdfs.namenode" | cut -d'=' -f2-`
 
-echo "Assembling jar for $ENV"
+echo "Assembling jar for $P"
 
 mvn -U -Poozie clean package -DskipTests assembly:single
 
@@ -41,5 +42,4 @@ echo "Create collection"
 curl -s """${solr_url}"/admin/collections?action=CREATE\&name="${solr_collection}"\&"${solr_opts}"\&collection.configName="${solr_collection}"""
 
 echo "Executing Oozie workflow"
-oozie job --oozie ${oozie_url} -config $P.properties -run
-
+oozie job --oozie ${oozie_url} -config $P.properties -D oozie.wf.application.path=${namenode}/registry-index-builder-$P/ -run

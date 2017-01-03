@@ -1,11 +1,26 @@
-<!--
- Triggers the oozie workflow. NOTE: you have to set start date to the day after you are running the install script e.g. if today is 2015-02-18 you'd set start to "2015-02-19T03:00Z"
--->
 <coordinator-app name="DatasetIndexOccUpdater-${environment}" frequency="${coord:days(1)}"
                  start="2017-01-01T03:00Z" end="2050-05-28T09:28Z" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
   <action>
+    <!--
+    NAMENODE: ${hdfs.namenode}
+    ENV: ${environment}
+    -->
     <workflow>
       <app-path>${hdfs.namenode}/registry-index-builder-${environment}/lib/</app-path>
+      <configuration>
+        <property>
+          <name>environment</name>
+          <value>${environment}</value>
+        </property>
+        <property>
+          <name>hadoop.jobtracker</name>
+          <value>${hadoop.jobtracker}</value>
+        </property>
+        <property>
+          <name>hdfs.namenode</name>
+          <value>${hdfs.namenode}</value>
+        </property>
+      </configuration>
     </workflow>
   </action>
 </coordinator-app>
