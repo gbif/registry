@@ -1,4 +1,4 @@
-<coordinator-app name="DatasetIndexOccUpdater-${environment}" frequency="${coordFrequency}"
+<coordinator-app name="DatasetIndexOccUpdater-${environment}" frequency="${coord:days(coordFrequency)}"
                  start="${startTime}" end="2050-01-01T00:00Z" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
   <action>
     <workflow>
