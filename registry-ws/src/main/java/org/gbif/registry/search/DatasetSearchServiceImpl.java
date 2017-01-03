@@ -88,25 +88,5 @@ public class DatasetSearchServiceImpl implements DatasetSearchService {
     return responseBuilder.buildSuggest(response);
   }
 
-  private QueryResponse query(SolrQuery query) {
-    try {
-      // Executes the search operation in Solr
-      LOG.debug("Solr query executed: {}", query);
-      return solrClient.query(query);
-
-    } catch (SolrServerException e) {
-      if (e.getRootCause() instanceof IllegalArgumentException) {
-        LOG.error("Bad query", e);
-        throw (IllegalArgumentException) e.getRootCause();
-      } else {
-        LOG.error("Error querying solr {}", query, e);
-        throw new SearchException(e);
-      }
-
-    } catch (IOException e) {
-      LOG.error("Error querying solr {}", query, e);
-      throw new SearchException(e);
-    }
-  }
-
+_key
 }
