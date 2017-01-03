@@ -1,6 +1,8 @@
 # Registry Index Builder
 
-This project covers the Java classes and Oozie workflows needed to backfill the dataset index of the registry solr index. The solr schema itself is defined in the [registry-ws](../registry-ws/src/main/resources/solr/) module. To avoid too many large dependencies such as ChecklistBank, Oozie and Spark within the webservice we separated the code into its own module.
+This project covers the Java classes and Oozie workflows needed to backfill the dataset index of the registry solr index. 
+The solr schema itself is defined in the [registry-ws](../registry-ws/src/main/resources/solr/) module. 
+To avoid too many large dependencies such as Oozie within the webservice we separated the code into its own module.
 
 There is one Oozie workflow in this project which can be configured to:
  - create a new dataset index from scratch, wiping anything existing and backfill it with the latest datasets from the registry.
@@ -13,7 +15,7 @@ The standard way to build a new solr index is to run the Oozie [workflow](src/ma
  - create a new collection from scratch or delete any previously existing one
  - loop over all datasets using mybatis and load them into solr
  - go through all checklist datasets in ChecklistBank and update the taxon key coverage field of the respective documents in solr
- - go through all occurrence datasets in HDFS using Spark and update the taxon key coverage field of the respective documents in solr
+ - go through all occurrence datasets, for each query the occurrence solr server for all distinct taxon keys & year values and update the taxon key coverage field of the respective documents in solr
 
 
 ### How to run the Oozie workflow
@@ -44,6 +46,13 @@ solr.opts=numShards=1&replicationFactor=1&maxShardsPerNode=1
 solr.dataset.type=CLOUD
 solr.dataset.home=c1n1.gbif.org:2181,c1n2.gbif.org:2181,c1n6.gbif.org:2181/solr5dev
 solr.dataset.collection=dev_dataset
+# occurrence index
+solr.occurrence.type=CLOUD
+solr.occurrence.home=c1n1.gbif.org:2181,c1n2.gbif.org:2181,c1n6.gbif.org:2181/solr5dev
+solr.occurrence.collection=dev_occurrence
+
+#Thread pool configuration
+solr.indexing.threads=2
 
 # registry db
 registry.db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
@@ -57,12 +66,6 @@ registry.db.maximumPoolSize=4
 directory.ws.url=http://api.gbif-dev.org/v1/directory/
 directory.app.key=gbif.portal
 directory.app.secret=*****
-
-# API
-api.url=http://api.gbif-dev.org/
-
-#Thread pool configuration
-solr.indexing.threads=2
 
 # checklistbank db to read taxon coverage from
 checklistbank.db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
