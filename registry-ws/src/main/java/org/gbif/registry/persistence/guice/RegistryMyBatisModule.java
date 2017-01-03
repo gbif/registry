@@ -12,7 +12,6 @@
  */
 package org.gbif.registry.persistence.guice;
 
-import org.gbif.api.model.checklistbank.DatasetMetrics;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -127,9 +126,6 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Installation").to(Installation.class);
       addAlias("Dataset").to(Dataset.class);
       addAlias("Network").to(Network.class);
-
-      addAlias("DatasetMetrics").to(DatasetMetrics.class);
-
       addAlias("Citation").to(Citation.class);
       addAlias("Contact").to(Contact.class);
       addAlias("Endpoint").to(Endpoint.class);
