@@ -48,8 +48,6 @@ public class DatasetIndexOccurrenceUpdater {
         // TODO we need to index all types with occurrences ultimately
         response = datasetService.listByType(DatasetType.OCCURRENCE, page);
         for (Dataset d : response.getResults()) {
-          LOG.debug("Indexing {} dataset {}: {}", d.getType(), d.getKey(), d.getTitle());
-
           SolrInputDocument doc = new SolrInputDocument();
           doc.addField("key", d.getKey().toString());
 
@@ -61,6 +59,15 @@ public class DatasetIndexOccurrenceUpdater {
           doc.addField("year", atomicUpdate(years.values));
 
           solr.add( doc );
+
+          LOG.debug("Indexed {} dataset {} with {} records, {} taxa and {} years: {}",
+              d.getType(),
+              d.getKey(),
+              taxKeys.records,
+              taxKeys.values.size(),
+              years.values.size(),
+              d.getTitle()
+          );
         }
         page.nextPage();
 
