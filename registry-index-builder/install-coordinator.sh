@@ -10,7 +10,7 @@ curl -s -H "Authorization: token $TOKEN" -H 'Accept: application/vnd.github.v3.r
 
 #extract the oozie.url value from the properties file
 oozie_url=`cat $ENV.properties| grep "oozie.url" | cut -d'=' -f2-`
-namenode=`cat $P.properties| grep "hdfs.namenode" | cut -d'=' -f2-`
+namenode=`cat $ENV.properties| grep "namenode" | cut -d'=' -f2-`
 
 echo "Assembling jar for $ENV"
 

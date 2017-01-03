@@ -2,8 +2,8 @@
 <workflow-app xmlns="uri:oozie:workflow:0.4.5" name="registry-index-builder-${environment}">
 
   <global>
-    <job-tracker>${wf:conf("hadoop.jobtracker")}</job-tracker>
-    <name-node>${wf:conf("hdfs.namenode")}</name-node>
+    <job-tracker>${wf:conf("jobtracker")}</job-tracker>
+    <name-node>${wf:conf("namenode")}</name-node>
     <configuration>
       <property>
         <name>oozie.launcher.mapreduce.task.classpath.user.precedence</name>

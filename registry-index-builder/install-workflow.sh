@@ -15,7 +15,7 @@ solr_collection=`cat $P.properties| grep "solr.dataset.collection" | cut -d'=' -
 solr_opts=`cat $P.properties| grep "solr.opts" | cut -d'=' -f2-`
 solr_home=`cat $P.properties| grep "solr.home" | cut -d'=' -f2-`
 zk_host=`cat $P.properties| grep "solr.dataset.home" | cut -d'=' -f2-`
-namenode=`cat $P.properties| grep "hdfs.namenode" | cut -d'=' -f2-`
+namenode=`cat $P.properties| grep "namenode" | cut -d'=' -f2-`
 
 echo "Assembling jar for $P"
 
