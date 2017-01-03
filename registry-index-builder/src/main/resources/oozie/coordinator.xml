@@ -1,5 +1,5 @@
-<coordinator-app name="DatasetIndexOccUpdater-${environment}" frequency="${coord:days(1)}"
-                 start="2017-01-01T03:00Z" end="2050-05-28T09:28Z" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
+<coordinator-app name="DatasetIndexOccUpdater-${environment}" frequency="${coordFrequency}"
+                 start="${startTime}" end="2050-01-01T00:00Z" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
   <action>
     <workflow>
       <app-path>${namenode}/registry-index-builder-${environment}/</app-path>

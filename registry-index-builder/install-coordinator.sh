@@ -36,6 +36,6 @@ hdfs dfs -copyFromLocal target/oozie-workflow/* /registry-index-builder-$ENV/
 hdfs dfs -copyFromLocal $ENV.properties /registry-index-builder-$ENV/lib/
 
 echo "Running Oozie coordinator job"
-oozie job --oozie ${oozie_url} -config $ENV.properties -D oozie.coord.application.path=${namenode}/registry-index-builder-$ENV/ -run
+oozie job --oozie ${oozie_url} -config $ENV.properties -DstartTime=`date -u "+%Y-%m-%dT03:00Z"` -Doozie.coord.application.path=${namenode}/registry-index-builder-$ENV/ -run
 
 
