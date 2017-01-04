@@ -109,11 +109,12 @@
     <field name="country_coverage" type="int" indexed="true" stored="true" required="false" multiValued="true" docValues="true"/>
     <field name="license" type="int" indexed="true" stored="true" required="false" docValues="true"/>
     <field name="project_id" type="keyword" indexed="true" stored="true" required="false" />
-
+    <!-- fields derived from occurrence and checklistbank data -->
     <field name="record_count" type="int" indexed="true" stored="true" required="false" docValues="true"/>
+    <field name="taxon_key" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
+    <!-- fields derived from occurrence data only -->
     <field name="year" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
     <field name="country" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
-    <field name="taxon_key" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
   </fields>
 
   <!-- Field to use to determine and enforce document uniqueness. Unless this

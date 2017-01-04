@@ -52,19 +52,23 @@ public class DatasetIndexOccurrenceUpdater {
           doc.addField("key", d.getKey().toString());
 
           OccSearchClient.FacetResult taxKeys = occ.taxonKeys(d.getKey());
-          doc.addField("record_count", atomicUpdate(taxKeys.records));
           doc.addField("taxon_key", atomicUpdate(taxKeys.values));
 
           OccSearchClient.FacetResult years = occ.years(d.getKey());
           doc.addField("year", atomicUpdate(years.values));
 
+          OccSearchClient.FacetResult countries = occ.countries(d.getKey());
+          doc.addField("country", atomicUpdate(countries.values));
+
+          doc.addField("record_count", atomicUpdate(taxKeys.records));
           solr.add( doc );
 
-          LOG.debug("Indexed {} dataset {} with {} records, {} taxa and {} years: {}",
+          LOG.debug("Indexed {} dataset {} with {} records, {} taxa, {} countries and {} years: {}",
               d.getType(),
               d.getKey(),
               taxKeys.records,
               taxKeys.values.size(),
+              countries.values.size(),
               years.values.size(),
               d.getTitle()
           );
