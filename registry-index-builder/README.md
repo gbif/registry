@@ -15,7 +15,7 @@ The standard way to build a new solr index is to run the Oozie [workflow](src/ma
  - create a new collection from scratch or delete any previously existing one
  - loop over all datasets using mybatis and load them into solr
  - go through all checklist datasets in ChecklistBank and update the taxon key coverage field of the respective documents in solr
- - go through all occurrence datasets, for each query the occurrence solr server for all distinct taxon keys & year values and update the taxon key coverage field of the respective documents in solr
+ - go through all occurrence datasets, for each query the occurrence solr server for all distinct taxon keys, countries & years and update the respective dataset solr index field 
 
 
 ### How to run the Oozie workflow
