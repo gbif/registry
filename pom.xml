@@ -49,6 +49,8 @@
   </repositories>
 
   <modules>
+    <module>registry-liquibase</module>
+    <module>registry-identity</module>
     <module>registry-cli</module>
     <module>registry-doi</module>
     <module>registry-examples</module>
@@ -86,6 +88,7 @@
     <gbif-common-mybatis.version>0.27</gbif-common-mybatis.version>
     <gbif-common-search.version>0.31</gbif-common-search.version>
     <gbif-common-service.version>0.16</gbif-common-service.version>
+    <gbif-common-test.version>0.7</gbif-common-test.version>
     <gbif-common-ws.version>0.37</gbif-common-ws.version>
     <gbif-common.version>0.29</gbif-common.version>
     <gbif-doi.version>1.5</gbif-doi.version>
@@ -117,7 +120,7 @@
     <jsr250.version>1.0</jsr250.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <junit.version>4.12</junit.version>
-    <liquibase.version>3.3.0</liquibase.version>
+    <liquibase.version>3.5.3</liquibase.version>
     <logback.version>1.1.3</logback.version>
     <metainf-services.version>1.5</metainf-services.version>
     <mockito.version>1.10.8</mockito.version>
@@ -131,6 +134,12 @@
     <validation-api.version>1.1.0.Final</validation-api.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
     <yammer.version>2.2.0</yammer.version>
+    <dbunit.version>2.4.9</dbunit.version>
+
+    <!-- TODO: REMOVE THIS! -->
+    <mysql-connector-java.version>5.1.34</mysql-connector-java.version>
+
+
   </properties>
 
   <!--
@@ -178,6 +187,17 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-liquibase</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-identity</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -412,6 +432,18 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-test</artifactId>
+        <version>${gbif-common-test.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dbunit</groupId>
+        <artifactId>dbunit</artifactId>
+        <version>${dbunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
@@ -473,6 +505,13 @@
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>${hikaricp.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <!-- TODO REMOVE THIS! -->
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${mysql-connector-java.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>

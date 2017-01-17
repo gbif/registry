@@ -11,6 +11,7 @@ See also: http://www.gbif.org/infrastructure/registry
 1. Create an empty PostgreSQL database "registry_it".  You may need to run
 
     `CREATE EXTENSION unaccent;`
+    `CREATE EXTENSION hstore;`
 
   (installed extensions can be listed with `\dx` from `psql`.)
 

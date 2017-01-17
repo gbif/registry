@@ -45,20 +45,6 @@ public class DatabaseInitializer extends ExternalResource {
     Connection connection = dataSource.getConnection();
     try {
       connection.setAutoCommit(false);
-      /*
-       * connection.createStatement().execute("TRUNCATE TABLE " +
-       * "node, node_identifier, node_machine_tag, node_tag, node_comment, " +
-       * "organization, organization_contact, organization_endpoint, organization_machine_tag, " +
-       * "organization_tag, organization_identifier, organization_comment, " +
-       * "installation, installation_contact, installation_endpoint, installation_machine_tag, " +
-       * "installation_tag, installation_comment, " +
-       * "dataset, dataset_contact, dataset_endpoint, dataset_machine_tag, dataset_tag, " +
-       * "dataset_identifier, dataset_comment, " +
-       * "network, network_contact, network_endpoint, network_machine_tag, network_tag, network_comment, " +
-       * "contact, endpoint, machine_tag, tag, identifier, comment, METADATA CASCADE");
-       */
-
-      // Profiling on laptop shows this to be far quicker, but above left it for easier reverting
       connection.prepareStatement("DELETE FROM contact").execute();
       connection.prepareStatement("DELETE FROM endpoint").execute();
       connection.prepareStatement("DELETE FROM tag").execute();
