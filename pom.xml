@@ -66,7 +66,7 @@
     to the release of that dependency]
   -->
   <properties>
-    <jdkLevel>1.7</jdkLevel>
+    <jdkLevel>1.8</jdkLevel>
     <release.tagNameBase>registry</release.tagNameBase>
 
     <aopalliance.version>1.0</aopalliance.version>
@@ -81,7 +81,7 @@
     <drupal-mybatis.version>0.20</drupal-mybatis.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.48</gbif-api.version>
+    <gbif-api.version>0.50-SNAPSHOT</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.27</gbif-common-mybatis.version>
     <gbif-common-search.version>0.31</gbif-common-search.version>
