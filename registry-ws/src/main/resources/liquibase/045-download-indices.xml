@@ -5,7 +5,6 @@
 
   <changeSet id="44" author="mdoering" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
-      DROP INDEX dataset_occurrence_download_dataset_key_idx1;
       CREATE INDEX ON occurrence_download(key, created);
     </sql>
   </changeSet>
