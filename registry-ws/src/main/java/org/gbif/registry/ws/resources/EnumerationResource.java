@@ -19,10 +19,12 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,16 +32,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A resource that provides a JSON serialization of all Enumerations in the GBIF API suitable for building Javascript
@@ -53,52 +55,25 @@ public class EnumerationResource {
 
   private static Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
 
-  //List of Licenses as String
-  private static final List<String> LICENSES = ImmutableList.copyOf(
-          Lists.transform(Lists.newArrayList(License.values()),
-                  new Function<License, String>() {
-                    @Nullable
-                    @Override
-                    public String apply(License license) {
-                      return license.isConcrete() ? license.getLicenseUrl() : license.name();
-                    }
-                  }));
-
   // Uses reflection to find the enumerations in the API
-  private static Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
+  private static final Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
-  private static List<Map<String, String>> COUNTRIES;
-  static {
-    List<Map<String, String>> countries = Lists.newArrayList();
-    for (Country c : Country.values()) {
-      if (c.isOfficial()) {
-        Map<String, String> info = Maps.newHashMap();
-        info.put("iso2", c.getIso2LetterCode());
-        info.put("iso3", c.getIso3LetterCode());
-        info.put("isoNumerical", String.valueOf(c.getIsoNumericalCode()));
-        info.put("title", c.getTitle());
-        info.put("enumName", c.name());
-        info.put("official", String.valueOf(c.isOfficial()));
-        countries.add(info);
-      }
-    }
-    COUNTRIES = ImmutableList.copyOf(countries);
-  }
+  //List of Licenses as String
+  private static final List<String> LICENSES =
+          Arrays.stream(License.values())
+                  .map(license -> license.isConcrete() ? license.getLicenseUrl() : license.name())
+                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
-  private static List<Map<String, String>> LANGUAGES;
-  static {
-    List<Map<String, String>> langs = Lists.newArrayList();
-    for (Language l : Language.values()) {
-      Map<String, String> info = Maps.newHashMap();
-      info.put("iso2", l.getIso2LetterCode());
-      info.put("iso3", l.getIso3LetterCode());
-      info.put("title", l.getTitleEnglish());
-      info.put("titleNative", l.getTitleNative());
-      info.put("enumName", l.name());
-      langs.add(info);
-    }
-    LANGUAGES = ImmutableList.copyOf(langs);
-  }
+  private static final List<Map<String, String>> COUNTRIES =
+          Arrays.stream(Country.values())
+                  .filter(Country::isOfficial)
+                  .map(EnumerationResource::countryToMap)
+                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+
+  private static final List<Map<String, String>> LANGUAGES =
+          Arrays.stream(Language.values())
+                  .map(EnumerationResource::languageToMap)
+                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
    * An inventory of the enumerations supported.
@@ -177,5 +152,40 @@ public class EnumerationResource {
       return null;
     }
   }
+
+  /**
+   * Transform a {@link Country} into a key-value map of properties.
+   *
+   * @param country
+   *
+   * @return
+   */
+  private static Map<String, String> countryToMap(Country country) {
+    Map<String, String> info = Maps.newHashMap();
+    info.put("iso2", country.getIso2LetterCode());
+    info.put("iso3", country.getIso3LetterCode());
+    info.put("isoNumerical", String.valueOf(country.getIsoNumericalCode()));
+    info.put("title", country.getTitle());
+    Optional.ofNullable(country.getGbifRegion()).ifPresent( gbifRegion -> info.put("gbifRegion", country.getGbifRegion().name()));
+    info.put("enumName", country.name());
+    return info;
+  }
+
+  /**
+   * Transform a {@link Language} into a key-value map of properties.
+   *
+   * @param language
+   *
+   * @return
+   */
+  private static Map<String, String> languageToMap(Language language) {
+    Map<String, String> info = Maps.newHashMap();
+    info.put("iso2", language.getIso2LetterCode());
+    info.put("iso3", language.getIso3LetterCode());
+    info.put("title", language.getTitleEnglish());
+    info.put("titleNative", language.getTitleNative());
+    return info;
+  }
+
 
 }
