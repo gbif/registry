@@ -602,6 +602,13 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-digester3</artifactId>
         <version>${commons-digester.version}</version>
+        <exclusions>
+             <exclusion>
+                 <!-- brings in old version 3.3.1 -->
+               <groupId>asm</groupId>
+               <artifactId>asm</artifactId>
+             </exclusion>
+         </exclusions>    
       </dependency>
       <dependency>
         <groupId>org.freemarker</groupId>
