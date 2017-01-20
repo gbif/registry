@@ -48,4 +48,5 @@
   <include file="liquibase/042-add-download-license.xml"/>
   <include file="liquibase/043-download-license-constraint.xml"/>
   <include file="liquibase/044-antarctica-gbifregion.xml"/>
+  <include file="liquibase/045-download-indices.xml"/>
 </databaseChangeLog>
