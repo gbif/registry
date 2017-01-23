@@ -341,7 +341,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void testDismaxSearch() {
+  public void testDismaxSearch() throws InterruptedException {
 
     Dataset d = newEntity();
     d = create(d, 1);
@@ -390,6 +390,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setDescription("This dataset contains the digitized treatments in Plazi based on the original journal article Zefa, Edison, Redü, Darlan Rutz, Costa, Maria Kátia Matiotti Da, Fontanetti, Carmem S., Gottschalk, Marco Silva, Padilha, Giovanna Boff, Fernandes, Anelise, Martins, Luciano De P. (2014): A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae. Zootaxa 3847 (1): 125-132, DOI: http://dx.doi.org/10.11646/zootaxa.3847.1.7");
     d.setLicense(License.CC0_1_0);
     service.create(d);
+
+    //Give some time to Solr to update
+    Thread.sleep(100);
 
     assertAll(6l);
     assertSearch("Hund", 1);
