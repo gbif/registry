@@ -87,7 +87,7 @@
     <gbif-common-search.version>0.31</gbif-common-search.version>
     <gbif-common-service.version>0.16</gbif-common-service.version>
     <gbif-common-ws.version>0.37</gbif-common-ws.version>
-    <gbif-common.version>0.29</gbif-common.version>
+    <gbif-common.version>0.32-SNAPSHOT</gbif-common.version>
     <gbif-doi.version>1.5</gbif-doi.version>
     <gbif-download-query-tools.version>1.18</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>

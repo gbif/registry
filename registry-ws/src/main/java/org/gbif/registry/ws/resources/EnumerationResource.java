@@ -24,7 +24,7 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +38,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.inject.Singleton;
@@ -81,10 +80,12 @@ public class EnumerationResource {
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
 
+  //Only includes InterpretationRemark that are NOT deprecated
   private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
           Stream.concat(
                   Arrays.stream(OccurrenceIssue.values()),
                   Arrays.stream(NameUsageIssue.values()))
+                  .filter(val -> !val.isDeprecated())
                   .map( val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
@@ -181,7 +182,7 @@ public class EnumerationResource {
    * @return
    */
   private static Map<String, String> countryToMap(Country country) {
-    Map<String, String> info = Maps.newHashMap();
+    Map<String, String> info = new LinkedHashMap<>();
     info.put("iso2", country.getIso2LetterCode());
     info.put("iso3", country.getIso3LetterCode());
     info.put("isoNumerical", String.valueOf(country.getIsoNumericalCode()));
@@ -199,7 +200,7 @@ public class EnumerationResource {
    * @return
    */
   private static Map<String, String> languageToMap(Language language) {
-    Map<String, String> info = Maps.newHashMap();
+    Map<String, String> info = new LinkedHashMap<>();
     info.put("iso2", language.getIso2LetterCode());
     info.put("iso3", language.getIso3LetterCode());
     info.put("title", language.getTitleEnglish());
@@ -215,7 +216,7 @@ public class EnumerationResource {
    * @return
    */
   private static Map<String, Object> interpretationRemarkToMap(InterpretationRemark interpretationRemark) {
-    Map<String, Object> info = new HashMap<>();
+    Map<String, Object> info = new LinkedHashMap<>();
     info.put("id", interpretationRemark.getId());
     info.put("severity", interpretationRemark.getSeverity().name());
     info.put("relatedTerms", interpretationRemark.getRelatedTerms());
