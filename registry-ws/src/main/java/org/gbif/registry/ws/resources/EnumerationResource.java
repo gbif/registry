@@ -14,17 +14,22 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.InterpretationRemark;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NameUsageIssue;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -73,6 +78,14 @@ public class EnumerationResource {
   private static final List<Map<String, String>> LANGUAGES =
           Arrays.stream(Language.values())
                   .map(EnumerationResource::languageToMap)
+                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+
+
+  private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
+          Stream.concat(
+                  Arrays.stream(OccurrenceIssue.values()),
+                  Arrays.stream(NameUsageIssue.values()))
+                  .map( val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
@@ -135,6 +148,13 @@ public class EnumerationResource {
     return LICENSES;
   }
 
+  @Path("interpretationRemark")
+  @GET
+  public List<Map<String, Object>> listInterpretationRemark() {
+    return INTERPRETATION_REMARKS;
+  }
+
+
   /**
    * Gets the values of the named enumeration should the enumeration exist.
    * Note this is used by the AngularJS console.
@@ -187,5 +207,19 @@ public class EnumerationResource {
     return info;
   }
 
+  /**
+   * Transform a {@link InterpretationRemark} into a key-value map of properties.
+   *
+   * @param interpretationRemark
+   *
+   * @return
+   */
+  private static Map<String, Object> interpretationRemarkToMap(InterpretationRemark interpretationRemark) {
+    Map<String, Object> info = new HashMap<>();
+    info.put("id", interpretationRemark.getId());
+    info.put("severity", interpretationRemark.getSeverity().name());
+    info.put("relatedTerms", interpretationRemark.getRelatedTerms());
+    return info;
+  }
 
 }
