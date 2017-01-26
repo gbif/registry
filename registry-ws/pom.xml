@@ -118,6 +118,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-identity</artifactId>
+    </dependency>
+    <!-- TODO: Remove this -->
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>drupal-mybatis</artifactId>
     </dependency>

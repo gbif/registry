@@ -4,6 +4,7 @@ import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.api.service.common.UserService;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.util.PasswordEncoder;
 
@@ -16,7 +17,10 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IdentityServiceImpl implements IdentityService {
+/**
+ * TODO: Remove the UserService.  This is included to ensure backwards compatibility at this point
+ */
+public class IdentityServiceImpl implements IdentityService, UserService {
 
   private static final Logger LOG = LoggerFactory.getLogger(IdentityServiceImpl.class);
 
