@@ -31,7 +31,7 @@ public class DoiSynchronizerConfiguration {
 
   @Valid
   @NotNull
-  public DbConfiguration drupal = new DbConfiguration();
+  public DbConfiguration identity = new DbConfiguration();
 
   @ParametersDelegate
   @Valid

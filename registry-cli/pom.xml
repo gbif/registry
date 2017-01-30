@@ -175,6 +175,10 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-identity</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws</artifactId>
     </dependency>
     <dependency>

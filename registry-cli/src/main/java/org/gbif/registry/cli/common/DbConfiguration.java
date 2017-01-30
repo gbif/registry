@@ -10,16 +10,16 @@ import com.beust.jcommander.Parameter;
 import com.google.common.collect.Sets;
 
 /**
- * Holds configuration for the registry or drupal database.
+ * Holds configuration for the registry or identity database.
  */
 @SuppressWarnings("PublicField")
 public class DbConfiguration {
 
   private static final String PG_DATASOURCE_CLASSNAME = "org.postgresql.ds.PGSimpleDataSource";
-  private static final String MYSQL_DATASOURCE_CLASSNAME = "com.mysql.jdbc.jdbc2.optional.MysqlDataSource";
+  private static final String IDENTITY_DATASOURCE_CLASSNAME = "org.postgresql.ds.PGSimpleDataSource";
 
   private static final String PROPERTY_REGISTRY_PREFIX = "registry.db.";
-  private static final String PROPERTY_DRUPAL_PREFIX = "drupal.db.";
+  private static final String PROPERTY_IDENTITY_PREFIX = "identity.db.";
 
   private static final String DATASOURCE_DATASOURCE_CLASSNAME_PROP = "dataSourceClassName";
   private static final Set<String> DATASOURCE_SET = Sets.newHashSet("serverName", "databaseName", "user", "password");
@@ -56,11 +56,11 @@ public class DbConfiguration {
   }
 
   /**
-   * Alias for toProperties(PROPERTY_DRUPAL_PREFIX, MYSQL_DATASOURCE_CLASSNAME)
+   * Alias for toProperties(PROPERTY_IDENTITY_PREFIX, IDENTITY_DATASOURCE_CLASSNAME)
    * @return
    */
-  public Properties toDrupalProperties(){
-    return toProperties(PROPERTY_DRUPAL_PREFIX, MYSQL_DATASOURCE_CLASSNAME);
+  public Properties toIdentityProperties(){
+    return toProperties(PROPERTY_IDENTITY_PREFIX, IDENTITY_DATASOURCE_CLASSNAME);
   }
 
   /**

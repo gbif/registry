@@ -121,18 +121,9 @@
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-identity</artifactId>
     </dependency>
-    <!-- TODO: Remove this -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>drupal-mybatis</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>download-query-tools</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common</artifactId>
     </dependency>
     <dependency>
       <groupId>aopalliance</groupId>

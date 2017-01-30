@@ -144,7 +144,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   /**
    * Create an entity using a principal provider that will fail authorization. The principal provider with name "heinz"
-   * won't authorize, because there is no user "heinz" in the test Drupal database with role administrator.
+   * won't authorize, because there is no user "heinz" in the test identity database with role administrator.
    */
   @Test
   public void testCreateBadRole() {
@@ -459,7 +459,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   /**
    * Repeatable entity creation with verification tests + support for processed properties.
-   * 
+   *
    * @param orig
    * @param expectedCount
    * @param processedProperties expected values of properties that are processed so they would not match the original

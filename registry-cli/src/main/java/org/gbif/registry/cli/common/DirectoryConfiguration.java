@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 import com.beust.jcommander.Parameter;
 
 /**
- * Holds configuration for the registry or drupal database.
+ * Holds configuration for the registry or identity database.
  */
 @SuppressWarnings("PublicField")
 public class DirectoryConfiguration {

@@ -114,7 +114,7 @@ public class RegistryTestModules {
               bind(SecurityContext.class).annotatedWith(Names.named("guiceInjectedSecurityContext")).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
-            new DrupalMockModule(), new RegistryMyBatisModule(p), new DirectoryMockModule(), new RegistrySearchModule(p),
+            new IdentityMockModule(), new RegistryMyBatisModule(p), new DirectoryMockModule(), new RegistrySearchModule(p),
             new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule(),
             new TitleLookupMockModule());
       } catch (IOException e) {

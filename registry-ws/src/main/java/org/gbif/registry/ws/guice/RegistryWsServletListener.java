@@ -12,7 +12,6 @@
  */
 package org.gbif.registry.ws.guice;
 
-import org.gbif.drupal.guice.DrupalMyBatisModule;
 import org.gbif.identity.guice.IdentityMyBatisModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
@@ -101,7 +100,6 @@ public class RegistryWsServletListener extends GbifServletListener {
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
-                              new DrupalMyBatisModule(properties),
                               new IdentityMyBatisModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),

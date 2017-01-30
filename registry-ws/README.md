@@ -33,13 +33,6 @@ with a Maven profile similar to:
     <appkeys.file>/Users/tim/dev/appkeys.properties</appkeys.file>
     <api.url>http://localhost/</api.url>
 
-    <drupal.db.host>localhost</drupal.db.host>
-    <drupal.db.name>drupal</drupal.db.name>
-    <drupal.db.username>root</drupal.db.username>
-    <drupal.db.password></drupal.db.password>
-    <drupal.db.poolSize>6</drupal.db.poolSize>
-    <drupal.db.connectionTimeout>1000</drupal.db.connectionTimeout>
-
     <registry.postalservice.enabled>false</registry.postalservice.enabled>
     <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
     <registry.messaging.port>5672</registry.messaging.port>

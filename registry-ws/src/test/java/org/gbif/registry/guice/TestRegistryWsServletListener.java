@@ -73,7 +73,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
       new DoiModule(props),
       new RabbitMockModule(),
       new DirectoryMockModule(),
-      new DrupalMockModule(),
+      new IdentityMockModule(),
       StringTrimInterceptor.newMethodInterceptingModule(),
       new ValidationModule(),
       new EventModule(props),

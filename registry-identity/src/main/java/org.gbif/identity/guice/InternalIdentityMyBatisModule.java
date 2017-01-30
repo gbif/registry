@@ -23,7 +23,7 @@ import com.google.inject.Scopes;
  */
 class InternalIdentityMyBatisModule extends MyBatisModule {
 
-  public static final String DATASOURCE_BINDING_NAME = "registry";
+  public static final String DATASOURCE_BINDING_NAME = "identity";
 
   public InternalIdentityMyBatisModule(Properties props) {
     super(DATASOURCE_BINDING_NAME, props);

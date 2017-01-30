@@ -26,9 +26,10 @@ public class IdentityMyBatisModule extends PrivateServiceModule {
     install(mod);
 
     // expose named datasource binding
-    expose(mod.getDatasourceKey());
+    //expose(mod.getDatasourceKey());
 
     // expose services
     expose(IdentityService.class);
+    expose(UserService.class);
   }
 }
