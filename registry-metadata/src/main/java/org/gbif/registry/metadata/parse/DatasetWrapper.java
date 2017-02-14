@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -59,8 +60,13 @@ import org.slf4j.LoggerFactory;
 public class DatasetWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetWrapper.class);
+  //matches UUID v4 + version like /v2.1
+  private static final Pattern PACKAGE_ID_VERSION_PATTERN =
+          Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/v(\\d+.\\d+)");
   private final Dataset target = new Dataset();
   private ParagraphContainer description = new ParagraphContainer();
+
+
   /**
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year, ignoring whitespace
    *
@@ -485,6 +491,12 @@ public class DatasetWrapper {
     // is this a DOI?
     if (DOI.isParsable(id)) {
       target.setDoi(new DOI(id));
+    } else {
+      //check if there is a version
+      Matcher m = PACKAGE_ID_VERSION_PATTERN.matcher(id);
+      if (m.matches()) {
+        target.setVersion(m.group(1));
+      }
     }
   }
 
