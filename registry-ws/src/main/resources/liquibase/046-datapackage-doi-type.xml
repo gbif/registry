@@ -5,7 +5,7 @@
 
   <changeSet id="45" author="mdoering" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
-      ALTER TYPE colors ADD VALUE 'DATA_PACKAGE' AFTER 'DOWNLOAD';
+      ALTER TYPE doi_type ADD VALUE 'DATA_PACKAGE' AFTER 'DOWNLOAD';
     </sql>
   </changeSet>
 </databaseChangeLog>
