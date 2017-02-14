@@ -158,6 +158,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     }
   }
 
+  @Override
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
     try {
       doiGenerator.registerDataset(doi, metadata, datasetKey);

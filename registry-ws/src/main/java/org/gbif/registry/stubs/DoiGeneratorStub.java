@@ -23,6 +23,11 @@ public class DoiGeneratorStub implements DoiGenerator {
   }
 
   @Override
+  public DOI newDataPackageDOI() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean isGbif(DOI doi) {
     return false;
   }
@@ -39,6 +44,11 @@ public class DoiGeneratorStub implements DoiGenerator {
 
   @Override
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException {
     throw new UnsupportedOperationException();
   }
 
