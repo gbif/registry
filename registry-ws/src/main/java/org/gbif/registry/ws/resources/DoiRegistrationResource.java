@@ -19,9 +19,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,8 +33,6 @@ public class DoiRegistrationResource implements DoiRegistrationService {
 
   private final DoiGenerator doiGenerator;
   private final DoiPersistenceService doiPersistenceService;
-
-  private @Context SecurityContext securityContext;
 
   @Inject
   public DoiRegistrationResource(DoiGenerator doiGenerator, DoiPersistenceService doiPersistenceService) {
@@ -75,11 +71,12 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public DOI register(DoiRegistration doiRegistration) {
     try {
+      //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata metadata = DataCiteMetadata.copyOf(doiRegistration.getMetadata()).withAlternateIdentifiers(
                             addDoiToIdentifiers(doiRegistration.getMetadata().getAlternateIdentifiers(), doi)).build();
-
+      //handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
@@ -93,7 +90,10 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     }
   }
 
-  private DataCiteMetadata.AlternateIdentifiers addDoiToIdentifiers(DataCiteMetadata.AlternateIdentifiers alternateIdentifiers, DOI doi) {
+  /**
+   * Ensures that the DOI is included as AlternateIdentifier.
+   */
+  private static DataCiteMetadata.AlternateIdentifiers addDoiToIdentifiers(DataCiteMetadata.AlternateIdentifiers alternateIdentifiers, DOI doi) {
     DataCiteMetadata.AlternateIdentifiers.Builder<Void> builder = DataCiteMetadata.AlternateIdentifiers.builder()
       .addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier());
     if (!alternateIdentifiers.getAlternateIdentifier().stream()

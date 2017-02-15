@@ -6,6 +6,10 @@ import org.gbif.registry.doi.DoiType;
 
 import javax.annotation.Nullable;
 
+/**
+ * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a different behaviour in
+ * the DoiRegistrationService.
+ */
 public class DoiRegistration {
 
   @Nullable
@@ -20,6 +24,9 @@ public class DoiRegistration {
 
   String user;
 
+  /**
+   * If the DOI existed prior the registration, maybe it was reserved previously, this field must be provided.
+   */
   public DOI getDoi() {
     return doi;
   }
@@ -28,6 +35,10 @@ public class DoiRegistration {
     this.doi = doi;
   }
 
+  /**
+   * Key, as a String, of the element to be linked to the DOI registration.
+   * This can be a download key, a dataset UUID key or any other value.
+   */
   public String getKey() {
     return key;
   }
@@ -36,6 +47,9 @@ public class DoiRegistration {
     this.key = key;
   }
 
+  /**
+   * DataCite metadata object that will be provided to DOI register.
+   */
   public DataCiteMetadata getMetadata() {
     return metadata;
   }
@@ -44,6 +58,9 @@ public class DoiRegistration {
     this.metadata = metadata;
   }
 
+  /**
+   * Type of DOI requested.
+   */
   public DoiType getType() {
     return type;
   }
@@ -52,6 +69,9 @@ public class DoiRegistration {
     this.type = type;
   }
 
+  /**
+   * GIBF user who requested the DOI or created the associated element: download, dataset or data package.
+   */
   public String getUser() {
     return user;
   }

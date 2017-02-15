@@ -4,6 +4,9 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.registry.doi.DoiType;
 
+/**
+ * Specifies the contract of a service that manages DOI registrations.
+ */
 public interface DoiRegistrationService {
 
   /**
