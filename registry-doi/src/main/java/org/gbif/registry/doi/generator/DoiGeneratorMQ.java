@@ -17,7 +17,6 @@ import java.net.URI;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -42,7 +41,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final URI downloadTarget;
   private final URI dataPackageTarget;
   private final String prefix;
-  private final static int RANDOM_LENGTH = 6;
+  private static final int RANDOM_LENGTH = 6;
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
    */

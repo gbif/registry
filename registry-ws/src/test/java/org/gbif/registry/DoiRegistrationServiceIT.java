@@ -14,11 +14,6 @@ package org.gbif.registry;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
-import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.DownloadFormat;
-import org.gbif.api.model.occurrence.DownloadRequest;
-import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
@@ -29,10 +24,6 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.resources.DoiRegistrationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
@@ -50,7 +41,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * This is parameterized to run the same test routines for the following:
+ * This is parameterized to run the same test routines for the following DOI Registration elements:
  * <ol>
  * <li>The persistence layer</li>
  * <li>The WS service layer</li>
@@ -89,29 +80,10 @@ public class DoiRegistrationServiceIT {
     final Injector webservice = webservice();
     final Injector client = webserviceClient();
 
-    return ImmutableList.<Object[]>of(
+    return ImmutableList.of(
       new Object[] {webservice.getInstance(DoiRegistrationResource.class), null},
       new Object[] {client.getInstance(DoiRegistrationService.class),
         client.getInstance(SimplePrincipalProvider.class)});
-  }
-
-  /**
-   * Creates {@link Download} instance with test data.
-   * The key is generated randomly using the class java.util.UUID.
-   * The instance generated should be ready and valid to be persisted.
-   */
-  protected static Download getTestInstance() {
-    Download download = new Download();
-    final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
-    DownloadRequest request =
-      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TEST_ADMIN_USER, emails,
-                          true, DownloadFormat.DWCA);
-    download.setKey(UUID.randomUUID().toString());
-    download.setStatus(Download.Status.PREPARING);
-    download.setRequest(request);
-    download.setDoi(new DOI("doi:10.1234/1ASCDU"));
-    download.setDownloadLink("testUrl");
-    return download;
   }
 
   @Before
@@ -121,16 +93,16 @@ public class DoiRegistrationServiceIT {
 
 
   /**
-   * Persists a valid {@link Download} instance.
+   * Generates a new DOI.
    */
   @Test
-  public void testCreate() {
+  public void testGenerate() {
     DOI doi = doiRegistrationService.generate(DoiType.DATA_PACKAGE);
     assertNotNull(doi);
   }
 
   /**
-   * Tests the create and get(key) methods.
+   * Tests the generate and get DOI methods.
    */
   @Test
   public void testCreateAndGet() {
@@ -141,7 +113,7 @@ public class DoiRegistrationServiceIT {
   }
 
   /**
-   * Tests the persistence of the DownloadRequest's DownloadFormat.
+   * Tests the registration of DOI for a data package.
    */
   @Test
   public void testRegister() {
@@ -153,6 +125,9 @@ public class DoiRegistrationServiceIT {
     assertNotNull(doi);
   }
 
+  /**
+   * Sets the user name as current authenticated user.
+   */
   private void setPrincipal(String username) {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (simplePrincipalProvider != null) {
