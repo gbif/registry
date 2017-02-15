@@ -15,6 +15,7 @@ package org.gbif.registry;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.ObjectFactory;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.doi.DoiType;
@@ -66,13 +67,11 @@ public class DoiRegistrationServiceIT {
 
   private final DoiRegistrationService doiRegistrationService;
 
-  private final SimplePrincipalProvider simplePrincipalProvider;
 
   public DoiRegistrationServiceIT(
     DoiRegistrationService doiRegistrationService,
     SimplePrincipalProvider simplePrincipalProvider) {
     this.doiRegistrationService = doiRegistrationService;
-    this.simplePrincipalProvider = simplePrincipalProvider;
   }
 
   @Parameters
@@ -85,12 +84,6 @@ public class DoiRegistrationServiceIT {
       new Object[] {client.getInstance(DoiRegistrationService.class),
         client.getInstance(SimplePrincipalProvider.class)});
   }
-
-  @Before
-  public void setup() {
-    setPrincipal(TEST_ADMIN_USER);
-  }
-
 
   /**
    * Generates a new DOI.
@@ -120,19 +113,35 @@ public class DoiRegistrationServiceIT {
     DoiRegistration doiRegistration = new DoiRegistration();
     doiRegistration.setType(DoiType.DATA_PACKAGE);
     doiRegistration.setUser(TEST_ADMIN_USER);
-    doiRegistration.setMetadata(DataCiteMetadata.builder().build());
+
+    doiRegistration.setMetadata(testMetadata());
     DOI doi = doiRegistrationService.register(doiRegistration);
     assertNotNull(doi);
   }
 
   /**
-   * Sets the user name as current authenticated user.
+   * Create a test DataCiteMetadata instance.
    */
-  private void setPrincipal(String username) {
-    // reset SimplePrincipleProvider, configured for web service client tests only
-    if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(username);
-    }
+  public DataCiteMetadata testMetadata() {
+    ObjectFactory of = new ObjectFactory();
+    DataCiteMetadata res = of.createDataCiteMetadata();
+
+    DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
+    DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
+    creator.setCreatorName(TEST_ADMIN_USER);
+    creators.getCreator().add(creator);
+    res.setCreators(creators);
+
+    DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
+    DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
+    title.setValue("TEST Tile");
+    titles.getTitle().add(title);
+    res.setTitles(titles);
+
+    res.setPublicationYear("2017");
+    res.setPublisher(TEST_ADMIN_USER);
+
+    return res;
   }
 
 }

@@ -26,7 +26,7 @@ import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageWsClient;
 import org.gbif.registry.ws.client.DatasetSearchWsClient;
 import org.gbif.registry.ws.client.DatasetWsClient;
-import org.gbif.registry.ws.client.DoiWsClient;
+import org.gbif.registry.ws.client.DoiRegistrationWsClient;
 import org.gbif.registry.ws.client.InstallationWsClient;
 import org.gbif.registry.ws.client.NetworkWsClient;
 import org.gbif.registry.ws.client.NodeWsClient;
@@ -107,7 +107,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       bind(OccurrenceDownloadService.class).to(OccurrenceDownloadWsClient.class).in(Scopes.SINGLETON);
       bind(DatasetOccurrenceDownloadUsageService.class).to(DatasetOccurrenceDownloadUsageWsClient.class).in(
         Scopes.SINGLETON);
-      bind(DoiRegistrationService.class).to(DoiWsClient.class).in(Scopes.SINGLETON);
+      bind(DoiRegistrationService.class).to(DoiRegistrationWsClient.class).in(Scopes.SINGLETON);
       bind(DatasetProcessStatusService.class).to(DatasetWsClient.class).in(Scopes.SINGLETON);
 
       expose(NodeService.class);

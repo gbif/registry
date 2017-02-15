@@ -3,6 +3,7 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
@@ -10,29 +11,43 @@ import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.UUID;
-import javax.annotation.security.PermitAll;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 /**
  * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
  */
 @Singleton
 @Path("doi")
+@Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
+@Consumes(MediaType.APPLICATION_JSON)
 public class DoiRegistrationResource implements DoiRegistrationService {
 
   private final DoiGenerator doiGenerator;
   private final DoiPersistenceService doiPersistenceService;
+
+  @Inject(optional = true)
+  @Named("guiceInjectedSecurityContext")
+  @Context
+  private SecurityContext securityContext;
 
   @Inject
   public DoiRegistrationResource(DoiGenerator doiGenerator, DoiPersistenceService doiPersistenceService) {
@@ -45,9 +60,9 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @POST
   @Path("gen/{type}")
-  @PermitAll
   @Override
   public DOI generate(@NotNull @PathParam("type") DoiType doiType) {
+    checkIsUserAuthenticated();
     return genDoiByType(doiType);
   }
 
@@ -67,9 +82,9 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @POST
   @NullToNotFound
-  @PermitAll
   @Override
   public DOI register(DoiRegistration doiRegistration) {
+    checkIsUserAuthenticated();
     try {
       //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
@@ -93,14 +108,19 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Ensures that the DOI is included as AlternateIdentifier.
    */
-  private static DataCiteMetadata.AlternateIdentifiers addDoiToIdentifiers(DataCiteMetadata.AlternateIdentifiers alternateIdentifiers, DOI doi) {
-    DataCiteMetadata.AlternateIdentifiers.Builder<Void> builder = DataCiteMetadata.AlternateIdentifiers.builder()
-      .addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier());
-    if (!alternateIdentifiers.getAlternateIdentifier().stream()
-          .anyMatch( identifier -> !identifier.getValue().equals(doi.getDoiName()))) {
-      builder.addAlternateIdentifier(DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier.builder()
-                                       .withValue(doi.getDoiName()).withAlternateIdentifierType("DOI").build());
+  private static AlternateIdentifiers addDoiToIdentifiers(AlternateIdentifiers alternateIdentifiers, DOI doi) {
+    AlternateIdentifiers.Builder<Void> builder = AlternateIdentifiers.builder();
+    if (alternateIdentifiers != null && alternateIdentifiers.getAlternateIdentifier() != null) {
+      builder.addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier().stream()
+                                       .filter( identifier -> !identifier.getValue().equals(doi.getDoiName())
+                                                              && !identifier.getAlternateIdentifierType()
+                                                                   .equalsIgnoreCase("DOI"))
+                                       .collect(Collectors.toList()));
     }
+    builder.addAlternateIdentifier(AlternateIdentifiers.AlternateIdentifier.builder()
+                                     .withValue(doi.getDoiName())
+                                     .withAlternateIdentifierType("DOI")
+                                     .build());
     return builder.build();
   }
 
@@ -115,6 +135,14 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     } else {
       return doiGenerator.newDatasetDOI();
     }
+  }
+
+  /**
+   * Check that the user is authenticated.
+   */
+  private void checkIsUserAuthenticated() {
+     if(securityContext == null)
+       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
   }
 
 }

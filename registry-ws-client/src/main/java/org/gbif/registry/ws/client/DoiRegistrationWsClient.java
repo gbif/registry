@@ -30,10 +30,10 @@ import com.sun.jersey.api.client.filter.ClientFilter;
 /**
  * Client-side implementation to the DoiRegistrationService.
  */
-public class DoiWsClient extends BaseWsClient implements DoiRegistrationService {
+public class DoiRegistrationWsClient extends BaseWsClient implements DoiRegistrationService {
 
   @Inject
-  public DoiWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
+  public DoiRegistrationWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
     super(resource.path("doi"));
     if (authFilter != null) {
       this.resource.addFilter(authFilter);
@@ -42,7 +42,7 @@ public class DoiWsClient extends BaseWsClient implements DoiRegistrationService 
 
   @Override
   public DOI generate(DoiType doiType) {
-    return getResource("gen",doiType.name()).type(MediaType.APPLICATION_JSON).get(DOI.class);
+    return getResource("gen", doiType.name()).type(MediaType.APPLICATION_JSON).post(DOI.class);
   }
 
   @Override
