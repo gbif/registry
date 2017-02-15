@@ -1,0 +1,120 @@
+package org.gbif.registry.ws.resources;
+
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.registry.doi.DoiPersistenceService;
+import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.registration.DoiRegistration;
+import org.gbif.registry.doi.registration.DoiRegistrationService;
+import org.gbif.ws.server.interceptor.NullToNotFound;
+
+import java.util.UUID;
+import javax.annotation.security.PermitAll;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+/**
+ * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
+ */
+@Singleton
+@Path("doi")
+public class DoiRegistrationResource implements DoiRegistrationService {
+
+  private final DoiGenerator doiGenerator;
+  private final DoiPersistenceService doiPersistenceService;
+
+  private @Context SecurityContext securityContext;
+
+  @Inject
+  public DoiRegistrationResource(DoiGenerator doiGenerator, DoiPersistenceService doiPersistenceService) {
+    this.doiGenerator = doiGenerator;
+    this.doiPersistenceService = doiPersistenceService;
+  }
+
+  /**
+   * Generates a new DOI based on the DoiType.
+   */
+  @POST
+  @Path("gen/{type}")
+  @PermitAll
+  @Override
+  public DOI generate(@NotNull @PathParam("type") DoiType doiType) {
+    return genDoiByType(doiType);
+  }
+
+  /**
+   * Retrieves the DOI information.
+   */
+  @GET
+  @Path("{prefix}/{suffix}")
+  @NullToNotFound
+  @Override
+  public DoiData get(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
+    return doiPersistenceService.get(new DOI(prefix, suffix));
+  }
+
+  /**
+   * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
+   */
+  @POST
+  @NullToNotFound
+  @PermitAll
+  @Override
+  public DOI register(DoiRegistration doiRegistration) {
+    try {
+      DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
+      //Ensures that the metadata contains the DOI as an alternative identifier
+      DataCiteMetadata metadata = DataCiteMetadata.copyOf(doiRegistration.getMetadata()).withAlternateIdentifiers(
+                            addDoiToIdentifiers(doiRegistration.getMetadata().getAlternateIdentifiers(), doi)).build();
+
+      if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
+        doiGenerator.registerDataPackage(doi, metadata);
+      } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
+        doiGenerator.registerDownload(doi, metadata, doiRegistration.getKey());
+      } else if (DoiType.DATASET == doiRegistration.getType()) {
+        doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
+      }
+      return doi;
+    } catch (InvalidMetadataException ex) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+  }
+
+  private DataCiteMetadata.AlternateIdentifiers addDoiToIdentifiers(DataCiteMetadata.AlternateIdentifiers alternateIdentifiers, DOI doi) {
+    DataCiteMetadata.AlternateIdentifiers.Builder<Void> builder = DataCiteMetadata.AlternateIdentifiers.builder()
+      .addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier());
+    if (!alternateIdentifiers.getAlternateIdentifier().stream()
+          .anyMatch( identifier -> !identifier.getValue().equals(doi.getDoiName()))) {
+      builder.addAlternateIdentifier(DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier.builder()
+                                       .withValue(doi.getDoiName()).withAlternateIdentifierType("DOI").build());
+    }
+    return builder.build();
+  }
+
+  /**
+   * Generates DOI based on the DoiType.
+   */
+  private DOI genDoiByType(DoiType doiType) {
+    if (DoiType.DATA_PACKAGE == doiType) {
+      return doiGenerator.newDataPackageDOI();
+    } else if (DoiType.DOWNLOAD == doiType) {
+      return doiGenerator.newDownloadDOI();
+    } else {
+      return doiGenerator.newDatasetDOI();
+    }
+  }
+
+}

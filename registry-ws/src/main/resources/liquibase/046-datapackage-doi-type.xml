@@ -3,9 +3,9 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="45" author="mdoering" runInTransaction="false">
+  <changeSet id="46" author="fede" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
-      ALTER TYPE colors ADD VALUE 'DATA_PACKAGE' AFTER 'DOWNLOAD';
+      ALTER TYPE doi_type ADD VALUE 'DATA_PACKAGE' AFTER 'DOWNLOAD';
     </sql>
   </changeSet>
 </databaseChangeLog>
