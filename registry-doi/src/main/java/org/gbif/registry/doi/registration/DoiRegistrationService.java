@@ -23,4 +23,10 @@ public interface DoiRegistrationService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   DOI register(DoiRegistration doiRegistration);
+
+
+  /**
+   * Deletes a DOI.
+   */
+  void delete(String prefix, String suffix);
 }

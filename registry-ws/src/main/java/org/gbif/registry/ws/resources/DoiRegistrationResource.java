@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -75,6 +76,17 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public DoiData get(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
     return doiPersistenceService.get(new DOI(prefix, suffix));
+  }
+
+  /**
+   * Deletes an existent DOI.
+   */
+  @DELETE
+  @Path("{prefix}/{suffix}")
+  @NullToNotFound
+  @Override
+  public void delete(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
+    doiGenerator.delete(new DOI(prefix, suffix));
   }
 
   /**

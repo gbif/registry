@@ -51,6 +51,11 @@ public class DoiRegistrationWsClient extends BaseWsClient implements DoiRegistra
   }
 
   @Override
+  public void delete(String prefix, String suffix) {
+    getResource(prefix, suffix).type(MediaType.APPLICATION_JSON).delete();
+  }
+
+  @Override
   public DOI register(DoiRegistration doiRegistration) {
     return resource.type(MediaType.APPLICATION_JSON).post(DOI.class, toBytes(doiRegistration));
   }
