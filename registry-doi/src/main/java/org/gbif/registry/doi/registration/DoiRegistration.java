@@ -6,12 +6,17 @@ import org.gbif.registry.doi.DoiType;
 
 import javax.annotation.Nullable;
 
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 /**
  * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a different behaviour in
  * the DoiRegistrationService.
  */
 public class DoiRegistration {
 
+  @JsonSerialize(using = DOI.Serializer.class)
+  @JsonDeserialize(using = DOI.Deserializer.class)
   @Nullable
   private DOI doi;
 

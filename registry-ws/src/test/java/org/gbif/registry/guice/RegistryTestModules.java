@@ -23,6 +23,7 @@ import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.TestValidateInterceptor;
 import org.gbif.registry.ws.resources.DatasetResource;
+import org.gbif.registry.ws.resources.DoiRegistrationResource;
 import org.gbif.registry.ws.resources.InstallationResource;
 import org.gbif.registry.ws.resources.NetworkResource;
 import org.gbif.registry.ws.resources.NodeResource;
@@ -111,6 +112,7 @@ public class RegistryTestModules {
               bind(DatasetResource.class);
               bind(NetworkResource.class);
               bind(IptResource.class);
+              bind(DoiRegistrationResource.class);
               bind(SecurityContext.class).annotatedWith(Names.named("guiceInjectedSecurityContext")).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
