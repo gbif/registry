@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
@@ -45,6 +46,7 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -73,6 +75,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -94,6 +97,9 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
@@ -145,6 +151,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
+
+  private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(
+                  new CacheLoader<UUID, Organization>() {
+                    public Organization load(UUID key) {
+                      return organizationMapper.get(key);
+                    }
+                  });
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -202,6 +217,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (dataset == null) {
       return null;
     }
+
+    //build citation here, until we decide if we store it in the database
+    //https://github.com/gbif/registry/issues/4
+    if (dataset.getPublishingOrganizationKey() != null) {
+      dataset.setGbifCitation(CitationGenerator.generateCitation(dataset,
+              ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+    }
+
     return sanitizeDataset(dataset);
   }
 
