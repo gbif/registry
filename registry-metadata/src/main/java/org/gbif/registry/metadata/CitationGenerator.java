@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -38,7 +40,8 @@ public class CitationGenerator {
 
     StringJoiner joiner = new StringJoiner(" ");
 
-    String authorList = dataset.getContacts().stream()
+    List<Contact> contacts = getUniqueAuthors(dataset.getContacts());
+    String authorList = contacts.stream()
             .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
             .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
             .map(CitationGenerator::getAuthorName)
@@ -76,6 +79,40 @@ public class CitationGenerator {
     joiner.add("accessed via GBIF.org on " + LocalDate.now(UTC) + ".");
 
     return joiner.toString();
+  }
+
+
+  /**
+   * This method is used to get the list of "unique" authors.
+   * Currently, uniqueness is based on lastName + firstNames.
+   * The order of the provided list will be preserved.
+   * @param authors
+   * @return
+   */
+  private static List<Contact> getUniqueAuthors(List<Contact> authors){
+    List<Contact> uniqueContact = new LinkedList<>();
+    if(authors != null) {
+      authors.forEach(ctc -> {
+        if (isNotAlreadyInList(ctc, uniqueContact)) {
+          uniqueContact.add(ctc);
+        }
+      });
+    }
+    return uniqueContact;
+  }
+
+  /**
+   * Check if a specific {@link Contact} is NOT already in the list of "unique" contact.
+   * Currently, uniqueness is based on the comparisons of lastName and firstNames.
+   * @param ctc
+   * @param uniqueContact
+   * @return
+   */
+  private static boolean isNotAlreadyInList(final Contact ctc, List<Contact> uniqueContact) {
+    return !uniqueContact.stream()
+            .filter( contact -> StringUtils.equalsIgnoreCase(ctc.getLastName(), contact.getLastName())
+                    && StringUtils.equalsIgnoreCase(ctc.getFirstName(), contact.getFirstName()))
+            .findFirst().isPresent();
   }
 
   /**

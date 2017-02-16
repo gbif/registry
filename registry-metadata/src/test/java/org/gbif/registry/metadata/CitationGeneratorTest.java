@@ -48,13 +48,7 @@ public class CitationGeneratorTest {
     Organization org = new Organization();
     org.setTitle("Cited Organization");
 
-    Dataset dataset = new Dataset();
-    dataset.setTitle("Dataset to be cited");
-    dataset.setVersion("2.1");
-    dataset.setDoi(new DOI(TEST_PREFIX+"/abcd"));
-    dataset.setPubDate(new Date(LocalDate.of(2009,2,8).atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()));
-
-    dataset.setType(DatasetType.CHECKLIST);
+    Dataset dataset = getTestDatasetObject();
 
     Contact c = new Contact();
     c.setLastName("Doe");
@@ -64,8 +58,45 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(c);
 
     assertEquals("Doe J D (2009) Dataset to be cited. Version 2.1. Cited Organization. " +
-            "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on 2017-02-15.",
+            "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
+  }
 
+  @Test
+  public void testCompleteCitationAuthorMultipleRoles() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+
+    Dataset dataset = getTestDatasetObject();
+
+    Contact c = new Contact();
+    c.setLastName("Doe");
+    c.setFirstName("John D.");
+    c.setType(ContactType.ORIGINATOR);
+
+    Contact c2 = new Contact();
+    c2.setLastName("Doe");
+    c2.setFirstName("John D.");
+    c2.setType(ContactType.METADATA_AUTHOR);
+
+    dataset.getContacts().add(c);
+    dataset.getContacts().add(c2);
+
+    assertEquals("Doe J D (2009) Dataset to be cited. Version 2.1. Cited Organization. " +
+                    "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " +
+            LocalDate.now().toString() + ".",
+            CitationGenerator.generateCitation(dataset,org));
+  }
+
+  private Dataset getTestDatasetObject() {
+    Dataset dataset = new Dataset();
+    dataset.setTitle("Dataset to be cited");
+    dataset.setVersion("2.1");
+    dataset.setDoi(new DOI(TEST_PREFIX+"/abcd"));
+    dataset.setPubDate(new Date(LocalDate.of(2009,2,8).atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()));
+
+    dataset.setType(DatasetType.CHECKLIST);
+
+    return dataset;
   }
 }
