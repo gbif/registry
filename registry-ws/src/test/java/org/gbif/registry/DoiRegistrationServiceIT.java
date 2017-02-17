@@ -28,7 +28,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,12 +109,11 @@ public class DoiRegistrationServiceIT {
    */
   @Test
   public void testRegister() {
-    DoiRegistration doiRegistration = new DoiRegistration();
-    doiRegistration.setType(DoiType.DATA_PACKAGE);
-    doiRegistration.setUser(TEST_ADMIN_USER);
-
-    doiRegistration.setMetadata(testMetadata());
-    DOI doi = doiRegistrationService.register(doiRegistration);
+    DoiRegistration.Builder builder = DoiRegistration.builder()
+                                        .withType(DoiType.DATA_PACKAGE)
+                                        .withUser(TEST_ADMIN_USER)
+                                        .withMetadata(testMetadata());
+    DOI doi = doiRegistrationService.register(builder.build());
     assertNotNull(doi);
   }
 
