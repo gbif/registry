@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
@@ -221,8 +222,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     //build citation here, until we decide if we store it in the database
     //https://github.com/gbif/registry/issues/4
     if (dataset.getPublishingOrganizationKey() != null) {
-      dataset.setGbifCitation(CitationGenerator.generateCitation(dataset,
+      Citation citation = new Citation();
+      citation.setText(CitationGenerator.generateCitation(dataset,
               ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+      dataset.setCitation(citation);
     }
 
     return sanitizeDataset(dataset);
