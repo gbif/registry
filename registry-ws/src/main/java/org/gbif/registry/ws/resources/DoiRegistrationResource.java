@@ -5,6 +5,7 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.generator.DoiGenerator;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.xml.bind.JAXBException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -101,8 +103,9 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
-      DataCiteMetadata metadata = DataCiteMetadata.copyOf(doiRegistration.getMetadata()).withAlternateIdentifiers(
-                            addDoiToIdentifiers(doiRegistration.getMetadata().getAlternateIdentifiers(), doi)).build();
+      DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
+      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata).withAlternateIdentifiers(
+                            addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
       //handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
@@ -112,7 +115,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
         doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
       }
       return doi;
-    } catch (InvalidMetadataException ex) {
+    } catch (InvalidMetadataException | JAXBException ex) {
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
   }

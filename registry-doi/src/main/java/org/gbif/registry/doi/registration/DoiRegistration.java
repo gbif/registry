@@ -25,7 +25,7 @@ public class DoiRegistration {
   @Nullable
   private String key;
 
-  private DataCiteMetadata metadata;
+  private String metadata;
 
   private DoiType type;
 
@@ -41,7 +41,7 @@ public class DoiRegistration {
   /**
    * Full constructor.
    */
-  private DoiRegistration(DOI doi, String key, DataCiteMetadata metadata, DoiType type, String user) {
+  private DoiRegistration(DOI doi, String key, String metadata, DoiType type, String user) {
     this.doi = doi;
     this.key = key;
     this.metadata = metadata;
@@ -75,11 +75,11 @@ public class DoiRegistration {
   /**
    * DataCite metadata object that will be provided to DOI register.
    */
-  public DataCiteMetadata getMetadata() {
+  public String getMetadata() {
     return metadata;
   }
 
-  public void setMetadata(DataCiteMetadata metadata) {
+  public void setMetadata(String metadata) {
     this.metadata = metadata;
   }
 
@@ -153,7 +153,7 @@ public class DoiRegistration {
 
     private String key;
 
-    private DataCiteMetadata metadata;
+    private String metadata;
 
     private DoiType type;
 
@@ -178,7 +178,7 @@ public class DoiRegistration {
     /**
      * Set the DataCite metadata.
      */
-    public Builder withMetadata(DataCiteMetadata metadata) {
+    public Builder withMetadata(String metadata) {
       this.metadata = metadata;
       return this;
     }

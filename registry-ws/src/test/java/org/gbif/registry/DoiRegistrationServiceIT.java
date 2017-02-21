@@ -16,6 +16,8 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.ObjectFactory;
+import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.doi.DoiType;
@@ -25,6 +27,8 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.resources.DoiRegistrationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import javax.xml.bind.JAXBException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
@@ -120,26 +124,29 @@ public class DoiRegistrationServiceIT {
   /**
    * Create a test DataCiteMetadata instance.
    */
-  public DataCiteMetadata testMetadata() {
-    ObjectFactory of = new ObjectFactory();
-    DataCiteMetadata res = of.createDataCiteMetadata();
+  public String testMetadata() {
+    try {
+      ObjectFactory of = new ObjectFactory();
+      DataCiteMetadata res = of.createDataCiteMetadata();
 
-    DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
-    DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
-    creator.setCreatorName(TEST_ADMIN_USER);
-    creators.getCreator().add(creator);
-    res.setCreators(creators);
+      DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
+      DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
+      creator.setCreatorName(TEST_ADMIN_USER);
+      creators.getCreator().add(creator);
+      res.setCreators(creators);
 
-    DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
-    DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
-    title.setValue("TEST Tile");
-    titles.getTitle().add(title);
-    res.setTitles(titles);
+      DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
+      DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
+      title.setValue("TEST Tile");
+      titles.getTitle().add(title);
+      res.setTitles(titles);
 
-    res.setPublicationYear("2017");
-    res.setPublisher(TEST_ADMIN_USER);
-
-    return res;
+      res.setPublicationYear("2017");
+      res.setPublisher(TEST_ADMIN_USER);
+      return DataCiteValidator.toXml(new DOI(DOI.TEST_PREFIX, "1"), res);
+    } catch (InvalidMetadataException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
 }
