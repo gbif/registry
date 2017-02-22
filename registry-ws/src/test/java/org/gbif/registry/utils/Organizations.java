@@ -34,6 +34,8 @@ public class Organizations extends JsonBackedData<Organization> {
   private static NodeService nodeService;
   private static OrganizationService organizationService;
 
+  public static final String ORGANIZATION_TITLE = "The BGBM";
+
   private Organizations() {
     super("data/organization.json", new TypeReference<Organization>() {});
     Injector i = RegistryTestModules.webservice();

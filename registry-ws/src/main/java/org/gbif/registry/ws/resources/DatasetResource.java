@@ -219,15 +219,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       return null;
     }
 
-    //build citation here, until we decide if we store it in the database
-    //https://github.com/gbif/registry/issues/4
-    if (dataset.getPublishingOrganizationKey() != null) {
-      Citation citation = new Citation();
-      citation.setText(CitationGenerator.generateCitation(dataset,
-              ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
-      dataset.setCitation(citation);
-    }
-
     return sanitizeDataset(dataset);
   }
 
@@ -337,13 +328,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   @Nullable
   private Dataset merge(@Nullable Dataset target, @Nullable Dataset supplementary) {
+
     // nothing to merge, return the target (which may be null)
     if (supplementary == null) {
+      setGeneratedCitation(target);
       return target;
     }
 
     // nothing to overlay into
     if (target == null) {
+      setGeneratedCitation(supplementary);
       return supplementary;
     }
 
@@ -382,6 +376,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     target.setIdentifiers(supplementary.getIdentifiers());
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
+
+    setGeneratedCitation(target);
 
     return target;
   }
@@ -630,12 +626,29 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * @param license license
    */
   private boolean replaceLicense(@Nullable License license) {
-
     if (license == null) {
       return false;
     }
-
     return license.isConcrete();
+  }
+
+  /**
+   * Set the generated GBIF citation on the provided Dataset object.
+   * This function is used until we decide if we store the GBIF generated citation in the database.
+   *
+   * see https://github.com/gbif/registry/issues/4
+   * @param dataset
+   * @return
+   */
+  private void setGeneratedCitation(Dataset dataset) {
+    if (dataset != null && dataset.getPublishingOrganizationKey() != null) {
+      // if the citation already exists keep it and only change the text. That allows us to keep the identifier
+      // if provided.
+      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
+      citation.setText(CitationGenerator.generateCitation(dataset,
+              ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+      dataset.setCitation(citation);
+    }
   }
 
   /**

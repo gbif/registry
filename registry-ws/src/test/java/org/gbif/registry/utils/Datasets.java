@@ -19,8 +19,11 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.ws.resources.DatasetResource;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.inject.Injector;
@@ -38,11 +41,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
-  public static final String EXPECTED_CITATION_TEXT = "Pontaurus needs more than 255 characters for it's title. " +
-          "It is a very, very, very, very long title in the German language. Word by word and character by character " +
-          "it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari &" +
-          " Aladaglari, Türkei\". The BGBM. Occurrence Dataset http://doi.org/10.5072/gbif.2014.xsd123 " +
-          "accessed via GBIF.org on 2017-02-22.";
+
 
   public Datasets() {
     super("data/dataset.json", new TypeReference<Dataset>() {
@@ -72,6 +71,23 @@ public class Datasets extends JsonBackedData<Dataset> {
     UUID key = datasetService.create(dataset);
     // some properties like created, modified are only set when the dataset is retrieved anew
     return datasetService.get(key);
+  }
+
+  public static String buildExpectedCitation(Dataset dataset, String organizationTitle) {
+    return CitationGenerator.generateCitation(dataset, organizationTitle);
+  }
+
+  /**
+   * Processed properties are properties that are expected to NOT matched the provided data.
+   *
+   * @param dataset
+   * @return a mutable mpa in case more properties shall be added.
+   */
+  public static Map<String, Object> buildExpectedProcessedProperties(Dataset dataset) {
+    String expectedCitation = buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
+    Map<String, Object> processedProperties = new HashMap<>();
+    processedProperties.put("citation.text", expectedCitation);
+    return processedProperties;
   }
 
 }

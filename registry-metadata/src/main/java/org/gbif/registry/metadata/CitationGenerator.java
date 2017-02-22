@@ -26,17 +26,22 @@ public class CitationGenerator {
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE = EnumSet.of(ContactType.ORIGINATOR,
           ContactType.METADATA_AUTHOR);
 
+  public static String generateCitation(Dataset dataset, Organization org) {
+    Objects.requireNonNull(org, "Organization shall be provided");
+    return generateCitation(dataset, org.getTitle());
+  }
+
   /**
    * Generate a citation for a {@link Dataset} and its {@link Organization}.
    * TODO add support for i18n
    * @param dataset
-   * @param org
+   * @param organizationTitle
    * @return
    */
-  public static String generateCitation(Dataset dataset, Organization org) {
+  public static String generateCitation(Dataset dataset, String organizationTitle) {
 
     Objects.requireNonNull(dataset, "Dataset shall be provided");
-    Objects.requireNonNull(org, "Organization shall be provided");
+    Objects.requireNonNull(organizationTitle, "Organization title shall be provided");
 
     StringJoiner joiner = new StringJoiner(" ");
 
@@ -64,7 +69,7 @@ public class CitationGenerator {
     }
 
     // add publisher
-    joiner.add(StringUtils.trim(org.getTitle()) + ".");
+    joiner.add(StringUtils.trim(organizationTitle) + ".");
 
     if (dataset.getType() != null) {
       joiner.add(StringUtils.capitalize(dataset.getType().name().toLowerCase()));

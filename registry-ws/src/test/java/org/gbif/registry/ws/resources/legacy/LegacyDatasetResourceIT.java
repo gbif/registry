@@ -656,7 +656,7 @@ public class LegacyDatasetResourceIT {
     assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());
     assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());
     // per https://github.com/gbif/registry/issues/4, Citation is now generated
-    assertEquals(Datasets.EXPECTED_CITATION_TEXT, dataset.getCitation().getText());
+    assertEquals(Datasets.buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE), dataset.getCitation().getText());
     assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());
     assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());
   }
