@@ -47,7 +47,9 @@ public class CitationGenerator {
             .map(CitationGenerator::getAuthorName)
             .collect(Collectors.joining(", "));
 
-    joiner.add(authorList);
+    if (StringUtils.isNotBlank(authorList)) {
+      joiner.add(authorList);
+    }
 
     if (dataset.getPubDate() != null) {
       joiner.add("(" + dataset.getPubDate().toInstant().atZone(UTC).getYear() + ")");
