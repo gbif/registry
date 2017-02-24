@@ -1,0 +1,49 @@
+<h4>User overview</h4>
+<p class="muted">This information appears on the user profile, organization pages, search results, and beyond.</p>
+<hr/>
+<p ng-show="user.deleted!=null">
+  <span class="label label-important">Important</span> <span class="text-error">This user was deleted {{user.deleted | timeAgo}} by {{user.modifiedBy}}.<span><br/>
+  <small class="muted">{{user.deleted}}</small>
+</p>
+
+<dl class="dl-horizontal spaced-list">
+  <dt>Title</dt>
+  <dd>{{user.title}}</dd>
+  <dt>Type</dt>
+  <dd>{{user.type}}</dd>
+  <dt>Participant status</dt>
+  <dd>{{user.participationStatus}}</dd>
+  <dt>GBIF Region</dt>
+  <dd>{{user.gbifRegion}}</dd>
+  <dt>Country</dt>
+  <dd>{{user.country | prettifyCountry}}</dd>
+  <dt>Continent</dt>
+  <dd>{{user.continent}}</dd>
+  <dt>Created</dt>
+  <dd>{{user.created | timeAgo}} <br/><small class="muted">{{user.created}}</small></dd>
+  <dt>Created by</dt>
+  <dd>{{user.createdBy}}</dd>
+  <dt>Modified</dt>
+  <dd>{{user.modified | timeAgo}} <br/><small class="muted">{{user.modified}}</small></dd>
+  <dt>Modified by</dt>
+  <dd>{{user.modifiedBy}}</dd>
+</dl>
+
+<div class="form-actions" ng-show="user.deleted!=null">
+    <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this user</a></small>
+      <p><small class="muted">Will make this eligible for endorsements etc.</small></p>
+    </div>
+    <div id="restoreConfirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="title" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="title">Restore?</h3>
+      </div>
+      <div class="modal-body">
+        <p><span class="label label-important">Important</span> <span class="text-error">Restoring a previously deleted entity will likely trigger significant processing<span></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button class="btn btn-primary btn-danger" data-dismiss="modal" ng-click="restore(user)">Yes, restore it!</button>
+      </div>
+    </div>
+</div>

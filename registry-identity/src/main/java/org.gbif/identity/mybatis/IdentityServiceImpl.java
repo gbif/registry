@@ -2,11 +2,13 @@ package org.gbif.identity.mybatis;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserService;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.util.PasswordEncoder;
+import org.gbif.identity.util.SessionTokens;
 
 import java.util.List;
 import java.util.UUID;
@@ -55,12 +57,23 @@ public class IdentityServiceImpl implements IdentityService, UserService {
 
   @Override
   public PagingResponse<User> list(@Nullable Pageable pageable) {
-    throw new UnsupportedOperationException("Not implemented yet");
+    return search(null, pageable);
+  }
+
+  @Override
+  public PagingResponse<User> search(@Nullable String query, @Nullable Pageable pageable) {
+    return pagingResponse(pageable, userMapper.count(query), userMapper.search(query, pageable));
   }
 
   @Override
   public void update(User user) {
     userMapper.update(user);
+  }
+
+  @Nullable
+  @Override
+  public User getByKey(int key) {
+    return userMapper.getByKey(key);
   }
 
   @Override
@@ -90,15 +103,10 @@ public class IdentityServiceImpl implements IdentityService, UserService {
     return userMapper.getBySession(session);
   }
 
-  // TODO... where should this go?
-  public Session authenticate(String username, String password, String host) {
-    User u = authenticate(username, password);
-    if (u != null) {
-      Session session = new Session(username, host, UUID.randomUUID().toString());
-      sessionMapper.create(session);
-      return session; // TODO
-    }
-    return null;
+  public Session createSession(String username) {
+    Session session = new Session(username, SessionTokens.newSessionToken(username));
+    sessionMapper.create(session);
+    return session;
   }
 
   public List<Session> listSessions(String username) {
@@ -111,5 +119,14 @@ public class IdentityServiceImpl implements IdentityService, UserService {
 
   public void terminateAllSessions(String username) {
     sessionMapper.deleteAll(username);
+  }
+
+  /**
+   * Null safe builder to construct a paging response.
+   *
+   * @param page page to create response for, can be null
+   */
+  private static PagingResponse<User> pagingResponse(@Nullable Pageable page, long count, List<User> result) {
+    return new PagingResponse<User>(page == null ? new PagingRequest() : page, count, result);
   }
 }

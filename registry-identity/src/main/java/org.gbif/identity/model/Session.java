@@ -11,15 +11,13 @@ import com.google.common.base.Objects;
 public class Session {
   private String userName;
   private String session;
-  private String hostname;
   private Date created;
 
   public Session() {
   }
 
-  public Session(String userName, String hostname, String session) {
+  public Session(String userName, String session) {
     this.userName = userName;
-    this.hostname = hostname;
     this.session = session;
   }
 
@@ -30,13 +28,12 @@ public class Session {
     Session session1 = (Session) o;
     return Objects.equal(userName, session1.userName) &&
            Objects.equal(session, session1.session) &&
-           Objects.equal(hostname, session1.hostname) &&
            Objects.equal(created, session1.created);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(userName, session, hostname, created);
+    return Objects.hashCode(userName, session, created);
   }
 
   public String getUserName() {
@@ -55,14 +52,6 @@ public class Session {
     this.session = session;
   }
 
-  public String getHostname() {
-    return hostname;
-  }
-
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
-  }
-
   public Date getCreated() {
     return created;
   }
@@ -76,7 +65,6 @@ public class Session {
     return Objects.toStringHelper(this)
                   .add("userName", userName)
                   .add("session", session)
-                  .add("hostname", hostname)
                   .add("created", created)
                   .toString();
   }

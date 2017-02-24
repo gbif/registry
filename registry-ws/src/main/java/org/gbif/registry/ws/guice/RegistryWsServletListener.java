@@ -23,6 +23,7 @@ import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
+import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -61,6 +62,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   static {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
+    requestFilters.add(CookieAuthFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
   }
 

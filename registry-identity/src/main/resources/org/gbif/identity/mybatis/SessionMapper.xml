@@ -5,18 +5,16 @@
   <resultMap id="SESSION_MAP" type="Session" >
     <id column="session" property="session" />
     <result column="username" property="userName" />
-    <result column="hostname" property="hostname" />
     <result column="created" property="created" />
   </resultMap>
 
   <sql id="SESSION_FIELDS">
-    username,session,hostname,created
+    username,session,created
   </sql>
 
   <sql id="WRITABLE_SESSION_FIELD_TYPES">
     #{userName,jdbcType=VARCHAR},
     #{session,jdbcType=VARCHAR},
-    #{hostname,jdbcType=VARCHAR},
     now() <!-- created -->
   </sql>
 

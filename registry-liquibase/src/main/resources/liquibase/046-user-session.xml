@@ -25,7 +25,6 @@
       CREATE TABLE session (
         username varchar(60) NOT NULL REFERENCES public.user(username),
         session varchar(128) PRIMARY KEY,
-        hostname varchar(128) NOT NULL,
         created timestamp with time zone NOT NULL DEFAULT now()
       );
       CREATE INDEX session_username_idx ON session (username);
