@@ -38,7 +38,7 @@ FROM
       GROUP BY u.name
     ) r ON r.username = u.name
 WHERE
-  u.login>0;
+  u.access <> 0 AND u.login <> 0 AND u.status = 1;
 
 --
 -- The following hacks create tables that give PG 9.3 compliant SQL to simulate UPSERTS.
