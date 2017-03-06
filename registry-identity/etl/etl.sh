@@ -23,13 +23,12 @@ ELAPSED_TIME=$(($SECONDS - $START_TIME))
 echo Exported in $ELAPSED_TIME seconds
 
 # Load
-# TODO: add the password with a -W$source_password
 echo Loading into $target_host:$target_db
 START_TIME=$SECONDS
-PGOPTIONS='--client-min-messages=warning' psql -q -h $target_host -U$target_username $target_db <  ./updates.sql
+PGPASSWORD=$target_password PGOPTIONS='--client-min-messages=warning' psql -q -h $target_host -U$target_username $target_db <  ./updates.sql
 ELAPSED_TIME=$(($SECONDS - $START_TIME))
 echo Updates applied in $ELAPSED_TIME seconds
 START_TIME=$SECONDS
-PGOPTIONS='--client-min-messages=warning' psql -q -h $target_host -U$target_username $target_db <  ./inserts.sql
+PGPASSWORD=$target_password PGOPTIONS='--client-min-messages=warning' psql -q -h $target_host -U$target_username $target_db <  ./inserts.sql
 ELAPSED_TIME=$(($SECONDS - $START_TIME))
 echo New accounts inserted in $ELAPSED_TIME seconds
