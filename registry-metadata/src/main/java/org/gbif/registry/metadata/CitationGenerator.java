@@ -44,13 +44,7 @@ public class CitationGenerator {
     Objects.requireNonNull(organizationTitle, "Organization title shall be provided");
 
     StringJoiner joiner = new StringJoiner(" ");
-
-    List<Contact> contacts = getUniqueAuthors(dataset.getContacts());
-    String authorList = contacts.stream()
-            .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
-            .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
-            .map(CitationGenerator::getAuthorName)
-            .collect(Collectors.joining(", "));
+    String authorList = generateAuthorsLine(dataset.getContacts());
 
     if (StringUtils.isNotBlank(authorList)) {
       joiner.add(authorList);
@@ -88,11 +82,32 @@ public class CitationGenerator {
     return joiner.toString();
   }
 
+  /**
+   * Given a list of contacts, generates a {@link String} representing the authors line.
+   * The author line is generated from contacts with {@link ContactType} inside {@link #AUTHOR_CONTACT_TYPE}
+   * based on the list of unique authors.
+   *
+   * @param contacts
+   */
+  public static String generateAuthorsLine(List<Contact> contacts) {
+    if(contacts == null || contacts.isEmpty()) {
+      return "";
+    }
+
+    List<Contact> uniqueContacts = getUniqueAuthors(contacts);
+    return uniqueContacts.stream()
+            .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
+            .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
+            .map(CitationGenerator::getAuthorName)
+            .collect(Collectors.joining(", "));
+  }
+
 
   /**
    * This method is used to get the list of "unique" authors.
    * Currently, uniqueness is based on lastName + firstNames.
-   * The order of the provided list will be preserved.
+   * The order of the provided list will be preserved which also means the first {@link ContactType} found for
+   * a contact is the one that will be used for this contact.
    * @param authors
    * @return
    */
