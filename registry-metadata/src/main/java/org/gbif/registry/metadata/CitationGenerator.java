@@ -96,7 +96,7 @@ public class CitationGenerator {
    * @param authors
    * @return
    */
-  private static List<Contact> getUniqueAuthors(List<Contact> authors){
+  public static List<Contact> getUniqueAuthors(List<Contact> authors){
     List<Contact> uniqueContact = new LinkedList<>();
     if(authors != null) {
       authors.forEach(ctc -> {
@@ -125,13 +125,12 @@ public class CitationGenerator {
   /**
    * Given a {@link Contact}, generates a a String for that contact for citation purpose.
    * The organisation will be used (if present) in case we don't have both lastName and firstNames of the contact.
-   * VISIBLE-FOR-TESTING
    *
    * @param creator
    *
    * @return
    */
-  protected static String getAuthorName(Contact creator) {
+  public static String getAuthorName(Contact creator) {
     StringBuilder sb = new StringBuilder();
     String lastName = StringUtils.trimToNull(creator.getLastName());
     String firstNames = StringUtils.trimToNull(creator.getFirstName());
