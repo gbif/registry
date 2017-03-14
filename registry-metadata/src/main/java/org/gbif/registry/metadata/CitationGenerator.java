@@ -7,9 +7,9 @@ import org.gbif.api.vocabulary.ContactType;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -44,10 +44,11 @@ public class CitationGenerator {
     Objects.requireNonNull(organizationTitle, "Organization title shall be provided");
 
     StringJoiner joiner = new StringJoiner(" ");
-    String authorList = generateAuthorsLine(dataset.getContacts());
+    List<String> authorsName = generateAuthorsName(getAuthors(dataset.getContacts()));
+    String authors = authorsName.stream().collect(Collectors.joining(", "));
 
-    if (StringUtils.isNotBlank(authorList)) {
-      joiner.add(authorList);
+    if (StringUtils.isNotBlank(authors)) {
+      joiner.add(authors);
     }
 
     if (dataset.getPubDate() != null) {
@@ -83,23 +84,41 @@ public class CitationGenerator {
   }
 
   /**
-   * Given a list of contacts, generates a {@link String} representing the authors line.
-   * The author line is generated from contacts with {@link ContactType} inside {@link #AUTHOR_CONTACT_TYPE}
-   * based on the list of unique authors.
+   * Extracts an ordered list of unique authors from a list of contacts.
+   * A {@link Contact} is identified as an author when his {@link ContactType} is contained in
+   * {@link #AUTHOR_CONTACT_TYPE}
    *
-   * @param contacts
+   * @param contacts list of contacts available
+   *
+   * @return ordered list of authors or empty list, never null
    */
-  public static String generateAuthorsLine(List<Contact> contacts) {
-    if(contacts == null || contacts.isEmpty()) {
-      return "";
+  public static List<Contact> getAuthors(List<Contact> contacts) {
+    if (contacts == null || contacts.isEmpty()) {
+      return new ArrayList<>();
     }
 
     List<Contact> uniqueContacts = getUniqueAuthors(contacts);
     return uniqueContacts.stream()
             .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Given a list of authors, generates a {@link List} of {@link String} representing the authors name.
+   * If a contact doesn't have a first AND last name it will not be included.
+   *
+   * @param authors ordered list of authors
+   * @return list of author names (if it can be generated) or empty list, never null
+   */
+  public static List<String> generateAuthorsName(List<Contact> authors) {
+    if (authors == null || authors.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    return authors.stream()
             .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
             .map(CitationGenerator::getAuthorName)
-            .collect(Collectors.joining(", "));
+            .collect(Collectors.toList());
   }
 
 
@@ -111,8 +130,8 @@ public class CitationGenerator {
    * @param authors
    * @return
    */
-  public static List<Contact> getUniqueAuthors(List<Contact> authors){
-    List<Contact> uniqueContact = new LinkedList<>();
+  private static List<Contact> getUniqueAuthors(List<Contact> authors){
+    List<Contact> uniqueContact = new ArrayList<>();
     if(authors != null) {
       authors.forEach(ctc -> {
         if (isNotAlreadyInList(ctc, uniqueContact)) {

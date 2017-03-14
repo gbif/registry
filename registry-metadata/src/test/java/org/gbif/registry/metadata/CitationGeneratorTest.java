@@ -14,6 +14,7 @@ import java.util.Date;
 import org.junit.Test;
 
 import static org.gbif.api.model.common.DOI.TEST_PREFIX;
+import static org.gbif.registry.metadata.CitationGenerator.getAuthors;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -74,6 +75,11 @@ public class CitationGeneratorTest {
     c.setFirstName("John D.");
     c.setType(ContactType.ORIGINATOR);
 
+    Contact c1 = new Contact();
+    c1.setLastName("Carey");
+    c1.setFirstName("Jim");
+    c1.setType(ContactType.PROGRAMMER);
+
     Contact c2 = new Contact();
     c2.setLastName("Doe");
     c2.setFirstName("John D.");
@@ -86,6 +92,40 @@ public class CitationGeneratorTest {
                     "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " +
             LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
+  }
+
+  @Test
+  public void testAuthors(){
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+
+    Dataset dataset = getTestDatasetObject();
+
+    Contact c = new Contact();
+    c.setLastName("Doe");
+    c.setFirstName("John D.");
+    c.setType(ContactType.ORIGINATOR);
+    dataset.getContacts().add(c);
+
+    //author with incomplete name
+    c = new Contact();
+    c.setLastName("Doe");
+    c.setOrganization("Awesome Organization");
+    c.setType(ContactType.ORIGINATOR);
+    dataset.getContacts().add(c);
+
+    //not an author
+    c = new Contact();
+    c.setLastName("Last");
+    c.setFirstName("Programmer");
+    c.setType(ContactType.PROGRAMMER);
+    dataset.getContacts().add(c);
+
+    //we expect 2 authors
+    assertEquals(2, getAuthors(dataset.getContacts()).size());
+
+    //but, we can only generate the name for one of them
+    assertEquals(1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
   }
 
   private Dataset getTestDatasetObject() {
