@@ -6,6 +6,7 @@ import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.common.UserService;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -55,7 +56,7 @@ public class DoiSynchronizerService {
   private final UserService userService;
   private final DataCiteService dataCiteService;
 
-  private DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
+  private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
 
   public DoiSynchronizerService(DoiSynchronizerConfiguration config) {
     this(config, new DoiSynchronizerModule(config).getInjector());
@@ -220,12 +221,12 @@ public class DoiSynchronizerService {
     List<Dataset> datasetsFromAltIdentifier = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
 
     //check that we have something to work on
-    if(datasetsFromDOI.isEmpty() && datasetsFromAltIdentifier.isEmpty()){
+    if (datasetsFromDOI.isEmpty() && datasetsFromAltIdentifier.isEmpty()) {
       return false;
     }
 
     //ensure we only have 1 dataset linked to this DOI
-    if(datasetsFromDOI.size() + datasetsFromAltIdentifier.size() != 1){
+    if (datasetsFromDOI.size() + datasetsFromAltIdentifier.size() != 1) {
       return false;
     }
 
@@ -233,31 +234,31 @@ public class DoiSynchronizerService {
     Dataset dataset = !datasetsFromDOI.isEmpty() ? datasetsFromDOI.get(0) : datasetsFromAltIdentifier.get(0);
 
     DOI datasetDoi = dataset.getDoi();
-    if(doi.equals(datasetDoi)) {
+    if (doi.equals(datasetDoi)) {
       dataCiteDoiHandlerStrategy.datasetChanged(dataset, null);
       return true;
     }
     //DOI changed
-    else {
-      // The dataset DOI is not issued by GBIF
-      if(!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)){
-        boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
-        boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
-        // check we are in a known state which means:
-        // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
-        // the logic is applied by the registry
-        if(doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers){
-          dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
-          return true;
-        }
-        else{
-          LOG.error("Can not handle cases where the DOI changed but the list of alternate identifiers is not updated");
-        }
+
+    // The dataset DOI is not issued by GBIF
+    if (!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)) {
+      boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
+      boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
+      // check we are in a known state which means:
+      // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
+      // the logic is applied by the registry
+      if(doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers){
+        dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
+        return true;
       }
       else{
-        LOG.error("Can not handle cases where the DOI changed to a GBIF DOI");
+        LOG.error("Can not handle cases where the DOI changed but the list of alternate identifiers is not updated");
       }
     }
+    else{
+      LOG.error("Can not handle cases where the DOI changed to a GBIF DOI");
+    }
+
 
     return false;
   }
@@ -266,19 +267,13 @@ public class DoiSynchronizerService {
    * Checks if a DOI can be found in the list of dataset identifiers.
    *
    * @param doi
-   * @param dataset
+   * @param identifiable
    * @return
    */
-  private boolean isIdentifierDOIFound(DOI doi, Dataset dataset){
-    List<Identifier> identifiers = dataset.getIdentifiers();
-    for(Identifier currentIdentifier : identifiers){
-      if(IdentifierType.DOI.equals(currentIdentifier.getType())){
-        if(currentIdentifier.getIdentifier().equals(doi.toString())){
-          return true;
-        }
-      }
-    }
-    return false;
+  private static boolean isIdentifierDOIFound(DOI doi, Identifiable identifiable){
+    return identifiable.getIdentifiers().stream().anyMatch(identifier -> IdentifierType.DOI == identifier.getType()
+                                                                         && identifier.getIdentifier()
+                                                                           .equals(doi.toString()));
   }
 
   /**
@@ -291,12 +286,12 @@ public class DoiSynchronizerService {
     Preconditions.checkNotNull(doi, "DOI can't be null");
 
     Download download = downloadMapper.getByDOI(doi);
-    if(download == null){
+    if (download == null) {
       return false;
     }
 
     // only handle download with status SUCCEEDED
-    if(!Download.Status.SUCCEEDED.equals(download.getStatus())){
+    if (Download.Status.SUCCEEDED != download.getStatus()) {
       LOG.error("Download with DOI {} status is {}", doi, download.getStatus());
       return false;
     }
@@ -305,7 +300,7 @@ public class DoiSynchronizerService {
     String creatorName = download.getRequest().getCreator();
     User user = userService.get(creatorName);
 
-    if(user == null){
+    if (user == null) {
       LOG.error("No user with creator name {} can be found", creatorName);
       return false;
     }
@@ -341,10 +336,9 @@ public class DoiSynchronizerService {
 
     //dataset first
     List<Map<String,Object>> failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, DoiType.DATASET, null);
-    DOI doi;
     System.out.println("Dateset DOI with status FAILED:");
     for(Map<String,Object> failedDoi : failedDoiList ) {
-      doi = new DOI((String) failedDoi.get("doi"));
+      DOI doi = new DOI((String) failedDoi.get("doi"));
       System.out.println(doi.getDoiName());
     }
 
@@ -352,7 +346,7 @@ public class DoiSynchronizerService {
     failedDoiList = doiPersistenceService.list(DoiStatus.FAILED, DoiType.DOWNLOAD, null);
     System.out.println("Download DOI with status FAILED:");
     for(Map<String,Object> failedDoi : failedDoiList ) {
-      doi = new DOI((String) failedDoi.get("doi"));
+      DOI doi = new DOI((String) failedDoi.get("doi"));
       System.out.println(doi.getDoiName());
     }
   }

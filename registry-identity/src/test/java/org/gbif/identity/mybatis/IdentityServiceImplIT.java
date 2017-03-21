@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -33,9 +34,12 @@ public class IdentityServiceImplIT {
   @ClassRule
   public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
+  // truncates the tables
+  @Rule
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
+
   private IdentityServiceImpl service;
   private static final PasswordEncoder encoder = new PasswordEncoder();
-
 
   @Before
   public void testSetup() throws Exception {

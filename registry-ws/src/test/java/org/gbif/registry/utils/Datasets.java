@@ -39,8 +39,11 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.ws.resources.DatasetResource;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.inject.Injector;
@@ -59,6 +62,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
+
 
   public Datasets() {
     super("data/dataset.json", new TypeReference<Dataset>() {
@@ -90,37 +94,21 @@ public class Datasets extends JsonBackedData<Dataset> {
     return datasetService.get(key);
   }
 
-  /**
-   * A utility to dump a Dataset as a JSON object to help Node developers see what they might expect.
-  public static void main(String[] args) throws Exception {
-    Dataset d = Datasets.newInstance(UUID.randomUUID(), UUID.randomUUID());
-    d.getContacts().add(Contacts.newInstance());
-    d.addEndpoint(Endpoints.newInstance());
-    d.addMachineTag(MachineTags.newInstance());
-    d.getBibliographicCitations().add(new Citation());
-    d.getCollections().add(new Collection());
-    d.getComments().add(new Comment());
-    d.getCuratorialUnits().add(new CuratorialUnitComposite());
-    d.getBibliographicCitations().add(new Citation());
-    d.getCountryCoverage().add(Country.AFGHANISTAN);
-    d.getDataDescriptions().add(new DataDescription());
-    d.getGeographicCoverages().add(new GeospatialCoverage());
-    d.getIdentifiers().add(new Identifier());
-    d.getKeywordCollections().add(new KeywordCollection());
-    d.setMaintenanceUpdateFrequency(MaintenanceUpdateFrequency.DAILY);
-    d.setProject(new Project());
-    d.setSamplingDescription(new SamplingDescription());
-    d.getTags().add(new Tag());
-    d.getTaxonomicCoverages().add(new TaxonomicCoverages());
-    d.getTemporalCoverages().add(new DateRange());
-    d.getTemporalCoverages().add(new SingleDate());
-    d.getTemporalCoverages().add(new VerbatimTimePeriod());
-
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.writerWithDefaultPrettyPrinter().writeValue(System.out, d);
-    String json = mapper.writeValueAsString(d);
+  public static String buildExpectedCitation(Dataset dataset, String organizationTitle) {
+    return CitationGenerator.generateCitation(dataset, organizationTitle);
   }
-  */
+
+  /**
+   * Processed properties are properties that are expected to NOT matched the provided data.
+   *
+   * @param dataset
+   * @return a mutable mpa in case more properties shall be added.
+   */
+  public static Map<String, Object> buildExpectedProcessedProperties(Dataset dataset) {
+    String expectedCitation = buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
+    Map<String, Object> processedProperties = new HashMap<>();
+    processedProperties.put("citation.text", expectedCitation);
+    return processedProperties;
+  }
 
 }

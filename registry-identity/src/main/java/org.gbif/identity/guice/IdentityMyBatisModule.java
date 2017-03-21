@@ -8,7 +8,7 @@ import java.util.Properties;
 
 public class IdentityMyBatisModule extends PrivateServiceModule {
 
-  private static final String PREFIX = "registry.db.";
+  private static final String PREFIX = "registry.db.";      // TODO: use identity?
 
   /**
    * Uses the given properties to configure the service.

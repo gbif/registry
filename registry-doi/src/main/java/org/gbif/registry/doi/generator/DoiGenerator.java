@@ -26,6 +26,13 @@ public interface DoiGenerator {
   DOI newDownloadDOI();
 
   /**
+   * Generates a new unique GBIF data package DOI.
+   * The new DOI is unknown to DataCite still and only lives in the GBIF registry which guarantees it to be unique.
+   * @return the new DOI
+   */
+  DOI newDataPackageDOI();
+
+  /**
    * Tests a DOI to see if it was issued by GBIF.
    * @return true if DOI was issued by GBIF
    */
@@ -62,6 +69,19 @@ public interface DoiGenerator {
    * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
    */
   void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException;
+
+
+  /**
+   * Schedules a DOI metadata update with DataCite and registers the DOI if needed.
+   * For subsequent calls with the same DOI only the metadata in DataCite will be updated.
+   * If it is called for the very first time the DOI will also be properly registered with DataCite.
+   *
+   * @param doi the GBIF DOI to registerDataset
+   * @param metadata the metadata to post to datacite. Mandatory fields are validated immediately
+   *
+   * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is not a GBIF one
+   */
+  void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException;
 
   /**
    * Deletes a GBIF DOI.

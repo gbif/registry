@@ -536,6 +536,16 @@ public class DatasetParserTest {
   }
 
   /**
+   * Simply test we can extract the version of dataset has provided by the IPT
+   */
+  @Test
+  public void testDatasetVersion() throws IOException {
+    Dataset dataset =
+            DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/ipt_eml.xml"));
+    assertEquals("2.1", dataset.getVersion());
+  }
+
+  /**
    * Tests parser does NOT set license when no machine readable license specified in EML.
    * This ensures parser does not override dataset license set manually.
    */
