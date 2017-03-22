@@ -60,5 +60,9 @@
       <groupId>org.mybatis</groupId>
       <artifactId>mybatis</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+    </dependency>
   </dependencies>
 </project>

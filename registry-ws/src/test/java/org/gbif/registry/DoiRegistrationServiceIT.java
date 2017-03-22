@@ -20,15 +20,13 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.resources.DoiRegistrationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import javax.xml.bind.JAXBException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
@@ -57,7 +55,7 @@ public class DoiRegistrationServiceIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
@@ -66,7 +64,7 @@ public class DoiRegistrationServiceIT {
   private static String TEST_ADMIN_USER = "admin";
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private final DoiRegistrationService doiRegistrationService;
 

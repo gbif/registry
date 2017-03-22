@@ -1,5 +1,7 @@
 package org.gbif.registry.database;
 
+import org.gbif.utils.file.properties.PropertiesUtil;
+
 import java.util.Properties;
 
 import com.google.common.base.Throwables;
@@ -13,9 +15,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.io.Resources;
 
 /**
- * Provides Guive utilities for easing testing.
+ * Provides Guice utilities for easing testing.
  */
 public class LiquibaseModules {
+
+  private static String DEFAULT_REGISTRY_PREFIX = "registry.db.";
+  private static String DEFAULT_REGISTRY_PROPERTIES_FILE = "registry-test.properties";
+
   private static Injector management;
   private static HikariDataSource managementDatasource;
 
@@ -30,15 +36,23 @@ public class LiquibaseModules {
   }
 
   /**
-   * @return An injector configured to issue a Datasource suitable for database management activities (Liquibase etc).
+   * Return a default injector.
+   * @see {@link #management(String, String)}
+   * @return
    */
   public static synchronized Injector management() {
+    return management(DEFAULT_REGISTRY_PROPERTIES_FILE, DEFAULT_REGISTRY_PREFIX);
+  }
+
+  /**
+   * @return An injector configured to issue a Datasource suitable for database management activities (Liquibase etc).
+   */
+  public static synchronized Injector management(String propertiesFile, String propertiesPrefix) {
     if (management == null) {
       try {
         final Properties p = new Properties();
-        p.load(Resources.getResourceAsStream("registry-test.properties"));
+        p.load(Resources.getResourceAsStream(propertiesFile));
         management = Guice.createInjector(new AbstractModule() {
-
           @Override
           protected void configure() {
           }
@@ -51,7 +65,7 @@ public class LiquibaseModules {
            * We provide an implementation specific datasource here so the pool can be properly closed at the end!
            */
           public HikariDataSource provideDs() {
-            HikariConfig config = new HikariConfig(filterProperties(p, "registry.db."));
+            HikariConfig config = new HikariConfig(PropertiesUtil.filterProperties(p, propertiesPrefix));
             config.setConnectionTimeout(5000);
             config.setMaximumPoolSize(1);
             return new HikariDataSource(config);
@@ -62,15 +76,5 @@ public class LiquibaseModules {
       }
     }
     return management;
-  }
-
-  private static Properties filterProperties(Properties properties, final String prefix) {
-    Properties filtered = new Properties();
-    for(String key : properties.stringPropertyNames()) {
-      if (key.startsWith(prefix)) {
-        filtered.setProperty(key.substring(prefix.length()), properties.getProperty(key));
-      }
-    }
-    return filtered;
   }
 }

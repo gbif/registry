@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
@@ -42,7 +43,7 @@ public class BootstrapTest {
    * Truncates the tables
    */
   @Rule
-  public final DatabaseInitializer initializer = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer initializer = new DatabaseInitializer(LiquibaseModules.database());
   private final NodeService nodeService;
   private final OrganizationService organizationService;
 

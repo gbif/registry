@@ -38,8 +38,8 @@ import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.MachineTags;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -74,13 +74,13 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
   private final NetworkEntityService<T> service; // under test
 
   private final ContactService contactService;

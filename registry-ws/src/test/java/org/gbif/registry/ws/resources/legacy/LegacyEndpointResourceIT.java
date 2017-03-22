@@ -7,6 +7,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
@@ -45,13 +46,13 @@ public class LegacyEndpointResourceIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   public static final String ENDPOINT_DESCRIPTION = "Description of Test Endpoint";
   public static final String ENDPOINT_TYPE = "EML";

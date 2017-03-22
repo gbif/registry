@@ -5,7 +5,7 @@ import org.gbif.api.service.common.UserService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.LiquibaseInitializer;
-import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -22,7 +22,7 @@ public class RegistryWsServletListenerTest {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   private static Properties properties;
 

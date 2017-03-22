@@ -19,11 +19,13 @@ import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
+import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.guice.GbifServletListener;
+import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,6 +43,7 @@ import org.apache.bval.guice.ValidationModule;
  * <ol>
  * <li>The registry-test.properties file is used</li>
  * <li>A life-cycle event monitor registers the SOLR server and Updater for JVM wide interaction</li>
+ * <li>Uses a mock of the Identity module</li>
  * </ol>
  */
 public class TestRegistryWsServletListener extends GbifServletListener {
@@ -49,12 +52,15 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   private static final String SOLR_HOME_PROPERTY = "solr.dataset.home";
 
   @SuppressWarnings("unchecked")
-  public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
-    .<Class<? extends ContainerRequestFilter>>newArrayList(LegacyAuthorizationFilter.class);
+  public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
+          Lists.newArrayList(LegacyAuthorizationFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
-      "org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh", true, null, requestFilters);
+            new WsJerseyModuleConfiguration()
+                    .resourcePackages("org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh")
+                    .useAuthenticationFilter(IdentifyFilter.class)
+                    .requestFilters(requestFilters));
   }
 
   /**
@@ -69,18 +75,19 @@ public class TestRegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected List<Module> getModules(Properties props) {
-    return Lists.<Module>newArrayList(new RegistryMyBatisModule(props),
-      new DoiModule(props),
-      new RabbitMockModule(),
-      new DirectoryMockModule(),
-      new IdentityMockModule(),
-      StringTrimInterceptor.newMethodInterceptingModule(),
-      new ValidationModule(),
-      new EventModule(props),
-      new RegistrySearchModule(props),
-      new SecurityModule(props),
-      new TitleLookupMockModule(),
-      new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
+    return Lists.<Module>newArrayList(
+            new RegistryMyBatisModule(props),
+            new IdentityMockModule(),
+            new DoiModule(props),
+            new RabbitMockModule(),
+            new DirectoryMockModule(),
+            StringTrimInterceptor.newMethodInterceptingModule(),
+            new ValidationModule(),
+            new EventModule(props),
+            new RegistrySearchModule(props),
+            new SecurityModule(props),
+            new TitleLookupMockModule(),
+            new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
     );
   }
 

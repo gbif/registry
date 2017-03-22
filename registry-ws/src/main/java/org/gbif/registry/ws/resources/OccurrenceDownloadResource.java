@@ -6,7 +6,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.service.common.UserService;
+import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
 import org.gbif.occurrence.query.TitleLookup;
@@ -60,7 +60,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookup titleLookup;
-  private final UserService userService;
+  private final IdentityService identityService;
   private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
@@ -75,12 +75,12 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Inject
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, UserService userService, TitleLookup titleLookup) {
+    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, IdentityService identityService, TitleLookup titleLookup) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;
     this.doiGenerator = doiGenerator;
-    this.userService = userService;
+    this.identityService = identityService;
     this.titleLookup = titleLookup;
   }
 
@@ -144,7 +144,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
-    User user = userService.get(securityContext.getUserPrincipal().getName());
+    User user = identityService.get(securityContext.getUserPrincipal().getName());
     doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
