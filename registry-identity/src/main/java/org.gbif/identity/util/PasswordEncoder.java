@@ -78,7 +78,7 @@ public class PasswordEncoder {
 
   /**
    * Encodes password using the settings and and salt from the provided encoded password.
-   * @param preEncoded the pre-encoded versiopn storing individual hashing settings in its first 12 chars
+   * @param preEncoded the pre-encoded version storing individual hashing settings in its first 12 chars.
    *
    * @return the encoded password using the existing hash settings or null on error
    */

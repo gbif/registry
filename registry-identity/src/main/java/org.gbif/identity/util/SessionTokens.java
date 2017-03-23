@@ -1,13 +1,7 @@
 package org.gbif.identity.util;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for encoding and decoding the session token.
@@ -29,7 +23,7 @@ public class SessionTokens {
     if (decoded.length() > TICKET_LENGTH+2) {
       return decoded.substring(TICKET_LENGTH+1);
     } else {
-      // deliberately vauge message as it implies tampering
+      // deliberately vague message as it implies tampering
       throw new IllegalArgumentException("Provided token is invalid");
     }
   }
@@ -39,7 +33,7 @@ public class SessionTokens {
     if (decoded.length() > TICKET_LENGTH+2) {
       return decoded.substring(0, TICKET_LENGTH);
     } else {
-      // deliberately vauge message as it implies tampering
+      // deliberately vague message as it implies tampering
       throw new IllegalArgumentException("Provided token is invalid");
     }
   }

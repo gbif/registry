@@ -11,8 +11,15 @@ import org.apache.ibatis.annotations.Param;
 
 public interface UserMapper {
   void create(User user);
+
   User get(String userName);
   User getByKey(int key);
+  User getByEmail(String email);
+
+  void setChallengeCode(@Param("key")int key, @Param("challengeCode") UUID challengeCode);
+  UUID getChallengeCode(int key);
+
+
   void delete(String userName);
   void update(User user);
   User getBySession(String session);

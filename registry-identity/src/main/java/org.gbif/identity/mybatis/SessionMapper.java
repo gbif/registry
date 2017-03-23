@@ -1,6 +1,5 @@
 package org.gbif.identity.mybatis;
 
-import org.gbif.api.model.common.User;
 import org.gbif.identity.model.Session;
 
 import java.util.List;
