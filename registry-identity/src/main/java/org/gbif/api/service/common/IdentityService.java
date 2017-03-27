@@ -19,17 +19,18 @@ import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.identity.model.Session;
+import org.gbif.identity.model.UserCreationResult;
 
-import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 /**
- * The identity service provides means to create, update and delete User accounts, and provide the mechanims to
+ * The identity service provides means to create, update and delete User accounts, and provide the mechanisms to
  * authenticate a user with their password.
  * This is a replacement of the deprecated UserService which was a read only service, backed by a managed database
  * (Drupal) and provides a writable option.
  */
-public interface IdentityService extends CrudService<User, User, String> {
+public interface IdentityService {
 
   /**
    * Exposes the user by primary key instead of the username.
@@ -38,6 +39,9 @@ public interface IdentityService extends CrudService<User, User, String> {
    */
   @Nullable
   User getByKey(int id);
+
+  @Nullable
+  User get(String userName);
 
   /**
    * Authenticates a user.
@@ -64,8 +68,25 @@ public interface IdentityService extends CrudService<User, User, String> {
    */
   PagingResponse<User> search(String query, @Nullable Pageable page);
 
+  UserCreationResult create(User user, String password);
+
+  void update(User user);
+
+  void delete(String userName);
+
+  PagingResponse<User> list(@Nullable Pageable var1);
 
   Session createSession(String username);
   void terminateSession(String session);
   void terminateAllSessions(String username);
+
+  /**
+   * Confirms a challenge code for a specific user. A challenge code can only be confirmed once and only if it was
+   * previously assigned. If no challenge code is present this method will return false;
+   *
+   * @param userKey
+   * @param challengeCode
+   * @return the challenge was confirmed or not
+   */
+  boolean confirmChallengeCode(int userKey, UUID challengeCode);
 }

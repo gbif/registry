@@ -3,14 +3,18 @@ package org.gbif.identity.mybatis;
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.guice.IdentityMyBatisModule;
-import org.gbif.identity.model.Session;
-import org.gbif.identity.util.PasswordEncoder;
+import org.gbif.identity.email.IdentityEmailManager;
+import org.gbif.identity.email.IdentityEmailManagerMock;
+import org.gbif.identity.guice.IdentityTestModule;
+import org.gbif.identity.model.ModelError;
+import org.gbif.identity.model.UserCreationResult;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
 import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -38,15 +42,20 @@ public class IdentityServiceImplIT {
   @Rule
   public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
-  private IdentityServiceImpl service;
-  private static final PasswordEncoder encoder = new PasswordEncoder();
+  private static final String TEST_PASSWORD = "[password]";
+  private static final AtomicInteger index = new AtomicInteger(0);
+
+  private IdentityService service;
+  private IdentityEmailManagerMock emailManager;
 
   @Before
   public void testSetup() throws Exception {
     Properties props = PropertiesUtil.loadProperties("registry-test.properties");
-    Module mod = new IdentityMyBatisModule(props);
+
+    Module mod = new IdentityTestModule(props);
     Injector inj = Guice.createInjector(mod);
-    service = (IdentityServiceImpl) inj.getInstance(IdentityService.class);
+    service = inj.getInstance(IdentityService.class);
+    emailManager = (IdentityEmailManagerMock)inj.getInstance(IdentityEmailManager.class);
   }
 
   /**
@@ -54,19 +63,11 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCRUD() throws Exception {
-    User u1 = new User();
-    u1.setUserName("trobertson");
-    u1.setFirstName("Tim");
-    u1.setLastName("Robertson");
-    u1.setPasswordHash(encoder.encode("password"));
-    u1.getRoles().add(UserRole.USER);
-    u1.getSettings().put("user.settings.language", "en");
-    u1.getSettings().put("user.country", "dk");
-    u1.setEmail("trobertson@gbif.org");
+    User u1 = generateUser();
 
     // create
-    String key = service.create(u1);
-    assertEquals("Expected the key to be the username", u1.getUserName(), key);
+    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the key to be set", result.getKey());
 
     // get
     User u2 = service.get(u1.getUserName());
@@ -94,6 +95,21 @@ public class IdentityServiceImplIT {
   }
 
   /**
+   * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
+   */
+  @Test
+  public void testCreateError() throws Exception {
+    User u1 = generateUser();
+    // create
+    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the key to be set", result.getKey());
+
+    // try to create it again
+    result = service.create(u1, TEST_PASSWORD);
+    assertEquals("Expected the error that user already exist", ModelError.USER_ALREADY_EXIST, result.getError());
+  }
+
+  /**
    * Checks the typical session creation processes.
    */
   @Test
@@ -102,9 +118,8 @@ public class IdentityServiceImplIT {
     u1.setUserName("frank");
     u1.setFirstName("Tim");
     u1.setLastName("Robertson");
-    u1.setPasswordHash(encoder.encode("password"));
     u1.setEmail("frank@gbif.org");
-    service.create(u1);
+    service.create(u1, TEST_PASSWORD);
 
     // this will create a session
     /*
@@ -130,5 +145,43 @@ public class IdentityServiceImplIT {
     service.terminateAllSessions(u1.getUserName());
     assertTrue(service.listSessions(u1.getUserName()).isEmpty());
      */
+  }
+
+  @Test
+  public void testChallengeCodeSequence() {
+    User u1 = generateUser();
+    // create the user
+    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the key to be set", result.getKey());
+    u1.setKey(result.getKey());
+
+    //ensure we can not login
+    assertNull("Can not login until the challenge code is confirmed", service.authenticate(u1.getUserName(), TEST_PASSWORD));
+
+    //confirm challenge code
+    UUID challengeCode = emailManager.getChallengeCode(u1.getEmail());
+    assertNotNull("Got a challenge code", challengeCode);
+    assertTrue("challengeCode can be confirmed", service.confirmChallengeCode(u1.getKey(), challengeCode));
+
+    //ensure we can not login
+    assertNotNull("Can login after the challenge code is confirmed", service.authenticate(u1.getUserName(), TEST_PASSWORD));
+  }
+
+  /**
+   * Generates a different user on each call.
+   * Thread-Safe
+   * @return
+   */
+  private static User generateUser() {
+    int idx = index.incrementAndGet();
+    User user = new User();
+    user.setUserName("user_" + idx);
+    user.setFirstName("Tim");
+    user.setLastName("Robertson");
+    user.getRoles().add(UserRole.USER);
+    user.getSettings().put("user.settings.language", "en");
+    user.getSettings().put("user.country", "dk");
+    user.setEmail("user_" + idx + "@gbif.org");
+    return user;
   }
 }

@@ -18,7 +18,7 @@
   </sql>
 
   <sql id="USER_FIELDS">
-    u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings
+    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings
   </sql>
 
   <sql id="WRITABLE_USER_FIELD_TYPES">

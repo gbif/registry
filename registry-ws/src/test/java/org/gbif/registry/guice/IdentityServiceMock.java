@@ -6,6 +6,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
+import org.gbif.identity.model.UserCreationResult;
 
 import java.util.Date;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public String create(User user) {
+  public UserCreationResult create(User user, String password) {
     throw new UnsupportedOperationException();
   }
 

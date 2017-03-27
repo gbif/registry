@@ -10,15 +10,9 @@ import org.gbif.identity.util.PasswordEncoder;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.Principal;
 import java.util.Map;
 import javax.annotation.Nullable;
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -40,10 +34,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.sun.jersey.api.core.HttpRequestContext;
-import com.sun.jersey.spi.container.ContainerRequest;
-import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +86,7 @@ public class UserResource {
   public Map<String, Object>  login(@Context SecurityContext security, @Context HttpServletRequest request,
                     @Context HttpServletResponse response) {
 
-    // Definsive coding follows: create a session only if one is not already present
+    // Defensive coding follows: create a session only if one is not already present
     String sessionToken = CookieAuthFilter.sessionTokenFromRequest(request);
     if (sessionToken == null) {
       Session session = identityService.createSession(security.getUserPrincipal().getName());
@@ -135,7 +125,7 @@ public class UserResource {
   @POST
   @Path("/")
   public void create(User user) {
-    identityService.create(user);
+    identityService.create(user, "password");
   }
 
   /**
@@ -167,6 +157,9 @@ public class UserResource {
     String username = securityContext.getUserPrincipal().getName();
     User user = identityService.get(username);
     // TODO - check the token makes sense!
+
+    //identityService.getBySession()
+    //String sessionToken = CookieAuthFilter.sessionTokenFromRequest(request);
   }
 
   /**
@@ -188,7 +181,7 @@ public class UserResource {
   }
 
   /**
-   * Updates the user password only if the token presented is valid for the user account.
+   *
    */
   @POST
   @Path("/requestPassword")

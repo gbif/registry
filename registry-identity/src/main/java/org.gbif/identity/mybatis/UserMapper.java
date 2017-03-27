@@ -16,9 +16,8 @@ public interface UserMapper {
   User getByKey(int key);
   User getByEmail(String email);
 
-  void setChallengeCode(@Param("key")int key, @Param("challengeCode") UUID challengeCode);
+  void setChallengeCode(@Param("key")int key, @Nullable @Param("challengeCode") UUID challengeCode);
   UUID getChallengeCode(int key);
-
 
   void delete(String userName);
   void update(User user);
