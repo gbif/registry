@@ -77,8 +77,11 @@ public class DatasetIndexOccurrenceUpdater {
 
       } while (!response.isEndOfRecords());
 
-      solr.commit();
+      solr.commit(datasetSolr.collection);
+      //Optimizing Solr since all the
+      solr.optimize(datasetSolr.collection);
       LOG.info("Finished updating Dataset index with occurrence taxon keys");
+
 
     } catch (Exception e) {
       LOG.error("Failed to index occurrence taxon keys", e);

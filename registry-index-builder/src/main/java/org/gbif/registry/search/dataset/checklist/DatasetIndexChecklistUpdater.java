@@ -71,7 +71,7 @@ public class DatasetIndexChecklistUpdater {
         }
       }
       rs.close();
-      solr.commit();
+      solr.commit(solrConfig.collection);
       LOG.info("Finished updating all checklists in dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
 
     } catch (Exception e) {
