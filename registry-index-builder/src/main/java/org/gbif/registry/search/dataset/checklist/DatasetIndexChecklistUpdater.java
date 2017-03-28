@@ -36,7 +36,7 @@ public class DatasetIndexChecklistUpdater {
 
   public DatasetIndexChecklistUpdater(ClbConnection clb, SolrConfig solr) {
     this.clb = clb;
-    this.solrConfig = solr;
+    solrConfig = solr;
   }
 
   /**
@@ -65,12 +65,12 @@ public class DatasetIndexChecklistUpdater {
           doc.addField("record_count", atomicUpdate(keys.length));
 
           solr.add( doc );
-
         } catch (Exception e) {
           Throwables.propagate(e);
         }
       }
       rs.close();
+
       solr.commit(solrConfig.collection);
       LOG.info("Finished updating all checklists in dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
 

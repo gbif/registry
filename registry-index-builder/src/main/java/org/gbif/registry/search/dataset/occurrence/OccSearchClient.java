@@ -1,8 +1,5 @@
 package org.gbif.registry.search.dataset.occurrence;
 
-import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.model.occurrence.Occurrence;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.occurrence.OccurrenceSearchService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.search.SearchException;
@@ -17,7 +14,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.sun.jersey.api.client.GenericType;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -39,11 +35,6 @@ public class OccSearchClient implements AutoCloseable {
   private final String FIELD_YEAR= "year";
   private final String FIELD_COUNTRY= "country";
   private final SolrClient solr;
-
-  // Response type.
-  private static final GenericType<SearchResponse<Occurrence, OccurrenceSearchParameter>> GENERIC_TYPE =
-    new GenericType<SearchResponse<Occurrence, OccurrenceSearchParameter>>() {
-    };
 
   /**
    * @param occSolr to the occurrence solr collection
@@ -125,7 +116,7 @@ public class OccSearchClient implements AutoCloseable {
       public Integer apply(@Nullable String iso) {
         Country c = Country.fromIsoCode(iso);
         if (c == null) {
-          LOG.warn("Unknown country ISO code found: "+iso);
+          LOG.warn("Unknown country ISO code found: {}", iso);
           return Country.UNKNOWN.ordinal();
         } else {
           return c.ordinal();

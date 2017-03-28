@@ -78,7 +78,8 @@ public class DatasetIndexBuilder {
       // read properties and check args
       Injector inj = registryInjector(props);
       SolrConfig solr = SolrConfig.fromProperties(props, SOLR_DATASET_PREFIX);
-      DatasetIndexBuilder idxBuilder = new DatasetIndexBuilder(inj.getInstance(DatasetService.class), inj.getInstance(DatasetIndexService.class));
+      DatasetIndexBuilder idxBuilder = new DatasetIndexBuilder(inj.getInstance(DatasetService.class),
+                                                               inj.getInstance(DatasetIndexService.class));
       LOG.info("Building new solr index for collection {} on {} and idField {}", solr.collection, solr.serverHome,
                solr.idField);
       idxBuilder.build();
