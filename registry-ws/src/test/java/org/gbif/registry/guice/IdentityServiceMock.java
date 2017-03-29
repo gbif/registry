@@ -1,6 +1,7 @@
 package org.gbif.registry.guice;
 
 import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
@@ -10,6 +11,7 @@ import org.gbif.identity.model.UserCreationResult;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
@@ -37,7 +39,7 @@ public class IdentityServiceMock implements IdentityService {
             .map(Map.Entry::getValue)
             .filter(user -> user.getKey().equals(id))
             .findFirst()
-            .map( user -> copyUserAfterLogin(user))
+            .map(IdentityServiceMock::copyUserAfterLogin)
             .orElse(null);
   }
 
@@ -50,11 +52,6 @@ public class IdentityServiceMock implements IdentityService {
       return copyUserAfterLogin(USERS.get(username));
     }
     return null;
-  }
-
-  @Override
-  public UserCreationResult create(User user, String password) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -73,6 +70,17 @@ public class IdentityServiceMock implements IdentityService {
       return copyUserAfterLogin(USERS.get(username));
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public User getByEmail(String email) {
+    return USERS.entrySet().stream()
+            .map(Map.Entry::getValue)
+            .filter(user -> user.getEmail().equals(email))
+            .findFirst()
+            .map(IdentityServiceMock::copyUserAfterLogin)
+            .orElse(null);
   }
 
   @Override
@@ -96,6 +104,11 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
+  public UserCreationResult create(UserCreation user) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public Session createSession(String username) {
     throw new UnsupportedOperationException();
   }
@@ -107,6 +120,26 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public void terminateAllSessions(String username) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean confirmChallengeCode(int userKey, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean updatePassword(int userKey, String newPassword, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void resetPassword(int userKey) {
     throw new UnsupportedOperationException();
   }
 

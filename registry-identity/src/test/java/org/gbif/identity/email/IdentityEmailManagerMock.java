@@ -19,6 +19,11 @@ public class IdentityEmailManagerMock implements IdentityEmailManager {
     emailToChallengeCode.put(user.getEmail(), challengeCode);
   }
 
+  @Override
+  public void generateAndSendPasswordReset(User user, UUID challengeCode) {
+    emailToChallengeCode.put(user.getEmail(), challengeCode);
+  }
+
   public UUID getChallengeCode(String email){
     return emailToChallengeCode.get(email);
   }

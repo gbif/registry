@@ -16,6 +16,7 @@
 package org.gbif.api.service.common;
 
 import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.identity.model.Session;
@@ -43,6 +44,9 @@ public interface IdentityService {
   @Nullable
   User get(String userName);
 
+  @Nullable
+  User getByEmail(String email);
+
   /**
    * Authenticates a user.
    * @param password clear text password
@@ -68,7 +72,7 @@ public interface IdentityService {
    */
   PagingResponse<User> search(String query, @Nullable Pageable page);
 
-  UserCreationResult create(User user, String password);
+  UserCreationResult create(UserCreation user);
 
   void update(User user);
 
@@ -81,12 +85,40 @@ public interface IdentityService {
   void terminateAllSessions(String username);
 
   /**
+   * Check if a challenge code is valid  for a specific user.
+   *
+   * @param userKey
+   * @param challengeCode
+   *
+   * @return the challenge is valid or not
+   */
+  boolean isChallengeCodeValid(int userKey, UUID challengeCode);
+
+  /**
    * Confirms a challenge code for a specific user. A challenge code can only be confirmed once and only if it was
    * previously assigned. If no challenge code is present this method will return false;
    *
    * @param userKey
    * @param challengeCode
+   *
    * @return the challenge was confirmed or not
    */
   boolean confirmChallengeCode(int userKey, UUID challengeCode);
+
+  /**
+   * Allows to change the password of a user providing a challenge code instead of its password.
+   * A challenge code can only be used once and only if it was
+   * previously assigned (it assumes {@code resetPassword} was previously called).
+   * If no challenge code is present this method will return false and the password won't be changed.
+   *
+   * @param userKey
+   * @param newPassword
+   * @param challengeCode
+   *
+   * @return the password was updated or not
+   */
+  boolean updatePassword(int userKey, String newPassword, UUID challengeCode);
+
+
+  void resetPassword(int userKey);
 }

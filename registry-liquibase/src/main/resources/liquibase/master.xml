@@ -52,4 +52,5 @@
   <include file="liquibase/046-datapackage-doi-type.xml"/>
   <include file="liquibase/047-dataset-version.xml"/>
   <include file="liquibase/048-user-session.xml"/>
+  <include file="liquibase/049-user-constraints-change.xml"/>
 </databaseChangeLog>

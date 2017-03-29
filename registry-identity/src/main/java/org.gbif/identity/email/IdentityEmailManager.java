@@ -19,4 +19,6 @@ public interface IdentityEmailManager {
    */
   void generateAndSendUserCreated(User user, UUID challengeCode);
 
+  void generateAndSendPasswordReset(User user, UUID challengeCode);
+
 }

@@ -19,6 +19,7 @@
 | ------------- |:---------:| ---------:|
 | userName      | x         | between 3 and 64 "^[a-z0-9_.-]+$" |
 | email         | x         |  |
+| password      | x         |  |
 | firstName     | x         |  |
 | lastName      | x         |  |
 | settings      |           | key/value map |
