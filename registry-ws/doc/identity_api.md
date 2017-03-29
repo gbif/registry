@@ -6,7 +6,7 @@
 | `/user/login` | `GET` | `{USER}` | Y | Y | Logs in a user with HTTP Basic Auth returning the session token as a cookie in the response |
 | `/logout?allSessions` | `GET` | `204` | Y | Y | Logs out the session or optionally all sessions for the authenticated account (cookie based auth) |
 | `/user/{userID}` | `GET` | `{USER}` | Y | Y | Gets the user, verifying the session token (cookie) is the user, or the user role is authorised to view the user (e.g. enable admins to edit account details) |
-| `/user` | `POST` | `204` | N | N | Creates a user. Internal (by trusted application). Verifies required fields as agreed [here](https://gist.github.com/cgendreau/c4c42f4a5f3fb82385d020784cf0d3a5) |
+| `/user` | `POST` | `204` | N | N | Creates a user. Internal (by trusted application). Verifies required fields as agreed [here](#create-user) |
 | `/user/confirm?challengeCode={UUID}` | `PUT` | `200` | N | N | Confirms that the user have access to that mail. app key and x-gbif-user. mail to express contains user and challenge. endpoint returns login token so that the user is logged in immediately |
 | `/user` | `PUT` | `204` | Y | Y | Updates the user, verifying the authenticated user is authorised (session tied to the `userID` or is an admin) |
 | `/user/reset-password?mailOrUsername` | `PUT` | `200` | Y | N | send user a mail with link to reset password |
