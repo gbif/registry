@@ -1,10 +1,9 @@
 package org.gbif.registry.ws.filter;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserPrincipal;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.identity.model.UserPrincipal;
 import org.gbif.ws.security.GbifAuthService;
-import org.gbif.ws.server.filter.AuthFilter;
 
 import java.security.Principal;
 import java.util.UUID;
@@ -88,7 +87,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
   }
 
-  private static final Logger LOG = LoggerFactory.getLogger(AuthFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(IdentifyFilter.class);
 
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
   private final IdentityService identityService;
@@ -100,7 +99,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
   private static final String BASIC_SCHEME_PREFIX = "Basic ";
 
   /**
-   * AuthFilter constructor
+   * IdentifyFilter constructor
    * In case {@link GbifAuthService} is not provided, this class will reject all authentications
    * on the GBIF scheme prefix.
    *
@@ -137,14 +136,12 @@ public class IdentifyFilter implements ContainerRequestFilter {
     // Extract authentication credentials
     String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
     if (authentication != null) {
-
       if (authentication.startsWith(BASIC_SCHEME_PREFIX)) {
         return basicAuthentication(authentication.substring(BASIC_SCHEME_PREFIX.length()));
       } else if (authentication.startsWith(GBIF_SCHEME_PREFIX)) {
         return gbifAuthentication(request);
       }
     }
-
     return new Authorizer();
   }
 

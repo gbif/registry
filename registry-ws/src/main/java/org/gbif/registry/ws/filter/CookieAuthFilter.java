@@ -3,11 +3,9 @@ package org.gbif.registry.ws.filter;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserPrincipal;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.util.SessionTokens;
 
 import java.security.Principal;
-import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.SecurityContext;
@@ -30,10 +28,10 @@ import org.slf4j.LoggerFactory;
  */
 public class CookieAuthFilter implements ContainerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(CookieAuthFilter.class);
+  public static final String GBIF_AUTH_SCHEME = "GBIF_SESSION";
 
   private static final String COOKIE_DOMAIN = ".gbif.org";
   private static final String COOKIE_SESSION = "USER_SESSION";
-  private static final String GBIF_AUTH_SCHEME = "GBIF_SESSION";
   private static final String GBIF_USER_HEADER = "x-gbif-user-session";
 
   private final IdentityService identityService;
@@ -46,11 +44,9 @@ public class CookieAuthFilter implements ContainerRequestFilter {
   @Override
   public ContainerRequest filter(final ContainerRequest request) {
 
-
     // Authentication is only invoked if a previous authentication scheme (e.g. GBIF trusted or HTTP
     // an BASIC) has not already identified a user principle
     if (request.getUserPrincipal() == null) {
-
 
       final User user = userFromRequest(request);
 

@@ -32,7 +32,6 @@ public class UserServiceImpl implements UserService {
     if (u == null) {
       LOG.debug("Cannot find user " + username);
     }
-
     return u;
   }
 

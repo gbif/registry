@@ -7,6 +7,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelError;
 import org.gbif.identity.model.Session;
@@ -68,6 +69,7 @@ public class IdentityServiceImpl implements IdentityService {
 
     String passwordHash = encoder.encode(user.getPassword());
     User newUser = UserCreation.toUser(user);
+    newUser.getRoles().add(UserRole.USER);
     newUser.setPasswordHash(passwordHash);
     userMapper.create(newUser);
 
@@ -117,8 +119,6 @@ public class IdentityServiceImpl implements IdentityService {
   public void update(User user) {
     userMapper.update(user);
   }
-
-
 
   @Override
   public User authenticate(String username, String password) {
@@ -172,6 +172,8 @@ public class IdentityServiceImpl implements IdentityService {
   public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
     if (challengeCode != null) {
       UUID expectedChallengeCode = userMapper.getChallengeCode(userKey);
+      System.out.println("expectedChallengeCode" + expectedChallengeCode);
+      System.out.println("challengeCode" + challengeCode);
       if (challengeCode.equals(expectedChallengeCode)) {
         return true;
       }
@@ -181,11 +183,15 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Override
   public boolean confirmChallengeCode(int userKey, UUID challengeCode) {
+    System.out.println(userKey + "," + challengeCode);
     if (challengeCode != null) {
       if(isChallengeCodeValid(userKey, challengeCode)){
         // remove challenge code since it has been confirmed
         userMapper.setChallengeCode(userKey, null);
         return true;
+      }
+      else{
+        System.out.println("challengeCode NOT euqlas, returning");
       }
     }
     return false;
@@ -222,5 +228,5 @@ public class IdentityServiceImpl implements IdentityService {
   private static PagingResponse<User> pagingResponse(@Nullable Pageable page, long count, List<User> result) {
     return new PagingResponse<>(page == null ? new PagingRequest() : page, count, result);
   }
-  
+
 }

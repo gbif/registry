@@ -16,9 +16,9 @@
 package org.gbif.api.service.common;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.UserCreation;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserCreationResult;
 

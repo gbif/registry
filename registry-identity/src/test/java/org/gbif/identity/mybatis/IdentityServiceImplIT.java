@@ -1,6 +1,7 @@
 package org.gbif.identity.mybatis;
 
 import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
@@ -43,6 +44,7 @@ public class IdentityServiceImplIT {
   public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private static final String TEST_PASSWORD = "[password]";
+  private static final String TEST_PASSWORD2 = "]password[";
   private static final AtomicInteger index = new AtomicInteger(0);
 
   private IdentityService service;
@@ -63,10 +65,10 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCRUD() throws Exception {
-    User u1 = generateUser();
+    UserCreation u1 = generateUser();
 
     // create
-    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    UserCreationResult result = service.create(u1);
     assertNotNull("Expected the key to be set", result.getKey());
 
     // get
@@ -99,14 +101,20 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCreateError() throws Exception {
-    User u1 = generateUser();
+    UserCreation u1 = generateUser();
     // create
-    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    UserCreationResult result = service.create(u1);
     assertNotNull("Expected the key to be set", result.getKey());
 
-    // try to create it again
-    result = service.create(u1, TEST_PASSWORD);
-    assertEquals("Expected the error that user already exist", ModelError.USER_ALREADY_EXIST, result.getError());
+    // try to create it again with a different username (but same email)
+    u1.setUserName("user_X");
+    result = service.create(u1);
+    assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelError.USER_ALREADY_EXIST, result.getError());
+
+    u1.setUserName("");
+    u1.setEmail("email@email.com");
+    result = service.create(u1);
+    assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelError.CONSTRAINT_VIOLATION, result.getError());
   }
 
   /**
@@ -114,12 +122,12 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testSessions() throws Exception {
-    User u1 = new User();
+    UserCreation u1 = generateUser();
     u1.setUserName("frank");
     u1.setFirstName("Tim");
     u1.setLastName("Robertson");
     u1.setEmail("frank@gbif.org");
-    service.create(u1, TEST_PASSWORD);
+    service.create(u1);
 
     // this will create a session
     /*
@@ -148,10 +156,58 @@ public class IdentityServiceImplIT {
   }
 
   @Test
-  public void testChallengeCodeSequence() {
-    User u1 = generateUser();
+  public void testCreateUserChallengeCodeSequence() {
+    User user = createConfirmedUser(service, emailManager);
+    assertNotNull(user);
+  }
+
+  @Test
+  public void testResetPasswordSequence() {
+    User user = createConfirmedUser(service, emailManager);
+    service.resetPassword(user.getKey());
+
+    //ensure we can not login
+    assertNull("Can not login until the password is changed", service.authenticate(user.getUserName(), TEST_PASSWORD));
+
+    //confirm challenge code
+    UUID challengeCode = emailManager.getChallengeCode(user.getEmail());
+    assertNotNull("Got a challenge code", challengeCode);
+    assertTrue("password can be changed using challengeCode", service.updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode));
+
+    //ensure we can now login
+    assertNotNull("Can login after the challenge code is confirmed", service.authenticate(user.getUserName(), TEST_PASSWORD2));
+  }
+
+  /**
+   * Generates a different user on each call.
+   * Thread-Safe
+   * @return
+   */
+  private static UserCreation generateUser() {
+    int idx = index.incrementAndGet();
+    UserCreation user = new UserCreation();
+    user.setUserName("user_" + idx);
+    user.setFirstName("Tim");
+    user.setLastName("Robertson");
+    user.setPassword(TEST_PASSWORD);
+    user.getRoles().add(UserRole.USER);
+    user.getSettings().put("user.settings.language", "en");
+    user.getSettings().put("user.country", "dk");
+    user.setEmail("user_" + idx + "@gbif.org");
+    return user;
+  }
+
+  /**
+   * Creates a new user and confirms its challenge code.
+   * No assertion performed.
+   * @param service
+   * @param emailManager
+   * @return
+   */
+  private static User createConfirmedUser(IdentityService service, IdentityEmailManagerMock emailManager) {
+    UserCreation u1 = generateUser();
     // create the user
-    UserCreationResult result = service.create(u1, TEST_PASSWORD);
+    UserCreationResult result = service.create(u1);
     assertNotNull("Expected the key to be set", result.getKey());
     u1.setKey(result.getKey());
 
@@ -163,25 +219,9 @@ public class IdentityServiceImplIT {
     assertNotNull("Got a challenge code", challengeCode);
     assertTrue("challengeCode can be confirmed", service.confirmChallengeCode(u1.getKey(), challengeCode));
 
-    //ensure we can not login
+    //ensure we can now login
     assertNotNull("Can login after the challenge code is confirmed", service.authenticate(u1.getUserName(), TEST_PASSWORD));
-  }
 
-  /**
-   * Generates a different user on each call.
-   * Thread-Safe
-   * @return
-   */
-  private static User generateUser() {
-    int idx = index.incrementAndGet();
-    User user = new User();
-    user.setUserName("user_" + idx);
-    user.setFirstName("Tim");
-    user.setLastName("Robertson");
-    user.getRoles().add(UserRole.USER);
-    user.getSettings().put("user.settings.language", "en");
-    user.getSettings().put("user.country", "dk");
-    user.setEmail("user_" + idx + "@gbif.org");
-    return user;
+    return service.getByKey(u1.getKey());
   }
 }
