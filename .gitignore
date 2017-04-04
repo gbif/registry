@@ -6,6 +6,8 @@ registry-ws/logs
 logs/
 dependency-reduced-pom.xml
 
+*.DS_Store
+
 # Package Files #
 *.jar
 *.war
