@@ -10,10 +10,13 @@ import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserCreationResult;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -38,6 +41,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,10 +61,21 @@ public class UserResource {
   private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
 
   private final IdentityService identityService;
+  private final IdentityEmailManagerMock tempIdentityEmailManager;
 
   @Inject
-  public UserResource(IdentityService identityService) {
+  public UserResource(IdentityService identityService, IdentityEmailManagerMock tempIdentityEmailManager) {
     this.identityService = identityService;
+    this.tempIdentityEmailManager = tempIdentityEmailManager;
+  }
+
+  @GET
+  @Path(("/debug"))
+  public Map<String, Object> debug() {
+    Map<String, Object> debugMap = new HashMap<>();
+    //tempIdentityEmailManager.
+    debugMap.put("challengeCodes", tempIdentityEmailManager.getAllChallengeCode());
+    return debugMap;
   }
 
   /**
@@ -96,18 +111,25 @@ public class UserResource {
   }
 
   @GET
-  @RolesAllowed({USER_ROLE})
   @Path("/logout")
-  public void logout(@Context SecurityContext security, @Context HttpServletRequest request,
-                     @QueryParam("allSessions") boolean allSessions) {
-    if (allSessions) {
+  public Response logout(@Context SecurityContext security, @Context HttpServletRequest request,
+                         @Nullable @QueryParam("allSessions") Boolean allSessions) {
+
+    ensureUserInSecurityContext(security);
+
+    Response.Status returnStatus = Response.Status.NO_CONTENT;
+    if (BooleanUtils.isTrue(allSessions)) {
       identityService.terminateAllSessions(security.getUserPrincipal().getName());
     } else {
       String sessionToken = CookieAuthFilter.sessionTokenFromRequest(request);
       if (sessionToken != null) {
         identityService.terminateSession(sessionToken);
       }
+      else {
+        returnStatus = Response.Status.BAD_REQUEST;
+      }
     }
+    return buildResponse(returnStatus);
   }
 
   /**
@@ -190,7 +212,7 @@ public class UserResource {
     if(identityService.isChallengeCodeValid(user.getKey(), challengeCode)) {
       return Response.noContent().build();
     }
-    return Response.status(Response.Status.BAD_REQUEST).build();
+    return buildResponse(Response.Status.UNAUTHORIZED);
   }
 
   /**
@@ -198,15 +220,18 @@ public class UserResource {
    */
   @POST
   @Path("/resetPassword")
-  public Response resetPassword(@Context SecurityContext securityContext, @QueryParam("identifier") String identifier) {
+  public Response resetPassword(@Context SecurityContext securityContext) {
     ensureIsTrustedApp(securityContext);
+    ensureUserInSecurityContext(securityContext);
+
+    String identifier= securityContext.getUserPrincipal().getName();
     User user = Optional.ofNullable(identityService.get(identifier))
             .orElse(identityService.getByEmail(identifier));
-
     if (user != null) {
       // initiate mail, and store the challenge etc.
       identityService.resetPassword(user.getKey());
     }
+    //this will probably send 201
     return Response.noContent().build();
   }
 
@@ -233,7 +258,7 @@ public class UserResource {
       return Response.ok().entity(UserSession.from(user, sessionToken)).build();
     }
 
-    return Response.noContent().build();
+    return buildResponse(Response.Status.UNAUTHORIZED);
   }
 
   /**
@@ -249,6 +274,7 @@ public class UserResource {
   }
 
   /**
+   * For admin console
    * Returns the identified user account.
    * @return the user or null
    */
@@ -258,6 +284,16 @@ public class UserResource {
   public User getById(@PathParam("userId") int userId) {
     return identityService.getByKey(userId);
   }
+
+  /**
+   * For admin console
+   */
+//  @PUT
+//  @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
+//  @Path("/{userId}")
+//  public User updateById(@PathParam("userId") int userId) {
+//    return identityService.getByKey(userId);
+//  }
 
   /**
    *
@@ -287,6 +323,9 @@ public class UserResource {
     }
   }
 
+  private static Response buildResponse(Response.Status status) {
+    return buildResponse(status, null);
+  }
   private static Response buildResponse(Response.Status status, @Nullable Object entity) {
     return generateResponse(status.getStatusCode(), entity);
   }

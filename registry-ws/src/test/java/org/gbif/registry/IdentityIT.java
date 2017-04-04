@@ -6,7 +6,6 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.UserCreationResult;
 import org.gbif.identity.mybatis.UserMapper;
-import org.gbif.registry.guice.IntegrationTestSecurityModule;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -37,10 +36,10 @@ public class IdentityIT extends PlainAPIBaseIT {
   private IdentityService identityService;
 
   private GbifAuthService gbifAuthService = GbifAuthService.singleKeyAuthService(
-          IntegrationTestSecurityModule.IT_APP_KEY, IntegrationTestSecurityModule.IT_APP_SECRET);
+          TestConstants.IT_APP_KEY, TestConstants.IT_APP_SECRET);
 
   public IdentityIT() {
-    final Injector service = RegistryTestModules.identityService();
+    final Injector service = RegistryTestModules.identityMybatis();
     identityService = service.getInstance(IdentityService.class);
     userMapper = service.getInstance(UserMapper.class);
   }

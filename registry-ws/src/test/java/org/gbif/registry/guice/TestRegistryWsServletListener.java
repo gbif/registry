@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.guice;
 
+import org.gbif.registry.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -93,7 +94,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
    * @return the SecurityModule instance
    */
   protected Module getSecurityModule(Properties props) {
-    return new SecurityModule(props);
+    return new SecurityModule(TestConstants.getIntegrationTestAppKeys());
   }
 
   @Override

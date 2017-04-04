@@ -14,12 +14,16 @@ package org.gbif.registry.guice;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.identity.email.IdentityEmailManager;
+import org.gbif.identity.guice.IdentityMyBatisModule;
+import org.gbif.registry.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
+import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.TestValidateInterceptor;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -43,6 +47,7 @@ import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 import org.apache.bval.guice.ValidationModule;
 import org.apache.ibatis.io.Resources;
@@ -52,7 +57,6 @@ import org.apache.ibatis.io.Resources;
  * <ol>
  * <li>The WS service layer</li>
  * <li>The WS service client layer</li>
- * <li>A management configuration to allow utilities to manipulate the database (Liquibase etc)</li>
  * </ol>
  * Everything is cached, and reused on subsequent calls.
  * This is used for Integration testing.
@@ -65,16 +69,18 @@ public class RegistryTestModules {
   private static Injector webserviceClient;
   private static Injector webserviceBasicAuthClient;
 
+  private static Injector identityMyBatis;
+
   public static final String WS_URL = "http://localhost:" + RegistryServer.getPort();
 
   /**
-   * @return An injector that is bound for the mybatis layer and exposes mappers.
+   * @return An injector that is bound for the mybatis layer and exposes mappers only.
    */
   public static synchronized Injector mybatis() {
     if (mybatis == null) {
       try {
         final Properties p = new Properties();
-        p.load(Resources.getResourceAsStream("registry-test.properties"));
+        p.load(Resources.getResourceAsStream(TestConstants.APPLICATION_PROPERTIES));
         mybatis =
           Guice.createInjector(new RegistryMyBatisModule(p));
       } catch (IOException e) {
@@ -94,7 +100,7 @@ public class RegistryTestModules {
     if (webservice == null) {
       try {
         final Properties p = new Properties();
-        p.load(Resources.getResourceAsStream("registry-test.properties"));
+        p.load(Resources.getResourceAsStream(TestConstants.APPLICATION_PROPERTIES));
         webservice =
           Guice.createInjector(new AbstractModule() {
 
@@ -120,6 +126,39 @@ public class RegistryTestModules {
     return webservice;
   }
 
+  /**
+   * @return An injector that is bound for the Identity mybatis layer and exposes mappers only.
+   */
+  public static synchronized Injector identityMybatis() {
+    if (identityMyBatis == null) {
+      try {
+        final Properties p = new Properties();
+        p.load(Resources.getResourceAsStream(TestConstants.APPLICATION_PROPERTIES));
+        identityMyBatis =
+                Guice.createInjector(
+                        newAbstractModule(IdentityEmailManager.class, IdentityEmailManagerMock.class),
+                        new IdentityMyBatisModule(p, true));
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
+    }
+    return identityMyBatis;
+  }
+
+  private static <T> AbstractModule newAbstractModule(Class<T> interfaceClass, Class<? extends T> implementationClass) {
+    return new AbstractModule(){
+      @Override
+      protected void configure () {
+        bind(interfaceClass).to(implementationClass).in(Scopes.SINGLETON);
+      }
+    };
+  }
+
+  /**
+   *
+   * @return
+   */
+
   private static SecurityContext mockAdmin() {
     User user = new User();
     user.setUserName("admin");
@@ -141,11 +180,11 @@ public class RegistryTestModules {
     if (webserviceClient == null) {
       Properties props = new Properties();
       props.setProperty("registry.ws.url", "http://localhost:" + RegistryServer.getPort());
-      props.setProperty("application.key", "gbif.registry-ws-client-it");
-      props.setProperty("application.secret", "6a55ca16c053e269a9602c02922b30ce49c49be3a68bb2d8908b24d7c1");
+      props.setProperty("application.key", TestConstants.IT_APP_KEY);
+      props.setProperty("application.secret", TestConstants.IT_APP_SECRET);
       // Create authentication module, and set principal name, equal to a GBIF User unique account name
       GbifApplicationAuthModule auth = new GbifApplicationAuthModule(props);
-      auth.setPrincipal("admin");
+      auth.setPrincipal("Nicolas Cage");
       webserviceClient = Guice.createInjector(new RegistryWsClientModule(props), auth);
     }
     return webserviceClient;
