@@ -19,6 +19,7 @@ import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
+import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
@@ -37,6 +38,8 @@ import com.google.inject.Module;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.bval.guice.ValidationModule;
 
+import static org.gbif.registry.TestConstants.APPLICATION_PROPERTIES;
+
 /**
  * The Registry WS module for testing in Grizzly.
  * This is the same as the production listener except that:
@@ -48,12 +51,13 @@ import org.apache.bval.guice.ValidationModule;
  */
 public class TestRegistryWsServletListener extends GbifServletListener {
 
-  public static final String APPLICATION_PROPERTIES = "registry-test.properties";
   private static final String SOLR_HOME_PROPERTY = "solr.dataset.home";
 
   @SuppressWarnings("unchecked")
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
-          Lists.newArrayList(LegacyAuthorizationFilter.class);
+          Lists.newArrayList(
+                  LegacyAuthorizationFilter.class,
+                  CookieAuthFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
@@ -73,11 +77,30 @@ public class TestRegistryWsServletListener extends GbifServletListener {
     return props;
   }
 
+  /**
+   * This is simply to allow another class to override it.
+   *
+   * @return the IdentityModule instance
+   */
+  protected Module getIdentityModule(Properties props) {
+    return new IdentityMockModule();
+  }
+
+  /**
+   * This is simply to allow another class to override it.
+   *
+   * @param props
+   * @return the SecurityModule instance
+   */
+  protected Module getSecurityModule(Properties props) {
+    return new SecurityModule(props);
+  }
+
   @Override
   protected List<Module> getModules(Properties props) {
     return Lists.<Module>newArrayList(
             new RegistryMyBatisModule(props),
-            new IdentityMockModule(),
+            getIdentityModule(props),
             new DoiModule(props),
             new RabbitMockModule(),
             new DirectoryMockModule(),
@@ -85,7 +108,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
             new ValidationModule(),
             new EventModule(props),
             new RegistrySearchModule(props),
-            new SecurityModule(props),
+            getSecurityModule(props),
             new TitleLookupMockModule(),
             new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
     );

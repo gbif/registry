@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 public class CookieAuthFilter implements ContainerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(CookieAuthFilter.class);
   public static final String GBIF_AUTH_SCHEME = "GBIF_SESSION";
+  public static final String GBIF_USER_HEADER = "x-gbif-user-session";
 
   private static final String COOKIE_DOMAIN = ".gbif.org";
   private static final String COOKIE_SESSION = "USER_SESSION";
-  private static final String GBIF_USER_HEADER = "x-gbif-user-session";
 
   private final IdentityService identityService;
 
@@ -43,11 +43,9 @@ public class CookieAuthFilter implements ContainerRequestFilter {
 
   @Override
   public ContainerRequest filter(final ContainerRequest request) {
-
     // Authentication is only invoked if a previous authentication scheme (e.g. GBIF trusted or HTTP
     // an BASIC) has not already identified a user principle
     if (request.getUserPrincipal() == null) {
-
       final User user = userFromRequest(request);
 
       if (user != null) {
@@ -92,16 +90,16 @@ public class CookieAuthFilter implements ContainerRequestFilter {
       String userName = SessionTokens.username(sessionToken);
       if (session != null && userName != null) {
         User user = identityService.getBySession(sessionToken);
-        LOG.info("Presented {} with session[{}] matching user", userName, session, user);
-
         // not critical but defensive: verify provided user matches expected user
-        if (userName != null && user != null && userName.equalsIgnoreCase(user.getUserName())) {
+        if (user != null && userName.equalsIgnoreCase(user.getUserName())) {
+          LOG.info("Presented {} with session[{}] matching user", userName, session, user);
           return user;
         }
-
+        else {
+          LOG.debug("user {} with session[{}] does NOT match", userName, session);
+        }
       }
     }
-
     return null;
   }
 

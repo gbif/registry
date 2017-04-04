@@ -1,6 +1,5 @@
-package org.gbif.identity.model;
+package org.gbif.api.model.common;
 
-import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 
 import java.security.Principal;

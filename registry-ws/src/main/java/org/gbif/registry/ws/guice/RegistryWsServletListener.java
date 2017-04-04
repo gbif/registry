@@ -24,6 +24,7 @@ import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -31,6 +32,7 @@ import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.mixin.Mixins;
 import org.gbif.ws.server.guice.GbifServletListener;
+import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -85,12 +87,20 @@ public class RegistryWsServletListener extends GbifServletListener {
   }
 
   public RegistryWsServletListener() throws IOException {
-    super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)), PACKAGES, true, responseFilters, requestFilters);
+    super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)),
+            new WsJerseyModuleConfiguration()
+                    .resourcePackages(PACKAGES)
+                    .useAuthenticationFilter(IdentifyFilter.class)
+                    .responseFilters(responseFilters)
+                    .requestFilters(requestFilters));
   }
 
   @VisibleForTesting
   public RegistryWsServletListener(Properties properties) {
-    super(properties, PACKAGES, true, null, requestFilters);
+    super(properties, new WsJerseyModuleConfiguration()
+            .resourcePackages(PACKAGES)
+            .useAuthenticationFilter(IdentifyFilter.class)
+            .requestFilters(requestFilters));
   }
 
   @Override

@@ -2,7 +2,7 @@ package org.gbif.registry.ws.filter;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.identity.model.UserPrincipal;
+import org.gbif.api.model.common.UserPrincipal;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.security.Principal;

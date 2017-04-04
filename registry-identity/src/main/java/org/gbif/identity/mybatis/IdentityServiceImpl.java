@@ -16,6 +16,7 @@ import org.gbif.identity.util.PasswordEncoder;
 import org.gbif.identity.util.SessionTokens;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -83,6 +84,22 @@ public class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
+  public void update(User user) {
+    Optional.ofNullable(user.getUserName())
+            .map(this::get)
+            .ifPresent(
+                    currentUser -> {
+                      //control which field it is possible to update for the user himself
+                      currentUser.setFirstName(user.getFirstName());
+                      currentUser.setLastName(user.getLastName());
+                      currentUser.setSettings(user.getSettings());
+                      userMapper.update(currentUser);
+                    }
+            );
+  }
+
+
+  @Override
   public void delete(String username) {
     userMapper.delete(username);
   }
@@ -113,11 +130,6 @@ public class IdentityServiceImpl implements IdentityService {
   @Override
   public PagingResponse<User> search(@Nullable String query, @Nullable Pageable pageable) {
     return pagingResponse(pageable, userMapper.count(query), userMapper.search(query, pageable));
-  }
-
-  @Override
-  public void update(User user) {
-    userMapper.update(user);
   }
 
   @Override
@@ -172,8 +184,6 @@ public class IdentityServiceImpl implements IdentityService {
   public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
     if (challengeCode != null) {
       UUID expectedChallengeCode = userMapper.getChallengeCode(userKey);
-      System.out.println("expectedChallengeCode" + expectedChallengeCode);
-      System.out.println("challengeCode" + challengeCode);
       if (challengeCode.equals(expectedChallengeCode)) {
         return true;
       }
@@ -183,7 +193,6 @@ public class IdentityServiceImpl implements IdentityService {
 
   @Override
   public boolean confirmChallengeCode(int userKey, UUID challengeCode) {
-    System.out.println(userKey + "," + challengeCode);
     if (challengeCode != null) {
       if(isChallengeCodeValid(userKey, challengeCode)){
         // remove challenge code since it has been confirmed

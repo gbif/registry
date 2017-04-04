@@ -82,13 +82,13 @@ public class IdentityServiceImplIT {
 
     // update
     u2.getSettings().put("user.country", "GB");
-    u2.getRoles().add(UserRole.REGISTRY_ADMIN);
+    //u2.getRoles().add(UserRole.REGISTRY_ADMIN);
     service.update(u2);
 
     User u3 = service.get(u1.getUserName());
     assertEquals(2, u3.getSettings().size());
     assertEquals("GB", u3.getSettings().get("user.country"));
-    assertEquals(2, u3.getRoles().size());
+    //assertEquals(2, u3.getRoles().size());
 
     service.delete(u1.getUserName());
 

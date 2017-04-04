@@ -31,6 +31,13 @@ public class UserSession {
     return from(user, null);
   }
 
+  /**
+   * Only used for json deserialization
+   */
+  public UserSession() {
+
+  }
+
   private UserSession(User user, String session) {
     userName = user.getUserName();
     firstName = user.getFirstName();
