@@ -15,7 +15,8 @@ package org.gbif.registry.guice;
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.guice.IdentityMyBatisModule;
+import org.gbif.identity.guice.IdentityServiceModule;
+import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
@@ -137,7 +138,7 @@ public class RegistryTestModules {
         identityMyBatis =
                 Guice.createInjector(
                         newAbstractModule(IdentityEmailManager.class, IdentityEmailManagerMock.class),
-                        new IdentityMyBatisModule(p, true));
+                        new IdentityServiceModuleMapper(p));
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
@@ -154,11 +155,11 @@ public class RegistryTestModules {
     };
   }
 
+
   /**
    *
    * @return
    */
-
   private static SecurityContext mockAdmin() {
     User user = new User();
     user.setUserName("admin");
@@ -203,6 +204,27 @@ public class RegistryTestModules {
       webserviceClient = Guice.createInjector(new RegistryWsClientModule(props), auth);
     }
     return webserviceClient;
+  }
+
+  /**
+   * Override the {@link IdentityServiceModule} to expose the myBatis mapper for testing purpose ONLY.
+   */
+  private static class IdentityServiceModuleMapper extends IdentityServiceModule {
+
+    /**
+     * Uses the given properties to configure the service.
+     *
+     * @param properties to use
+     */
+    public IdentityServiceModuleMapper(Properties properties) {
+      super(properties);
+    }
+
+    @Override
+    protected void configureService() {
+      super.configureService();
+      expose(UserMapper.class);
+    }
   }
 
 }

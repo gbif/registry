@@ -51,7 +51,16 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 
 /**
- * Services relating to authentication and account creation.
+ * Web layer relating to authentication and account creation.
+ *
+ * Design and implementation decisions:
+ * - This resource contains mostly to routing to the business logic ({@link IdentityService}
+ * - Return {@link Response} instead of object to minimize usage of exceptions and provide
+ *   better control over the HTTP code returned. This also allows to return an entity in case
+ *   of errors (e.g. {@link UserCreationResult}.
+ * - keys (user id) are not considered public, therefore, they are not returned and/or accepted
+ *   by methods that are not under ADMIN_ROLE or EDITOR_ROLE.
+ * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserSession}).
  */
 @Path("user")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})

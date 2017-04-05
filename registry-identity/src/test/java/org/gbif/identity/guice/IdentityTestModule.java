@@ -22,7 +22,7 @@ public class IdentityTestModule implements Module {
 
   @Override
   public void configure(Binder binder) {
-    IdentityMyBatisModule mod = new IdentityMyBatisModule(properties);
+    IdentityServiceModule mod = new IdentityServiceModule(properties);
 
     binder.install(mod);
     binder.bind(IdentityEmailManager.class).to(IdentityEmailManagerMock.class).in(Scopes.SINGLETON);

@@ -12,7 +12,7 @@
  */
 package org.gbif.registry.ws.guice;
 
-import org.gbif.identity.guice.IdentityMyBatisModule;
+import org.gbif.identity.guice.IdentityServiceModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
@@ -112,7 +112,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
-                              new IdentityMyBatisModule(properties),
+                              new IdentityServiceModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),
                               new ValidationModule(),

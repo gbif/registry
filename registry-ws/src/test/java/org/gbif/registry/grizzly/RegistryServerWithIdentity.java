@@ -1,6 +1,6 @@
 package org.gbif.registry.grizzly;
 
-import org.gbif.identity.guice.IdentityMyBatisModule;
+import org.gbif.identity.guice.IdentityServiceModule;
 import org.gbif.registry.TestConstants;
 import org.gbif.registry.guice.TestRegistryWsServletListener;
 import org.gbif.registry.ws.guice.SecurityModule;
@@ -38,7 +38,7 @@ public class RegistryServerWithIdentity extends AbstractRegistryServer {
 
     @Override
     protected Module getIdentityModule(Properties props) {
-      return new IdentityMyBatisModule(props);
+      return new IdentityServiceModule(props);
     }
 
     @Override

@@ -1,15 +1,11 @@
 package org.gbif.identity.guice;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.service.common.UserService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.mybatis.IdentityServiceImpl;
 import org.gbif.identity.mybatis.SessionMapper;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.mybatis.UserRoleTypeHandler;
-import org.gbif.identity.mybatis.UserServiceImpl;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.UuidTypeHandler;
 
@@ -17,10 +13,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.inject.Scopes;
-
 /**
- * This Module should not be used, use the {@link IdentityMyBatisModule} instead.
+ * This Module should not be used, use the {@link IdentityServiceModule} instead.
  */
 class InternalIdentityMyBatisModule extends MyBatisModule {
 
@@ -32,8 +26,9 @@ class InternalIdentityMyBatisModule extends MyBatisModule {
 
   @Override
   protected void bindManagers() {
-    bind(UserService.class).to(UserServiceImpl.class).in(Scopes.SINGLETON);
-    bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
+//    bind(UserService.class).to(UserServiceImpl.class).in(Scopes.SINGLETON);
+//    bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
+    failFast(true);
   }
 
   @Override

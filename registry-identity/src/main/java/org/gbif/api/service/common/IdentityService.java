@@ -30,6 +30,11 @@ import javax.annotation.Nullable;
  * authenticate a user with their password.
  * This is a replacement of the deprecated UserService which was a read only service, backed by a managed database
  * (Drupal) and provides a writable option.
+ *
+ * Design and implementation decisions:
+ * - This service is also responsible to handle sessions
+ * - Create method returns result objects (e.g. {@link UserCreationResult}) instead of throwing exceptions
+ *
  */
 public interface IdentityService {
 
@@ -72,6 +77,11 @@ public interface IdentityService {
    */
   PagingResponse<User> search(String query, @Nullable Pageable page);
 
+  /**
+   * Create a new user.
+   * @param user {@link UserCreation} is used in order to control what it is possible set on {@link User}.
+   * @return result of the user creation
+   */
   UserCreationResult create(UserCreation user);
 
   void update(User user);
