@@ -7,10 +7,11 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Mock implementation of {@link IdentityEmailManager} that keeps information in variable instead of
+ * Implementation of {@link IdentityEmailManager} that keeps information in variable instead of
  * sending real emails.
+ * Should only be used for testing.
  */
-public class IdentityEmailManagerMock implements IdentityEmailManager {
+public class InMemoryIdentityEmailManager implements IdentityEmailManager {
 
   private final Map<String, UUID> emailToChallengeCode = new HashMap<>();
 
@@ -21,11 +22,16 @@ public class IdentityEmailManagerMock implements IdentityEmailManager {
 
   @Override
   public void generateAndSendPasswordReset(User user, UUID challengeCode) {
+    System.out.println("resetPassword called:" + challengeCode);
     emailToChallengeCode.put(user.getEmail(), challengeCode);
   }
 
   public UUID getChallengeCode(String email){
     return emailToChallengeCode.get(email);
+  }
+
+  public int getNumberOfChallengeCode() {
+    return emailToChallengeCode.size();
   }
 
 }

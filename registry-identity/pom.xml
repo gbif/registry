@@ -32,12 +32,34 @@
       <testResource>
         <directory>src/test/resources</directory>
         <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.ftl</exclude>
+        </excludes>
+      </testResource>
+      <testResource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.ftl</include>
+        </includes>
       </testResource>
     </testResources>
+
     <resources>
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.ftl</exclude>
+        </excludes>
+      </resource>
+      <!--not pretty but simply says we want the ftl in the final jar but we don't want to filter them-->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.ftl</include>
+        </includes>
       </resource>
     </resources>
     <plugins>

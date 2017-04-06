@@ -11,9 +11,11 @@ import java.util.Properties;
 
 import com.google.inject.Scopes;
 
+
 /**
- * Guice bindings for Identity service.
- * Requires {@link IdentityEmailManager}
+ * Guice module for Identity service.
+ * Requires: {@link IdentityEmailManager}, database properties smtp.host
+ * Exposes: {@link IdentityService}
  */
 public class IdentityServiceModule extends PrivateServiceModule {
 
@@ -36,9 +38,6 @@ public class IdentityServiceModule extends PrivateServiceModule {
 
     bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
     bind(UserService.class).to(UserServiceImpl.class).in(Scopes.SINGLETON);
-
-    // expose named datasource binding
-    //expose(mod.getDatasourceKey());
 
     // expose services
     expose(IdentityService.class);

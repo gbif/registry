@@ -1,6 +1,5 @@
 package org.gbif.registry.ws.guice;
 
-import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.EditorAuthorizationServiceImpl;
 import org.gbif.ws.server.guice.WsAuthModule;
@@ -28,12 +27,7 @@ public class SecurityModule extends WsAuthModule {
   protected void configure() {
     super.configure();
     bind(EditorAuthorizationService.class).to(EditorAuthorizationServiceImpl.class).in(Scopes.SINGLETON);
-
-    bind(IdentityEmailManager.class).to(IdentityEmailManagerMock.class).in(Scopes.SINGLETON);
-
     expose(EditorAuthorizationService.class);
-    expose(IdentityEmailManager.class);
-    //expose(IdentityEmailManagerMock.class);
   }
 
 }

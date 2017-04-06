@@ -26,8 +26,6 @@ class InternalIdentityMyBatisModule extends MyBatisModule {
 
   @Override
   protected void bindManagers() {
-//    bind(UserService.class).to(UserServiceImpl.class).in(Scopes.SINGLETON);
-//    bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
     failFast(true);
   }
 

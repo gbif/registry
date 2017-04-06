@@ -1,30 +1,31 @@
 package org.gbif.identity.guice;
 
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.email.IdentityEmailManagerMock;
+import org.gbif.identity.email.InMemoryIdentityEmailManager;
 
 import java.util.Properties;
 
-import com.google.inject.Binder;
-import com.google.inject.Module;
+import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 /**
- * Wrapper of {@link InternalIdentityMyBatisModule} for testing purpose.
- * The main target is to bind {@link IdentityEmailManager} to a mock object
+ * Wires Identity modules for testing purpose.
+ * The main target is to bind {@link IdentityEmailManager} to {@link InMemoryIdentityEmailManager}
  */
-public class IdentityTestModule implements Module {
+public class IdentityTestModule extends AbstractModule {
 
   private final Properties properties;
+
   public IdentityTestModule(Properties properties) {
     this.properties = properties;
   }
 
   @Override
-  public void configure(Binder binder) {
-    IdentityServiceModule mod = new IdentityServiceModule(properties);
+  protected void configure() {
+    bind(IdentityEmailManager.class)
+            .to(InMemoryIdentityEmailManager.class)
+            .in(Scopes.SINGLETON);
 
-    binder.install(mod);
-    binder.bind(IdentityEmailManager.class).to(IdentityEmailManagerMock.class).in(Scopes.SINGLETON);
+    install(new IdentityServiceModule(properties));
   }
 }

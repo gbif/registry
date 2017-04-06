@@ -19,6 +19,13 @@ public interface IdentityEmailManager {
    */
   void generateAndSendUserCreated(User user, UUID challengeCode);
 
+  /**
+   * When we receive a rest password request, this function is responsible to send an email to the provided user.
+   * The email address used will be the one returned by {@code user.getEmail()}.
+   *
+   * @param user
+   * @param challengeCode
+   */
   void generateAndSendPasswordReset(User user, UUID challengeCode);
 
 }

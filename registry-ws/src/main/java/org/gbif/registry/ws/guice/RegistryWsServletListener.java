@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.ws.guice;
 
+import org.gbif.identity.email.IdentityEmailModule;
 import org.gbif.identity.guice.IdentityServiceModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
@@ -58,8 +59,8 @@ public class RegistryWsServletListener extends GbifServletListener {
   // fail fast by designed, see CubeService usage
   private static final String METRICS_WS_HTTP_TIMEOUT = "100";
 
-  public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
-  public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
+  private static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
+  private static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
 
   static {
     requestFilters.add(LegacyAuthorizationFilter.class);
@@ -112,6 +113,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
+                              new IdentityEmailModule(properties),
                               new IdentityServiceModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),

@@ -5,8 +5,8 @@ import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.email.IdentityEmailManagerMock;
 import org.gbif.identity.guice.IdentityTestModule;
+import org.gbif.identity.email.InMemoryIdentityEmailManager;
 import org.gbif.identity.model.ModelError;
 import org.gbif.identity.model.UserCreationResult;
 import org.gbif.registry.database.LiquibaseInitializer;
@@ -48,7 +48,7 @@ public class IdentityServiceImplIT {
   private static final AtomicInteger index = new AtomicInteger(0);
 
   private IdentityService service;
-  private IdentityEmailManagerMock emailManager;
+  private InMemoryIdentityEmailManager emailManager;
 
   @Before
   public void testSetup() throws Exception {
@@ -57,7 +57,7 @@ public class IdentityServiceImplIT {
     Module mod = new IdentityTestModule(props);
     Injector inj = Guice.createInjector(mod);
     service = inj.getInstance(IdentityService.class);
-    emailManager = (IdentityEmailManagerMock)inj.getInstance(IdentityEmailManager.class);
+    emailManager = (InMemoryIdentityEmailManager)inj.getInstance(IdentityEmailManager.class);
   }
 
   /**
@@ -171,7 +171,7 @@ public class IdentityServiceImplIT {
 
     //confirm challenge code
     UUID challengeCode = emailManager.getChallengeCode(user.getEmail());
-    assertNotNull("Got a challenge code", challengeCode);
+    assertNotNull("Got a challenge code for " + user.getEmail(), challengeCode);
     assertTrue("password can be changed using challengeCode", service.updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode));
 
     //ensure we can now login
@@ -204,7 +204,8 @@ public class IdentityServiceImplIT {
    * @param emailManager
    * @return
    */
-  private static User createConfirmedUser(IdentityService service, IdentityEmailManagerMock emailManager) {
+  private static User createConfirmedUser(final IdentityService service,
+                                          final InMemoryIdentityEmailManager emailManager) {
     UserCreation u1 = generateUser();
     // create the user
     UserCreationResult result = service.create(u1);
@@ -216,7 +217,7 @@ public class IdentityServiceImplIT {
 
     //confirm challenge code
     UUID challengeCode = emailManager.getChallengeCode(u1.getEmail());
-    assertNotNull("Got a challenge code", challengeCode);
+    assertNotNull("Got a challenge code for email: " + u1.getEmail(), challengeCode);
     assertTrue("challengeCode can be confirmed", service.confirmChallengeCode(u1.getKey(), challengeCode));
 
     //ensure we can now login

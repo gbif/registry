@@ -196,6 +196,13 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-identity</artifactId>
+        <type>test-jar</type>
+        <scope>test</scope>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
         <artifactId>registry-ws</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -417,7 +424,7 @@
         <groupId>javax.mail</groupId>
         <artifactId>mail</artifactId>
         <version>${javax.mail.version}</version>
-        <scope>runtime</scope>
+        <!--<scope>runtime</scope>-->
       </dependency>
       <dependency>
         <groupId>junit</groupId>
