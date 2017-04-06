@@ -1,4 +1,4 @@
-package org.gbif.identity.mybatis;
+package org.gbif.identity.service;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserCreation;
@@ -12,6 +12,8 @@ import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelError;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.mybatis.SessionMapper;
+import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.util.PasswordEncoder;
 import org.gbif.identity.util.SessionTokens;
 
@@ -28,13 +30,12 @@ import javax.validation.groups.Default;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import org.apache.bval.jsr303.ApacheValidationProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
-public class IdentityServiceImpl implements IdentityService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(IdentityServiceImpl.class);
+/**
+ * Main implementation of {@link IdentityService} on top of mybatis.
+ */
+class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
   private final SessionMapper sessionMapper;
@@ -48,7 +49,7 @@ public class IdentityServiceImpl implements IdentityService {
   private final PasswordEncoder encoder = new PasswordEncoder();
 
   @Inject
-  public IdentityServiceImpl(UserMapper userMapper, SessionMapper sessionMapper,
+  IdentityServiceImpl(UserMapper userMapper, SessionMapper sessionMapper,
                              IdentityEmailManager identityEmailManager) {
     this.userMapper = userMapper;
     this.sessionMapper = sessionMapper;

@@ -15,8 +15,8 @@ package org.gbif.registry.guice;
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.guice.IdentityServiceModule;
 import org.gbif.identity.mybatis.UserMapper;
+import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
@@ -138,7 +138,7 @@ public class RegistryTestModules {
         identityMyBatis =
                 Guice.createInjector(
                         newAbstractModule(IdentityEmailManager.class, IdentityEmailManagerMock.class),
-                        new IdentityServiceModuleMapper(p));
+                       new IdentityServiceModuleMapper(p));
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
@@ -221,10 +221,11 @@ public class RegistryTestModules {
     }
 
     @Override
-    protected void configureService() {
-      super.configureService();
+    protected void configure() {
+      super.configure();
       expose(UserMapper.class);
     }
   }
+
 
 }

@@ -1,11 +1,9 @@
-package org.gbif.identity.guice;
+package org.gbif.identity.mybatis;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.mybatis.SessionMapper;
-import org.gbif.identity.mybatis.UserMapper;
-import org.gbif.identity.mybatis.UserRoleTypeHandler;
+import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.UuidTypeHandler;
 
@@ -14,9 +12,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * This Module should not be used, use the {@link IdentityServiceModule} instead.
+ * This Module should not be used directly, use the {@link IdentityServiceModule} instead.
  */
-class InternalIdentityMyBatisModule extends MyBatisModule {
+public class InternalIdentityMyBatisModule extends MyBatisModule {
 
   public static final String DATASOURCE_BINDING_NAME = "identity";
 

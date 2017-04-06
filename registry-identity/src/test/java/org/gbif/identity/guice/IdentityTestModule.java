@@ -2,6 +2,7 @@ package org.gbif.identity.guice;
 
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.email.InMemoryIdentityEmailManager;
+import org.gbif.identity.service.IdentityServiceModule;
 
 import java.util.Properties;
 
@@ -25,7 +26,6 @@ public class IdentityTestModule extends AbstractModule {
     bind(IdentityEmailManager.class)
             .to(InMemoryIdentityEmailManager.class)
             .in(Scopes.SINGLETON);
-
     install(new IdentityServiceModule(properties));
   }
 }

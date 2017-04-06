@@ -14,7 +14,7 @@ import com.google.inject.name.Named;
 /**
  * Guice module for emails related to the Identity service.
  * Requires: properties smtp.host, from, and bcc prefixed by identity.mail
- * Binds: {@link IdentityEmailManager}.
+ * Binds: {@link IdentityEmailManager}
  */
 public class IdentityEmailModule extends AbstractModule {
 
