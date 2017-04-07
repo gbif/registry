@@ -77,8 +77,12 @@ public class IdentityIT extends PlainAPIBaseIT {
 
   @Test
   public void testLogin() {
-    prepareUser();
+    User user = prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(wr -> wr.path("login"));
+    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+
+    //try to login using the email instead of the username
+    cr = generateAuthenticatedClient(user.getEmail(), getPassword()).get(wr -> wr.path("login"));
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 

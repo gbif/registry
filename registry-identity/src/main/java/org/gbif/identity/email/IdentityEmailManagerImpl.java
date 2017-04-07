@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gbif.identity.email.IdentityEmailManagerConfiguration.FREEMARKER_TEMPLATES_LOCATION;
+import static org.gbif.identity.email.IdentityEmailManagerConfiguration.RESET_PASSWORD_SUBJECT_KEY;
+import static org.gbif.identity.email.IdentityEmailManagerConfiguration.RESET_PASSWORD_TEMPLATE;
 import static org.gbif.identity.email.IdentityEmailManagerConfiguration.USER_CREATE_SUBJECT_KEY;
 import static org.gbif.identity.email.IdentityEmailManagerConfiguration.USER_CREATE_TEMPLATE;
 import static org.gbif.identity.util.LogUtils.NOTIFY_ADMIN;
@@ -84,11 +86,30 @@ class IdentityEmailManagerImpl implements IdentityEmailManager {
 
   @Override
   public void generateAndSendUserCreated(User user, UUID challengeCode) {
+    generateAndSend(user, confirmUrlTemplate, challengeCode, USER_CREATE_SUBJECT_KEY, USER_CREATE_TEMPLATE);
+  }
+
+  @Override
+  public void generateAndSendPasswordReset(User user, UUID challengeCode) {
+    generateAndSend(user, resetPasswordUrlTemplate, challengeCode, RESET_PASSWORD_SUBJECT_KEY, RESET_PASSWORD_TEMPLATE);
+  }
+
+  /**
+   * Method that generates (using a template) and send an email containing an username and a challenge code.
+   *
+   * @param user
+   * @param urlTemplate
+   * @param challengeCode
+   * @param subjectKey
+   * @param template      template to use to generate the body of the email
+   */
+  private void generateAndSend(User user, String urlTemplate, UUID challengeCode,
+                               String subjectKey, String template) {
     //generate URL with challengeCode;
     BaseEmailModel emailModel = null;
     try {
       emailModel = new BaseEmailModel(user.getUserName(),
-              new URL(MessageFormat.format(confirmUrlTemplate, user.getUserName(), challengeCode)));
+              new URL(MessageFormat.format(urlTemplate, user.getUserName(), challengeCode)));
     } catch (MalformedURLException e) {
       LOG.error(NOTIFY_ADMIN, "Rendering of notification Mail for [{}] failed", user.getUserName(), e);
     }
@@ -97,17 +118,12 @@ class IdentityEmailManagerImpl implements IdentityEmailManager {
     toAddress(user.getEmail()).ifPresent(
             email -> {
               try {
-                sendMail(email, defaultEmailSubjects.getString(USER_CREATE_SUBJECT_KEY),
-                        buildEmailBody(finalEmailModel, USER_CREATE_TEMPLATE));
+                sendMail(email, defaultEmailSubjects.getString(subjectKey),
+                        buildEmailBody(finalEmailModel, template));
               } catch (IOException | TemplateException e) {
                 LOG.error(NOTIFY_ADMIN, "Rendering of notification Mail for [{}] failed", email, e);
               }
             });
-  }
-
-  @Override
-  public void generateAndSendPasswordReset(User user, UUID challengeCode) {
-
   }
 
   @VisibleForTesting

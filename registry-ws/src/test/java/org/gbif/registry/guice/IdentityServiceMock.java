@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Class that implements an in-memory users store.
@@ -81,6 +82,13 @@ public class IdentityServiceMock implements IdentityService {
             .findFirst()
             .map(IdentityServiceMock::copyUserAfterLogin)
             .orElse(null);
+  }
+
+  @Nullable
+  @Override
+  public User getByIdentifier(String identifier) {
+    return StringUtils.contains(identifier, "@") ?
+            getByEmail(identifier) :get(identifier);
   }
 
   @Override

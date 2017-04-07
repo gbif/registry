@@ -53,6 +53,17 @@ public interface IdentityService {
   User getByEmail(String email);
 
   /**
+   * Get a user by identifier. An identifier is a username OR an email.
+   *
+   * @param identifier
+   *
+   * @return The user or null
+   */
+  @Nullable
+  User getByIdentifier(String identifier);
+
+
+  /**
    * Authenticates a user.
    * @param password clear text password
    *

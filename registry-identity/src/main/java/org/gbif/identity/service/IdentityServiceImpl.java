@@ -30,6 +30,7 @@ import javax.validation.groups.Default;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import org.apache.bval.jsr303.ApacheValidationProvider;
+import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -133,13 +134,20 @@ class IdentityServiceImpl implements IdentityService {
     return pagingResponse(pageable, userMapper.count(query), userMapper.search(query, pageable));
   }
 
+  /**
+   * Authenticate a user
+   * @param username username or email address
+   * @param password clear text password
+   *
+   * @return
+   */
   @Override
   public User authenticate(String username, String password) {
     if (Strings.isNullOrEmpty(username) || password == null) {
       return null;
     }
 
-    User u = get(username);
+    User u = getByIdentifier(username);
     if (u != null) {
       // use the settings which are the prefix in the existing password hash to encode the provided password
       // and verify that they result in the same
@@ -152,6 +160,13 @@ class IdentityServiceImpl implements IdentityService {
       }
     }
     return null;
+  }
+
+  @Override
+  public User getByIdentifier(String identifier) {
+    //this assumes username name can not contains @ (see User's getUserName())
+    return StringUtils.contains(identifier, "@") ?
+            getByEmail(identifier) :get(identifier);
   }
 
   @Override
@@ -200,9 +215,6 @@ class IdentityServiceImpl implements IdentityService {
         userMapper.setChallengeCode(userKey, null);
         return true;
       }
-      else{
-        System.out.println("challengeCode NOT euqlas, returning");
-      }
     }
     return false;
   }
@@ -212,7 +224,7 @@ class IdentityServiceImpl implements IdentityService {
     // ensure the user exists
     User user = userMapper.getByKey(userKey);
     if (userMapper.getByKey(userKey) != null) {
-      //we do not terminate all session
+      //we do NOT terminate all session now (we can't guarantee it was initiated by the user himself)
       UUID challengeCode = UUID.randomUUID();
       userMapper.setChallengeCode(userKey, challengeCode);
       identityEmailManager.generateAndSendPasswordReset(user, challengeCode);
