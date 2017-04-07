@@ -19,6 +19,12 @@ public interface UserMapper {
   void setChallengeCode(@Param("key")int key, @Nullable @Param("challengeCode") UUID challengeCode);
   UUID getChallengeCode(int key);
 
+  /**
+   * Update the lastLogin date to "now()".
+   * @param key
+   */
+  void updateLastLogin(@Param("key")int key);
+
   void delete(String userName);
   void update(User user);
   User getBySession(String session);

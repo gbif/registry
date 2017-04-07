@@ -177,10 +177,16 @@ class IdentityServiceImpl implements IdentityService {
     return userMapper.getBySession(session);
   }
 
+  @Override
   public Session createSession(String username) {
     Session session = new Session(username, SessionTokens.newSessionToken(username));
     sessionMapper.create(session);
     return session;
+  }
+
+  @Override
+  public void updateLastLogin(int userKey){
+    userMapper.updateLastLogin(userKey);
   }
 
   public List<Session> listSessions(String username) {

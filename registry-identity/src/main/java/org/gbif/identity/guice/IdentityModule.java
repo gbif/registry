@@ -14,7 +14,7 @@ import com.google.inject.AbstractModule;
  * Requires: properties identity.db.*, identity.mail.smtp.host,
  *           identity.mail.from, and identity.mail.bcc
  * Binds: {@link IdentityEmailManager} and {@link IdentityService}.
- * 
+ *
  */
 public class IdentityModule extends AbstractModule {
 

@@ -106,6 +106,12 @@ public interface IdentityService {
   void terminateAllSessions(String username);
 
   /**
+   * Trigger an update of the last login date.
+   * @param userKey
+   */
+  void updateLastLogin(int userKey);
+
+  /**
    * Check if a challenge code is valid  for a specific user.
    *
    * @param userKey

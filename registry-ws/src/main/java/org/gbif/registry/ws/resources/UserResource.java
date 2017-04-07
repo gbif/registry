@@ -100,8 +100,8 @@ public class UserResource {
   }
 
   /**
-   * Redirects the user to the target, appending a session token.
-   * @return the user
+   *
+   * @return the user and a session token as {@link UserSession}
    */
   @GET
   @Path("/login")
@@ -109,13 +109,14 @@ public class UserResource {
 
     ensureUserInSecurityContext(security);
 
-    // Defensive coding follows: create a session only if one is not already present
+    // create a session only if one is not already present
     String sessionToken = CookieAuthFilter.sessionTokenFromRequest(request);
     if (sessionToken == null) {
       Session session = identityService.createSession(security.getUserPrincipal().getName());
       sessionToken = session.getSession();
     }
     User user = identityService.get(security.getUserPrincipal().getName());
+    identityService.updateLastLogin(user.getKey());
     return UserSession.from(user, sessionToken);
   }
 
@@ -180,6 +181,7 @@ public class UserResource {
       //generate a token
       Session session = identityService.createSession(user.getUserName());
       String sessionToken = session.getSession();
+      identityService.updateLastLogin(user.getKey());
 
       //ideally we would return 200 OK but CreatedResponseFilter automatically
       //change it to 201 CREATED
@@ -264,6 +266,7 @@ public class UserResource {
       //generate a new one
       Session session = identityService.createSession(user.getUserName());
       String sessionToken = session.getSession();
+      identityService.updateLastLogin(user.getKey());
       return Response.ok().entity(UserSession.from(user, sessionToken)).build();
     }
 

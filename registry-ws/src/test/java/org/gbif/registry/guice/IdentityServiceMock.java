@@ -132,6 +132,11 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
+  public void updateLastLogin(int userKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }

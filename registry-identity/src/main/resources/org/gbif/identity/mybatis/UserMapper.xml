@@ -18,7 +18,7 @@
   </sql>
 
   <sql id="USER_FIELDS">
-    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings
+    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.last_login
   </sql>
 
   <sql id="WRITABLE_USER_FIELD_TYPES">
@@ -116,6 +116,12 @@
   <update id="setChallengeCode">
     UPDATE public.user
     SET challenge_code = #{challengeCode,jdbcType=OTHER}
+    WHERE key = #{key}
+  </update>
+
+  <update id="updateLastLogin">
+    UPDATE public.user
+    SET last_login = now()
     WHERE key = #{key}
   </update>
 
