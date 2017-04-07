@@ -81,7 +81,7 @@ class IdentityServiceImpl implements IdentityService {
     //trigger email
     identityEmailManager.generateAndSendUserCreated(newUser, challengeCode);
 
-    return UserCreationResult.fromKey(newUser.getKey());
+    return UserCreationResult.onSuccess(newUser.getUserName(), newUser.getEmail());
   }
 
   @Override

@@ -14,12 +14,13 @@ import static org.gbif.identity.model.ModelError.CONSTRAINT_VIOLATION;
  */
 public class UserCreationResult {
 
-  private Integer key;
+  private String username;
+  private String email;
   private ModelError modelError;
   private Map<String, String> constraintViolation;
 
-  public static UserCreationResult fromKey(Integer key) {
-    return new UserCreationResult(key);
+  public static UserCreationResult onSuccess(String username, String email) {
+    return new UserCreationResult(username, email);
   }
 
   public static UserCreationResult withError(ModelError modelError) {
@@ -30,7 +31,12 @@ public class UserCreationResult {
     return new UserCreationResult(constraintViolation);
   }
 
-  public UserCreationResult(ModelError modelError) {
+  private UserCreationResult(String username, String email) {
+    this.username = username;
+    this.email = email;
+  }
+
+  private UserCreationResult(ModelError modelError) {
     this.modelError = modelError;
   }
 
@@ -42,12 +48,12 @@ public class UserCreationResult {
     );
   }
 
-  public UserCreationResult(Integer key){
-    this.key = key;
+  public String getUsername() {
+    return username;
   }
 
-  public Integer getKey() {
-    return key;
+  public String getEmail() {
+    return email;
   }
 
   public Map<String, String> getConstraintViolation() {

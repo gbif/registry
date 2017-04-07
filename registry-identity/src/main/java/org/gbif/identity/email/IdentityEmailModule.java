@@ -9,7 +9,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 /**
  * Guice module for emails related to the Identity service.
@@ -22,6 +21,10 @@ public class IdentityEmailModule extends AbstractModule {
   private String SMTP_SERVER = "smtp.host";
   private String EMAIL_FROM = "from";
   private String EMAIL_BCC = "bcc";
+
+  private String CONFIRM_TEMPLATE = "urlTemplate.confirm";
+  private String RESET_PASSWORD_TEMPLATE = "urlTemplate.resetPassword";
+
   private Properties filteredProperties;
 
   public IdentityEmailModule(Properties properties) {
@@ -35,16 +38,19 @@ public class IdentityEmailModule extends AbstractModule {
 
   @Provides
   @Singleton
-  private Session providesMailSession() {
+  private IdentityEmailManagerConfiguration provideIdentityEmailManagerConfiguration() {
+    IdentityEmailManagerConfiguration config = new IdentityEmailManagerConfiguration();
+
     Properties props = new Properties();
     props.setProperty("mail.smtp.host", filteredProperties.getProperty(SMTP_SERVER));
     props.setProperty("mail.from", filteredProperties.getProperty(EMAIL_FROM));
-    return Session.getInstance(props, null);
-  }
+    config.setSession(Session.getInstance(props, null));
 
-  @Provides
-  private @Named("bcc") String provideBccAddress () {
-    return filteredProperties.getProperty(EMAIL_BCC);
+    config.setBccAddresses(filteredProperties.getProperty(EMAIL_BCC));
+    config.setConfirmUrlTemplate(filteredProperties.getProperty(CONFIRM_TEMPLATE));
+    config.setResetPasswordUrlTemplate(filteredProperties.getProperty(RESET_PASSWORD_TEMPLATE));
+
+    return config;
   }
 
 }

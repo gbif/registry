@@ -4,15 +4,18 @@ import org.gbif.api.model.common.User;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -21,19 +24,22 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.validation.constraints.NotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.identity.email.IdentityEmailManagerConfiguration.FREEMARKER_TEMPLATES_LOCATION;
+import static org.gbif.identity.email.IdentityEmailManagerConfiguration.USER_CREATE_SUBJECT_KEY;
+import static org.gbif.identity.email.IdentityEmailManagerConfiguration.USER_CREATE_TEMPLATE;
 import static org.gbif.identity.util.LogUtils.NOTIFY_ADMIN;
 
 import static freemarker.template.Configuration.VERSION_2_3_25;
@@ -46,9 +52,6 @@ class IdentityEmailManagerImpl implements IdentityEmailManager {
   private static final Logger LOG = LoggerFactory.getLogger(IdentityEmailManagerImpl.class);
   private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();
 
-  static final String USER_CREATE_TEMPLATE = "create_confirmation_en.ftl";
-  static final String RESET_PASSWORD_TEMPLATE = "reset_password_en.ftl";
-
   private static final Configuration FREEMARKER_CONFIG = new Configuration(VERSION_2_3_25);
   static {
     FREEMARKER_CONFIG.setDefaultEncoding("UTF-8");
@@ -57,32 +60,49 @@ class IdentityEmailManagerImpl implements IdentityEmailManager {
     FREEMARKER_CONFIG.setDateFormat("yyyy-mm-dd");
     // create custom rendering for relative dates
     //FREEMARKER_CONFIG.setSharedVariable("niceDate", new NiceDateTemplateMethodModel());
-    FREEMARKER_CONFIG.setClassForTemplateLoading(IdentityEmailManagerImpl.class, "/email");
+    FREEMARKER_CONFIG.setClassForTemplateLoading(IdentityEmailManagerImpl.class, FREEMARKER_TEMPLATES_LOCATION);
   }
 
   private final Session session;
   private final Set<Address> bccAddresses;
+  private final String confirmUrlTemplate;
+  private final String resetPasswordUrlTemplate;
+
+  //English email subjects
+  private final ResourceBundle defaultEmailSubjects;
 
   @Inject
-  IdentityEmailManagerImpl(Session session, @Nullable @Named("bcc") String bccAddresses) {
-    this.session = session;
-    this.bccAddresses = bccAddresses != null ?
-            Sets.newHashSet(toInternetAddresses(EMAIL_SPLITTER.split(bccAddresses))) : Collections.emptySet();
+  IdentityEmailManagerImpl(IdentityEmailManagerConfiguration config) {
+    this.session = config.getSession();
+    this.bccAddresses = config.getBccAddresses() != null ?
+            Sets.newHashSet(toInternetAddresses(EMAIL_SPLITTER.split(config.getBccAddresses()))) : Collections.emptySet();
+    this.confirmUrlTemplate = config.getConfirmUrlTemplate();
+    this.resetPasswordUrlTemplate = config.getResetPasswordUrlTemplate();
+
+    defaultEmailSubjects = config.getDefaultEmailSubjects();
   }
 
   @Override
   public void generateAndSendUserCreated(User user, UUID challengeCode) {
     //generate URL with challengeCode;
-    BaseEmailModel emailModel = new BaseEmailModel(user.getUserName(), null);
-
-    Optional<Address> emailAddress = toAddress(user.getEmail());
-    if(emailAddress.isPresent()) {
-      try {
-        sendMail(emailAddress.get(), "Account creation on gbif.org", buildEmailBody(emailModel, USER_CREATE_TEMPLATE));
-      } catch (IOException | TemplateException e) {
-        LOG.error(NOTIFY_ADMIN, "Rendering of notification Mail for [{}] failed", emailAddress, e);
-      }
+    BaseEmailModel emailModel = null;
+    try {
+      emailModel = new BaseEmailModel(user.getUserName(),
+              new URL(MessageFormat.format(confirmUrlTemplate, user.getUserName(), challengeCode)));
+    } catch (MalformedURLException e) {
+      LOG.error(NOTIFY_ADMIN, "Rendering of notification Mail for [{}] failed", user.getUserName(), e);
     }
+    //make it final for the lambda
+    final BaseEmailModel finalEmailModel = emailModel;
+    toAddress(user.getEmail()).ifPresent(
+            email -> {
+              try {
+                sendMail(email, defaultEmailSubjects.getString(USER_CREATE_SUBJECT_KEY),
+                        buildEmailBody(finalEmailModel, USER_CREATE_TEMPLATE));
+              } catch (IOException | TemplateException e) {
+                LOG.error(NOTIFY_ADMIN, "Rendering of notification Mail for [{}] failed", email, e);
+              }
+            });
   }
 
   @Override
@@ -102,13 +122,9 @@ class IdentityEmailManagerImpl implements IdentityEmailManager {
   /**
    * Utility method that sends a notification email.
    */
-  private void sendMail(Address emailAddress, String subject, String body) {
+  private void sendMail(@NotNull Address emailAddress, String subject, String body) {
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
 
-    if (emailAddress == null || bccAddresses.isEmpty()) {
-      LOG.warn("No valid notification addresses given");
-      return;
-    }
     try {
       // Send E-Mail
       MimeMessage msg = new MimeMessage(session);

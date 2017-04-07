@@ -204,9 +204,10 @@ public class IdentityIT extends PlainAPIBaseIT {
     UserCreationResult userCreated = identityService.create(newTestUser);
     assertFalse("Shall not contain error -> " + userCreated.getError(), userCreated.containsError());
 
-    UUID challengeCode = userMapper.getChallengeCode(userCreated.getKey());
+    Integer key = identityService.get(newTestUser.getUserName()).getKey();
+    UUID challengeCode = userMapper.getChallengeCode(key);
     assertTrue("Shall confirm challengeCode " + challengeCode,
-            identityService.confirmChallengeCode(userCreated.getKey(), challengeCode));
+            identityService.confirmChallengeCode(key, challengeCode));
 
     return UserCreation.toUser(newTestUser);
   }

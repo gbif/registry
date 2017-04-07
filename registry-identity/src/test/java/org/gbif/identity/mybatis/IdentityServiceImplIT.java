@@ -69,7 +69,7 @@ public class IdentityServiceImplIT {
 
     // create
     UserCreationResult result = service.create(u1);
-    assertNotNull("Expected the key to be set", result.getKey());
+    assertNotNull("Expected the Username to be set", result.getUsername());
 
     // get
     User u2 = service.get(u1.getUserName());
@@ -104,7 +104,7 @@ public class IdentityServiceImplIT {
     UserCreation u1 = generateUser();
     // create
     UserCreationResult result = service.create(u1);
-    assertNotNull("Expected the key to be set", result.getKey());
+    assertNotNull("Expected the Username to be set", result.getUsername());
 
     // try to create it again with a different username (but same email)
     u1.setUserName("user_X");
@@ -209,8 +209,7 @@ public class IdentityServiceImplIT {
     UserCreation u1 = generateUser();
     // create the user
     UserCreationResult result = service.create(u1);
-    assertNotNull("Expected the key to be set", result.getKey());
-    u1.setKey(result.getKey());
+    assertNotNull("Expected the Username to be set", result.getUsername());
 
     //ensure we can not login
     assertNull("Can not login until the challenge code is confirmed", service.authenticate(u1.getUserName(), TEST_PASSWORD));
@@ -218,11 +217,12 @@ public class IdentityServiceImplIT {
     //confirm challenge code
     UUID challengeCode = emailManager.getChallengeCode(u1.getEmail());
     assertNotNull("Got a challenge code for email: " + u1.getEmail(), challengeCode);
-    assertTrue("challengeCode can be confirmed", service.confirmChallengeCode(u1.getKey(), challengeCode));
+
+    User user = service.get(u1.getUserName());
+    assertTrue("challengeCode can be confirmed", service.confirmChallengeCode(user.getKey(), challengeCode));
 
     //ensure we can now login
     assertNotNull("Can login after the challenge code is confirmed", service.authenticate(u1.getUserName(), TEST_PASSWORD));
-
-    return service.getByKey(u1.getKey());
+    return user;
   }
 }
