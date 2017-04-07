@@ -153,8 +153,11 @@ class IdentityServiceImpl implements IdentityService {
       // and verify that they result in the same
       String phash = encoder.encode(password, u.getPasswordHash());
       if (phash.equalsIgnoreCase(u.getPasswordHash())) {
-        //ensure there is no pending challenge code
-        if(userMapper.getChallengeCode(u.getKey()) == null) {
+
+        //ensure there is no pending challenge code, unless the user already logged in in the past.
+        //If the user logged in in the past we assume the challengeCode is from a reset password and since we
+        //can't be sure the user initiated the request himself we must allow to login
+        if(userMapper.getChallengeCode(u.getKey()) == null || u.getLastLogin() != null) {
           return u;
         }
       }

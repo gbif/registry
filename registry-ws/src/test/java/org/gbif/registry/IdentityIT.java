@@ -115,6 +115,10 @@ public class IdentityIT extends PlainAPIBaseIT {
     ClientResponse cr = postSignedRequest(newUserName, generateUser(newUserName), Function.identity());
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
+    //test we can't login (challengeCode not confirmed)
+    cr = generateAuthenticatedClient(newUserName, PASSWORD).get(wr -> wr.path("login"));
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+
     User newUser = userMapper.get(newUserName);
     UUID challengeCode = userMapper.getChallengeCode(newUser.getKey());
 
@@ -122,7 +126,6 @@ public class IdentityIT extends PlainAPIBaseIT {
     cr = postSignedRequest(newUserName,
             uri -> uri.path("confirm")
                     .queryParam("challengeCode", challengeCode));
-
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
     cr = generateAuthenticatedClient(newUserName, PASSWORD).get(wr -> wr.path("login"));
@@ -152,6 +155,7 @@ public class IdentityIT extends PlainAPIBaseIT {
     User testUser = prepareUser();
     User createdUser = userMapper.get(testUser.getUserName());
 
+    //ensure there is no challengeCode
     UUID challengeCode = userMapper.getChallengeCode(createdUser.getKey());
     assertNull("challengeCode shall be null" + challengeCode, challengeCode);
 
@@ -161,6 +165,10 @@ public class IdentityIT extends PlainAPIBaseIT {
 
     challengeCode = userMapper.getChallengeCode(createdUser.getKey());
     assertNotNull("challengeCode shall exist" + challengeCode);
+
+    //we should still be able to login with username/password
+    cr = getAuthenticatedClient().get(wr -> wr.path("login"));
+    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 
   @Test
@@ -212,6 +220,10 @@ public class IdentityIT extends PlainAPIBaseIT {
     UUID challengeCode = userMapper.getChallengeCode(key);
     assertTrue("Shall confirm challengeCode " + challengeCode,
             identityService.confirmChallengeCode(key, challengeCode));
+
+    //this is currently done in the web layer (UserResource) since we confirm the challengeCode
+    //directly using the service we update it here
+    identityService.updateLastLogin(key);
 
     return UserCreation.toUser(newTestUser);
   }
