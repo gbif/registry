@@ -3,7 +3,7 @@ package org.gbif.api.model.common;
 import javax.validation.constraints.NotNull;
 
 /**
- * {@link AbstractUser} implementation that represents a user to be created
+ * {@link AbstractUser} implementation that represents a user to be created.
  */
 public class UserCreation extends AbstractUser {
 

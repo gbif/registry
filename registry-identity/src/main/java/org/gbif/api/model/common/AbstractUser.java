@@ -1,13 +1,10 @@
 package org.gbif.api.model.common;
 
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.vocabulary.UserRole;
 
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -23,7 +20,6 @@ public abstract class AbstractUser {
   protected static final String EMAIL_PATTERN =
           "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
-  protected Integer key;
   protected String userName;
   protected String firstName;
   protected String lastName;
@@ -31,16 +27,6 @@ public abstract class AbstractUser {
   protected Set<UserRole> roles = Sets.newHashSet();
   // Note: Settings was introduced in the system developed to replace Drupal
   protected Map<String, String> settings = Maps.newHashMap();
-
-  @Null(groups = {PrePersist.class})
-  @NotNull(groups = {PostPersist.class})
-  public Integer getKey() {
-    return key;
-  }
-
-  public void setKey(Integer key) {
-    this.key = key;
-  }
 
   @NotNull
   @Pattern(regexp = EMAIL_PATTERN)
@@ -157,8 +143,7 @@ public abstract class AbstractUser {
     }
 
     AbstractUser that = (AbstractUser) obj;
-    return Objects.equal(this.key, that.key)
-            && Objects.equal(this.userName, that.userName)
+    return Objects.equal(this.userName, that.userName)
             && Objects.equal(this.firstName, that.firstName)
             && Objects.equal(this.lastName, that.lastName)
             && Objects.equal(this.email, that.email)
@@ -168,13 +153,12 @@ public abstract class AbstractUser {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(key, userName, firstName, lastName, email, roles, settings);
+    return Objects.hashCode(userName, firstName, lastName, email, roles, settings);
   }
 
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
-            .add("key", key)
             .add("accountName", userName)
             .add("firstName", firstName)
             .add("lastName", lastName)

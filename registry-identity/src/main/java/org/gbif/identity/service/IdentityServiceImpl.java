@@ -5,20 +5,20 @@ import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.model.ModelError;
+import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.SessionMapper;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.util.PasswordEncoder;
 import org.gbif.identity.util.SessionTokens;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -32,6 +32,8 @@ import com.google.inject.Inject;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.apache.commons.lang3.StringUtils;
 
+import static org.gbif.identity.model.UserModelMutationResult.withError;
+
 
 /**
  * Main implementation of {@link IdentityService} on top of mybatis.
@@ -42,7 +44,7 @@ class IdentityServiceImpl implements IdentityService {
   private final SessionMapper sessionMapper;
   private final IdentityEmailManager identityEmailManager;
 
-  private final Validator BEAN_VALIDATOR =
+  private static final Validator BEAN_VALIDATOR =
           Validation.byProvider(ApacheValidationProvider.class)
                   .configure()
                   .buildValidatorFactory()
@@ -58,16 +60,16 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public UserCreationResult create(UserCreation user) {
+  public UserModelMutationResult create(UserCreation user) {
     if (userMapper.get(user.getUserName()) != null ||
             userMapper.getByEmail(user.getEmail()) != null) {
-      return UserCreationResult.withError(ModelError.USER_ALREADY_EXIST);
+      return withError(ModelMutationError.USER_ALREADY_EXIST);
     }
 
     Set<ConstraintViolation<UserCreation>> violations = BEAN_VALIDATOR.validate(user,
             PrePersist.class, Default.class);
     if(!violations.isEmpty()) {
-      return UserCreationResult.withError(violations);
+      return withError(violations);
     }
 
     String passwordHash = encoder.encode(user.getPassword());
@@ -82,24 +84,36 @@ class IdentityServiceImpl implements IdentityService {
     //trigger email
     identityEmailManager.generateAndSendUserCreated(newUser, challengeCode);
 
-    return UserCreationResult.onSuccess(newUser.getUserName(), newUser.getEmail());
+    return UserModelMutationResult.onSuccess(newUser.getUserName(), newUser.getEmail());
   }
 
   @Override
-  public void update(User user) {
-    Optional.ofNullable(user.getUserName())
-            .map(this::get)
-            .ifPresent(
-                    currentUser -> {
-                      //control which field it is possible to update for the user himself
-                      currentUser.setFirstName(user.getFirstName());
-                      currentUser.setLastName(user.getLastName());
-                      currentUser.setSettings(user.getSettings());
-                      userMapper.update(currentUser);
-                    }
-            );
-  }
+  public UserModelMutationResult update(User user) {
 
+    User currentUser = getByKey(user.getKey());
+    if (currentUser != null) {
+
+      //handle email change and user if the user want to change it is is not already
+      //linked to another account
+      if (!currentUser.getEmail().equalsIgnoreCase(user.getEmail())) {
+        User currentUserWithEmail = userMapper.getByEmail(user.getEmail());
+        if (currentUserWithEmail != null) {
+          return UserModelMutationResult.withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
+        }
+      }
+
+      Set<ConstraintViolation<User>> violations = BEAN_VALIDATOR.validate(user,
+              PostPersist.class, Default.class);
+      if (!violations.isEmpty()) {
+        return UserModelMutationResult.withError(violations);
+      }
+      userMapper.update(user);
+    } else {
+      //means the user doesn't exist
+      return null;
+    }
+    return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
+  }
 
   @Override
   public void delete(String username) {

@@ -5,10 +5,10 @@ import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.guice.IdentityTestModule;
 import org.gbif.identity.email.InMemoryIdentityEmailManager;
-import org.gbif.identity.model.ModelError;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.guice.IdentityTestModule;
+import org.gbif.identity.model.ModelMutationError;
+import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -68,7 +69,7 @@ public class IdentityServiceImplIT {
     UserCreation u1 = generateUser();
 
     // create
-    UserCreationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // get
@@ -83,7 +84,10 @@ public class IdentityServiceImplIT {
     // update
     u2.getSettings().put("user.country", "GB");
     //u2.getRoles().add(UserRole.REGISTRY_ADMIN);
-    service.update(u2);
+
+    UserModelMutationResult mutationResult = service.update(u2);
+    assertNotNull("got mutationResult", mutationResult);
+    assertFalse("Doesn't contain error like " + mutationResult.getConstraintViolation(), mutationResult.containsError());
 
     User u3 = service.get(u1.getUserName());
     assertEquals(2, u3.getSettings().size());
@@ -91,7 +95,6 @@ public class IdentityServiceImplIT {
     //assertEquals(2, u3.getRoles().size());
 
     service.delete(u1.getUserName());
-
     User u4 = service.get(u1.getUserName());
     assertNull(u4);
   }
@@ -103,18 +106,18 @@ public class IdentityServiceImplIT {
   public void testCreateError() throws Exception {
     UserCreation u1 = generateUser();
     // create
-    UserCreationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // try to create it again with a different username (but same email)
     u1.setUserName("user_X");
     result = service.create(u1);
-    assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelError.USER_ALREADY_EXIST, result.getError());
+    assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelMutationError.USER_ALREADY_EXIST, result.getError());
 
     u1.setUserName("");
     u1.setEmail("email@email.com");
     result = service.create(u1);
-    assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelError.CONSTRAINT_VIOLATION, result.getError());
+    assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelMutationError.CONSTRAINT_VIOLATION, result.getError());
   }
 
   /**
@@ -208,7 +211,7 @@ public class IdentityServiceImplIT {
                                           final InMemoryIdentityEmailManager emailManager) {
     UserCreation u1 = generateUser();
     // create the user
-    UserCreationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     //ensure we can not login

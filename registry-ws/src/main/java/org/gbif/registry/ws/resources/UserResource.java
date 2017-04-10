@@ -2,13 +2,15 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserCreation;
+import org.gbif.api.model.common.UserUpdate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.model.UserModelMutationResult;
+import org.gbif.identity.service.UpdateRulesManager;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.ws.response.GbifResponseStatus;
@@ -57,7 +59,7 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
  * - This resource contains mostly to routing to the business logic ({@link IdentityService}
  * - Return {@link Response} instead of object to minimize usage of exceptions and provide
  *   better control over the HTTP code returned. This also allows to return an entity in case
- *   of errors (e.g. {@link UserCreationResult}.
+ *   of errors (e.g. {@link UserModelMutationResult}.
  * - keys (user id) are not considered public, therefore, they are not returned and/or accepted
  *   by methods that are not under ADMIN_ROLE or EDITOR_ROLE.
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserSession}).
@@ -152,7 +154,7 @@ public class UserResource {
     ensureIsTrustedApp(securityContext);
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
-    UserCreationResult result = identityService.create(user);
+    UserModelMutationResult result = identityService.create(user);
     if(result.containsError()) {
       returnStatusCode = GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus();
     }
@@ -197,12 +199,20 @@ public class UserResource {
   @PUT
   @Path("/")
   @RolesAllowed({USER_ROLE})
-  public Response update(User user, @Context SecurityContext securityContext) {
+  public Response update(UserUpdate user, @Context SecurityContext securityContext) {
     ensureUserInSecurityContext(securityContext);
 
+    User updateInitiator = identityService.get(securityContext.getUserPrincipal().getName());
+    User currentUser = identityService.get(user.getUserName());
+
     //TODO check the user is himself or is an admin
-    identityService.update(user);
-    return Response.noContent().build();
+    Response response = Response.noContent().build();
+    UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
+            updateInitiator.getRoles(), currentUser, user));
+    if(result.containsError()) {
+      response = generateResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), result);
+    }
+    return response;
   }
 
   /**

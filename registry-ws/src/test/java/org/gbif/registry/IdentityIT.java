@@ -4,9 +4,11 @@ import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.model.ModelMutationError;
+import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.util.UUID;
@@ -31,6 +33,8 @@ public class IdentityIT extends PlainAPIBaseIT {
   private static final String RESOURCE_PATH = "user";
   private static final String USERNAME = "user_12";
   private static final String PASSWORD = "password";
+
+  private static final String ALTERNATE_USERNAME = "user_13";
 
   private UserMapper userMapper;
   private IdentityService identityService;
@@ -110,7 +114,7 @@ public class IdentityIT extends PlainAPIBaseIT {
 
   @Test
   public void testCreateUser() {
-    String newUserName = "user_13";
+    String newUserName = ALTERNATE_USERNAME;
 
     ClientResponse cr = postSignedRequest(newUserName, generateUser(newUserName), Function.identity());
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
@@ -148,6 +152,22 @@ public class IdentityIT extends PlainAPIBaseIT {
     //load user directly from the database
     User updatedUser = userMapper.get(testUser.getUserName());
     assertEquals(newUserFirstName, updatedUser.getFirstName());
+
+    //create a new user
+    User testUser2 = prepareUser(generateUser(ALTERNATE_USERNAME));
+    cr = getAuthenticatedClient().get(wr -> wr.path("login"));
+    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    responseData = cr.getEntity(UserSession.class);
+
+    //update user2 using email from user1
+    testUser2.setEmail(testUser.getEmail());
+    cr = getPublicClient().putWithSessionToken(responseData.getSession(), testUser2);
+    assertEquals(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), cr.getStatus());
+    assertEquals(ModelMutationError.EMAIL_ALREADY_IN_USE, cr.getEntity(UserModelMutationResult.class).getError());
+
+    testUser2.setEmail("12345@mail.com");
+    cr = getPublicClient().putWithSessionToken(responseData.getSession(), testUser2);
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
   }
 
   @Test
@@ -212,8 +232,11 @@ public class IdentityIT extends PlainAPIBaseIT {
   }
 
   private User prepareUser() {
-    UserCreation newTestUser = generateUser();
-    UserCreationResult userCreated = identityService.create(newTestUser);
+    return prepareUser(generateUser());
+  }
+
+  private User prepareUser(UserCreation newTestUser) {
+    UserModelMutationResult userCreated = identityService.create(newTestUser);
     assertFalse("Shall not contain error -> " + userCreated.getError(), userCreated.containsError());
 
     Integer key = identityService.get(newTestUser.getUserName()).getKey();

@@ -15,9 +15,13 @@
  */
 package org.gbif.api.model.common;
 
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
+
 import java.util.Date;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 import com.google.common.base.Objects;
 
@@ -26,9 +30,20 @@ import com.google.common.base.Objects;
  */
 public class User extends AbstractUser {
 
-  @NotNull
+  protected Integer key;
+
   private String passwordHash;
   private Date lastLogin;
+
+  @Null(groups = {PrePersist.class})
+  @NotNull(groups = {PostPersist.class})
+  public Integer getKey() {
+    return key;
+  }
+
+  public void setKey(Integer key) {
+    this.key = key;
+  }
 
   @Nullable
   public Date getLastLogin() {
@@ -42,6 +57,7 @@ public class User extends AbstractUser {
   /**
    * @return the drupal hashed version of the user password.
    */
+  @NotNull
   public String getPasswordHash() {
     return passwordHash;
   }

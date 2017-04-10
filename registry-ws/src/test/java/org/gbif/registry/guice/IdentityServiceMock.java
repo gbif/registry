@@ -7,7 +7,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.model.UserModelMutationResult;
 
 import java.util.Date;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public void update(User user) {
+  public UserModelMutationResult update(User user) {
     throw new UnsupportedOperationException();
   }
 
@@ -112,7 +112,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public UserCreationResult create(UserCreation user) {
+  public UserModelMutationResult create(UserCreation user) {
     throw new UnsupportedOperationException();
   }
 

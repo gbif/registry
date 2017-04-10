@@ -16,11 +16,11 @@
 package org.gbif.api.service.common;
 
 import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.identity.model.Session;
-import org.gbif.identity.model.UserCreationResult;
+import org.gbif.identity.model.UserModelMutationResult;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  *
  * Design and implementation decisions:
  * - This service is also responsible to handle sessions
- * - Create method returns result objects (e.g. {@link UserCreationResult}) instead of throwing exceptions
+ * - Create method returns result objects (e.g. {@link UserModelMutationResult}) instead of throwing exceptions
  *
  */
 public interface IdentityService {
@@ -93,9 +93,15 @@ public interface IdentityService {
    * @param user {@link UserCreation} is used in order to control what it is possible set on {@link User}.
    * @return result of the user creation
    */
-  UserCreationResult create(UserCreation user);
+  UserModelMutationResult create(UserCreation user);
 
-  void update(User user);
+  /**
+   * Apply an update to a user.
+   * It is the responsibility of the caller to ensure what is allowed to be changed (e.g. base on the roles).
+   * @param user
+   * @return
+   */
+  UserModelMutationResult update(User user);
 
   void delete(String userName);
 
