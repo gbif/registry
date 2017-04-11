@@ -1,14 +1,12 @@
 package org.gbif.identity.service;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.Session;
@@ -60,31 +58,29 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public UserModelMutationResult create(UserCreation user) {
+  public UserModelMutationResult create(User user, String password) {
+
     if (userMapper.get(user.getUserName()) != null ||
             userMapper.getByEmail(user.getEmail()) != null) {
       return withError(ModelMutationError.USER_ALREADY_EXIST);
     }
 
-    Set<ConstraintViolation<UserCreation>> violations = BEAN_VALIDATOR.validate(user,
+    user.setPasswordHash(encoder.encode(password));
+
+    Set<ConstraintViolation<User>> violations = BEAN_VALIDATOR.validate(user,
             PrePersist.class, Default.class);
     if(!violations.isEmpty()) {
       return withError(violations);
     }
-
-    String passwordHash = encoder.encode(user.getPassword());
-    User newUser = UserCreation.toUser(user);
-    newUser.getRoles().add(UserRole.USER);
-    newUser.setPasswordHash(passwordHash);
-    userMapper.create(newUser);
+    userMapper.create(user);
 
     UUID challengeCode = UUID.randomUUID();
-    userMapper.setChallengeCode(newUser.getKey(), challengeCode);
+    userMapper.setChallengeCode(user.getKey(), challengeCode);
 
     //trigger email
-    identityEmailManager.generateAndSendUserCreated(newUser, challengeCode);
+    identityEmailManager.generateAndSendUserCreated(user, challengeCode);
 
-    return UserModelMutationResult.onSuccess(newUser.getUserName(), newUser.getEmail());
+    return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
   }
 
   @Override

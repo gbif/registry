@@ -1,7 +1,6 @@
 package org.gbif.registry.guice;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
@@ -112,7 +111,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public UserModelMutationResult create(UserCreation user) {
+  public UserModelMutationResult create(User user, String password) {
     throw new UnsupportedOperationException();
   }
 

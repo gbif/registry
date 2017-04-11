@@ -1,8 +1,9 @@
-package org.gbif.identity.service;
+package org.gbif.registry.ws.security;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserUpdate;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.ws.model.UserUpdate;
 
 import java.util.Set;
 
@@ -30,6 +31,17 @@ public class UpdateRulesManager {
       user.setRoles(userUpdate.getRoles());
     }
 
+    return user;
+  }
+
+  public static User applyCreate(UserCreation userCreate) {
+    User user = new User();
+    user.setUserName(userCreate.getUserName());
+    user.setFirstName(userCreate.getFirstName());
+    user.setLastName(userCreate.getLastName());
+    user.setEmail(userCreate.getEmail());
+    user.setSettings(userCreate.getSettings());
+    user.getRoles().add(UserRole.USER);
     return user;
   }
 

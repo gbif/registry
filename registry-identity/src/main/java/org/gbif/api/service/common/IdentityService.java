@@ -16,7 +16,6 @@
 package org.gbif.api.service.common;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.identity.model.Session;
@@ -90,10 +89,10 @@ public interface IdentityService {
 
   /**
    * Create a new user.
-   * @param user {@link UserCreation} is used in order to control what it is possible set on {@link User}.
+   * @param user {@link User} to be created.
    * @return result of the user creation
    */
-  UserModelMutationResult create(UserCreation user);
+  UserModelMutationResult create(User user, String password);
 
   /**
    * Apply an update to a user.

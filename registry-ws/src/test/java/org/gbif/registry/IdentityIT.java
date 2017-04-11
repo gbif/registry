@@ -1,13 +1,14 @@
 package org.gbif.registry;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.ws.security.UpdateRulesManager;
 import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -22,8 +23,8 @@ import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Integration tests related to the identity module.
@@ -236,8 +237,10 @@ public class IdentityIT extends PlainAPIBaseIT {
   }
 
   private User prepareUser(UserCreation newTestUser) {
-    UserModelMutationResult userCreated = identityService.create(newTestUser);
-    assertFalse("Shall not contain error -> " + userCreated.getError(), userCreated.containsError());
+    User userToCreate = UpdateRulesManager.applyCreate(newTestUser);
+    UserModelMutationResult userCreated = identityService.create(userToCreate,
+            newTestUser.getPassword());
+    assertNoErrorAfterMutation(userCreated);
 
     Integer key = identityService.get(newTestUser.getUserName()).getKey();
     UUID challengeCode = userMapper.getChallengeCode(key);
@@ -247,12 +250,22 @@ public class IdentityIT extends PlainAPIBaseIT {
     //this is currently done in the web layer (UserResource) since we confirm the challengeCode
     //directly using the service we update it here
     identityService.updateLastLogin(key);
-
-    return UserCreation.toUser(newTestUser);
+    return userToCreate;
   }
 
+  /**
+   * Generates a test user with username {@link #USERNAME}
+   * @return
+   */
   private static UserCreation generateUser() {
     return generateUser(USERNAME);
+  }
+
+  private static void assertNoErrorAfterMutation(UserModelMutationResult userModelMutationResult) {
+    if (userModelMutationResult.containsError()) {
+      fail("Shall not contain error. Got " + userModelMutationResult.getError() + "," +
+              userModelMutationResult.getConstraintViolation());
+    }
   }
 
   /**

@@ -1,7 +1,6 @@
 package org.gbif.identity.mybatis;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
@@ -66,10 +65,10 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCRUD() throws Exception {
-    UserCreation u1 = generateUser();
+    User u1 = generateUser();
 
     // create
-    UserModelMutationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // get
@@ -104,19 +103,19 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCreateError() throws Exception {
-    UserCreation u1 = generateUser();
+    User u1 = generateUser();
     // create
-    UserModelMutationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // try to create it again with a different username (but same email)
     u1.setUserName("user_X");
-    result = service.create(u1);
+    result = service.create(u1, TEST_PASSWORD);
     assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelMutationError.USER_ALREADY_EXIST, result.getError());
 
     u1.setUserName("");
     u1.setEmail("email@email.com");
-    result = service.create(u1);
+    result = service.create(u1, TEST_PASSWORD);
     assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelMutationError.CONSTRAINT_VIOLATION, result.getError());
   }
 
@@ -125,12 +124,12 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testSessions() throws Exception {
-    UserCreation u1 = generateUser();
+    User u1 = generateUser();
     u1.setUserName("frank");
     u1.setFirstName("Tim");
     u1.setLastName("Robertson");
     u1.setEmail("frank@gbif.org");
-    service.create(u1);
+    service.create(u1, TEST_PASSWORD);
 
     // this will create a session
     /*
@@ -186,13 +185,12 @@ public class IdentityServiceImplIT {
    * Thread-Safe
    * @return
    */
-  private static UserCreation generateUser() {
+  private static User generateUser() {
     int idx = index.incrementAndGet();
-    UserCreation user = new UserCreation();
+    User user = new User();
     user.setUserName("user_" + idx);
     user.setFirstName("Tim");
     user.setLastName("Robertson");
-    user.setPassword(TEST_PASSWORD);
     user.getRoles().add(UserRole.USER);
     user.getSettings().put("user.settings.language", "en");
     user.getSettings().put("user.country", "dk");
@@ -209,9 +207,9 @@ public class IdentityServiceImplIT {
    */
   private static User createConfirmedUser(final IdentityService service,
                                           final InMemoryIdentityEmailManager emailManager) {
-    UserCreation u1 = generateUser();
+    User u1 = generateUser();
     // create the user
-    UserModelMutationResult result = service.create(u1);
+    UserModelMutationResult result = service.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     //ensure we can not login

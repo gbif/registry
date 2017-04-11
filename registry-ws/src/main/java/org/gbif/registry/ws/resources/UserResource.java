@@ -1,8 +1,8 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserCreation;
-import org.gbif.api.model.common.UserUpdate;
+import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.ws.model.UserUpdate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -10,7 +10,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.identity.service.UpdateRulesManager;
+import org.gbif.registry.ws.security.UpdateRulesManager;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.ws.response.GbifResponseStatus;
@@ -154,7 +154,8 @@ public class UserResource {
     ensureIsTrustedApp(securityContext);
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
-    UserModelMutationResult result = identityService.create(user);
+    UserModelMutationResult result = identityService.create(
+            UpdateRulesManager.applyCreate(user), user.getPassword());
     if(result.containsError()) {
       returnStatusCode = GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus();
     }

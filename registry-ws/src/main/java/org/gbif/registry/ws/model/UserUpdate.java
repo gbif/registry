@@ -1,4 +1,6 @@
-package org.gbif.api.model.common;
+package org.gbif.registry.ws.model;
+
+import org.gbif.api.model.common.AbstractUser;
 
 /**
  * {@link AbstractUser} implementation that represents a user to be updated.
