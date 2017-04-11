@@ -1,10 +1,9 @@
 {{resultsCount}} users matching <strong><em>{{searchString}}</em></strong>
 <hr/>
 <ul class="unstyled list-hover">
-  <li data-ng-repeat="user in results" ng-click="openNode(user)">
-    <strong><a href="">{{user.lastName}}, {{user.firstName}}</a></strong> <span class="muted pull-right"><small>Edited {{user.modified | timeAgo}}</small></span><br/>
+  <li data-ng-repeat="user in results" ng-click="openUser(user)">
+    <strong><a href="">{{user.lastName}}, {{user.firstName}}</a></strong><br/>
     <small class="muted">{{user.userName}} | {{user.email}}</small><br/>
-    <span class="muted"><small>Created {{user.created | timeAgo}} by {{user.createdBy || "anonymous"}}</small></span>
   </li>
 </ul>
 <ul class="pager">

@@ -1,26 +1,31 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.User;
-import org.gbif.registry.ws.model.UserCreation;
-import org.gbif.registry.ws.model.UserUpdate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.registry.ws.security.UpdateRulesManager;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
+import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.ws.model.UserUpdate;
+import org.gbif.registry.ws.security.UpdateRulesManager;
+import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -74,6 +79,9 @@ public class UserResource {
   private final IdentityService identityService;
   private final IdentityEmailManagerMock tempIdentityEmailManager;
 
+  private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter( r ->
+          !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
+
   @Inject
   public UserResource(IdentityService identityService, IdentityEmailManagerMock tempIdentityEmailManager) {
     this.identityService = identityService;
@@ -87,6 +95,12 @@ public class UserResource {
     //tempIdentityEmailManager.
     debugMap.put("challengeCodes", tempIdentityEmailManager.getAllChallengeCode());
     return debugMap;
+  }
+
+  @GET
+  @Path("/roles")
+  public List<UserRole> listRoles() {
+    return USER_ROLES;
   }
 
   /**
@@ -303,20 +317,20 @@ public class UserResource {
    */
   @GET
   @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
-  @Path("/{userId}")
-  public User getById(@PathParam("userId") int userId) {
-    return identityService.getByKey(userId);
+  @Path("/{userKey}")
+  public User getById(@PathParam("userKey") int userKey) {
+    return identityService.getByKey(userKey);
   }
 
   /**
    * For admin console
    */
-//  @PUT
-//  @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
-//  @Path("/{userId}")
-//  public User updateById(@PathParam("userId") int userId) {
-//    return identityService.getByKey(userId);
-//  }
+  @PUT
+  @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
+  @Path("/{userKey}")
+  public Response updateById(@PathParam("userKey") int userKey, UserUpdate user, @Context SecurityContext securityContext) {
+    return update(user, securityContext);
+  }
 
   /**
    *

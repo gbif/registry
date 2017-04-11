@@ -1,33 +1,37 @@
 <h4>User overview</h4>
-<p class="muted">This information appears on the user profile, organization pages, search results, and beyond.</p>
 <hr/>
 <p ng-show="user.deleted!=null">
-  <span class="label label-important">Important</span> <span class="text-error">This user was deleted {{user.deleted | timeAgo}} by {{user.modifiedBy}}.<span><br/>
+  <span class="label label-important">Important</span> <span class="text-error">This user was deleted {{user.deleted | timeAgo}}.<span><br/>
   <small class="muted">{{user.deleted}}</small>
 </p>
 
 <dl class="dl-horizontal spaced-list">
-  <dt>Title</dt>
-  <dd>{{user.title}}</dd>
-  <dt>Type</dt>
-  <dd>{{user.type}}</dd>
-  <dt>Participant status</dt>
-  <dd>{{user.participationStatus}}</dd>
-  <dt>GBIF Region</dt>
-  <dd>{{user.gbifRegion}}</dd>
-  <dt>Country</dt>
-  <dd>{{user.country | prettifyCountry}}</dd>
-  <dt>Continent</dt>
-  <dd>{{user.continent}}</dd>
-  <dt>Created</dt>
-  <dd>{{user.created | timeAgo}} <br/><small class="muted">{{user.created}}</small></dd>
-  <dt>Created by</dt>
-  <dd>{{user.createdBy}}</dd>
-  <dt>Modified</dt>
-  <dd>{{user.modified | timeAgo}} <br/><small class="muted">{{user.modified}}</small></dd>
-  <dt>Modified by</dt>
-  <dd>{{user.modifiedBy}}</dd>
+  <dt>Username</dt>
+  <dd>{{user.userName}}</dd>
+  <dt>Email</dt>
+  <dd>{{user.email}}</dd>
+  <dt>First Name</dt>
+  <dd>{{user.firstName}}</dd>
+  <dt>Last Name</dt>
+  <dd>{{user.lastName}}</dd>
+
+  <dt>Last Login</dt>
+  <dd><br/><small class="muted">{{user.lastLogin}}</small></dd>
+
+  <dt>Settings</dt>
+  <dd ng-repeat="(key, value) in user.settings">
+    {{key}} => {{value}}
+  </dd>
+
+  <dt>Roles</dt>
+  <dd ng-repeat="role in user.roles">
+    {{role}}
+  </dd>
 </dl>
+
+<div class="form-actions">
+  <small><a href="" ng-click="transitionTo('edit')">Edit these details</a></small>
+</div>
 
 <div class="form-actions" ng-show="user.deleted!=null">
     <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this user</a></small>

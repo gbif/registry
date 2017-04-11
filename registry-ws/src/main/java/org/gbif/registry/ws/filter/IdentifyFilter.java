@@ -118,7 +118,6 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     // authenticates the HTTP method, but ignores legacy UUID user names
     if (identityService != null) {
-      System.out.println("AUTHORIZER");
       authorizer = authenticate(request);
     }
 

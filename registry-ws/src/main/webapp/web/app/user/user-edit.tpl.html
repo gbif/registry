@@ -6,25 +6,26 @@
 
 <form id="userEdit" novalidate class="form-horizontal">
   <fieldset class="control-group">
-    <label class="control-label" for="title">Username</label>
+    <label class="control-label" for="userName">Username</label>
     <div class="controls">
-      <input id="userName" maxlength="255" type="text" name="userName" ng-model="user.userName" value="{{user.userName}}">
+      <input id="userName" maxlength="255" type="text" name="userName" ng-model="user.userName" value="{{user.userName}}"
+      ng-disabled="true">
       <p class="muted"><small>You can log in using a username or an email address.</small></p>
     </div>
 
-    <label class="control-label" for="type">First name</label>
+    <label class="control-label" for="firstName">First name</label>
     <div class="controls">
       <input id="firstName" maxlength="255" type="text" name="firstName" ng-model="user.firstName" value="{{user.firstName}}">
       <p class="muted"><small></small></p>
     </div>
 
-    <label class="control-label" for="type">Last name</label>
+    <label class="control-label" for="lastName">Last name</label>
     <div class="controls">
       <input id="lastName" maxlength="255" type="text" name="lastName" ng-model="user.lastName" value="{{user.lastName}}">
       <p class="muted"><small></small></p>
     </div>
 
-    <label class="control-label" for="type">E-mail address</label>
+    <label class="control-label" for="email">E-mail address</label>
     <div class="controls">
       <input id="email" maxlength="255" type="text" name="email" ng-model="user.email" value="{{user.email}}">
       <p class="muted"><small></small></p>
@@ -32,15 +33,22 @@
 
     <label class="control-label" for="country">Country</label>
     <div class="controls">
-      <select ng-model="user.country" ng-options="o | prettifyCountry for o in countries">
+      <select id ="country" ng-model="user.settings.country" ng-options="o | prettifyCountry for o in countries">
         <option style="display:none" value="">select a country</option>
       </select>
       <p class="muted"><small>This is used for reporting purposes</small></p>
     </div>
 
+    <label class="control-label" for="roles">Roles</label>
+    <div class="controls">
+      <label ng-repeat="(key, value) in user_roles">
+        <input type="checkbox" ng-model="user_roles[key]">{{key}}
+      </label>
+    </div>
+
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>
-      <button class="btn primary-btn" ng-click="save(user)" type="submit">Save changes</button>
+      <button class="btn primary-btn" ng-click="save(user,user_roles)" type="submit">Save changes</button>
     </div>
     <div class="form-actions">
       <small><a href="" data-target="#deleteConfirm" data-toggle="modal">Delete this user</a></small>
