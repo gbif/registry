@@ -39,6 +39,7 @@ public interface IdentityService {
 
   /**
    * Exposes the user by primary key instead of the username.
+   * This method will return the user even if he is deleted.
    * @param id The primary key of the user
    * @return The user or null
    */
@@ -102,7 +103,7 @@ public interface IdentityService {
    */
   UserModelMutationResult update(User user);
 
-  void delete(String userName);
+  void delete(int userKey);
 
   PagingResponse<User> list(@Nullable Pageable var1);
 

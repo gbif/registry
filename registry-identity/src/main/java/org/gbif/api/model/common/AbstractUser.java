@@ -2,6 +2,7 @@ package org.gbif.api.model.common;
 
 import org.gbif.api.vocabulary.UserRole;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -27,6 +28,8 @@ public abstract class AbstractUser {
   protected Set<UserRole> roles = Sets.newHashSet();
   // Note: Settings was introduced in the system developed to replace Drupal
   protected Map<String, String> settings = Maps.newHashMap();
+
+  protected Date deleted;
 
   @NotNull
   @Pattern(regexp = EMAIL_PATTERN)
@@ -133,6 +136,14 @@ public abstract class AbstractUser {
     this.settings = settings == null ? Maps.<String,String>newHashMap() : settings;
   }
 
+  public Date getDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(Date deleted) {
+    this.deleted = deleted;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -148,12 +159,13 @@ public abstract class AbstractUser {
             && Objects.equal(this.lastName, that.lastName)
             && Objects.equal(this.email, that.email)
             && Objects.equal(this.roles, that.roles)
-            && Objects.equal(this.settings, that.settings);
+            && Objects.equal(this.settings, that.settings)
+            && Objects.equal(this.deleted, that.deleted);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(userName, firstName, lastName, email, roles, settings);
+    return Objects.hashCode(userName, firstName, lastName, email, roles, settings, deleted);
   }
 
   @Override
@@ -165,6 +177,7 @@ public abstract class AbstractUser {
             .add("email", email)
             .add("roles", roles)
             .add("settings", settings)
+            .add("deleted", deleted)
             .toString();
   }
 

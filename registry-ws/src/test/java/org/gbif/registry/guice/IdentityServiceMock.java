@@ -55,7 +55,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public void delete(String s) {
+  public void delete(int key) {
     throw new UnsupportedOperationException();
   }
 

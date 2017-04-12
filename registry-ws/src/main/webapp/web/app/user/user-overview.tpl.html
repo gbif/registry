@@ -18,13 +18,23 @@
   <dt>Last Login</dt>
   <dd><br/><small class="muted">{{user.lastLogin}}</small></dd>
 
+  <div class="clearfix">
   <dt>Settings</dt>
   <dd ng-repeat="(key, value) in user.settings">
     {{key}} => {{value}}
   </dd>
+  </div>
 
+  <!--only display roles that we can map-->
+  <div class="clearfix">
   <dt>Roles</dt>
-  <dd ng-repeat="role in user.roles">
+  <dd ng-repeat="(key, value) in user_roles" ng-if="value===true">
+    {{key}}
+  </dd>
+  </div>
+
+  <dt ng-if="unmapped_user_roles.length !== 0">Unmapped Roles</dt>
+  <dd ng-repeat="role in unmapped_user_roles">
     {{role}}
   </dd>
 </dl>
@@ -35,15 +45,12 @@
 
 <div class="form-actions" ng-show="user.deleted!=null">
     <small><a href="" data-target="#restoreConfirm" data-toggle="modal">Restore this user</a></small>
-      <p><small class="muted">Will make this eligible for endorsements etc.</small></p>
+      <p><small class="muted">Will make the user eligible to login again</small></p>
     </div>
     <div id="restoreConfirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="title" aria-hidden="true">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="title">Restore?</h3>
-      </div>
-      <div class="modal-body">
-        <p><span class="label label-important">Important</span> <span class="text-error">Restoring a previously deleted entity will likely trigger significant processing<span></p>
       </div>
       <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>

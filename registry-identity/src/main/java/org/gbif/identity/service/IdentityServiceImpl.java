@@ -29,6 +29,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.apache.commons.lang3.StringUtils;
+import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.identity.model.UserModelMutationResult.withError;
 
@@ -58,6 +59,7 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
+  @Transactional
   public UserModelMutationResult create(User user, String password) {
 
     if (userMapper.get(user.getUserName()) != null ||
@@ -112,8 +114,8 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public void delete(String username) {
-    userMapper.delete(username);
+  public void delete(int userKey) {
+    userMapper.delete(userKey);
   }
 
   @Override

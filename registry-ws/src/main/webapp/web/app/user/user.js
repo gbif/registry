@@ -70,6 +70,8 @@ angular.module('user', [
             _.each($scope.roles, function (element, index, list) {
               $scope.user_roles[element]= _.contains(user.roles, element)
             });
+
+            $scope.unmapped_user_roles = _.reject(user.roles, function(role){ return _.has($scope.user_roles, role) });
           })
         })
   }

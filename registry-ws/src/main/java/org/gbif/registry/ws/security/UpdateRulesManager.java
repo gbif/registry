@@ -29,6 +29,7 @@ public class UpdateRulesManager {
 
     if(initiatorRoles.contains(UserRole.REGISTRY_EDITOR) || initiatorRoles.contains(UserRole.REGISTRY_ADMIN)) {
       user.setRoles(userUpdate.getRoles());
+      user.setDeleted(userUpdate.getDeleted());
     }
 
     return user;

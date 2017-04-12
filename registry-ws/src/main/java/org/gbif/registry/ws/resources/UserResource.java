@@ -10,7 +10,6 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
-import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
 import org.gbif.registry.ws.security.UpdateRulesManager;
@@ -20,9 +19,7 @@ import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,6 +28,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -50,6 +48,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,24 +76,14 @@ public class UserResource {
   private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
 
   private final IdentityService identityService;
-  private final IdentityEmailManagerMock tempIdentityEmailManager;
 
+  //filters roles that are deprecated
   private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter( r ->
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
 
   @Inject
-  public UserResource(IdentityService identityService, IdentityEmailManagerMock tempIdentityEmailManager) {
+  public UserResource(IdentityService identityService) {
     this.identityService = identityService;
-    this.tempIdentityEmailManager = tempIdentityEmailManager;
-  }
-
-  @GET
-  @Path(("/debug"))
-  public Map<String, Object> debug() {
-    Map<String, Object> debugMap = new HashMap<>();
-    //tempIdentityEmailManager.
-    debugMap.put("challengeCodes", tempIdentityEmailManager.getAllChallengeCode());
-    return debugMap;
   }
 
   @GET
@@ -173,7 +162,7 @@ public class UserResource {
     if(result.containsError()) {
       returnStatusCode = GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus();
     }
-    return generateResponse(returnStatusCode, result);
+    return buildResponse(returnStatusCode, result);
   }
 
   /**
@@ -187,6 +176,7 @@ public class UserResource {
    */
   @POST
   @Path("/confirm")
+  @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext,
                                        @QueryParam("challengeCode") UUID challengeCode) {
 
@@ -209,25 +199,62 @@ public class UserResource {
 
   /**
    * Updates the user asserting that the user being updated is indeed the authenticated user.
-   * TODO: An admin console equivalent that allows registry_editor role to do this.
+   * This endpoint allow authenticated user to update themself without knowing their user key (which is not exposed).
    */
   @PUT
   @Path("/")
   @RolesAllowed({USER_ROLE})
-  public Response update(UserUpdate user, @Context SecurityContext securityContext) {
+  public Response update(UserUpdate userUpdate, @Context SecurityContext securityContext) {
+
     ensureUserInSecurityContext(securityContext);
-
     User updateInitiator = identityService.get(securityContext.getUserPrincipal().getName());
-    User currentUser = identityService.get(user.getUserName());
 
-    //TODO check the user is himself or is an admin
-    Response response = Response.noContent().build();
-    UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
-            updateInitiator.getRoles(), currentUser, user));
-    if(result.containsError()) {
-      response = generateResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), result);
+    Response response;
+    // using this endpoint a user can only update himself
+    if(StringUtils.equals(userUpdate.getUserName(), updateInitiator.getUserName())) {
+      response = innerUpdateUser(updateInitiator, userUpdate, identityService.get(userUpdate.getUserName()));
+    } else {
+      response = buildResponse(Response.Status.BAD_REQUEST);
     }
     return response;
+  }
+
+  /**
+   * For admin console only.
+   */
+  @PUT
+  @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
+  @Path("/{userKey}")
+  public Response updateById(@PathParam("userKey") int userKey, UserUpdate userUpdate, @Context SecurityContext securityContext) {
+    ensureUserInSecurityContext(securityContext);
+    User updateInitiator = identityService.get(securityContext.getUserPrincipal().getName());
+
+    Response response;
+    //ensure the key used to access the update is actually the one of the user represented by the UserUpdate
+    User currentUser = identityService.getByKey(userKey);
+    if(currentUser == null || !currentUser.getUserName().equals(userUpdate.getUserName())) {
+      response = buildResponse(Response.Status.BAD_REQUEST);
+    }
+    else{
+      response = innerUpdateUser(updateInitiator, userUpdate, currentUser);
+    }
+    return response;
+  }
+
+  /**
+   * Internal method used to update a {@link User} from a {@link UserUpdate}.
+   * @param updateInitiator the user who is asking for the update (the user himself or an admin)
+   * @param userUpdate the {@link UserUpdate} representing what needs to be updated
+   * @param currentUser the current user object (loaded from the database)
+   * @return
+   */
+  private Response innerUpdateUser(User updateInitiator, UserUpdate userUpdate, User currentUser) {
+    UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
+            updateInitiator.getRoles(), currentUser, userUpdate));
+    if(result.containsError()) {
+      return buildResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), result);
+    }
+    return Response.noContent().build();
   }
 
   /**
@@ -276,6 +303,7 @@ public class UserResource {
    */
   @POST
   @Path("/updatePassword")
+  @Transactional
   public Response updatePassword(@Context SecurityContext securityContext, @QueryParam("password")String password,
                                  @QueryParam("challengeCode") UUID challengeCode) {
     ensureIsTrustedApp(securityContext);
@@ -324,18 +352,20 @@ public class UserResource {
 
   /**
    * For admin console
+   * Relax content-type to wildcard to allow angularjs.
    */
-  @PUT
+  @DELETE
   @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
+  @Consumes(MediaType.WILDCARD)
   @Path("/{userKey}")
-  public Response updateById(@PathParam("userKey") int userKey, UserUpdate user, @Context SecurityContext securityContext) {
-    return update(user, securityContext);
+  public Response delete(@PathParam("userKey") int userKey) {
+    identityService.delete(userKey);
+    return Response.noContent().build();
   }
 
   /**
-   *
+   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme.
    * @param security
-   * @return
    * @throws WebApplicationException FORBIDDEN if the request is not coming from a trusted application
    */
   private static void ensureIsTrustedApp(SecurityContext security) {
@@ -349,7 +379,7 @@ public class UserResource {
   /**
    * Check that a user is present in the SecurityContext otherwise throw WebApplicationException.
    * @param securityContext
-   * @throws WebApplicationException FORBIDDEN if the user is not present in the {@link SecurityContext}
+   * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link SecurityContext}
    */
   private static void ensureUserInSecurityContext(SecurityContext securityContext)
           throws WebApplicationException {
@@ -363,11 +393,12 @@ public class UserResource {
   private static Response buildResponse(Response.Status status) {
     return buildResponse(status, null);
   }
+
   private static Response buildResponse(Response.Status status, @Nullable Object entity) {
-    return generateResponse(status.getStatusCode(), entity);
+    return buildResponse(status.getStatusCode(), entity);
   }
 
-  private static Response generateResponse(int returnStatusCode, @Nullable Object entity) {
+  private static Response buildResponse(int returnStatusCode, @Nullable Object entity) {
     Response.ResponseBuilder bldr = Response.status(returnStatusCode);
     if(entity != null) {
       bldr.entity(entity);

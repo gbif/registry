@@ -25,7 +25,7 @@ public interface UserMapper {
    */
   void updateLastLogin(@Param("key")int key);
 
-  void delete(String userName);
+  void delete(int key);
   void update(User user);
   User getBySession(String session);
   List<User> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);

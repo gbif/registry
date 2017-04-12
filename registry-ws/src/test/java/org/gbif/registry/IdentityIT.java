@@ -156,7 +156,7 @@ public class IdentityIT extends PlainAPIBaseIT {
 
     //create a new user
     User testUser2 = prepareUser(generateUser(ALTERNATE_USERNAME));
-    cr = getAuthenticatedClient().get(wr -> wr.path("login"));
+    cr = generateAuthenticatedClient(ALTERNATE_USERNAME, PASSWORD).get(wr -> wr.path("login"));
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
     responseData = cr.getEntity(UserSession.class);
 

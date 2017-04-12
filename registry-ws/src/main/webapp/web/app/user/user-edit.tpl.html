@@ -46,6 +46,16 @@
       </label>
     </div>
 
+    <label class="control-label" for="uroles">Unmapped Roles</label>
+    <div class="controls">
+      <ul id="uroles">
+        <li ng-repeat="role in unmapped_user_roles">
+          {{role}}
+        </li>
+      </ul>
+      <p class="muted"><small>Warning: Unmapped roles will be removed after update.</small></p>
+    </div>
+
     <div class="form-actions">
       <button class="btn primary-btn" ng-click="cancelEdit()">Cancel</button>
       <button class="btn primary-btn" ng-click="save(user,user_roles)" type="submit">Save changes</button>

@@ -93,7 +93,7 @@ public class IdentityServiceImplIT {
     assertEquals("GB", u3.getSettings().get("user.country"));
     //assertEquals(2, u3.getRoles().size());
 
-    service.delete(u1.getUserName());
+    service.delete(u1.getKey());
     User u4 = service.get(u1.getUserName());
     assertNull(u4);
   }

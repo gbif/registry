@@ -2,7 +2,7 @@
 <hr/>
 <ul class="unstyled list-hover">
   <li data-ng-repeat="user in results" ng-click="openUser(user)">
-    <strong><a href="">{{user.lastName}}, {{user.firstName}}</a></strong><br/>
+    <strong><a href="">{{user.deleted!=null ? '[deleted] ' : ''}}{{user.lastName}}, {{user.firstName}}</a></strong><br/>
     <small class="muted">{{user.userName}} | {{user.email}}</small><br/>
   </li>
 </ul>
