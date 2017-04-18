@@ -216,6 +216,10 @@ class IdentityServiceImpl implements IdentityService {
     sessionMapper.deleteAll(username);
   }
 
+  @Override
+  public boolean containsChallengeCode(int userKey) {
+    return userMapper.getChallengeCode(userKey) != null;
+  }
 
   @Override
   public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {

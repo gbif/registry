@@ -148,6 +148,11 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
+  public boolean containsChallengeCode(int userKey) {
+    return false;
+  }
+
+  @Override
   public boolean updatePassword(int userKey, String newPassword, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }

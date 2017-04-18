@@ -11,6 +11,7 @@ import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
 import org.gbif.registry.ws.security.UpdateRulesManager;
@@ -353,13 +354,19 @@ public class UserResource {
   /**
    * For admin console
    * Returns the identified user account.
-   * @return the user or null
+   * @return the {@link UserAdminView} or null
    */
   @GET
   @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
   @Path("/{userKey}")
-  public User getById(@PathParam("userKey") int userKey) {
-    return identityService.getByKey(userKey);
+  public UserAdminView getById(@PathParam("userKey") int userKey) {
+
+    User user = identityService.getByKey(userKey);
+    if(user == null) {
+      return null;
+    }
+
+    return new UserAdminView(user, identityService.containsChallengeCode(userKey));
   }
 
   /**

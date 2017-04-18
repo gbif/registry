@@ -140,6 +140,13 @@ public interface IdentityService {
   boolean confirmChallengeCode(int userKey, UUID challengeCode);
 
   /**
+   * Checks if we have a challenge code stored for a specific user.
+   * @param userKey
+   * @return the user has a challenge code stored
+   */
+  boolean containsChallengeCode(int userKey);
+
+  /**
    * Allows to change the password of a user providing a challenge code instead of its password.
    * A challenge code can only be used once and only if it was
    * previously assigned (it assumes {@code resetPassword} was previously called).
