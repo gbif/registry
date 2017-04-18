@@ -7,9 +7,9 @@ import org.gbif.api.vocabulary.ContactType;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -44,16 +44,11 @@ public class CitationGenerator {
     Objects.requireNonNull(organizationTitle, "Organization title shall be provided");
 
     StringJoiner joiner = new StringJoiner(" ");
+    List<String> authorsName = generateAuthorsName(getAuthors(dataset.getContacts()));
+    String authors = authorsName.stream().collect(Collectors.joining(", "));
 
-    List<Contact> contacts = getUniqueAuthors(dataset.getContacts());
-    String authorList = contacts.stream()
-            .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
-            .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
-            .map(CitationGenerator::getAuthorName)
-            .collect(Collectors.joining(", "));
-
-    if (StringUtils.isNotBlank(authorList)) {
-      joiner.add(authorList);
+    if (StringUtils.isNotBlank(authors)) {
+      joiner.add(authors);
     }
 
     if (dataset.getPubDate() != null) {
@@ -88,16 +83,55 @@ public class CitationGenerator {
     return joiner.toString();
   }
 
+  /**
+   * Extracts an ordered list of unique authors from a list of contacts.
+   * A {@link Contact} is identified as an author when his {@link ContactType} is contained in
+   * {@link #AUTHOR_CONTACT_TYPE}
+   *
+   * @param contacts list of contacts available
+   *
+   * @return ordered list of authors or empty list, never null
+   */
+  public static List<Contact> getAuthors(List<Contact> contacts) {
+    if (contacts == null || contacts.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    List<Contact> uniqueContacts = getUniqueAuthors(contacts);
+    return uniqueContacts.stream()
+            .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
+            .collect(Collectors.toList());
+  }
+
+  /**
+   * Given a list of authors, generates a {@link List} of {@link String} representing the authors name.
+   * If a contact doesn't have a first AND last name it will not be included.
+   *
+   * @param authors ordered list of authors
+   * @return list of author names (if it can be generated) or empty list, never null
+   */
+  public static List<String> generateAuthorsName(List<Contact> authors) {
+    if (authors == null || authors.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    return authors.stream()
+            .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
+            .map(CitationGenerator::getAuthorName)
+            .collect(Collectors.toList());
+  }
+
 
   /**
    * This method is used to get the list of "unique" authors.
    * Currently, uniqueness is based on lastName + firstNames.
-   * The order of the provided list will be preserved.
+   * The order of the provided list will be preserved which also means the first {@link ContactType} found for
+   * a contact is the one that will be used for this contact.
    * @param authors
    * @return
    */
   private static List<Contact> getUniqueAuthors(List<Contact> authors){
-    List<Contact> uniqueContact = new LinkedList<>();
+    List<Contact> uniqueContact = new ArrayList<>();
     if(authors != null) {
       authors.forEach(ctc -> {
         if (isNotAlreadyInList(ctc, uniqueContact)) {
@@ -125,13 +159,12 @@ public class CitationGenerator {
   /**
    * Given a {@link Contact}, generates a a String for that contact for citation purpose.
    * The organisation will be used (if present) in case we don't have both lastName and firstNames of the contact.
-   * VISIBLE-FOR-TESTING
    *
    * @param creator
    *
    * @return
    */
-  protected static String getAuthorName(Contact creator) {
+  public static String getAuthorName(Contact creator) {
     StringBuilder sb = new StringBuilder();
     String lastName = StringUtils.trimToNull(creator.getLastName());
     String firstNames = StringUtils.trimToNull(creator.getFirstName());
