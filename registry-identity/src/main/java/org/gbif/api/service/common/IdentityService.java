@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
  * Design and implementation decisions:
  * - This service is also responsible to handle sessions
  * - Create method returns result objects (e.g. {@link UserModelMutationResult}) instead of throwing exceptions
+ * - Authorization related to the {@link IdentityService} itself (who is allowed to create user ...) is NOT done by this service.
  *
  */
 public interface IdentityService {

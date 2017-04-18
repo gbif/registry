@@ -18,12 +18,12 @@ import com.google.inject.Singleton;
 public class IdentityEmailModule extends AbstractModule {
 
   private static final String propertyPrefix = "identity.mail.";
-  private String SMTP_SERVER = "smtp.host";
-  private String EMAIL_FROM = "from";
-  private String EMAIL_BCC = "bcc";
+  private static final String SMTP_SERVER = "smtp.host";
+  private static final String EMAIL_FROM = "from";
+  private static final String EMAIL_BCC = "bcc";
 
-  private String CONFIRM_TEMPLATE = "urlTemplate.confirm";
-  private String RESET_PASSWORD_TEMPLATE = "urlTemplate.resetPassword";
+  private static final String CONFIRM_TEMPLATE = "urlTemplate.confirm";
+  private static final String RESET_PASSWORD_TEMPLATE = "urlTemplate.resetPassword";
 
   private Properties filteredProperties;
 

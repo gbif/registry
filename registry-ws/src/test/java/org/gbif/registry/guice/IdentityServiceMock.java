@@ -7,6 +7,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
+import org.gbif.registry.TestConstants;
 
 import java.util.Date;
 import java.util.Map;
@@ -19,18 +20,21 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * Class that implements an in-memory users store.
- * This class is intended to be use in IT and unit tests ONLY.
+ * This class is intended to be use in IT and unit tests ONLY and only provides methods to authenticate.
  */
 public class IdentityServiceMock implements IdentityService {
 
   private static final Map<String, User> USERS = Maps.newHashMap();
   static{
-    USERS.put("admin", mockUser(1, "admin", UserRole.REGISTRY_ADMIN));
-    USERS.put("user", mockUser(2, "user", UserRole.USER));
-    USERS.put("editor", mockUser(3, "editor", UserRole.REGISTRY_EDITOR));
+    USERS.put(TestConstants.TEST_ADMIN, mockUser(1, TestConstants.TEST_ADMIN,
+            TestConstants.getTestUserRole(TestConstants.TEST_ADMIN)));
+    USERS.put(TestConstants.TEST_EDITOR, mockUser(2, TestConstants.TEST_EDITOR,
+            TestConstants.getTestUserRole(TestConstants.TEST_EDITOR)));
+    USERS.put(TestConstants.TEST_USER, mockUser(3, TestConstants.TEST_USER,
+            TestConstants.getTestUserRole(TestConstants.TEST_USER)));
   }
 
-  public static final String EMAIL_AT_GIBF = "%s@gbif.test.org";
+  private static final String EMAIL_AT_GIBF = "%s@gbif.test.org";
 
   @Nullable
   @Override
@@ -92,8 +96,7 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public PagingResponse<User> list(@Nullable Pageable pageable) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+    throw new UnsupportedOperationException();
   }
 
   /**
@@ -106,8 +109,7 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public PagingResponse<User> search(String query, @Nullable Pageable page) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+    throw new UnsupportedOperationException();
   }
 
   @Override

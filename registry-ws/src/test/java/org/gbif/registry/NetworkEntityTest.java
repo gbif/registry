@@ -108,7 +108,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   public void setup() {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (pp != null) {
-      pp.setPrincipal("admin");
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
     }
   }
 

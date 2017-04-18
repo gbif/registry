@@ -9,6 +9,7 @@ import org.gbif.api.service.common.UserSession;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
+import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
@@ -46,6 +47,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mybatis.guice.transactional.Transactional;
@@ -60,7 +62,8 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
  * Web layer relating to authentication and account creation.
  *
  * Design and implementation decisions:
- * - This resource contains mostly to routing to the business logic ({@link IdentityService}
+ * - This resource contains mostly to routing to the business logic ({@link IdentityService} including
+ *   authorizations
  * - Return {@link Response} instead of object to minimize usage of exceptions and provide
  *   better control over the HTTP code returned. This also allows to return an entity in case
  *   of errors (e.g. {@link UserModelMutationResult}.
@@ -76,14 +79,21 @@ public class UserResource {
   private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
 
   private final IdentityService identityService;
+  private final List<String> appKeyWhitelist;
 
   //filters roles that are deprecated
   private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter( r ->
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
 
+  /**
+   *
+   * @param identityService
+   * @param appKeyWhitelist list of appkeys that are allowed to use this resource.
+   */
   @Inject
-  public UserResource(IdentityService identityService) {
+  public UserResource(IdentityService identityService, @Named(IdentityServiceModule.APPKEYS_WHITELIST) List<String> appKeyWhitelist) {
     this.identityService = identityService;
+    this.appKeyWhitelist = appKeyWhitelist;
   }
 
   @GET
@@ -152,9 +162,9 @@ public class UserResource {
    */
   @POST
   @Path("/")
-  public Response create(@Context SecurityContext securityContext, UserCreation user) {
+  public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
 
-    ensureIsTrustedApp(securityContext);
+    ensureIsTrustedApp(securityContext, request);
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
     UserModelMutationResult result = identityService.create(
@@ -170,6 +180,7 @@ public class UserResource {
    * The username is taken from the securityContext.
    *
    * @param securityContext
+   * @param request
    * @param challengeCode
    *
    * @return
@@ -177,10 +188,10 @@ public class UserResource {
   @POST
   @Path("/confirm")
   @Transactional
-  public Response confirmChallengeCode(@Context SecurityContext securityContext,
+  public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
                                        @QueryParam("challengeCode") UUID challengeCode) {
 
-    ensureIsTrustedApp(securityContext);
+    ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     User user = identityService.get(securityContext.getUserPrincipal().getName());
@@ -263,10 +274,10 @@ public class UserResource {
    */
   @GET
   @Path("/challengeCodeValid")
-  public Response tokenValidityCheck(@Context SecurityContext securityContext,
+  public Response tokenValidityCheck(@Context SecurityContext securityContext, @Context HttpServletRequest request,
                                  @QueryParam("challengeCode") UUID challengeCode) {
 
-    ensureIsTrustedApp(securityContext);
+    ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     String username = securityContext.getUserPrincipal().getName();
@@ -283,8 +294,8 @@ public class UserResource {
    */
   @POST
   @Path("/resetPassword")
-  public Response resetPassword(@Context SecurityContext securityContext) {
-    ensureIsTrustedApp(securityContext);
+  public Response resetPassword(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+    ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     String identifier= securityContext.getUserPrincipal().getName();
@@ -304,9 +315,10 @@ public class UserResource {
   @POST
   @Path("/updatePassword")
   @Transactional
-  public Response updatePassword(@Context SecurityContext securityContext, @QueryParam("password")String password,
+  public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
+                                 @QueryParam("password")String password,
                                  @QueryParam("challengeCode") UUID challengeCode) {
-    ensureIsTrustedApp(securityContext);
+    ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     String username = securityContext.getUserPrincipal().getName();
@@ -364,13 +376,16 @@ public class UserResource {
   }
 
   /**
-   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme.
+   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme AND the appkey is
+   * in our whitelist.
    * @param security
+   * @param request
    * @throws WebApplicationException FORBIDDEN if the request is not coming from a trusted application
    */
-  private static void ensureIsTrustedApp(SecurityContext security) {
-    if(GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())) {
-      //TODO check the appKey is portal16 or registry console
+  private void ensureIsTrustedApp(SecurityContext security, HttpServletRequest request) {
+    //ensure the appkey is authenticated
+    if (GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())
+            && appKeyWhitelist.contains(GbifAuthService.getAppKeyFromRequest(request))) {
       return;
     }
     throw new WebApplicationException(Response.Status.FORBIDDEN);

@@ -1,10 +1,14 @@
 package org.gbif.registry;
 
+import org.gbif.api.vocabulary.UserRole;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+
 /**
- *
+ * Contants related to unit and integration testing of the registry.
  */
 public class TestConstants {
 
@@ -18,12 +22,33 @@ public class TestConstants {
     appKeys.put(IT_APP_KEY, IT_APP_SECRET);
   }
 
+  public static final String TEST_ADMIN = "admin";
+  public static final String TEST_EDITOR = "editor";
+  public static final String TEST_USER = "user";
+
+
+  public static final Map<String, UserRole> TEST_USERS_ROLE = Maps.newHashMap();
+  static{
+    TEST_USERS_ROLE.put(TEST_ADMIN, UserRole.REGISTRY_ADMIN);
+    TEST_USERS_ROLE.put(TEST_EDITOR, UserRole.REGISTRY_EDITOR );
+    TEST_USERS_ROLE.put(TEST_USER, UserRole.USER);
+  }
+
   public static String getRegistryServerURL(int port) {
     return "http://localhost:" + port;
   }
 
   public static Map<String, String> getIntegrationTestAppKeys() {
     return appKeys;
+  }
+
+  /**
+   * Return the {@link UserRole} of a test user as defined by {@link #TEST_USERS_ROLE}.
+   * @param testUsername
+   * @return
+   */
+  public static UserRole getTestUserRole(String testUsername) {
+    return TEST_USERS_ROLE.get(testUsername);
   }
 
 }

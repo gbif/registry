@@ -52,7 +52,7 @@ class IdentityServiceImpl implements IdentityService {
 
   @Inject
   IdentityServiceImpl(UserMapper userMapper, SessionMapper sessionMapper,
-                             IdentityEmailManager identityEmailManager) {
+                      IdentityEmailManager identityEmailManager) {
     this.userMapper = userMapper;
     this.sessionMapper = sessionMapper;
     this.identityEmailManager = identityEmailManager;
