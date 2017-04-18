@@ -22,8 +22,9 @@ angular.module('app', [
 
   // relative to /web brings us up to the root
   // should this be run outside of the registry-ws project, this will need changed
-  //RestangularProvider.setBaseUrl("../");
-  RestangularProvider.setBaseUrl("http://localhost:8080/");
+  RestangularProvider.setBaseUrl("../");
+  //useful for running locally
+  //RestangularProvider.setBaseUrl("http://localhost:8080/");
 
   // all GBIF entities use "key" and not "id" as the id, and this is used inn routing
   RestangularProvider.setRestangularFields({
