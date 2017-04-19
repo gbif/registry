@@ -4,6 +4,10 @@
   <span class="label label-important">Important</span> <span class="text-error">This user was deleted {{user.deleted | timeAgo}}.<span><br/>
   <small class="muted">{{user.deleted}}</small>
 </p>
+<p ng-show="user.challengeCodePresent">
+  <span class="label label-important">Important</span> <span class="text-error">This user has a challenge code.<span><br/>
+  <small class="muted">Challenge code shall be confirmed with a link sent by email</small>
+</p>
 
 <dl class="dl-horizontal spaced-list">
   <dt>Username</dt>
