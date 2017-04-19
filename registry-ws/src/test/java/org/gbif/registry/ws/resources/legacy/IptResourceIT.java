@@ -178,8 +178,8 @@ public class IptResourceIT {
     // send POST request with credentials
     HttpUtil.Response result = Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
 
-    // correct response code? Jersey resource should really respond with 201, but 2XX means success
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    // correct response code?
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
     installation = validatePersistedIptInstallation(installationKey, organizationKey);
@@ -584,7 +584,7 @@ public class IptResourceIT {
     HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
 
     // correct response code?
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
     dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey, DatasetType.OCCURRENCE);
