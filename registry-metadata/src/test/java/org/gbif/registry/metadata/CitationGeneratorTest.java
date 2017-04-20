@@ -55,11 +55,28 @@ public class CitationGeneratorTest {
     c.setLastName("Doe");
     c.setFirstName("John D.");
     c.setType(ContactType.ORIGINATOR);
-
     dataset.getContacts().add(c);
 
-    assertEquals("Doe J D (2009) Dataset to be cited. Version 2.1. Cited Organization. " +
+    assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
             "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+            CitationGenerator.generateCitation(dataset,org));
+  }
+
+  @Test
+  public void testCompleteCitationNoYear() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+
+    Dataset dataset = getTestDatasetObject();
+    dataset.setPubDate(null);
+    Contact c = new Contact();
+    c.setLastName("Doe");
+    c.setFirstName("John");
+    c.setType(ContactType.ORIGINATOR);
+    dataset.getContacts().add(c);
+
+    assertEquals("Doe J. Dataset to be cited. Version 2.1. Cited Organization. " +
+                    "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -88,7 +105,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(c);
     dataset.getContacts().add(c2);
 
-    assertEquals("Doe J D (2009) Dataset to be cited. Version 2.1. Cited Organization. " +
+    assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
                     "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " +
             LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
