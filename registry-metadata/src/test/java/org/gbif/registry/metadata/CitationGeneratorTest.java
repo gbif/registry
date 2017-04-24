@@ -58,7 +58,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(c);
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
-            "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+            "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -76,7 +76,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(c);
 
     assertEquals("Doe J. Dataset to be cited. Version 2.1. Cited Organization. " +
-                    "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -106,7 +106,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(c2);
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
-                    "Checklist Dataset http://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
             LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
