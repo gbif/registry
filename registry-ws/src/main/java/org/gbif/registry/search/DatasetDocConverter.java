@@ -90,6 +90,8 @@ class DatasetDocConverter {
       List<Integer> decades = timeSeriesExtractor.extractDecades(d.getTemporalCoverages());
       doc.addField("decade", decades);
 
+      doc.addField("modified_date", d.getModified());
+
       // index entire metadata documents
       indexMetadata(doc, d.getKey(), metadataXml);
 

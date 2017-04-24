@@ -28,6 +28,7 @@
 
     <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" omitNorms="true" positionIncrementGap="0" />
 
+    <fieldType name="tdate" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0" sortMissingLast="true"/>
 
     <!-- case insensitive field for UUID values. -->
     <fieldType name="uuid" class="solr.TextField">
@@ -115,6 +116,7 @@
     <!-- fields derived from occurrence data only -->
     <field name="year" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
     <field name="country" type="int" indexed="true" stored="false" required="false" multiValued="true" docValues="true"/>
+    <field name="modified_date" type="tdate" indexed="true" stored="false" docValues="true"/>
   </fields>
 
   <!-- Field to use to determine and enforce document uniqueness. Unless this
