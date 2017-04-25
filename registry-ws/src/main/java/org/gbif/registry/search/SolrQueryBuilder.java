@@ -22,8 +22,8 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.common.search.solr.QueryUtils;
+import org.gbif.common.search.solr.SearchDateUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -222,11 +222,14 @@ public class SolrQueryBuilder {
             } else if (Boolean.class.isAssignableFrom(param.type())) {
               filterVal = String.valueOf(Boolean.parseBoolean(value));
 
-            } else if (LocalDateTime.class.isAssignableFrom(param.type())) {
-                filterVal = LocalDateTime.parse(value).toString();
-
             } else {
-              filterVal = toPhraseQuery(value);
+
+              if(DatasetSearchParameter.MODIFIED_DATE == param){
+                filterVal = SearchDateUtils.toDateQuery(value);
+              }
+              else {
+                filterVal = toPhraseQuery(value);
+              }
             }
 
             final String predicate = PARAMS_JOINER.join(solrField, filterVal);
