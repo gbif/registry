@@ -48,7 +48,7 @@ import static org.gbif.common.search.solr.SolrConstants.BLANK;
 import static org.gbif.common.search.solr.SolrConstants.DEFAULT_QUERY;
 import static org.gbif.common.search.solr.SolrConstants.NOT_OP;
 import static org.gbif.common.search.solr.SolrConstants.NUM_HL_SNIPPETS;
-import static org.gbif.registry.search.SolrMapping.FACET_MAPPING;
+import static org.gbif.registry.search.SolrMapping.FIELDS_MAPPING;
 import static org.gbif.registry.search.SolrMapping.HIGHLIGHT_FIELDS;
 import static org.gbif.ws.util.WebserviceParameter.DEFAULT_SEARCH_PARAM_VALUE;
 
@@ -167,7 +167,7 @@ public class SolrQueryBuilder {
     Multimap<DatasetSearchParameter, String> params = request.getParameters();
     if (params != null) {
       for (DatasetSearchParameter param : params.keySet()) {
-        String solrField = FACET_MAPPING.get(param);
+        String solrField = FIELDS_MAPPING.get(param);
         if (solrField == null) {
           LOG.warn("Requested facet {} not mapped! It will be ignored", param);
 
@@ -272,20 +272,20 @@ public class SolrQueryBuilder {
       solrQuery.setFacetMissing(false);
       solrQuery.setFacetSort(DEFAULT_FACET_SORT.toString().toLowerCase());
 
-      if(searchRequest.getFacetLimit() != null) {
+      if (searchRequest.getFacetLimit() != null) {
         solrQuery.setFacetLimit(searchRequest.getFacetLimit());
       }
 
-      if(searchRequest.getFacetOffset() != null) {
+      if (searchRequest.getFacetOffset() != null) {
         solrQuery.setParam(FacetParams.FACET_OFFSET, searchRequest.getFacetOffset().toString());
       }
 
       for (final DatasetSearchParameter facet : searchRequest.getFacets()) {
-        if (!FACET_MAPPING.containsKey(facet)) {
+        if (!FIELDS_MAPPING.containsKey(facet)) {
           LOG.warn("{} is no valid facet. Ignore", facet);
           continue;
         }
-        final String field = FACET_MAPPING.get(facet);
+        final String field = FIELDS_MAPPING.get(facet);
         if (searchRequest.isMultiSelectFacets()) {
           // use exclusion filter with same name as used in filter query
           // http://wiki.apache.org/solr/SimpleFacetParameters#Tagging_and_excluding_Filters
