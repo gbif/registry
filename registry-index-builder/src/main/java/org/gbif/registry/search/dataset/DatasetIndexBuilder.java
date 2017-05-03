@@ -80,8 +80,8 @@ public class DatasetIndexBuilder {
       SolrConfig solr = SolrConfig.fromProperties(props, SOLR_DATASET_PREFIX);
       DatasetIndexBuilder idxBuilder = new DatasetIndexBuilder(inj.getInstance(DatasetService.class),
                                                                inj.getInstance(DatasetIndexService.class));
-      LOG.info("Building new solr index for collection {} on {} and idField {}", solr.collection, solr.serverHome,
-               solr.idField);
+      LOG.info("Building new solr index for collection {} on {} and idField {}", solr.getCollection(),
+              solr.getServerHome(), solr.getIdField());
       idxBuilder.build();
 
       LOG.info("Indexing completed successfully.");

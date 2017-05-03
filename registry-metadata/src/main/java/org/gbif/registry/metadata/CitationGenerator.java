@@ -26,6 +26,11 @@ public class CitationGenerator {
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE = EnumSet.of(ContactType.ORIGINATOR,
           ContactType.METADATA_AUTHOR);
 
+  /**
+   * Utility class
+   */
+  private CitationGenerator(){}
+
   public static String generateCitation(Dataset dataset, Organization org) {
     Objects.requireNonNull(org, "Organization shall be provided");
     return generateCitation(dataset, org.getTitle());
@@ -36,7 +41,7 @@ public class CitationGenerator {
    * TODO add support for i18n
    * @param dataset
    * @param organizationTitle
-   * @return
+   * @return generated citation as {@link String}
    */
   public static String generateCitation(Dataset dataset, String organizationTitle) {
 
@@ -48,11 +53,13 @@ public class CitationGenerator {
     String authors = authorsName.stream().collect(Collectors.joining(", "));
 
     if (StringUtils.isNotBlank(authors)) {
+      //only add a dot if we are not gonna add it with the year
+      authors += dataset.getPubDate() == null ? "." : "";
       joiner.add(authors);
     }
 
     if (dataset.getPubDate() != null) {
-      joiner.add("(" + dataset.getPubDate().toInstant().atZone(UTC).getYear() + ")");
+      joiner.add("(" + dataset.getPubDate().toInstant().atZone(UTC).getYear() + ").");
     }
 
     // add title
