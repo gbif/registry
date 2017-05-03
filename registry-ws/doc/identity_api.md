@@ -20,6 +20,7 @@
 
 #### Administrative console only
 | URL | Method | Success | Description |
+| ------------- |---------| ---------|---|
 | `/user/{userID}` | `GET` | `{USER}` | Gets the user role is authorised to view the user (e.g. enable admins to edit account details) |
 | `/user/{userID}` | `PUT` | `204` | Allowing admin to edit user accounts |
 
