@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -190,7 +191,7 @@ public class UserResource {
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                       @QueryParam("challengeCode") UUID challengeCode) {
+                                       @FormParam("challengeCode") UUID challengeCode) {
 
     ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
@@ -306,7 +307,6 @@ public class UserResource {
       // initiate mail, and store the challenge etc.
       identityService.resetPassword(user.getKey());
     }
-    //this will probably send 201
     return Response.noContent().build();
   }
 
@@ -317,8 +317,8 @@ public class UserResource {
   @Path("/updatePassword")
   @Transactional
   public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                 @QueryParam("password")String password,
-                                 @QueryParam("challengeCode") UUID challengeCode) {
+                                 @FormParam("password")String password,
+                                 @FormParam("challengeCode") UUID challengeCode) {
     ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
@@ -360,7 +360,6 @@ public class UserResource {
   @RolesAllowed({EDITOR_ROLE, ADMIN_ROLE})
   @Path("/{userKey}")
   public UserAdminView getById(@PathParam("userKey") int userKey) {
-
     User user = identityService.getByKey(userKey);
     if(user == null) {
       return null;
