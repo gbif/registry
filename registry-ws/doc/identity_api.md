@@ -13,10 +13,10 @@
 | URL | Method | Success | Description |
 | --- | --- | --- | --- |
 | `/user` | `POST` | `201` | Creates a user. Verifies [required fields](#create-user-fields) and returns `422` if the user can not be created. The appkey must be provided as `x-gbif-user` |
-| `/user/confirm` | `POST` | `201` `{USER}`, `{SESSION}` | Confirms that the user have access to that mail. The target user must be provided as `x-gbif-user` and the `challengeCode={challengeCode} in the post form. User is logged in immediately if `challengeCode` is valid. |
+| `/user/confirm` | `POST` | `201` `{USER}`, `{SESSION}` | Confirms that the user have access to that mail. The target user must be provided as `x-gbif-user` and the `challengeCode` in the post body (as JSON). User is logged in immediately if `challengeCode` is valid. |
 | `/user/resetPassword` | `POST` | `204` | Send user a mail with link to reset password. The target user (userName or email) must be provided as `x-gbif-user`. |
 | `/user/challengeCodeValid?challengeCode={challengeCode}` | `GET` | `204` | Utility for the web app to determine if the token is the currently valid challenge for the user. Returns `204` if so (app will then present the new password form) or `401` if the token is not considered authorized to change the password. The target user must be provided as `x-gbif-user`. |
-| `/user/updatePassword` | `POST` | `201` `{USER}`, `{SESSION}` | Updates the password for the user by accepting the `challengeCode={challengeCode}` and `password={newPassword}` in the form. Returns `401` if the token is not authorized to change the password. Deletes all user tokens and return a new login token to set as cookie. The target user must be provided as `x-gbif-user`. |
+| `/user/updatePassword` | `POST` | `201` `{USER}`, `{SESSION}` | Updates the password for the user by accepting the `challengeCode` and `password` in the post body (as JSON). Returns `401` if the token is not authorized to change the password. Deletes all user tokens and return a new login token to set as cookie. The target user must be provided as `x-gbif-user`. |
 
 #### Administrative console only
 | URL | Method | Success | Description |

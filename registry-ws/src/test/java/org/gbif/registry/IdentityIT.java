@@ -7,6 +7,7 @@ import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.ws.model.ChallengeCodeParameters;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.security.UpdateRulesManager;
 import org.gbif.ws.response.GbifResponseStatus;
@@ -18,7 +19,6 @@ import javax.ws.rs.core.Response;
 
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.representation.Form;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -129,9 +129,9 @@ public class IdentityIT extends PlainAPIBaseIT {
     UUID challengeCode = userMapper.getChallengeCode(newUser.getKey());
 
     //generate a new request to confirm challengeCode
-    Form form = new Form();
-    form.add("challengeCode", challengeCode);
-    cr = postSignedRequest(newUserName, form, uri -> uri.path("confirm"));
+    ChallengeCodeParameters params = new ChallengeCodeParameters();
+    params.setChallengeCode(challengeCode);
+    cr = postSignedRequest(newUserName, params, uri -> uri.path("confirm"));
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
     cr = generateAuthenticatedClient(newUserName, PASSWORD).get(wr -> wr.path("login"));
@@ -198,11 +198,11 @@ public class IdentityIT extends PlainAPIBaseIT {
     User testUser = prepareUser();
 
     User createdUser = userMapper.get(testUser.getUserName());
-    Form form = new Form();
-    form.add("password", "1234");
-    form.add("challengeCode", UUID.randomUUID().toString());
+    ChallengeCodeParameters params = new ChallengeCodeParameters();
+    params.setPassword("1234");
+    params.setChallengeCode(UUID.randomUUID());
     ClientResponse cr =
-            postSignedRequest(testUser.getUserName(), form,
+            postSignedRequest(testUser.getUserName(), params,
                     uriBldr -> uriBldr.path("updatePassword"));
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
 
@@ -221,10 +221,11 @@ public class IdentityIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
     //change password using that code
-    form = new Form();
-    form.add("password", "1234");
-    form.add("challengeCode", challengeCode);
-    cr = postSignedRequest(testUser.getUserName(), form,
+    params = new ChallengeCodeParameters();
+    params.setPassword("1234");
+    params.setChallengeCode(challengeCode);
+
+    cr = postSignedRequest(testUser.getUserName(), params,
             uri -> uri.path("updatePassword"));
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 

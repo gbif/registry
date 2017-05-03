@@ -11,6 +11,7 @@ import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.model.ChallengeCodeParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
@@ -31,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -183,7 +183,7 @@ public class UserResource {
    *
    * @param securityContext
    * @param request
-   * @param challengeCode
+   * @param challengeCodeParameters
    *
    * @return
    */
@@ -191,13 +191,13 @@ public class UserResource {
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                       @FormParam("challengeCode") UUID challengeCode) {
+                                       ChallengeCodeParameters challengeCodeParameters) {
 
     ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     User user = identityService.get(securityContext.getUserPrincipal().getName());
-    if(user != null && identityService.confirmChallengeCode(user.getKey(), challengeCode)){
+    if(user != null && identityService.confirmChallengeCode(user.getKey(), challengeCodeParameters.getChallengeCode())){
       //generate a token
       Session session = identityService.createSession(user.getUserName());
       String sessionToken = session.getSession();
@@ -317,15 +317,15 @@ public class UserResource {
   @Path("/updatePassword")
   @Transactional
   public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                 @FormParam("password")String password,
-                                 @FormParam("challengeCode") UUID challengeCode) {
+                                 ChallengeCodeParameters challengeCodeParameters) {
     ensureIsTrustedApp(securityContext, request);
     ensureUserInSecurityContext(securityContext);
 
     String username = securityContext.getUserPrincipal().getName();
     User user = identityService.get(username);
 
-    if(identityService.updatePassword(user.getKey(), password, challengeCode)){
+    if(identityService.updatePassword(user.getKey(), challengeCodeParameters.getPassword(),
+            challengeCodeParameters.getChallengeCode())){
       //terminate all previous sessions
       identityService.terminateAllSessions(user.getUserName());
 
