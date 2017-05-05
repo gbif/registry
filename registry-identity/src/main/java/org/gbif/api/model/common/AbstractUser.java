@@ -26,8 +26,11 @@ public abstract class AbstractUser {
   protected String lastName;
   protected String email;
   protected Set<UserRole> roles = Sets.newHashSet();
-  // Note: Settings was introduced in the system developed to replace Drupal
+
   protected Map<String, String> settings = Maps.newHashMap();
+
+  //settings that the user will not set directly
+  protected Map<String, String> systemSettings = Maps.newHashMap();
 
   protected Date deleted;
 
@@ -114,10 +117,13 @@ public abstract class AbstractUser {
     return false;
   }
 
-  public boolean isAdmin() {
-    return roles.contains(UserRole.ADMIN);
+  /**
+   * Sets the settings object, setting an empty map if null is provided.
+   */
+  public void setSettings(Map<String, String> settings) {
+    // safeguard against misuse to avoid NPE
+    this.settings = settings == null ? Maps.<String,String>newHashMap() : settings;
   }
-
 
   /**
    * Gets the settings which may be empty but never null.
@@ -131,9 +137,17 @@ public abstract class AbstractUser {
   /**
    * Sets the settings object, setting an empty map if null is provided.
    */
-  public void setSettings(Map<String, String> settings) {
+  public void setSystemSettings(Map<String, String> systemSettings) {
     // safeguard against misuse to avoid NPE
-    this.settings = settings == null ? Maps.<String,String>newHashMap() : settings;
+    this.systemSettings = systemSettings == null ? Maps.<String,String>newHashMap() : systemSettings;
+  }
+  /**
+   * Gets the settings which may be empty but never null.
+   * @return
+   */
+  @NotNull
+  public Map<String, String> getSystemSettings() {
+    return systemSettings;
   }
 
   public Date getDeleted() {
@@ -160,12 +174,14 @@ public abstract class AbstractUser {
             && Objects.equal(this.email, that.email)
             && Objects.equal(this.roles, that.roles)
             && Objects.equal(this.settings, that.settings)
+            && Objects.equal(this.systemSettings, that.systemSettings)
             && Objects.equal(this.deleted, that.deleted);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(userName, firstName, lastName, email, roles, settings, deleted);
+    return Objects.hashCode(userName, firstName, lastName, email, roles, settings,
+            systemSettings, deleted);
   }
 
   @Override
@@ -177,6 +193,7 @@ public abstract class AbstractUser {
             .add("email", email)
             .add("roles", roles)
             .add("settings", settings)
+            .add("systemSettings", systemSettings)
             .add("deleted", deleted)
             .toString();
   }

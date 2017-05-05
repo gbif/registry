@@ -2,16 +2,14 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.identity.model.Session;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,26 +49,21 @@ class Authentications {
     return null;
   }
 
-  static void attachNewCookieForSession(Session session, HttpServletResponse response) {
-    OffsetDateTime oneHourFromNow
-      = OffsetDateTime.now(ZoneOffset.UTC)
-                      .plus(Duration.ofHours(1));
-
-    String cookieExpires
-      = DateTimeFormatter.RFC_1123_DATE_TIME
-      .format(oneHourFromNow);
-
-    response.setHeader("Set-Cookie", COOKIE_SESSION + "=" + session.getSession() + "; "
-                                     + "Domain=.gbif-dev.org; Expires=" + cookieExpires + "; Path=/; HTTPOnly");
-
-    /*
-    final Boolean useSecureCookie = new Boolean(false);
-    final int expiryTime = 60*60;  // 60 mins
-    Cookie cookie = new Cookie(COOKIE_SESSION, session.getSession());
-    cookie.setMaxAge(expiryTime);
-    cookie.setPath("/");
-    cookie.setDomain(".gbif-dev.org");
-    response.addCookie(cookie);
-    */
+  /**
+   * Check that a user is present in the getUserPrincipal of the SecurityContext otherwise throw
+   * WebApplicationException UNAUTHORIZED.
+   *
+   * @param securityContext
+   *
+   * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link SecurityContext}
+   */
+  static void ensureUserSetInSecurityContext(SecurityContext securityContext)
+          throws WebApplicationException {
+    if (securityContext == null || securityContext.getUserPrincipal() == null ||
+            StringUtils.isBlank(securityContext.getUserPrincipal().getName())) {
+      LOG.warn("The user must be identified by the username. AuthenticationScheme: {}",
+              securityContext.getAuthenticationScheme());
+      throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    }
   }
 }

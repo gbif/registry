@@ -10,16 +10,17 @@
     <result column="password" property="passwordHash" />
     <result column="roles" property="roles" typeHandler="org.gbif.identity.mybatis.UserRoleTypeHandler"/>
     <result column="settings" property="settings" typeHandler="org.gbif.identity.mybatis.SettingsTypeHandler"/>
+    <result column="system_settings" property="systemSettings" typeHandler="org.gbif.identity.mybatis.SettingsTypeHandler"/>
     <result column="last_login" property="lastLogin" />
     <result column="deleted" property="deleted" />
   </resultMap>
 
   <sql id="WRITABLE_USER_FIELDS">
-    username,first_name,last_name,email,password,roles,settings,created
+    username,first_name,last_name,email,password,roles,settings,system_settings,created
   </sql>
 
   <sql id="USER_FIELDS">
-    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.last_login, u.deleted
+    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.system_settings,u.last_login, u.deleted
   </sql>
 
   <sql id="WRITABLE_USER_FIELD_TYPES">
@@ -30,6 +31,7 @@
     #{passwordHash,jdbcType=VARCHAR},
     #{roles,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.UserRoleTypeHandler},
     #{settings,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.SettingsTypeHandler}::hstore,
+    #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.SettingsTypeHandler}::hstore,
     now() <!-- created -->
   </sql>
 
@@ -40,6 +42,7 @@
     password = #{passwordHash,jdbcType=VARCHAR},
     roles = #{roles,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.UserRoleTypeHandler},
     settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.SettingsTypeHandler}::hstore,
+    system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.identity.mybatis.SettingsTypeHandler}::hstore,
     deleted = #{deleted}
   </sql>
 

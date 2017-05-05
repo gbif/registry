@@ -1,8 +1,8 @@
 package org.gbif.registry.ws.filter;
 
 import org.gbif.api.model.common.User;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.model.common.UserPrincipal;
+import org.gbif.api.service.common.IdentityService;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.security.Principal;
@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.sun.jersey.core.util.Base64;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,41 +30,40 @@ import org.slf4j.LoggerFactory;
  */
 public class IdentifyFilter implements ContainerRequestFilter {
 
-  private class Authorizer implements SecurityContext {
+  public static final String GBIF_SCHEME_APP_ROLE = "GBIF_SCHEME_APP_ROLE";
 
+  private static class Authorizer implements SecurityContext {
     private final UserPrincipal principal;
+    //appRole should ONLY be defined if there is no UserPrincipal
+    private final String appRole;
+
     private final String authenticationScheme;
+    private final boolean isSecure;
 
-    /**
-     * Anonymous user.
-     */
-    private Authorizer() {
-      this.principal = null;
-      this.authenticationScheme = "";
-    }
-
-    private Authorizer(@Nullable final String username, final String authenticationScheme) {
-      if (identityService == null) {
-        LOG.debug("No user service configured! No roles assigned, using anonymous user instead.");
-        principal = null;
-
-      } else {
-        User user = identityService.get(username);
-        if (user == null) {
-          principal = null;
-          LOG.debug(
-                  "Authorized user {} not found in user service! No roles could be assigned, using anonymous user instead.",
-                  username);
-        } else {
-          principal = new UserPrincipal(user);
-        }
-      }
+    private Authorizer(UserPrincipal principal, String authenticationScheme, boolean isSecure) {
+      this.principal = principal;
       this.authenticationScheme = authenticationScheme;
+      this.appRole = null;
+      this.isSecure = isSecure;
     }
 
-    private Authorizer(User user, String scheme) {
-      this.principal = new UserPrincipal(user);
-      this.authenticationScheme = scheme;
+    private Authorizer(String appRole, String authenticationScheme, boolean isSecure) {
+      this.principal = null;
+      this.authenticationScheme = authenticationScheme;
+      this.appRole = appRole;
+      this.isSecure = isSecure;
+    }
+
+    static Authorizer getAuthorizer(User user, String authenticationScheme, boolean isSecure) {
+      return new Authorizer(new UserPrincipal(user), authenticationScheme, isSecure);
+    }
+
+    static Authorizer getAnonymous(boolean isSecure) {
+      return new Authorizer((UserPrincipal)null, "", isSecure);
+    }
+
+    static Authorizer getAuthorizer(String appRole, String authenticationScheme, boolean isSecure) {
+      return new Authorizer(appRole, authenticationScheme, isSecure);
     }
 
     @Override
@@ -78,12 +78,13 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     @Override
     public boolean isSecure() {
-      return "https".equals(uriInfo.getRequestUri().getScheme());
+      return isSecure;
     }
 
     @Override
     public boolean isUserInRole(String role) {
-      return principal != null && principal.hasRole(role);
+      return (principal != null && principal.hasRole(role)) ||
+              (appRole != null && appRole.equals(role));
     }
   }
 
@@ -123,12 +124,16 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     if (authorizer == null) {
       // default is the anonymous user
-      authorizer = new Authorizer();
+      authorizer = Authorizer.getAnonymous(isSecure());
     }
 
     request.setSecurityContext(authorizer);
 
     return request;
+  }
+
+  private boolean isSecure() {
+    return "https".equals(uriInfo.getRequestUri().getScheme());
   }
 
   private Authorizer authenticate(ContainerRequest request) {
@@ -141,7 +146,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
         return gbifAuthentication(request);
       }
     }
-    return new Authorizer();
+    return Authorizer.getAnonymous(isSecure());
   }
 
   private Authorizer basicAuthentication(String authentication) {
@@ -172,7 +177,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
 
     LOG.debug("Authenticating user {} via scheme {}", username, SecurityContext.BASIC_AUTH);
-    return new IdentifyFilter.Authorizer(user, SecurityContext.BASIC_AUTH);
+    return Authorizer.getAuthorizer(user, SecurityContext.BASIC_AUTH, isSecure());
   }
 
   private Authorizer gbifAuthentication(ContainerRequest request) {
@@ -191,7 +196,27 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
 
     LOG.debug("Authenticating user {} via scheme {}", username, GbifAuthService.GBIF_SCHEME);
-    return new Authorizer(username, GbifAuthService.GBIF_SCHEME);
+    if (identityService == null) {
+      LOG.debug("No identityService configured! No roles assigned, using anonymous user instead.");
+      return Authorizer.getAnonymous(isSecure());
+    }
+
+    //check if we have a request that impersonates a user or if it's an app
+    User user = identityService.get(username);
+    if (user == null) {
+      //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
+      String appKey = GbifAuthService.getAppKeyFromRequest((name) -> request.getHeaderValue(name));
+      if(StringUtils.equals(appKey,username)) {
+        return Authorizer.getAuthorizer(GBIF_SCHEME_APP_ROLE, GbifAuthService.GBIF_SCHEME, isSecure());
+      }
+      else{
+        LOG.debug(
+                "Authorized user {} not found in user service! No roles could be assigned, using anonymous user instead.",
+                username);
+        return Authorizer.getAnonymous(isSecure());
+      }
+    }
+    return Authorizer.getAuthorizer(user, GbifAuthService.GBIF_SCHEME, isSecure());
   }
 
 }

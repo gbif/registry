@@ -9,11 +9,15 @@ import org.gbif.registry.ws.security.UpdateRulesManager;
 
 import java.util.UUID;
 
+import javax.ws.rs.core.MultivaluedMap;
+
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- *
+ * Fixtures related to users used for testing.
  */
 public class UserTestFixture {
 
@@ -88,5 +92,18 @@ public class UserTestFixture {
       fail("Shall not contain error. Got " + userModelMutationResult.getError() + "," +
               userModelMutationResult.getConstraintViolation());
     }
+  }
+
+  public static MultivaluedMap<String, String> buildQueryParams(String key, String value){
+    MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+    queryParams.add(key, value);
+    return queryParams;
+  }
+
+  public static MultivaluedMap<String, String> buildQueryParams(String key1, String value1, String key2, String value2){
+    MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+    queryParams.add(key1, value1);
+    queryParams.add(key2, value2);
+    return queryParams;
   }
 }

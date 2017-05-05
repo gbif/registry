@@ -82,7 +82,7 @@ public class IdentityServiceImplIT {
 
     // update
     u2.getSettings().put("user.country", "GB");
-    //u2.getRoles().add(UserRole.REGISTRY_ADMIN);
+    u2.getSystemSettings().put("internal.settings", "-7");
 
     UserModelMutationResult mutationResult = service.update(u2);
     assertNotNull("got mutationResult", mutationResult);
@@ -91,7 +91,7 @@ public class IdentityServiceImplIT {
     User u3 = service.get(u1.getUserName());
     assertEquals(2, u3.getSettings().size());
     assertEquals("GB", u3.getSettings().get("user.country"));
-    //assertEquals(2, u3.getRoles().size());
+    assertEquals("-7", u3.getSystemSettings().get("internal.settings"));
 
     service.delete(u1.getKey());
     User u4 = service.get(u1.getUserName());
@@ -194,6 +194,7 @@ public class IdentityServiceImplIT {
     user.getRoles().add(UserRole.USER);
     user.getSettings().put("user.settings.language", "en");
     user.getSettings().put("user.country", "dk");
+    user.getSystemSettings().put("internal.settings", "18");
     user.setEmail("user_" + idx + "@gbif.org");
     return user;
   }
