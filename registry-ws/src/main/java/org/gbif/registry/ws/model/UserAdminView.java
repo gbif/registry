@@ -13,6 +13,8 @@ public class UserAdminView {
   private boolean challengeCodePresent;
   //private int numberOfSessions;
 
+  public UserAdminView(){}
+
   public UserAdminView(User user, boolean challengeCodePresent) {
     this.user = user;
     this.challengeCodePresent = challengeCodePresent;

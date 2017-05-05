@@ -171,7 +171,7 @@ public abstract class AbstractUser {
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
-            .add("accountName", userName)
+            .add("userName", userName)
             .add("firstName", firstName)
             .add("lastName", lastName)
             .add("email", email)
