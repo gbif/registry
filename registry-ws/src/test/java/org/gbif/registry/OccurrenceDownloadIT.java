@@ -25,6 +25,7 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -44,7 +45,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import static org.gbif.registry.TestConstants.TEST_USER;
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceBasicAuthClient;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;

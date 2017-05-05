@@ -202,7 +202,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
 
     //check if we have a request that impersonates a user or if it's an app
-    User user = identityService.get(username);
+    User user = identityService.getByIdentifier(username);
     if (user == null) {
       //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
       String appKey = GbifAuthService.getAppKeyFromRequest((name) -> request.getHeaderValue(name));

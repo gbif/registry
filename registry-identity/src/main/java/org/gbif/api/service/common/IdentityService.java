@@ -161,5 +161,13 @@ public interface IdentityService {
   boolean updatePassword(int userKey, String newPassword, UUID challengeCode);
 
 
+  /**
+   * Allows to change the password of a user that is already authenticated.
+   * @param userKey
+   * @param newPassword
+   * @return
+   */
+  boolean updatePassword(int userKey, String newPassword);
+
   void resetPassword(int userKey);
 }

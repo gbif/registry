@@ -267,6 +267,17 @@ class IdentityServiceImpl implements IdentityService {
     return false;
   }
 
+  @Override
+  public boolean updatePassword(int userKey, String newPassword) {
+    User user = userMapper.getByKey(userKey);
+    if(user != null){
+      user.setPasswordHash(encoder.encode(newPassword));
+      userMapper.update(user);
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Null safe builder to construct a paging response.
    *

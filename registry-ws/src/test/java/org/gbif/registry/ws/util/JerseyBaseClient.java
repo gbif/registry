@@ -1,4 +1,4 @@
-package org.gbif.registry.identity;
+package org.gbif.registry.ws.util;
 
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 

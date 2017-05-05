@@ -41,3 +41,4 @@ All the following fields are required in order to apply the update.
 | lastName      | |
 | email         | |
 | settings      | key/value map |
+| systemSettings      | key/value map |

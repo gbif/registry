@@ -4,8 +4,9 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServerWithIdentity;
-import org.gbif.registry.identity.TestClient;
-import org.gbif.registry.identity.JerseyBaseClient;
+import org.gbif.registry.ws.fixtures.TestClient;
+import org.gbif.registry.ws.util.JerseyBaseClient;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.net.URI;
@@ -22,7 +23,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
-import static org.gbif.registry.identity.TestClient.buildPublicClient;
+import static org.gbif.registry.ws.fixtures.TestClient.buildPublicClient;
 
 /**
  * This abstract class is used to test access to API endpoint using plain call (NOT using a Java ws-client).

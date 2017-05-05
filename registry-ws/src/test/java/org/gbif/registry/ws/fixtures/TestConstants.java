@@ -1,4 +1,4 @@
-package org.gbif.registry;
+package org.gbif.registry.ws.fixtures;
 
 import org.gbif.api.vocabulary.UserRole;
 

@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Simple container class to hold challenge code related parameters.
  */
-public class ChallengeCodeParameters {
+public class AuthenticationDataParameters {
 
   private String password;
   private UUID challengeCode;

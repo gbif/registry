@@ -17,7 +17,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.service.IdentityServiceModule;
-import org.gbif.registry.TestConstants;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;

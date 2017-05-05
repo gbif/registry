@@ -10,7 +10,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.service.IdentityServiceModule;
-import org.gbif.registry.ws.model.ChallengeCodeParameters;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
@@ -60,7 +60,17 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 
 /**
- * Web layer relating to account management.
+ * Web layer relating to user management.
+ * Mostly used by the Registry Console and the portal backend.
+ *
+ * Design and implementation decisions:
+ * - This resource contains mostly to routing to the business logic ({@link IdentityService}) including
+ *   authorizations
+ * - Return {@link Response} instead of object to minimize usage of exceptions and provide
+ *   better control over the HTTP code returned. This also allows to return an entity in case
+ *   of errors (e.g. {@link UserModelMutationResult}.
+ * - keys (user id) are not considered public, therefore the username is used as key
+ * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserSession}).
  */
 @Path("admin/user")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
@@ -118,9 +128,6 @@ public class UserManagementResource {
 
   //findOne()
 
-  /**
-   * Creates a user account.
-   */
   @POST
   @RolesAllowed({GBIF_SCHEME_APP_ROLE})
   @Path("/")
@@ -172,7 +179,7 @@ public class UserManagementResource {
    *
    * @param securityContext
    * @param request
-   * @param challengeCodeParameters
+   * @param authenticationDataParameters
    *
    * @return
    */
@@ -181,13 +188,13 @@ public class UserManagementResource {
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                       ChallengeCodeParameters challengeCodeParameters) {
+                                       AuthenticationDataParameters authenticationDataParameters) {
 
     ensureIsTrustedApp(securityContext, request, true);
     ensureUserSetInSecurityContext(securityContext);
 
     User user = identityService.get(securityContext.getUserPrincipal().getName());
-    if(user != null && identityService.confirmChallengeCode(user.getKey(), challengeCodeParameters.getChallengeCode())){
+    if(user != null && identityService.confirmChallengeCode(user.getKey(), authenticationDataParameters.getChallengeCode())){
       //generate a token
       Session session = identityService.createSession(user.getUserName());
       String sessionToken = session.getSession();
@@ -254,7 +261,7 @@ public class UserManagementResource {
   @Path("/updatePassword")
   @Transactional
   public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                 ChallengeCodeParameters challengeCodeParameters) {
+                                 AuthenticationDataParameters authenticationDataParameters) {
 
     ensureIsTrustedApp(securityContext, request, true);
     ensureUserSetInSecurityContext(securityContext);
@@ -262,8 +269,8 @@ public class UserManagementResource {
     String username = securityContext.getUserPrincipal().getName();
     User user = identityService.get(username);
 
-    if(identityService.updatePassword(user.getKey(), challengeCodeParameters.getPassword(),
-            challengeCodeParameters.getChallengeCode())){
+    if(identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword(),
+            authenticationDataParameters.getChallengeCode())){
       //terminate all previous sessions
       identityService.terminateAllSessions(user.getUserName());
 

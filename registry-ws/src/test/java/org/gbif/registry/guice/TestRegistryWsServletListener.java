@@ -12,7 +12,7 @@
  */
 package org.gbif.registry.guice;
 
-import org.gbif.registry.TestConstants;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -39,7 +39,7 @@ import com.google.inject.Module;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.bval.guice.ValidationModule;
 
-import static org.gbif.registry.TestConstants.APPLICATION_PROPERTIES;
+import static org.gbif.registry.ws.fixtures.TestConstants.APPLICATION_PROPERTIES;
 
 /**
  * The Registry WS module for testing in Grizzly.

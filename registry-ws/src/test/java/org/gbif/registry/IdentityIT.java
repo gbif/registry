@@ -5,8 +5,8 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
-import org.gbif.registry.identity.TestClient;
-import org.gbif.registry.identity.UserTestFixture;
+import org.gbif.registry.ws.fixtures.TestClient;
+import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.ws.security.GbifAuthService;
 
 import javax.ws.rs.core.Response;

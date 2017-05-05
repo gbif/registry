@@ -6,9 +6,10 @@ import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
-import org.gbif.registry.identity.IdentityProvider;
-import org.gbif.registry.identity.UserTestFixture;
-import org.gbif.registry.ws.model.ChallengeCodeParameters;
+import org.gbif.registry.ws.fixtures.TestClient;
+import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.fixtures.UserTestFixture;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
@@ -21,7 +22,7 @@ import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Test;
 
-import static org.gbif.registry.identity.UserTestFixture.ALTERNATE_USERNAME;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.ALTERNATE_USERNAME;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -37,7 +38,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
   private GbifAuthService gbifAuthService = GbifAuthService.singleKeyAuthService(
           TestConstants.IT_APP_KEY, TestConstants.IT_APP_SECRET);
 
-  private IdentityProvider identityProvider;
+  private TestClient testClient;
   private IdentityService identityService;
   private UserMapper userMapper;
 
@@ -48,7 +49,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     identityService = service.getInstance(IdentityService.class);
     userMapper = service.getInstance(UserMapper.class);
 
-    identityProvider = new IdentityProvider(wsBaseUrl);
+    testClient = new TestClient(wsBaseUrl);
     userTestFixture = new UserTestFixture(identityService, userMapper);
   }
 
@@ -61,19 +62,19 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
     //test we can't login (challengeCode not confirmed)
-    cr = identityProvider.login(newUserName, PASSWORD);
+    cr = testClient.login(newUserName, PASSWORD);
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
 
     User newUser = userMapper.get(newUserName);
     UUID challengeCode = userMapper.getChallengeCode(newUser.getKey());
 
     //generate a new request to confirm challengeCode
-    ChallengeCodeParameters params = new ChallengeCodeParameters();
+    AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setChallengeCode(challengeCode);
     cr = postSignedRequest(newUserName, params, uri -> uri.path("confirm"));
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
-    cr = identityProvider.login(newUserName, PASSWORD);
+    cr = testClient.login(newUserName, PASSWORD);
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 
@@ -94,7 +95,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertNotNull("challengeCode shall exist" + challengeCode);
 
     //we should still be able to login with username/password
-    cr = identityProvider.login(getUsername(), getPassword());
+    cr = testClient.login(getUsername(), getPassword());
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 
@@ -103,7 +104,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     User testUser = userTestFixture.prepareUser();
 
     User createdUser = userMapper.get(testUser.getUserName());
-    ChallengeCodeParameters params = new ChallengeCodeParameters();
+    AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword("1234");
     params.setChallengeCode(UUID.randomUUID());
     ClientResponse cr =
@@ -126,7 +127,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
     //change password using that code
-    params = new ChallengeCodeParameters();
+    params = new AuthenticationDataParameters();
     params.setPassword("1234");
     params.setChallengeCode(challengeCode);
 
@@ -135,7 +136,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
     //ensure we can login with the new password
-    cr = identityProvider.login(testUser.getUserName(), "1234");
+    cr = testClient.login(testUser.getUserName(), "1234");
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 
@@ -155,7 +156,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     User testUser = userTestFixture.prepareUser();
     final String newUserFirstName = "My new first name";
 
-    ClientResponse cr = identityProvider.login(getUsername(), getPassword());
+    ClientResponse cr = testClient.login(getUsername(), getPassword());
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
    // UserSession responseData = cr.getEntity(UserSession.class);
 
@@ -169,7 +170,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     //create a new user
     User testUser2 = userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
-    cr = identityProvider.login(ALTERNATE_USERNAME, PASSWORD);
+    cr = testClient.login(ALTERNATE_USERNAME, PASSWORD);
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
    // responseData = cr.getEntity(UserSession.class);
 

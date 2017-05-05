@@ -6,14 +6,17 @@ import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -36,13 +39,12 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
  * Web layer relating to authentication.
  *
  * Design and implementation decisions:
- * - This resource contains mostly to routing to the business logic ({@link IdentityService} including
+ * - This resource contains mostly to routing to the business logic ({@link IdentityService}) including
  *   authorizations
  * - Return {@link Response} instead of object to minimize usage of exceptions and provide
  *   better control over the HTTP code returned. This also allows to return an entity in case
  *   of errors (e.g. {@link UserModelMutationResult}.
- * - keys (user id) are not considered public, therefore, they are not returned and/or accepted
- *   by methods that are not under ADMIN_ROLE or EDITOR_ROLE.
+ * - keys (user id) are not considered public, therefore the username is used as key
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserSession}).
  */
 @Path("user")
@@ -115,6 +117,24 @@ public class UserResource {
       }
     }
     return buildResponse(returnStatus);
+  }
+
+  @PUT
+  @RolesAllowed({USER_ROLE})
+  @Path("/changePassword")
+  public Response changePassword(@Context SecurityContext securityContext,
+                                 AuthenticationDataParameters authenticationDataParameters) {
+
+    ensureUserSetInSecurityContext(securityContext);
+
+    String identifier = securityContext.getUserPrincipal().getName();
+    User user = Optional.ofNullable(identityService.get(identifier))
+            .orElse(identityService.getByEmail(identifier));
+    if (user != null) {
+      // initiate mail, and store the challenge etc.
+      identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
+    }
+    return Response.noContent().build();
   }
 
 }

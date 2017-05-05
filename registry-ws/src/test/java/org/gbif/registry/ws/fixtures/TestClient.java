@@ -1,4 +1,6 @@
-package org.gbif.registry.identity;
+package org.gbif.registry.ws.fixtures;
+
+import org.gbif.registry.identity.JerseyBaseClient;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -7,7 +9,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 
-import static org.gbif.registry.identity.UserTestFixture.USER_RESOURCE_PATH;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.USER_RESOURCE_PATH;
 
 /**
  * Generates and offer utilities related to authenticated client in the context of testing.
@@ -47,7 +49,7 @@ public class TestClient {
   }
 
   /**
-   *
+   * Call the login endpoint using a HTTP Basic authentication.
    * @param username
    * @param password
    * @return

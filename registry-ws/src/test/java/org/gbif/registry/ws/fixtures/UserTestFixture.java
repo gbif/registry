@@ -1,4 +1,4 @@
-package org.gbif.registry.identity;
+package org.gbif.registry.ws.fixtures;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;

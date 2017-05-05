@@ -7,7 +7,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.registry.TestConstants;
+import org.gbif.registry.ws.fixtures.TestConstants;
 
 import java.util.Date;
 import java.util.Map;
@@ -154,6 +154,11 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public boolean updatePassword(int userKey, String newPassword, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean updatePassword(int userKey, String newPassword) {
     throw new UnsupportedOperationException();
   }
 

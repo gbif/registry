@@ -41,6 +41,7 @@ import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.utils.MachineTags;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
