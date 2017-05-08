@@ -13,7 +13,7 @@ import static org.gbif.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
 
 /**
  * Model containing result of mutations to user data.
- * Mostly used to return significant modelError if creation fails.
+ * Mostly used to return significant modelError if creation/update fails.
  */
 public class UserModelMutationResult {
 
@@ -21,6 +21,10 @@ public class UserModelMutationResult {
   private String email;
   private ModelMutationError modelError;
   private Map<String, String> constraintViolation;
+
+  public static UserModelMutationResult onSuccess() {
+    return new UserModelMutationResult(null, null);
+  }
 
   public static UserModelMutationResult onSuccess(String username, String email) {
     return new UserModelMutationResult(username, email);
@@ -30,6 +34,20 @@ public class UserModelMutationResult {
     return new UserModelMutationResult(modelError);
   }
 
+  /**
+   * Create a new {@link UserModelMutationResult} representing a custom {@link ModelMutationError#CONSTRAINT_VIOLATION}
+   * (not coming from javax.validation.Validator).
+   * @param key
+   * @param value
+   * @return
+   */
+  public static UserModelMutationResult withSingleConstraintViolation(String key, String value) {
+    UserModelMutationResult userModelMutationResult = new UserModelMutationResult(CONSTRAINT_VIOLATION);
+    Map<String, String> constraintViolation = new HashMap<>();
+    constraintViolation.put(key, value);
+    userModelMutationResult.setConstraintViolation(constraintViolation);
+    return userModelMutationResult;
+  }
 
   public static <T extends AbstractUser> UserModelMutationResult withError(Set<ConstraintViolation<T>> constraintViolation) {
     Map<String, String> cvMap = new HashMap<>();
@@ -52,7 +70,6 @@ public class UserModelMutationResult {
    * Only for JSON serialisation
    */
   public UserModelMutationResult() {
-
   }
 
   public void setUsername(String username) {

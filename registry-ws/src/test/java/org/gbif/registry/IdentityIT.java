@@ -7,6 +7,7 @@ import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.fixtures.TestClient;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.ws.security.GbifAuthService;
 
 import javax.ws.rs.core.Response;
@@ -77,6 +78,25 @@ public class IdentityIT extends PlainAPIBaseIT {
 
     //try to login using the email instead of the username
     cr = testClient.login(user.getEmail(), getPassword());
+    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+  }
+
+  @Test
+  public void testChangePassword() {
+    userTestFixture.prepareUser();
+
+    AuthenticationDataParameters params = new AuthenticationDataParameters();
+    params.setPassword("123456");
+    ClientResponse cr = getAuthenticatedClient()
+            .put(uri -> uri.path("changePassword"), params);
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+
+    //try to login using the previous password
+    cr = getAuthenticatedClient().get(wr -> wr.path("login"));
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+
+    //try with the new password
+    cr = testClient.login(UserTestFixture.USERNAME, "123456");
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 

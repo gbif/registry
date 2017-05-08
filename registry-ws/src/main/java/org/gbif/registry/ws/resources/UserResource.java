@@ -7,9 +7,9 @@ import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -128,11 +128,13 @@ public class UserResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String identifier = securityContext.getUserPrincipal().getName();
-    User user = Optional.ofNullable(identityService.get(identifier))
-            .orElse(identityService.getByEmail(identifier));
+    User user = identityService.get(identifier);
     if (user != null) {
-      // initiate mail, and store the challenge etc.
-      identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
+      UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
+              authenticationDataParameters.getPassword());
+      if(updatePasswordMutationResult.containsError()) {
+        return buildResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), updatePasswordMutationResult);
+      }
     }
     return Response.noContent().build();
   }

@@ -8,7 +8,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 /**
- * Contants related to unit and integration testing of the registry.
+ * Constants related to unit and integration testing of the registry.
  */
 public class TestConstants {
 

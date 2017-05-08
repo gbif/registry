@@ -158,7 +158,7 @@ public interface IdentityService {
    *
    * @return the password was updated or not
    */
-  boolean updatePassword(int userKey, String newPassword, UUID challengeCode);
+  UserModelMutationResult updatePassword(int userKey, String newPassword, UUID challengeCode);
 
 
   /**
@@ -167,7 +167,7 @@ public interface IdentityService {
    * @param newPassword
    * @return
    */
-  boolean updatePassword(int userKey, String newPassword);
+  UserModelMutationResult updatePassword(int userKey, String newPassword);
 
   void resetPassword(int userKey);
 }

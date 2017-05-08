@@ -10,6 +10,8 @@ public class AuthenticationDataParameters {
   private String password;
   private UUID challengeCode;
 
+  public AuthenticationDataParameters(){}
+
   public String getPassword() {
     return password;
   }

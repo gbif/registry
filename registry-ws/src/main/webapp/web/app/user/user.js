@@ -36,7 +36,7 @@ angular.module('user', [
 }])
 
 .controller('UserSearchCtrl', function ($scope, $state, Restangular, DEFAULT_PAGE_SIZE) {
-  var user = Restangular.all("user/search");
+  var user = Restangular.all("admin/user/search");
   $scope.search = function(q) {
     user.getList({q:q, limit:DEFAULT_PAGE_SIZE}).then(function(data) {
       $scope.resultsCount = data.count;
@@ -58,13 +58,13 @@ angular.module('user', [
   var key = $stateParams.key;
 
   var load = function () {
-    Restangular.one('user', key).get()
+    Restangular.one('admin/user', key).get()
         .then(function (user) {
           $scope.user = user;
           return user;
         })
         .then(function (user) {
-          Restangular.all("user/roles").getList().then(function (data) {
+          Restangular.all("admin/user/roles").getList().then(function (data) {
             $scope.roles = data;
             $scope.user_roles = {};
             _.each($scope.roles, function (element, index, list) {

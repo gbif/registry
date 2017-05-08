@@ -5,6 +5,7 @@ package org.gbif.identity.model;
  */
 public enum ModelMutationError {
   USER_ALREADY_EXIST,
+  PASSWORD_LENGTH_VIOLATION,
   /** a user can update its own email but it shall not be use by another user*/
   EMAIL_ALREADY_IN_USE,
   CONSTRAINT_VIOLATION

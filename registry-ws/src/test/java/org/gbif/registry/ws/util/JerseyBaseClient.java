@@ -51,6 +51,21 @@ public class JerseyBaseClient {
   }
 
   /**
+   * Issue a {@code POST} from the base URL using a provided configuration function ({@code configurer}).
+   *
+   * @param configurer function allowing to add path, query parameters or headers to the base {@link WebResource}
+   * @param entity entity to post
+   *
+   * @return {@link ClientResponse} as result of the call
+   */
+  public ClientResponse put(Function<WebResource, WebResource> configurer, Object entity) {
+    return configurer.apply(client.resource(wsBaseUrl).path(resourcePath))
+            .type(MediaType.APPLICATION_JSON)
+            .put(ClientResponse.class, entity);
+  }
+
+
+  /**
    * Get underlying {@link Client}
    *
    * @return underlying {@link Client}

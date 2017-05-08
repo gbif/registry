@@ -7,6 +7,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.UserSession;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.identity.model.PropertyConstants;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.service.IdentityServiceModule;
@@ -269,8 +270,10 @@ public class UserManagementResource {
     String username = securityContext.getUserPrincipal().getName();
     User user = identityService.get(username);
 
-    if(identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword(),
-            authenticationDataParameters.getChallengeCode())){
+    UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
+            authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
+
+    if(!updatePasswordMutationResult.containsError()){
       //terminate all previous sessions
       identityService.terminateAllSessions(user.getUserName());
 
@@ -281,7 +284,13 @@ public class UserManagementResource {
       return Response.ok().entity(UserSession.from(user, sessionToken)).build();
     }
 
-    return ResponseUtils.buildResponse(Response.Status.UNAUTHORIZED);
+    //determine if it's a challengeCode error
+    boolean challengeCodeError = updatePasswordMutationResult.getConstraintViolation().keySet()
+            .stream()
+            .anyMatch(s -> s.equalsIgnoreCase(PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME));
+
+    return challengeCodeError ? ResponseUtils.buildResponse(Response.Status.UNAUTHORIZED) :
+            ResponseUtils.buildResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), updatePasswordMutationResult);
   }
 
   /**

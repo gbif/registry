@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.fixtures;
 
-import org.gbif.registry.identity.JerseyBaseClient;
+import org.gbif.registry.ws.util.JerseyBaseClient;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;

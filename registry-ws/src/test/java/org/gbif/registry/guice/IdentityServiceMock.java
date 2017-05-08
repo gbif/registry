@@ -153,12 +153,12 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public boolean updatePassword(int userKey, String newPassword, UUID challengeCode) {
+  public UserModelMutationResult updatePassword(int userKey, String newPassword, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean updatePassword(int userKey, String newPassword) {
+  public UserModelMutationResult updatePassword(int userKey, String newPassword) {
     throw new UnsupportedOperationException();
   }
 

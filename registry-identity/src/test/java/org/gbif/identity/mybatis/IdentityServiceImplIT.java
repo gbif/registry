@@ -109,7 +109,8 @@ public class IdentityServiceImplIT {
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // try to create it again with a different username (but same email)
-    u1.setUserName("user_X");
+    u1.setKey(null); //reset key
+    u1.setUserName("user_x");
     result = service.create(u1, TEST_PASSWORD);
     assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelMutationError.USER_ALREADY_EXIST, result.getError());
 
@@ -117,6 +118,11 @@ public class IdentityServiceImplIT {
     u1.setEmail("email@email.com");
     result = service.create(u1, TEST_PASSWORD);
     assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelMutationError.CONSTRAINT_VIOLATION, result.getError());
+
+    // try with a password too short
+    u1.setUserName("user_x");
+    result = service.create(u1, "p");
+    assertEquals("Expected PASSWORD_LENGTH_VIOLATION", ModelMutationError.PASSWORD_LENGTH_VIOLATION, result.getError());
   }
 
   /**
@@ -174,7 +180,8 @@ public class IdentityServiceImplIT {
     //confirm challenge code
     UUID challengeCode = emailManager.getChallengeCode(user.getEmail());
     assertNotNull("Got a challenge code for " + user.getEmail(), challengeCode);
-    assertTrue("password can be changed using challengeCode", service.updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode));
+    assertTrue("password can be changed using challengeCode",
+            !service.updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode).containsError());
 
     //ensure we can now login
     assertNotNull("Can login after the challenge code is confirmed", service.authenticate(user.getUserName(), TEST_PASSWORD2));

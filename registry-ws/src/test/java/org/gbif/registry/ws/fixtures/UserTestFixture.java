@@ -35,6 +35,10 @@ public class UserTestFixture {
     this.userMapper = userMapper;
   }
 
+  /**
+   * Prepare a pre-defined user {@link #USERNAME}
+   * @return
+   */
   public User prepareUser() {
     return prepareUser(generateUser());
   }

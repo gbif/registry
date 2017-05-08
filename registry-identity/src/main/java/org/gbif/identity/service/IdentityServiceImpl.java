@@ -9,6 +9,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelMutationError;
+import org.gbif.identity.model.PropertyConstants;
 import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.SessionMapper;
@@ -28,10 +29,12 @@ import javax.validation.groups.Default;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import org.apache.bval.jsr303.ApacheValidationProvider;
+import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.identity.model.UserModelMutationResult.withError;
+import static org.gbif.identity.model.UserModelMutationResult.withSingleConstraintViolation;
 
 
 /**
@@ -43,11 +46,14 @@ class IdentityServiceImpl implements IdentityService {
   private final SessionMapper sessionMapper;
   private final IdentityEmailManager identityEmailManager;
 
+  private final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
+
   private static final Validator BEAN_VALIDATOR =
           Validation.byProvider(ApacheValidationProvider.class)
                   .configure()
                   .buildValidatorFactory()
                   .getValidator();
+
   private final PasswordEncoder encoder = new PasswordEncoder();
 
   @Inject
@@ -65,6 +71,10 @@ class IdentityServiceImpl implements IdentityService {
     if (userMapper.get(user.getUserName()) != null ||
             userMapper.getByEmail(user.getEmail()) != null) {
       return withError(ModelMutationError.USER_ALREADY_EXIST);
+    }
+
+    if(StringUtils.isBlank(password) || !PASSWORD_LENGTH_RANGE.contains(password.length())) {
+      return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
     }
 
     user.setPasswordHash(encoder.encode(password));
@@ -257,25 +267,27 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public boolean updatePassword(int userKey, String newPassword, UUID challengeCode) {
+  public UserModelMutationResult updatePassword(int userKey, String newPassword, UUID challengeCode) {
     if(confirmChallengeCode(userKey, challengeCode)){
-      User user = userMapper.getByKey(userKey);
-      user.setPasswordHash(encoder.encode(newPassword));
-      userMapper.update(user);
-      return true;
+      return updatePassword(userKey, newPassword);
     }
-    return false;
+    return withSingleConstraintViolation(PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);
   }
 
   @Override
-  public boolean updatePassword(int userKey, String newPassword) {
+  public UserModelMutationResult updatePassword(int userKey, String newPassword) {
     User user = userMapper.getByKey(userKey);
     if(user != null){
+      if(StringUtils.isBlank(newPassword) || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
+        return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
+      }
       user.setPasswordHash(encoder.encode(newPassword));
       userMapper.update(user);
-      return true;
     }
-    return false;
+    else{
+      return withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN);
+    }
+    return UserModelMutationResult.onSuccess();
   }
 
   /**

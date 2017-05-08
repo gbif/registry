@@ -34,6 +34,8 @@ import static org.junit.Assert.assertNull;
  */
 public class UserManagementIT extends PlainAPIBaseIT {
 
+  private static final String CHANGED_PASSWORD = "123456";
+
   private static final String RESOURCE_PATH = "admin/user";
   private GbifAuthService gbifAuthService = GbifAuthService.singleKeyAuthService(
           TestConstants.IT_APP_KEY, TestConstants.IT_APP_SECRET);
@@ -105,7 +107,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     User createdUser = userMapper.get(testUser.getUserName());
     AuthenticationDataParameters params = new AuthenticationDataParameters();
-    params.setPassword("1234");
+    params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(UUID.randomUUID());
     ClientResponse cr =
             postSignedRequest(testUser.getUserName(), params,
@@ -128,7 +130,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     //change password using that code
     params = new AuthenticationDataParameters();
-    params.setPassword("1234");
+    params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(challengeCode);
 
     cr = postSignedRequest(testUser.getUserName(), params,
@@ -136,7 +138,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 
     //ensure we can login with the new password
-    cr = testClient.login(testUser.getUserName(), "1234");
+    cr = testClient.login(testUser.getUserName(), CHANGED_PASSWORD);
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
   }
 
