@@ -20,7 +20,7 @@ angular.module('user', [
     templateUrl: 'app/user/user-results.tpl.html'
   })
   .state('user', {
-    url: '/user/{key}',
+    url: '/user/{userName}', //the key of a user is the username (see load function)
     abstract: true,
     templateUrl: 'app/user/user-main.tpl.html',
     controller: 'UserCtrl'
@@ -47,19 +47,21 @@ angular.module('user', [
   $scope.search(""); // start with empty search
 
   $scope.openUser = function(user) {
-    $state.transitionTo('user.detail', {key: user.key})
+    $state.transitionTo('user.detail', {userName: user.userName})
   }
 })
 
 /**
  * The single detail controller
+ * WARNING: user.key will be assigned to user.userName
  */
 .controller('UserCtrl', function ($scope, $state, $stateParams, notifications, Restangular, DEFAULT_PAGE_SIZE) {
-  var key = $stateParams.key;
+  var key = $stateParams.userName;
 
   var load = function () {
     Restangular.one('admin/user', key).get()
         .then(function (user) {
+          user.key = user.userName;
           $scope.user = user;
           return user;
         })
@@ -83,7 +85,7 @@ angular.module('user', [
   
   // transitions to a new view, correctly setting up the path
   $scope.transitionTo = function (target) {
-    $state.transitionTo('user.' + target, { key: key, type: "user" });
+    $state.transitionTo('user.' + target, { userName: key, type: "user" });
   }
 
   $scope.save = function (user, user_roles) {
@@ -127,7 +129,6 @@ angular.module('user', [
       }
     );
   }
-
 
   $scope.cancelEdit = function () {
     load();
