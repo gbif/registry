@@ -34,6 +34,8 @@ import javax.xml.bind.JAXBException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
@@ -43,6 +45,8 @@ import com.google.inject.name.Named;
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
 @Consumes(MediaType.APPLICATION_JSON)
 public class DoiRegistrationResource implements DoiRegistrationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DoiRegistrationResource.class);
 
   private final DoiGenerator doiGenerator;
   private final DoiPersistenceService doiPersistenceService;
@@ -88,6 +92,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @NullToNotFound
   @Override
   public void delete(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
+    LOG.info("Deleting DOI {} {}", prefix, suffix);
     doiGenerator.delete(new DOI(prefix, suffix));
   }
 
@@ -114,8 +119,10 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       } else if (DoiType.DATASET == doiRegistration.getType()) {
         doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
       }
+      LOG.info("DOI registered {}", doi.getDoiName());
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
+      LOG.info("Error registering DOI", ex);
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
   }
