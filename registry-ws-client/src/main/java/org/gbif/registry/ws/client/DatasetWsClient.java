@@ -175,4 +175,8 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
     return get(GenericTypes.LIST_NETWORK, datasetKey.toString(), "networks");
   }
 
+  @Override
+  public List<Dataset> listByDOI(String doi) {
+    return get(GenericTypes.LIST_DATASET, doi, "doi");
+  }
 }

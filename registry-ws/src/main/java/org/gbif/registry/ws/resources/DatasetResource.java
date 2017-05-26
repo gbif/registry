@@ -1008,4 +1008,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   protected UUID owningEntityKey(@NotNull Dataset entity) {
     return entity.getPublishingOrganizationKey();
   }
+
+  @GET
+  @Path("doi/{doi}")
+  @Override
+  public List<Dataset> listByDOI(@PathParam("doi") String doi) {
+    return datasetMapper.listByDOI(doi);
+  }
 }
