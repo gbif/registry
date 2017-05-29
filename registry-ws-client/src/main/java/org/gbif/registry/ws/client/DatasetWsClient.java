@@ -176,7 +176,7 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset> implements
   }
 
   @Override
-  public List<Dataset> listByDOI(String doi) {
-    return get(GenericTypes.LIST_DATASET, doi, "doi");
+  public PagingResponse<Dataset> listByDOI(String doi, Pageable page) {
+    return get(GenericTypes.PAGING_DATASET, page, doi, "doi");
   }
 }

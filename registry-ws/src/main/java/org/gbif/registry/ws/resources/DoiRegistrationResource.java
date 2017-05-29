@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
@@ -109,8 +110,9 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
-      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata).withAlternateIdentifiers(
-                            addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
+      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata)
+                                    .withAlternateIdentifiers(
+                                      addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
       //handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
