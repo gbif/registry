@@ -110,8 +110,8 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public int countByDOI(@Param("doi") String doi) {
-    return 0;
+  public long countByDOI(@Param("doi") String doi) {
+    return 0L;
   }
 
   @Override
