@@ -1013,6 +1013,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("doi/{doi}")
   @Override
   public PagingResponse<Dataset> listByDOI(@PathParam("doi") String doi, @Context Pageable page) {
-    return new PagingResponse<>(page, (long)datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+    return new PagingResponse<>(page, Integer.valueOf(datasetMapper.countByDOI(doi)).longValue(),
+                                datasetMapper.listByDOI(doi, page));
   }
 }
