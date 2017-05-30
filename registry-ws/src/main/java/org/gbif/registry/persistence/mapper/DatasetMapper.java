@@ -81,7 +81,7 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
    * Counts all datasets from a DOI.
    * This counts for dataset.doi and alternate identifiers.
    */
-  int countByDOI(@Param("doi") String doi);
+  long countByDOI(@Param("doi") String doi);
 
   /**
    * Get a Dataset list from a DOI, dataset.dois and alternate identifier are searched.
