@@ -82,7 +82,7 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   @Override
   public List<KeyTitleResult> suggest(@Nullable String q) {
     MultivaluedMap queryParams = new MultivaluedMapImpl();
-    queryParams.put("q", q);
+    queryParams.putSingle("q", q);
     return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
 }
