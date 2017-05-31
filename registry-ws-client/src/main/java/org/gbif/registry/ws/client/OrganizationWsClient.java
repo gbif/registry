@@ -17,17 +17,21 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.QueryParamBuilder;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Client-side implementation to the OrganizationService.
@@ -73,5 +77,12 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   @Override
   public PagingResponse<Organization> listNonPublishing(Pageable page) {
     return get(GenericTypes.PAGING_ORGANIZATION, null, null, page, "nonPublishing");
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String q) {
+    MultivaluedMap queryParams = new MultivaluedMapImpl();
+    queryParams.put("q", q);
+    return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
 }

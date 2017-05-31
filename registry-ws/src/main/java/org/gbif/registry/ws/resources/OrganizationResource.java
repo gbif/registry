@@ -17,6 +17,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -31,6 +32,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -200,6 +202,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Organization> listNonPublishing(@Context Pageable page) {
     return pagingResponse(page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
+  }
+
+  @Path("suggest")
+  @GET
+  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
+    return organizationMapper.suggest(label);
   }
 
   /**

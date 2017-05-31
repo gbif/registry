@@ -16,6 +16,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 
 import java.util.List;
@@ -95,4 +96,9 @@ public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization
    * @return The list of organizations, with only their key and title populated.
    */
   List<LegacyOrganizationBriefResponse> listLegacyOrganizationsBrief();
+
+  /**
+   * A simple suggest by title service.
+   */
+  List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 }
