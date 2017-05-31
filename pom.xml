@@ -91,7 +91,7 @@
     <gbif-doi.version>1.5</gbif-doi.version>
     <gbif-download-query-tools.version>1.18</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-microservice.version>0.6</gbif-microservice.version>
+    <gbif-microservice.version>0.7-SNAPSHOT</gbif-microservice.version>
     <gbif-parsers.version>0.29</gbif-parsers.version>
     <gbif-postal-service.version>0.24</gbif-postal-service.version>
     <gbif-directory.version>0.9</gbif-directory.version>
