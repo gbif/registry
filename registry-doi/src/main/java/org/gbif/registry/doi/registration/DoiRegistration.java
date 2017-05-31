@@ -1,7 +1,6 @@
 package org.gbif.registry.doi.registration;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.doi.DoiType;
 
 import javax.annotation.Nullable;
