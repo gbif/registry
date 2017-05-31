@@ -145,9 +145,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
     Preconditions.checkNotNull(page, "To search you must supply a page");
-    long total = organizationMapper.count(query, country);
+    long total = organizationMapper.countScopedByCountry(query, country);
     return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
-                                            organizationMapper.search(query, country, page));
+                                            organizationMapper.searchScopedByCountry(query, country, page));
   }
 
   @GET
