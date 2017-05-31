@@ -165,6 +165,9 @@
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
     </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -177,6 +180,9 @@
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
+    </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
     </if>
   </select>
 

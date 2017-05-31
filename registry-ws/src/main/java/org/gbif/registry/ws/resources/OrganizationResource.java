@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -49,6 +50,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -120,7 +123,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * All network entities support simple (!) search with "&q=".
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
-   * Organizations can also be filtered by their country, but a search and country filter cannot be combined.
    */
   @GET
   public PagingResponse<Organization> list(@Nullable @Context Country country,
@@ -128,18 +130,24 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (country != null) {
-      return listByCountry(country, page);
-    } else if (identifierType != null && identifier != null) {
+
+    // Hack: Intercept identifier search
+    if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
-    } else if (!Strings.isNullOrEmpty(query)) {
-      return search(query, page);
-    } else {
+    }
+
+    // short circuited list all
+    if (country == null && Strings.isNullOrEmpty(query)) {
       return list(page);
     }
+
+    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
+    Preconditions.checkNotNull(page, "To search you must supply a page");
+    long total = organizationMapper.count(query, country);
+    return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
+                                            organizationMapper.search(query, country, page));
   }
 
   @GET

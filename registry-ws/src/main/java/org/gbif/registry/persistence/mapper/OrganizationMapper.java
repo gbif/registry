@@ -101,4 +101,17 @@ public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization
    * A simple suggest by title service.
    */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
+
+  /**
+   * Overloaded search to allow it to scope the search by country.
+   */
+  List<Organization> search(@Nullable @Param("query") String query, @Param("country") Country country,
+                            @Nullable @Param("page") Pageable page);
+
+
+  /**
+   * Overloaded count to allow a search scoped by country.
+   */
+  int count(@Nullable @Param("query") String query, @Param("country") Country country);
+
 }
