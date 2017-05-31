@@ -21,7 +21,6 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -50,7 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
@@ -119,6 +117,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return super.create(organization, security);
   }
 
+  public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
+    return list(null, null, null, query, page);
+  }
+
   /**
    * All network entities support simple (!) search with "&q=".
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
@@ -145,9 +147,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
     Preconditions.checkNotNull(page, "To search you must supply a page");
-    long total = organizationMapper.countScopedByCountry(query, country);
+    long total = organizationMapper.count(query, country);
     return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
-                                            organizationMapper.searchScopedByCountry(query, country, page));
+                                            organizationMapper.search(query, country, page));
   }
 
   @GET
