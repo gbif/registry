@@ -303,6 +303,10 @@
           <groupId>io.dropwizard</groupId>
           <artifactId>dropwizard-jersey</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.dropwizard</groupId>
+          <artifactId>dropwizard-testing</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
