@@ -15,6 +15,7 @@ import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -106,6 +107,19 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   public DOI register(DoiRegistration doiRegistration) {
     checkIsUserAuthenticated();
     try {
+      //Persist the DOI
+      Optional.ofNullable(doiRegistration.getDoi()).ifPresent(
+        doi -> {
+          Optional.ofNullable(doiPersistenceService.get(doi))
+            .ifPresent(doiData -> {
+              if (DoiStatus.NEW != doiData.getStatus()) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                                    .entity("Doi already exists")
+                                                    .build());
+              }});
+          doiPersistenceService.create(doi, DoiType.DATA_PACKAGE);
+        }
+      );
       //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
