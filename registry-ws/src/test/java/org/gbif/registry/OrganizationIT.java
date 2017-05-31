@@ -75,13 +75,13 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
   @Test
   public void testSuggest() {
     Node node = Nodes.newInstance();
-    nodeService.create(node);
+    UUID nodeKey = nodeService.create(node);
 
-    Organization o1 = Organizations.newInstance(node.getKey());
+    Organization o1 = Organizations.newInstance(nodeKey);
     o1.setTitle("Tim");
     UUID key1 = this.getService().create(o1);
 
-    Organization o2 = Organizations.newInstance(node.getKey());
+    Organization o2 = Organizations.newInstance(nodeKey);
     o2.setTitle("The Tim");
     UUID key2 = this.getService().create(o2);
 
