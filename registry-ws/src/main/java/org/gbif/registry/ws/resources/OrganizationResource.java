@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -147,6 +148,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
     long total = organizationMapper.count(query, country);
+    page = page == null ? new PagingRequest() : page;
     return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
                                             organizationMapper.search(query, country, page));
   }
