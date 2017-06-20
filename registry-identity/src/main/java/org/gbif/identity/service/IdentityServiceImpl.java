@@ -10,12 +10,9 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.PropertyConstants;
-import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.identity.mybatis.SessionMapper;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.util.PasswordEncoder;
-import org.gbif.identity.util.SessionTokens;
 
 import java.util.List;
 import java.util.Set;
@@ -43,7 +40,6 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
 class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
-  private final SessionMapper sessionMapper;
   private final IdentityEmailManager identityEmailManager;
 
   private final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
@@ -57,10 +53,9 @@ class IdentityServiceImpl implements IdentityService {
   private final PasswordEncoder encoder = new PasswordEncoder();
 
   @Inject
-  IdentityServiceImpl(UserMapper userMapper, SessionMapper sessionMapper,
+  IdentityServiceImpl(UserMapper userMapper,
                       IdentityEmailManager identityEmailManager) {
     this.userMapper = userMapper;
-    this.sessionMapper = sessionMapper;
     this.identityEmailManager = identityEmailManager;
   }
 
@@ -203,28 +198,10 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public Session createSession(String username) {
-    Session session = new Session(username, SessionTokens.newSessionToken(username));
-    sessionMapper.create(session);
-    return session;
-  }
-
-  @Override
   public void updateLastLogin(int userKey){
     userMapper.updateLastLogin(userKey);
   }
 
-  public List<Session> listSessions(String username) {
-    return sessionMapper.list(username);
-  }
-
-  public void terminateSession(String session) {
-    sessionMapper.delete(session);
-  }
-
-  public void terminateAllSessions(String username) {
-    sessionMapper.deleteAll(username);
-  }
 
   @Override
   public boolean containsChallengeCode(int userKey) {

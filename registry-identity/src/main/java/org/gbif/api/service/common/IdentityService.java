@@ -18,7 +18,6 @@ package org.gbif.api.service.common;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 
 import java.util.UUID;
@@ -107,10 +106,6 @@ public interface IdentityService {
   void delete(int userKey);
 
   PagingResponse<User> list(@Nullable Pageable var1);
-
-  Session createSession(String username);
-  void terminateSession(String session);
-  void terminateAllSessions(String username);
 
   /**
    * Trigger an update of the last login date.

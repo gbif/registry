@@ -5,10 +5,9 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.service.common.UserSession;
+import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.PropertyConstants;
-import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
@@ -71,7 +70,7 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
  *   better control over the HTTP code returned. This also allows to return an entity in case
  *   of errors (e.g. {@link UserModelMutationResult}.
  * - keys (user id) are not considered public, therefore the username is used as key
- * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserSession}).
+ * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser}).
  */
 @Path("admin/user")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
@@ -196,14 +195,11 @@ public class UserManagementResource {
 
     User user = identityService.get(securityContext.getUserPrincipal().getName());
     if(user != null && identityService.confirmChallengeCode(user.getKey(), authenticationDataParameters.getChallengeCode())){
-      //generate a token
-      Session session = identityService.createSession(user.getUserName());
-      String sessionToken = session.getSession();
       identityService.updateLastLogin(user.getKey());
 
       //ideally we would return 200 OK but CreatedResponseFilter automatically
       //change it to 201 CREATED
-      return buildResponse(Response.Status.CREATED, UserSession.from(user, sessionToken));
+      return buildResponse(Response.Status.CREATED, LoggedUser.from(user));
     }
     return Response.status(Response.Status.BAD_REQUEST).build();
   }
@@ -274,14 +270,8 @@ public class UserManagementResource {
             authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
 
     if(!updatePasswordMutationResult.containsError()){
-      //terminate all previous sessions
-      identityService.terminateAllSessions(user.getUserName());
-
-      //generate a new one
-      Session session = identityService.createSession(user.getUserName());
-      String sessionToken = session.getSession();
       identityService.updateLastLogin(user.getKey());
-      return Response.ok().entity(UserSession.from(user, sessionToken)).build();
+      return Response.ok().entity(LoggedUser.from(user)).build();
     }
 
     //determine if it's a challengeCode error
