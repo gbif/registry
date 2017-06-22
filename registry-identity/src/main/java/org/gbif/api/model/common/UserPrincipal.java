@@ -2,15 +2,13 @@ package org.gbif.api.model.common;
 
 import org.gbif.api.vocabulary.UserRole;
 
-import java.security.Principal;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 /**
  * A wrapper class for a GBIF User that exposes the unique account name as the principal name.
  */
-public class UserPrincipal implements Principal {
+public class UserPrincipal implements ExtendedPrincipal {
   private final User user;
 
   public UserPrincipal(User user) {

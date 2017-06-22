@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.filter;
 
+import org.gbif.api.model.common.AppPrincipal;
+import org.gbif.api.model.common.ExtendedPrincipal;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserPrincipal;
 import org.gbif.api.service.common.IdentityService;
@@ -33,37 +35,47 @@ public class IdentifyFilter implements ContainerRequestFilter {
   public static final String GBIF_SCHEME_APP_ROLE = "GBIF_SCHEME_APP_ROLE";
 
   private static class Authorizer implements SecurityContext {
-    private final UserPrincipal principal;
-    //appRole should ONLY be defined if there is no UserPrincipal
-    private final String appRole;
 
+    private final ExtendedPrincipal principal;
     private final String authenticationScheme;
     private final boolean isSecure;
 
-    private Authorizer(UserPrincipal principal, String authenticationScheme, boolean isSecure) {
+    private Authorizer(ExtendedPrincipal principal, String authenticationScheme, boolean isSecure) {
       this.principal = principal;
       this.authenticationScheme = authenticationScheme;
-      this.appRole = null;
       this.isSecure = isSecure;
     }
 
-    private Authorizer(String appRole, String authenticationScheme, boolean isSecure) {
-      this.principal = null;
-      this.authenticationScheme = authenticationScheme;
-      this.appRole = appRole;
-      this.isSecure = isSecure;
-    }
-
+    /**
+     * Get an {@link Authorizer} for a specific {@link User}.
+     * @param user
+     * @param authenticationScheme
+     * @param isSecure
+     * @return
+     */
     static Authorizer getAuthorizer(User user, String authenticationScheme, boolean isSecure) {
       return new Authorizer(new UserPrincipal(user), authenticationScheme, isSecure);
     }
 
+    /**
+     * Get an anonymous {@link Authorizer}.
+     * Anonymous users do not have {@link Principal}.
+     * @param isSecure
+     * @return
+     */
     static Authorizer getAnonymous(boolean isSecure) {
-      return new Authorizer((UserPrincipal)null, "", isSecure);
+      return new Authorizer(null, "", isSecure);
     }
 
-    static Authorizer getAuthorizer(String appRole, String authenticationScheme, boolean isSecure) {
-      return new Authorizer(appRole, authenticationScheme, isSecure);
+    /**
+     * Get an {@link Authorizer} for an application represented by an appKey.
+     * @param appKey
+     * @param authenticationScheme
+     * @param isSecure
+     * @return
+     */
+    static Authorizer getAuthorizer(String appKey, String authenticationScheme, boolean isSecure) {
+      return new Authorizer(new AppPrincipal(appKey, GBIF_SCHEME_APP_ROLE), authenticationScheme, isSecure);
     }
 
     @Override
@@ -83,8 +95,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     @Override
     public boolean isUserInRole(String role) {
-      return (principal != null && principal.hasRole(role)) ||
-              (appRole != null && appRole.equals(role));
+      return principal != null && principal.hasRole(role);
     }
   }
 
@@ -205,9 +216,9 @@ public class IdentifyFilter implements ContainerRequestFilter {
     User user = identityService.getByIdentifier(username);
     if (user == null) {
       //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
-      String appKey = GbifAuthService.getAppKeyFromRequest((name) -> request.getHeaderValue(name));
-      if(StringUtils.equals(appKey,username)) {
-        return Authorizer.getAuthorizer(GBIF_SCHEME_APP_ROLE, GbifAuthService.GBIF_SCHEME, isSecure());
+      String appKey = GbifAuthService.getAppKeyFromRequest(request::getHeaderValue);
+      if(StringUtils.equals(appKey, username)) {
+        return Authorizer.getAuthorizer(appKey, GbifAuthService.GBIF_SCHEME, isSecure());
       }
       else{
         LOG.debug(
