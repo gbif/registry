@@ -160,7 +160,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     ClientResponse cr = testClient.login(getUsername(), getPassword());
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-   // UserSession responseData = cr.getEntity(UserSession.class);
+   // LoggedUser responseData = cr.getEntity(LoggedUser.class);
 
     testUser.setFirstName(newUserFirstName);
     cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser, uriBldr -> uriBldr.path(testUser.getUserName()));
@@ -174,7 +174,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     User testUser2 = userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
     cr = testClient.login(ALTERNATE_USERNAME, PASSWORD);
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-   // responseData = cr.getEntity(UserSession.class);
+   // responseData = cr.getEntity(LoggedUser.class);
 
     //update user2 using email from user1
     testUser2.setEmail(testUser.getEmail());

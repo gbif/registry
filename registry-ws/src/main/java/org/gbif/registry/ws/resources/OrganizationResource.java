@@ -29,7 +29,9 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.Random;
 import java.util.UUID;
@@ -44,6 +46,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -52,6 +55,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import static org.gbif.registry.ws.filter.IdentifyFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
@@ -69,6 +73,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
 
+  private final OrganizationEndorsementService<UUID> organizationEndorsementService;
+
   @Inject
   public OrganizationResource(
     OrganizationMapper organizationMapper,
@@ -80,6 +86,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     CommentMapper commentMapper,
     DatasetMapper datasetMapper,
     InstallationMapper installationMapper,
+    OrganizationEndorsementService<UUID> organizationEndorsementService,
     EventBus eventBus,
     EditorAuthorizationService userAuthService) {
     super(organizationMapper,
@@ -92,9 +99,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       Organization.class,
       eventBus,
       userAuthService);
+
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
+    this.organizationEndorsementService = organizationEndorsementService;
   }
 
   /**
@@ -107,11 +116,33 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @return key of entity created
    */
   @POST
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
   @Override
   public UUID create(@NotNull Organization organization, @Context SecurityContext security) {
     organization.setPassword(generatePassword());
-    return super.create(organization, security);
+    UUID newOrganization = super.create(organization, security);
+
+    if(security.isUserInRole(GBIF_SCHEME_APP_ROLE)) {
+      organizationEndorsementService.onNewOrganization(organization);
+    }
+    return newOrganization;
+  }
+
+  /**
+   * Maybe confirm should be par of the API?
+   * @param organizationKey
+   * @param authenticationDataParameters
+   * @return
+   */
+  @POST
+  @Path("{key}/confirm")
+  @RolesAllowed(GBIF_SCHEME_APP_ROLE)
+  public Response confirm(@PathParam("key") UUID organizationKey,
+                          AuthenticationDataParameters authenticationDataParameters) {
+    if(organizationEndorsementService.confirmOrganization(organizationKey, authenticationDataParameters.getChallengeCode())){
+      return Response.noContent().build();
+    }
+    return Response.status(Response.Status.BAD_REQUEST).build();
   }
 
   /**
@@ -243,7 +274,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       randomIndex = random.nextInt(PASSWORD_ALLOWED_CHARACTERS.length());
       password.append(PASSWORD_ALLOWED_CHARACTERS.charAt(randomIndex));
     }
-
     return password.toString();
   }
+
+
 }

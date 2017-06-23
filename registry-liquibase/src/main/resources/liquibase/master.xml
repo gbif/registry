@@ -54,4 +54,5 @@
   <include file="liquibase/048-user-session.xml"/>
   <include file="liquibase/049-user-constraints-change.xml"/>
   <include file="liquibase/050-user-system-settings.xml"/>
+  <include file="liquibase/051-challenge-code-table.xml"/>
 </databaseChangeLog>

@@ -17,13 +17,14 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.service.IdentityServiceModule;
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.TestValidateInterceptor;
@@ -34,6 +35,7 @@ import org.gbif.registry.ws.resources.NetworkResource;
 import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.registry.ws.resources.legacy.IptResource;
+import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
 import org.gbif.ws.server.filter.AuthFilter;
@@ -68,6 +70,7 @@ public class RegistryTestModules {
   private static Injector mybatis;
   private static Injector webservice;
   private static Injector webserviceClient;
+  private static Injector webserviceAppKeyClient;
   private static Injector webserviceBasicAuthClient;
 
   private static Injector identityMyBatis;
@@ -117,9 +120,18 @@ public class RegistryTestModules {
               bind(SecurityContext.class).annotatedWith(Names.named("guiceInjectedSecurityContext")).toInstance(mockAdmin());
             }
           }, TestValidateInterceptor.newMethodInterceptingModule(),
-            new IdentityMockModule(), new RegistryMyBatisModule(p), new DirectoryMockModule(), new RegistrySearchModule(p),
-            new EventModule(p), new ValidationModule(), new SecurityModule(p), new DoiModule(p), new RabbitMockModule(),
-            new TitleLookupMockModule());
+                  new IdentityMockModule(),
+                  new RegistryMyBatisModule(p),
+                  new DirectoryMockModule(),
+                  new RegistrySearchModule(p),
+                  new EmailManagerTestModule(),
+                  new SuretyModule(p),
+                  new EventModule(p),
+                  new ValidationModule(),
+                  new SecurityModule(p),
+                  new DoiModule(p),
+                  new RabbitMockModule(),
+                  new TitleLookupMockModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
@@ -155,7 +167,6 @@ public class RegistryTestModules {
     };
   }
 
-
   /**
    *
    * @return
@@ -175,6 +186,22 @@ public class RegistryTestModules {
   }
 
   /**
+   * TODO make it dryer
+   * @return An injector that is bound for the webservice client layer using appKey only (no user).
+   */
+  public static synchronized Injector webserviceAppKeyClient() {
+    if (webserviceAppKeyClient == null) {
+      Properties props = new Properties();
+      props.setProperty("registry.ws.url", "http://localhost:" + RegistryServer.getPort());
+      props.setProperty("application.key", TestConstants.IT_APP_KEY);
+      props.setProperty("application.secret", TestConstants.IT_APP_SECRET);
+      GbifApplicationAuthModule auth = new GbifApplicationAuthModule(props);
+      webserviceAppKeyClient = Guice.createInjector(new RegistryWsClientModule(props), auth);
+    }
+    return webserviceAppKeyClient;
+  }
+
+  /**
    * @return An injector that is bound for the webservice client layer.
    */
   public static synchronized Injector webserviceClient() {
@@ -190,8 +217,6 @@ public class RegistryTestModules {
     }
     return webserviceClient;
   }
-
-
   /**
    * @return An injector that is bound for the webservice client layer.
    */
@@ -201,9 +226,9 @@ public class RegistryTestModules {
       props.setProperty("registry.ws.url", "http://localhost:" + RegistryServer.getPort());
       // Create authentication module, and set principal name, equal to a GBIF User unique account name
       SingleUserAuthModule auth = new SingleUserAuthModule(username, password);
-      webserviceClient = Guice.createInjector(new RegistryWsClientModule(props), auth);
+      webserviceBasicAuthClient = Guice.createInjector(new RegistryWsClientModule(props), auth);
     }
-    return webserviceClient;
+    return webserviceBasicAuthClient;
   }
 
   /**

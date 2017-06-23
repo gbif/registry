@@ -479,6 +479,7 @@
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
+
   <select id="countByIdentifier" resultType="Long">
     SELECT count(DISTINCT o.key)
     FROM organization o
@@ -489,4 +490,14 @@
       AND ide.type=#{type,jdbcType=OTHER}
     </if>
   </select>
+
+  <select id="getChallengeCodeKey" resultType="Integer">
+    SELECT challenge_code_key FROM organization WHERE key = #{key, jdbcType=OTHER}
+  </select>
+
+  <update id="updateChallengeCodeKey">
+    UPDATE organization
+    SET challenge_code_key = #{challengeCodeKey}
+    WHERE key = #{key}
+  </update>
 </mapper>

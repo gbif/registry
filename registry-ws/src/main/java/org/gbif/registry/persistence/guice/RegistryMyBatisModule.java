@@ -66,6 +66,8 @@ import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
+import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
+import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.service.guice.PrivateServiceModule;
 
 import java.net.URI;
@@ -73,11 +75,15 @@ import java.util.Properties;
 import java.util.UUID;
 
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 
 /**
  * Sets up the persistence layer using the properties supplied.
  */
 public class RegistryMyBatisModule extends PrivateServiceModule {
+
+  public static final TypeLiteral<ChallengeCodeSupportMapper<UUID>> CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL =
+          new TypeLiteral<ChallengeCodeSupportMapper<UUID>>() {};
 
   /**
    * Sets up the MyBatis structure. Note that MyBatis Guice uses named injection parameters (e.g. JDBC.url), and they
@@ -86,6 +92,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
   public static class InternalRegistryServiceMyBatisModule extends MyBatisModule {
 
     public static final String DATASOURCE_BINDING_NAME = "registry";
+
 
     public InternalRegistryServiceMyBatisModule(Properties props) {
       super(DATASOURCE_BINDING_NAME, props);
@@ -119,6 +126,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(MetasyncHistoryMapper.class);
       addMapperClass(UserRightsMapper.class);
       addMapperClass(DoiMapper.class);
+
+      //from registry-surety module
+      addMapperClass(ChallengeCodeMapper.class);
 
       // reduce mapper verboseness with aliases
       addAlias("Node").to(Node.class);
@@ -202,10 +212,15 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(MetasyncHistoryMapper.class);
     expose(UserRightsMapper.class);
     expose(DoiMapper.class);
+    expose(ChallengeCodeMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
     expose(DoiPersistenceService.class);
+
+    //TODO use Named to avoid conflicts with Identity
+    bind(CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL).to(OrganizationMapper.class).in(Scopes.SINGLETON);
+    expose(CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL);
   }
 
 }

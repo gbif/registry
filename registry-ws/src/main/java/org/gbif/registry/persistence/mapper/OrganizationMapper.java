@@ -16,6 +16,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 
 import java.util.List;
@@ -24,7 +25,7 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
-public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization> {
+public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization>, ChallengeCodeSupportMapper<UUID> {
 
   /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation on this mapper.

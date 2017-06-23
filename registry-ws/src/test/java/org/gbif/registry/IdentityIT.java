@@ -2,7 +2,6 @@ package org.gbif.registry;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.service.common.UserSession;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.fixtures.TestClient;
@@ -98,28 +97,6 @@ public class IdentityIT extends PlainAPIBaseIT {
     //try with the new password
     cr = testClient.login(UserTestFixture.USERNAME, "123456");
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-  }
-
-  @Test
-  public void testSession() {
-    userTestFixture.prepareUser();
-    ClientResponse cr = getAuthenticatedClient().get(wr -> wr.path("login"));
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-    UserSession userSession = cr.getEntity(UserSession.class);
-
-    //use the session to issue a simple get on the user
-    cr = getPublicClient().getWithSessionToken(userSession.getSession());
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-    assertEquals(UserTestFixture.USERNAME, userSession.getUserName());
-
-    //logout
-    cr = getPublicClient().getWithSessionToken(userSession.getSession(), wr -> wr.path("logout"));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
-
-    //try to use the token again (after logout)
-    cr = getPublicClient().getWithSessionToken(userSession.getSession());
-    //ideally UNAUTHORIZED would be returned
-    assertEquals(Response.Status.FORBIDDEN.getStatusCode(), cr.getStatus());
   }
 
 }

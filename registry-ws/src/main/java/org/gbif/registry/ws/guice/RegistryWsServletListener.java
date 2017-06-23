@@ -16,6 +16,7 @@ import org.gbif.identity.guice.IdentityModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
+import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
@@ -27,6 +28,7 @@ import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
@@ -113,6 +115,9 @@ public class RegistryWsServletListener extends GbifServletListener {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
                               new IdentityModule(properties),
+                              //shared email manager (identity, organization creation)
+                              new EmailManagerModule(properties),
+                              new SuretyModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),
                               new ValidationModule(),

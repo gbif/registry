@@ -20,7 +20,8 @@ import java.util.Properties;
  * To allow WS tests to flush SOLR between runs, this allows the registration of the SOLR server.
  *
  * It uses {@link TestRegistryWsServletListener} as ServletListener which means the IdentityService is mocked:
- * see {@link TestRegistryWsServletListener#getIdentityModule(Properties)}
+ * see {@link TestRegistryWsServletListener#getIdentityModule(Properties)}. This allows to use in-memory constants
+ * instead of having to setup the database with users for each tests.
  */
 public class RegistryServer extends AbstractRegistryServer {
 

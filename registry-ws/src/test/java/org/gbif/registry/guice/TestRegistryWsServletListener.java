@@ -12,19 +12,21 @@
  */
 package org.gbif.registry.guice;
 
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.filter.IdentifyFilter;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
@@ -99,9 +101,11 @@ public class TestRegistryWsServletListener extends GbifServletListener {
 
   @Override
   protected List<Module> getModules(Properties props) {
-    return Lists.<Module>newArrayList(
+    return Lists.newArrayList(
             new RegistryMyBatisModule(props),
             getIdentityModule(props),
+            new EmailManagerTestModule(),
+            new SuretyModule(props),
             new DoiModule(props),
             new RabbitMockModule(),
             new DirectoryMockModule(),

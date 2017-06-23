@@ -5,7 +5,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.model.Session;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.fixtures.TestConstants;
 
@@ -114,21 +113,6 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public UserModelMutationResult create(User user, String password) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Session createSession(String username) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void terminateSession(String session) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void terminateAllSessions(String username) {
     throw new UnsupportedOperationException();
   }
 

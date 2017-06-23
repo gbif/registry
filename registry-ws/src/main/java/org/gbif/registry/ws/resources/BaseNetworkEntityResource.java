@@ -76,6 +76,7 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
+import static org.gbif.registry.ws.filter.IdentifyFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
@@ -148,7 +149,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
     // if not admin, verify rights
-    if (!security.isUserInRole(ADMIN_ROLE)) {
+    if (!security.isUserInRole(ADMIN_ROLE) && !security.isUserInRole(GBIF_SCHEME_APP_ROLE)) {
       UUID entityKeyToBeAssesed = owningEntityKey(entity);
       if (entityKeyToBeAssesed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssesed)) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);

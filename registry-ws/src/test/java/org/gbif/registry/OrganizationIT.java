@@ -57,12 +57,12 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
   public static Iterable<Object[]> data() {
     final Injector webservice = webservice();
     final Injector client = webserviceClient();
-    return ImmutableList.<Object[]>of(new Object[] {webservice.getInstance(OrganizationResource.class),
-      webservice.getInstance(NodeResource.class),
-      null},
-      new Object[] {client.getInstance(OrganizationService.class),
-        client.getInstance(NodeService.class),
-        client.getInstance(SimplePrincipalProvider.class)});
+    return ImmutableList.<Object[]>of(
+            new Object[] {
+                    webservice.getInstance(OrganizationResource.class), webservice.getInstance(NodeResource.class), null},
+            new Object[] {
+                    client.getInstance(OrganizationService.class), client.getInstance(NodeService.class),
+                    client.getInstance(SimplePrincipalProvider.class)});
   }
 
   public OrganizationIT(OrganizationService service, NodeService nodeService, @Nullable SimplePrincipalProvider pp) {

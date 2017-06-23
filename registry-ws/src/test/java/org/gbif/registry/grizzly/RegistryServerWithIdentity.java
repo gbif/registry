@@ -15,6 +15,7 @@ import com.google.inject.Module;
  * This Registry Server uses a nested ServletListener which uses the real IdentityService
  * see {@link InnerRegistryWsServletListener#getIdentityModule(Properties)} and a {@link SecurityModule}
  * with in-memory/predefined app keys.
+ * It accesses the test database for user authentication.
  */
 public class RegistryServerWithIdentity extends AbstractRegistryServer {
 
