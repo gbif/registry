@@ -22,7 +22,6 @@ public class InMemoryIdentityEmailManager implements IdentityEmailManager {
 
   @Override
   public void generateAndSendPasswordReset(User user, UUID challengeCode) {
-    System.out.println("resetPassword called:" + challengeCode);
     emailToChallengeCode.put(user.getEmail(), challengeCode);
   }
 

@@ -40,18 +40,45 @@
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.ftl</exclude>
+        </excludes>
       </resource>
       <resource>
         <directory>src/main/webapp</directory>
         <filtering>true</filtering>
         <targetPath>webapp</targetPath>
       </resource>
+
+      <!--not pretty but simply says we want the ftl in the final jar but we don't want to filter them -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.ftl</include>
+        </includes>
+      </resource>
     </resources>
+
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
         <filtering>true</filtering>
       </testResource>
+        <testResource>
+          <directory>src/test/resources</directory>
+          <filtering>true</filtering>
+          <excludes>
+            <exclude>**/*.ftl</exclude>
+          </excludes>
+        </testResource>
+        <testResource>
+          <directory>src/main/resources</directory>
+          <filtering>false</filtering>
+          <includes>
+            <include>**/*.ftl</include>
+          </includes>
+        </testResource>
     </testResources>
     <plugins>
       <plugin>
@@ -120,13 +147,6 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-identity</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-identity</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -204,6 +224,10 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-doi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-surety</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.directory</groupId>
@@ -414,6 +438,18 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-liquibase</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-identity</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-surety</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
