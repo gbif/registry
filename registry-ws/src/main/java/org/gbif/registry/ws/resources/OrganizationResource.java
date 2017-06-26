@@ -61,6 +61,10 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
  * A MyBATIS implementation of the service.
+ *
+ * Note: {@link OrganizationEndorsementService} is a composed object. Therefore it is not part of the API ({@link OrganizationService})
+ * at the moment.
+ *
  */
 @Path("organization")
 @Singleton

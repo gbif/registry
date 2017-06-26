@@ -40,6 +40,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
@@ -148,8 +149,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
-    // if not admin, verify rights
-    if (!security.isUserInRole(ADMIN_ROLE) && !security.isUserInRole(GBIF_SCHEME_APP_ROLE)) {
+    // if not admin or app, verify rights
+    if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, GBIF_SCHEME_APP_ROLE)) {
       UUID entityKeyToBeAssesed = owningEntityKey(entity);
       if (entityKeyToBeAssesed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssesed)) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);

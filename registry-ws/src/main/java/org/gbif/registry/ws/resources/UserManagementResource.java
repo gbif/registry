@@ -126,8 +126,6 @@ public class UserManagementResource {
     return new UserAdminView(user, identityService.containsChallengeCode(user.getKey()));
   }
 
-  //findOne()
-
   @POST
   @RolesAllowed({GBIF_SCHEME_APP_ROLE})
   @Path("/")
