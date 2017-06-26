@@ -12,11 +12,13 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.common.ChallengeCodeParameter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -29,10 +31,10 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -135,18 +137,22 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   /**
    * Maybe confirm should be par of the API?
    * @param organizationKey
-   * @param authenticationDataParameters
+   * @param challengeCodeParameter
    * @return
    */
   @POST
-  @Path("{key}/confirm")
+  @Path("{key}/endorsement")
   @RolesAllowed(GBIF_SCHEME_APP_ROLE)
-  public Response confirm(@PathParam("key") UUID organizationKey,
-                          AuthenticationDataParameters authenticationDataParameters) {
-    if(organizationEndorsementService.confirmOrganization(organizationKey, authenticationDataParameters.getChallengeCode())){
+  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, ChallengeCodeParameter challengeCodeParameter) {
+    if(confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode())){
       return Response.noContent().build();
     }
     return Response.status(Response.Status.BAD_REQUEST).build();
+  }
+
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
+    return organizationEndorsementService.confirmOrganization(organizationKey, confirmationKey);
   }
 
   /**
@@ -235,6 +241,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Organization> listNonPublishing(@Context Pageable page) {
     return pagingResponse(page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String s) {
+    return null;
   }
 
   /**

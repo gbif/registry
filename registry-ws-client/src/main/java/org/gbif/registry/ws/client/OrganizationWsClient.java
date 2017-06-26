@@ -12,20 +12,26 @@
  */
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.model.common.ChallengeCodeParameter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.QueryParamBuilder;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
@@ -73,5 +79,16 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   @Override
   public PagingResponse<Organization> listNonPublishing(Pageable page) {
     return get(GenericTypes.PAGING_ORGANIZATION, null, null, page, "nonPublishing");
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String s) {
+    return null;
+  }
+
+  @Override
+  public boolean confirmEndorsement(@NotNull UUID organizationKey, @NotNull UUID confirmationKey) {
+    return Response.Status.OK.getStatusCode() ==
+            post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement").getStatus();
   }
 }
