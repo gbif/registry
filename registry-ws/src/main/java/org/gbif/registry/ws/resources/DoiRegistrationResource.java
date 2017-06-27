@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
@@ -14,6 +15,7 @@ import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -34,6 +36,8 @@ import javax.xml.bind.JAXBException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
@@ -43,6 +47,8 @@ import com.google.inject.name.Named;
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
 @Consumes(MediaType.APPLICATION_JSON)
 public class DoiRegistrationResource implements DoiRegistrationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DoiRegistrationResource.class);
 
   private final DoiGenerator doiGenerator;
   private final DoiPersistenceService doiPersistenceService;
@@ -88,6 +94,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @NullToNotFound
   @Override
   public void delete(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
+    LOG.info("Deleting DOI {} {}", prefix, suffix);
     doiGenerator.delete(new DOI(prefix, suffix));
   }
 
@@ -100,12 +107,26 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   public DOI register(DoiRegistration doiRegistration) {
     checkIsUserAuthenticated();
     try {
+      //Persist the DOI
+      Optional.ofNullable(doiRegistration.getDoi()).ifPresent(
+        doi -> {
+          Optional.ofNullable(doiPersistenceService.get(doi))
+            .ifPresent(doiData -> { //if DOI is not NEW throw an exception
+              if (DoiStatus.NEW != doiData.getStatus()) {
+                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                                    .entity("Doi already exists")
+                                                    .build());
+              }});
+          doiPersistenceService.create(doi, DoiType.DATA_PACKAGE);
+        }
+      );
       //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
-      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata).withAlternateIdentifiers(
-                            addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
+      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata)
+                                    .withAlternateIdentifiers(
+                                      addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
       //handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
@@ -114,8 +135,10 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       } else if (DoiType.DATASET == doiRegistration.getType()) {
         doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
       }
+      LOG.info("DOI registered {}", doi.getDoiName());
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
+      LOG.info("Error registering DOI", ex);
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
   }

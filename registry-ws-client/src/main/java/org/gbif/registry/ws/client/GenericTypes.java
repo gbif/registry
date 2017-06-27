@@ -29,6 +29,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
@@ -55,6 +56,8 @@ class GenericTypes {
   public static final GenericType<PagingResponse<Network>> PAGING_NETWORK = new GenericType<PagingResponse<Network>>() {
   };
   public static final GenericType<List<Network>> LIST_NETWORK = new GenericType<List<Network>>() {
+  };
+  public static final GenericType<List<KeyTitleResult>> LIST_KEY_TITLE = new GenericType<List<KeyTitleResult>>() {
   };
   public static final GenericType<List<Contact>> LIST_CONTACT = new GenericType<List<Contact>>() {
   };

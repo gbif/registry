@@ -22,7 +22,7 @@ public class SecurityContextCheck {
    * Utility class
    */
   private SecurityContextCheck(){}
-  
+
   /**
    * Check if the user represented by the {@link SecurityContext} has at least one of the
    * provided roles.

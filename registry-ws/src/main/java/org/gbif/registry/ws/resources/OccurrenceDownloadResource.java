@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -103,6 +104,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public Download get(@PathParam("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
+    if (download == null && DOI.isParsable(key)) { //maybe it's a DOI?
+     download = occurrenceDownloadMapper.getByDOI(new DOI(key));
+    }
     if (download != null) { // the user can request a non-existing download
       clearSensitiveData(securityContext, download);
     }

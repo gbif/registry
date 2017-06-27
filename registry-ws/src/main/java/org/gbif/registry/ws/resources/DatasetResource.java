@@ -984,7 +984,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@Context Pageable page) {
-    return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.count(),
+    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.count(),
       datasetProcessStatusMapper.list(page));
   }
 
@@ -992,7 +992,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("process/aborted")
   @Override
   public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(@Context Pageable page) {
-      return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countAborted(),
+      return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countAborted(),
               datasetProcessStatusMapper.listAborted(page));
   }
 
@@ -1000,12 +1000,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("{datasetKey}/process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathParam("datasetKey") UUID datasetKey, @Context Pageable page) {
-    return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
+    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
       datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
 
   @Override
   protected UUID owningEntityKey(@NotNull Dataset entity) {
     return entity.getPublishingOrganizationKey();
+  }
+
+  @GET
+  @Path("doi/{doi}")
+  @Override
+  public PagingResponse<Dataset> listByDOI(@PathParam("doi") String doi, @Context Pageable page) {
+    return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
   }
 }

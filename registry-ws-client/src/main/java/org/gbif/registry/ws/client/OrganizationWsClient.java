@@ -29,11 +29,13 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Client-side implementation to the OrganizationService.
@@ -82,13 +84,14 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   }
 
   @Override
-  public List<KeyTitleResult> suggest(@Nullable String s) {
-    return null;
+  public boolean confirmEndorsement(@NotNull UUID organizationKey, @NotNull UUID confirmationKey) {
+    return Response.Status.NO_CONTENT.getStatusCode() ==
+            post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement").getStatus();
   }
 
-  @Override
-  public boolean confirmEndorsement(@NotNull UUID organizationKey, @NotNull UUID confirmationKey) {
-    return Response.Status.OK.getStatusCode() ==
-            post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement").getStatus();
+  public List<KeyTitleResult> suggest(@Nullable String q) {
+    MultivaluedMap queryParams = new MultivaluedMapImpl();
+    queryParams.putSingle("q", q);
+    return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
 }

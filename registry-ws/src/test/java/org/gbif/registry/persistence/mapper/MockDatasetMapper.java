@@ -1,6 +1,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -104,8 +105,13 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public List<Dataset> listByDOI(@Param("doi") String doi) {
+  public List<Dataset> listByDOI(@Param("doi") String doi, @Nullable @Param("page") Pageable page) {
     return null;
+  }
+
+  @Override
+  public long countByDOI(@Param("doi") String doi) {
+    return 0L;
   }
 
   @Override

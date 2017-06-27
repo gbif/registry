@@ -14,6 +14,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.ChallengeCodeParameter;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -144,6 +145,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Path("{key}/endorsement")
   @RolesAllowed(GBIF_SCHEME_APP_ROLE)
   public Response confirmEndorsement(@PathParam("key") UUID organizationKey, ChallengeCodeParameter challengeCodeParameter) {
+    System.out.println("confirmEndorsement organizationKey: " + organizationKey + ", challengeCodeParameter: "
+            + challengeCodeParameter.getChallengeCode());
     if(confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode())){
       return Response.noContent().build();
     }
@@ -152,14 +155,18 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
+
     return organizationEndorsementService.confirmOrganization(organizationKey, confirmationKey);
+  }
+
+  public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
+    return list(null, null, null, query, page);
   }
 
   /**
    * All network entities support simple (!) search with "&q=".
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
-   * Organizations can also be filtered by their country, but a search and country filter cannot be combined.
    */
   @GET
   public PagingResponse<Organization> list(@Nullable @Context Country country,
@@ -167,18 +174,24 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (country != null) {
-      return listByCountry(country, page);
-    } else if (identifierType != null && identifier != null) {
+
+    // Hack: Intercept identifier search
+    if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
-    } else if (!Strings.isNullOrEmpty(query)) {
-      return search(query, page);
-    } else {
+    }
+
+    // short circuited list all
+    if (country == null && Strings.isNullOrEmpty(query)) {
       return list(page);
     }
+
+    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
+    long total = organizationMapper.count(query, country);
+    page = page == null ? new PagingRequest() : page;
+    return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
+                                            organizationMapper.search(query, country, page));
   }
 
   @GET
@@ -243,9 +256,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return pagingResponse(page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
   }
 
-  @Override
-  public List<KeyTitleResult> suggest(@Nullable String s) {
-    return null;
+
+  @Path("suggest")
+  @GET
+  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
+    return organizationMapper.suggest(label);
   }
 
   /**

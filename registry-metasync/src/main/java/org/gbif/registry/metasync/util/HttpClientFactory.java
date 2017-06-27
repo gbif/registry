@@ -1,34 +1,32 @@
 package org.gbif.registry.metasync.util;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
+import javax.net.ssl.SSLContext;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.impl.client.DecompressingHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-
 /**
- * A factory that builds new Apache Http Clients to be used with the Metadata synchroniser.
+ * A factory that builds new Apache HTTP Clients to be used with the Metadata synchroniser.
  *
  * This allows for easy swapping of implementations to make testing easier.
  */
 public class HttpClientFactory {
 
-  private static final int HTTP_PORT = 80;
-  private static final int HTTPS_PORT = 443;
-
   private static final int MAX_TOTAL_CONNECTIONS = 200;
   private static final int MAX_CONNECTIONS_PER_HOST = 20;
 
-  private final ClientConnectionManager connectionManager;
+  private final HttpClientConnectionManager connectionManager;
 
   private final int timeout;
 
@@ -46,22 +44,32 @@ public class HttpClientFactory {
   }
 
   public HttpClient provideHttpClient() {
-    HttpParams params = new BasicHttpParams();
-    HttpConnectionParams.setConnectionTimeout(params, timeout);
-    HttpConnectionParams.setSoTimeout(params, timeout);
-    params.setLongParameter(ClientPNames.CONN_MANAGER_TIMEOUT, timeout);
-    return new DecompressingHttpClient(new DefaultHttpClient(connectionManager, params));
+    RequestConfig defaultRequestConfig = RequestConfig.custom()
+        .setConnectTimeout(timeout)
+        .setSocketTimeout(timeout)
+        .build();
+
+    CloseableHttpClient httpClient = HttpClients.custom()
+        .setUserAgent("GBIF-Registry")
+        .setConnectionManager(connectionManager)
+        .setDefaultRequestConfig(defaultRequestConfig)
+        .build();
+
+    return httpClient;
   }
 
-  private ClientConnectionManager setupConnectionManager() {
-    SchemeRegistry schemeRegistry = new SchemeRegistry();
-    schemeRegistry.register(new Scheme("http", HTTP_PORT, PlainSocketFactory.getSocketFactory()));
-    schemeRegistry.register(new Scheme("https", HTTPS_PORT, PlainSocketFactory.getSocketFactory()));
+  private HttpClientConnectionManager setupConnectionManager() {
+    SSLContext sslcontext = SSLContexts.createSystemDefault();
 
-    PoolingClientConnectionManager newConnectionManager = new PoolingClientConnectionManager(schemeRegistry);
-    newConnectionManager.setMaxTotal(MAX_TOTAL_CONNECTIONS);
-    newConnectionManager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST);
-    return newConnectionManager;
+    Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+        .register("http", PlainConnectionSocketFactory.INSTANCE)
+        .register("https", new SSLConnectionSocketFactory(sslcontext))
+        .build();
+
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+    connectionManager.setMaxTotal(MAX_TOTAL_CONNECTIONS);
+    connectionManager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST);
+
+    return connectionManager;
   }
-
 }

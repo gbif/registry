@@ -217,21 +217,21 @@ public class DoiSynchronizerService {
   private boolean reapplyDatasetDOIStrategy(DOI doi){
     Preconditions.checkNotNull(doi, "DOI can't be null");
 
-    List<Dataset> datasetsFromDOI = datasetMapper.listByDOI(doi.getDoiName());
-    List<Dataset> datasetsFromAltIdentifier = datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null);
+    List<Dataset> datasetsFromDOI = datasetMapper.listByDOI(doi.getDoiName(), null);
+
 
     //check that we have something to work on
-    if (datasetsFromDOI.isEmpty() && datasetsFromAltIdentifier.isEmpty()) {
+    if (datasetsFromDOI.isEmpty()) {
       return false;
     }
 
     //ensure we only have 1 dataset linked to this DOI
-    if (datasetsFromDOI.size() + datasetsFromAltIdentifier.size() != 1) {
+    if (datasetsFromDOI.size() != 1) {
       return false;
     }
 
     //get the Dataset from the right source
-    Dataset dataset = !datasetsFromDOI.isEmpty() ? datasetsFromDOI.get(0) : datasetsFromAltIdentifier.get(0);
+    Dataset dataset = datasetsFromDOI.get(0);
 
     DOI datasetDoi = dataset.getDoi();
     if (doi.equals(datasetDoi)) {
@@ -404,8 +404,7 @@ public class DoiSynchronizerService {
     GbifDatasetDOIDiagnosticResult datasetDiagnosticResult = new GbifDatasetDOIDiagnosticResult(doi);
 
     //Try to load the Dataset from its DOI and alternate identifier
-    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByDOI(doi.getDoiName()));
-    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByIdentifier(IdentifierType.DOI, doi.toString(), null));
+    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByDOI(doi.getDoiName(), null));
 
     if(datasetDiagnosticResult.isLinkedToASingleDataset()){
       datasetDiagnosticResult.setDoiIsInAlternateIdentifiers(isIdentifierDOIFound(doi, datasetDiagnosticResult.getRelatedDataset()));
