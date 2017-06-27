@@ -17,16 +17,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.filter.IdentifyFilter.GBIF_SCHEME_APP_ROLE;
-
 /**
  * A filter that allows an application to identify itself as an application (as opposed to an application
  * impersonating a user).
+ * In order to identify itself an application shall provide its appKey in the header x-gbif-user and sign the request
+ * accordingly.
+ * If the application can be authenticated, the {@link Principal#getName()} will return the appKey and the
+ * role {@link #GBIF_SCHEME_APP_ROLE} will be assigned to it.
+ *
  * This filter must run AFTER {@link IdentifyFilter} if user impersonation using appKey is required.
  * This filter will be skipped if the {@link ContainerRequest} already has a {@link Principal} attached.
  * This filter operates on {@link GbifAuthService#GBIF_SCHEME} only.
  */
 public class AppIdentityFilter implements ContainerRequestFilter {
+
+  public static final String GBIF_SCHEME_APP_ROLE = "GBIF_SCHEME_APP_ROLE";
 
   //FIXME should have its own scheme
   private static final String GBIF_SCHEME_PREFIX = GbifAuthService.GBIF_SCHEME + " ";
