@@ -20,7 +20,7 @@ import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
-import org.gbif.registry.ws.filter.CookieAuthFilter;
+import org.gbif.registry.ws.filter.AppIdentityFilter;
 import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
@@ -60,7 +60,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
           Lists.newArrayList(
                   LegacyAuthorizationFilter.class,
-                  CookieAuthFilter.class);
+                  AppIdentityFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),

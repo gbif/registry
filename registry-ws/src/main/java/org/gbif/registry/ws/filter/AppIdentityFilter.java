@@ -60,9 +60,9 @@ public class AppIdentityFilter implements ContainerRequestFilter {
       }
 
       String username = containerRequest.getHeaderValue(GbifAuthService.HEADER_GBIF_USER);
-      //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
       String appKey = GbifAuthService.getAppKeyFromRequest(containerRequest::getHeaderValue);
 
+      //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
       if (StringUtils.equals(appKey, username)) {
         containerRequest.setSecurityContext(new SecurityContext() {
           private final ExtendedPrincipal principal = new AppPrincipal(appKey, GBIF_SCHEME_APP_ROLE);

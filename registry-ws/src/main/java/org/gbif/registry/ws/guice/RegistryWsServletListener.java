@@ -16,15 +16,15 @@ import org.gbif.identity.guice.IdentityModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
-import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.surety.email.EmailManagerModule;
+import org.gbif.registry.ws.filter.AppIdentityFilter;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
-import org.gbif.registry.ws.filter.CookieAuthFilter;
 import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
@@ -66,7 +66,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   static {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
-    requestFilters.add(CookieAuthFilter.class);
+    requestFilters.add(AppIdentityFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
   }
 

@@ -1,6 +1,5 @@
 package org.gbif.registry.ws.filter;
 
-import org.gbif.api.model.common.AppPrincipal;
 import org.gbif.api.model.common.ExtendedPrincipal;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserPrincipal;
@@ -13,17 +12,14 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.sun.jersey.core.util.Base64;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +27,6 @@ import org.slf4j.LoggerFactory;
  * Future replacement for common-ws AuthFilter
  */
 public class IdentifyFilter implements ContainerRequestFilter {
-
-  public static final String GBIF_SCHEME_APP_ROLE = "GBIF_SCHEME_APP_ROLE";
 
   private static class Authorizer implements SecurityContext {
 
@@ -48,9 +42,11 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     /**
      * Get an {@link Authorizer} for a specific {@link User}.
+     *
      * @param user
      * @param authenticationScheme
      * @param isSecure
+     *
      * @return
      */
     static Authorizer getAuthorizer(User user, String authenticationScheme, boolean isSecure) {
@@ -60,22 +56,13 @@ public class IdentifyFilter implements ContainerRequestFilter {
     /**
      * Get an anonymous {@link Authorizer}.
      * Anonymous users do not have {@link Principal}.
+     *
      * @param isSecure
+     *
      * @return
      */
     static Authorizer getAnonymous(boolean isSecure) {
       return new Authorizer(null, "", isSecure);
-    }
-
-    /**
-     * Get an {@link Authorizer} for an application represented by an appKey.
-     * @param appKey
-     * @param authenticationScheme
-     * @param isSecure
-     * @return
-     */
-    static Authorizer getAuthorizer(String appKey, String authenticationScheme, boolean isSecure) {
-      return new Authorizer(new AppPrincipal(appKey, GBIF_SCHEME_APP_ROLE), authenticationScheme, isSecure);
     }
 
     @Override
@@ -105,8 +92,6 @@ public class IdentifyFilter implements ContainerRequestFilter {
   private final IdentityService identityService;
   private final GbifAuthService authService;
 
-  @Context
-  private UriInfo uriInfo;
   private static final String GBIF_SCHEME_PREFIX = GbifAuthService.GBIF_SCHEME + " ";
   private static final String BASIC_SCHEME_PREFIX = "Basic ";
 
@@ -116,7 +101,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
    * on the GBIF scheme prefix.
    *
    * @param identityService
-   * @param authService nullable GbifAuthService
+   * @param authService     nullable GbifAuthService
    */
   @Inject
   public IdentifyFilter(@NotNull IdentityService identityService, @Nullable GbifAuthService authService) {
@@ -135,16 +120,10 @@ public class IdentifyFilter implements ContainerRequestFilter {
 
     if (authorizer == null) {
       // default is the anonymous user
-      authorizer = Authorizer.getAnonymous(isSecure());
+      authorizer = Authorizer.getAnonymous(request.isSecure());
     }
-
     request.setSecurityContext(authorizer);
-
     return request;
-  }
-
-  private boolean isSecure() {
-    return "https".equals(uriInfo.getRequestUri().getScheme());
   }
 
   private Authorizer authenticate(ContainerRequest request) {
@@ -152,15 +131,15 @@ public class IdentifyFilter implements ContainerRequestFilter {
     String authentication = request.getHeaderValue(ContainerRequest.AUTHORIZATION);
     if (authentication != null) {
       if (authentication.startsWith(BASIC_SCHEME_PREFIX)) {
-        return basicAuthentication(authentication.substring(BASIC_SCHEME_PREFIX.length()));
+        return basicAuthentication(authentication.substring(BASIC_SCHEME_PREFIX.length()), request.isSecure());
       } else if (authentication.startsWith(GBIF_SCHEME_PREFIX)) {
         return gbifAuthentication(request);
       }
     }
-    return Authorizer.getAnonymous(isSecure());
+    return Authorizer.getAnonymous(request.isSecure());
   }
 
-  private Authorizer basicAuthentication(String authentication) {
+  private Authorizer basicAuthentication(String authentication, boolean isSecure) {
     String[] values = COLON_PATTERN.split(Base64.base64Decode(authentication));
     if (values.length < 2) {
       LOG.warn("Invalid syntax for username and password: {}", authentication);
@@ -188,7 +167,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
 
     LOG.debug("Authenticating user {} via scheme {}", username, SecurityContext.BASIC_AUTH);
-    return Authorizer.getAuthorizer(user, SecurityContext.BASIC_AUTH, isSecure());
+    return Authorizer.getAuthorizer(user, SecurityContext.BASIC_AUTH, isSecure);
   }
 
   private Authorizer gbifAuthentication(ContainerRequest request) {
@@ -197,7 +176,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
       LOG.warn("Missing gbif username header {}", GbifAuthService.HEADER_GBIF_USER);
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
-    if (authService == null){
+    if (authService == null) {
       LOG.warn("No GbifAuthService defined.");
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
@@ -209,25 +188,13 @@ public class IdentifyFilter implements ContainerRequestFilter {
     LOG.debug("Authenticating user {} via scheme {}", username, GbifAuthService.GBIF_SCHEME);
     if (identityService == null) {
       LOG.debug("No identityService configured! No roles assigned, using anonymous user instead.");
-      return Authorizer.getAnonymous(isSecure());
+      return Authorizer.getAnonymous(request.isSecure());
     }
 
-    //check if we have a request that impersonates a user or if it's an app
+    //check if we have a request that impersonates a user
     User user = identityService.getByIdentifier(username);
-    if (user == null) {
-      //check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
-      String appKey = GbifAuthService.getAppKeyFromRequest(request::getHeaderValue);
-      if(StringUtils.equals(appKey, username)) {
-        return Authorizer.getAuthorizer(appKey, GbifAuthService.GBIF_SCHEME, isSecure());
-      }
-      else{
-        LOG.debug(
-                "Authorized user {} not found in user service! No roles could be assigned, using anonymous user instead.",
-                username);
-        return Authorizer.getAnonymous(isSecure());
-      }
-    }
-    return Authorizer.getAuthorizer(user, GbifAuthService.GBIF_SCHEME, isSecure());
+    return user == null ? Authorizer.getAnonymous(request.isSecure())
+            : Authorizer.getAuthorizer(user, GbifAuthService.GBIF_SCHEME, request.isSecure());
   }
 
 }
