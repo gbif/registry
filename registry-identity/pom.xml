@@ -75,6 +75,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-surety</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
@@ -149,6 +153,12 @@
     </dependency>
 
     <!-- Test -->
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-surety</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
