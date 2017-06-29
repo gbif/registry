@@ -1,9 +1,9 @@
 package org.gbif.registry.grizzly;
 
-import org.gbif.identity.guice.IdentityTestModule;
+import org.gbif.identity.guice.IdentityServiceTestModule;
 import org.gbif.identity.service.IdentityServiceModule;
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.guice.TestRegistryWsServletListener;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class RegistryServerWithIdentity extends AbstractRegistryServer {
     @Override
     protected Module getIdentityModule(Properties props) {
       props.setProperty(IdentityServiceModule.APPKEYS_WHITELIST, TestConstants.IT_APP_KEY);
-      return new IdentityTestModule(props);
+      return new IdentityServiceTestModule(props);
     }
 
     @Override

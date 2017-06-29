@@ -144,7 +144,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @POST
   @Path("{key}/endorsement")
   @RolesAllowed(GBIF_SCHEME_APP_ROLE)
-  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, ChallengeCodeParameter challengeCodeParameter) {
+  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ChallengeCodeParameter challengeCodeParameter) {
     System.out.println("confirmEndorsement organizationKey: " + organizationKey + ", challengeCodeParameter: "
             + challengeCodeParameter.getChallengeCode());
     if(confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode())){

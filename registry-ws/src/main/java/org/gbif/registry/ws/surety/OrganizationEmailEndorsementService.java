@@ -4,6 +4,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.surety.email.BaseEmailModel;
@@ -58,8 +59,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
     Optional<Contact> nodeManager =
             endorsingNode.getContacts().stream().filter(c -> c.getType() == ContactType.NODE_MANAGER).findFirst();
 
-
-    BaseEmailModel emailModel = emailTemplateProcessor.generateNewOrganizationEmailModel(newOrganization.getKey(),
+    BaseEmailModel emailModel = emailTemplateProcessor.generateNewOrganizationEmailModel(newOrganization,
             nodeManager.orElse(null), challengeCode);
     emailManager.send(emailModel);
   }
@@ -72,6 +72,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
             challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode) &&
             challengeCodeManager.remove(organizationKey)) {
       organization.setEndorsementApproved(true);
+      WithMyBatis.update(organizationMapper, organization);
       return true;
     }
     return false;

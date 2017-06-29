@@ -77,7 +77,7 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.filter.IdentifyFilter.GBIF_SCHEME_APP_ROLE;
+import static org.gbif.registry.ws.filter.AppIdentityFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 

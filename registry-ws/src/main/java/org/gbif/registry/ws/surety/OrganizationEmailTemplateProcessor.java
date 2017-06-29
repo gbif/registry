@@ -1,16 +1,16 @@
 package org.gbif.registry.ws.surety;
 
 import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.surety.email.BaseEmailModel;
-import org.gbif.registry.surety.email.BaseTemplateDataModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.model.ChallengeCode;
 
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Locale;
 import java.util.Objects;
-import java.util.UUID;
 
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
@@ -45,12 +45,12 @@ public class OrganizationEmailTemplateProcessor {
 
   /**
    * If nodeManagerContact does not contain an email address, the model will be set to send the message to helpdesk.
-   * @param organizationKey
+   * @param newOrganization
    * @param nodeManagerContact
    * @param challengeCode
    * @return new {@link BaseEmailModel} or null if an error occurred
    */
-  public BaseEmailModel generateNewOrganizationEmailModel(UUID organizationKey, Contact nodeManagerContact, ChallengeCode challengeCode) {
+  public BaseEmailModel generateNewOrganizationEmailModel(Organization newOrganization, Contact nodeManagerContact, ChallengeCode challengeCode) {
     BaseEmailModel baseEmailModel = null;
 
     String emailAddress;
@@ -65,11 +65,11 @@ public class OrganizationEmailTemplateProcessor {
     }
 
     try {
-      URL url = new URL(MessageFormat.format(urlTemplate, organizationKey.toString(), challengeCode.getCode().toString()));
-      BaseTemplateDataModel templateDataModel = new BaseTemplateDataModel(name, url);
-      baseEmailModel = emailTemplateProcessor.buildEmail(emailAddress, templateDataModel);
+      URL url = new URL(MessageFormat.format(urlTemplate, newOrganization.getKey().toString(), challengeCode.getCode().toString()));
+      OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, url, newOrganization, null);
+      baseEmailModel = emailTemplateProcessor.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH);
     } catch (TemplateException | IOException ex) {
-      LOG.error("Error while trying to send email to confirm organization " + organizationKey, ex);
+      LOG.error("Error while trying to send email to confirm organization " + newOrganization.getKey(), ex);
     }
     return baseEmailModel;
   }

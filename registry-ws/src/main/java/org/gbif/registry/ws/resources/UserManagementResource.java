@@ -53,7 +53,7 @@ import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.filter.IdentifyFilter.GBIF_SCHEME_APP_ROLE;
+import static org.gbif.registry.ws.filter.AppIdentityFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.resources.Authentications.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;

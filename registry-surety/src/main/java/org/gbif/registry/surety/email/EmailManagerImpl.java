@@ -21,15 +21,13 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
+
+import static org.gbif.registry.surety.SuretyConstants.NOTIFY_ADMIN;
 
 /**
  * Allows to send {@link BaseEmailModel}
  */
 class EmailManagerImpl implements EmailManager {
-
-  public static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailManagerImpl.class);
   private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();

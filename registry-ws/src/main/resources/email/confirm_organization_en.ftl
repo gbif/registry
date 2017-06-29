@@ -1,6 +1,22 @@
-<#-- @ftlvariable name="" type="org.gbif.identity.email.BaseEmailModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.ws.surety.OrganizationTemplateDataModel" -->
 Hello ${name},
 
-Please confirm the new organization [PUT THE NAME OF THE ORGANIZATION HERE] by clicking the following link:
-    ${url}
+A new organization requires your confirmation:
+${newOrganisation.title}
+
+<#list newOrganisation.address! as addr>
+${addr}
+</#list>
+${newOrganisation.city!}
+${newOrganisation.province!}
+${newOrganisation.postalCode!}
+${newOrganisation.country.title!}
+
+Description:
+${newOrganisation.description!}
+
+Please confirm by clicking the following link: ${url}
+
+Kind regards,
+The GBIF Team
 

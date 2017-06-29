@@ -25,7 +25,7 @@
   </select>
 
   <delete id="deleteChallengeCode">
-    DELETE FROM challenge_code WHERE key #{key}
+    DELETE FROM challenge_code WHERE key = #{key}
   </delete>
 
 </mapper>

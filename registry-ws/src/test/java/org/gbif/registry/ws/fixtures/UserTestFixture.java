@@ -3,12 +3,11 @@ package org.gbif.registry.ws.fixtures;
 import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.identity.mybatis.UserMapper;
+import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.security.UpdateRulesManager;
 
 import java.util.UUID;
-
 import javax.ws.rs.core.MultivaluedMap;
 
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -28,11 +27,11 @@ public class UserTestFixture {
   public static final String PASSWORD = "password";
 
   private IdentityService identityService;
-  private UserMapper userMapper;
+  private IdentitySuretyTestHelper identitySuretyTestHelper;
 
-  public UserTestFixture(IdentityService identityService, UserMapper userMapper) {
+  public UserTestFixture(IdentityService identityService, IdentitySuretyTestHelper identitySuretyTestHelper) {
     this.identityService = identityService;
-    this.userMapper = userMapper;
+    this.identitySuretyTestHelper = identitySuretyTestHelper;
   }
 
   /**
@@ -55,7 +54,7 @@ public class UserTestFixture {
     assertNoErrorAfterMutation(userCreated);
 
     Integer key = identityService.get(newTestUser.getUserName()).getKey();
-    UUID challengeCode = userMapper.getChallengeCode(key);
+    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(key);
     assertTrue("Shall confirm challengeCode " + challengeCode,
             identityService.confirmChallengeCode(key, challengeCode));
 

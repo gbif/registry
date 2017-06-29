@@ -14,8 +14,7 @@ package org.gbif.registry.guice;
 
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.email.IdentityEmailManager;
-import org.gbif.identity.mybatis.UserMapper;
+import org.gbif.identity.guice.IdentityServiceTestModule;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
@@ -23,9 +22,10 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
+import org.gbif.registry.surety.EmptyEmailManager;
+import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.registry.ws.fixtures.TestConstants;
-import org.gbif.registry.ws.guice.IdentityEmailManagerMock;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.TestValidateInterceptor;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -140,7 +140,7 @@ public class RegistryTestModules {
   }
 
   /**
-   * @return An injector that is bound for the Identity mybatis layer and exposes mappers only.
+   * @return An injector that is bound for the Identity mybatis layer.
    */
   public static synchronized Injector identityMybatis() {
     if (identityMyBatis == null) {
@@ -149,8 +149,9 @@ public class RegistryTestModules {
         p.load(Resources.getResourceAsStream(TestConstants.APPLICATION_PROPERTIES));
         identityMyBatis =
                 Guice.createInjector(
-                        newAbstractModule(IdentityEmailManager.class, IdentityEmailManagerMock.class),
-                       new IdentityServiceModuleMapper(p));
+                        newAbstractModule(EmailManager.class, EmptyEmailManager.class),
+                        new RegistryMyBatisModule(p), //required for the ChallengeCodeMapper
+                        new IdentityServiceTestModule(p));
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
@@ -234,23 +235,23 @@ public class RegistryTestModules {
   /**
    * Override the {@link IdentityServiceModule} to expose the myBatis mapper for testing purpose ONLY.
    */
-  private static class IdentityServiceModuleMapper extends IdentityServiceModule {
-
-    /**
-     * Uses the given properties to configure the service.
-     *
-     * @param properties to use
-     */
-    public IdentityServiceModuleMapper(Properties properties) {
-      super(properties);
-    }
-
-    @Override
-    protected void configure() {
-      super.configure();
-      expose(UserMapper.class);
-    }
-  }
+//  private static class IdentityServiceModuleMapper extends IdentityServiceModule {
+//
+//    /**
+//     * Uses the given properties to configure the service.
+//     *
+//     * @param properties to use
+//     */
+//    public IdentityServiceModuleMapper(Properties properties) {
+//      super(properties);
+//    }
+//
+//    @Override
+//    protected void configure() {
+//      super.configure();
+//      expose(UserMapper.class);
+//    }
+//  }
 
 
 }

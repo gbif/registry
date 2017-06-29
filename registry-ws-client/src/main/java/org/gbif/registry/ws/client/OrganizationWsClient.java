@@ -85,8 +85,8 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
 
   @Override
   public boolean confirmEndorsement(@NotNull UUID organizationKey, @NotNull UUID confirmationKey) {
-    return Response.Status.NO_CONTENT.getStatusCode() ==
-            post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement").getStatus();
+    ClientResponse cr = post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement");
+    return Response.Status.NO_CONTENT.getStatusCode() == cr.getStatus();
   }
 
   public List<KeyTitleResult> suggest(@Nullable String q) {

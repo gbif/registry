@@ -114,9 +114,9 @@ public class RegistryWsServletListener extends GbifServletListener {
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
-                              new IdentityModule(properties),
                               //shared email manager (identity, organization creation)
                               new EmailManagerModule(properties),
+                              new IdentityModule(properties),
                               new SuretyModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),

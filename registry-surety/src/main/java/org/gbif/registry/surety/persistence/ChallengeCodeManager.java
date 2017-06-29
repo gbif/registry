@@ -5,13 +5,19 @@ import org.gbif.registry.surety.model.ChallengeCode;
 import java.util.UUID;
 
 /**
- * Helper class to manage ChallengeCode with another table referencing it.
+ * Helper class to manage challengeCode references it.
+ * @param <K> type of the key used by the entity who is pointing to the challengeCode.
  */
 public class ChallengeCodeManager<K> {
 
-  private ChallengeCodeMapper challengeCodeMapper;
-  private ChallengeCodeSupportMapper<K> challengeCodeSupportMapper;
+  private final ChallengeCodeMapper challengeCodeMapper;
+  private final ChallengeCodeSupportMapper<K> challengeCodeSupportMapper;
 
+  /**
+   *
+   * @param challengeCodeMapper
+   * @param challengeCodeSupportMapper
+   */
   public ChallengeCodeManager(ChallengeCodeMapper challengeCodeMapper, ChallengeCodeSupportMapper<K> challengeCodeSupportMapper) {
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
@@ -32,6 +38,16 @@ public class ChallengeCodeManager<K> {
   }
 
   /**
+   * Check if a given key is associated with a challengeCode.
+   * @param key
+   * @return
+   */
+  public boolean hasChallengeCode(K key) {
+    return challengeCodeSupportMapper.getChallengeCodeKey(key) != null;
+  }
+
+  /**
+   * Creates a new challengeCode and updates the link between the entity and the challengeCode.
    * Should be called inside a @Transactional method
    */
   public ChallengeCode create(K key) {
@@ -42,16 +58,17 @@ public class ChallengeCodeManager<K> {
   }
 
   /**
+   * Removes a challengeCode and removes the link between the entity and the challengeCode.
    * Should be called inside a @Transactional method
    * @param key
-   * @return
+   * @return the challengeCode was removed successfully.
    */
   public boolean remove(K key) {
     Integer challengeCodeKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
     if(challengeCodeKey == null) {
       return false;
     }
-    //remove the challengeCode from the referencing table
+    //remove the challengeCode from the referencing table first
     challengeCodeSupportMapper.updateChallengeCodeKey(key, null);
     challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
     return true;

@@ -4,6 +4,7 @@ import org.gbif.api.model.common.User;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
+import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.fixtures.TestClient;
@@ -43,16 +44,18 @@ public class UserManagementIT extends PlainAPIBaseIT {
   private TestClient testClient;
   private IdentityService identityService;
   private UserMapper userMapper;
+  private IdentitySuretyTestHelper identitySuretyTestHelper;
 
   private UserTestFixture userTestFixture;
 
   public UserManagementIT() {
-    final Injector service = RegistryTestModules.identityMybatis();
-    identityService = service.getInstance(IdentityService.class);
-    userMapper = service.getInstance(UserMapper.class);
+    final Injector injector = RegistryTestModules.identityMybatis();
+    identityService = injector.getInstance(IdentityService.class);
+    userMapper = injector.getInstance(UserMapper.class);
+    identitySuretyTestHelper = injector.getInstance(IdentitySuretyTestHelper.class);
 
     testClient = new TestClient(wsBaseUrl);
-    userTestFixture = new UserTestFixture(identityService, userMapper);
+    userTestFixture = new UserTestFixture(identityService, identitySuretyTestHelper);
   }
 
   @Test
@@ -68,7 +71,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
 
     User newUser = userMapper.get(newUserName);
-    UUID challengeCode = userMapper.getChallengeCode(newUser.getKey());
+    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(newUser.getKey());
 
     //generate a new request to confirm challengeCode
     AuthenticationDataParameters params = new AuthenticationDataParameters();
@@ -86,14 +89,14 @@ public class UserManagementIT extends PlainAPIBaseIT {
     User createdUser = userMapper.get(testUser.getUserName());
 
     //ensure there is no challengeCode
-    UUID challengeCode = userMapper.getChallengeCode(createdUser.getKey());
+    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNull("challengeCode shall be null" + challengeCode, challengeCode);
 
     ClientResponse cr = postSignedRequest(testUser.getUserName(),
             uri -> uri.path("resetPassword"));
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
-    challengeCode = userMapper.getChallengeCode(createdUser.getKey());
+    challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNotNull("challengeCode shall exist" + challengeCode);
 
     //we should still be able to login with username/password
@@ -119,7 +122,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
             uri -> uri.path("resetPassword"));
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
-    UUID challengeCode = userMapper.getChallengeCode(createdUser.getKey());
+    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNotNull("challengeCode shall exist" + challengeCode);
 
     //ensure we can check if the challengeCode is valid for the user
