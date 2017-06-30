@@ -113,15 +113,15 @@
     WHERE s.session = #{x}
   </select>
 
-  <select id="getChallengeCode" resultType="UUID" parameterType="java.lang.Integer">
-    SELECT challenge_code
-    FROM public.user u
-    WHERE u.key = #{x}
+  <select id="getChallengeCodeKey" resultType="Integer" parameterType="java.lang.Integer">
+    SELECT challenge_code_key
+    FROM public.user
+    WHERE key = #{key}
   </select>
 
-  <update id="setChallengeCode">
+  <update id="updateChallengeCodeKey">
     UPDATE public.user
-    SET challenge_code = #{challengeCode,jdbcType=OTHER}
+    SET challenge_code_key = #{challengeCodeKey}
     WHERE key = #{key}
   </update>
 

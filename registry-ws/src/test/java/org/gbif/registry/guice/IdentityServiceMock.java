@@ -98,14 +98,6 @@ public class IdentityServiceMock implements IdentityService {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * The session key must be equals to the user name.
-   */
-  @Override
-  public User getBySession(String session) {
-    return mockUser(1, session, null);
-  }
-
   @Override
   public PagingResponse<User> search(String query, @Nullable Pageable page) {
     throw new UnsupportedOperationException();
@@ -122,18 +114,18 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
+  public boolean isConfirmationKeyValid(int userKey, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean confirmChallengeCode(int userKey, UUID challengeCode) {
+  public boolean confirmUser(int userKey, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean containsChallengeCode(int userKey) {
-    return false;
+  public boolean hasPendingConfirmation(int userKey) {
+    return true;
   }
 
   @Override

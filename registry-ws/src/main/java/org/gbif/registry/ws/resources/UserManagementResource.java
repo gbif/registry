@@ -123,7 +123,7 @@ public class UserManagementResource {
     if(user == null) {
       return null;
     }
-    return new UserAdminView(user, identityService.containsChallengeCode(user.getKey()));
+    return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
   }
 
   @POST
@@ -192,7 +192,7 @@ public class UserManagementResource {
     ensureUserSetInSecurityContext(securityContext);
 
     User user = identityService.get(securityContext.getUserPrincipal().getName());
-    if(user != null && identityService.confirmChallengeCode(user.getKey(), authenticationDataParameters.getChallengeCode())){
+    if(user != null && identityService.confirmUser(user.getKey(), authenticationDataParameters.getChallengeCode())){
       identityService.updateLastLogin(user.getKey());
 
       //ideally we would return 200 OK but CreatedResponseFilter automatically
@@ -297,7 +297,7 @@ public class UserManagementResource {
     String username = securityContext.getUserPrincipal().getName();
     User user = identityService.get(username);
 
-    if(identityService.isChallengeCodeValid(user.getKey(), challengeCode)) {
+    if(identityService.isConfirmationKeyValid(user.getKey(), challengeCode)) {
       return Response.noContent().build();
     }
     return buildResponse(Response.Status.UNAUTHORIZED);

@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
  * (Drupal) and provides a writable option.
  *
  * Design and implementation decisions:
- * - This service is also responsible to handle sessions
  * - Create method returns result objects (e.g. {@link UserModelMutationResult}) instead of throwing exceptions
  * - Authorization related to the {@link IdentityService} itself (who is allowed to create user ...) is NOT done by this service.
  *
@@ -72,14 +71,16 @@ public interface IdentityService {
   @Nullable
   User authenticate(String username, String password);
 
+
   /**
-   * Retrieves a user by a currently open login session.
-   * The session name is stored by in a cookie.
-   * @param session the session name as found in the cookie
-   * @return the user of an existing session or NULL if not found
+   * Checks if a user requires a confirmation.
+   * Confirmation can be for a new user or a password change.
+   *
+   * @param userKey
+   *
+   * @return the user has a confirmation pending.
    */
-  @Nullable
-  User getBySession(String session);
+  boolean hasPendingConfirmation(int userKey);
 
   /**
    * A simple search that supports paging.
@@ -114,32 +115,25 @@ public interface IdentityService {
   void updateLastLogin(int userKey);
 
   /**
-   * Check if a challenge code is valid  for a specific user.
+   * Check if a confirmationKey is valid for a specific user.
    *
    * @param userKey
-   * @param challengeCode
+   * @param confirmationKey
    *
-   * @return the challenge is valid or not
+   * @return the confirmationKey is valid or not
    */
-  boolean isChallengeCodeValid(int userKey, UUID challengeCode);
+  boolean isConfirmationKeyValid(int userKey, UUID confirmationKey);
 
   /**
-   * Confirms a challenge code for a specific user. A challenge code can only be confirmed once and only if it was
-   * previously assigned. If no challenge code is present this method will return false;
+   * Confirms user using a confirmation key. A confirmationKey can only be confirmed once and only if it was
+   * previously assigned. If no confirmationKey is present this method will return false;
    *
    * @param userKey
-   * @param challengeCode
+   * @param confirmationKey
    *
-   * @return the challenge was confirmed or not
+   * @return the user was confirmed by this action or not
    */
-  boolean confirmChallengeCode(int userKey, UUID challengeCode);
-
-  /**
-   * Checks if we have a challenge code stored for a specific user.
-   * @param userKey
-   * @return the user has a challenge code stored
-   */
-  boolean containsChallengeCode(int userKey);
+  boolean confirmUser(int userKey, UUID confirmationKey);
 
   /**
    * Allows to change the password of a user providing a challenge code instead of its password.
@@ -149,11 +143,11 @@ public interface IdentityService {
    *
    * @param userKey
    * @param newPassword
-   * @param challengeCode
+   * @param confirmationKey
    *
    * @return the password was updated or not
    */
-  UserModelMutationResult updatePassword(int userKey, String newPassword, UUID challengeCode);
+  UserModelMutationResult updatePassword(int userKey, String newPassword, UUID confirmationKey);
 
 
   /**

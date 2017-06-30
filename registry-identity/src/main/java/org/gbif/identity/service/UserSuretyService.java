@@ -5,7 +5,7 @@ import org.gbif.api.model.common.User;
 import java.util.UUID;
 
 /**
- *
+ * Coordinates actions between the MyBatis layer and the email manager.
  */
 public interface UserSuretyService {
 

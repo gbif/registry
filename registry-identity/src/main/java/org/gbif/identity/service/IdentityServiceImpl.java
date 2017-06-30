@@ -7,7 +7,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.identity.email.IdentityEmailManager;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.PropertyConstants;
 import org.gbif.identity.model.UserModelMutationResult;
@@ -40,7 +39,7 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
 class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
-  private final IdentityEmailManager identityEmailManager;
+  private final UserSuretyService userSuretyService;
 
   private final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
 
@@ -54,9 +53,9 @@ class IdentityServiceImpl implements IdentityService {
 
   @Inject
   IdentityServiceImpl(UserMapper userMapper,
-                      IdentityEmailManager identityEmailManager) {
+                      UserSuretyService userSuretyService) {
     this.userMapper = userMapper;
-    this.identityEmailManager = identityEmailManager;
+    this.userSuretyService = userSuretyService;
   }
 
   @Override
@@ -81,11 +80,8 @@ class IdentityServiceImpl implements IdentityService {
     }
     userMapper.create(user);
 
-    UUID challengeCode = UUID.randomUUID();
-    userMapper.setChallengeCode(user.getKey(), challengeCode);
-
     //trigger email
-    identityEmailManager.generateAndSendUserCreated(user, challengeCode);
+    userSuretyService.onNewUser(user);
 
     return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
   }
@@ -174,7 +170,7 @@ class IdentityServiceImpl implements IdentityService {
         //ensure there is no pending challenge code, unless the user already logged in in the past.
         //If the user logged in in the past we assume the challengeCode is from a reset password and since we
         //can't be sure the user initiated the request himself we must allow to login
-        if(userMapper.getChallengeCode(u.getKey()) == null || u.getLastLogin() != null) {
+        if(!userSuretyService.hasChallengeCode(u.getKey()) || u.getLastLogin() != null) {
           return u;
         }
       }
@@ -190,43 +186,24 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public User getBySession(String session) {
-    if (Strings.isNullOrEmpty(session)) {
-      return null;
-    }
-    return userMapper.getBySession(session);
-  }
-
-  @Override
   public void updateLastLogin(int userKey){
     userMapper.updateLastLogin(userKey);
   }
 
-
   @Override
-  public boolean containsChallengeCode(int userKey) {
-    return userMapper.getChallengeCode(userKey) != null;
+  public boolean hasPendingConfirmation(int userKey) {
+    return userSuretyService.hasChallengeCode(userKey);
   }
 
   @Override
-  public boolean isChallengeCodeValid(int userKey, UUID challengeCode) {
-    if (challengeCode != null) {
-      UUID expectedChallengeCode = userMapper.getChallengeCode(userKey);
-      if (challengeCode.equals(expectedChallengeCode)) {
-        return true;
-      }
-    }
-    return false;
+  public boolean isConfirmationKeyValid(int userKey, UUID confirmationKey) {
+    return userSuretyService.isValidChallengeCode(userKey, confirmationKey);
   }
 
   @Override
-  public boolean confirmChallengeCode(int userKey, UUID challengeCode) {
-    if (challengeCode != null) {
-      if(isChallengeCodeValid(userKey, challengeCode)){
-        // remove challenge code since it has been confirmed
-        userMapper.setChallengeCode(userKey, null);
-        return true;
-      }
+  public boolean confirmUser(int userKey, UUID confirmationKey) {
+    if (confirmationKey != null) {
+        return userSuretyService.confirmUser(userKey, confirmationKey);
     }
     return false;
   }
@@ -235,17 +212,14 @@ class IdentityServiceImpl implements IdentityService {
   public void resetPassword(int userKey) {
     // ensure the user exists
     User user = userMapper.getByKey(userKey);
-    if (userMapper.getByKey(userKey) != null) {
-      //we do NOT terminate all session now (we can't guarantee it was initiated by the user himself)
-      UUID challengeCode = UUID.randomUUID();
-      userMapper.setChallengeCode(userKey, challengeCode);
-      identityEmailManager.generateAndSendPasswordReset(user, challengeCode);
+    if (user != null) {
+      userSuretyService.onPasswordReset(user);
     }
   }
 
   @Override
   public UserModelMutationResult updatePassword(int userKey, String newPassword, UUID challengeCode) {
-    if(confirmChallengeCode(userKey, challengeCode)){
+    if(confirmUser(userKey, challengeCode)){
       return updatePassword(userKey, newPassword);
     }
     return withSingleConstraintViolation(PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);

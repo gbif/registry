@@ -11,7 +11,6 @@ public class UserAdminView {
 
   private User user;
   private boolean challengeCodePresent;
-  //private int numberOfSessions;
 
   public UserAdminView(){}
 

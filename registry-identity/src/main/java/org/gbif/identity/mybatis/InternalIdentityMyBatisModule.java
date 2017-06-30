@@ -10,6 +10,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
+import static org.gbif.identity.service.IdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL;
+import static org.gbif.identity.service.IdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME;
+
 /**
  * This Module should not be used directly, use the {@link IdentityServiceModule} instead.
  */
@@ -33,6 +39,11 @@ public class InternalIdentityMyBatisModule extends MyBatisModule {
     addAlias("User").to(User.class);
     addAlias("UserRole").to(UserRole.class);
     addAlias("UUID").to(UUID.class);
+
+    // expose UserMapper also as ChallengeCodeSupportMapper<Integer>
+    bind(CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL)
+            .annotatedWith(Names.named(CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME))
+            .to(UserMapper.class).in(Scopes.SINGLETON);
   }
 
   @Override

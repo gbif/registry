@@ -1,8 +1,6 @@
 package org.gbif.identity.service;
 
 import org.gbif.api.model.common.User;
-import org.gbif.identity.service.IdentityEmailTemplateProcessor;
-import org.gbif.identity.service.UserSuretyService;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.surety.model.ChallengeCode;
@@ -14,9 +12,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 /**
- * Decides which actions to take
+ * Coordinates actions between the MyBatis layer and the email manager.
  */
-public class UserSuretyServiceImpl implements UserSuretyService {
+class UserSuretyServiceImpl implements UserSuretyService {
 
   private final ChallengeCodeManager<Integer> challengeCodeManager;
   private final EmailManager emailManager;

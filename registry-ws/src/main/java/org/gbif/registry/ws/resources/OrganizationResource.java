@@ -145,17 +145,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Path("{key}/endorsement")
   @RolesAllowed(GBIF_SCHEME_APP_ROLE)
   public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ChallengeCodeParameter challengeCodeParameter) {
-    System.out.println("confirmEndorsement organizationKey: " + organizationKey + ", challengeCodeParameter: "
-            + challengeCodeParameter.getChallengeCode());
-    if(confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode())){
-      return Response.noContent().build();
-    }
-    return Response.status(Response.Status.BAD_REQUEST).build();
+    return (confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode()) ?
+            Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
   }
 
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
-
     return organizationEndorsementService.confirmOrganization(organizationKey, confirmationKey);
   }
 

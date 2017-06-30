@@ -15,6 +15,8 @@
 
       ALTER TABLE organization ADD COLUMN challenge_code_key INTEGER REFERENCES challenge_code(key)
         CHECK (endorsement_approved = FALSE OR challenge_code_key IS NULL);
+
+      ALTER TABLE public.user ADD COLUMN challenge_code_key INTEGER REFERENCES challenge_code(key);
     </sql>
   </changeSet>
 </databaseChangeLog>
