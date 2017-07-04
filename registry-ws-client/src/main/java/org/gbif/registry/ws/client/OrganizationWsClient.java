@@ -12,9 +12,9 @@
  */
 package org.gbif.registry.ws.client;
 
-import org.gbif.api.model.common.ChallengeCodeParameter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientResponse;
@@ -85,7 +85,7 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
 
   @Override
   public boolean confirmEndorsement(@NotNull UUID organizationKey, @NotNull UUID confirmationKey) {
-    ClientResponse cr = post(ClientResponse.class, new ChallengeCodeParameter(confirmationKey), String.valueOf(organizationKey), "endorsement");
+    ClientResponse cr = post(ClientResponse.class, new ConfirmationKeyParameter(confirmationKey), String.valueOf(organizationKey), "endorsement");
     return Response.Status.NO_CONTENT.getStatusCode() == cr.getStatus();
   }
 

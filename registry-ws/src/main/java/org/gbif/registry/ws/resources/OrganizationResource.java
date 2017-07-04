@@ -12,10 +12,10 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.common.ChallengeCodeParameter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
@@ -136,16 +136,18 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Maybe confirm should be par of the API?
+   * Confirm the endorsement of an organisation.
+   *
    * @param organizationKey
-   * @param challengeCodeParameter
+   * @param confirmationKeyParameter
+   *
    * @return
    */
   @POST
   @Path("{key}/endorsement")
   @RolesAllowed(GBIF_SCHEME_APP_ROLE)
-  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ChallengeCodeParameter challengeCodeParameter) {
-    return (confirmEndorsement(organizationKey, challengeCodeParameter.getChallengeCode()) ?
+  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
+    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
             Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
   }
 
