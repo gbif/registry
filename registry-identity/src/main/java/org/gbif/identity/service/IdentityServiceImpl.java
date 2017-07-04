@@ -16,6 +16,7 @@ import org.gbif.identity.util.PasswordEncoder;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -49,6 +50,9 @@ class IdentityServiceImpl implements IdentityService {
                   .buildValidatorFactory()
                   .getValidator();
 
+  private static final Function<String, String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
+  private static final Function<String, String> NORMALIZE_EMAIL_FCT = (email) -> email == null ? null : email.trim().toLowerCase();
+
   private final PasswordEncoder encoder = new PasswordEncoder();
 
   @Inject
@@ -60,8 +64,9 @@ class IdentityServiceImpl implements IdentityService {
 
   @Override
   @Transactional
-  public UserModelMutationResult create(GbifUser user, String password) {
+  public UserModelMutationResult create(GbifUser rawUser, String password) {
 
+    GbifUser user = normalize(rawUser);
     if (userMapper.get(user.getUserName()) != null ||
             userMapper.getByEmail(user.getEmail()) != null) {
       return withError(ModelMutationError.USER_ALREADY_EXIST);
@@ -87,8 +92,8 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public UserModelMutationResult update(GbifUser user) {
-
+  public UserModelMutationResult update(GbifUser rawUser) {
+    GbifUser user = normalize(rawUser);
     GbifUser currentUser = getByKey(user.getKey());
     if (currentUser != null) {
 
@@ -129,12 +134,12 @@ class IdentityServiceImpl implements IdentityService {
     if (Strings.isNullOrEmpty(username)) {
       return null;
     }
-    return userMapper.get(username);
+    return userMapper.get(NORMALIZE_USERNAME_FCT.apply(username));
   }
 
   @Override
   public GbifUser getByEmail(String email) {
-    return userMapper.getByEmail(email);
+    return userMapper.getByEmail(NORMALIZE_EMAIL_FCT.apply(email));
   }
 
   @Override
@@ -239,6 +244,20 @@ class IdentityServiceImpl implements IdentityService {
       return withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN);
     }
     return UserModelMutationResult.onSuccess();
+  }
+
+  /**
+   * The main purpose of this method is to normalize the content of some fields from a {@link GbifUser}.
+   * The goal is to ensure we can query this object in the same way we handle inserts/updates.
+   *  - trim() on username
+   *  - trim() + toLowerCase() on emails
+   * @param gbifUser
+   * @return
+   */
+  private static GbifUser normalize(GbifUser gbifUser){
+    gbifUser.setUserName(NORMALIZE_USERNAME_FCT.apply(gbifUser.getUserName()));
+    gbifUser.setEmail(NORMALIZE_EMAIL_FCT.apply(gbifUser.getEmail()));
+    return gbifUser;
   }
 
   /**

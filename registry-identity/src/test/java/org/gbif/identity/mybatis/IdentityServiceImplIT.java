@@ -129,6 +129,22 @@ public class IdentityServiceImplIT {
     assertEquals("Expected PASSWORD_LENGTH_VIOLATION", ModelMutationError.PASSWORD_LENGTH_VIOLATION, result.getError());
   }
 
+  /**
+   * Checks that the get(username) is case insensitive.
+   */
+  @Test
+  public void testGetIsCaseInsensitive() throws Exception {
+    GbifUser u1 = generateUser();
+    u1.setUserName("testuser");
+
+    // create
+    UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the Username to be set. " + result.getConstraintViolation(), result.getUsername());
+
+    GbifUser newUser = identityService.get("tEstuSeR");
+    assertNotNull("Can get the user using the same username with capital letters", newUser.getKey());
+  }
+
   @Test
   public void testCreateUserChallengeCodeSequence() {
     GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);

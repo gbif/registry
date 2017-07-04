@@ -1,6 +1,6 @@
 package org.gbif.api.service.common;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 
 import java.util.Map;
 
@@ -18,7 +18,7 @@ public class LoggedUser {
   private String email;
   private Map<String, String> settings = Maps.newHashMap();
 
-  public static LoggedUser from(User user){
+  public static LoggedUser from(GbifUser user){
     if(user == null) {
       return null;
     }
@@ -32,7 +32,7 @@ public class LoggedUser {
 
   }
 
-  private LoggedUser(User user) {
+  private LoggedUser(GbifUser user) {
     userName = user.getUserName();
     firstName = user.getFirstName();
     lastName = user.getLastName();
