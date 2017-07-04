@@ -15,7 +15,7 @@
  */
 package org.gbif.api.service.common;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.identity.model.UserModelMutationResult;
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * - Authorization related to the {@link IdentityService} itself (who is allowed to create user ...) is NOT done by this service.
  *
  */
-public interface IdentityService {
+public interface IdentityService extends IdentityAccessService {
 
   /**
    * Exposes the user by primary key instead of the username.
@@ -43,13 +43,10 @@ public interface IdentityService {
    * @return The user or null
    */
   @Nullable
-  User getByKey(int id);
+  GbifUser getByKey(int id);
 
   @Nullable
-  User get(String userName);
-
-  @Nullable
-  User getByEmail(String email);
+  GbifUser getByEmail(String email);
 
   /**
    * Get a user by identifier. An identifier is a username OR an email.
@@ -59,18 +56,7 @@ public interface IdentityService {
    * @return The user or null
    */
   @Nullable
-  User getByIdentifier(String identifier);
-
-
-  /**
-   * Authenticates a user.
-   * @param password clear text password
-   *
-   * @return the authenticated user or null if not found or wrong credentials provided
-   */
-  @Nullable
-  User authenticate(String username, String password);
-
+  GbifUser getByIdentifier(String identifier);
 
   /**
    * Checks if a user requires a confirmation.
@@ -87,14 +73,14 @@ public interface IdentityService {
    *
    * @return a pageable response of network entities, with accurate counts.
    */
-  PagingResponse<User> search(String query, @Nullable Pageable page);
+  PagingResponse<GbifUser> search(String query, @Nullable Pageable page);
 
   /**
    * Create a new user.
-   * @param user {@link User} to be created.
+   * @param user {@link GbifUser} to be created.
    * @return result of the user creation
    */
-  UserModelMutationResult create(User user, String password);
+  UserModelMutationResult create(GbifUser user, String password);
 
   /**
    * Apply an update to a user.
@@ -102,11 +88,11 @@ public interface IdentityService {
    * @param user
    * @return
    */
-  UserModelMutationResult update(User user);
+  UserModelMutationResult update(GbifUser user);
 
   void delete(int userKey);
 
-  PagingResponse<User> list(@Nullable Pageable var1);
+  PagingResponse<GbifUser> list(@Nullable Pageable var1);
 
   /**
    * Trigger an update of the last login date.

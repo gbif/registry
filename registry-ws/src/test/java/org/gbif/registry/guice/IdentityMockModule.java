@@ -1,5 +1,6 @@
 package org.gbif.registry.guice;
 
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
 
 import java.util.Collections;
@@ -21,6 +22,7 @@ public class IdentityMockModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(IdentityService.class).to(IdentityServiceMock.class);
+    bind(IdentityAccessService.class).to(IdentityServiceMock.class);
     //do not accept appkeys
     bind(new TypeLiteral<List<String>>() {
     }).annotatedWith(Names.named(APPKEYS_WHITELIST)).toInstance(

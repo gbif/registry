@@ -1,6 +1,6 @@
 package org.gbif.registry.guice;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.common.IdentityService;
@@ -23,7 +23,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class IdentityServiceMock implements IdentityService {
 
-  private static final Map<String, User> USERS = Maps.newHashMap();
+  private static final Map<String, GbifUser> USERS = Maps.newHashMap();
   static{
     USERS.put(TestConstants.TEST_ADMIN, mockUser(1, TestConstants.TEST_ADMIN,
             TestConstants.getTestUserRole(TestConstants.TEST_ADMIN)));
@@ -37,7 +37,7 @@ public class IdentityServiceMock implements IdentityService {
 
   @Nullable
   @Override
-  public User getByKey(int id) {
+  public GbifUser getByKey(int id) {
     return USERS.entrySet().stream()
             .map(Map.Entry::getValue)
             .filter(user -> user.getKey().equals(id))
@@ -50,7 +50,7 @@ public class IdentityServiceMock implements IdentityService {
    * Authenticates the user by a simple match of username and pwd.
    */
   @Override
-  public User authenticate(String username, String passwordHash) {
+  public GbifUser authenticate(String username, String passwordHash) {
     if (USERS.containsKey(username) && USERS.get(username).getPasswordHash().equals(passwordHash)) {
       return copyUserAfterLogin(USERS.get(username));
     }
@@ -63,12 +63,12 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public UserModelMutationResult update(User user) {
+  public UserModelMutationResult update(GbifUser user) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public User get(String username) {
+  public GbifUser get(String username) {
     if (USERS.containsKey(username)) {
       return copyUserAfterLogin(USERS.get(username));
     }
@@ -77,7 +77,7 @@ public class IdentityServiceMock implements IdentityService {
 
   @Nullable
   @Override
-  public User getByEmail(String email) {
+  public GbifUser getByEmail(String email) {
     return USERS.entrySet().stream()
             .map(Map.Entry::getValue)
             .filter(user -> user.getEmail().equals(email))
@@ -88,23 +88,23 @@ public class IdentityServiceMock implements IdentityService {
 
   @Nullable
   @Override
-  public User getByIdentifier(String identifier) {
+  public GbifUser getByIdentifier(String identifier) {
     return StringUtils.contains(identifier, "@") ?
             getByEmail(identifier) :get(identifier);
   }
 
   @Override
-  public PagingResponse<User> list(@Nullable Pageable pageable) {
+  public PagingResponse<GbifUser> list(@Nullable Pageable pageable) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public PagingResponse<User> search(String query, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(String query, @Nullable Pageable page) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public UserModelMutationResult create(User user, String password) {
+  public UserModelMutationResult create(GbifUser user, String password) {
     throw new UnsupportedOperationException();
   }
 
@@ -148,8 +148,8 @@ public class IdentityServiceMock implements IdentityService {
    * @param user
    * @return
    */
-  private static User copyUserAfterLogin(User user) {
-    User userCopy = new User();
+  private static GbifUser copyUserAfterLogin(GbifUser user) {
+    GbifUser userCopy = new GbifUser();
     userCopy.setUserName(user.getUserName());
     userCopy.setPasswordHash(user.getPasswordHash());
     userCopy.setLastLogin(new Date());
@@ -166,8 +166,8 @@ public class IdentityServiceMock implements IdentityService {
   /**
    * Creates a full user instance using the username as passwordhash
    */
-  private static User mockUser(int key, String username, UserRole... roles) {
-    User user = new User();
+  private static GbifUser mockUser(int key, String username, UserRole... roles) {
+    GbifUser user = new GbifUser();
     user.setUserName(username);
     user.setPasswordHash(username);
     user.setLastLogin(new Date());

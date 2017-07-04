@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.security;
 
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.ws.model.UserCreation;
@@ -21,7 +22,7 @@ public class UpdateRulesManager {
    * @param userUpdate
    * @return
    */
-  public static User applyUpdate(@Nullable Set<UserRole> initiatorRoles, User user, UserUpdate userUpdate, boolean fromTrustedApp) {
+  public static GbifUser applyUpdate(@Nullable Set<UserRole> initiatorRoles, GbifUser user, UserUpdate userUpdate, boolean fromTrustedApp) {
 
     boolean isAdmin = initiatorRoles != null && (initiatorRoles.contains(UserRole.REGISTRY_ADMIN));
 
@@ -48,8 +49,8 @@ public class UpdateRulesManager {
    * @param userCreate
    * @return
    */
-  public static User applyCreate(UserCreation userCreate) {
-    User user = new User();
+  public static GbifUser applyCreate(UserCreation userCreate) {
+    GbifUser user = new GbifUser();
     user.setUserName(userCreate.getUserName());
     user.setFirstName(userCreate.getFirstName());
     user.setLastName(userCreate.getLastName());

@@ -12,7 +12,8 @@
  */
 package org.gbif.registry.guice;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.GbifUserPrincipal;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.guice.IdentityServiceTestModule;
 import org.gbif.identity.service.IdentityServiceModule;
@@ -38,9 +39,9 @@ import org.gbif.registry.ws.resources.legacy.IptResource;
 import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
-import org.gbif.ws.server.filter.AuthFilter;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -173,7 +174,7 @@ public class RegistryTestModules {
    * @return
    */
   private static SecurityContext mockAdmin() {
-    User user = new User();
+    GbifUser user = new GbifUser();
     user.setUserName("admin");
     user.setFirstName("Veronica");
     user.setLastName("Meier");
@@ -182,8 +183,31 @@ public class RegistryTestModules {
     Set<UserRole> roles = new HashSet<UserRole>();
     roles.add(UserRole.ADMIN);
     user.setRoles(roles);
-    AuthFilter af = new AuthFilter(null, null);
-    return af.new Authorizer(user, "");
+    return new SecurityContext() {
+
+      @Override
+      public Principal getUserPrincipal() {
+        return new GbifUserPrincipal(user);
+      }
+
+      @Override
+      public boolean isUserInRole(String s) {
+        return user.getRoles().stream()
+                .filter(r -> r.toString().equalsIgnoreCase(s))
+                .findFirst()
+                .isPresent();
+      }
+
+      @Override
+      public boolean isSecure() {
+        return false;
+      }
+
+      @Override
+      public String getAuthenticationScheme() {
+        return null;
+      }
+    };
   }
 
   /**

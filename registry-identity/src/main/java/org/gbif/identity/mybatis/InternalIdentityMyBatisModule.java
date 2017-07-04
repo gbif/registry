@@ -1,6 +1,6 @@
 package org.gbif.identity.mybatis;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.mybatis.guice.MyBatisModule;
@@ -36,7 +36,7 @@ public class InternalIdentityMyBatisModule extends MyBatisModule {
   protected void bindMappers() {
     addMapperClass(UserMapper.class);
 
-    addAlias("User").to(User.class);
+    addAlias("GbifUser").to(GbifUser.class);
     addAlias("UserRole").to(UserRole.class);
     addAlias("UUID").to(UUID.class);
 

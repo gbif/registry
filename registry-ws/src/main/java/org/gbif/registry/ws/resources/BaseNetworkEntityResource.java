@@ -300,7 +300,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/comment")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
   public int addComment(@NotNull @PathParam("key") UUID targetEntityKey, @NotNull @Trim Comment comment,
     @Context SecurityContext security) {
     comment.setCreatedBy(security.getUserPrincipal().getName());
@@ -497,7 +497,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/contact")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
   public int addContact(@PathParam("key") UUID targetEntityKey, @NotNull @Trim Contact contact,
     @Context SecurityContext security) {
     contact.setCreatedBy(security.getUserPrincipal().getName());

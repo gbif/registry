@@ -1,6 +1,6 @@
 package org.gbif.identity.mybatis;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.guice.IdentityTestModule;
@@ -69,14 +69,14 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCRUD() throws Exception {
-    User u1 = generateUser();
+    GbifUser u1 = generateUser();
 
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // get
-    User u2 = identityService.get(u1.getUserName());
+    GbifUser u2 = identityService.get(u1.getUserName());
     assertEquals(u1.getUserName(), u2.getUserName());
     assertEquals(u1.getFirstName(), u2.getFirstName());
     assertEquals(u1.getLastName(), u2.getLastName());
@@ -92,13 +92,13 @@ public class IdentityServiceImplIT {
     assertNotNull("got mutationResult", mutationResult);
     assertFalse("Doesn't contain error like " + mutationResult.getConstraintViolation(), mutationResult.containsError());
 
-    User u3 = identityService.get(u1.getUserName());
+    GbifUser u3 = identityService.get(u1.getUserName());
     assertEquals(2, u3.getSettings().size());
     assertEquals("GB", u3.getSettings().get("user.country"));
     assertEquals("-7", u3.getSystemSettings().get("internal.settings"));
 
     identityService.delete(u1.getKey());
-    User u4 = identityService.get(u1.getUserName());
+    GbifUser u4 = identityService.get(u1.getUserName());
     assertNull(u4);
   }
 
@@ -107,7 +107,7 @@ public class IdentityServiceImplIT {
    */
   @Test
   public void testCreateError() throws Exception {
-    User u1 = generateUser();
+    GbifUser u1 = generateUser();
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
@@ -131,13 +131,13 @@ public class IdentityServiceImplIT {
 
   @Test
   public void testCreateUserChallengeCodeSequence() {
-    User user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
+    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
     assertNotNull(user);
   }
 
   @Test
   public void testResetPasswordSequence() {
-    User user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
+    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
     identityService.resetPassword(user.getKey());
 
     //ensure we can not login
@@ -158,9 +158,9 @@ public class IdentityServiceImplIT {
    * Thread-Safe
    * @return
    */
-  public static User generateUser() {
+  public static GbifUser generateUser() {
     int idx = index.incrementAndGet();
-    User user = new User();
+    GbifUser user = new GbifUser();
     user.setUserName("user_" + idx);
     user.setFirstName("Tim");
     user.setLastName("Robertson");
@@ -177,9 +177,9 @@ public class IdentityServiceImplIT {
    * No assertion performed.
    * @return
    */
-  public static User createConfirmedUser(IdentityService identityService, IdentitySuretyTestHelper identitySuretyTestHelper,
+  public static GbifUser createConfirmedUser(IdentityService identityService, IdentitySuretyTestHelper identitySuretyTestHelper,
                                          InMemoryEmailManager inMemoryEmailManager) {
-    User u1 = generateUser();
+    GbifUser u1 = generateUser();
     // create the user
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
@@ -195,7 +195,7 @@ public class IdentityServiceImplIT {
     //confirm challenge code
     assertNotNull("Got a challenge code for email: " + u1.getEmail(), challengeCode);
 
-    User user = identityService.get(u1.getUserName());
+    GbifUser user = identityService.get(u1.getUserName());
     assertTrue("challengeCode can be confirmed", identityService.confirmUser(u1.getKey(), challengeCode));
 
     //ensure we can now login

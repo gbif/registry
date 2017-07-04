@@ -1,6 +1,6 @@
 package org.gbif.identity.service;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -39,7 +39,7 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
 class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
-  private final UserSuretyService userSuretyService;
+  private final UserSuretyDelegateIf userSuretyService;
 
   private final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
 
@@ -53,14 +53,14 @@ class IdentityServiceImpl implements IdentityService {
 
   @Inject
   IdentityServiceImpl(UserMapper userMapper,
-                      UserSuretyService userSuretyService) {
+                      UserSuretyDelegateIf userSuretyService) {
     this.userMapper = userMapper;
     this.userSuretyService = userSuretyService;
   }
 
   @Override
   @Transactional
-  public UserModelMutationResult create(User user, String password) {
+  public UserModelMutationResult create(GbifUser user, String password) {
 
     if (userMapper.get(user.getUserName()) != null ||
             userMapper.getByEmail(user.getEmail()) != null) {
@@ -73,7 +73,7 @@ class IdentityServiceImpl implements IdentityService {
 
     user.setPasswordHash(encoder.encode(password));
 
-    Set<ConstraintViolation<User>> violations = BEAN_VALIDATOR.validate(user,
+    Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(user,
             PrePersist.class, Default.class);
     if(!violations.isEmpty()) {
       return withError(violations);
@@ -87,21 +87,21 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public UserModelMutationResult update(User user) {
+  public UserModelMutationResult update(GbifUser user) {
 
-    User currentUser = getByKey(user.getKey());
+    GbifUser currentUser = getByKey(user.getKey());
     if (currentUser != null) {
 
       //handle email change and user if the user want to change it is is not already
       //linked to another account
       if (!currentUser.getEmail().equalsIgnoreCase(user.getEmail())) {
-        User currentUserWithEmail = userMapper.getByEmail(user.getEmail());
+        GbifUser currentUserWithEmail = userMapper.getByEmail(user.getEmail());
         if (currentUserWithEmail != null) {
           return UserModelMutationResult.withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
         }
       }
 
-      Set<ConstraintViolation<User>> violations = BEAN_VALIDATOR.validate(user,
+      Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(user,
               PostPersist.class, Default.class);
       if (!violations.isEmpty()) {
         return UserModelMutationResult.withError(violations);
@@ -120,12 +120,12 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public User getByKey(int key) {
+  public GbifUser getByKey(int key) {
     return userMapper.getByKey(key);
   }
 
   @Override
-  public User get(String username) {
+  public GbifUser get(String username) {
     if (Strings.isNullOrEmpty(username)) {
       return null;
     }
@@ -133,17 +133,17 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public User getByEmail(String email) {
+  public GbifUser getByEmail(String email) {
     return userMapper.getByEmail(email);
   }
 
   @Override
-  public PagingResponse<User> list(@Nullable Pageable pageable) {
+  public PagingResponse<GbifUser> list(@Nullable Pageable pageable) {
     return search(null, pageable);
   }
 
   @Override
-  public PagingResponse<User> search(@Nullable String query, @Nullable Pageable pageable) {
+  public PagingResponse<GbifUser> search(@Nullable String query, @Nullable Pageable pageable) {
     return pagingResponse(pageable, userMapper.count(query), userMapper.search(query, pageable));
   }
 
@@ -155,12 +155,12 @@ class IdentityServiceImpl implements IdentityService {
    * @return
    */
   @Override
-  public User authenticate(String username, String password) {
+  public GbifUser authenticate(String username, String password) {
     if (Strings.isNullOrEmpty(username) || password == null) {
       return null;
     }
 
-    User u = getByIdentifier(username);
+    GbifUser u = getByIdentifier(username);
     if (u != null) {
       // use the settings which are the prefix in the existing password hash to encode the provided password
       // and verify that they result in the same
@@ -179,7 +179,7 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public User getByIdentifier(String identifier) {
+  public GbifUser getByIdentifier(String identifier) {
     //this assumes username name can not contains @ (see User's getUserName())
     return StringUtils.contains(identifier, "@") ?
             getByEmail(identifier) :get(identifier);
@@ -211,7 +211,7 @@ class IdentityServiceImpl implements IdentityService {
   @Override
   public void resetPassword(int userKey) {
     // ensure the user exists
-    User user = userMapper.getByKey(userKey);
+    GbifUser user = userMapper.getByKey(userKey);
     if (user != null) {
       userSuretyService.onPasswordReset(user);
     }
@@ -227,7 +227,7 @@ class IdentityServiceImpl implements IdentityService {
 
   @Override
   public UserModelMutationResult updatePassword(int userKey, String newPassword) {
-    User user = userMapper.getByKey(userKey);
+    GbifUser user = userMapper.getByKey(userKey);
     if(user != null){
       if(StringUtils.isBlank(newPassword) || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
         return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
@@ -246,7 +246,7 @@ class IdentityServiceImpl implements IdentityService {
    *
    * @param page page to create response for, can be null
    */
-  private static PagingResponse<User> pagingResponse(@Nullable Pageable page, long count, List<User> result) {
+  private static PagingResponse<GbifUser> pagingResponse(@Nullable Pageable page, long count, List<GbifUser> result) {
     return new PagingResponse<>(page == null ? new PagingRequest() : page, count, result);
   }
 

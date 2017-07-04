@@ -1,6 +1,6 @@
 package org.gbif.identity.service;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.BaseTemplateDataModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
@@ -38,7 +38,7 @@ public class IdentityEmailTemplateProcessor {
    * Email model that only includes a username and a formatted URL for a specific username and challenge code.
    * @return new {@link BaseEmailModel} or null if an error occurred
    */
-  public BaseEmailModel generateUserChallengeCodeEmailModel(User user, ChallengeCode challengeCode) {
+  public BaseEmailModel generateUserChallengeCodeEmailModel(GbifUser user, ChallengeCode challengeCode) {
     BaseEmailModel baseEmailModel = null;
     try {
       URL url = new URL(MessageFormat.format(urlTemplate, user.getUserName(), challengeCode.getCode()));

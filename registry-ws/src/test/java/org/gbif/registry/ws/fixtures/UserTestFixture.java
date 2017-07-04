@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.fixtures;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
@@ -38,7 +38,7 @@ public class UserTestFixture {
    * Prepare a pre-defined user {@link #USERNAME}
    * @return
    */
-  public User prepareUser() {
+  public GbifUser prepareUser() {
     return prepareUser(generateUser());
   }
 
@@ -47,8 +47,8 @@ public class UserTestFixture {
    * @param newTestUser
    * @return
    */
-  public User prepareUser(UserCreation newTestUser) {
-    User userToCreate = UpdateRulesManager.applyCreate(newTestUser);
+  public GbifUser prepareUser(UserCreation newTestUser) {
+    GbifUser userToCreate = UpdateRulesManager.applyCreate(newTestUser);
     UserModelMutationResult userCreated = identityService.create(userToCreate,
             newTestUser.getPassword());
     assertNoErrorAfterMutation(userCreated);

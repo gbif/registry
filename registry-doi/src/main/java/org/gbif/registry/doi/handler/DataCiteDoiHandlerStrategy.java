@@ -1,7 +1,7 @@
 package org.gbif.registry.doi.handler;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -29,7 +29,7 @@ public interface DataCiteDoiHandlerStrategy {
    * @param user
    * @return
    */
-  DataCiteMetadata buildMetadata(Download download, User user);
+  DataCiteMetadata buildMetadata(Download download, GbifUser user);
 
   /**
    * Build the DataCiteMetadata for a Dataset.
@@ -65,7 +65,7 @@ public interface DataCiteDoiHandlerStrategy {
    *                         by something else
    * @param user
    */
-  void downloadChanged(Download download, Download previousDownload, User user);
+  void downloadChanged(Download download, Download previousDownload, GbifUser user);
 
   /**
    * Directly schedule the registration of a Dataset DOI.

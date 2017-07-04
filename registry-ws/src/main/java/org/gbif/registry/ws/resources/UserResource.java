@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.identity.model.UserModelMutationResult;
@@ -82,7 +82,7 @@ public class UserResource {
 
     ensureUserSetInSecurityContext(security);
 
-    User user = identityService.get(security.getUserPrincipal().getName());
+    GbifUser user = identityService.get(security.getUserPrincipal().getName());
     identityService.updateLastLogin(user.getKey());
     return LoggedUser.from(user);
   }
@@ -96,7 +96,7 @@ public class UserResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String identifier = securityContext.getUserPrincipal().getName();
-    User user = identityService.get(identifier);
+    GbifUser user = identityService.get(identifier);
     if (user != null) {
       UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
               authenticationDataParameters.getPassword());

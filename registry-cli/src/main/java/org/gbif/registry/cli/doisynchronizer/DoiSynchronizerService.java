@@ -3,12 +3,11 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.service.common.UserService;
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.datacite.DataCiteService;
@@ -53,7 +52,7 @@ public class DoiSynchronizerService {
 
   private final DatasetMapper datasetMapper;
   private final OccurrenceDownloadMapper downloadMapper;
-  private final UserService userService;
+  private final IdentityAccessService identityAccessService;
   private final DataCiteService dataCiteService;
 
   private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
@@ -68,7 +67,7 @@ public class DoiSynchronizerService {
     dataCiteDoiHandlerStrategy = injector.getInstance(DataCiteDoiHandlerStrategy.class);
     datasetMapper = injector.getInstance(DatasetMapper.class);
     downloadMapper = injector.getInstance(OccurrenceDownloadMapper.class);
-    userService = injector.getInstance(UserService.class);
+    identityAccessService = injector.getInstance(IdentityAccessService.class);
 
     dataCiteService = CommonBuilder.createDataCiteService(config.datacite);
   }
@@ -298,7 +297,7 @@ public class DoiSynchronizerService {
 
     //retrieve User
     String creatorName = download.getRequest().getCreator();
-    User user = userService.get(creatorName);
+    GbifUser user = identityAccessService.get(creatorName);
 
     if (user == null) {
       LOG.error("No user with creator name {} can be found", creatorName);

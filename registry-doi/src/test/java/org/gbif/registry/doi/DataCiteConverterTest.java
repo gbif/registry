@@ -1,7 +1,7 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.registry.Contact;
@@ -148,7 +148,7 @@ public class DataCiteConverterTest {
     downloadRequest.setCreator("dev@gbif.org");
     download.setRequest(downloadRequest);
 
-    User user = new User();
+    GbifUser user = new GbifUser();
     user.setUserName("peta");
     user.setEmail("aha@music.com");
     user.setFirstName("Pete");

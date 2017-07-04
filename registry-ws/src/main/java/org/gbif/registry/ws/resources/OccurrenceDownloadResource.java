@@ -1,13 +1,13 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.service.common.IdentityService;
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
 import org.gbif.occurrence.query.TitleLookup;
@@ -61,7 +61,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookup titleLookup;
-  private final IdentityService identityService;
+  private final IdentityAccessService identityService;
   private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
@@ -76,7 +76,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Inject
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, IdentityService identityService, TitleLookup titleLookup) {
+    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, IdentityAccessService identityService, TitleLookup titleLookup) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;
@@ -121,9 +121,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public PagingResponse<Download> list(@Context Pageable page, @Nullable @QueryParam("status") Set<Download.Status> status) {
     if(status == null ||status.isEmpty()) {
-      return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
+      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
-      return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByStatus(status), occurrenceDownloadMapper.listByStatus(page,status));
+      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByStatus(status), occurrenceDownloadMapper.listByStatus(page,status));
     }
   }
 
@@ -148,7 +148,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
-    User user = identityService.get(securityContext.getUserPrincipal().getName());
+    GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
     doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
@@ -161,7 +161,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                                                                    @Context Pageable page){
     Download download = get(downloadKey);
     if(download != null) {
-      return new PagingResponse<DatasetOccurrenceDownloadUsage>(page,
+      return new PagingResponse<>(page,
                                    download.getNumberDatasets(),
                                    datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page));
     }

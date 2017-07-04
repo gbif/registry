@@ -1,8 +1,9 @@
 package org.gbif.registry.ws.filter;
 
 import org.gbif.api.model.common.ExtendedPrincipal;
+import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.GbifUserPrincipal;
 import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserPrincipal;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -49,8 +50,8 @@ public class IdentifyFilter implements ContainerRequestFilter {
      *
      * @return
      */
-    static Authorizer getAuthorizer(User user, String authenticationScheme, boolean isSecure) {
-      return new Authorizer(new UserPrincipal(user), authenticationScheme, isSecure);
+    static Authorizer getAuthorizer(GbifUser user, String authenticationScheme, boolean isSecure) {
+      return new Authorizer(new GbifUserPrincipal(user), authenticationScheme, isSecure);
     }
 
     /**
@@ -161,7 +162,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
       // no UUID, continue with regular drupal authentication
     }
 
-    User user = identityService.authenticate(username, password);
+    GbifUser user = identityService.authenticate(username, password);
     if (user == null) {
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
@@ -192,7 +193,7 @@ public class IdentifyFilter implements ContainerRequestFilter {
     }
 
     //check if we have a request that impersonates a user
-    User user = identityService.getByIdentifier(username);
+    GbifUser user = identityService.getByIdentifier(username);
     return user == null ? Authorizer.getAnonymous(request.isSecure())
             : Authorizer.getAuthorizer(user, GbifAuthService.GBIF_SCHEME, request.isSecure());
   }

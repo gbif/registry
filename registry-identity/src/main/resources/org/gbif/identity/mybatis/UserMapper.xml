@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.identity.mybatis.UserMapper" >
 
-  <resultMap id="USER_MAP" type="User" >
+  <resultMap id="USER_MAP" type="GbifUser" >
     <id column="username" property="userName" />
     <result column="email" property="email" />
     <result column="first_name" property="firstName" />
@@ -70,7 +70,7 @@
     FROM public.user u <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
   </select>
 
-  <insert id="create" parameterType="User" useGeneratedKeys="true" keyProperty="key">
+  <insert id="create" parameterType="GbifUser" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO public.user(<include refid="WRITABLE_USER_FIELDS"/>)
     VALUES(<include refid="WRITABLE_USER_FIELD_TYPES"/>)
   </insert>
@@ -95,7 +95,7 @@
     WHERE u.email = #{x} AND u.deleted IS NULL
   </select>
 
-  <update id="update" parameterType="User">
+  <update id="update" parameterType="GbifUser">
     UPDATE public.user
     SET <include refid="USER_UPDATE"/>
     WHERE username = #{userName,jdbcType=VARCHAR}

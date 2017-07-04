@@ -1,6 +1,6 @@
 package org.gbif.identity.model;
 
-import org.gbif.api.model.common.AbstractUser;
+import org.gbif.api.model.common.AbstractGbifUser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class UserModelMutationResult {
     return userModelMutationResult;
   }
 
-  public static <T extends AbstractUser> UserModelMutationResult withError(Set<ConstraintViolation<T>> constraintViolation) {
+  public static <T extends AbstractGbifUser> UserModelMutationResult withError(Set<ConstraintViolation<T>> constraintViolation) {
     Map<String, String> cvMap = new HashMap<>();
     constraintViolation.forEach(cv ->
             cvMap.put(cv.getPropertyPath().toString(), cv.getMessage())

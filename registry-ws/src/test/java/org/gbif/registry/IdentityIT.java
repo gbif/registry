@@ -1,6 +1,6 @@
 package org.gbif.registry;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.guice.RegistryTestModules;
@@ -72,7 +72,7 @@ public class IdentityIT extends PlainAPIBaseIT {
 
   @Test
   public void testLogin() {
-    User user = userTestFixture.prepareUser();
+    GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(wr -> wr.path("login"));
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
 

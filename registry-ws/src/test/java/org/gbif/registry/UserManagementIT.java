@@ -1,6 +1,6 @@
 package org.gbif.registry;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
@@ -70,7 +70,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     cr = testClient.login(newUserName, PASSWORD);
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
 
-    User newUser = userMapper.get(newUserName);
+    GbifUser newUser = userMapper.get(newUserName);
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(newUser.getKey());
 
     //generate a new request to confirm challengeCode
@@ -85,8 +85,8 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
   @Test
   public void testResetPassword() {
-    User testUser = userTestFixture.prepareUser();
-    User createdUser = userMapper.get(testUser.getUserName());
+    GbifUser testUser = userTestFixture.prepareUser();
+    GbifUser createdUser = userMapper.get(testUser.getUserName());
 
     //ensure there is no challengeCode
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
@@ -106,9 +106,9 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
   @Test
   public void testUpdatePassword() {
-    User testUser = userTestFixture.prepareUser();
+    GbifUser testUser = userTestFixture.prepareUser();
 
-    User createdUser = userMapper.get(testUser.getUserName());
+    GbifUser createdUser = userMapper.get(testUser.getUserName());
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(UUID.randomUUID());
@@ -147,8 +147,8 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
   @Test
   public void getUserFromAdmin() {
-    User testUser = userTestFixture.prepareUser();
-    User createdUser = userMapper.get(testUser.getUserName());
+    GbifUser testUser = userTestFixture.prepareUser();
+    GbifUser createdUser = userMapper.get(testUser.getUserName());
 
     ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(testUser.getUserName()));
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
@@ -158,7 +158,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
   @Test
   public void testUpdateUser() {
-    User testUser = userTestFixture.prepareUser();
+    GbifUser testUser = userTestFixture.prepareUser();
     final String newUserFirstName = "My new first name";
 
     ClientResponse cr = testClient.login(getUsername(), getPassword());
@@ -170,11 +170,11 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
     //load user directly from the database
-    User updatedUser = userMapper.get(testUser.getUserName());
+    GbifUser updatedUser = userMapper.get(testUser.getUserName());
     assertEquals(newUserFirstName, updatedUser.getFirstName());
 
     //create a new user
-    User testUser2 = userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
+    GbifUser testUser2 = userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
     cr = testClient.login(ALTERNATE_USERNAME, PASSWORD);
     assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
    // responseData = cr.getEntity(LoggedUser.class);

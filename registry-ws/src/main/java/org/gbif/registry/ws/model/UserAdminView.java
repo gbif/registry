@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.model;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 
 import org.codehaus.jackson.annotate.JsonUnwrapped;
 
@@ -9,18 +9,18 @@ import org.codehaus.jackson.annotate.JsonUnwrapped;
  */
 public class UserAdminView {
 
-  private User user;
+  private GbifUser user;
   private boolean challengeCodePresent;
 
   public UserAdminView(){}
 
-  public UserAdminView(User user, boolean challengeCodePresent) {
+  public UserAdminView(GbifUser user, boolean challengeCodePresent) {
     this.user = user;
     this.challengeCodePresent = challengeCodePresent;
   }
 
   @JsonUnwrapped
-  public User getUser() {
+  public GbifUser getUser() {
     return user;
   }
 

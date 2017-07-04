@@ -1,7 +1,7 @@
 package org.gbif.registry.ws.guice;
 
 import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.service.common.UserService;
+import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.LiquibaseInitializer;
@@ -49,7 +49,7 @@ public class RegistryWsServletListenerTest {
     DatasetService datasetService = injector.getInstance(DatasetService.class);
     datasetService.list(new PagingRequest());
 
-    UserService userService = injector.getInstance(UserService.class);
+    IdentityService userService = injector.getInstance(IdentityService.class);
     userService.get("admin");
 
     OrganizationService orgService = injector.getInstance(OrganizationService.class);

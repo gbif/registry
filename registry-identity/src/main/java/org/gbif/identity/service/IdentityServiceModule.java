@@ -1,10 +1,9 @@
 package org.gbif.identity.service;
 
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.service.common.UserService;
 import org.gbif.identity.IdentityConstants;
 import org.gbif.identity.mybatis.InternalIdentityMyBatisModule;
-import org.gbif.identity.mybatis.UserServiceImpl;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
@@ -90,15 +89,13 @@ public class IdentityServiceModule extends PrivateModule {
 
   @Override
   protected void configure() {
-    // bind classes
     install(new InternalIdentityMyBatisModule(PropertiesUtil.filterProperties(rawProperties, DB_PROPERTY_PREFIX)));
 
-    bind(UserSuretyService.class).to(UserSuretyServiceImpl.class).in(Scopes.SINGLETON);
+    bind(UserSuretyDelegateIf.class).to(UserSuretyDelegate.class).in(Scopes.SINGLETON);
     bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
-    bind(UserService.class).to(UserServiceImpl.class).in(Scopes.SINGLETON);
-
+    bind(IdentityAccessService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
     expose(IdentityService.class);
-    expose(UserService.class);
+    expose(IdentityAccessService.class);
 
     bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(APPKEYS_WHITELIST)).toInstance(appKeyWhitelist);
     expose(Key.get(new TypeLiteral<List<String>>() {}, Names.named(APPKEYS_WHITELIST)));

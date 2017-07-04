@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -119,7 +119,7 @@ public class UserManagementResource {
     //if we are logged in by app key ensure it is a trusted one
     ensureIsTrustedApp(securityContext, request, true);
 
-    User user = identityService.get(username);
+    GbifUser user = identityService.get(username);
     if(user == null) {
       return null;
     }
@@ -154,12 +154,12 @@ public class UserManagementResource {
 
     Response response = Response.noContent().build();
     //ensure the key used to access the update is actually the one of the user represented by the UserUpdate
-    User currentUser = identityService.get(username);
+    GbifUser currentUser = identityService.get(username);
     if(currentUser == null || !currentUser.getUserName().equals(userUpdate.getUserName())) {
       response = buildResponse(Response.Status.BAD_REQUEST);
     }
     else{
-      User updateInitiator = securityContext.getUserPrincipal() == null ? null :
+      GbifUser updateInitiator = securityContext.getUserPrincipal() == null ? null :
               identityService.get(securityContext.getUserPrincipal().getName());
 
       UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
@@ -191,7 +191,7 @@ public class UserManagementResource {
     ensureIsTrustedApp(securityContext, request, true);
     ensureUserSetInSecurityContext(securityContext);
 
-    User user = identityService.get(securityContext.getUserPrincipal().getName());
+    GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
     if(user != null && identityService.confirmUser(user.getKey(), authenticationDataParameters.getChallengeCode())){
       identityService.updateLastLogin(user.getKey());
 
@@ -221,7 +221,7 @@ public class UserManagementResource {
   @GET
   @Path("/search")
   @RolesAllowed({ADMIN_ROLE})
-  public PagingResponse<User> search(@QueryParam("q") String query, @Context @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(@QueryParam("q") String query, @Context @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q = Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(query));
     return identityService.search(q, page);
@@ -239,7 +239,7 @@ public class UserManagementResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String identifier= securityContext.getUserPrincipal().getName();
-    User user = Optional.ofNullable(identityService.get(identifier))
+    GbifUser user = Optional.ofNullable(identityService.get(identifier))
             .orElse(identityService.getByEmail(identifier));
     if (user != null) {
       // initiate mail, and store the challenge etc.
@@ -262,7 +262,7 @@ public class UserManagementResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String username = securityContext.getUserPrincipal().getName();
-    User user = identityService.get(username);
+    GbifUser user = identityService.get(username);
 
     UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
             authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
@@ -295,7 +295,7 @@ public class UserManagementResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String username = securityContext.getUserPrincipal().getName();
-    User user = identityService.get(username);
+    GbifUser user = identityService.get(username);
 
     if(identityService.isConfirmationKeyValid(user.getKey(), challengeCode)) {
       return Response.noContent().build();

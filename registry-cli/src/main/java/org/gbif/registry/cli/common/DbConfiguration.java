@@ -55,13 +55,6 @@ public class DbConfiguration {
     return toProperties(PROPERTY_REGISTRY_PREFIX, PG_DATASOURCE_CLASSNAME);
   }
 
-  /**
-   * Alias for toProperties(PROPERTY_IDENTITY_PREFIX, IDENTITY_DATASOURCE_CLASSNAME)
-   * @return
-   */
-  public Properties toIdentityProperties(){
-    return toProperties(PROPERTY_IDENTITY_PREFIX, IDENTITY_DATASOURCE_CLASSNAME);
-  }
 
   /**
    * Create a Properties object from the public fields from that class.
