@@ -36,6 +36,9 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
 
 /**
  * Main implementation of {@link IdentityService} on top of mybatis.
+ * Notes:
+ *  - usernames are case insensitive but the constraint in the db only allows lowercase at the moment (could be removed)
+ *  - emails are stored and queried in lowercase
  */
 class IdentityServiceImpl implements IdentityService {
 
@@ -129,16 +132,30 @@ class IdentityServiceImpl implements IdentityService {
     return userMapper.getByKey(key);
   }
 
+  /**
+   * Get a {@link GbifUser} using its username.
+   * The username is case insensitive.
+   * @param username
+   * @return {@link GbifUser} or null
+   */
   @Override
   public GbifUser get(String username) {
     if (Strings.isNullOrEmpty(username)) {
       return null;
     }
+    // the mybatis mapper will run the query with a lower()
     return userMapper.get(NORMALIZE_USERNAME_FCT.apply(username));
   }
 
+  /**
+   * Get a {@link GbifUser} using its email.
+   * The email is case insensitive.
+   * @param email
+   * @return {@link GbifUser} or null
+   */
   @Override
   public GbifUser getByEmail(String email) {
+    // emails are stored in lowercase
     return userMapper.getByEmail(NORMALIZE_EMAIL_FCT.apply(email));
   }
 
