@@ -107,12 +107,6 @@
     WHERE key = #{x} AND deleted IS NULL
   </select>
 
-  <select id="getBySession" resultMap="USER_MAP" parameterType="java.lang.String">
-    SELECT <include refid="USER_FIELDS"/>
-    FROM public.user u JOIN session s ON u.username = s.username
-    WHERE s.session = #{x}
-  </select>
-
   <select id="getChallengeCodeKey" resultType="Integer" parameterType="java.lang.Integer">
     SELECT challenge_code_key
     FROM public.user

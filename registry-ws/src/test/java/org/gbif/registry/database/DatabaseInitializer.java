@@ -83,7 +83,6 @@ public class DatabaseInitializer extends ExternalResource {
       connection.prepareStatement("DELETE FROM installation").execute();
       connection.prepareStatement("DELETE FROM organization").execute();
       connection.prepareStatement("DELETE FROM node").execute();
-      connection.prepareStatement("DELETE FROM session").execute();
       connection.prepareStatement("DELETE FROM public.user").execute();
       connection.prepareStatement("DELETE FROM challenge_code").execute();
       connection.prepareStatement("TRUNCATE gbif_doi").execute();

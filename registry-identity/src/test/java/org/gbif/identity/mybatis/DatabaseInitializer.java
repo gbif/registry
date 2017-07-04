@@ -45,7 +45,6 @@ public class DatabaseInitializer extends ExternalResource {
     Connection connection = dataSource.getConnection();
     try {
       connection.setAutoCommit(false);
-      connection.prepareStatement("DELETE FROM public.session").execute();
       connection.prepareStatement("DELETE FROM public.user").execute();
       connection.commit();
 
