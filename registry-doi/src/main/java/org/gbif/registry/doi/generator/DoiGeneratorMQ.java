@@ -147,7 +147,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   @Override
   public void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
-    checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+    checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, dataPackageTarget.resolve(doi.getDoiName()));

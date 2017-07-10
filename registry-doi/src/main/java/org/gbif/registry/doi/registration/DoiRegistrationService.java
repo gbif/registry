@@ -24,6 +24,11 @@ public interface DoiRegistrationService {
    */
   DOI register(DoiRegistration doiRegistration);
 
+  /**
+   * Update a DOI registration data.
+   */
+  DOI update(DoiRegistration doiRegistration);
+
 
   /**
    * Deletes a DOI.

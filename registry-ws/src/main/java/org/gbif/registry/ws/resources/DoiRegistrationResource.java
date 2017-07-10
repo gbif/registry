@@ -17,12 +17,14 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -105,28 +107,61 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @NullToNotFound
   @Override
   public DOI register(DoiRegistration doiRegistration) {
+   return createOrUpdate(doiRegistration, doiRegistrationToRegister -> {
+            //Persist the DOI
+            Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
+              doi -> {
+                Optional.ofNullable(doiPersistenceService.get(doi))
+                  .ifPresent(doiData -> { //if DOI is not NEW throw an exception
+                    if (DoiStatus.NEW != doiData.getStatus()) {
+                      throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                                          .entity("Doi already exists")
+                                                          .build());
+                    }
+                  });
+                doiPersistenceService.create(doi, DoiType.DATA_PACKAGE);
+              }
+            );
+          });
+  }
+
+  /**
+   * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
+   */
+  @PUT
+  @NullToNotFound
+  @Override
+  public DOI update(DoiRegistration doiRegistration) {
+    DOI updatedDoi = createOrUpdate(doiRegistration, existingDoiRegistration  ->
+                             Optional.ofNullable(existingDoiRegistration.getDoi())
+                               .ifPresent(
+                                doi ->
+                                  Optional.ofNullable(doiPersistenceService.get(doi))
+                                    .ifPresent(doiData -> { //if DOI is not NEW throw an exception
+                                      if (DoiStatus.REGISTERED != doiData.getStatus()) {
+                                        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                                                                            .entity("DOI does not exists")
+                                                                            .build());
+                                      }
+                                      doiPersistenceService.update(doi, doiPersistenceService.get(doi),
+                                                                   doiRegistration.getMetadata());
+                                    })
+                              ));
+    return updatedDoi;
+  }
+
+
+  private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
     checkIsUserAuthenticated();
     try {
-      //Persist the DOI
-      Optional.ofNullable(doiRegistration.getDoi()).ifPresent(
-        doi -> {
-          Optional.ofNullable(doiPersistenceService.get(doi))
-            .ifPresent(doiData -> { //if DOI is not NEW throw an exception
-              if (DoiStatus.NEW != doiData.getStatus()) {
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                                    .entity("Doi already exists")
-                                                    .build());
-              }});
-          doiPersistenceService.create(doi, DoiType.DATA_PACKAGE);
-        }
-      );
+      preFilter.accept(doiRegistration);
       //registration contains a DOI already
       DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
       //Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
       DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata)
-                                    .withAlternateIdentifiers(
-                                      addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
+        .withAlternateIdentifiers(
+          addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
       //handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
@@ -135,10 +170,11 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       } else if (DoiType.DATASET == doiRegistration.getType()) {
         doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
       }
-      LOG.info("DOI registered {}", doi.getDoiName());
+
+      LOG.info("DOI registered/updated {}", doi.getDoiName());
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
-      LOG.info("Error registering DOI", ex);
+      LOG.info("Error registering/updating DOI", ex);
       throw new WebApplicationException(Response.Status.BAD_REQUEST);
     }
   }
