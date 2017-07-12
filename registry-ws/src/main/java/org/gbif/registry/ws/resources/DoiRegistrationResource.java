@@ -138,7 +138,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                                 doi ->
                                   Optional.ofNullable(doiPersistenceService.get(doi))
                                     .ifPresent(doiData -> { //if DOI is not NEW throw an exception
-                                      if (DoiStatus.DELETED != doiData.getStatus()) {
+                                      if (DoiStatus.DELETED == doiData.getStatus()) {
                                         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                                                                             .entity("DOI does not exists")
                                                                             .build());
