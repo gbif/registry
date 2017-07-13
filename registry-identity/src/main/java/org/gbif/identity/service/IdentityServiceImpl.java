@@ -56,7 +56,7 @@ class IdentityServiceImpl implements IdentityService {
   private static final Function<String, String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
   private static final Function<String, String> NORMALIZE_EMAIL_FCT = (email) -> email == null ? null : email.trim().toLowerCase();
 
-  private final PasswordEncoder encoder = new PasswordEncoder();
+  private static final PasswordEncoder encoder = new PasswordEncoder();
 
   @Inject
   IdentityServiceImpl(UserMapper userMapper,
