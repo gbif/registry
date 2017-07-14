@@ -23,9 +23,7 @@ import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.email.EmailManagerModule;
-import org.gbif.registry.ws.filter.AppIdentityFilter;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
-import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.surety.SuretyModule;
@@ -33,6 +31,8 @@ import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.mixin.Mixins;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentifyFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 

@@ -58,8 +58,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import static org.gbif.registry.ws.filter.AppIdentityFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
@@ -123,13 +123,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @return key of entity created
    */
   @POST
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Override
   public UUID create(@NotNull Organization organization, @Context SecurityContext security) {
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization, security);
 
-    if(security.isUserInRole(GBIF_SCHEME_APP_ROLE)) {
+    if(security.isUserInRole(APP_ROLE)) {
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;
@@ -145,7 +145,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @POST
   @Path("{key}/endorsement")
-  @RolesAllowed(GBIF_SCHEME_APP_ROLE)
+  @RolesAllowed(APP_ROLE)
   public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
             Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();

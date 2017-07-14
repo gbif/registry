@@ -45,19 +45,6 @@ public interface IdentityService extends IdentityAccessService {
   @Nullable
   GbifUser getByKey(int id);
 
-  @Nullable
-  GbifUser getByEmail(String email);
-
-  /**
-   * Get a user by identifier. An identifier is a username OR an email.
-   *
-   * @param identifier
-   *
-   * @return The user or null
-   */
-  @Nullable
-  GbifUser getByIdentifier(String identifier);
-
   /**
    * Checks if a user requires a confirmation.
    * Confirmation can be for a new user or a password change.

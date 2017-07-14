@@ -133,18 +133,19 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   /**
-   * Get a {@link GbifUser} using its username.
+   * Get a {@link GbifUser} using its identifier (username or email).
    * The username is case insensitive.
-   * @param username
+   * @param identifier
    * @return {@link GbifUser} or null
    */
   @Override
-  public GbifUser get(String username) {
-    if (Strings.isNullOrEmpty(username)) {
+  public GbifUser get(String identifier) {
+    if (Strings.isNullOrEmpty(identifier)) {
       return null;
     }
-    // the mybatis mapper will run the query with a lower()
-    return userMapper.get(NORMALIZE_USERNAME_FCT.apply(username));
+    //this assumes username name can not contains @ (which is the case, see AbstractGbifUser's getUserName())
+    return StringUtils.contains(identifier, "@") ?
+            getByEmail(identifier) : userMapper.get(NORMALIZE_USERNAME_FCT.apply(identifier));
   }
 
   /**
@@ -153,9 +154,9 @@ class IdentityServiceImpl implements IdentityService {
    * @param email
    * @return {@link GbifUser} or null
    */
-  @Override
-  public GbifUser getByEmail(String email) {
+  private GbifUser getByEmail(String email) {
     // emails are stored in lowercase
+    // the mybatis mapper will run the query with a lower()
     return userMapper.getByEmail(NORMALIZE_EMAIL_FCT.apply(email));
   }
 
@@ -182,7 +183,7 @@ class IdentityServiceImpl implements IdentityService {
       return null;
     }
 
-    GbifUser u = getByIdentifier(username);
+    GbifUser u = get(username);
     if (u != null) {
       // use the settings which are the prefix in the existing password hash to encode the provided password
       // and verify that they result in the same
@@ -198,13 +199,6 @@ class IdentityServiceImpl implements IdentityService {
       }
     }
     return null;
-  }
-
-  @Override
-  public GbifUser getByIdentifier(String identifier) {
-    //this assumes username name can not contains @ (see User's getUserName())
-    return StringUtils.contains(identifier, "@") ?
-            getByEmail(identifier) :get(identifier);
   }
 
   @Override

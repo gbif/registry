@@ -77,8 +77,8 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.filter.AppIdentityFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -150,7 +150,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
     // if not admin or app, verify rights
-    if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, GBIF_SCHEME_APP_ROLE)) {
+    if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, APP_ROLE)) {
       UUID entityKeyToBeAssesed = owningEntityKey(entity);
       if (entityKeyToBeAssesed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssesed)) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
@@ -300,7 +300,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/comment")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addComment(@NotNull @PathParam("key") UUID targetEntityKey, @NotNull @Trim Comment comment,
     @Context SecurityContext security) {
     comment.setCreatedBy(security.getUserPrincipal().getName());
@@ -497,7 +497,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/contact")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addContact(@PathParam("key") UUID targetEntityKey, @NotNull @Trim Contact contact,
     @Context SecurityContext security) {
     contact.setCreatedBy(security.getUserPrincipal().getName());

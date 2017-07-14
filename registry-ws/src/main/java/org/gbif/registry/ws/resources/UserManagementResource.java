@@ -23,7 +23,6 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -53,9 +52,9 @@ import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.filter.AppIdentityFilter.GBIF_SCHEME_APP_ROLE;
 import static org.gbif.registry.ws.resources.Authentications.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 
@@ -111,7 +110,7 @@ public class UserManagementResource {
    * @return the {@link UserAdminView} or null
    */
   @GET
-  @RolesAllowed({ADMIN_ROLE, GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({ADMIN_ROLE, APP_ROLE})
   @Path("/{username}")
   public UserAdminView getUser(@PathParam("username") String username, @Context SecurityContext securityContext,
                                @Context HttpServletRequest request) {
@@ -127,7 +126,7 @@ public class UserManagementResource {
   }
 
   @POST
-  @RolesAllowed({GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({APP_ROLE})
   @Path("/")
   public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
 
@@ -143,7 +142,7 @@ public class UserManagementResource {
   }
 
   @PUT
-  @RolesAllowed({ADMIN_ROLE, GBIF_SCHEME_APP_ROLE})
+  @RolesAllowed({ADMIN_ROLE, APP_ROLE})
   @Path("/{username}")
   public Response update(@PathParam("username") String username, UserUpdate userUpdate, @Context SecurityContext securityContext,
                          @Context HttpServletRequest request) {
@@ -239,8 +238,7 @@ public class UserManagementResource {
     ensureUserSetInSecurityContext(securityContext);
 
     String identifier= securityContext.getUserPrincipal().getName();
-    GbifUser user = Optional.ofNullable(identityService.get(identifier))
-            .orElse(identityService.getByEmail(identifier));
+    GbifUser user = identityService.get(identifier);
     if (user != null) {
       // initiate mail, and store the challenge etc.
       identityService.resetPassword(user.getKey());

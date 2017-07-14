@@ -20,14 +20,14 @@ import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
-import org.gbif.registry.ws.filter.AppIdentityFilter;
-import org.gbif.registry.ws.filter.IdentifyFilter;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentifyFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
