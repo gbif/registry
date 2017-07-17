@@ -1,5 +1,6 @@
 package org.gbif.identity.guice;
 
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
@@ -16,8 +17,9 @@ import com.google.inject.AbstractModule;
  *  - Database properties prefixed by {@link org.gbif.identity.IdentityConstants#DB_PROPERTY_PREFIX}
  *  - {@link ChallengeCodeMapper}, {@link ChallengeCodeSupportMapper<Integer>}
  *
- * Binds:
+ * Exposes:
  *  - {@link IdentityService}
+ *  - {@link IdentityAccessService}
  *
  */
 public class IdentityModule extends AbstractModule {

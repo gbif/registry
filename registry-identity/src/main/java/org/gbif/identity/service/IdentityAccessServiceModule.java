@@ -16,7 +16,7 @@ import com.google.inject.PrivateModule;
 import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
 
 /**
- * Guice modules that exposes only {@link IdentityAccessService}.
+ * Guice module that only exposes {@link IdentityAccessService} for accessing users.
  */
 public class IdentityAccessServiceModule extends PrivateModule {
 

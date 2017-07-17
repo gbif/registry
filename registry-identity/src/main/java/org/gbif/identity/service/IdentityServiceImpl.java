@@ -14,6 +14,7 @@ import org.gbif.identity.mybatis.UserMapper;
 import org.gbif.identity.util.PasswordEncoder;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -81,10 +82,9 @@ class IdentityServiceImpl implements IdentityService {
 
     user.setPasswordHash(encoder.encode(password));
 
-    Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(user,
-            PrePersist.class, Default.class);
-    if(!violations.isEmpty()) {
-      return withError(violations);
+    Optional<UserModelMutationResult> beanValidation = validateBean(user, PrePersist.class);
+    if(beanValidation.isPresent()){
+      return beanValidation.get();
     }
     userMapper.create(user);
 
@@ -98,28 +98,40 @@ class IdentityServiceImpl implements IdentityService {
   public UserModelMutationResult update(GbifUser rawUser) {
     GbifUser user = normalize(rawUser);
     GbifUser currentUser = getByKey(user.getKey());
-    if (currentUser != null) {
 
+    if (currentUser != null) {
       //handle email change and user if the user want to change it is is not already
       //linked to another account
-      if (!currentUser.getEmail().equalsIgnoreCase(user.getEmail())) {
-        GbifUser currentUserWithEmail = userMapper.getByEmail(user.getEmail());
-        if (currentUserWithEmail != null) {
-          return UserModelMutationResult.withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
-        }
+      Optional<GbifUser> gbifUserAlreadyUsingEmail = Optional.of(currentUser)
+              .filter(u -> !u.getEmail().equalsIgnoreCase(user.getEmail()))
+              .map(u -> userMapper.getByEmail(user.getEmail()));
+
+      if (gbifUserAlreadyUsingEmail.isPresent()) {
+        return UserModelMutationResult.withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
       }
 
-      Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(user,
-              PostPersist.class, Default.class);
-      if (!violations.isEmpty()) {
-        return UserModelMutationResult.withError(violations);
+      Optional<UserModelMutationResult> beanValidation = validateBean(user, PostPersist.class);
+      if(beanValidation.isPresent()){
+        return beanValidation.get();
       }
+
       userMapper.update(user);
     } else {
       //means the user doesn't exist
       return null;
     }
     return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
+  }
+
+  /**
+   * Runs a Java bean validation on the provided {@link GbifUser} and a scope (e.g. PostPersist.class)
+   * @param gbifUser
+   * @param scope
+   * @return
+   */
+  private static Optional<UserModelMutationResult> validateBean(GbifUser gbifUser, Class<?> scope) {
+    Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(gbifUser, scope, Default.class);
+    return violations.isEmpty() ? Optional.empty() : Optional.of(UserModelMutationResult.withError(violations));
   }
 
   @Override

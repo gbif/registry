@@ -17,9 +17,13 @@ public class TestConstants {
   //static appkeys used for testing
   public static final String IT_APP_KEY = "gbif.app.it";
   public static final String IT_APP_SECRET = "6a55ca16c053e269a9602c02922b30ce49c49be3a68bb2d8908b24d7c1";
+
+  public static final String IT_APP_KEY2 = "gbif.app.it2";
+  public static final String IT_APP_SECRET2 = "6a55ca16c053e269a9602c02922b30ce49c49be3a68bb2d8908b24d7c2";
   private final static Map<String, String> appKeys = new HashMap<>();
   static{
     appKeys.put(IT_APP_KEY, IT_APP_SECRET);
+    appKeys.put(IT_APP_KEY2, IT_APP_SECRET2);
   }
 
   public static final String TEST_ADMIN = "admin";

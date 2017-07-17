@@ -32,7 +32,7 @@ import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.mixin.Mixins;
 import org.gbif.ws.server.filter.AppIdentityFilter;
-import org.gbif.ws.server.filter.IdentifyFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
@@ -92,7 +92,7 @@ public class RegistryWsServletListener extends GbifServletListener {
     super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)),
             new WsJerseyModuleConfiguration()
                     .resourcePackages(PACKAGES)
-                    .useAuthenticationFilter(IdentifyFilter.class)
+                    .useAuthenticationFilter(IdentityFilter.class)
                     .responseFilters(responseFilters)
                     .requestFilters(requestFilters));
   }
@@ -101,7 +101,7 @@ public class RegistryWsServletListener extends GbifServletListener {
   public RegistryWsServletListener(Properties properties) {
     super(properties, new WsJerseyModuleConfiguration()
             .resourcePackages(PACKAGES)
-            .useAuthenticationFilter(IdentifyFilter.class)
+            .useAuthenticationFilter(IdentityFilter.class)
             .requestFilters(requestFilters));
   }
 

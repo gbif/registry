@@ -9,7 +9,6 @@ import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.PropertyConstants;
 import org.gbif.identity.model.UserModelMutationResult;
-import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
@@ -47,12 +46,11 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.resources.Authentications.ensureUserSetInSecurityContext;
+import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
@@ -84,17 +82,14 @@ public class UserManagementResource {
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
 
   private final IdentityService identityService;
-  private final List<String> appKeyWhitelist;
 
   /**
    *
    * @param identityService
-   * @param appKeyWhitelist list of appkeys that are allowed to use this resource.
    */
   @Inject
-  public UserManagementResource(IdentityService identityService, @Named(IdentityServiceModule.APPKEYS_WHITELIST) List<String> appKeyWhitelist) {
+  public UserManagementResource(IdentityService identityService) {
     this.identityService = identityService;
-    this.appKeyWhitelist = appKeyWhitelist;
   }
 
   @GET
@@ -302,8 +297,7 @@ public class UserManagementResource {
   }
 
   /**
-   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme AND the appkey is
-   * in our whitelist.
+   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme..
    * @param security
    * @param request
    * @throws WebApplicationException FORBIDDEN if the request is not coming from a trusted application
@@ -317,8 +311,7 @@ public class UserManagementResource {
     }
 
     //ensure the appkey is allowed
-    if (isGbifScheme
-            && appKeyWhitelist.contains(GbifAuthService.getAppKeyFromRequest(request::getHeader))) {
+    if (isGbifScheme ) {
       return;
     }
     throw new WebApplicationException(Response.Status.FORBIDDEN);

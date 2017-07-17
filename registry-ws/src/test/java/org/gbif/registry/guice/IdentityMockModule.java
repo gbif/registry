@@ -10,7 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
-import static org.gbif.identity.service.IdentityServiceModule.APPKEYS_WHITELIST;
+import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 /**
  * Mock Identity module to ease testing.

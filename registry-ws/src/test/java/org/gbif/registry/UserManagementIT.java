@@ -84,6 +84,18 @@ public class UserManagementIT extends PlainAPIBaseIT {
   }
 
   @Test
+  public void testCreateUserNonWhiteListAppKey() {
+    String newUserName = ALTERNATE_USERNAME;
+
+    GbifAuthService gbifAuthServiceKey2 = GbifAuthService.singleKeyAuthService(
+            TestConstants.IT_APP_KEY2, TestConstants.IT_APP_SECRET2);
+    ClientResponse cr = postSignedRequest(gbifAuthServiceKey2, TestConstants.IT_APP_KEY2,
+            UserTestFixture.generateUser(newUserName), Function.identity());
+    //it will authenticate since the appKey is valid but it won't get the APP role
+    assertEquals(Response.Status.FORBIDDEN.getStatusCode(), cr.getStatus());
+  }
+
+  @Test
   public void testResetPassword() {
     GbifUser testUser = userTestFixture.prepareUser();
     GbifUser createdUser = userMapper.get(testUser.getUserName());

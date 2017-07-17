@@ -1,7 +1,6 @@
 package org.gbif.registry.grizzly;
 
 import org.gbif.identity.guice.IdentityServiceTestModule;
-import org.gbif.identity.service.IdentityServiceModule;
 import org.gbif.registry.guice.TestRegistryWsServletListener;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
@@ -10,6 +9,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.google.inject.Module;
+
+import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 /**
  * This Registry Server uses a nested ServletListener which uses the real IdentityService
@@ -40,7 +41,7 @@ public class RegistryServerWithIdentity extends AbstractRegistryServer {
 
     @Override
     protected Module getIdentityModule(Properties props) {
-      props.setProperty(IdentityServiceModule.APPKEYS_WHITELIST, TestConstants.IT_APP_KEY);
+      props.setProperty(APPKEYS_WHITELIST, TestConstants.IT_APP_KEY);
       return new IdentityServiceTestModule(props);
     }
 

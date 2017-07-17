@@ -26,7 +26,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.resources.Authentications.ensureUserSetInSecurityContext;
+import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 
@@ -36,9 +36,9 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
  * Design and implementation decisions:
  * - This resource contains mostly to routing to the business logic ({@link IdentityService}) including
  *   authorizations
- * - Return {@link Response} instead of object to minimize usage of exceptions and provide
+ * - Can return {@link Response} instead of object to minimize usage of exceptions and provide
  *   better control over the HTTP code returned. This also allows to return an entity in case
- *   of errors (e.g. {@link UserModelMutationResult}.
+ *   of errors (e.g. {@link UserModelMutationResult}
  * - keys (user id) are not considered public, therefore the username is used as key
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser}).
  */

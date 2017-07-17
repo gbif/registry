@@ -98,13 +98,17 @@ public abstract class PlainAPIBaseIT {
    * @return
    */
   public ClientResponse postSignedRequest(String username, @Nullable Object entity, Function<UriBuilder, UriBuilder> uriBuilder) {
+    return postSignedRequest(getAuthService(), username, entity, uriBuilder);
+  }
+
+  protected ClientResponse postSignedRequest(GbifAuthService authService, String username, @Nullable Object entity, Function<UriBuilder, UriBuilder> uriBuilder) {
     ClientRequest clientRequest = generatePostClientRequest(uriBuilder);
 
     if(entity != null) {
       clientRequest.setEntity(entity);
     }
     //sign the request, we create users using the appKeys
-    getAuthService().signRequest(username, clientRequest);
+    authService.signRequest(username, clientRequest);
     return publicClient.getClient().handle(clientRequest);
   }
 

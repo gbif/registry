@@ -2,8 +2,11 @@ package org.gbif.registry.ws.security;
 
 import java.util.Arrays;
 import java.util.Objects;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +27,24 @@ public class SecurityContextCheck {
   private SecurityContextCheck(){}
 
   /**
+   * Check that a user is present in the getUserPrincipal of the SecurityContext otherwise throw
+   * WebApplicationException UNAUTHORIZED.
+   *
+   * @param securityContext
+   *
+   * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link SecurityContext}
+   */
+  public static void ensureUserSetInSecurityContext(SecurityContext securityContext)
+          throws WebApplicationException {
+    if (securityContext == null || securityContext.getUserPrincipal() == null ||
+            StringUtils.isBlank(securityContext.getUserPrincipal().getName())) {
+      LOG.warn("The user must be identified by the username. AuthenticationScheme: {}",
+              securityContext.getAuthenticationScheme());
+      throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    }
+  }
+
+  /**
    * Check if the user represented by the {@link SecurityContext} has at least one of the
    * provided roles.
    *
@@ -39,7 +60,6 @@ public class SecurityContextCheck {
     if(roles == null || roles.length < 1) {
       return false;
     }
-
     return Arrays.stream(roles)
             .filter(securityContext::isUserInRole)
             .findFirst().isPresent();

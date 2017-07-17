@@ -34,6 +34,7 @@ import static org.gbif.identity.IdentityConstants.CONFIRM_ORGANIZATION_URL_TEMPL
 import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
 import static org.gbif.identity.IdentityConstants.EMAIL_SUBJECTS_RESOURCE;
 import static org.gbif.identity.IdentityConstants.RESET_PASSWORD_URL_TEMPLATE;
+import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -44,7 +45,7 @@ import static java.util.stream.Collectors.toList;
  *
  * Requires:
  * - properties identity.db.*, identity.appkeys.whitelist
- * Binds and Exposes: {@link IdentityService}, {@link #APPKEYS_WHITELIST}
+ * Binds and Exposes: {@link IdentityService}, {@link #"identity.appkeys.whitelist"}
  */
 public class IdentityServiceModule extends PrivateModule {
 
@@ -53,8 +54,8 @@ public class IdentityServiceModule extends PrivateModule {
   public static final String CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME = "identityChallengeCodeSupportMapper";
   public static final TypeLiteral<ChallengeCodeSupportMapper<Integer>> CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL =
           new TypeLiteral<ChallengeCodeSupportMapper<Integer>>() {};
-
-  public static final  String APPKEYS_WHITELIST = "identity.appkeys.whitelist";
+  public static final TypeLiteral<List<String>> APPKEYS_WHITELIST_TYPE_LITERAL =
+          new TypeLiteral<List<String>>() {};
 
   //identity (users)
   static final String USER_CREATE_SUBJECT_KEY = "createAccount";
@@ -97,8 +98,8 @@ public class IdentityServiceModule extends PrivateModule {
     expose(IdentityService.class);
     expose(IdentityAccessService.class);
 
-    bind(new TypeLiteral<List<String>>() {}).annotatedWith(Names.named(APPKEYS_WHITELIST)).toInstance(appKeyWhitelist);
-    expose(Key.get(new TypeLiteral<List<String>>() {}, Names.named(APPKEYS_WHITELIST)));
+    bind(APPKEYS_WHITELIST_TYPE_LITERAL).annotatedWith(Names.named(APPKEYS_WHITELIST)).toInstance(appKeyWhitelist);
+    expose(Key.get(APPKEYS_WHITELIST_TYPE_LITERAL, Names.named(APPKEYS_WHITELIST)));
   }
 
   @Provides

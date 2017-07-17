@@ -27,7 +27,7 @@ import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.surety.SuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
-import org.gbif.ws.server.filter.IdentifyFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
@@ -66,7 +66,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
             new WsJerseyModuleConfiguration()
                     .resourcePackages("org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh")
-                    .useAuthenticationFilter(IdentifyFilter.class)
+                    .useAuthenticationFilter(IdentityFilter.class)
                     .requestFilters(requestFilters));
   }
 
