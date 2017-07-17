@@ -3,7 +3,7 @@ package org.gbif.identity.service;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.IdentityConstants;
-import org.gbif.identity.guice.IdentityModule;
+import org.gbif.identity.inject.IdentityModule;
 import org.gbif.identity.mybatis.InternalIdentityMyBatisModule;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;

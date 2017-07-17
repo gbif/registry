@@ -5,10 +5,8 @@ import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 
 import java.util.UUID;
 
-import org.mybatis.guice.transactional.Transactional;
-
 /**
- *
+ * Helper class that offers direct access to challenge codes for testing purpose (only).
  */
 public class IdentitySuretyTestHelper {
 
@@ -19,17 +17,6 @@ public class IdentitySuretyTestHelper {
                            ChallengeCodeSupportMapper<Integer> challengeCodeSupportMapper) {
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
-  }
-
-  /**
-   * Confirm an entity directly.
-   * @param entityKey
-   */
-  @Transactional
-  public void confirmEntity(Integer entityKey) {
-    Integer challengeCodeKey = challengeCodeSupportMapper.getChallengeCodeKey(entityKey);
-    challengeCodeSupportMapper.updateChallengeCodeKey(entityKey, null);
-    challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
   }
 
   public UUID getChallengeCode(Integer entityKey) {

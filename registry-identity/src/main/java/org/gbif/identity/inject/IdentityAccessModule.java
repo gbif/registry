@@ -1,4 +1,4 @@
-package org.gbif.identity.guice;
+package org.gbif.identity.inject;
 
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.identity.service.InternalIdentityAccessServiceModule;

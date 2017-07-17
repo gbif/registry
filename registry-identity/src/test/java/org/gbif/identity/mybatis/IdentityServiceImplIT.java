@@ -3,7 +3,7 @@ package org.gbif.identity.mybatis;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.guice.IdentityTestModule;
+import org.gbif.identity.inject.IdentityTestModule;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.database.LiquibaseInitializer;

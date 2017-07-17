@@ -3,7 +3,7 @@ package org.gbif.identity.service;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.identity.guice.IdentityAccessModule;
+import org.gbif.identity.inject.IdentityAccessModule;
 import org.gbif.identity.mybatis.InternalIdentityMyBatisModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 

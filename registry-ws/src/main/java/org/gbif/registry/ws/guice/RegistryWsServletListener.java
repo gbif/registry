@@ -12,7 +12,7 @@
  */
 package org.gbif.registry.ws.guice;
 
-import org.gbif.identity.guice.IdentityModule;
+import org.gbif.identity.inject.IdentityModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;

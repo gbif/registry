@@ -1,6 +1,6 @@
 package org.gbif.registry.grizzly;
 
-import org.gbif.identity.guice.IdentityServiceTestModule;
+import org.gbif.identity.inject.IdentityServiceTestModule;
 import org.gbif.registry.guice.TestRegistryWsServletListener;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;

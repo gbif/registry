@@ -16,7 +16,7 @@ This module offers:
   * MyBatis interface and mapper for ChallengeCode table
   * MyBatis interface for ChallengeCode support to allow another mapper to link to ChallengeCode.
   * ChallengeCodeManager to allow manipulation of ChallengeCode between ChallengeCode and a ChallengeCodeSupportMapper.
-  * Email generation from Freemarker template (with possibility for multilingual templates)
+  * Generic email generation from Freemarker template (with possibility for multilingual templates)
   * Email sending (using `javax.mail`)
   * Guice Email module (`EmailManagerModule`)
 

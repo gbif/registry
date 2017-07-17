@@ -15,8 +15,7 @@ package org.gbif.registry.guice;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.GbifUserPrincipal;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.guice.IdentityServiceTestModule;
-import org.gbif.identity.service.IdentityServiceModule;
+import org.gbif.identity.inject.IdentityServiceTestModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -255,27 +254,5 @@ public class RegistryTestModules {
     }
     return webserviceBasicAuthClient;
   }
-
-  /**
-   * Override the {@link IdentityServiceModule} to expose the myBatis mapper for testing purpose ONLY.
-   */
-//  private static class IdentityServiceModuleMapper extends IdentityServiceModule {
-//
-//    /**
-//     * Uses the given properties to configure the service.
-//     *
-//     * @param properties to use
-//     */
-//    public IdentityServiceModuleMapper(Properties properties) {
-//      super(properties);
-//    }
-//
-//    @Override
-//    protected void configure() {
-//      super.configure();
-//      expose(UserMapper.class);
-//    }
-//  }
-
 
 }

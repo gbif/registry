@@ -1,4 +1,4 @@
-package org.gbif.identity.guice;
+package org.gbif.identity.inject;
 
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.identity.mybatis.UserMapper;
