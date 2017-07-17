@@ -2,7 +2,7 @@ package org.gbif.identity.guice;
 
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.identity.service.IdentityServiceModule;
+import org.gbif.identity.service.InternalIdentityServiceModule;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 
@@ -32,6 +32,6 @@ public class IdentityModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new IdentityServiceModule(properties));
+    install(new InternalIdentityServiceModule(properties));
   }
 }

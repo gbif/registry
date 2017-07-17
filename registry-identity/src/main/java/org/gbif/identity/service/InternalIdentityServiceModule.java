@@ -3,6 +3,7 @@ package org.gbif.identity.service;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.IdentityConstants;
+import org.gbif.identity.guice.IdentityModule;
 import org.gbif.identity.mybatis.InternalIdentityMyBatisModule;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
@@ -10,6 +11,7 @@ import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.ws.server.filter.AppIdentityFilter;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +35,11 @@ import org.slf4j.LoggerFactory;
 import static org.gbif.identity.IdentityConstants.CONFIRM_ORGANIZATION_URL_TEMPLATE;
 import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
 import static org.gbif.identity.IdentityConstants.EMAIL_SUBJECTS_RESOURCE;
+import static org.gbif.identity.IdentityConstants.RESET_PASSWORD_FTL_TEMPLATE;
+import static org.gbif.identity.IdentityConstants.RESET_PASSWORD_SUBJECT_KEY;
 import static org.gbif.identity.IdentityConstants.RESET_PASSWORD_URL_TEMPLATE;
+import static org.gbif.identity.IdentityConstants.USER_CREATE_FTL_TEMPLATE;
+import static org.gbif.identity.IdentityConstants.USER_CREATE_SUBJECT_KEY;
 import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 import static java.util.stream.Collectors.collectingAndThen;
@@ -41,15 +47,19 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * Identity Service Module using mybatis as source for data.
+ * Internal module, this module should not be used directly. {@link IdentityModule} should be used.
  * This module is private to avoid exposing the mybatis layer.
  *
  * Requires:
  * - properties identity.db.*, identity.appkeys.whitelist
- * Binds and Exposes: {@link IdentityService}, {@link #"identity.appkeys.whitelist"}
+ * Exposes:
+ * - {@link IdentityService}
+ * - {@link IdentityAccessService}
+ * - AppKey whitelist Named {@link AppIdentityFilter#APPKEYS_WHITELIST}
  */
-public class IdentityServiceModule extends PrivateModule {
+public class InternalIdentityServiceModule extends PrivateModule {
 
-  private static final Logger LOG = LoggerFactory.getLogger(IdentityServiceModule.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InternalIdentityServiceModule.class);
 
   public static final String CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME = "identityChallengeCodeSupportMapper";
   public static final TypeLiteral<ChallengeCodeSupportMapper<Integer>> CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL =
@@ -57,20 +67,13 @@ public class IdentityServiceModule extends PrivateModule {
   public static final TypeLiteral<List<String>> APPKEYS_WHITELIST_TYPE_LITERAL =
           new TypeLiteral<List<String>>() {};
 
-  //identity (users)
-  static final String USER_CREATE_SUBJECT_KEY = "createAccount";
-  static final String USER_CREATE_FTL_TEMPLATE = "create_confirmation_en.ftl";
-
-  static final String RESET_PASSWORD_SUBJECT_KEY = "resetPassword";
-  static final String RESET_PASSWORD_FTL_TEMPLATE = "reset_password_en.ftl";
-
   private static final ResourceBundle SUBJECT_RESOURCE = ResourceBundle.getBundle(EMAIL_SUBJECTS_RESOURCE, Locale.ENGLISH);
 
   private final Properties rawProperties;
   private final Properties filteredProperties;
   private final List<String> appKeyWhitelist;
 
-  public IdentityServiceModule(Properties properties) {
+  public InternalIdentityServiceModule(Properties properties) {
     rawProperties = properties;
     //the prefix is composed since we have surety within identity
     filteredProperties = PropertiesUtil.filterProperties(properties, IdentityConstants.PROPERTY_PREFIX + SuretyConstants.PROPERTY_PREFIX);
@@ -92,7 +95,7 @@ public class IdentityServiceModule extends PrivateModule {
   protected void configure() {
     install(new InternalIdentityMyBatisModule(PropertiesUtil.filterProperties(rawProperties, DB_PROPERTY_PREFIX)));
 
-    bind(UserSuretyDelegateIf.class).to(UserSuretyDelegate.class).in(Scopes.SINGLETON);
+    bind(UserSuretyDelegate.class).to(UserSuretyDelegateImpl.class).in(Scopes.SINGLETON);
     bind(IdentityService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
     bind(IdentityAccessService.class).to(IdentityServiceImpl.class).in(Scopes.SINGLETON);
     expose(IdentityService.class);

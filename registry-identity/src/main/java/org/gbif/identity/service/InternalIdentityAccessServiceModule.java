@@ -3,6 +3,7 @@ package org.gbif.identity.service;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.identity.guice.IdentityAccessModule;
 import org.gbif.identity.mybatis.InternalIdentityMyBatisModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
@@ -17,12 +18,13 @@ import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
 
 /**
  * Guice module that only exposes {@link IdentityAccessService} for accessing users.
+ * Internal module, this module should not be used directly. {@link IdentityAccessModule} should be used.
  */
-public class IdentityAccessServiceModule extends PrivateModule {
+public class InternalIdentityAccessServiceModule extends PrivateModule {
 
   private final Properties rawProperties;
 
-  public IdentityAccessServiceModule(Properties properties) {
+  public InternalIdentityAccessServiceModule(Properties properties) {
     rawProperties = properties;
   }
 
@@ -30,7 +32,7 @@ public class IdentityAccessServiceModule extends PrivateModule {
   protected void configure() {
 
     install(new InternalIdentityMyBatisModule(PropertiesUtil.filterProperties(rawProperties, DB_PROPERTY_PREFIX)));
-    bind(UserSuretyDelegateIf.class).to(EmptyUserSuretyDelegate.class);
+    bind(UserSuretyDelegate.class).to(EmptyUserSuretyDelegate.class);
     bind(IdentityService.class).to(IdentityServiceImpl.class);
     bind(IdentityAccessService.class).to(InnerIdentityService.class);
 
@@ -38,10 +40,10 @@ public class IdentityAccessServiceModule extends PrivateModule {
   }
 
   /**
-   * Inner implementation of {@link UserSuretyDelegateIf} that ignores all calls and returns
+   * Inner implementation of {@link UserSuretyDelegate} that ignores all calls and returns
    * false on each boolean method.
    */
-  private static class EmptyUserSuretyDelegate implements UserSuretyDelegateIf {
+  private static class EmptyUserSuretyDelegate implements UserSuretyDelegate {
     @Override
     public boolean hasChallengeCode(Integer userKey) {
       return false;

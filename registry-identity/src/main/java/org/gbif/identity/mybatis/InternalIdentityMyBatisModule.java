@@ -2,7 +2,7 @@ package org.gbif.identity.mybatis;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.service.IdentityServiceModule;
+import org.gbif.identity.service.InternalIdentityServiceModule;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.UuidTypeHandler;
 
@@ -13,11 +13,11 @@ import java.util.UUID;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
-import static org.gbif.identity.service.IdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL;
-import static org.gbif.identity.service.IdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME;
+import static org.gbif.identity.service.InternalIdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_LITERAL;
+import static org.gbif.identity.service.InternalIdentityServiceModule.CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME;
 
 /**
- * This Module should not be used directly, use the {@link IdentityServiceModule} instead.
+ * This Module should not be used directly, use the {@link InternalIdentityServiceModule} instead.
  */
 public class InternalIdentityMyBatisModule extends MyBatisModule {
 

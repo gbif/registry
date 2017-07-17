@@ -2,7 +2,7 @@ package org.gbif.identity.guice;
 
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.identity.mybatis.UserMapper;
-import org.gbif.identity.service.IdentityServiceModule;
+import org.gbif.identity.service.InternalIdentityServiceModule;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 
@@ -12,7 +12,7 @@ import com.google.inject.Provides;
 import com.google.inject.name.Named;
 
 /**
- * Modifies the real {@link IdentityServiceModule} to expose a utility class {@link IdentitySuretyTestHelper}
+ * Modifies the real {@link InternalIdentityServiceModule} to expose a utility class {@link IdentitySuretyTestHelper}
  * that makes testing related to challengeCode easier.
  *
  * Requires:
@@ -20,9 +20,9 @@ import com.google.inject.name.Named;
  *  - @Named(CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME) ChallengeCodeSupportMapper<Integer>
  * Binds:
  *  - IdentitySuretyTestHelper
- *  - all of {@link IdentityServiceModule}
+ *  - all of {@link InternalIdentityServiceModule}
  */
-public class IdentityServiceTestModule extends IdentityServiceModule {
+public class IdentityServiceTestModule extends InternalIdentityServiceModule {
 
   public IdentityServiceTestModule(Properties properties) {
     super(properties);

@@ -44,7 +44,7 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
 class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
-  private final UserSuretyDelegateIf userSuretyService;
+  private final UserSuretyDelegate userSuretyService;
 
   private final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
 
@@ -61,7 +61,7 @@ class IdentityServiceImpl implements IdentityService {
 
   @Inject
   IdentityServiceImpl(UserMapper userMapper,
-                      UserSuretyDelegateIf userSuretyService) {
+                      UserSuretyDelegate userSuretyService) {
     this.userMapper = userMapper;
     this.userSuretyService = userSuretyService;
   }

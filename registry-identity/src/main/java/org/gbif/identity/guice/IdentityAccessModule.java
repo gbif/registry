@@ -1,7 +1,7 @@
 package org.gbif.identity.guice;
 
 import org.gbif.api.service.common.IdentityAccessService;
-import org.gbif.identity.service.IdentityAccessServiceModule;
+import org.gbif.identity.service.InternalIdentityAccessServiceModule;
 
 import java.util.Properties;
 
@@ -27,6 +27,6 @@ public class IdentityAccessModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new IdentityAccessServiceModule(properties));
+    install(new InternalIdentityAccessServiceModule(properties));
   }
 }

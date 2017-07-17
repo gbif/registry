@@ -1,6 +1,6 @@
 package org.gbif.identity.guice;
 
-import org.gbif.identity.service.IdentityServiceModule;
+import org.gbif.identity.service.InternalIdentityServiceModule;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.surety.InMemoryEmailManager;
@@ -22,7 +22,7 @@ import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
  * Wires Identity related classes for testing purpose (for the identity module).
  *
  * The main goal is to bind {@link EmailManager} to {@link InMemoryEmailTestModule} and
- * expose {@link ChallengeCodeMapper} and {@link IdentityServiceModule#CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME}.
+ * expose {@link ChallengeCodeMapper} and {@link InternalIdentityServiceModule#CHALLENGE_CODE_SUPPORT_MAPPER_TYPE_NAME}.
  */
 public class IdentityTestModule extends AbstractModule {
 
