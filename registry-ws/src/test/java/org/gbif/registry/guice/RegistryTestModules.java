@@ -35,7 +35,7 @@ import org.gbif.registry.ws.resources.NetworkResource;
 import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.registry.ws.resources.legacy.IptResource;
-import org.gbif.registry.ws.surety.SuretyModule;
+import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
 
@@ -125,7 +125,7 @@ public class RegistryTestModules {
                   new DirectoryMockModule(),
                   new RegistrySearchModule(p),
                   new EmailManagerTestModule(),
-                  new SuretyModule(p),
+                  new OrganizationSuretyModule(p),
                   new EventModule(p),
                   new ValidationModule(),
                   new SecurityModule(p),

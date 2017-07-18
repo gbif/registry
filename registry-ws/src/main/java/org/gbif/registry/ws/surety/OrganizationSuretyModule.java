@@ -34,8 +34,7 @@ import com.google.inject.TypeLiteral;
  *   - ChallengeCodeManager<UUID>
  *   - OrganizationEmailTemplateProcessor
  */
-//TODO rename to OrganizationSuretyModule
-public class SuretyModule extends AbstractModule {
+public class OrganizationSuretyModule extends AbstractModule {
 
   private final Properties filteredProperties;
 
@@ -51,7 +50,7 @@ public class SuretyModule extends AbstractModule {
   static final String CONFIRM_ORGANIZATION_SUBJECT_KEY = "confirmOrganization";
   static final String CONFIRM_ORGANIZATION_FTL_TEMPLATE = "confirm_organization_en.ftl";
 
-  public SuretyModule(Properties properties) {
+  public OrganizationSuretyModule(Properties properties) {
     this.filteredProperties = PropertiesUtil.filterProperties(properties, "organization." + SuretyConstants.PROPERTY_PREFIX);
   }
 

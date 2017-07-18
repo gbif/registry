@@ -2,18 +2,18 @@
 Hello ${name},
 
 A new organization requires your confirmation:
-${newOrganisation.title}
+${organisation.title!}
 
-<#list newOrganisation.address! as addr>
+<#list organisation.address! as addr>
 ${addr}
 </#list>
-${newOrganisation.city!}
-${newOrganisation.province!}
-${newOrganisation.postalCode!}
-${newOrganisation.country.title!}
+${organisation.city!}
+${organisation.province!}
+${organisation.postalCode!}
+${organisation.country.title!}
 
 Description:
-${newOrganisation.description!}
+${organisation.description!}
 
 Please confirm by clicking the following link: ${url}
 

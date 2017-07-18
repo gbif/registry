@@ -4,10 +4,9 @@
 
 | URL | Method | Success | Description |
 | --- | --- | --- | --- |
-| `/user/login` | `GET` | `{USER}`, `{SESSION}` | Logs in a user with HTTP Basic Auth returning the session token as a cookie in the response |
-| `/user/logout?allSessions` | `GET` | `204` | Logs out the session or optionally all sessions for the authenticated account (cookie based auth) |
+| `/user/login` | `GET` | `{USER}` | Logs in a user with HTTP Basic Auth returning the user in the response |
+| `/user/changePassword`| `PUT` | `204` | Allows user to change its own password using HTTP Basic Auth |
 | `/user` | `PUT` | `204` | Updates the user, verifying the authenticated user is authorised (himself). Verifies [fields](#update-user-fields) and returns `422` if the user can not be updated. |
-| `/user` | `GET` | `{USER}`, `{SESSION}` | Gets a user, using the session token (cookie) for Auth |
 
 #### Administrative and Trusted application endpoints
 | URL | Method | Success | Description |
@@ -15,7 +14,7 @@
 | `admin/user` | `POST` | `201` | Creates a user. Verifies [required fields](#create-user-fields) and returns `422` if the user can not be created. The appkey must be provided as `x-gbif-user` |
 | `admin/user/{username}` | `GET` | `{USER}` | Gets the user role is authorised to view the user (e.g. enable admins to edit account details) |
 | `admin/user/{username}` | `PUT` | `204` | Updates the user. Verifies [fields](#update-user-fields) and returns `422` if the user can not be updated. |
-| `admin/user/confirm` | `POST` | `201` `{USER}`, `{SESSION}` | Confirms that the user have access to that mail. The target user must be provided as `x-gbif-user` and the `challengeCode` in the post body (as JSON). User is logged in immediately if `challengeCode` is valid. |
+| `admin/user/confirm` | `POST` | `201` `{USER}` | Confirms that the user have access to that mail. The target user must be provided as `x-gbif-user` and the `confirmationKey` in the post body (as JSON). |
 | `admin/user/resetPassword` | `POST` | `204` | Send user a mail with link to reset password. The target user (userName or email) must be provided as `x-gbif-user`. |
 | `admin/user/challengeCodeValid?challengeCode={challengeCode}` | `GET` | `204` | Utility for the web app to determine if the token is the currently valid challenge for the user. Returns `204` if so (app will then present the new password form) or `401` if the token is not considered authorized to change the password. The target user must be provided as `x-gbif-user`. |
 | `admin/user/updatePassword` | `POST` | `201` `{USER}`, `{SESSION}` | Updates the password for the user by accepting the `challengeCode` and `password` in the post body (as JSON). Returns `401` if the token is not authorized to change the password. Deletes all user tokens and return a new login token to set as cookie. The target user must be provided as `x-gbif-user`. |

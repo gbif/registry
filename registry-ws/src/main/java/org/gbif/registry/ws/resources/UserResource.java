@@ -6,7 +6,6 @@ import org.gbif.api.service.common.LoggedUser;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.ws.response.GbifResponseStatus;
-import org.gbif.ws.util.ExtraMediaTypes;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +42,7 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser}).
  */
 @Path("user")
-@Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
+@Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
 public class UserResource {

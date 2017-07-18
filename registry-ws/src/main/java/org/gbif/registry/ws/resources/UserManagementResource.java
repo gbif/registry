@@ -4,6 +4,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
@@ -13,11 +14,11 @@ import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
+import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UpdateRulesManager;
 import org.gbif.registry.ws.util.ResponseUtils;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.response.GbifResponseStatus;
-import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
@@ -36,7 +37,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,15 +46,16 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
+import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 /**
  * Web layer relating to user management.
@@ -82,14 +83,18 @@ public class UserManagementResource {
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
 
   private final IdentityService identityService;
+  private final List<String> appKeyWhitelist;
 
   /**
    *
    * @param identityService
+   * @param appKeyWhitelist list of authorized appkeys. Used to determine if user impersonation can be trusted.
    */
   @Inject
-  public UserManagementResource(IdentityService identityService) {
+  public UserManagementResource(IdentityService identityService,
+                                @Named(APPKEYS_WHITELIST) List<String> appKeyWhitelist) {
     this.identityService = identityService;
+    this.appKeyWhitelist = appKeyWhitelist;
   }
 
   @GET
@@ -111,7 +116,7 @@ public class UserManagementResource {
                                @Context HttpServletRequest request) {
 
     //if we are logged in by app key ensure it is a trusted one
-    ensureIsTrustedApp(securityContext, request, true);
+   // ensureIsTrustedApp(securityContext, request, true);
 
     GbifUser user = identityService.get(username);
     if(user == null) {
@@ -120,12 +125,19 @@ public class UserManagementResource {
     return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
   }
 
+  /**
+   * Creates a new user, only available to the portal backend.
+   * @param securityContext
+   * @param request
+   * @param user
+   * @return
+   */
   @POST
   @RolesAllowed({APP_ROLE})
   @Path("/")
   public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
 
-    ensureIsTrustedApp(securityContext, request, false);
+    //ensureIsTrustedApp(securityContext, request, false);
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
     UserModelMutationResult result = identityService.create(
@@ -136,15 +148,26 @@ public class UserManagementResource {
     return buildResponse(returnStatusCode, result);
   }
 
+  /**
+   * Updates a user. Available to admin-console and portal backend.
+   * {@link UpdateRulesManager} will be used to determine which properties it is possible to update based on the role,
+   * all other properties will be ignored.
+   *
+   * At the moment, a user cannot update its own data calling the API directly using HTTP Basic auth.
+   * If this is required/wanted, it would go in {@link UserResource} to only accept the role USER and ensure
+   * a user can only update its own data.
+   *
+   * @param username
+   * @param userUpdate
+   * @param securityContext
+   * @param request
+   * @return
+   */
   @PUT
   @RolesAllowed({ADMIN_ROLE, APP_ROLE})
   @Path("/{username}")
-  public Response update(@PathParam("username") String username, UserUpdate userUpdate, @Context SecurityContext securityContext,
-                         @Context HttpServletRequest request) {
-
-    //if we are logged in by app key ensure it is a trusted one
-    ensureIsTrustedApp(securityContext, request, true);
-    boolean requestFromTrustedApp = securityContext.getUserPrincipal() == null;
+  public Response update(@PathParam("username") String username, UserUpdate userUpdate,
+                         @Context SecurityContext securityContext, @Context HttpServletRequest request) {
 
     Response response = Response.noContent().build();
     //ensure the key used to access the update is actually the one of the user represented by the UserUpdate
@@ -157,7 +180,8 @@ public class UserManagementResource {
               identityService.get(securityContext.getUserPrincipal().getName());
 
       UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
-              updateInitiator == null ? null : updateInitiator.getRoles(), currentUser, userUpdate, requestFromTrustedApp));
+              updateInitiator == null ? null : updateInitiator.getRoles(), currentUser, userUpdate,
+              securityContext.isUserInRole(APP_ROLE)));
       if(result.containsError()) {
         response = buildResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), result);
       }
@@ -166,12 +190,12 @@ public class UserManagementResource {
   }
 
   /**
-   * Confirm a challengeCode for a specific user.
-   * The username is taken from the securityContext.
+   * Confirm a confirmationKey for a specific user.
+   * The username is expected to be present in the security context (authenticated by appkey).
    *
    * @param securityContext
    * @param request
-   * @param authenticationDataParameters
+   * @param confirmationKeyParameter
    *
    * @return
    */
@@ -180,13 +204,13 @@ public class UserManagementResource {
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                       AuthenticationDataParameters authenticationDataParameters) {
+                                       ConfirmationKeyParameter confirmationKeyParameter) {
 
-    ensureIsTrustedApp(securityContext, request, true);
-    ensureUserSetInSecurityContext(securityContext);
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);
 
     GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
-    if(user != null && identityService.confirmUser(user.getKey(), authenticationDataParameters.getChallengeCode())){
+    if(user != null && identityService.confirmUser(user.getKey(), confirmationKeyParameter.getConfirmationKey())){
       identityService.updateLastLogin(user.getKey());
 
       //ideally we would return 200 OK but CreatedResponseFilter automatically
@@ -197,7 +221,7 @@ public class UserManagementResource {
   }
 
   /**
-   * For admin console
+   * For admin console only.
    * Relax content-type to wildcard to allow angularjs.
    */
   @DELETE
@@ -210,6 +234,7 @@ public class UserManagementResource {
   }
 
   /**
+   * For admin console only.
    * User search, intended for user administration console use only.
    */
   @GET
@@ -222,17 +247,19 @@ public class UserManagementResource {
   }
 
   /**
-   *
+   * A user requesting his password to be reset.
+   * The username is expected to be present in the security context (authenticated by appkey).
+   * This method will always return 204 No Content.
    */
   @POST
   @RolesAllowed({USER_ROLE})
   @Path("/resetPassword")
   public Response resetPassword(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
 
-    ensureIsTrustedApp(securityContext, request, true);
-    ensureUserSetInSecurityContext(securityContext);
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);
 
-    String identifier= securityContext.getUserPrincipal().getName();
+    String identifier = securityContext.getUserPrincipal().getName();
     GbifUser user = identityService.get(identifier);
     if (user != null) {
       // initiate mail, and store the challenge etc.
@@ -243,6 +270,7 @@ public class UserManagementResource {
 
   /**
    * Updates the user password only if the token presented is valid for the user account.
+   * The username is expected to be present in the security context (authenticated by appkey).
    */
   @POST
   @RolesAllowed({USER_ROLE})
@@ -251,8 +279,8 @@ public class UserManagementResource {
   public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
                                  AuthenticationDataParameters authenticationDataParameters) {
 
-    ensureIsTrustedApp(securityContext, request, true);
-    ensureUserSetInSecurityContext(securityContext);
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);
 
     String username = securityContext.getUserPrincipal().getName();
     GbifUser user = identityService.get(username);
@@ -276,6 +304,7 @@ public class UserManagementResource {
 
   /**
    * Utility to determine if the challengeCode provided is valid for the given user.
+   * The username is expected to be present in the security context (authenticated by appkey).
    * @param challengeCode To check
    */
   @GET
@@ -284,8 +313,8 @@ public class UserManagementResource {
   public Response tokenValidityCheck(@Context SecurityContext securityContext, @Context HttpServletRequest request,
                                      @QueryParam("challengeCode") UUID challengeCode) {
 
-    ensureIsTrustedApp(securityContext, request, true);
-    ensureUserSetInSecurityContext(securityContext);
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);
 
     String username = securityContext.getUserPrincipal().getName();
     GbifUser user = identityService.get(username);
@@ -294,27 +323,6 @@ public class UserManagementResource {
       return Response.noContent().build();
     }
     return buildResponse(Response.Status.UNAUTHORIZED);
-  }
-
-  /**
-   * Check if the {@link SecurityContext} was obtained by the GBIF Authenticated scheme..
-   * @param security
-   * @param request
-   * @throws WebApplicationException FORBIDDEN if the request is not coming from a trusted application
-   */
-  private void ensureIsTrustedApp(SecurityContext security, HttpServletRequest request, boolean allowOtherScheme) {
-    boolean isGbifScheme = GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme());
-
-    //first check if we have something to check
-    if(!isGbifScheme && allowOtherScheme){
-      return;
-    }
-
-    //ensure the appkey is allowed
-    if (isGbifScheme ) {
-      return;
-    }
-    throw new WebApplicationException(Response.Status.FORBIDDEN);
   }
 
 }

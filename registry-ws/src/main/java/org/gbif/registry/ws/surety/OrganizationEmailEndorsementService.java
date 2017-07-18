@@ -22,7 +22,7 @@ import org.mybatis.guice.transactional.Transactional;
  * {@link OrganizationEndorsementService} implementation responsible to handle the business logic of creating and
  * confirming {@link Organization}
  */
-public class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
+class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
 
   private final OrganizationMapper organizationMapper;
   private final NodeMapper nodeMapper;

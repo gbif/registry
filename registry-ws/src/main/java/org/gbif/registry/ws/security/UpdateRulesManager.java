@@ -20,6 +20,7 @@ public class UpdateRulesManager {
    * @param initiatorRoles can be null if the update if not initiated by a user (e.g. another app)
    * @param user
    * @param userUpdate
+   * @param fromTrustedApp
    * @return
    */
   public static GbifUser applyUpdate(@Nullable Set<UserRole> initiatorRoles, GbifUser user, UserUpdate userUpdate, boolean fromTrustedApp) {

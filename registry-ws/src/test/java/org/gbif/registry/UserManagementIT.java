@@ -1,6 +1,7 @@
 package org.gbif.registry;
 
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
@@ -74,8 +75,8 @@ public class UserManagementIT extends PlainAPIBaseIT {
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(newUser.getKey());
 
     //generate a new request to confirm challengeCode
-    AuthenticationDataParameters params = new AuthenticationDataParameters();
-    params.setChallengeCode(challengeCode);
+    ConfirmationKeyParameter params = new ConfirmationKeyParameter();
+    params.setConfirmationKey(challengeCode);
     cr = postSignedRequest(newUserName, params, uri -> uri.path("confirm"));
     assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
 

@@ -11,7 +11,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
-import static org.gbif.registry.ws.surety.SuretyModule.ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF;
+import static org.gbif.registry.ws.surety.OrganizationSuretyModule.ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF;
 
 /**
  *

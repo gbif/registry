@@ -24,7 +24,7 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
-import org.gbif.registry.ws.surety.SuretyModule;
+import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
@@ -105,7 +105,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
             new RegistryMyBatisModule(props),
             getIdentityModule(props),
             new EmailManagerTestModule(),
-            new SuretyModule(props),
+            new OrganizationSuretyModule(props),
             new DoiModule(props),
             new RabbitMockModule(),
             new DirectoryMockModule(),

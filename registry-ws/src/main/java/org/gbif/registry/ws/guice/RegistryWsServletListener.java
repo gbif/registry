@@ -26,7 +26,7 @@ import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
-import org.gbif.registry.ws.surety.SuretyModule;
+import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
@@ -117,7 +117,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               //shared email manager (identity, organization creation)
                               new EmailManagerModule(properties),
                               new IdentityModule(properties),
-                              new SuretyModule(properties),
+                              new OrganizationSuretyModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),
                               new ValidationModule(),
