@@ -58,17 +58,23 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 
 /**
- * Web layer relating to user management.
- * Mostly used by the Registry Console and the portal backend.
+ * The "/admin/user" resource represents the "endpoints" related to user management. This means the resource
+ * it expected to be called by another application (mostly the Registry Console and the portal backend).
  *
  * Design and implementation decisions:
- * - This resource contains mostly to routing to the business logic ({@link IdentityService}) including
- *   authorizations
- * - Return {@link Response} instead of object to minimize usage of exceptions and provide
+ * - This resource contains mostly the routing to the business logic ({@link IdentityService}) including
+ *   authorizations. This resource does NOT implement the service but aggregates it (by Dependency Injection).
+ * - Methods can return {@link Response} instead of object to minimize usage of exceptions and provide
  *   better control over the HTTP code returned. This also allows to return an entity in case
- *   of errors (e.g. {@link UserModelMutationResult}.
+ *   of errors (e.g. {@link UserModelMutationResult}
  * - keys (user id) are not considered public, therefore the username is used as key
- * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser}).
+ * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link UserAdminView})
+ *
+ * Please note there is 3 possible ways to be authenticated:
+ * - HTTP Basic authentication
+ * - User impersonation using appKey. ALL applications with a valid appKey can impersonate a user.
+ * - Application itself (APP_ROLE). All applications with a valid appKey that is also present in the appKey whitelist.
+ * See {@link org.gbif.ws.server.filter.AppIdentityFilter}.
  */
 @Path("admin/user")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
@@ -86,7 +92,7 @@ public class UserManagementResource {
   private final List<String> appKeyWhitelist;
 
   /**
-   *
+   * {@link UserManagementResource} main constructor.
    * @param identityService
    * @param appKeyWhitelist list of authorized appkeys. Used to determine if user impersonation can be trusted.
    */
@@ -115,9 +121,6 @@ public class UserManagementResource {
   public UserAdminView getUser(@PathParam("username") String username, @Context SecurityContext securityContext,
                                @Context HttpServletRequest request) {
 
-    //if we are logged in by app key ensure it is a trusted one
-   // ensureIsTrustedApp(securityContext, request, true);
-
     GbifUser user = identityService.get(username);
     if(user == null) {
       return null;
@@ -126,7 +129,8 @@ public class UserManagementResource {
   }
 
   /**
-   * Creates a new user, only available to the portal backend.
+   * Creates a new user. (only available to the portal backend).
+   *
    * @param securityContext
    * @param request
    * @param user
@@ -136,8 +140,6 @@ public class UserManagementResource {
   @RolesAllowed({APP_ROLE})
   @Path("/")
   public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
-
-    //ensureIsTrustedApp(securityContext, request, false);
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
     UserModelMutationResult result = identityService.create(
@@ -305,13 +307,13 @@ public class UserManagementResource {
   /**
    * Utility to determine if the challengeCode provided is valid for the given user.
    * The username is expected to be present in the security context (authenticated by appkey).
-   * @param challengeCode To check
+   * @param confirmationKey To check
    */
   @GET
   @RolesAllowed({USER_ROLE})
-  @Path("/challengeCodeValid")
+  @Path("/confirmationKeyValid")
   public Response tokenValidityCheck(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                     @QueryParam("challengeCode") UUID challengeCode) {
+                                     @QueryParam("confirmationKey") UUID confirmationKey) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);
@@ -319,7 +321,7 @@ public class UserManagementResource {
     String username = securityContext.getUserPrincipal().getName();
     GbifUser user = identityService.get(username);
 
-    if(identityService.isConfirmationKeyValid(user.getKey(), challengeCode)) {
+    if(identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
       return Response.noContent().build();
     }
     return buildResponse(Response.Status.UNAUTHORIZED);

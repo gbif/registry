@@ -66,6 +66,21 @@ public class SecurityContextCheck {
   }
 
   /**
+   * Ensure a {@link SecurityContext} was not obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication scheme.
+   * If the {@link SecurityContext} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
+   * @param security
+   *
+   * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was obtained using the GBIF
+   * authentication scheme.
+   */
+  public static void ensureNotGbifScheme(final SecurityContext security) {
+    if(security != null && !GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())){
+      return;
+    }
+    throw new WebApplicationException(Response.Status.FORBIDDEN);
+  }
+
+  /**
    * A user impersonation is when an application is authenticated using the appkey to act on behalf of a user.
    * This method ensures that if user impersonation is used, it is done by an authorized appkey.
    * @param security

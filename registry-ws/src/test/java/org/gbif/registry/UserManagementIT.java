@@ -135,19 +135,19 @@ public class UserManagementIT extends PlainAPIBaseIT {
             uri -> uri.path("resetPassword"));
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
-    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
-    assertNotNull("challengeCode shall exist" + challengeCode);
+    UUID confirmationKey = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
+    assertNotNull("challengeCode shall exist" + confirmationKey);
 
     //ensure we can check if the challengeCode is valid for the user
     cr = getWithSignedRequest(testUser.getUserName(),
-            uri -> uri.path("challengeCodeValid")
-                    .queryParam("challengeCode", challengeCode));
+            uri -> uri.path("confirmationKeyValid")
+                    .queryParam("confirmationKey", confirmationKey));
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
 
     //change password using that code
     params = new AuthenticationDataParameters();
     params.setPassword(CHANGED_PASSWORD);
-    params.setChallengeCode(challengeCode);
+    params.setChallengeCode(confirmationKey);
 
     cr = postSignedRequest(testUser.getUserName(), params,
             uri -> uri.path("updatePassword"));
