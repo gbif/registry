@@ -49,6 +49,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -81,52 +82,54 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
   }
 
   @Override
-  public SyncResult syncInstallation(
-    Installation installation, List<Dataset> datasets
-  ) throws MetadataException {
-    checkArgument(installation.getType() == InstallationType.BIOCASE_INSTALLATION,
-                  "Only supports BioCASe Installations");
+  public SyncResult syncInstallation(Installation installation, List<Dataset> datasets) throws MetadataException {
+    try (MDC.MDCCloseable mdc1 = MDC.putCloseable("installationKey", installation.getKey().toString())) {
+      checkArgument(installation.getType() == InstallationType.BIOCASE_INSTALLATION,
+          "Only supports BioCASe Installations");
 
-    List<Dataset> added = Lists.newArrayList();
-    List<Dataset> deleted = Lists.newArrayList();
-    Map<Dataset, Dataset> updated = Maps.newHashMap();
+      List<Dataset> added = Lists.newArrayList();
+      List<Dataset> deleted = Lists.newArrayList();
+      Map<Dataset, Dataset> updated = Maps.newHashMap();
 
-    for (Endpoint endpoint : installation.getEndpoints()) {
-      LOG.info("Starting synchronization of endpoint: {}", endpoint.getUrl());
+      for (Endpoint endpoint : installation.getEndpoints()) {
+        try (MDC.MDCCloseable mdc2 = MDC.putCloseable("endpointKey", endpoint.getKey().toString())) {
+          LOG.info("Starting synchronization of endpoint: {}", endpoint.getUrl());
 
-      Capabilities capabilities = getCapabilities(endpoint);
-      if (capabilities.getPreferredSchema() == null) {
-        throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
-      }
-      List<String> datasetInventory = getDatasetInventory(capabilities, endpoint);
-      for (String datasetTitle : datasetInventory) {
-        Dataset newDataset;
+          Capabilities capabilities = getCapabilities(endpoint);
+          if (capabilities.getPreferredSchema() == null) {
+            throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
+          }
+          List<String> datasetInventory = getDatasetInventory(capabilities, endpoint);
+          for (String datasetTitle : datasetInventory) {
+            Dataset newDataset;
 
-        if (capabilities.getPreferredSchema().equals(Constants.ABCD_12_SCHEMA)) {
-          SimpleAbcd12Metadata metadata = get12Metadata(endpoint, datasetTitle, capabilities);
-          newDataset = convertToDataset(metadata, endpoint, capabilities);
-        } else {
-          SimpleAbcd206Metadata metadata = get206Metadata(endpoint, datasetTitle, capabilities);
-          newDataset = convertToDataset(metadata, endpoint, capabilities);
+            if (capabilities.getPreferredSchema().equals(Constants.ABCD_12_SCHEMA)) {
+              SimpleAbcd12Metadata metadata = get12Metadata(endpoint, datasetTitle, capabilities);
+              newDataset = convertToDataset(metadata, endpoint, capabilities);
+            } else {
+              SimpleAbcd206Metadata metadata = get206Metadata(endpoint, datasetTitle, capabilities);
+              newDataset = convertToDataset(metadata, endpoint, capabilities);
+            }
+
+            Dataset existingDataset = findDataset(datasetTitle, datasets);
+            if (existingDataset == null) {
+              added.add(newDataset);
+            } else {
+              updated.put(existingDataset, newDataset);
+            }
+          }
         }
+      }
 
-        Dataset existingDataset = findDataset(datasetTitle, datasets);
-        if (existingDataset == null) {
-          added.add(newDataset);
-        } else {
-          updated.put(existingDataset, newDataset);
+      // All Datasets that weren't updated must have been deleted
+      for (Dataset dataset : datasets) {
+        if (!updated.containsKey(dataset)) {
+          deleted.add(dataset);
         }
       }
-    }
 
-    // All Datasets that weren't updated must have been deleted
-    for (Dataset dataset : datasets) {
-      if (!updated.containsKey(dataset)) {
-        deleted.add(dataset);
-      }
+      return new SyncResult(updated, added, deleted, installation);
     }
-
-    return new SyncResult(updated, added, deleted, installation);
   }
 
   public URI buildUri(URI url, String parameter, String value) throws MetadataException {
