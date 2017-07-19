@@ -98,7 +98,7 @@
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>4.0</guice.version>
-    <hadoop.version>2.6.0-cdh5.4.10</hadoop.version>
+    <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
     <hikaricp.version>2.4.7</hikaricp.version>
     <httpclient.version>4.3.6</httpclient.version>
     <httpcore.version>4.3.3</httpcore.version>
