@@ -82,17 +82,17 @@
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
     <gbif-api.version>0.54</gbif-api.version>
-    <gbif-cli.version>0.12</gbif-cli.version>
+    <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.28</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>
     <gbif-common-service.version>0.16</gbif-common-service.version>
     <gbif-common-ws.version>0.39</gbif-common-ws.version>
-    <gbif-common.version>0.35</gbif-common.version>
+    <gbif-common.version>0.32</gbif-common.version>
     <gbif-doi.version>1.5</gbif-doi.version>
     <gbif-download-query-tools.version>1.18</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-microservice.version>0.7</gbif-microservice.version>
-    <gbif-parsers.version>0.31</gbif-parsers.version>
+    <gbif-parsers.version>0.30</gbif-parsers.version>
     <gbif-postal-service.version>0.24</gbif-postal-service.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
