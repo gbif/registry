@@ -2,6 +2,7 @@ package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.guice.RegistryTestModules;
 
@@ -20,7 +21,7 @@ public class DoiGeneratorMQIT {
   private DoiGenerator generator;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   @Before
   public void setup() {

@@ -5,6 +5,7 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.guice.RegistryTestModules;
 
@@ -27,10 +28,10 @@ public class DoiMapperTest {
   private DoiMapper mapper;
 
   @ClassRule
-  public static LiquibaseInitializer liquibase = new LiquibaseInitializer(RegistryTestModules.database());
+  public static LiquibaseInitializer liquibase = new LiquibaseInitializer(LiquibaseModules.database());
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   @Before
   public void setup() {

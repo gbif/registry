@@ -17,11 +17,10 @@ See also: http://www.gbif.org/infrastructure/registry
 
 2. This database will automatically be populated by Liquibase when the integration tests are run.
 
-3. Set up a local copy of the GBIF Portal Drupal MySQL database, which is used for authentication.
 
-4. Set up a solr collection hosted either in a simple [http solr server](http://lucene.apache.org/solr/quickstart.html) or in a Solr cloud. Follow the [registry-index-builder](registry-index-builder/README.md) to create and populate such a collection. See the [maven POM](pom.xml) for the minimum solr version required by the current registry code.
+3. Set up a solr collection hosted either in a simple [http solr server](http://lucene.apache.org/solr/quickstart.html) or in a Solr cloud. Follow the [registry-index-builder](registry-index-builder/README.md) to create and populate such a collection. See the [maven POM](pom.xml) for the minimum solr version required by the current registry code.
 
-5. Create a Maven profile similar to:
+4. Create a Maven profile similar to:
 
 ````xml
   <profile>
@@ -31,14 +30,8 @@ See also: http://www.gbif.org/infrastructure/registry
       <registry-it.db.name>registry_it</registry-it.db.name>
       <registry-it.db.username>registry</registry-it.db.username>
       <registry-it.db.password/>
-
       <appkeys.testfile>/home/mblissett/Workspace/appkeys-it.properties</appkeys.testfile>
-
-      <drupal.db.host>localhost</drupal.db.host>
-      <drupal.db.name>drupal</drupal.db.name>
-      <drupal.db.username>root</drupal.db.username>
-      <drupal.db.password></drupal.db.password>
-    </properties>
+   </properties>
   </profile>
 ````
 

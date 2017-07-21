@@ -17,7 +17,6 @@ import java.net.URI;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -40,8 +39,9 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final DoiPersistenceService doiPersistenceService;
   private final URI datasetTarget;
   private final URI downloadTarget;
+  private final URI dataPackageTarget;
   private final String prefix;
-  private final static int RANDOM_LENGTH = 6;
+  private static final int RANDOM_LENGTH = 6;
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
    */
@@ -58,6 +58,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     datasetTarget = portal.resolve("dataset/");
     downloadTarget = portal.resolve("occurrence/download/");
+    dataPackageTarget = portal.resolve("data_package/");
   }
 
   private DOI newDOI(final String shoulder, DoiType type) {
@@ -86,6 +87,11 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
+  public DOI newDataPackageDOI() {
+    return newDOI("dp.", DoiType.DATA_PACKAGE);
+  }
+
+  @Override
   public boolean isGbif(DOI doi) {
     return doi != null && doi.getPrefix().equalsIgnoreCase(prefix);
   }
@@ -106,9 +112,9 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   @Override
   public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
-    Preconditions.checkNotNull(doi, "DOI required");
-    Preconditions.checkNotNull(datasetKey, "Dataset key required");
-    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+    checkNotNull(doi, "DOI required");
+    checkNotNull(datasetKey, "Dataset key required");
+    checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
@@ -123,9 +129,9 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   @Override
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
-    Preconditions.checkNotNull(doi, "DOI required");
-    Preconditions.checkNotNull(downloadKey, "Download key required");
-    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+    checkNotNull(doi, "DOI required");
+    checkNotNull(downloadKey, "Download key required");
+    checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
@@ -139,9 +145,24 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
+  public void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException {
+    checkNotNull(doi, "DOI required");
+    checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+
+    String xml = DataCiteValidator.toXml(doi, metadata);
+    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, dataPackageTarget.resolve(doi.getDoiName()));
+    try {
+      messagePublisher.send(message, true);
+    } catch (IOException e) {
+      LOG.error("Failed sending DoiChangeMessage for DataPackage {}", doi, e);
+    }
+
+  }
+
+  @Override
   public void delete(DOI doi) {
-    Preconditions.checkNotNull(doi, "DOI required");
-    Preconditions.checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
+    checkNotNull(doi, "DOI required");
+    checkNotNull(messagePublisher,"No message publisher configured to send DoiChangeMessage");
 
     Message message = new ChangeDoiMessage(DoiStatus.DELETED, doi, null, null);
 

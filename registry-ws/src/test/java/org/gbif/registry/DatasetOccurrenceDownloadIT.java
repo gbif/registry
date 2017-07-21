@@ -27,6 +27,7 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
@@ -72,7 +73,7 @@ public class DatasetOccurrenceDownloadIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
@@ -95,7 +96,7 @@ public class DatasetOccurrenceDownloadIT {
   }
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private final OccurrenceDownloadService occurrenceDownloadService;
 

@@ -18,12 +18,14 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
@@ -45,6 +47,7 @@ import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -73,6 +76,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -94,6 +98,9 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
@@ -145,6 +152,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
+
+  private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(
+                  new CacheLoader<UUID, Organization>() {
+                    public Organization load(UUID key) {
+                      return organizationMapper.get(key);
+                    }
+                  });
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -202,6 +218,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (dataset == null) {
       return null;
     }
+
     return sanitizeDataset(dataset);
   }
 
@@ -311,13 +328,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   @Nullable
   private Dataset merge(@Nullable Dataset target, @Nullable Dataset supplementary) {
+
     // nothing to merge, return the target (which may be null)
     if (supplementary == null) {
+      setGeneratedCitation(target);
       return target;
     }
 
     // nothing to overlay into
     if (target == null) {
+      setGeneratedCitation(supplementary);
       return supplementary;
     }
 
@@ -356,6 +376,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     target.setIdentifiers(supplementary.getIdentifiers());
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
+
+    setGeneratedCitation(target);
 
     return target;
   }
@@ -604,12 +626,29 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * @param license license
    */
   private boolean replaceLicense(@Nullable License license) {
-
     if (license == null) {
       return false;
     }
-
     return license.isConcrete();
+  }
+
+  /**
+   * Set the generated GBIF citation on the provided Dataset object.
+   * This function is used until we decide if we store the GBIF generated citation in the database.
+   *
+   * see https://github.com/gbif/registry/issues/4
+   * @param dataset
+   * @return
+   */
+  private void setGeneratedCitation(Dataset dataset) {
+    if (dataset != null && dataset.getPublishingOrganizationKey() != null) {
+      // if the citation already exists keep it and only change the text. That allows us to keep the identifier
+      // if provided.
+      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
+      citation.setText(CitationGenerator.generateCitation(dataset,
+              ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+      dataset.setCitation(citation);
+    }
   }
 
   /**
@@ -945,7 +984,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@Context Pageable page) {
-    return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.count(),
+    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.count(),
       datasetProcessStatusMapper.list(page));
   }
 
@@ -953,7 +992,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("process/aborted")
   @Override
   public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(@Context Pageable page) {
-      return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countAborted(),
+      return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countAborted(),
               datasetProcessStatusMapper.listAborted(page));
   }
 
@@ -961,12 +1000,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("{datasetKey}/process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathParam("datasetKey") UUID datasetKey, @Context Pageable page) {
-    return new PagingResponse<DatasetProcessStatus>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
+    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
       datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
 
   @Override
   protected UUID owningEntityKey(@NotNull Dataset entity) {
     return entity.getPublishingOrganizationKey();
+  }
+
+  @GET
+  @Path("doi/{doi}")
+  @Override
+  public PagingResponse<Dataset> listByDOI(@PathParam("doi") String doi, @Context Pageable page) {
+    return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
   }
 }

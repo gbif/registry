@@ -36,7 +36,7 @@ public class DatasetIndexChecklistUpdater {
 
   public DatasetIndexChecklistUpdater(ClbConnection clb, SolrConfig solr) {
     this.clb = clb;
-    this.solrConfig = solr;
+    solrConfig = solr;
   }
 
   /**
@@ -65,13 +65,13 @@ public class DatasetIndexChecklistUpdater {
           doc.addField("record_count", atomicUpdate(keys.length));
 
           solr.add( doc );
-
         } catch (Exception e) {
           Throwables.propagate(e);
         }
       }
       rs.close();
-      solr.commit();
+
+      solr.commit(solrConfig.getCollection());
       LOG.info("Finished updating all checklists in dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
 
     } catch (Exception e) {
@@ -95,7 +95,7 @@ public class DatasetIndexChecklistUpdater {
       ClbConnection clb = new ClbConnection(props);
 
       DatasetIndexChecklistUpdater idxBuilder = new DatasetIndexChecklistUpdater(clb, solr);
-      LOG.info("Updating checklists in dataset index {} on {}", solr.collection, solr.serverHome);
+      LOG.info("Updating checklists in dataset index {} on {}", solr.getCollection(), solr.getServerHome());
       idxBuilder.build();
       LOG.info("Checklist indexing completed successfully.");
 

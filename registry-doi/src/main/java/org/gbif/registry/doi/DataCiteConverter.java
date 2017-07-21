@@ -1,7 +1,7 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -274,7 +274,7 @@ public class DataCiteConverter {
   /**
    * Convert a download and its dataset usages into a datacite metadata instance.
    */
-  public static DataCiteMetadata convert(Download d, User creator, List<DatasetOccurrenceDownloadUsage> usedDatasets,
+  public static DataCiteMetadata convert(Download d, GbifUser creator, List<DatasetOccurrenceDownloadUsage> usedDatasets,
                                          TitleLookup titleLookup) {
     Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
     Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");

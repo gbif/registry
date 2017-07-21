@@ -5,11 +5,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.63-SNAPSHOT</version>
+    <version>2.68-SNAPSHOT</version>
   </parent>
 
   <artifactId>registry-ws-client</artifactId>
-  <version>2.63-SNAPSHOT</version>
+  <version>2.68-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Registry Web service client</name>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
-    </dependency>   
+    </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
@@ -63,6 +63,14 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-doi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-identity</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>

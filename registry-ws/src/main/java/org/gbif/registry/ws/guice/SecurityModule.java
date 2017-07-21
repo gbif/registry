@@ -4,6 +4,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.EditorAuthorizationServiceImpl;
 import org.gbif.ws.server.guice.WsAuthModule;
 
+import java.util.Map;
 import java.util.Properties;
 
 import com.google.inject.Scopes;
@@ -18,10 +19,15 @@ public class SecurityModule extends WsAuthModule {
     super(properties);
   }
 
+  public SecurityModule(Map<String, String> keys) {
+    super(keys);
+  }
+
   @Override
   protected void configure() {
     super.configure();
     bind(EditorAuthorizationService.class).to(EditorAuthorizationServiceImpl.class).in(Scopes.SINGLETON);
     expose(EditorAuthorizationService.class);
   }
+
 }

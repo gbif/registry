@@ -18,12 +18,18 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
+import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,26 +41,33 @@ import com.google.inject.Module;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.bval.guice.ValidationModule;
 
+import static org.gbif.registry.ws.fixtures.TestConstants.APPLICATION_PROPERTIES;
+
 /**
  * The Registry WS module for testing in Grizzly.
  * This is the same as the production listener except that:
  * <ol>
  * <li>The registry-test.properties file is used</li>
  * <li>A life-cycle event monitor registers the SOLR server and Updater for JVM wide interaction</li>
+ * <li>Uses a mock of the Identity module</li>
  * </ol>
  */
 public class TestRegistryWsServletListener extends GbifServletListener {
 
-  public static final String APPLICATION_PROPERTIES = "registry-test.properties";
   private static final String SOLR_HOME_PROPERTY = "solr.dataset.home";
 
   @SuppressWarnings("unchecked")
-  public final static List<Class<? extends ContainerRequestFilter>> requestFilters = Lists
-    .<Class<? extends ContainerRequestFilter>>newArrayList(LegacyAuthorizationFilter.class);
+  public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
+          Lists.newArrayList(
+                  LegacyAuthorizationFilter.class,
+                  AppIdentityFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
-      "org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh", true, null, requestFilters);
+            new WsJerseyModuleConfiguration()
+                    .resourcePackages("org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh")
+                    .useAuthenticationFilter(IdentityFilter.class)
+                    .requestFilters(requestFilters));
   }
 
   /**
@@ -67,20 +80,42 @@ public class TestRegistryWsServletListener extends GbifServletListener {
     return props;
   }
 
+  /**
+   * This is simply to allow another class to override it.
+   *
+   * @return the IdentityModule instance
+   */
+  protected Module getIdentityModule(Properties props) {
+    return new IdentityMockModule();
+  }
+
+  /**
+   * This is simply to allow another class to override it.
+   *
+   * @param props
+   * @return the SecurityModule instance
+   */
+  protected Module getSecurityModule(Properties props) {
+    return new SecurityModule(TestConstants.getIntegrationTestAppKeys());
+  }
+
   @Override
   protected List<Module> getModules(Properties props) {
-    return Lists.<Module>newArrayList(new RegistryMyBatisModule(props),
-      new DoiModule(props),
-      new RabbitMockModule(),
-      new DirectoryMockModule(),
-      new DrupalMockModule(),
-      StringTrimInterceptor.newMethodInterceptingModule(),
-      new ValidationModule(),
-      new EventModule(props),
-      new RegistrySearchModule(props),
-      new SecurityModule(props),
-      new TitleLookupMockModule(),
-      new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
+    return Lists.newArrayList(
+            new RegistryMyBatisModule(props),
+            getIdentityModule(props),
+            new EmailManagerTestModule(),
+            new OrganizationSuretyModule(props),
+            new DoiModule(props),
+            new RabbitMockModule(),
+            new DirectoryMockModule(),
+            StringTrimInterceptor.newMethodInterceptingModule(),
+            new ValidationModule(),
+            new EventModule(props),
+            new RegistrySearchModule(props),
+            getSecurityModule(props),
+            new TitleLookupMockModule(),
+            new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
     );
   }
 

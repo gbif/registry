@@ -25,7 +25,7 @@
     key,parent_dataset_key,duplicate_of_dataset_key,installation_key,publishing_organization_key,
     external,type,sub_type,title,alias,abbreviation,description,language,
     homepage,logo_url,citation,citation_identifier,rights,locked_for_auto_update,created,created_by,
-    modified,modified_by,doi,license,maintenance_update_frequency
+    modified,modified_by,doi,license,maintenance_update_frequency,version
   </sql>
 
   <sql id="DATASET_FIELDS">
@@ -34,7 +34,7 @@
     d.homepage,d.logo_url,
     COALESCE(d.citation, o.title || ': ' || d.title) as citation,
     d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
-    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency
+    d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version
   </sql>
 
   <!--
@@ -79,7 +79,8 @@
     deleted = null, <!-- if we're updating it can't be deleted -->
     doi = #{doi,jdbcType=VARCHAR},
     license = #{license,jdbcType=OTHER},
-    maintenance_update_frequency = #{maintenanceUpdateFrequency,jdbcType=OTHER}
+    maintenance_update_frequency = #{maintenanceUpdateFrequency,jdbcType=OTHER},
+    version = #{version}
   </sql>
 
   <sql id="WRITABLE_DATASET_FIELD_TYPES">
@@ -108,7 +109,8 @@
     #{createdBy},
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
-    #{maintenanceUpdateFrequency,jdbcType=OTHER}
+    #{maintenanceUpdateFrequency,jdbcType=OTHER},
+    #{version}
   </sql>
 
   <select id="countConstituents" resultType="int">
@@ -124,9 +126,26 @@
 
   <!--  Note: you can get entities which are deleted -->
   <select id="listByDOI" resultMap="DATASET_MAP">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.doi = #{doi}
+    SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>
+    FROM dataset d
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    LEFT JOIN dataset_identifier ON dataset_key = d.key
+    LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
+    WHERE d.doi = #{doi} OR i.identifier = #{doi}
+    ORDER BY d.key, d.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+
+  <select id="countByDOI" resultType="Long">
+    SELECT count(DISTINCT d.key)
+    FROM dataset d
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    LEFT JOIN dataset_identifier ON dataset_key = d.key
+    LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
+    WHERE d.doi = #{doi} OR i.identifier = #{doi}
   </select>
 
   <select id="title" resultType="String">

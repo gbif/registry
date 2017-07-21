@@ -56,6 +56,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
@@ -63,7 +64,6 @@ import javax.validation.ValidationException;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
 import org.apache.ibatis.io.Resources;
@@ -77,6 +77,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
+import static org.gbif.registry.utils.Datasets.buildExpectedProcessedProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -172,9 +173,20 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertEquals(DOI.TEST_PREFIX, d.getDoi().getPrefix());
   }
 
+  /**
+   * Override creation to add process properties.
+   * @param orig
+   * @param expectedCount
+   * @return
+   */
+  @Override
+  protected Dataset create(Dataset orig, int expectedCount) {
+    return create(orig, expectedCount, buildExpectedProcessedProperties(orig));
+  }
+
   @Test
   public void testConstituents() {
-    Dataset parent = create(newEntity(), 1);
+    Dataset parent = newAndCreate(1);
     for (int id = 0; id < 10; id++) {
       Dataset constituent = newEntity();
       constituent.setParentDatasetKey(parent.getKey());
@@ -188,7 +200,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   // Easier to test this here than OrganizationIT due to our utility dataset factory
   @Test
   public void testHostedByList() {
-    Dataset dataset = create(newEntity(), 1);
+    Dataset dataset = newAndCreate(1);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull("Dataset should have an installation", i);
     PagingResponse<Dataset> published =
@@ -201,7 +213,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   // Easier to test this here than OrganizationIT due to our utility dataset factory
   @Test
   public void testPublishedByList() {
-    Dataset dataset = create(newEntity(), 1);
+    Dataset dataset = newAndCreate(1);
     PagingResponse<Dataset> published =
       organizationService.publishedDatasets(dataset.getPublishingOrganizationKey(), new PagingRequest());
     assertEquals("The organization should have only 1 dataset", 1, published.getResults().size());
@@ -215,7 +227,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   // Easier to test this here than InstallationIT due to our utility dataset factory
   @Test
   public void testHostedByInstallationList() {
-    Dataset dataset = create(newEntity(), 1);
+    Dataset dataset = newAndCreate(1);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull("Dataset should have an installation", i);
     PagingResponse<Dataset> hosted =
@@ -291,7 +303,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setType(DatasetType.CHECKLIST);
     d.setLicense(License.CC0_1_0);
     d.setLanguage(Language.AFRIKAANS);
-    d = create(d, 1);
+    create(d, 1);
 
     Thread.sleep(100);
 
@@ -341,10 +353,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void testDismaxSearch() {
+  public void testDismaxSearch() throws InterruptedException {
 
-    Dataset d = newEntity();
-    d = create(d, 1);
+    Dataset d = newAndCreate(1);
     final UUID pubKey = d.getPublishingOrganizationKey();
     final UUID instKey = d.getInstallationKey();
     final UUID nodeKey = organizationService.get(pubKey).getEndorsingNodeKey();
@@ -390,6 +401,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setDescription("This dataset contains the digitized treatments in Plazi based on the original journal article Zefa, Edison, Redü, Darlan Rutz, Costa, Maria Kátia Matiotti Da, Fontanetti, Carmem S., Gottschalk, Marco Silva, Padilha, Giovanna Boff, Fernandes, Anelise, Martins, Luciano De P. (2014): A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae. Zootaxa 3847 (1): 125-132, DOI: http://dx.doi.org/10.11646/zootaxa.3847.1.7");
     d.setLicense(License.CC0_1_0);
     service.create(d);
+
+    //Give some time to Solr to update
+    Thread.sleep(100);
 
     assertAll(6l);
     assertSearch("Hund", 1);
@@ -571,17 +585,22 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     String expectedParagraph = "<h1>headline</h1><br /><p>paragraph with <a href=\"http://www.gbif.org\">link</a> and <em>italics</em></p>";
 
-    dataset = create(dataset, 1, ImmutableMap.<String, Object>of("description", expectedParagraph));
+    Map<String, Object> processProperties = Datasets.buildExpectedProcessedProperties(dataset);
+    processProperties.put("description", expectedParagraph);
+    dataset = create(dataset, 1, processProperties);
     assertEquals(expectedParagraph, dataset.getDescription());
   }
 
   @Test
   public void testCitation() {
-    Dataset dataset = create(newEntity(), 1);
+    Dataset dataset = newEntity();
+    dataset = create(dataset, 1);
     dataset = service.get(dataset.getKey());
     assertNotNull("Citation should never be null", dataset.getCitation());
+
     assertEquals("ABC", dataset.getCitation().getIdentifier());
-    assertEquals("This is a citation text", dataset.getCitation().getText());
+    //original citation not preserved, we generate one
+    assertNotEquals("This is a citation text", dataset.getCitation().getText());
 
     // update it
     dataset.getCitation().setIdentifier("doi:123");
@@ -589,16 +608,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     service.update(dataset);
     dataset = service.get(dataset.getKey());
     assertEquals("doi:123", dataset.getCitation().getIdentifier());
-    assertEquals("GOD publishing, volume 123", dataset.getCitation().getText());
+    //original citation not preserved, we generate one
+    assertNotEquals("GOD publishing, volume 123", dataset.getCitation().getText());
 
     // setting to null should make it the default using the org:dataset titles
     dataset.getCitation().setText(null);
     service.update(dataset);
     dataset = service.get(dataset.getKey());
     assertEquals("doi:123", dataset.getCitation().getIdentifier());
-    assertEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"", dataset.getCitation().getText());
+    //original citation not preserved, we generate one
+    assertNotEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"", dataset.getCitation().getText());
   }
-
 
   @Test
   public void testDoiChanges() {
@@ -766,7 +786,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // check update succeeds
     dataset = service.get(key);
     assertNotNull(dataset.getCitation());
-    assertEquals("This is a citation text", dataset.getCitation().getText());
+    // we use the generated citation
+    assertNotEquals("This is a citation text", dataset.getCitation().getText());
     assertNull(dataset.getCitation().getIdentifier());
 
     // set Citation identifier to single character
@@ -912,7 +933,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    */
   @Test
   public void testMetadataDuplication() throws IOException {
-    Dataset d1 = create(newEntity(), 1);
+    Dataset d1 = newAndCreate(1);
     List<Metadata> m1 = service.listMetadata(d1.getKey(), MetadataType.EML);
 
     // upload a valid EML doc
@@ -1040,4 +1061,16 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     }
     return d;
   }
+
+  /**
+   * Create a new instance of Dataset, store it using the create method.
+   * @param expectedCount
+   * @return
+   */
+  private Dataset newAndCreate(int expectedCount) {
+    Dataset newDataset = newEntity();
+    return create(newDataset, expectedCount);
+  }
+
+
 }

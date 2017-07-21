@@ -38,9 +38,10 @@ import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.MachineTags;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
@@ -74,13 +75,13 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
   private final NetworkEntityService<T> service; // under test
 
   private final ContactService contactService;
@@ -108,7 +109,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   public void setup() {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (pp != null) {
-      pp.setPrincipal("admin");
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
     }
   }
 
@@ -144,7 +145,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   /**
    * Create an entity using a principal provider that will fail authorization. The principal provider with name "heinz"
-   * won't authorize, because there is no user "heinz" in the test Drupal database with role administrator.
+   * won't authorize, because there is no user "heinz" in the test identity database with role administrator.
    */
   @Test
   public void testCreateBadRole() {
@@ -459,7 +460,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
   /**
    * Repeatable entity creation with verification tests + support for processed properties.
-   * 
+   *
    * @param orig
    * @param expectedCount
    * @param processedProperties expected values of properties that are processed so they would not match the original

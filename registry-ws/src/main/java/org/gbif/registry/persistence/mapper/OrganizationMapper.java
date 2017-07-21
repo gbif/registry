@@ -16,6 +16,8 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 
 import java.util.List;
@@ -24,7 +26,7 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
-public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization> {
+public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization>, ChallengeCodeSupportMapper<UUID> {
 
   /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation on this mapper.
@@ -95,4 +97,22 @@ public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization
    * @return The list of organizations, with only their key and title populated.
    */
   List<LegacyOrganizationBriefResponse> listLegacyOrganizationsBrief();
+
+  /**
+   * A simple suggest by title service.
+   */
+  List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
+
+  /**
+   * Overloaded search to allow it to scope the search by country.
+   */
+  List<Organization> search(@Nullable @Param("query") String query, @Param("country") Country country,
+                            @Nullable @Param("page") Pageable page);
+
+
+  /**
+   * Overloaded count to allow a search scoped by country.
+   */
+  int count(@Nullable @Param("query") String query, @Param("country") Country country);
+
 }

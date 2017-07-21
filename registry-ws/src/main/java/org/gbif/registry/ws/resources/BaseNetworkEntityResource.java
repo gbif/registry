@@ -40,6 +40,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
@@ -77,6 +78,7 @@ import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -147,8 +149,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
-    // if not admin, verify rights
-    if (!security.isUserInRole(ADMIN_ROLE)) {
+    // if not admin or app, verify rights
+    if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, APP_ROLE)) {
       UUID entityKeyToBeAssesed = owningEntityKey(entity);
       if (entityKeyToBeAssesed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssesed)) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
@@ -298,7 +300,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/comment")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addComment(@NotNull @PathParam("key") UUID targetEntityKey, @NotNull @Trim Comment comment,
     @Context SecurityContext security) {
     comment.setCreatedBy(security.getUserPrincipal().getName());
@@ -495,7 +497,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Path("{key}/contact")
   @Trim
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addContact(@PathParam("key") UUID targetEntityKey, @NotNull @Trim Contact contact,
     @Context SecurityContext security) {
     contact.setCreatedBy(security.getUserPrincipal().getName());

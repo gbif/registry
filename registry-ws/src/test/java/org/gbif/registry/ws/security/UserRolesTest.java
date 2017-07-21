@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.security;
 
+import org.gbif.api.vocabulary.AppRole;
 import org.gbif.api.vocabulary.UserRole;
 
 import org.junit.Test;
@@ -11,5 +12,7 @@ public class UserRolesTest {
   public void assertRoleNamesAreIdentical() {
     assertEquals(UserRoles.ADMIN_ROLE, UserRole.REGISTRY_ADMIN.name());
     assertEquals(UserRoles.EDITOR_ROLE, UserRole.REGISTRY_EDITOR.name());
+
+    assertEquals(UserRoles.APP_ROLE, AppRole.APP.name());
   }
 }

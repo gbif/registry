@@ -13,10 +13,13 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -30,7 +33,9 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -44,6 +49,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,10 +59,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
  * A MyBATIS implementation of the service.
+ *
+ * Note: {@link OrganizationEndorsementService} is a composed object. Therefore it is not part of the API ({@link OrganizationService})
+ * at the moment.
+ *
  */
 @Path("organization")
 @Singleton
@@ -69,6 +80,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
 
+  private final OrganizationEndorsementService<UUID> organizationEndorsementService;
+
   @Inject
   public OrganizationResource(
     OrganizationMapper organizationMapper,
@@ -80,6 +93,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     CommentMapper commentMapper,
     DatasetMapper datasetMapper,
     InstallationMapper installationMapper,
+    OrganizationEndorsementService<UUID> organizationEndorsementService,
     EventBus eventBus,
     EditorAuthorizationService userAuthService) {
     super(organizationMapper,
@@ -92,9 +106,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       Organization.class,
       eventBus,
       userAuthService);
+
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
+    this.organizationEndorsementService = organizationEndorsementService;
   }
 
   /**
@@ -107,18 +123,47 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @return key of entity created
    */
   @POST
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Override
   public UUID create(@NotNull Organization organization, @Context SecurityContext security) {
     organization.setPassword(generatePassword());
-    return super.create(organization, security);
+    UUID newOrganization = super.create(organization, security);
+
+    if(security.isUserInRole(APP_ROLE)) {
+      organizationEndorsementService.onNewOrganization(organization);
+    }
+    return newOrganization;
+  }
+
+  /**
+   * Confirm the endorsement of an organisation.
+   *
+   * @param organizationKey
+   * @param confirmationKeyParameter
+   *
+   * @return
+   */
+  @POST
+  @Path("{key}/endorsement")
+  @RolesAllowed(APP_ROLE)
+  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
+    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
+            Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
+  }
+
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
+    return organizationEndorsementService.confirmOrganization(organizationKey, confirmationKey);
+  }
+
+  public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
+    return list(null, null, null, query, page);
   }
 
   /**
    * All network entities support simple (!) search with "&q=".
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
-   * Organizations can also be filtered by their country, but a search and country filter cannot be combined.
    */
   @GET
   public PagingResponse<Organization> list(@Nullable @Context Country country,
@@ -126,18 +171,24 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (country != null) {
-      return listByCountry(country, page);
-    } else if (identifierType != null && identifier != null) {
+
+    // Hack: Intercept identifier search
+    if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
-    } else if (!Strings.isNullOrEmpty(query)) {
-      return search(query, page);
-    } else {
+    }
+
+    // short circuited list all
+    if (country == null && Strings.isNullOrEmpty(query)) {
       return list(page);
     }
+
+    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
+    long total = organizationMapper.count(query, country);
+    page = page == null ? new PagingRequest() : page;
+    return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
+                                            organizationMapper.search(query, country, page));
   }
 
   @GET
@@ -202,6 +253,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return pagingResponse(page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
   }
 
+
+  @Path("suggest")
+  @GET
+  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
+    return organizationMapper.suggest(label);
+  }
+
   /**
    * This is an HTTP only method to retrieve the password for an organization.
    *
@@ -243,7 +301,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       randomIndex = random.nextInt(PASSWORD_ALLOWED_CHARACTERS.length());
       password.append(PASSWORD_ALLOWED_CHARACTERS.charAt(randomIndex));
     }
-
     return password.toString();
   }
+
+
 }

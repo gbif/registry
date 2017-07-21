@@ -29,10 +29,6 @@ public class DoiSynchronizerConfiguration {
   @NotNull
   public DbConfiguration registry = new DbConfiguration();
 
-  @Valid
-  @NotNull
-  public DbConfiguration drupal = new DbConfiguration();
-
   @ParametersDelegate
   @Valid
   @NotNull

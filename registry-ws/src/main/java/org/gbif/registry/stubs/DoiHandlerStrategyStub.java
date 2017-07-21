@@ -1,7 +1,7 @@
 package org.gbif.registry.stubs;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.User;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -22,7 +22,7 @@ public class DoiHandlerStrategyStub implements DataCiteDoiHandlerStrategy {
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(Download download, User user) {
+  public DataCiteMetadata buildMetadata(Download download, GbifUser user) {
     return null;
   }
 
@@ -42,7 +42,7 @@ public class DoiHandlerStrategyStub implements DataCiteDoiHandlerStrategy {
   }
 
   @Override
-  public void downloadChanged(Download download, Download previousDownload, User user) {
+  public void downloadChanged(Download download, Download previousDownload, GbifUser user) {
 
   }
 

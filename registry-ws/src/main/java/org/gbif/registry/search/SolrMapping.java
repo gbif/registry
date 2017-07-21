@@ -18,21 +18,26 @@ import com.google.common.collect.ImmutableList;
 public class SolrMapping {
 
   public static final String KEY_FIELD = "key";
-  public static final BiMap<DatasetSearchParameter, String> FACET_MAPPING = EnumHashBiMap.create(DatasetSearchParameter.class);
+
+  /**
+   * mapping between the {@link DatasetSearchParameter} and the field we have in Solr
+   */
+  public static final BiMap<DatasetSearchParameter, String> FIELDS_MAPPING = EnumHashBiMap.create(DatasetSearchParameter.class);
   static {
-    FACET_MAPPING.put(DatasetSearchParameter.TYPE, "type");
-    FACET_MAPPING.put(DatasetSearchParameter.SUBTYPE, "subtype");
-    FACET_MAPPING.put(DatasetSearchParameter.COUNTRY, "country");
-    FACET_MAPPING.put(DatasetSearchParameter.PUBLISHING_COUNTRY, "publishing_country");
-    FACET_MAPPING.put(DatasetSearchParameter.PUBLISHING_ORG, "publishing_organization_key");
-    FACET_MAPPING.put(DatasetSearchParameter.HOSTING_ORG, "hosting_organization_key");
-    FACET_MAPPING.put(DatasetSearchParameter.DECADE, "decade");
-    FACET_MAPPING.put(DatasetSearchParameter.KEYWORD, "keyword");
-    FACET_MAPPING.put(DatasetSearchParameter.LICENSE, "license");
-    FACET_MAPPING.put(DatasetSearchParameter.PROJECT_ID, "project_id");
-    FACET_MAPPING.put(DatasetSearchParameter.TAXON_KEY, "taxon_key");
-    FACET_MAPPING.put(DatasetSearchParameter.YEAR, "year");
-    FACET_MAPPING.put(DatasetSearchParameter.RECORD_COUNT, "record_count");
+    FIELDS_MAPPING.put(DatasetSearchParameter.TYPE, "type");
+    FIELDS_MAPPING.put(DatasetSearchParameter.SUBTYPE, "subtype");
+    FIELDS_MAPPING.put(DatasetSearchParameter.COUNTRY, "country");
+    FIELDS_MAPPING.put(DatasetSearchParameter.PUBLISHING_COUNTRY, "publishing_country");
+    FIELDS_MAPPING.put(DatasetSearchParameter.PUBLISHING_ORG, "publishing_organization_key");
+    FIELDS_MAPPING.put(DatasetSearchParameter.HOSTING_ORG, "hosting_organization_key");
+    FIELDS_MAPPING.put(DatasetSearchParameter.DECADE, "decade");
+    FIELDS_MAPPING.put(DatasetSearchParameter.KEYWORD, "keyword");
+    FIELDS_MAPPING.put(DatasetSearchParameter.LICENSE, "license");
+    FIELDS_MAPPING.put(DatasetSearchParameter.PROJECT_ID, "project_id");
+    FIELDS_MAPPING.put(DatasetSearchParameter.TAXON_KEY, "taxon_key");
+    FIELDS_MAPPING.put(DatasetSearchParameter.YEAR, "year");
+    FIELDS_MAPPING.put(DatasetSearchParameter.RECORD_COUNT, "record_count");
+    FIELDS_MAPPING.put(DatasetSearchParameter.MODIFIED_DATE, "modified_date");
   }
 
   public static final List<String> HIGHLIGHT_FIELDS = ImmutableList.of("description", "vernacular_name");

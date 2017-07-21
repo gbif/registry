@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
@@ -53,13 +54,13 @@ public class IptResourceIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private final InstallationService installationService;
   private final DatasetService datasetService;
@@ -177,9 +178,7 @@ public class IptResourceIT {
 
     // send POST request with credentials
     HttpUtil.Response result = Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
-
-    // correct response code? Jersey resource should really respond with 201, but 2XX means success
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
     installation = validatePersistedIptInstallation(installationKey, organizationKey);
@@ -584,7 +583,7 @@ public class IptResourceIT {
     HttpUtil.Response result = Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
 
     // correct response code?
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
     dataset = validatePersistedIptDataset(datasetKey, organizationKey, installationKey, DatasetType.OCCURRENCE);
@@ -789,7 +788,8 @@ public class IptResourceIT {
     // not expected to change
     assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());
     assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());
-    assertEquals(Datasets.DATASET_CITATION.getIdentifier(), dataset.getCitation().getIdentifier());
+    // per https://github.com/gbif/registry/issues/4, Citation is now generated
+    assertEquals(Datasets.buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE), dataset.getCitation().getText());
     assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());
     assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());
   }

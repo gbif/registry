@@ -12,8 +12,7 @@
  */
 package org.gbif.registry.ws.guice;
 
-import org.gbif.drupal.guice.DrupalMyBatisModule;
-import org.gbif.identity.guice.IdentityMyBatisModule;
+import org.gbif.identity.inject.IdentityModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
@@ -23,14 +22,19 @@ import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
+import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
 import org.gbif.ws.client.guice.GbifWsClientModule;
 import org.gbif.ws.mixin.Mixins;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.guice.GbifServletListener;
+import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -56,12 +60,13 @@ public class RegistryWsServletListener extends GbifServletListener {
   // fail fast by designed, see CubeService usage
   private static final String METRICS_WS_HTTP_TIMEOUT = "100";
 
-  public static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
-  public static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
+  private static final List<Class<? extends ContainerRequestFilter>> requestFilters = Lists.newArrayList();
+  private static final List<Class<? extends ContainerResponseFilter>> responseFilters = Lists.newArrayList();
 
   static {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
+    requestFilters.add(AppIdentityFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
   }
 
@@ -84,12 +89,20 @@ public class RegistryWsServletListener extends GbifServletListener {
   }
 
   public RegistryWsServletListener() throws IOException {
-    super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)), PACKAGES, true, responseFilters, requestFilters);
+    super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)),
+            new WsJerseyModuleConfiguration()
+                    .resourcePackages(PACKAGES)
+                    .useAuthenticationFilter(IdentityFilter.class)
+                    .responseFilters(responseFilters)
+                    .requestFilters(requestFilters));
   }
 
   @VisibleForTesting
   public RegistryWsServletListener(Properties properties) {
-    super(properties, PACKAGES, true, null, requestFilters);
+    super(properties, new WsJerseyModuleConfiguration()
+            .resourcePackages(PACKAGES)
+            .useAuthenticationFilter(IdentityFilter.class)
+            .requestFilters(requestFilters));
   }
 
   @Override
@@ -101,8 +114,10 @@ public class RegistryWsServletListener extends GbifServletListener {
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
                               new RegistryMyBatisModule(properties),
-                              new DrupalMyBatisModule(properties),
-                              new IdentityMyBatisModule(properties),
+                              //shared email manager (identity, organization creation)
+                              new EmailManagerModule(properties),
+                              new IdentityModule(properties),
+                              new OrganizationSuretyModule(properties),
                               new DirectoryModule(properties),
                               StringTrimInterceptor.newMethodInterceptingModule(),
                               new ValidationModule(),

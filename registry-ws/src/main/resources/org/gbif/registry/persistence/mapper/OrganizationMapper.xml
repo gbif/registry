@@ -165,6 +165,9 @@
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
     </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -177,6 +180,9 @@
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
+    </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
     </if>
   </select>
 
@@ -479,6 +485,7 @@
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
+
   <select id="countByIdentifier" resultType="Long">
     SELECT count(DISTINCT o.key)
     FROM organization o
@@ -488,5 +495,26 @@
     <if test="type != null" >
       AND ide.type=#{type,jdbcType=OTHER}
     </if>
+  </select>
+
+  <select id="getChallengeCodeKey" resultType="Integer">
+    SELECT challenge_code_key FROM organization WHERE key = #{key, jdbcType=OTHER}
+  </select>
+
+  <update id="updateChallengeCodeKey">
+    UPDATE organization
+    SET challenge_code_key = #{challengeCodeKey}
+    WHERE key = #{key}
+  </update>
+
+  <!--
+   Simple suggest
+   -->
+  <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
+    SELECT key,title FROM (
+      (SELECT key,title FROM organization WHERE title ilike #{q}||'%' ORDER BY title LIMIT 25)
+      UNION ALL
+      (SELECT key,title FROM organization WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
+    ) t1 LIMIT 25
   </select>
 </mapper>

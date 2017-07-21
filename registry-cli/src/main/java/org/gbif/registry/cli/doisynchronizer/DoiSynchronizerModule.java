@@ -2,7 +2,7 @@ package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.common.messaging.guice.PostalServiceModule;
-import org.gbif.drupal.guice.DrupalMyBatisModule;
+import org.gbif.identity.inject.IdentityAccessModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
@@ -27,7 +27,7 @@ public class DoiSynchronizerModule {
   public Injector getInjector(){
     return Guice.createInjector(
             new RegistryMyBatisModule(config.registry.toRegistryProperties()),
-            new DrupalMyBatisModule(config.drupal.toDrupalProperties()),
+            new IdentityAccessModule(config.registry.toRegistryProperties()),
             new InnerRegistryModule()
     );
   }

@@ -12,8 +12,8 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
@@ -61,13 +61,13 @@ public abstract class AbstractOaipmhEndpointIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private final NodeService nodeService;
   private final OrganizationService organizationService;
@@ -203,7 +203,7 @@ public abstract class AbstractOaipmhEndpointIT {
   void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
     Connection connection = null;
     try {
-      connection = RegistryTestModules.database().getConnection();
+      connection = LiquibaseModules.database().getConnection();
       connection.setAutoCommit(false);
 
       PreparedStatement p = connection.prepareStatement("UPDATE dataset SET modified = ? WHERE key = ?");

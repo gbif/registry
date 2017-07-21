@@ -129,7 +129,7 @@ public class IptResource {
    * @param installationKey installation key (UUID) coming in as path param
    * @param installation IptInstallation with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
-   * @return Response with Status.CREATED if successful
+   * @return Response with Status.NO_CONTENT if successful
    */
   @POST
   @Path("update/{key}")

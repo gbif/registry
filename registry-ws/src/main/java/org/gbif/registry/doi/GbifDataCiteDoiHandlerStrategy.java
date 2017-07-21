@@ -1,6 +1,7 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
@@ -73,7 +74,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(Download download, User user) {
+  public DataCiteMetadata buildMetadata(Download download, GbifUser user) {
     List<DatasetOccurrenceDownloadUsage> response = null;
     List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
     PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
@@ -144,7 +145,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
    * the DOI is removed, otherwise does nothing.
    */
   @Override
-  public void downloadChanged(Download download, Download previousDownload, User user) {
+  public void downloadChanged(Download download, Download previousDownload, GbifUser user) {
     Preconditions.checkNotNull(download, "download can not be null");
 
     if (download.isAvailable() && (previousDownload == null || previousDownload.getStatus() != Download.Status.SUCCEEDED)) {
@@ -158,6 +159,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     }
   }
 
+  @Override
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
     try {
       doiGenerator.registerDataset(doi, metadata, datasetKey);

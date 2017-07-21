@@ -38,6 +38,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -57,18 +58,36 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
   public static Iterable<Object[]> data() {
     final Injector webservice = webservice();
     final Injector client = webserviceClient();
-    return ImmutableList.<Object[]>of(new Object[] {webservice.getInstance(OrganizationResource.class),
-      webservice.getInstance(NodeResource.class),
-      null},
-      new Object[] {client.getInstance(OrganizationService.class),
-        client.getInstance(NodeService.class),
-        client.getInstance(SimplePrincipalProvider.class)});
+    return ImmutableList.<Object[]>of(
+            new Object[] {
+                    webservice.getInstance(OrganizationResource.class), webservice.getInstance(NodeResource.class), null},
+            new Object[] {
+                    client.getInstance(OrganizationService.class), client.getInstance(NodeService.class),
+                    client.getInstance(SimplePrincipalProvider.class)});
   }
 
   public OrganizationIT(OrganizationService service, NodeService nodeService, @Nullable SimplePrincipalProvider pp) {
     super(service, pp);
     this.service = service;
     this.nodeService = nodeService;
+  }
+
+  @Test
+  public void testSuggest() {
+    Node node = Nodes.newInstance();
+    UUID nodeKey = nodeService.create(node);
+
+    Organization o1 = Organizations.newInstance(nodeKey);
+    o1.setTitle("Tim");
+    UUID key1 = this.getService().create(o1);
+
+    Organization o2 = Organizations.newInstance(nodeKey);
+    o2.setTitle("The Tim");
+    UUID key2 = this.getService().create(o2);
+
+    OrganizationService service = (OrganizationService) this.getService();
+    assertTrue("Should find only The Tim", service.suggest("The").size() == 1);
+    assertTrue("Should find both organisations", service.suggest("Tim").size() == 2);
   }
 
   @Test

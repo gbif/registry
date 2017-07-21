@@ -84,7 +84,7 @@ public class ResponseBuilder {
     if (queryResponse.getFacetFields() != null) {
       List<FacetField> facetFields =  queryResponse.getFacetFields();
       for (final FacetField facetField : facetFields) {
-        DatasetSearchParameter facetParam = SolrMapping.FACET_MAPPING.inverse().get(facetField.getName());
+        DatasetSearchParameter facetParam = SolrMapping.FIELDS_MAPPING.inverse().get(facetField.getName());
         Facet<DatasetSearchParameter> facet = new Facet<DatasetSearchParameter>(facetParam);
 
         List<Facet.Count> counts = Lists.newArrayList();

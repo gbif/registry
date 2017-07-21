@@ -23,8 +23,9 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
+import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -66,17 +67,13 @@ public class OccurrenceDownloadIT {
 
   // Flushes the database on each run
   @ClassRule
-  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(RegistryTestModules.database());
+  public static final LiquibaseInitializer liquibaseRule = new LiquibaseInitializer(LiquibaseModules.database());
 
   @ClassRule
   public static final RegistryServer registryServer = RegistryServer.INSTANCE;
 
-  // Tests user
-  private static String TEST_ADMIN_USER = "admin";
-  private static String TEST_USER = "user";
-
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(RegistryTestModules.database());
+  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
 
   private final OccurrenceDownloadService occurrenceDownloadService;
 
@@ -109,7 +106,7 @@ public class OccurrenceDownloadIT {
     Download download = new Download();
     final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
     DownloadRequest request =
-      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TEST_ADMIN_USER, emails,
+      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TestConstants.TEST_ADMIN, emails,
         true, DownloadFormat.DWCA);
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);
@@ -121,7 +118,7 @@ public class OccurrenceDownloadIT {
 
   @Before
   public void setup() {
-    setPrincipal(TEST_ADMIN_USER);
+    setPrincipal(TestConstants.TEST_ADMIN);
   }
 
 
@@ -190,10 +187,10 @@ public class OccurrenceDownloadIT {
       for (int i = 1; i <= 5; i++) {
         occurrenceDownloadService.create(getTestInstance());
       }
-      final Injector clientBasicAuth = webserviceBasicAuthClient(TEST_USER, TEST_USER);
+      final Injector clientBasicAuth = webserviceBasicAuthClient(TestConstants.TEST_USER, TestConstants.TEST_USER);
       OccurrenceDownloadService downloadServiceAuth = clientBasicAuth.getInstance(OccurrenceDownloadService.class);
       assertTrue("List by user operation should return 5 records",
-        downloadServiceAuth.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5),null).getResults().size() > 0);
+        downloadServiceAuth.listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5),null).getResults().size() > 0);
 
     } else {
       // Just to make the test pass for the webservice version
@@ -210,7 +207,7 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstance());
     }
     assertTrue("List by user operation should return 5 records",
-      occurrenceDownloadService.listByUser(TEST_ADMIN_USER, new PagingRequest(3, 5),null).getResults().size() > 0);
+      occurrenceDownloadService.listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5),null).getResults().size() > 0);
   }
 
   /**
@@ -234,7 +231,8 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstance());
     }
     assertTrue("List by user and status operation should return 5 records",
-               occurrenceDownloadService.listByUser(TEST_ADMIN_USER, new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES).getResults().size() > 0);
+               occurrenceDownloadService.listByUser(TestConstants.TEST_ADMIN, new PagingRequest(0, 5),
+                       Download.Status.EXECUTING_STATUSES).getResults().size() > 0);
   }
 
   /**
