@@ -2,6 +2,7 @@ package org.gbif.registry.surety;
 
 import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.surety.email.EmailManagerConfiguration;
+import org.gbif.registry.surety.email.EmptyEmailManager;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

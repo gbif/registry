@@ -17,8 +17,7 @@
         system_settings hstore,
         created timestamp with time zone NOT NULL DEFAULT now(),
         last_login timestamp with time zone,
-        deleted timestamp with time zone,
-        challenge_code uuid
+        deleted timestamp with time zone
       );
 
       CREATE UNIQUE INDEX user_username_lower_idx on public.user (lower(username));

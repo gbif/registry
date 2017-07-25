@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
 
 /**
@@ -36,7 +37,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
                                              NodeMapper nodeMapper,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
                                              OrganizationEmailTemplateProcessor emailTemplateProcessor,
-                                             EmailManager emailManager) {
+                                             @Named("endorsementEmailManager") EmailManager emailManager) {
     this.organizationMapper = organizationMapper;
     this.nodeMapper = nodeMapper;
     this.challengeCodeManager = challengeCodeManager;
@@ -45,7 +46,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   }
 
   /**
-   * Handle to logic to generate a new challenge code and send an email to the right person.
+   * Handles the logic to generate a new challenge code and send an email to the right person.
    *
    * @param newOrganization
    */

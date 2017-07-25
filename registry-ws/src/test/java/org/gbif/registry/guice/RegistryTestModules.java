@@ -22,7 +22,7 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
-import org.gbif.registry.surety.EmptyEmailManager;
+import org.gbif.registry.surety.email.EmptyEmailManager;
 import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.registry.ws.fixtures.TestConstants;

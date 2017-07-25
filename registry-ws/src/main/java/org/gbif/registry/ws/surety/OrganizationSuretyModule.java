@@ -1,8 +1,10 @@
 package org.gbif.registry.ws.surety;
 
 import org.gbif.registry.surety.SuretyConstants;
+import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.surety.email.EmailManagerConfiguration;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
+import org.gbif.registry.surety.email.EmptyEmailManager;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
@@ -18,6 +20,8 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+import org.apache.commons.lang3.BooleanUtils;
 
 /**
  * Guice module for related to surety.
@@ -28,6 +32,7 @@ import com.google.inject.TypeLiteral;
  *   - EmailManagerConfiguration
  *   - ChallengeCodeMapper
  *   - ChallengeCodeSupportMapper
+ *   - EmailManager
  *
  * Binds:
  *   - OrganizationEndorsementService<UUID>
@@ -36,6 +41,7 @@ import com.google.inject.TypeLiteral;
  */
 public class OrganizationSuretyModule extends AbstractModule {
 
+  private static final String ENDORSEMENT_EMAIL_MANAGER_KEY = "endorsementEmailManager";
   private final Properties filteredProperties;
 
   public static final TypeLiteral<OrganizationEndorsementService<UUID>>
@@ -45,6 +51,7 @@ public class OrganizationSuretyModule extends AbstractModule {
           "email/subjects/email_subjects", Locale.ENGLISH);
 
   static final String CONFIRM_ORGANIZATION_URL_TEMPLATE = "mail.urlTemplate.confirmOrganization";
+  static final String MAIL_ENABLED_PROPERTY = "mail.enable";
   static final String HELPDESK_EMAIL_PROPERTY = "helpdesk.email";
 
   static final String CONFIRM_ORGANIZATION_SUBJECT_KEY = "confirmOrganization";
@@ -70,8 +77,7 @@ public class OrganizationSuretyModule extends AbstractModule {
             filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE),
             filteredProperties.getProperty(HELPDESK_EMAIL_PROPERTY));
   }
-
-
+  
   private static class InnerModule extends AbstractModule {
     private Properties filteredProperties;
 
@@ -81,6 +87,15 @@ public class OrganizationSuretyModule extends AbstractModule {
 
     @Override
     protected void configure() {
+      // avoid sending emails unless the configuration says otherwise
+      // (OrganizationEmailEndorsementService sends emails to NodeManagers)
+      if(!BooleanUtils.toBoolean(filteredProperties.getProperty(MAIL_ENABLED_PROPERTY))) {
+        bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY)).toInstance(new EmptyEmailManager());
+      }
+      else{
+        bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY));
+      }
+
       bind(ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF).to(OrganizationEmailEndorsementService.class).in(Scopes.SINGLETON);
     }
 
