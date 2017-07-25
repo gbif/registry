@@ -163,9 +163,11 @@ public class RegistryUpdaterTest {
   @Test
   public void testUpdateBiocaseDatasetDoesNotOverrideLicense() throws Exception {
     Installation installation = new Installation();
+    installation.setKey(UUID.randomUUID());
     installation.setType(InstallationType.BIOCASE_INSTALLATION);
     Endpoint endpoint = new Endpoint();
     endpoint.setUrl(URI.create("http://localhost"));
+    endpoint.setKey(1);
     installation.addEndpoint(endpoint);
     HttpClient client = mock(HttpClient.class);
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))

@@ -19,8 +19,6 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
@@ -29,6 +27,7 @@ import org.gbif.registry.metasync.api.SyncResult;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
@@ -61,8 +60,10 @@ public class BiocaseMetadataSynchroniserTest {
   public void setup() {
     synchroniser = new BiocaseMetadataSynchroniser(client);
     installation = new Installation();
+    installation.setKey(UUID.randomUUID());
     installation.setType(InstallationType.BIOCASE_INSTALLATION);
     Endpoint endpoint = new Endpoint();
+    endpoint.setKey(1);
     endpoint.setUrl(URI.create("http://localhost"));
     installation.addEndpoint(endpoint);
   }
@@ -84,7 +85,7 @@ public class BiocaseMetadataSynchroniserTest {
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "biocase/capabilities1.xml"))
       .thenReturn(prepareResponse(200, "biocase/inventory1.xml"))
       .thenReturn(prepareResponse(200, "biocase/dataset1.xml"));
-    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<>());
     assertThat(syncResult.exception).isNull();
     assertThat(syncResult.deletedDatasets).isEmpty();
     assertThat(syncResult.existingDatasets).isEmpty();

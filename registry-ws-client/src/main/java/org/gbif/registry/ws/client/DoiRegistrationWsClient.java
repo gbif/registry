@@ -60,4 +60,9 @@ public class DoiRegistrationWsClient extends BaseWsClient implements DoiRegistra
     return resource.type(MediaType.APPLICATION_JSON).post(DOI.class, toBytes(doiRegistration));
   }
 
+  @Override
+  public DOI update(DoiRegistration doiRegistration) {
+    return resource.type(MediaType.APPLICATION_JSON).put(DOI.class, toBytes(doiRegistration));
+  }
+
 }
