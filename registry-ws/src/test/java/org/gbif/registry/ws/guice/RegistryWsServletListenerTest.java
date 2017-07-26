@@ -49,8 +49,8 @@ public class RegistryWsServletListenerTest {
     DatasetService datasetService = injector.getInstance(DatasetService.class);
     datasetService.list(new PagingRequest());
 
-    IdentityService userService = injector.getInstance(IdentityService.class);
-    userService.get("admin");
+    IdentityService identityService = injector.getInstance(IdentityService.class);
+    identityService.get("admin");
 
     OrganizationService orgService = injector.getInstance(OrganizationService.class);
     orgService.list(new PagingRequest());

@@ -29,6 +29,13 @@
   </dd>
   </div>
 
+  <div class="clearfix">
+    <dt>System Settings</dt>
+    <dd ng-repeat="(key, value) in user.systemSettings">
+      {{key}} => {{value}}
+    </dd>
+  </div>
+
   <!--only display roles that we can map-->
   <div class="clearfix">
   <dt>Roles</dt>

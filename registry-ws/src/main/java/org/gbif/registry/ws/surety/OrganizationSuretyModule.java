@@ -22,6 +22,8 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import org.apache.commons.lang3.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Guice module for related to surety.
@@ -32,7 +34,7 @@ import org.apache.commons.lang3.BooleanUtils;
  *   - EmailManagerConfiguration
  *   - ChallengeCodeMapper
  *   - ChallengeCodeSupportMapper
- *   - EmailManager
+ *   - EmailManager (unless the property organization.surety.mail.enable is set to false)
  *
  * Binds:
  *   - OrganizationEndorsementService<UUID>
@@ -41,7 +43,10 @@ import org.apache.commons.lang3.BooleanUtils;
  */
 public class OrganizationSuretyModule extends AbstractModule {
 
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationSuretyModule.class);
+
   private static final String ENDORSEMENT_EMAIL_MANAGER_KEY = "endorsementEmailManager";
+  private static final String PROPERTY_PREFIX = "organization." + SuretyConstants.PROPERTY_PREFIX;
   private final Properties filteredProperties;
 
   public static final TypeLiteral<OrganizationEndorsementService<UUID>>
@@ -58,7 +63,7 @@ public class OrganizationSuretyModule extends AbstractModule {
   static final String CONFIRM_ORGANIZATION_FTL_TEMPLATE = "confirm_organization_en.ftl";
 
   public OrganizationSuretyModule(Properties properties) {
-    this.filteredProperties = PropertiesUtil.filterProperties(properties, "organization." + SuretyConstants.PROPERTY_PREFIX);
+    this.filteredProperties = PropertiesUtil.filterProperties(properties, PROPERTY_PREFIX);
   }
 
   @Override
@@ -77,11 +82,11 @@ public class OrganizationSuretyModule extends AbstractModule {
             filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE),
             filteredProperties.getProperty(HELPDESK_EMAIL_PROPERTY));
   }
-  
+
   private static class InnerModule extends AbstractModule {
     private Properties filteredProperties;
 
-    public InnerModule(Properties filteredProperties) {
+    InnerModule(Properties filteredProperties) {
       this.filteredProperties = filteredProperties;
     }
 
@@ -90,12 +95,12 @@ public class OrganizationSuretyModule extends AbstractModule {
       // avoid sending emails unless the configuration says otherwise
       // (OrganizationEmailEndorsementService sends emails to NodeManagers)
       if(!BooleanUtils.toBoolean(filteredProperties.getProperty(MAIL_ENABLED_PROPERTY))) {
+        LOG.info("email sending feature is disabled (" + PROPERTY_PREFIX + MAIL_ENABLED_PROPERTY + " is not set or false)");
         bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY)).toInstance(new EmptyEmailManager());
       }
       else{
         bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY));
       }
-
       bind(ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF).to(OrganizationEmailEndorsementService.class).in(Scopes.SINGLETON);
     }
 
