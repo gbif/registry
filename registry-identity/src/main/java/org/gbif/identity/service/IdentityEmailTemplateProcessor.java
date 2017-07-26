@@ -42,7 +42,7 @@ public class IdentityEmailTemplateProcessor {
     BaseEmailModel baseEmailModel = null;
     try {
       URL url = new URL(MessageFormat.format(urlTemplate, user.getUserName(), challengeCode.getCode()));
-      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getName(), url);
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
       baseEmailModel = emailTemplateProcessor.buildEmail(user.getEmail(), dataModel, Locale.ENGLISH);
     } catch (TemplateException | IOException ex) {
       LOG.error("Error while generating e-mail.", ex);
