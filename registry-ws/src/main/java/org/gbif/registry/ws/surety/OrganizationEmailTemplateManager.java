@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Manager handling the different types of email related to organization endorsement.
- * 
+ *
  * Responsibilities (with the help of (via {@link EmailTemplateProcessor}):
  *  - decide where to send the email (which address)
  *  - generate the body of the email
@@ -64,7 +64,7 @@ class OrganizationEmailTemplateManager {
    *
    * @return new {@link BaseEmailModel} or null if an error occurred
    */
-  BaseEmailModel generateNewOrganizationEmailModel(Organization newOrganization,
+  BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
                                                           Contact nodeManagerContact,
                                                           UUID confirmationKey,
                                                           Node endorsingNode) {
@@ -103,7 +103,7 @@ class OrganizationEmailTemplateManager {
    * @param endorsingNode
    * @return
    */
-  BaseEmailModel generateOrganizationConfirmedEmailModel(Organization newOrganization, Node endorsingNode) {
+  BaseEmailModel generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) {
     BaseEmailModel baseEmailModel = null;
     OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(HELPDESK_NAME, null,
             newOrganization, endorsingNode);

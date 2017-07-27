@@ -70,8 +70,8 @@ public class OrganizationSuretyModule extends AbstractModule {
   @Singleton
   private OrganizationEmailTemplateManager provideOrganizationEmailTemplateProcessor(EmailManagerConfiguration emailManagerConfiguration) {
     return new OrganizationEmailTemplateManager(
-            provideEmailTemplateProcessor(EmailType.TO_CONFIRM),
-            provideEmailTemplateProcessor(EmailType.CONFIRMED),
+            provideEmailTemplateProcessor(EmailType.NEW_ORGANIZATION),
+            provideEmailTemplateProcessor(EmailType.ENDORSEMENT_CONFIRMATION),
             config);
   }
 

@@ -30,8 +30,8 @@ class OrganizationEmailTemplateConfiguration {
    * Type of emails related to organization endorsement
    */
   enum EmailType {
-    TO_CONFIRM("confirmOrganization", "confirm_organization_en.ftl"),
-    CONFIRMED("organizationConfirmed", "organization_confirmed_en.ftl");
+    NEW_ORGANIZATION("newOrganization", "confirm_organization_en.ftl"),
+    ENDORSEMENT_CONFIRMATION("endorsementConfirmation", "organization_confirmed_en.ftl");
 
     private final String subjectKey;
     private final String ftlTemplate;

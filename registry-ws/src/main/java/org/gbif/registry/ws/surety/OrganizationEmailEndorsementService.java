@@ -62,7 +62,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     Optional<Contact> nodeManager =
             endorsingNode.getContacts().stream().filter(c -> c.getType() == ContactType.NODE_MANAGER).findFirst();
 
-    BaseEmailModel emailModel = emailTemplateManager.generateNewOrganizationEmailModel(
+    BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsementEmailModel(
             newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
     emailManager.send(emailModel);
   }
@@ -79,7 +79,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
       WithMyBatis.update(organizationMapper, organization);
 
       Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
-      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationConfirmedEmailModel(organization, endorsingNode);
+      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsedEmailModel(organization, endorsingNode);
       emailManager.send(emailModel);
       return true;
     }
