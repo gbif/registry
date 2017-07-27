@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.identity.IdentityConstants.CONFIRM_ORGANIZATION_URL_TEMPLATE;
+import static org.gbif.identity.IdentityConstants.CONFIRM_USER_URL_TEMPLATE;
 import static org.gbif.identity.IdentityConstants.DB_PROPERTY_PREFIX;
 import static org.gbif.identity.IdentityConstants.EMAIL_SUBJECTS_RESOURCE;
 import static org.gbif.identity.IdentityConstants.RESET_PASSWORD_FTL_TEMPLATE;
@@ -114,7 +114,7 @@ public class InternalIdentityServiceModule extends PrivateModule {
             (locale) -> SUBJECT_RESOURCE.getString(USER_CREATE_SUBJECT_KEY),
             (locale) -> USER_CREATE_FTL_TEMPLATE);
     return new IdentityEmailTemplateProcessor(emailTemplateProcessor,
-            filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE));
+            filteredProperties.getProperty(CONFIRM_USER_URL_TEMPLATE));
   }
 
   @Provides

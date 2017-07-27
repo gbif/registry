@@ -5,7 +5,7 @@ import org.gbif.api.model.registry.Organization;
 import java.util.UUID;
 
 /**
- * Service responsible to handle the business logic of creating and confirming {@link Organization}
+ * Service responsible to handle the business logic of creating and confirming {@link Organization}.
  */
 public interface OrganizationEndorsementService<T> {
 
@@ -17,6 +17,6 @@ public interface OrganizationEndorsementService<T> {
    * @param confirmationObject object used to handle confirmation by the implementation.
    * @return
    */
-  boolean confirmOrganization(UUID organizationKey, T confirmationObject);
+  boolean confirmEndorsement(UUID organizationKey, T confirmationObject);
 
 }

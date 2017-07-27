@@ -21,27 +21,29 @@ import org.mybatis.guice.transactional.Transactional;
 
 /**
  * {@link OrganizationEndorsementService} implementation responsible to handle the business logic of creating and
- * confirming {@link Organization}
+ * confirming the endorsement of an {@link Organization}.
  */
 class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
+
+  static final String ENDORSEMENT_EMAIL_MANAGER_KEY = "endorsementEmailManager";
 
   private final OrganizationMapper organizationMapper;
   private final NodeMapper nodeMapper;
   private final ChallengeCodeManager<UUID> challengeCodeManager;
 
-  private final OrganizationEmailTemplateProcessor emailTemplateProcessor;
+  private final OrganizationEmailTemplateManager emailTemplateManager;
   private final EmailManager emailManager;
 
   @Inject
   public OrganizationEmailEndorsementService(OrganizationMapper organizationMapper,
                                              NodeMapper nodeMapper,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
-                                             OrganizationEmailTemplateProcessor emailTemplateProcessor,
-                                             @Named("endorsementEmailManager") EmailManager emailManager) {
+                                             OrganizationEmailTemplateManager emailTemplateManager,
+                                             @Named(ENDORSEMENT_EMAIL_MANAGER_KEY) EmailManager emailManager) {
     this.organizationMapper = organizationMapper;
     this.nodeMapper = nodeMapper;
     this.challengeCodeManager = challengeCodeManager;
-    this.emailTemplateProcessor = emailTemplateProcessor;
+    this.emailTemplateManager = emailTemplateManager;
     this.emailManager = emailManager;
   }
 
@@ -60,20 +62,25 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     Optional<Contact> nodeManager =
             endorsingNode.getContacts().stream().filter(c -> c.getType() == ContactType.NODE_MANAGER).findFirst();
 
-    BaseEmailModel emailModel = emailTemplateProcessor.generateNewOrganizationEmailModel(newOrganization,
-            nodeManager.orElse(null), challengeCode);
+    BaseEmailModel emailModel = emailTemplateManager.generateNewOrganizationEmailModel(
+            newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
     emailManager.send(emailModel);
   }
 
   @Transactional
   @Override
-  public boolean confirmOrganization(UUID organizationKey, UUID challengeCode) {
+  public boolean confirmEndorsement(UUID organizationKey, UUID challengeCode) {
     Organization organization = organizationMapper.get(organizationKey);
     if (organization != null && !organization.isEndorsementApproved() &&
             challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode) &&
             challengeCodeManager.remove(organizationKey)) {
+
       organization.setEndorsementApproved(true);
       WithMyBatis.update(organizationMapper, organization);
+
+      Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
+      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationConfirmedEmailModel(organization, endorsingNode);
+      emailManager.send(emailModel);
       return true;
     }
     return false;

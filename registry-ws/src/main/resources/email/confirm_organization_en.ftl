@@ -1,7 +1,8 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.ws.surety.OrganizationTemplateDataModel" -->
-Hello ${name},
+Dear ${name},
 
-A new organization requires your confirmation:
+A new organization is requesting to be endorsed by ${endorsingNode.title}:
+
 ${organisation.title!}
 
 <#list organisation.address! as addr>
@@ -14,6 +15,7 @@ ${organisation.country.title!}
 
 Description:
 ${organisation.description!}
+
 
 Please confirm by clicking the following link: ${url}
 

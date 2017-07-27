@@ -1,8 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.ws.surety.OrganizationTemplateDataModel" -->
-Hello ${name},
+Dear ${name},
 
-The organization ${organisation.title} has just been confirmed.
+The following message is to inform you that ${endorsingNode.title} has endorsed the organization ${organisation.title}.
 
 Kind regards,
 The GBIF Team
-

@@ -196,7 +196,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Path("{key}/contact")
   @Override
   public List<Contact> listContacts(@PathParam("key") UUID targetEntityKey) {
-    throw new UnsupportedOperationException("Contacts are manually managed in IMS");
+    throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
   @DELETE
@@ -204,12 +204,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @RolesAllowed(ADMIN_ROLE)
   @Override
   public void deleteContact(@PathParam("key") UUID targetEntityKey, @PathParam("contactKey") int contactKey) {
-    throw new UnsupportedOperationException("Contacts are manually managed in IMS");
+    throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
   @Override
   public int addContact(@PathParam("key") UUID targetEntityKey, @NotNull @Valid @Trim Contact contact) {
-    throw new UnsupportedOperationException("Contacts are manually managed in IMS");
+    throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
   @GET
