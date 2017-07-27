@@ -153,7 +153,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
-    return organizationEndorsementService.confirmOrganization(organizationKey, confirmationKey);
+    return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
   }
 
   public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
