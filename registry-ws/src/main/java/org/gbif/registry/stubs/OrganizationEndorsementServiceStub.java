@@ -16,7 +16,7 @@ public class OrganizationEndorsementServiceStub implements OrganizationEndorseme
   }
 
   @Override
-  public boolean confirmOrganization(UUID organizationKey, UUID confirmationObject) {
+  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationObject) {
     throw new UnsupportedOperationException();
   }
 }
