@@ -1,0 +1,35 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="45" author="trobertson" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true" >
+      CREATE TABLE public.user (
+        key serial PRIMARY KEY,
+        username varchar(60) NOT NULL UNIQUE,
+        email text NOT NULL UNIQUE CHECK (assert_min_length(email, 5)),
+        password varchar(128) NOT NULL CHECK (assert_min_length(password, 32)),
+        first_name varchar(60) NOT NULL CHECK (assert_min_length(first_name, 1)),
+        last_name varchar(60) NOT NULL CHECK (assert_min_length(last_name, 1)),
+        roles text[] NOT NULL DEFAULT array[]::text[],
+        settings hstore NOT NULL,
+        created timestamp with time zone NOT NULL DEFAULT now(),
+        last_login timestamp with time zone,
+        deleted timestamp with time zone,
+        challenge_code uuid
+      );
+      CREATE INDEX user_username_idx ON public.user (username);
+      CREATE INDEX user_email_idx ON public.user (email);
+
+      CREATE TABLE session (
+        username varchar(60) NOT NULL REFERENCES public.user(username),
+        session varchar(128) PRIMARY KEY,
+        hostname varchar(128) NOT NULL,
+        created timestamp with time zone NOT NULL DEFAULT now()
+      );
+      CREATE INDEX session_username_idx ON session (username);
+    </sql>
+
+  </changeSet>
+</databaseChangeLog>

@@ -2,6 +2,7 @@ package org.gbif.registry.surety.persistence;
 
 import org.gbif.registry.surety.model.ChallengeCode;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -43,7 +44,7 @@ public class ChallengeCodeManager<K> {
    * @return
    */
   public boolean hasChallengeCode(K key) {
-    return challengeCodeSupportMapper.getChallengeCodeKey(key) != null;
+    return Optional.ofNullable(challengeCodeSupportMapper.getChallengeCodeKey(key)).isPresent();
   }
 
   /**
@@ -64,13 +65,12 @@ public class ChallengeCodeManager<K> {
    * @return the challengeCode was removed successfully.
    */
   public boolean remove(K key) {
-    Integer challengeCodeKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
-    if(challengeCodeKey == null) {
-      return false;
-    }
-    //remove the challengeCode from the referencing table first
-    challengeCodeSupportMapper.updateChallengeCodeKey(key, null);
-    challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
-    return true;
+    return Optional.ofNullable(challengeCodeSupportMapper.getChallengeCodeKey(key))
+            .map(challengeCodeKey -> {
+              //remove the challengeCode from the referencing table first
+              challengeCodeSupportMapper.updateChallengeCodeKey(key, null);
+              challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
+              return true;
+            }).orElse(Boolean.FALSE);
   }
 }

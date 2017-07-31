@@ -16,7 +16,7 @@ public class LoggedUser {
   private String firstName;
   private String lastName;
   private String email;
-  private Map<String, String> settings = Maps.newHashMap();
+  private final Map<String, String> settings = Maps.newHashMap();
 
   public static LoggedUser from(GbifUser user){
     if(user == null) {

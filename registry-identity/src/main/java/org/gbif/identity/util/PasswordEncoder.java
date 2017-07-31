@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  * Mostly this code is copied from http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
  */
 public class PasswordEncoder {
+
   private static final Logger LOG = LoggerFactory.getLogger(PasswordEncoder.class);
   private static final String ALGORITHM = "SHA-512";
   private static final SecureRandom RANDOM = new SecureRandom();
@@ -52,7 +53,7 @@ public class PasswordEncoder {
    * Encode using the algorithm.
    */
   private static byte[] sha512(String input) {
-    return PasswordEncoder.sha512(input.getBytes());
+    return sha512(input.getBytes());
   }
 
   /**
@@ -128,7 +129,7 @@ public class PasswordEncoder {
    */
   private static String base64Encode(byte[] input, int count) {
 
-    StringBuffer output = new StringBuffer();
+    StringBuilder output = new StringBuilder();
     int i = 0;
     CharSequence itoa64 = PASSWORD_ITOA64;
     do {
