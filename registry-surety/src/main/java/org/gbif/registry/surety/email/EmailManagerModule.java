@@ -20,15 +20,15 @@ import com.google.inject.Singleton;
  */
 public class EmailManagerModule extends AbstractModule {
 
-  private static final String propertyPrefix = "mail.";
+  private static final String PROPERTY_PREFIX = "mail.";
   private static final String SMTP_SERVER = "smtp.host";
   private static final String EMAIL_FROM = "from";
   private static final String EMAIL_BCC = "bcc";
 
-  private Properties filteredProperties;
+  private final Properties filteredProperties;
 
   public EmailManagerModule(Properties properties) {
-    filteredProperties = PropertiesUtil.filterProperties(properties, propertyPrefix);
+    filteredProperties = PropertiesUtil.filterProperties(properties, PROPERTY_PREFIX);
   }
 
   @Override

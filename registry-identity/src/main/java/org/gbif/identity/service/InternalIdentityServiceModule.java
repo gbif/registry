@@ -13,12 +13,12 @@ import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
@@ -67,7 +67,10 @@ public class InternalIdentityServiceModule extends PrivateModule {
   public static final TypeLiteral<List<String>> APPKEYS_WHITELIST_TYPE_LITERAL =
           new TypeLiteral<List<String>>() {};
 
-  private static final ResourceBundle SUBJECT_RESOURCE = ResourceBundle.getBundle(EMAIL_SUBJECTS_RESOURCE, Locale.ENGLISH);
+  private static final ResourceBundle SUBJECT_RESOURCE = ResourceBundle.getBundle(EMAIL_SUBJECTS_RESOURCE,
+                                                                                  Locale.ENGLISH);
+
+  private static final Pattern COMMA_PATTERN = Pattern.compile(",");
 
   private final Properties rawProperties;
   private final Properties filteredProperties;
@@ -79,14 +82,15 @@ public class InternalIdentityServiceModule extends PrivateModule {
     filteredProperties = PropertiesUtil.filterProperties(properties, IdentityConstants.PROPERTY_PREFIX + SuretyConstants.PROPERTY_PREFIX);
 
     String appkeysWl = properties.getProperty(APPKEYS_WHITELIST);
-    if(StringUtils.isNotBlank(appkeysWl)){
-      appKeyWhitelist = Arrays.stream(appkeysWl.split(","))
-              .map(String::trim)
-              .collect(collectingAndThen(toList(), Collections::unmodifiableList));
-      LOG.info("appKeyWhitelist: " + appKeyWhitelist);
+    if (StringUtils.isNotBlank(appkeysWl)) {
+
+      appKeyWhitelist = COMMA_PATTERN.splitAsStream(appkeysWl)
+                          .map(String::trim)
+                          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      LOG.info("appKeyWhitelist {} ", appKeyWhitelist);
     }
     else{
-      appKeyWhitelist = Collections.EMPTY_LIST;
+      appKeyWhitelist = Collections.emptyList();
       LOG.warn("No appKeyWhitelist found. No appKey will be accepted.");
     }
   }
@@ -111,10 +115,10 @@ public class InternalIdentityServiceModule extends PrivateModule {
   private IdentityEmailTemplateProcessor provideNewUserEmailTemplateProcessor() {
     EmailTemplateProcessor emailTemplateProcessor = new EmailTemplateProcessor(
             //we only support one Locale at the moment
-            (locale) -> SUBJECT_RESOURCE.getString(USER_CREATE_SUBJECT_KEY),
-            (locale) -> USER_CREATE_FTL_TEMPLATE);
+            locale -> SUBJECT_RESOURCE.getString(USER_CREATE_SUBJECT_KEY),
+            locale -> USER_CREATE_FTL_TEMPLATE);
     return new IdentityEmailTemplateProcessor(emailTemplateProcessor,
-            filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE));
+                                              filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE));
   }
 
   @Provides
@@ -123,10 +127,10 @@ public class InternalIdentityServiceModule extends PrivateModule {
   private IdentityEmailTemplateProcessor provideResetPasswordEmailTemplateProcessor() {
     EmailTemplateProcessor emailTemplateProcessor = new EmailTemplateProcessor(
             //we only support one Locale at the moment
-            (locale) -> SUBJECT_RESOURCE.getString(RESET_PASSWORD_SUBJECT_KEY),
-            (locale) -> RESET_PASSWORD_FTL_TEMPLATE);
+            locale -> SUBJECT_RESOURCE.getString(RESET_PASSWORD_SUBJECT_KEY),
+            locale -> RESET_PASSWORD_FTL_TEMPLATE);
     return new IdentityEmailTemplateProcessor(emailTemplateProcessor,
-            filteredProperties.getProperty(RESET_PASSWORD_URL_TEMPLATE));
+                                              filteredProperties.getProperty(RESET_PASSWORD_URL_TEMPLATE));
   }
 
   @Provides

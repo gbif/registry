@@ -8,7 +8,9 @@ import org.slf4j.MarkerFactory;
  */
 public class SuretyConstants {
 
-  /**Utility class*/
+  /**
+   * Utility class.
+   */
   private SuretyConstants() {}
 
   public static final String PROPERTY_PREFIX = "surety.";

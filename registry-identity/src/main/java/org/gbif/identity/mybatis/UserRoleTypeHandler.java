@@ -1,19 +1,14 @@
 package org.gbif.identity.mybatis;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.mybatis.type.BaseConverter;
 
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -26,8 +21,7 @@ public class UserRoleTypeHandler extends BaseTypeHandler<Set<UserRole>> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, Set<UserRole> parameter, JdbcType jdbcType) throws
     SQLException {
-    Array array = ps.getConnection().createArrayOf("text", parameter.toArray());
-    ps.setArray(i, array);
+    ps.setArray(i, ps.getConnection().createArrayOf("text", parameter.toArray()));
   }
 
   @Override
@@ -46,7 +40,10 @@ public class UserRoleTypeHandler extends BaseTypeHandler<Set<UserRole>> {
   }
 
   private Set<UserRole> toSet(Array pgArray) throws SQLException {
-    if (pgArray == null) return Sets.newHashSet();
+    if (pgArray == null) {
+      return Sets.newHashSet();
+    }
+
     String[] strings = (String[]) pgArray.getArray();
     if (strings.length == 0) return Sets.newHashSet();
 
