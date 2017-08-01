@@ -6,6 +6,7 @@ import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.surety.model.ChallengeCode;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.google.inject.Inject;
@@ -51,15 +52,17 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
   @Override
   public boolean confirmUser(Integer key, UUID confirmationObject) {
-    return key != null
-            && challengeCodeManager.isValidChallengeCode(key, confirmationObject)
-            && challengeCodeManager.remove(key);
+    return Optional.ofNullable(key)
+            .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
+                           && challengeCodeManager.remove(keyVal))
+            .orElse(Boolean.FALSE);
   }
 
   @Override
   public void onPasswordReset(GbifUser user) {
     ChallengeCode challengeCode = challengeCodeManager.create(user.getKey());
-    BaseEmailModel emailModel = resetPasswordEmailTemplateProcessor.generateUserChallengeCodeEmailModel(user, challengeCode);
+    BaseEmailModel emailModel = resetPasswordEmailTemplateProcessor.generateUserChallengeCodeEmailModel(user,
+                                                                                                        challengeCode);
     emailManager.send(emailModel);
   }
 

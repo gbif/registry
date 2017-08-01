@@ -14,7 +14,6 @@ import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -94,9 +93,6 @@ public class InternalIdentityServiceModule extends PrivateModule {
       appKeyWhitelist = Collections.emptyList();
       LOG.warn("No appKeyWhitelist found. No appKey will be accepted.");
     }
-
-    HashMap<String, String> hm = new HashMap<>();
-    hm.entrySet();
   }
 
   @Override
