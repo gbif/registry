@@ -1,6 +1,7 @@
 package org.gbif.registry;
 
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.OrganizationService;
@@ -10,6 +11,7 @@ import org.gbif.registry.grizzly.RegistryServerWithIdentity;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.utils.Contacts;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.ws.resources.NodeResource;
@@ -54,6 +56,9 @@ public class OrganizationCreationIT {
     node = nodeService.list(new PagingRequest()).getResults().get(0);
 
     Organization o = Organizations.newInstance(node.getKey());
+    Contact organizationContact = Contacts.newInstance();
+    o.getContacts().add(organizationContact);
+
     //we need to create the organization using the appKey
     final Injector webserviceAppKey = RegistryTestModules.webserviceAppKeyClient();
     OrganizationService organizationService =  webserviceAppKey.getInstance(OrganizationService.class);
@@ -76,5 +81,8 @@ public class OrganizationCreationIT {
 
     //We should have no more pending endorsement for this node
     assertEquals(Long.valueOf(0), nodeService.pendingEndorsements(node.getKey(), new PagingRequest()).getCount());
+
+    //We should also have a contact
+    assertEquals(1, webserviceInj.getInstance(OrganizationService.class).get(newOrganizationKey).getContacts().size());
   }
 }

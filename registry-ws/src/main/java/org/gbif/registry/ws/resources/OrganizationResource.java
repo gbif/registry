@@ -36,6 +36,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -75,7 +76,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   protected static final int MINIMUM_PASSWORD_SIZE = 6;
   protected static final int MAXIMUM_PASSWORD_SIZE = 15;
-  private final static String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  private static final String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
@@ -129,7 +130,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization, security);
 
-    if(security.isUserInRole(APP_ROLE)) {
+    if (security.isUserInRole(APP_ROLE)) {
+      // for trusted app, we accept contacts to include on the endorsement request
+      Optional.ofNullable(organization.getContacts())
+              .filter( c -> !c.isEmpty())
+              .ifPresent( contacts -> {
+                contacts.forEach( c -> addContact(newOrganization, c, security));
+              });
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;
