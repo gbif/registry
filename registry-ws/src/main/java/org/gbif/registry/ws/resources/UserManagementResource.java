@@ -137,7 +137,7 @@ public class UserManagementResource {
    * @return
    */
   @POST
-  @RolesAllowed({APP_ROLE})
+  @RolesAllowed(APP_ROLE)
   @Path("/")
   public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
 
@@ -202,7 +202,7 @@ public class UserManagementResource {
    * @return
    */
   @POST
-  @RolesAllowed({USER_ROLE})
+  @RolesAllowed(USER_ROLE)
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
@@ -227,7 +227,7 @@ public class UserManagementResource {
    * Relax content-type to wildcard to allow angularjs.
    */
   @DELETE
-  @RolesAllowed({ADMIN_ROLE})
+  @RolesAllowed(ADMIN_ROLE)
   @Consumes(MediaType.WILDCARD)
   @Path("/{userKey}")
   public Response delete(@PathParam("userKey") int userKey) {
@@ -241,7 +241,7 @@ public class UserManagementResource {
    */
   @GET
   @Path("/search")
-  @RolesAllowed({ADMIN_ROLE})
+  @RolesAllowed(ADMIN_ROLE)
   public PagingResponse<GbifUser> search(@QueryParam("q") String query, @Context @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q = Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(query));
@@ -254,7 +254,7 @@ public class UserManagementResource {
    * This method will always return 204 No Content.
    */
   @POST
-  @RolesAllowed({USER_ROLE})
+  @RolesAllowed(USER_ROLE)
   @Path("/resetPassword")
   public Response resetPassword(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
 
@@ -275,7 +275,7 @@ public class UserManagementResource {
    * The username is expected to be present in the security context (authenticated by appkey).
    */
   @POST
-  @RolesAllowed({USER_ROLE})
+  @RolesAllowed(USER_ROLE)
   @Path("/updatePassword")
   @Transactional
   public Response updatePassword(@Context SecurityContext securityContext, @Context HttpServletRequest request,
@@ -310,7 +310,7 @@ public class UserManagementResource {
    * @param confirmationKey To check
    */
   @GET
-  @RolesAllowed({USER_ROLE})
+  @RolesAllowed(USER_ROLE)
   @Path("/confirmationKeyValid")
   public Response tokenValidityCheck(@Context SecurityContext securityContext, @Context HttpServletRequest request,
                                      @QueryParam("confirmationKey") UUID confirmationKey) {

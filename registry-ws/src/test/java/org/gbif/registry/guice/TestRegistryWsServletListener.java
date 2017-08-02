@@ -49,7 +49,7 @@ import static org.gbif.registry.ws.fixtures.TestConstants.APPLICATION_PROPERTIES
  * <ol>
  * <li>The registry-test.properties file is used</li>
  * <li>A life-cycle event monitor registers the SOLR server and Updater for JVM wide interaction</li>
- * <li>Uses a mock of the Identity module</li>
+ * <li>Uses a mock of the Identity module ({@link IdentityMockModule})</li>
  * </ol>
  */
 public class TestRegistryWsServletListener extends GbifServletListener {

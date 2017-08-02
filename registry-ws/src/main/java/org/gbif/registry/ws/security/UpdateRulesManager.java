@@ -14,6 +14,8 @@ import javax.annotation.Nullable;
  */
 public class UpdateRulesManager {
 
+  private UpdateRulesManager(){}
+
   /**
    * Apply updates contained in {@link UserUpdate} to {@link User}.
    *
@@ -23,7 +25,8 @@ public class UpdateRulesManager {
    * @param fromTrustedApp
    * @return
    */
-  public static GbifUser applyUpdate(@Nullable Set<UserRole> initiatorRoles, GbifUser user, UserUpdate userUpdate, boolean fromTrustedApp) {
+  public static GbifUser applyUpdate(@Nullable Set<UserRole> initiatorRoles, GbifUser user, UserUpdate userUpdate,
+                                     boolean fromTrustedApp) {
 
     boolean isAdmin = initiatorRoles != null && (initiatorRoles.contains(UserRole.REGISTRY_ADMIN));
 

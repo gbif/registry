@@ -45,10 +45,6 @@ public class RegistryServerWithIdentity extends AbstractRegistryServer {
       return new IdentityServiceTestModule(props);
     }
 
-    @Override
-    protected Module getSecurityModule(Properties props) {
-      return new SecurityModule(TestConstants.getIntegrationTestAppKeys());
-    }
   }
 
 }

@@ -181,7 +181,9 @@ public class RegistryTestModules {
     user.setKey(1);
     Set<UserRole> roles = new HashSet<UserRole>();
     roles.add(UserRole.ADMIN);
+    roles.add(UserRole.REGISTRY_ADMIN);
     user.setRoles(roles);
+
     return new SecurityContext() {
 
       @Override

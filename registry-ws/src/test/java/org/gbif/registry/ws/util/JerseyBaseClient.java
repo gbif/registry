@@ -40,6 +40,12 @@ public class JerseyBaseClient {
             .get(ClientResponse.class);
   }
 
+  public ClientResponse post(Function<WebResource, WebResource> configurer, Object entity) {
+    return configurer.apply(client.resource(wsBaseUrl).path(resourcePath))
+            .type(MediaType.APPLICATION_JSON)
+            .post(ClientResponse.class, entity);
+  }
+
   /**
    * Issue a {@code POST} from the base URL using a provided configuration function ({@code configurer}).
    *
