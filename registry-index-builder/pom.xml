@@ -9,6 +9,7 @@
 
   <artifactId>registry-index-builder</artifactId>
   <version>2.68-SNAPSHOT</version>
+
   <packaging>jar</packaging>
 
   <name>Registry Solr Index Builder</name>
