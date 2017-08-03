@@ -54,6 +54,7 @@ import com.sun.jersey.api.client.WebResource;
  * A Module for Guice doing all the necessary wiring with the exception of the authentication filters.
  * In order to use this module an authentication module needs to be installed first, such as {@link AnonymousAuthModule}
  * for anonymous access or {@link GbifApplicationAuthModule} for trusted applications.
+ *
  * With an authentication module installed, the only thing left for clients to do is to provide a property
  * to be bound to {@code registry.ws.url}.
  * If you want to use this module remember to also depend on Guice, jersey-apache-client4 and jersey-json in your

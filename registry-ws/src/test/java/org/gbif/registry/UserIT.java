@@ -18,10 +18,13 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
 
 /**
- * Integration tests related to the user (identity) module.
+ * Integration tests related to the user (identity) module representing actions a user can initiate by himself.
+ *
+ * Due to the fact that login and changePassword are not directly available in the Java ws client,
+ * most of the tests use a direct HTTP client.
  */
 public class UserIT extends PlainAPIBaseIT {
 
@@ -78,44 +81,49 @@ public class UserIT extends PlainAPIBaseIT {
   @Test
   public void testLoginNoCredentials() {
     ClientResponse cr = getPublicClient().get(LOGIN_RESOURCE_FCT);
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.UNAUTHORIZED, cr);
   }
 
   @Test
   public void testLogin() {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
 
     //try to login using the email instead of the username
     cr = testClient.login(user.getEmail(), getPassword());
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
   }
 
   @Test
   public void testChangePassword() {
     userTestFixture.prepareUser();
 
+    final String newPassword = "123456";
     AuthenticationDataParameters params = new AuthenticationDataParameters();
-    params.setPassword("123456");
+    params.setPassword(newPassword);
     ClientResponse cr = getAuthenticatedClient()
             .put(uri -> uri.path("changePassword"), params);
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.NO_CONTENT, cr);
 
     //try to login using the previous password
     cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.UNAUTHORIZED, cr);
 
     //try with the new password
-    cr = testClient.login(UserTestFixture.USERNAME, "123456");
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    cr = testClient.login(UserTestFixture.USERNAME, newPassword);
+    assertResponse(Response.Status.OK, cr);
   }
 
+  /**
+   * The login endpoint only accepts HTTP Basic request.
+   * Application that uses appkeys are trusted.
+   */
   @Test
   public void testLoginWithAppKeys() {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getWithSignedRequest(user.getUserName(), (uriBuilder -> uriBuilder.path("login")));
-    assertEquals(Response.Status.FORBIDDEN.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.FORBIDDEN, cr);
   }
 
 }

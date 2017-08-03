@@ -1,4 +1,4 @@
-package org.gbif.identity.mybatis;
+package org.gbif.identity.service;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
@@ -6,6 +6,8 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.inject.IdentityTestModule;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
+import org.gbif.identity.mybatis.DatabaseInitializer;
+import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.surety.InMemoryEmailManager;
@@ -200,7 +202,6 @@ public class IdentityServiceImplIT {
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
-    System.out.println("**/*:" + inMemoryEmailManager.toString());
     //ensure we got an email
     assertNotNull("The user got an email with the challenge code", inMemoryEmailManager.getEmail(u1.getEmail()));
 

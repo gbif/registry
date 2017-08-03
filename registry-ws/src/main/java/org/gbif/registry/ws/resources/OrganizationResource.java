@@ -33,6 +33,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;
@@ -144,6 +145,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   /**
    * Confirm the endorsement of an organisation.
+   * An admin has the ability to confirm an endorsement without a confirmationKey.
    *
    * @param organizationKey
    * @param confirmationKeyParameter
@@ -152,9 +154,17 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @POST
   @Path("{key}/endorsement")
-  @RolesAllowed(APP_ROLE)
-  public Response confirmEndorsement(@PathParam("key") UUID organizationKey, @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
-    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
+  @RolesAllowed({ADMIN_ROLE, APP_ROLE})
+  public Response confirmEndorsement(@PathParam("key") UUID organizationKey,
+                                     @Nullable ConfirmationKeyParameter confirmationKeyParameter,
+                                     @Context SecurityContext security) {
+    UUID confirmationKey = confirmationKeyParameter != null ? confirmationKeyParameter.getConfirmationKey() : null;
+
+    //only admin can confirm an endorsement without a confirmationKey
+    SecurityContextCheck.ensurePreconditionUnlessRoleIs(ADMIN_ROLE, confirmationKey != null, security,
+            Response.Status.BAD_REQUEST);
+
+    return (confirmEndorsement(organizationKey, confirmationKey) ?
             Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
   }
 
@@ -194,7 +204,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
     long total = organizationMapper.count(query, country);
     page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<Organization>(page.getOffset(), page.getLimit(), total,
+    return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
                                             organizationMapper.search(query, country, page));
   }
 

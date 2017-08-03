@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Test;
 
 import static org.gbif.registry.ws.fixtures.UserTestFixture.ALTERNATE_USERNAME;
+import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -32,11 +33,15 @@ import static org.eclipse.aether.repository.AuthenticationContext.PASSWORD;
 import static org.junit.Assert.assertNull;
 
 /**
- * Integration tests related to the User Manager resource.
+ * Integration tests related to the User Manager resource (the service itself is tested in the registry-identity module).
+ * Due to the fact that all user management operations are not available in the Java ws client,
+ * the tests use a direct HTTP client.
  */
 public class UserManagementIT extends PlainAPIBaseIT {
 
   private static final String CHANGED_PASSWORD = "123456";
+  private static final String RESET_PASSWORD_PATH = "resetPassword";
+  private static final String UPDATE_PASSWORD_PATH = "updatePassword";
 
   private static final String RESOURCE_PATH = "admin/user";
   private GbifAuthService gbifAuthService = GbifAuthService.singleKeyAuthService(
@@ -65,11 +70,11 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     ClientResponse cr = postSignedRequest(TestConstants.IT_APP_KEY,
             UserTestFixture.generateUser(newUserName), Function.identity());
-    assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.CREATED, cr);
 
     //test we can't login (challengeCode not confirmed)
     cr = testClient.login(newUserName, PASSWORD);
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.UNAUTHORIZED, cr);
 
     GbifUser newUser = userMapper.get(newUserName);
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(newUser.getKey());
@@ -78,10 +83,10 @@ public class UserManagementIT extends PlainAPIBaseIT {
     ConfirmationKeyParameter params = new ConfirmationKeyParameter();
     params.setConfirmationKey(challengeCode);
     cr = postSignedRequest(newUserName, params, uri -> uri.path("confirm"));
-    assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.CREATED, cr);
 
     cr = testClient.login(newUserName, PASSWORD);
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
   }
 
   @Test
@@ -93,7 +98,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     ClientResponse cr = postSignedRequest(gbifAuthServiceKey2, TestConstants.IT_APP_KEY2,
             UserTestFixture.generateUser(newUserName), Function.identity());
     //it will authenticate since the appKey is valid but it won't get the APP role
-    assertEquals(Response.Status.FORBIDDEN.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.FORBIDDEN, cr);
   }
 
   @Test
@@ -105,16 +110,15 @@ public class UserManagementIT extends PlainAPIBaseIT {
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNull("challengeCode shall be null" + challengeCode, challengeCode);
 
-    ClientResponse cr = postSignedRequest(testUser.getUserName(),
-            uri -> uri.path("resetPassword"));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+    ClientResponse cr = postSignedRequest(testUser.getUserName(), uri -> uri.path(RESET_PASSWORD_PATH));
+    assertResponse(Response.Status.NO_CONTENT, cr);
 
     challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNotNull("challengeCode shall exist" + challengeCode);
 
     //we should still be able to login with username/password
     cr = testClient.login(getUsername(), getPassword());
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
   }
 
   @Test
@@ -127,13 +131,13 @@ public class UserManagementIT extends PlainAPIBaseIT {
     params.setChallengeCode(UUID.randomUUID());
     ClientResponse cr =
             postSignedRequest(testUser.getUserName(), params,
-                    uriBldr -> uriBldr.path("updatePassword"));
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), cr.getStatus());
+                    uriBldr -> uriBldr.path(UPDATE_PASSWORD_PATH));
+    assertResponse(Response.Status.UNAUTHORIZED, cr);
 
     //ask to reset password
     cr = postSignedRequest(testUser.getUserName(),
-            uri -> uri.path("resetPassword"));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+            uri -> uri.path(RESET_PASSWORD_PATH));
+    assertResponse(Response.Status.NO_CONTENT, cr);
 
     UUID confirmationKey = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
     assertNotNull("challengeCode shall exist" + confirmationKey);
@@ -142,20 +146,19 @@ public class UserManagementIT extends PlainAPIBaseIT {
     cr = getWithSignedRequest(testUser.getUserName(),
             uri -> uri.path("confirmationKeyValid")
                     .queryParam("confirmationKey", confirmationKey));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.NO_CONTENT, cr);
 
     //change password using that code
     params = new AuthenticationDataParameters();
     params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(confirmationKey);
 
-    cr = postSignedRequest(testUser.getUserName(), params,
-            uri -> uri.path("updatePassword"));
-    assertEquals(Response.Status.CREATED.getStatusCode(), cr.getStatus());
+    cr = postSignedRequest(testUser.getUserName(), params, uri -> uri.path(UPDATE_PASSWORD_PATH));
+    assertResponse(Response.Status.CREATED, cr);
 
     //ensure we can login with the new password
     cr = testClient.login(testUser.getUserName(), CHANGED_PASSWORD);
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
   }
 
   @Test
@@ -164,7 +167,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     GbifUser createdUser = userMapper.get(testUser.getUserName());
 
     ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(testUser.getUserName()));
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.OK, cr);
 
     assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
   }
@@ -175,12 +178,11 @@ public class UserManagementIT extends PlainAPIBaseIT {
     final String newUserFirstName = "My new first name";
 
     ClientResponse cr = testClient.login(getUsername(), getPassword());
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-   // LoggedUser responseData = cr.getEntity(LoggedUser.class);
+    assertResponse(Response.Status.OK, cr);
 
     testUser.setFirstName(newUserFirstName);
     cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser, uriBldr -> uriBldr.path(testUser.getUserName()));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.NO_CONTENT, cr);
 
     //load user directly from the database
     GbifUser updatedUser = userMapper.get(testUser.getUserName());
@@ -189,8 +191,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     //create a new user
     GbifUser testUser2 = userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
     cr = testClient.login(ALTERNATE_USERNAME, PASSWORD);
-    assertEquals(Response.Status.OK.getStatusCode(), cr.getStatus());
-   // responseData = cr.getEntity(LoggedUser.class);
+    assertResponse(Response.Status.OK, cr);
 
     //update user2 using email from user1
     testUser2.setEmail(testUser.getEmail());
@@ -200,7 +201,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     testUser2.setEmail("12345@mail.com");
     cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), cr.getStatus());
+    assertResponse(Response.Status.NO_CONTENT, cr);
   }
 
   @Override

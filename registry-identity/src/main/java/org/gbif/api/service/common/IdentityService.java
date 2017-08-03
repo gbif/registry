@@ -24,7 +24,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 /**
- * The identity service provides means to create, update and delete User accounts, and provide the mechanisms to
+ * The identity (management) service provides means to create, update and delete User accounts, and provide the mechanisms to
  * authenticate a user with their password.
  * This is a replacement of the deprecated UserService which was a read only service, backed by a managed database
  * (Drupal) and provides a writable option.

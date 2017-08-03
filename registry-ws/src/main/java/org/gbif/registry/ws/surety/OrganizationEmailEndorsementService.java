@@ -15,6 +15,8 @@ import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
@@ -67,12 +69,24 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     emailManager.send(emailModel);
   }
 
+  /**
+   * Confirm the endorsement of an organization using, optionally, a challengeCode.
+   * If a challengeCode is provided, it shall be the expected one.
+   * If no challengeCode is provided, the organisation endorsement will be approved without verification.
+   * The caller is responsible to determine if a challengeCode should be used or not.
+   *
+   * @param organizationKey
+   * @param challengeCode
+   *
+   * @return the organization endorsement was approved or not
+   */
   @Transactional
   @Override
-  public boolean confirmEndorsement(UUID organizationKey, UUID challengeCode) {
+  public boolean confirmEndorsement(UUID organizationKey, @Nullable UUID challengeCode) {
     Organization organization = organizationMapper.get(organizationKey);
+
     if (organization != null && !organization.isEndorsementApproved() &&
-            challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode) &&
+            (challengeCode == null || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode)) &&
             challengeCodeManager.remove(organizationKey)) {
 
       organization.setEndorsementApproved(true);

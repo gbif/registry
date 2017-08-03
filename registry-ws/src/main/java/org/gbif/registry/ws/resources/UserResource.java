@@ -65,7 +65,7 @@ public class UserResource {
   @GET
   @Path("/login")
   public LoggedUser login(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
-    // the user shall be authenticated using basic auth. scheme
+    // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 

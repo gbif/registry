@@ -18,10 +18,9 @@ import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 
 /**
  * Utility methods to check conditions on {@link SecurityContext}
- *
  * Convention:
- *  - ensure methods throws exception
- *  - check methods: return boolean
+ * - ensure methods throws exception
+ * - check methods: return boolean
  */
 public class SecurityContextCheck {
 
@@ -30,7 +29,8 @@ public class SecurityContextCheck {
   /**
    * Utility class
    */
-  private SecurityContextCheck(){}
+  private SecurityContextCheck() {
+  }
 
   /**
    * Check that a user is present in the getUserPrincipal of the SecurityContext otherwise throw
@@ -53,36 +53,56 @@ public class SecurityContextCheck {
   /**
    * Ensure a {@link SecurityContext} was obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication scheme.
    * If the {@link SecurityContext} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
+   *
    * @param security
    *
-   * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was not obtained using the GBIF
-   * authentication scheme.
+   * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was not obtained using the
+   *                                 GBIF
+   *                                 authentication scheme.
    */
   public static void ensureGbifScheme(final SecurityContext security) {
-    if(security != null && GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())){
+    if (security != null && GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException(Response.Status.FORBIDDEN);
   }
 
   /**
-   * Ensure a {@link SecurityContext} was not obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication scheme.
+   * Ensure a {@link SecurityContext} was not obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication
+   * scheme.
    * If the {@link SecurityContext} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
+   *
    * @param security
    *
    * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was obtained using the GBIF
-   * authentication scheme.
+   *                                 authentication scheme.
    */
   public static void ensureNotGbifScheme(final SecurityContext security) {
-    if(security != null && !GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())){
+    if (security != null && !GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException(Response.Status.FORBIDDEN);
+  }
+
+  /**
+   * Check the precondition unless the {@link SecurityContext} contains a specific role.
+   * @param security if null the precondition will failed
+   * @param role
+   * @param precondition
+   * @param statusOnPreconditionFailed
+   */
+  public static void ensurePreconditionUnlessRoleIs(final String role, boolean precondition,
+                                                    final SecurityContext security, Response.Status statusOnPreconditionFailed) {
+    if (security != null && (security.isUserInRole(role) || precondition)) {
+      return;
+    }
+    throw new WebApplicationException(statusOnPreconditionFailed);
   }
 
   /**
    * A user impersonation is when an application is authenticated using the appkey to act on behalf of a user.
    * This method ensures that if user impersonation is used, it is done by an authorized appkey.
+   *
    * @param security
    * @param request
    * @param appKeyWhitelist depending on the context the appKey whitelist may be different
@@ -93,7 +113,7 @@ public class SecurityContextCheck {
     ensureGbifScheme(security);
 
     String appKey = GbifAuthService.getAppKeyFromRequest(request::getHeader);
-    if(appKeyWhitelist.contains(appKey)){
+    if (appKeyWhitelist.contains(appKey)) {
       return;
     }
     throw new WebApplicationException(Response.Status.FORBIDDEN);
@@ -104,6 +124,7 @@ public class SecurityContextCheck {
    * authentication scheme and the roles.
    *
    * @param security
+   *
    * @return if the {@link SecurityContext} is using user impersonation or not
    */
   public static boolean isUsingUserImpersonation(final SecurityContext security) {
@@ -117,7 +138,8 @@ public class SecurityContextCheck {
    * provided roles.
    *
    * @param securityContext
-   * @param roles           this methods will return true if a the user is at least int one role. If no role is provided
+   * @param roles           this methods will return true if a the user is at least int one role. If no role is
+   *                        provided
    *                        this method will return false.
    *
    * @return the user is at least in one of the provided role(s)
@@ -125,7 +147,7 @@ public class SecurityContextCheck {
   public static boolean checkUserInRole(SecurityContext securityContext, String... roles) {
     Objects.requireNonNull(securityContext, "securityContext shall be provided");
 
-    if(roles == null || roles.length < 1) {
+    if (roles == null || roles.length < 1) {
       return false;
     }
     return Arrays.stream(roles)

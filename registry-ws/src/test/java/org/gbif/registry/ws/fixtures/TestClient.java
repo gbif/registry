@@ -49,6 +49,16 @@ public class TestClient {
   }
 
   /**
+   * This client will only work against a Grizzly server started from {@link org.gbif.registry.grizzly.RegistryServer}.
+   * @return
+   */
+  public static Client buildAuthenticatedAdmin() {
+    Client client = buildPublicClient();
+    client.addFilter(new HTTPBasicAuthFilter(TestConstants.TEST_ADMIN, TestConstants.TEST_ADMIN));
+    return client;
+  }
+
+  /**
    * Call the login endpoint using a HTTP Basic authentication.
    * @param username
    * @param password
