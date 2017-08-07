@@ -100,6 +100,18 @@ public class SecurityContextCheck {
   }
 
   /**
+   * Check a precondition and throw a {@link WebApplicationException} if not met.
+   * @param precondition
+   * @param statusOnPreconditionFailed
+   */
+  public static void ensurePrecondition(boolean precondition, Response.Status statusOnPreconditionFailed) {
+    if (precondition) {
+      return;
+    }
+    throw new WebApplicationException(statusOnPreconditionFailed);
+  }
+
+  /**
    * A user impersonation is when an application is authenticated using the appkey to act on behalf of a user.
    * This method ensures that if user impersonation is used, it is done by an authorized appkey.
    *

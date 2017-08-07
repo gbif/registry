@@ -17,6 +17,7 @@ import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.NodeResource;
 
+import java.security.AccessControlException;
 import java.util.UUID;
 
 import com.google.inject.Injector;
@@ -27,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
+import static org.gbif.registry.guice.RegistryTestModules.webserviceAppKeyClient;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -57,8 +59,8 @@ public class OrganizationCreationIT {
     NodeResource nodeService =  webservice.getInstance(NodeResource.class);
 
     //we need to create the organization using the appKey
-    final Injector webserviceAppKey = RegistryTestModules.webserviceAppKeyClient();
-    OrganizationService organizationService =  webserviceAppKey.getInstance(OrganizationService.class);
+    final Injector webserviceAppKey = webserviceAppKeyClient();
+    OrganizationService organizationService = webserviceAppKey.getInstance(OrganizationService.class);
 
     Organization organization = prepareOrganization(nodeService, organizationService);
 
@@ -87,20 +89,43 @@ public class OrganizationCreationIT {
   @Test
   public void testEndorsementsByAdmin() {
     final Injector webservice = webservice();
-    final Injector webserviceAppClientWithAppKey = RegistryTestModules.webserviceAppKeyClient();
+    final Injector webserviceAppClientWithAppKey = webserviceAppKeyClient();
 
     NodeResource nodeService =  webservice.getInstance(NodeResource.class);
     OrganizationService organizationService = webserviceAppClientWithAppKey.getInstance(OrganizationService.class);
 
     Organization organization = prepareOrganization(nodeService, organizationService);
     assertEquals(Long.valueOf(0), nodeService.endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest()).getCount());
-    assertFalse("endorsement should be NOT be confirmed using appkey and no confirmation code",
+    assertFalse("endorsement should NOT be confirmed using appkey and no confirmation code",
             organizationService.confirmEndorsement(organization.getKey(), null));
 
     Injector injector = RegistryTestModules.webserviceBasicAuthClient(TestConstants.TEST_ADMIN, TestConstants.TEST_ADMIN);
     OrganizationService adminOrganizationService = injector.getInstance(OrganizationService.class);
+    assertFalse("endorsement should NOT be confirmed without confirmation code", adminOrganizationService.confirmEndorsement(organization.getKey(), null));
 
-    assertTrue("endorsement should be confirmed", adminOrganizationService.confirmEndorsement(organization.getKey(), null));
+    //get the latest version (to get fields like modified)
+    organization = adminOrganizationService.get(organization.getKey());
+    organization.setEndorsementApproved(true);
+    adminOrganizationService.update(organization);
+
+    assertEquals(Long.valueOf(1), nodeService.endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest()).getCount());
+  }
+
+  /**
+   * Only Admin shall be allowed to set EndorsementApproved directly (without providing a confirmationCode)
+   */
+  @Test(expected = AccessControlException.class)
+  public void testSetEndorsementsByNonAdmin() {
+
+    NodeResource nodeService =  webservice().getInstance(NodeResource.class);
+    OrganizationService organizationService = webserviceAppKeyClient().getInstance(OrganizationService.class);
+
+    Organization organization = prepareOrganization(nodeService, organizationService);
+    organization = organizationService.get(organization.getKey());
+    organization.setEndorsementApproved(true);
+
+    //make sure an app can not change the endorsementApproved directly
+    organizationService.update(organization);
   }
 
   private static Organization prepareOrganization(NodeResource nodeService, OrganizationService organizationService) {

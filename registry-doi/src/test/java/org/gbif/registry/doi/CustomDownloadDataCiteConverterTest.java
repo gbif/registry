@@ -5,17 +5,16 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.utils.file.ClosableReportingIterator;
 import org.gbif.utils.file.FileUtils;
-import org.gbif.utils.file.csv.CSVReader;
-import org.gbif.utils.file.csv.CSVReaderFactory;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.utils.file.tabular.TabularDataFileReader;
+import org.gbif.utils.file.tabular.TabularFiles;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.List;
@@ -97,34 +96,35 @@ public class CustomDownloadDataCiteConverterTest {
    * @return list of DatasetOccurrenceDownloadUsage populated from usedDatasets.txt
    */
   private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException {
-    // load the .txt file to process
-    InputStream fis = DataCiteConverterTest.class.getResourceAsStream("/customdownload/usedDatasets.txt");
-    // create an iterator on the file
-    CSVReader reader = CSVReaderFactory.build(fis, "UTF-8", "\t", null, 1);
-
+    File csv = FileUtils.getClasspathFile("customdownload/usedDatasets.txt");
     List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
-    ClosableReportingIterator<String[]> iter = reader.iterator();
-    while (iter.hasNext()) {
-      String[] record = iter.next();
-      DatasetOccurrenceDownloadUsage usage = new DatasetOccurrenceDownloadUsage();
 
-      // Dataset key @ column #1 (index 0)
-      UUID datasetKey = UUID.fromString(record[0]);
-      usage.setDatasetKey(datasetKey);
+    try (TabularDataFileReader<List<String>> reader = TabularFiles.newTabularFileReader(
+            Files.newBufferedReader(csv.toPath(), StandardCharsets.UTF_8), '\t', true)) {
+      List<String> rec = reader.read();
+      while (rec != null) {
+        DatasetOccurrenceDownloadUsage usage = new DatasetOccurrenceDownloadUsage();
 
-      // Dataset title @ column #2 (index 1)
-      String datasetTitle = record[1];
-      usage.setDatasetTitle(datasetTitle);
+        // Dataset key @ column #1 (index 0)
+        UUID datasetKey = UUID.fromString(rec.get(0));
+        usage.setDatasetKey(datasetKey);
 
-      // Dataset DOI @ column #3 (index 2)
-      DOI datasetDoi = new DOI(record[2]);
-      usage.setDatasetDOI(datasetDoi);
+        // Dataset title @ column #2 (index 1)
+        String datasetTitle = rec.get(1);
+        usage.setDatasetTitle(datasetTitle);
 
-      // Number of records @ column #4 (index 3)
-      Long numberRecords = Long.valueOf(record[3]);
-      usage.setNumberRecords(numberRecords);
+        // Dataset DOI @ column #3 (index 2)
+        DOI datasetDoi = new DOI(rec.get(2));
+        usage.setDatasetDOI(datasetDoi);
 
-      usages.add(usage);
+        // Number of records @ column #4 (index 3)
+        Long numberRecords = Long.valueOf(rec.get(3));
+        usage.setNumberRecords(numberRecords);
+
+        usages.add(usage);
+
+        rec = reader.read();
+      }
     }
     return usages;
   }

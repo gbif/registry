@@ -32,6 +32,8 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.ws.authorization.OrganizationAuthorization;
+import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
@@ -42,9 +44,11 @@ import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -59,10 +63,14 @@ import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.bval.guice.Validate;
+import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A MyBATIS implementation of the service.
@@ -145,7 +153,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   /**
    * Confirm the endorsement of an organisation.
-   * An admin has the ability to confirm an endorsement without a confirmationKey.
    *
    * @param organizationKey
    * @param confirmationKeyParameter
@@ -154,23 +161,41 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @POST
   @Path("{key}/endorsement")
-  @RolesAllowed({ADMIN_ROLE, APP_ROLE})
+  @Validate
+  @RolesAllowed(APP_ROLE)
   public Response confirmEndorsement(@PathParam("key") UUID organizationKey,
-                                     @Nullable ConfirmationKeyParameter confirmationKeyParameter,
+                                     @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter,
                                      @Context SecurityContext security) {
-    UUID confirmationKey = confirmationKeyParameter != null ? confirmationKeyParameter.getConfirmationKey() : null;
-
-    //only admin can confirm an endorsement without a confirmationKey
-    SecurityContextCheck.ensurePreconditionUnlessRoleIs(ADMIN_ROLE, confirmationKey != null, security,
-            Response.Status.BAD_REQUEST);
-
-    return (confirmEndorsement(organizationKey, confirmationKey) ?
+    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
             Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
   }
 
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
+  }
+
+  @PUT
+  @Path("{key}")
+  @Trim
+  @Transactional
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public void update(@PathParam("key") UUID key, @NotNull @Trim Organization organization,
+                     @Context SecurityContext securityContext) {
+    checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
+
+    Organization previousOrg = super.get(organization.getKey());
+    SecurityContextCheck.ensurePrecondition(
+            OrganizationAuthorization.isUpdateAuthorized(previousOrg, organization, securityContext),
+            Response.Status.FORBIDDEN);
+
+    if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
+      // here we consider the user has the right to endorse an organization without a key.
+      confirmEndorsement(organization.getKey(), null);
+    }
+
+    // let the parent class set the modifiedBy
+    super.update(key, organization, securityContext);
   }
 
   public PagingResponse<Organization> search(String query, @Nullable Pageable page) {

@@ -45,12 +45,7 @@
       </plugin>
     </plugins>
   </build>
-
-  <properties>
-    <!-- The IPT depends on this module and so this must stay at java 6 until IPT is upgraded -->
-    <jdkLevel>1.6</jdkLevel>
-  </properties>
-
+  
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>
