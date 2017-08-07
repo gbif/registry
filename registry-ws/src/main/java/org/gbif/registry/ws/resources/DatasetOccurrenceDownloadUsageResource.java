@@ -70,7 +70,7 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
     @PathParam("datasetKey") UUID datasetKey, @Context Pageable page) {
     List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDataset(datasetKey, page);
     clearSensitiveData(securityContext, usages);
-    return new PagingResponse<DatasetOccurrenceDownloadUsage>(page,
+    return new PagingResponse<>(page,
       (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
   }
 

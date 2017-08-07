@@ -15,7 +15,7 @@ import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
 import org.gbif.registry.ws.security.SecurityContextCheck;
-import org.gbif.registry.ws.security.UpdateRulesManager;
+import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.registry.ws.util.ResponseUtils;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.response.GbifResponseStatus;
@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -143,7 +145,7 @@ public class UserManagementResource {
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
     UserModelMutationResult result = identityService.create(
-            UpdateRulesManager.applyCreate(user), user.getPassword());
+            UserUpdateRulesManager.applyCreate(user), user.getPassword());
     if(result.containsError()) {
       returnStatusCode = GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus();
     }
@@ -152,7 +154,7 @@ public class UserManagementResource {
 
   /**
    * Updates a user. Available to admin-console and portal backend.
-   * {@link UpdateRulesManager} will be used to determine which properties it is possible to update based on the role,
+   * {@link UserUpdateRulesManager} will be used to determine which properties it is possible to update based on the role,
    * all other properties will be ignored.
    *
    * At the moment, a user cannot update its own data calling the API directly using HTTP Basic auth.
@@ -181,7 +183,7 @@ public class UserManagementResource {
       GbifUser updateInitiator = securityContext.getUserPrincipal() == null ? null :
               identityService.get(securityContext.getUserPrincipal().getName());
 
-      UserModelMutationResult result = identityService.update(UpdateRulesManager.applyUpdate(
+      UserModelMutationResult result = identityService.update(UserUpdateRulesManager.applyUpdate(
               updateInitiator == null ? null : updateInitiator.getRoles(), currentUser, userUpdate,
               securityContext.isUserInRole(APP_ROLE)));
       if(result.containsError()) {
@@ -206,7 +208,7 @@ public class UserManagementResource {
   @Path("/confirm")
   @Transactional
   public Response confirmChallengeCode(@Context SecurityContext securityContext, @Context HttpServletRequest request,
-                                       ConfirmationKeyParameter confirmationKeyParameter) {
+                                       @NotNull @Valid ConfirmationKeyParameter confirmationKeyParameter) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(securityContext, request, appKeyWhitelist);

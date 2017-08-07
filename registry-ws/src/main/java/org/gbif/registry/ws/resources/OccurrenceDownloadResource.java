@@ -134,7 +134,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page, @Nullable @QueryParam("status")
   Set<Download.Status> status) {
     checkUserIsInSecurityContext(user, securityContext);
-    return new PagingResponse<Download>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
+    return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
                                         occurrenceDownloadMapper.listByUser(user,page,status));
   }
 

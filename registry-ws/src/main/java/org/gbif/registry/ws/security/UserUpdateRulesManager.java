@@ -12,12 +12,12 @@ import javax.annotation.Nullable;
 /**
  * Simple manager that only copies data from {@link UserUpdate} based on {@link UserRole}.
  */
-public class UpdateRulesManager {
+public class UserUpdateRulesManager {
 
-  private UpdateRulesManager(){}
+  private UserUpdateRulesManager(){}
 
   /**
-   * Apply updates contained in {@link UserUpdate} to {@link User}.
+   * Apply updates contained in {@link UserUpdate} to {@link GbifUser}.
    *
    * @param initiatorRoles can be null if the update if not initiated by a user (e.g. another app)
    * @param user
@@ -44,7 +44,6 @@ public class UpdateRulesManager {
     if(fromTrustedApp || isAdmin) {
       user.setSystemSettings(userUpdate.getSystemSettings());
     }
-
     return user;
   }
 

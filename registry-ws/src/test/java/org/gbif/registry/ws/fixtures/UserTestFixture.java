@@ -5,7 +5,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.ws.model.UserCreation;
-import org.gbif.registry.ws.security.UpdateRulesManager;
+import org.gbif.registry.ws.security.UserUpdateRulesManager;
 
 import java.util.UUID;
 import javax.ws.rs.core.MultivaluedMap;
@@ -48,7 +48,7 @@ public class UserTestFixture {
    * @return
    */
   public GbifUser prepareUser(UserCreation newTestUser) {
-    GbifUser userToCreate = UpdateRulesManager.applyCreate(newTestUser);
+    GbifUser userToCreate = UserUpdateRulesManager.applyCreate(newTestUser);
     UserModelMutationResult userCreated = identityService.create(userToCreate,
             newTestUser.getPassword());
     assertNoErrorAfterMutation(userCreated);
