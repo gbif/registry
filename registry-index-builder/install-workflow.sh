@@ -23,14 +23,14 @@ mvn -U -Poozie clean package -DskipTests assembly:single
 
 if hdfs dfs -test -d /registry-index-builder-$P/; then
    echo "Removing content of current Oozie workflow directory"
-   hdfs dfs -rm -f -r /registry-index-builder-$P/*
+   sudo -u hdfs hdfs dfs -rm -f -r /registry-index-builder-$P/*
 else
    echo "Creating workflow directory"
-   hdfs dfs -mkdir /registry-index-builder-$P/
+   sudo -u hdfs hdfs dfs -mkdir /registry-index-builder-$P/
 fi
 echo "Copying new Oozie workflow to HDFS"
-hdfs dfs -copyFromLocal target/oozie-workflow/* /registry-index-builder-$P/
-hdfs dfs -copyFromLocal $P.properties /registry-index-builder-$P/lib/
+sudo -u hdfs hdfs dfs -copyFromLocal target/oozie-workflow/* /registry-index-builder-$P/
+sudo -u hdfs hdfs dfs -copyFromLocal $P.properties /registry-index-builder-$P/lib/
 
 echo "Delete existing collection"
 curl -s """${solr_url}"/admin/collections?action=DELETE\&name="${solr_collection}"""
