@@ -3,6 +3,7 @@ package org.gbif.registry.ws.surety;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 
@@ -92,10 +93,13 @@ class OrganizationEmailTemplateManager {
       OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, endorsementUrl,
               newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
       baseEmailModel = endorsementEmailTemplateProcessors.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH,
-              nodeManagerEmailAddress.map( e -> Collections.singletonList(config.getHelpdeskEmail())).orElse(null));
-
+              //CC helpdesk unless we are sending the email to helpdesk
+              Optional.ofNullable(emailAddress)
+                      .filter(e -> !e.equals(config.getHelpdeskEmail()))
+                      .map(e -> Collections.singletonList(config.getHelpdeskEmail())).orElse(null));
     } catch (TemplateException | IOException ex) {
-      LOG.error("Error while trying to generate email to confirm organization " + newOrganization.getKey(), ex);
+      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email to confirm organization " + newOrganization.getKey(), ex);
     }
     return baseEmailModel;
   }
@@ -113,7 +117,8 @@ class OrganizationEmailTemplateManager {
     try {
       baseEmailModel = endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH);
     } catch (TemplateException | IOException ex) {
-      LOG.error("Error while trying to generate email on organization confirmed" + newOrganization.getKey(), ex);
+      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email on organization confirmed" + newOrganization.getKey(), ex);
     }
     return baseEmailModel;
   }
