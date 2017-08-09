@@ -1,5 +1,7 @@
 package org.gbif.registry.surety.email;
 
+import java.util.List;
+
 import com.google.common.base.MoreObjects;
 
 /**
@@ -11,11 +13,17 @@ public class BaseEmailModel {
   private final String subject;
   private final String body;
 
+  private final List<String> ccAddress;
+
   public BaseEmailModel(String emailAddress, String subject, String body) {
+    this(emailAddress, subject, body, null);
+  }
+
+  public BaseEmailModel(String emailAddress, String subject, String body, List<String> ccAddress) {
     this.emailAddress = emailAddress;
     this.subject = subject;
     this.body = body;
-
+    this.ccAddress = ccAddress;
   }
 
   public String getEmailAddress() {
@@ -30,12 +38,17 @@ public class BaseEmailModel {
     return body;
   }
 
+  public List<String> getCcAddress() {
+    return ccAddress;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
             .add("emailAddress", emailAddress)
             .add("subject", subject)
             .add("body", body)
+            .add("ccAddress", ccAddress)
             .toString();
   }
 }

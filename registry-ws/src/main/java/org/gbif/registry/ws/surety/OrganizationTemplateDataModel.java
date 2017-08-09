@@ -17,6 +17,11 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
 
   private final Organization organisation;
   private final Node endorsingNode;
+  private final boolean reachableNodeManager;
+
+  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation, Node endorsingNode) {
+    this(name, url, organisation, endorsingNode, false);
+  }
 
   /**
    *
@@ -24,11 +29,14 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
    * @param url
    * @param organisation
    * @param endorsingNode
+   * @param reachableNodeManager
    */
-  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation, Node endorsingNode) {
+  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation, Node endorsingNode,
+                                       boolean reachableNodeManager) {
     super(name, url);
     this.organisation = organisation;
     this.endorsingNode = endorsingNode;
+    this.reachableNodeManager = reachableNodeManager;
   }
 
   public Organization getOrganisation() {
@@ -39,4 +47,7 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
     return endorsingNode;
   }
 
+  public boolean hasReachableNodeManager() {
+    return reachableNodeManager;
+  }
 }

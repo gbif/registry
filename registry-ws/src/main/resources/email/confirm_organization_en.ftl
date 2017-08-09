@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.ws.surety.OrganizationTemplateDataModel" -->
 Dear ${name},
 
+<#if !hasReachableNodeManager()>Warning: ${endorsingNode.title} doesn't have a NodeManager with email address. Therefore, the email was only sent to Helpdesk.</#if>
 A new organization is requesting to be endorsed by ${endorsingNode.title}:
 
 ${organisation.title!}

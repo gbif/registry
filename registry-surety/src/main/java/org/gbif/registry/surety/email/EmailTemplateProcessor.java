@@ -2,11 +2,11 @@ package org.gbif.registry.surety.email;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-
 import javax.annotation.Nullable;
 
 import freemarker.template.Configuration;
@@ -46,6 +46,11 @@ public class EmailTemplateProcessor {
     this.templateFileProvider = templateFileProvider;
   }
 
+  public BaseEmailModel buildEmail(String emailAddress, Object templateDataModel, @Nullable Locale locale)
+          throws IOException, TemplateException {
+    return buildEmail(emailAddress, templateDataModel, locale, null);
+  }
+
   /**
    * Build a {@link BaseEmailModel} from
    * @param emailAddress
@@ -55,7 +60,8 @@ public class EmailTemplateProcessor {
    * @throws IOException
    * @throws TemplateException
    */
-  public BaseEmailModel buildEmail(String emailAddress, Object templateDataModel, @Nullable Locale locale)
+  public BaseEmailModel buildEmail(String emailAddress, Object templateDataModel, @Nullable Locale locale,
+                                   List<String> ccAddresses)
           throws IOException, TemplateException {
 
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
@@ -67,7 +73,7 @@ public class EmailTemplateProcessor {
     // Prepare the E-Mail body text
     StringWriter contentBuffer = new StringWriter();
     FREEMARKER_CONFIG.getTemplate(templateFileProvider.apply(emailLocale)).process(templateDataModel, contentBuffer);
-    return new BaseEmailModel(emailAddress, subjectProvider.apply(emailLocale), contentBuffer.toString());
+    return new BaseEmailModel(emailAddress, subjectProvider.apply(emailLocale), contentBuffer.toString(), ccAddresses);
   }
 
 }

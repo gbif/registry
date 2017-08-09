@@ -49,7 +49,7 @@ public class OrganizationSuretyModule extends AbstractModule {
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationSuretyModule.class);
 
-  private static final String PROPERTY_PREFIX = "organization." + SuretyConstants.PROPERTY_PREFIX;
+  public static final String PROPERTY_PREFIX = "organization." + SuretyConstants.PROPERTY_PREFIX;
   private final Properties filteredProperties;
   private final OrganizationEmailTemplateConfiguration config;
 
@@ -83,8 +83,8 @@ public class OrganizationSuretyModule extends AbstractModule {
   private EmailTemplateProcessor provideEmailTemplateProcessor(EmailType organizationEmailType) {
     return new EmailTemplateProcessor(
             //we only support one Locale at the moment
-            (locale) -> config.getEmailSubject(organizationEmailType),
-            (locale) -> organizationEmailType.getFtlTemplate());
+            locale -> config.getEmailSubject(organizationEmailType),
+            locale -> organizationEmailType.getFtlTemplate());
   }
 
   private static class InnerModule extends AbstractModule {

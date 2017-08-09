@@ -2,6 +2,7 @@ package org.gbif.registry.surety.email;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
@@ -60,7 +62,7 @@ class EmailManagerImpl implements EmailManager {
               //from will be set with the value from the {@link Session} object.
               msg.setFrom();
               msg.setRecipient(Message.RecipientType.TO, emailAddress);
-              msg.setRecipients(Message.RecipientType.BCC, bccAddresses.toArray(new Address[bccAddresses.size()]));
+              msg.setRecipients(Message.RecipientType.BCC, generateBccArray(bccAddresses, emailModel));
               msg.setSubject(emailModel.getSubject());
               msg.setSentDate(new Date());
               msg.setText(emailModel.getBody());
@@ -82,7 +84,16 @@ class EmailManagerImpl implements EmailManager {
             .collect(Collectors.toSet());
   }
 
-  private static Optional<Address> toAddress(String emailAddress) {
+  @VisibleForTesting
+  static Address[] generateBccArray(Set<Address> bccAddressesFromConfig, BaseEmailModel emailModel) {
+    Set<Address> combinedBccAddresses = new HashSet<>(bccAddressesFromConfig);
+    Optional.ofNullable(emailModel.getCcAddress())
+            .ifPresent( bccList -> bccList.forEach( bcc -> toAddress(bcc).ifPresent(combinedBccAddresses::add)));
+    return combinedBccAddresses.toArray(new Address[combinedBccAddresses.size()]);
+  }
+
+  @VisibleForTesting
+  static Optional<Address> toAddress(String emailAddress) {
     try {
       return Optional.of(new InternetAddress(emailAddress));
     } catch (AddressException e) {

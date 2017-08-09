@@ -8,6 +8,7 @@ import org.gbif.registry.surety.email.EmailTemplateProcessor;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -72,7 +73,7 @@ class OrganizationEmailTemplateManager {
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
 
     BaseEmailModel baseEmailModel = null;
-    Optional<String> contactEmailAddress =
+    Optional<String> nodeManagerEmailAddress =
       Optional.ofNullable(nodeManagerContact)
               .map(Contact::getEmail)
               .flatMap( emails -> emails.stream().findFirst());
@@ -80,17 +81,19 @@ class OrganizationEmailTemplateManager {
     String name = HELPDESK_NAME;
     String emailAddress = config.getHelpdeskEmail();
     // do we have an email to contact the node manager ?
-    if (contactEmailAddress.isPresent()) {
+    if (nodeManagerEmailAddress.isPresent()) {
       name = Optional.ofNullable(StringUtils.trimToNull(nodeManagerContact.computeCompleteName()))
               .orElse(endorsingNode.getTitle());
-      emailAddress = contactEmailAddress.get();
+      emailAddress = nodeManagerEmailAddress.get();
     }
 
     try {
       URL endorsementUrl = config.generateEndorsementUrl(newOrganization.getKey(), confirmationKey);
       OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, endorsementUrl,
-              newOrganization, endorsingNode);
-      baseEmailModel = endorsementEmailTemplateProcessors.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH);
+              newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
+      baseEmailModel = endorsementEmailTemplateProcessors.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH,
+              nodeManagerEmailAddress.map( e -> Collections.singletonList(config.getHelpdeskEmail())).orElse(null));
+
     } catch (TemplateException | IOException ex) {
       LOG.error("Error while trying to generate email to confirm organization " + newOrganization.getKey(), ex);
     }
