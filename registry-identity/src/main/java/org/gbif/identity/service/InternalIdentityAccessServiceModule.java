@@ -59,7 +59,7 @@ public class InternalIdentityAccessServiceModule extends PrivateModule {
     }
 
     @Override
-    public boolean confirmUser(Integer key, UUID confirmationObject) {
+    public boolean confirmUser(GbifUser user, UUID confirmationObject) {
       return false;
     }
 

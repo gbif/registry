@@ -13,6 +13,6 @@ interface UserSuretyDelegate {
   boolean hasChallengeCode(Integer userKey);
   boolean isValidChallengeCode(Integer userKey, UUID challengeCode);
   void onNewUser(GbifUser user);
-  boolean confirmUser(Integer key, UUID confirmationObject);
+  boolean confirmUser(GbifUser user, UUID confirmationObject);
   void onPasswordReset(GbifUser user);
 }

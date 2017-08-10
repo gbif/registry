@@ -61,11 +61,21 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public boolean confirmUser(Integer key, UUID confirmationObject) {
-    return Optional.ofNullable(key)
+  public boolean confirmUser(GbifUser user, UUID confirmationObject) {
+    Boolean confirmationSucceeded = Optional.ofNullable(user.getKey())
             .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
                            && challengeCodeManager.remove(keyVal))
             .orElse(Boolean.FALSE);
+    if(confirmationSucceeded){
+      try {
+        BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
+        emailManager.send(emailModel);
+      } catch (IOException e) {
+        LOG.error(SuretyConstants.NOTIFY_ADMIN,
+                "Error while trying to generate welcome email for user " + user.getUserName(), e);
+      }
+    }
+    return confirmationSucceeded;
   }
 
   @Override

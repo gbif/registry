@@ -27,10 +27,6 @@ public class IdentityEmailManager {
     this.templateProcessors = templateProcessors;
   }
 
-  /**
-   * Email model that only includes a username and a formatted URL for a specific username and challenge code.
-   * @return new {@link BaseEmailModel} or null if an error occurred
-   */
   public BaseEmailModel generateNewUserEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
       return generateConfirmationEmailModel(user, identityEmailConfiguration.generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
@@ -49,6 +45,19 @@ public class IdentityEmailManager {
     }
   }
 
+  public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
+    try {
+      return templateProcessors.get(IdentityEmailConfiguration.EmailType.WELCOME).
+              buildEmail(user.getEmail(), new Object(), Locale.ENGLISH);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
+  }
+
+  /**
+   * Email model that only includes a username and a formatted URL for a specific username and challenge code.
+   * @return new {@link BaseEmailModel} or null if an error occurred
+   */
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, IdentityEmailConfiguration.EmailType emailType)
           throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
