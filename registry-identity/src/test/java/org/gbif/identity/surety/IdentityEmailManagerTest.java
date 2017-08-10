@@ -20,6 +20,8 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * Unit tests related to {@link IdentityEmailManager}.
+ * The main purpose of the following unit tests is to ensure we can generate a {@link BaseEmailModel} using the
+ * Freemarker templates.
  */
 public class IdentityEmailManagerTest {
   public static final String APPLICATION_PROPERTIES = "registry-test.properties";

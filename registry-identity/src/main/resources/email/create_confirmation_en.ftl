@@ -1,9 +1,8 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.surety.email.BaseEmailModel" -->
-Hello ${name},
+<p>Hello ${name},</p>
 
-Thanks for registering at GBIF.org.
+<p>Thanks for registering at GBIF.org.
 Please confirm your GBIF account by clicking the following link:
-<a href="${url}">${url}</a>
+<a href="${url}">${url}</a></p>
 
-
-The GBIF Secretariat
+<p>The GBIF Secretariat</p>
