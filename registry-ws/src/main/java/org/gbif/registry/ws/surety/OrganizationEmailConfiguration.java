@@ -13,7 +13,7 @@ import org.apache.commons.lang3.BooleanUtils;
 /**
  * Configurations related to organization endorsement.
  */
-class OrganizationEmailTemplateConfiguration {
+class OrganizationEmailConfiguration {
 
   static final String CONFIRM_ORGANIZATION_URL_TEMPLATE = "mail.urlTemplate.confirmOrganization";
   static final String MAIL_ENABLED_PROPERTY = "mail.enable";
@@ -49,11 +49,11 @@ class OrganizationEmailTemplateConfiguration {
     }
   }
 
-  static OrganizationEmailTemplateConfiguration from(Properties filteredProperties) {
-    return new OrganizationEmailTemplateConfiguration(filteredProperties);
+  static OrganizationEmailConfiguration from(Properties filteredProperties) {
+    return new OrganizationEmailConfiguration(filteredProperties);
   }
 
-  private OrganizationEmailTemplateConfiguration(Properties filteredProperties){
+  private OrganizationEmailConfiguration(Properties filteredProperties){
     endorsementUrlTemplate = filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE);
     emailEnabled = BooleanUtils.toBoolean(filteredProperties.getProperty(MAIL_ENABLED_PROPERTY));
     helpdeskEmail = filteredProperties.getProperty(HELPDESK_EMAIL_PROPERTY);

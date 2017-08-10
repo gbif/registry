@@ -26,30 +26,30 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
- * Unit tests related to {@link OrganizationEmailTemplateManager}.
+ * Unit tests related to {@link OrganizationEmailManager}.
  */
 public class OrganizationEmailTemplateManagerTest {
 
-  private OrganizationEmailTemplateConfiguration config;
-  private OrganizationEmailTemplateManager organizationEmailTemplateManager;
+  private OrganizationEmailConfiguration config;
+  private OrganizationEmailManager organizationEmailTemplateManager;
 
   @Before
   public void setup() throws IOException {
     final Properties p = new Properties();
     p.load(Resources.getResourceAsStream(TestConstants.APPLICATION_PROPERTIES));
     Properties filteredProperties = PropertiesUtil.filterProperties(p, PROPERTY_PREFIX);
-    config = OrganizationEmailTemplateConfiguration.from(filteredProperties);
+    config = OrganizationEmailConfiguration.from(filteredProperties);
 
     EmailTemplateProcessor newOrganizationTP = new EmailTemplateProcessor(
-            locale -> config.getEmailSubject(OrganizationEmailTemplateConfiguration.EmailType.NEW_ORGANIZATION),
-            locale -> OrganizationEmailTemplateConfiguration.EmailType.NEW_ORGANIZATION.getFtlTemplate());
+            locale -> config.getEmailSubject(OrganizationEmailConfiguration.EmailType.NEW_ORGANIZATION),
+            locale -> OrganizationEmailConfiguration.EmailType.NEW_ORGANIZATION.getFtlTemplate());
 
     EmailTemplateProcessor endorsementConfirmationTP = new EmailTemplateProcessor(
-            locale -> config.getEmailSubject(OrganizationEmailTemplateConfiguration.EmailType.ENDORSEMENT_CONFIRMATION),
-            locale -> OrganizationEmailTemplateConfiguration.EmailType.ENDORSEMENT_CONFIRMATION.getFtlTemplate());
+            locale -> config.getEmailSubject(OrganizationEmailConfiguration.EmailType.ENDORSEMENT_CONFIRMATION),
+            locale -> OrganizationEmailConfiguration.EmailType.ENDORSEMENT_CONFIRMATION.getFtlTemplate());
 
     organizationEmailTemplateManager =
-            new OrganizationEmailTemplateManager(newOrganizationTP,
+            new OrganizationEmailManager(newOrganizationTP,
                     endorsementConfirmationTP, config);
   }
 

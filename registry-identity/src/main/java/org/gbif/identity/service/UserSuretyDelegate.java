@@ -6,6 +6,7 @@ import java.util.UUID;
 
 /**
  * Internal class used to coordinates actions between the MyBatis layer and the email manager.
+ *
  */
 interface UserSuretyDelegate {
 
