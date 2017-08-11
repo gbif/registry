@@ -549,10 +549,6 @@
         <exclusions>
           <exclusion>
             <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
           </exclusion>
         </exclusions>
@@ -577,10 +573,6 @@
              <exclusion>
                <groupId>log4j</groupId>
                <artifactId>log4j</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.apache.httpcomponents</groupId>
-               <artifactId>httpclient</artifactId>
              </exclusion>
              <exclusion>
                <groupId>org.apache.httpcomponents</groupId>

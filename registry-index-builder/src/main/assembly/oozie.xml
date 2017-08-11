@@ -33,10 +33,9 @@
 
   <dependencySets>
     <dependencySet>
-      <excludes>
-        <exclude>org.apache.avro:*</exclude>
-        <exclude>org.apache.solr:*</exclude>
-      </excludes>
+      <includes>
+        <include>org.gbif.registry:registry-index-builder</include>
+      </includes>
       <outputDirectory>lib</outputDirectory>
       <fileMode>0644</fileMode>
     </dependencySet>
