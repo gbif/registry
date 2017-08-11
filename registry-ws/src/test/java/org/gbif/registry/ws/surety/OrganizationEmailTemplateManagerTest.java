@@ -69,6 +69,7 @@ public class OrganizationEmailTemplateManagerTest {
     //now try with a NodeManager
     Contact c = Contacts.newInstance();
     c.setType(ContactType.NODE_MANAGER);
+    org.getContacts().add(Contacts.newInstance());
     baseEmail = organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, c, UUID.randomUUID(), endorsingNode);
 

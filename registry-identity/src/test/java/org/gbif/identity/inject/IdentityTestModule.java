@@ -3,7 +3,7 @@ package org.gbif.identity.inject;
 import org.gbif.identity.service.InternalIdentityServiceModule;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.UuidTypeHandler;
-import org.gbif.registry.surety.InMemoryEmailManager;
+import org.gbif.registry.surety.InMemoryEmailSender;
 import org.gbif.registry.surety.InMemoryEmailTestModule;
 import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
@@ -36,7 +36,7 @@ public class IdentityTestModule extends AbstractModule {
   protected void configure() {
     install(new InMemoryEmailTestModule());
     //expose it directly
-    bind(InMemoryEmailManager.class).in(Scopes.SINGLETON);
+    bind(InMemoryEmailSender.class).in(Scopes.SINGLETON);
 
     install(new IdentityServiceTestModule(properties));
     install(new InternalTestPrivateModule(properties));

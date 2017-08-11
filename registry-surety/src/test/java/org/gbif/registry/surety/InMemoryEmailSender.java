@@ -12,13 +12,12 @@ import java.util.Map;
  * - 1 {@link BaseEmailModel} is stored per email address
  * - no automatic cleanup
  */
-public class InMemoryEmailManager implements EmailSender {
+public class InMemoryEmailSender implements EmailSender {
 
-  private Map<String, BaseEmailModel> emails = new HashMap<>();
+  private final Map<String, BaseEmailModel> emails = new HashMap<>();
 
   @Override
   public void send(BaseEmailModel baseEmailModel) {
-    System.out.println("sending email to" + baseEmailModel);
     emails.put(baseEmailModel.getEmailAddress(), baseEmailModel);
   }
 

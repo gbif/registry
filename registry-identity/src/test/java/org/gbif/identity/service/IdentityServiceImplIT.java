@@ -10,7 +10,7 @@ import org.gbif.identity.mybatis.DatabaseInitializer;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
-import org.gbif.registry.surety.InMemoryEmailManager;
+import org.gbif.registry.surety.InMemoryEmailSender;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
 import java.util.Properties;
@@ -51,7 +51,7 @@ public class IdentityServiceImplIT {
   private IdentityService identityService;
 
   private IdentitySuretyTestHelper identitySuretyTestHelper;
-  private InMemoryEmailManager inMemoryEmailManager;
+  private InMemoryEmailSender inMemoryEmailSender;
 
   @Before
   public void testSetup() throws Exception {
@@ -63,7 +63,7 @@ public class IdentityServiceImplIT {
     identitySuretyTestHelper = inj.getInstance(IdentitySuretyTestHelper.class);
 
     //get the concrete type of the EmailSender
-    inMemoryEmailManager = inj.getInstance(InMemoryEmailManager.class);
+    inMemoryEmailSender = inj.getInstance(InMemoryEmailSender.class);
   }
 
   /**
@@ -156,13 +156,13 @@ public class IdentityServiceImplIT {
 
   @Test
   public void testCreateUserChallengeCodeSequence() {
-    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
+    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailSender);
     assertNotNull(user);
   }
 
   @Test
   public void testResetPasswordSequence() {
-    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailManager);
+    GbifUser user = createConfirmedUser(identityService, identitySuretyTestHelper, inMemoryEmailSender);
     identityService.resetPassword(user.getKey());
 
     //ensure we can not login
@@ -203,7 +203,7 @@ public class IdentityServiceImplIT {
    * @return
    */
   public static GbifUser createConfirmedUser(IdentityService identityService, IdentitySuretyTestHelper identitySuretyTestHelper,
-                                         InMemoryEmailManager inMemoryEmailManager) {
+                                         InMemoryEmailSender inMemoryEmailManager) {
     GbifUser u1 = generateUser();
     // create the user
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);

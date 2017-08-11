@@ -13,7 +13,7 @@ public class InMemoryEmailTestModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(EmailSender.class).to(InMemoryEmailManager.class).in(Scopes.SINGLETON);
+    bind(EmailSender.class).to(InMemoryEmailSender.class).in(Scopes.SINGLETON);
     //bind configuration to have access to ResourceBundle
     bind(EmailManagerConfiguration.class).in(Scopes.SINGLETON);
   }
