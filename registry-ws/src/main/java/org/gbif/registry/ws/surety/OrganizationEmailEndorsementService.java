@@ -8,7 +8,7 @@ import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.surety.email.BaseEmailModel;
-import org.gbif.registry.surety.email.EmailManager;
+import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.model.ChallengeCode;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 
@@ -34,14 +34,14 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   private final ChallengeCodeManager<UUID> challengeCodeManager;
 
   private final OrganizationEmailManager emailTemplateManager;
-  private final EmailManager emailManager;
+  private final EmailSender emailManager;
 
   @Inject
   public OrganizationEmailEndorsementService(OrganizationMapper organizationMapper,
                                              NodeMapper nodeMapper,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
                                              OrganizationEmailManager emailTemplateManager,
-                                             @Named(ENDORSEMENT_EMAIL_MANAGER_KEY) EmailManager emailManager) {
+                                             @Named(ENDORSEMENT_EMAIL_MANAGER_KEY) EmailSender emailManager) {
     this.organizationMapper = organizationMapper;
     this.nodeMapper = nodeMapper;
     this.challengeCodeManager = challengeCodeManager;

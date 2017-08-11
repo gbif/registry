@@ -10,7 +10,7 @@ import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 
 /**
- * Unit tests related to {@link EmailManagerImpl}.
+ * Unit tests related to {@link EmailSenderImpl}.
  */
 public class EmailManagerImplTest {
 
@@ -21,8 +21,8 @@ public class EmailManagerImplTest {
     BaseEmailModel baseEmailModel = new BaseEmailModel( "email@b.com", "subject", "body",
             Collections.singletonList("b@b.com"));
 
-    bccAddresses.add(EmailManagerImpl.toAddress("a@b.com").orElse(null));
-    Address[] bccAddressesArray = EmailManagerImpl.generateBccArray(bccAddresses, baseEmailModel);
+    bccAddresses.add(EmailSenderImpl.toAddress("a@b.com").orElse(null));
+    Address[] bccAddressesArray = EmailSenderImpl.generateBccArray(bccAddresses, baseEmailModel);
 
     assertEquals(2, bccAddressesArray.length);
   }

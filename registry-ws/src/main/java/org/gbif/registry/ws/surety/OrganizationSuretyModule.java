@@ -2,10 +2,10 @@ package org.gbif.registry.ws.surety;
 
 
 import org.gbif.registry.surety.SuretyConstants;
-import org.gbif.registry.surety.email.EmailManager;
+import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.email.EmailManagerConfiguration;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
-import org.gbif.registry.surety.email.EmptyEmailManager;
+import org.gbif.registry.surety.email.EmptyEmailSender;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
@@ -38,7 +38,7 @@ import static org.gbif.registry.ws.surety.OrganizationEmailEndorsementService.EN
  *   - EmailManagerConfiguration
  *   - ChallengeCodeMapper
  *   - ChallengeCodeSupportMapper
- *   - EmailManager (unless the property organization.surety.mail.enable is set to false)
+ *   - EmailSender (unless the property organization.surety.mail.enable is set to false)
  *
  * Binds:
  *   - OrganizationEndorsementService<UUID> (ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF)
@@ -102,19 +102,19 @@ public class OrganizationSuretyModule extends AbstractModule {
     /**
      * We want to avoid sending emails unless the configuration says otherwise.
      * (OrganizationEmailEndorsementService sends emails to NodeManagers)
-     * The idea here is to bind the {@link EmailManager} annotated with {@link OrganizationEmailEndorsementService#ENDORSEMENT_EMAIL_MANAGER_KEY}
+     * The idea here is to bind the {@link EmailSender} annotated with {@link OrganizationEmailEndorsementService#ENDORSEMENT_EMAIL_MANAGER_KEY}
      * depending on the configuration. It is not recommended to have conditional logic in modules so we added it to test coverage.
      *
      * @param emailManager shared emailManager instance coming from registry-surety module
-     * @return the provided {@link EmailManager} if the configuration says emailEnabled or {@link EmptyEmailManager} if not.
+     * @return the provided {@link EmailSender} if the configuration says emailEnabled or {@link EmptyEmailSender} if not.
      */
     @Provides
     @Singleton
     @Named(ENDORSEMENT_EMAIL_MANAGER_KEY)
-    private EmailManager provideEndorsementEmailManager(EmailManager emailManager) {
+    private EmailSender provideEndorsementEmailManager(EmailSender emailManager) {
       if(!config.isEmailEnabled()) {
         LOG.info("email sending feature is disabled (" + PROPERTY_PREFIX + MAIL_ENABLED_PROPERTY + " is not set or false)");
-        return new EmptyEmailManager();
+        return new EmptyEmailSender();
       }
       return emailManager;
     }

@@ -16,7 +16,7 @@ import com.google.inject.Singleton;
  * Requires:
  * - properties smtp.host, from, and bcc prefixed by mail.
  * Binds:
- *  - {@link EmailManager}
+ *  - {@link EmailSender}
  */
 public class EmailManagerModule extends AbstractModule {
 
@@ -33,7 +33,7 @@ public class EmailManagerModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(EmailManager.class).to(EmailManagerImpl.class).in(Scopes.SINGLETON);
+    bind(EmailSender.class).to(EmailSenderImpl.class).in(Scopes.SINGLETON);
   }
 
   @Provides

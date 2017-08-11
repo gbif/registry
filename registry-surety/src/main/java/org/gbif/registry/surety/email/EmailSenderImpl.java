@@ -29,9 +29,9 @@ import static org.gbif.registry.surety.SuretyConstants.NOTIFY_ADMIN;
 /**
  * Allows to send {@link BaseEmailModel}
  */
-class EmailManagerImpl implements EmailManager {
+class EmailSenderImpl implements EmailSender {
 
-  private static final Logger LOG = LoggerFactory.getLogger(EmailManagerImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EmailSenderImpl.class);
   private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();
   private static final String HTML_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -39,7 +39,7 @@ class EmailManagerImpl implements EmailManager {
   private final Set<Address> bccAddresses;
 
   @Inject
-  EmailManagerImpl(EmailManagerConfiguration config) {
+  EmailSenderImpl(EmailManagerConfiguration config) {
     session = config.getSession();
     bccAddresses = Optional.ofNullable(config.getBccAddresses())
                     .map(bccAddresses -> toInternetAddresses(EMAIL_SPLITTER.split(bccAddresses)))
@@ -81,7 +81,7 @@ class EmailManagerImpl implements EmailManager {
    */
   private static Set<Address> toInternetAddresses(Iterable<String> strEmails) {
     return StreamSupport.stream(strEmails.spliterator(), false)
-            .map(EmailManagerImpl::toAddress)
+            .map(EmailSenderImpl::toAddress)
             .flatMap(address -> address.map(Stream::of).orElseGet(Stream::empty))
             .collect(Collectors.toSet());
   }

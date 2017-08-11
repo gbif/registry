@@ -4,7 +4,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.identity.surety.IdentityEmailManager;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
-import org.gbif.registry.surety.email.EmailManager;
+import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.model.ChallengeCode;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 
@@ -24,14 +24,14 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private static final Logger LOG = LoggerFactory.getLogger(UserSuretyDelegateImpl.class);
 
   private final ChallengeCodeManager<Integer> challengeCodeManager;
-  private final EmailManager emailManager;
+  private final EmailSender emailSender;
   private final IdentityEmailManager identityEmailManager;
 
   @Inject
-  UserSuretyDelegateImpl(EmailManager emailManager,
+  UserSuretyDelegateImpl(EmailSender emailSender,
                          ChallengeCodeManager<Integer> challengeCodeManager,
                          IdentityEmailManager identityEmailManager) {
-    this.emailManager = emailManager;
+    this.emailSender = emailSender;
     this.challengeCodeManager = challengeCodeManager;
     this.identityEmailManager = identityEmailManager;
   }
@@ -57,7 +57,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
               "Error while trying to generate email to confirm user " + user.getUserName(), e);
       return;
     }
-    emailManager.send(emailModel);
+    emailSender.send(emailModel);
   }
 
   @Override
@@ -69,7 +69,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
     if(confirmationSucceeded){
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
-        emailManager.send(emailModel);
+        emailSender.send(emailModel);
       } catch (IOException e) {
         LOG.error(SuretyConstants.NOTIFY_ADMIN,
                 "Error while trying to generate welcome email for user " + user.getUserName(), e);
@@ -89,7 +89,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
               "Error while trying to generate email to reset password of user " + user.getUserName(), e);
       return;
     }
-    emailManager.send(emailModel);
+    emailSender.send(emailModel);
   }
 
 }

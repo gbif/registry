@@ -62,7 +62,7 @@ public class IdentityServiceImplIT {
     identityService = inj.getInstance(IdentityService.class);
     identitySuretyTestHelper = inj.getInstance(IdentitySuretyTestHelper.class);
 
-    //get the concrete type of the EmailManager
+    //get the concrete type of the EmailSender
     inMemoryEmailManager = inj.getInstance(InMemoryEmailManager.class);
   }
 

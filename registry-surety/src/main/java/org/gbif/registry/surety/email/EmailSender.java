@@ -3,7 +3,7 @@ package org.gbif.registry.surety.email;
 /**
  * Manager of emails related tasks.
  */
-public interface EmailManager {
+public interface EmailSender {
 
 
   /**
