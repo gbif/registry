@@ -84,9 +84,9 @@
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>org.gbif.registry:registry-ws</artifact>
+                  <artifact>*:*</artifact>
                   <excludes>
-                    <exclude>org/apache/http/**</exclude>
+                    <exclude>org/apache/hadoop/**</exclude>
                   </excludes>
                 </filter>
                 <filter>
