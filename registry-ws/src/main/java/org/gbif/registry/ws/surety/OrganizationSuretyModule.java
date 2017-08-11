@@ -24,9 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.ws.surety.OrganizationEmailEndorsementService.ENDORSEMENT_EMAIL_MANAGER_KEY;
-import static org.gbif.registry.ws.surety.OrganizationEmailTemplateConfiguration.EmailType;
-import static org.gbif.registry.ws.surety.OrganizationEmailTemplateConfiguration.MAIL_ENABLED_PROPERTY;
-import static org.gbif.registry.ws.surety.OrganizationEmailTemplateConfiguration.from;
+import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.EmailType;
+import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.MAIL_ENABLED_PROPERTY;
+import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.from;
 
 
 /**
@@ -43,7 +43,7 @@ import static org.gbif.registry.ws.surety.OrganizationEmailTemplateConfiguration
  * Binds:
  *   - OrganizationEndorsementService<UUID>
  *   - ChallengeCodeManager<UUID>
- *   - OrganizationEmailTemplateManager
+ *   - OrganizationEmailManager
  */
 public class OrganizationSuretyModule extends AbstractModule {
 
@@ -51,7 +51,7 @@ public class OrganizationSuretyModule extends AbstractModule {
 
   public static final String PROPERTY_PREFIX = "organization." + SuretyConstants.PROPERTY_PREFIX;
   private final Properties filteredProperties;
-  private final OrganizationEmailTemplateConfiguration config;
+  private final OrganizationEmailConfiguration config;
 
   public static final TypeLiteral<OrganizationEndorsementService<UUID>>
           ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF = new TypeLiteral<OrganizationEndorsementService<UUID>>(){};
@@ -68,8 +68,8 @@ public class OrganizationSuretyModule extends AbstractModule {
 
   @Provides
   @Singleton
-  private OrganizationEmailTemplateManager provideOrganizationEmailTemplateProcessor(EmailManagerConfiguration emailManagerConfiguration) {
-    return new OrganizationEmailTemplateManager(
+  private OrganizationEmailManager provideOrganizationEmailTemplateProcessor(EmailManagerConfiguration emailManagerConfiguration) {
+    return new OrganizationEmailManager(
             provideEmailTemplateProcessor(EmailType.NEW_ORGANIZATION),
             provideEmailTemplateProcessor(EmailType.ENDORSEMENT_CONFIRMATION),
             config);
@@ -88,9 +88,9 @@ public class OrganizationSuretyModule extends AbstractModule {
   }
 
   private static class InnerModule extends AbstractModule {
-    private final OrganizationEmailTemplateConfiguration config;
+    private final OrganizationEmailConfiguration config;
 
-    InnerModule(OrganizationEmailTemplateConfiguration config) {
+    InnerModule(OrganizationEmailConfiguration config) {
       this.config = config;
     }
 

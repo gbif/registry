@@ -33,14 +33,14 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   private final NodeMapper nodeMapper;
   private final ChallengeCodeManager<UUID> challengeCodeManager;
 
-  private final OrganizationEmailTemplateManager emailTemplateManager;
+  private final OrganizationEmailManager emailTemplateManager;
   private final EmailManager emailManager;
 
   @Inject
   public OrganizationEmailEndorsementService(OrganizationMapper organizationMapper,
                                              NodeMapper nodeMapper,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
-                                             OrganizationEmailTemplateManager emailTemplateManager,
+                                             OrganizationEmailManager emailTemplateManager,
                                              @Named(ENDORSEMENT_EMAIL_MANAGER_KEY) EmailManager emailManager) {
     this.organizationMapper = organizationMapper;
     this.nodeMapper = nodeMapper;

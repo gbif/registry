@@ -22,31 +22,28 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Manager handling the different types of email related to organization endorsement.
- *
  * Responsibilities (with the help of (via {@link EmailTemplateProcessor}):
- *  - decide where to send the email (which address)
- *  - generate the body of the email
- *
+ * - decide where to send the email (which address)
+ * - generate the body of the email
  */
-class OrganizationEmailTemplateManager {
+class OrganizationEmailManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailTemplateManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailManager.class);
 
   private final EmailTemplateProcessor endorsementEmailTemplateProcessors;
   private final EmailTemplateProcessor endorsedEmailTemplateProcessors;
-  private final OrganizationEmailTemplateConfiguration config;
+  private final OrganizationEmailConfiguration config;
 
   private static final String HELPDESK_NAME = "Helpdesk";
 
   /**
-   *
    * @param endorsementEmailTemplateProcessors configured EmailTemplateProcessor
-   * @param endorsedEmailTemplateProcessors configured EmailTemplateProcessor
+   * @param endorsedEmailTemplateProcessors    configured EmailTemplateProcessor
    * @param config
    */
-  OrganizationEmailTemplateManager(EmailTemplateProcessor endorsementEmailTemplateProcessors,
-                                   EmailTemplateProcessor endorsedEmailTemplateProcessors,
-                                   OrganizationEmailTemplateConfiguration config) {
+  OrganizationEmailManager(EmailTemplateProcessor endorsementEmailTemplateProcessors,
+                           EmailTemplateProcessor endorsedEmailTemplateProcessors,
+                           OrganizationEmailConfiguration config) {
     Objects.requireNonNull(endorsementEmailTemplateProcessors, "endorsementEmailTemplateProcessors shall be provided");
     Objects.requireNonNull(endorsedEmailTemplateProcessors, "endorsedEmailTemplateProcessors shall be provided");
     Objects.requireNonNull(config, "configuration email shall be provided");
@@ -60,24 +57,25 @@ class OrganizationEmailTemplateManager {
    * If nodeManagerContact does not contain an email address, the model will be set to send the message to helpdesk.
    *
    * @param newOrganization
-   * @param nodeManagerContact
+   * @param nodeManagerContact the {@link Contact} representing the NodeManager or null if there is none
    * @param confirmationKey
    * @param endorsingNode
    *
-   * @return new {@link BaseEmailModel} or null if an error occurred
+   * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
-                                                          Contact nodeManagerContact,
-                                                          UUID confirmationKey,
-                                                          Node endorsingNode) {
+                                                           Contact nodeManagerContact,
+                                                           UUID confirmationKey,
+                                                           Node endorsingNode) {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
+    Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
 
     BaseEmailModel baseEmailModel = null;
     Optional<String> nodeManagerEmailAddress =
-      Optional.ofNullable(nodeManagerContact)
-              .map(Contact::getEmail)
-              .flatMap( emails -> emails.stream().findFirst());
+            Optional.ofNullable(nodeManagerContact)
+                    .map(Contact::getEmail)
+                    .flatMap(emails -> emails.stream().findFirst());
 
     String name = HELPDESK_NAME;
     String emailAddress = config.getHelpdeskEmail();
@@ -106,9 +104,11 @@ class OrganizationEmailTemplateManager {
 
   /**
    * Generate an email to helpdesk to inform a new organization was confirmed.
+   *
    * @param newOrganization
    * @param endorsingNode
-   * @return
+   *
+   * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   BaseEmailModel generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) {
     BaseEmailModel baseEmailModel = null;

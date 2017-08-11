@@ -1,36 +1,39 @@
 package org.gbif.identity.service;
 
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.identity.surety.IdentityEmailManager;
+import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailManager;
 import org.gbif.registry.surety.model.ChallengeCode;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @see UserSuretyDelegate
  */
 class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
+  private static final Logger LOG = LoggerFactory.getLogger(UserSuretyDelegateImpl.class);
+
   private final ChallengeCodeManager<Integer> challengeCodeManager;
   private final EmailManager emailManager;
-  private final IdentityEmailTemplateProcessor newUserEmailTemplateProcessor;
-  private final IdentityEmailTemplateProcessor resetPasswordEmailTemplateProcessor;
+  private final IdentityEmailManager identityEmailManager;
 
   @Inject
   UserSuretyDelegateImpl(EmailManager emailManager,
                          ChallengeCodeManager<Integer> challengeCodeManager,
-                         @Named("newUserEmailTemplateProcessor") IdentityEmailTemplateProcessor newUserEmailTemplateProcessor,
-                         @Named("resetPasswordEmailTemplateProcessor") IdentityEmailTemplateProcessor resetPasswordEmailTemplateProcessor) {
+                         IdentityEmailManager identityEmailManager) {
     this.emailManager = emailManager;
     this.challengeCodeManager = challengeCodeManager;
-    this.newUserEmailTemplateProcessor = newUserEmailTemplateProcessor;
-    this.resetPasswordEmailTemplateProcessor = resetPasswordEmailTemplateProcessor;
+    this.identityEmailManager = identityEmailManager;
   }
 
   @Override
@@ -46,23 +49,46 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   @Override
   public void onNewUser(GbifUser user) {
     ChallengeCode challengeCode = challengeCodeManager.create(user.getKey());
-    BaseEmailModel emailModel = newUserEmailTemplateProcessor.generateUserChallengeCodeEmailModel(user, challengeCode);
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generateNewUserEmailModel(user, challengeCode);
+    } catch (IOException e) {
+      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email to confirm user " + user.getUserName(), e);
+      return;
+    }
     emailManager.send(emailModel);
   }
 
   @Override
-  public boolean confirmUser(Integer key, UUID confirmationObject) {
-    return Optional.ofNullable(key)
+  public boolean confirmUser(GbifUser user, UUID confirmationObject) {
+    Boolean confirmationSucceeded = Optional.ofNullable(user.getKey())
             .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
                            && challengeCodeManager.remove(keyVal))
             .orElse(Boolean.FALSE);
+    if(confirmationSucceeded){
+      try {
+        BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
+        emailManager.send(emailModel);
+      } catch (IOException e) {
+        LOG.error(SuretyConstants.NOTIFY_ADMIN,
+                "Error while trying to generate welcome email for user " + user.getUserName(), e);
+      }
+    }
+    return confirmationSucceeded;
   }
 
   @Override
   public void onPasswordReset(GbifUser user) {
     ChallengeCode challengeCode = challengeCodeManager.create(user.getKey());
-    BaseEmailModel emailModel = resetPasswordEmailTemplateProcessor.generateUserChallengeCodeEmailModel(user,
-                                                                                                        challengeCode);
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generateResetPasswordEmailModel(user, challengeCode);
+    } catch (IOException e) {
+      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email to reset password of user " + user.getUserName(), e);
+      return;
+    }
     emailManager.send(emailModel);
   }
 

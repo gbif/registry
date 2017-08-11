@@ -33,6 +33,7 @@ class EmailManagerImpl implements EmailManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailManagerImpl.class);
   private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();
+  private static final String HTML_CONTENT_TYPE = "text/html; charset=UTF-8";
 
   private final Session session;
   private final Set<Address> bccAddresses;
@@ -46,7 +47,8 @@ class EmailManagerImpl implements EmailManager {
   }
 
   /**
-   * Method that generates (using a template) and send an email containing an username and a challenge code.
+   * Method that generates (using a template) and send an email containing a username and a challenge code.
+   * This method will generate an HTML email.
    */
   @Override
   public void send(BaseEmailModel emailModel) {
@@ -65,7 +67,7 @@ class EmailManagerImpl implements EmailManager {
               msg.setRecipients(Message.RecipientType.BCC, generateBccArray(bccAddresses, emailModel));
               msg.setSubject(emailModel.getSubject());
               msg.setSentDate(new Date());
-              msg.setText(emailModel.getBody());
+              msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
               Transport.send(msg);
             } catch (MessagingException e) {
               LOG.error(NOTIFY_ADMIN, "Sending of notification Mail for [{}] failed", emailAddress, e);

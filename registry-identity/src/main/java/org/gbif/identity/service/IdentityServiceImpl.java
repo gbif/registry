@@ -39,12 +39,12 @@ import static org.gbif.identity.model.UserModelMutationResult.withSingleConstrai
  * Main implementation of {@link IdentityService} on top of mybatis.
  * Notes:
  *  - usernames are case insensitive but the constraint in the db only allows lowercase at the moment (could be removed)
- *  - emails are stored and queried in lowercase
+ *  - emails are stored as provided (the case is preserved) but are queried in lowercase
  */
 class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
-  private final UserSuretyDelegate userSuretyService;
+  private final UserSuretyDelegate userSuretyDelegate;
 
   private static final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
 
@@ -55,15 +55,15 @@ class IdentityServiceImpl implements IdentityService {
 
   private static final Function<String, String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
   private static final Function<String, String> NORMALIZE_EMAIL_FCT = email -> Optional.ofNullable(email)
-                                                                                 .map(val -> val.trim().toLowerCase())
+                                                                                 .map(String::trim)
                                                                                  .orElse(null);
 
   private static final PasswordEncoder PASSWORD_ENCODER = new PasswordEncoder();
 
   @Inject
-  IdentityServiceImpl(UserMapper userMapper, UserSuretyDelegate userSuretyService) {
+  IdentityServiceImpl(UserMapper userMapper, UserSuretyDelegate userSuretyDelegate) {
     this.userMapper = userMapper;
-    this.userSuretyService = userSuretyService;
+    this.userSuretyDelegate = userSuretyDelegate;
   }
 
   @Override
@@ -88,7 +88,7 @@ class IdentityServiceImpl implements IdentityService {
     userMapper.create(user);
 
     //trigger email
-    userSuretyService.onNewUser(user);
+    userSuretyDelegate.onNewUser(user);
 
     return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
   }
@@ -200,7 +200,7 @@ class IdentityServiceImpl implements IdentityService {
     return Optional.ofNullable(get(username))
             .filter(user ->
               PASSWORD_ENCODER.encode(password, user.getPasswordHash()).equalsIgnoreCase(user.getPasswordHash())
-              && (!userSuretyService.hasChallengeCode(user.getKey()) || user.getLastLogin() != null))
+              && (!userSuretyDelegate.hasChallengeCode(user.getKey()) || user.getLastLogin() != null))
             .orElse(null);
   }
 
@@ -211,25 +211,25 @@ class IdentityServiceImpl implements IdentityService {
 
   @Override
   public boolean hasPendingConfirmation(int userKey) {
-    return userSuretyService.hasChallengeCode(userKey);
+    return userSuretyDelegate.hasChallengeCode(userKey);
   }
 
   @Override
   public boolean isConfirmationKeyValid(int userKey, UUID confirmationKey) {
-    return userSuretyService.isValidChallengeCode(userKey, confirmationKey);
+    return userSuretyDelegate.isValidChallengeCode(userKey, confirmationKey);
   }
 
   @Override
   public boolean confirmUser(int userKey, UUID confirmationKey) {
     return Optional.ofNullable(confirmationKey)
-            .map(confirmationKeyVal -> userSuretyService.confirmUser(userKey, confirmationKeyVal))
+            .map(confirmationKeyVal -> userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKeyVal))
             .orElse(Boolean.FALSE);
   }
 
   @Override
   public void resetPassword(int userKey) {
     // ensure the user exists
-    Optional.ofNullable(userMapper.getByKey(userKey)).ifPresent(userSuretyService::onPasswordReset);
+    Optional.ofNullable(userMapper.getByKey(userKey)).ifPresent(userSuretyDelegate::onPasswordReset);
   }
 
   @Override
