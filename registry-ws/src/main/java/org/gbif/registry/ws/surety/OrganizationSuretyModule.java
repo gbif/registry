@@ -19,14 +19,14 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.registry.ws.surety.OrganizationEmailEndorsementService.ENDORSEMENT_EMAIL_MANAGER_KEY;
 import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.EmailType;
 import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.MAIL_ENABLED_PROPERTY;
 import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.from;
+import static org.gbif.registry.ws.surety.OrganizationEmailEndorsementService.ENDORSEMENT_EMAIL_MANAGER_KEY;
 
 
 /**
@@ -41,7 +41,7 @@ import static org.gbif.registry.ws.surety.OrganizationEmailConfiguration.from;
  *   - EmailManager (unless the property organization.surety.mail.enable is set to false)
  *
  * Binds:
- *   - OrganizationEndorsementService<UUID>
+ *   - OrganizationEndorsementService<UUID> (ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF)
  *   - ChallengeCodeManager<UUID>
  *   - OrganizationEmailManager
  */
@@ -96,16 +96,27 @@ public class OrganizationSuretyModule extends AbstractModule {
 
     @Override
     protected void configure() {
-      // avoid sending emails unless the configuration says otherwise
-      // (OrganizationEmailEndorsementService sends emails to NodeManagers)
+      bind(ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF).to(OrganizationEmailEndorsementService.class).in(Scopes.SINGLETON);
+    }
+
+    /**
+     * We want to avoid sending emails unless the configuration says otherwise.
+     * (OrganizationEmailEndorsementService sends emails to NodeManagers)
+     * The idea here is to bind the {@link EmailManager} annotated with {@link OrganizationEmailEndorsementService#ENDORSEMENT_EMAIL_MANAGER_KEY}
+     * depending on the configuration. It is not recommended to have conditional logic in modules so we added it to test coverage.
+     *
+     * @param emailManager shared emailManager instance coming from registry-surety module
+     * @return the provided {@link EmailManager} if the configuration says emailEnabled or {@link EmptyEmailManager} if not.
+     */
+    @Provides
+    @Singleton
+    @Named(ENDORSEMENT_EMAIL_MANAGER_KEY)
+    private EmailManager provideEndorsementEmailManager(EmailManager emailManager) {
       if(!config.isEmailEnabled()) {
         LOG.info("email sending feature is disabled (" + PROPERTY_PREFIX + MAIL_ENABLED_PROPERTY + " is not set or false)");
-        bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY)).toInstance(new EmptyEmailManager());
+        return new EmptyEmailManager();
       }
-      else{
-        bind(EmailManager.class).annotatedWith(Names.named(ENDORSEMENT_EMAIL_MANAGER_KEY));
-      }
-      bind(ORGANIZATION_ENDORSEMENT_SERVICE_TYPE_REF).to(OrganizationEmailEndorsementService.class).in(Scopes.SINGLETON);
+      return emailManager;
     }
 
     @Provides
