@@ -138,6 +138,7 @@ public class IdentityServiceImplIT {
   public void testGetIsCaseInsensitive() throws Exception {
     GbifUser u1 = generateUser();
     u1.setUserName("testuser");
+    u1.setEmail("myEmail@b.com");
 
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
@@ -145,6 +146,12 @@ public class IdentityServiceImplIT {
 
     GbifUser newUser = identityService.get("tEstuSeR");
     assertNotNull("Can get the user using the same username with capital letters", newUser.getKey());
+    //ensure we stored the email by respecting the case
+    assertEquals("myEmail@b.com", newUser.getEmail());
+
+    //but we should be able to login using the lowercase version
+    newUser = identityService.get("myemail@b.com");
+    assertNotNull("Can get the user using the email in lowercase", newUser.getKey());
   }
 
   @Test
