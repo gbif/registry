@@ -7,19 +7,23 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.model.ChallengeCode;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link OrganizationEndorsementService} implementation responsible to handle the business logic of creating and
@@ -27,6 +31,7 @@ import org.mybatis.guice.transactional.Transactional;
  */
 class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
 
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailEndorsementService.class);
   static final String ENDORSEMENT_EMAIL_MANAGER_KEY = "endorsementEmailManager";
 
   private final OrganizationMapper organizationMapper;
@@ -64,9 +69,15 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     Optional<Contact> nodeManager =
             endorsingNode.getContacts().stream().filter(c -> c.getType() == ContactType.NODE_MANAGER).findFirst();
 
-    BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsementEmailModel(
-            newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
-    emailManager.send(emailModel);
+    try {
+      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsementEmailModel(
+              newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
+      emailManager.send(emailModel);
+    } catch (IOException ex) {
+      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email on new organization created:" + newOrganization.getKey(), ex);
+    }
+
   }
 
   /**
@@ -93,8 +104,13 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
       WithMyBatis.update(organizationMapper, organization);
 
       Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
-      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsedEmailModel(organization, endorsingNode);
-      emailManager.send(emailModel);
+      try {
+        List<BaseEmailModel> emailModel = emailTemplateManager.generateOrganizationEndorsedEmailModel(organization, endorsingNode);
+        emailModel.forEach(emailManager::send);
+      }catch (IOException ex) {
+        LOG.error(SuretyConstants.NOTIFY_ADMIN,
+              "Error while trying to generate email on organization confirmed: " + organizationKey, ex);
+      }
       return true;
     }
     return false;

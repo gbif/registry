@@ -3,13 +3,15 @@ package org.gbif.registry.ws.surety;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.registry.surety.SuretyConstants;
+import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,8 +19,6 @@ import java.util.UUID;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Manager handling the different types of email related to organization endorsement.
@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory;
  * - generate the body of the email
  */
 class OrganizationEmailManager {
-
-  private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailManager.class);
 
   private final EmailTemplateProcessor endorsementEmailTemplateProcessors;
   private final EmailTemplateProcessor endorsedEmailTemplateProcessors;
@@ -66,12 +64,11 @@ class OrganizationEmailManager {
   BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
                                                            Contact nodeManagerContact,
                                                            UUID confirmationKey,
-                                                           Node endorsingNode) {
+                                                           Node endorsingNode) throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
     Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
 
-    BaseEmailModel baseEmailModel = null;
     Optional<String> nodeManagerEmailAddress =
             Optional.ofNullable(nodeManagerContact)
                     .map(Contact::getEmail)
@@ -86,6 +83,7 @@ class OrganizationEmailManager {
       emailAddress = nodeManagerEmailAddress.get();
     }
 
+    BaseEmailModel baseEmailModel;
     try {
       URL endorsementUrl = config.generateEndorsementUrl(newOrganization.getKey(), confirmationKey);
       OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, endorsementUrl,
@@ -95,32 +93,45 @@ class OrganizationEmailManager {
               Optional.ofNullable(emailAddress)
                       .filter(e -> !e.equals(config.getHelpdeskEmail()))
                       .map(e -> Collections.singletonList(config.getHelpdeskEmail())).orElse(null));
-    } catch (TemplateException | IOException ex) {
-      LOG.error(SuretyConstants.NOTIFY_ADMIN,
-              "Error while trying to generate email to confirm organization " + newOrganization.getKey(), ex);
+    } catch (TemplateException tEx) {
+      throw new IOException(tEx);
     }
     return baseEmailModel;
   }
 
   /**
-   * Generate an email to helpdesk to inform a new organization was confirmed.
+   * Generate an email to inform a new organization was endorsed.
+   * The returning list includes an email to helpdesk and one to the contact who submitted the request.
+   *
    *
    * @param newOrganization
    * @param endorsingNode
    *
-   * @return the {@link BaseEmailModel} or null if the model can not be generated
+   * @return the list of {@link BaseEmailModel} to send.
    */
-  BaseEmailModel generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) {
-    BaseEmailModel baseEmailModel = null;
+  List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
+    List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
     OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(HELPDESK_NAME, null,
             newOrganization, endorsingNode);
+
     try {
-      baseEmailModel = endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH);
-    } catch (TemplateException | IOException ex) {
-      LOG.error(SuretyConstants.NOTIFY_ADMIN,
-              "Error while trying to generate email on organization confirmed" + newOrganization.getKey(), ex);
+      baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH));
+      Optional<String> pointOfContactEmail = newOrganization.getContacts()
+              .stream()
+              .filter(c -> ContactType.POINT_OF_CONTACT == c.getType())
+              .findFirst()
+              .map(Contact::getEmail)
+              .orElse(Collections.emptyList())
+              .stream().findFirst();
+
+      if (pointOfContactEmail.isPresent()) {
+        baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
+      }
     }
-    return baseEmailModel;
+    catch (TemplateException tEx){
+      throw new IOException(tEx);
+    }
+    return baseEmailModelList;
   }
 
 }

@@ -13,6 +13,8 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -22,8 +24,11 @@ import org.junit.Test;
 
 import static org.gbif.registry.ws.surety.OrganizationSuretyModule.PROPERTY_PREFIX;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests related to {@link OrganizationEmailManager}.
@@ -54,7 +59,7 @@ public class OrganizationEmailTemplateManagerTest {
   }
 
   @Test
-  public void testGenerateOrganizationEndorsementEmailModel() {
+  public void testGenerateOrganizationEndorsementEmailModel() throws IOException {
     Node endorsingNode = Nodes.newInstance();
     endorsingNode.setKey(UUID.randomUUID());
     Organization org = Organizations.newInstance(endorsingNode.getKey());
@@ -80,12 +85,27 @@ public class OrganizationEmailTemplateManagerTest {
 
   @Test
   public void testGenerateOrganizationEndorsedEmailModel() {
-    Node endorsingNode = Nodes.newInstance();
+    final String pocEmail = "point_of_contact@b.com";
+    final Node endorsingNode = Nodes.newInstance();
     endorsingNode.setKey(UUID.randomUUID());
     Organization org = Organizations.newInstance(endorsingNode.getKey());
+    Contact c = Contacts.newInstance();
+    c.setEmail(Collections.singletonList(pocEmail));
+    c.setType(ContactType.POINT_OF_CONTACT);
+
     org.setKey(UUID.randomUUID());
-    BaseEmailModel baseEmail = organizationEmailTemplateManager.generateOrganizationEndorsedEmailModel(
-            org, endorsingNode);
-    assertNotNull("We can generate the model from the template", baseEmail);
+    org.getContacts().add(c);
+
+    try {
+      List<BaseEmailModel> baseEmails = organizationEmailTemplateManager
+              .generateOrganizationEndorsedEmailModel(org, endorsingNode);
+      assertNotNull("We can generate the model from the template", baseEmails);
+      assertEquals(2, baseEmails.size());
+      assertTrue("Email to Helpdesk is there", baseEmails.stream().filter( be -> config.getHelpdeskEmail().equals(be.getEmailAddress())).findFirst().isPresent());
+      assertTrue("Email to Point of Contact is there", baseEmails.stream().filter( be -> pocEmail.equals(be.getEmailAddress())).findFirst().isPresent());
+    } catch (IOException e) {
+      fail(e.getMessage());
+    }
+
   }
 }

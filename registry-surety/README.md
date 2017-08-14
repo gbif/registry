@@ -18,7 +18,7 @@ This module offers:
   * ChallengeCodeManager to allow manipulation of ChallengeCode between ChallengeCode and a ChallengeCodeSupportMapper.
   * Generic email generation from Freemarker template (with possibility for multilingual templates)
   * Email sending (using `javax.mail`)
-  * Guice Email module (`EmailManagerModule`)
+  * Guice Email sending module (`EmailSenderModule`)
 
 ## Sequence
 The sequence is not defined or enforced by this module since it may (and will) vary depending of the usage.
@@ -26,7 +26,7 @@ But, it was designed to follow more or less the following sequence:
  * An entity is created
  * A ChallengeCode is created and stored (`ChallengeCodeManager.create`)
  * An email is generated (`EmailTemplateProcessor.buildEmail`)
- * The email is sent with the created ChallengeCode (`EmailManagers.send`)
+ * The email is sent with the created ChallengeCode (`EmailSender.send`)
  * Once the ChallengeCode is received for the created entity the ChallengeCode is removed (`ChallengeCodeManager.remove`)
  * A confirmation email is sent
 
