@@ -81,7 +81,6 @@ public class RegistryWsClientModule extends GbifWsClientModule {
     expose(DatasetProcessStatusService.class);
     expose(MetasyncHistoryService.class);
     expose(DoiRegistrationService.class);
-    expose(IdentityAccessService.class);
   }
 
   @Override
