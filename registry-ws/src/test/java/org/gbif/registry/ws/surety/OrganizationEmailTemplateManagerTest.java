@@ -89,12 +89,14 @@ public class OrganizationEmailTemplateManagerTest {
     final Node endorsingNode = Nodes.newInstance();
     endorsingNode.setKey(UUID.randomUUID());
     Organization org = Organizations.newInstance(endorsingNode.getKey());
-    Contact c = Contacts.newInstance();
-    c.setEmail(Collections.singletonList(pocEmail));
-    c.setType(ContactType.POINT_OF_CONTACT);
+    Contact pointOfContact = Contacts.newInstance();
+    pointOfContact.setFirstName("First");
+    pointOfContact.setLastName("Last");
+    pointOfContact.setEmail(Collections.singletonList(pocEmail));
+    pointOfContact.setType(ContactType.POINT_OF_CONTACT);
 
     org.setKey(UUID.randomUUID());
-    org.getContacts().add(c);
+    org.getContacts().add(pointOfContact);
 
     try {
       List<BaseEmailModel> baseEmails = organizationEmailTemplateManager
@@ -103,6 +105,7 @@ public class OrganizationEmailTemplateManagerTest {
       assertEquals(2, baseEmails.size());
       assertTrue("Email to Helpdesk is there", baseEmails.stream().filter( be -> config.getHelpdeskEmail().equals(be.getEmailAddress())).findFirst().isPresent());
       assertTrue("Email to Point of Contact is there", baseEmails.stream().filter( be -> pocEmail.equals(be.getEmailAddress())).findFirst().isPresent());
+      assertTrue("Point of Contact name is there", baseEmails.stream().filter( be -> be.getBody().contains(pointOfContact.computeCompleteName())).findFirst().isPresent());
     } catch (IOException e) {
       fail(e.getMessage());
     }

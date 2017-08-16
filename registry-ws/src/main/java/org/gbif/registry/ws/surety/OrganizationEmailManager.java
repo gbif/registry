@@ -116,15 +116,20 @@ class OrganizationEmailManager {
 
     try {
       baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH));
-      Optional<String> pointOfContactEmail = newOrganization.getContacts()
+
+      Optional<Contact> pointOfContact = newOrganization.getContacts()
               .stream()
               .filter(c -> ContactType.POINT_OF_CONTACT == c.getType())
-              .findFirst()
+              .findFirst();
+      Optional<String> pointOfContactEmail = pointOfContact
               .map(Contact::getEmail)
               .orElse(Collections.emptyList())
               .stream().findFirst();
 
       if (pointOfContactEmail.isPresent()) {
+        templateDataModel = new OrganizationTemplateDataModel(
+                pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
+                null, newOrganization, endorsingNode);
         baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
       }
     }
