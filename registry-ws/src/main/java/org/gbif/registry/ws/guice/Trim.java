@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 
 /**
  * Indicates that the field is suitable for String trimming.
- * To use this annotate the method with Trim, and the fields intended for trimming.
+ * To use this annotate the method with Trim AND the fields intended for trimming.
  * The field must be:
  * <ul>
  * <li>A mutable POJO with getters and setters</li>

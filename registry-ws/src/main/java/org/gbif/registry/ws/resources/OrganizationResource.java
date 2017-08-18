@@ -134,6 +134,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @POST
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
+  @Trim
   @Override
   public UUID create(@NotNull @Trim Organization organization, @Context SecurityContext security) {
     organization.setPassword(generatePassword());
