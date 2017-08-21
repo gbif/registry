@@ -52,11 +52,12 @@ public class CitationGenerator {
     List<String> authorsName = generateAuthorsName(getAuthors(dataset.getContacts()));
     String authors = authorsName.stream().collect(Collectors.joining(", "));
 
-    if (StringUtils.isNotBlank(authors)) {
-      //only add a dot if we are not gonna add it with the year
-      authors += dataset.getPubDate() == null ? "." : "";
-      joiner.add(authors);
-    }
+    boolean authorsNameAvailable = StringUtils.isNotBlank(authors);
+    authors = authorsNameAvailable ? authors : organizationTitle ;
+
+    //only add a dot if we are not gonna add it with the year
+    authors += dataset.getPubDate() == null ? "." : "";
+    joiner.add(authors);
 
     if (dataset.getPubDate() != null) {
       joiner.add("(" + dataset.getPubDate().toInstant().atZone(UTC).getYear() + ").");
@@ -70,8 +71,10 @@ public class CitationGenerator {
       joiner.add("Version " + dataset.getVersion() + ".");
     }
 
-    // add publisher
-    joiner.add(StringUtils.trim(organizationTitle) + ".");
+    // add publisher except if it was used instead of the authors
+    if(authorsNameAvailable) {
+      joiner.add(StringUtils.trim(organizationTitle) + ".");
+    }
 
     if (dataset.getType() != null) {
       joiner.add(StringUtils.capitalize(dataset.getType().name().toLowerCase()));
