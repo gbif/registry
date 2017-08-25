@@ -86,8 +86,8 @@ class OrganizationEmailManager {
     BaseEmailModel baseEmailModel;
     try {
       URL endorsementUrl = config.generateEndorsementUrl(newOrganization.getKey(), confirmationKey);
-      OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, endorsementUrl,
-              newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
+      OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel
+              .buildEndorsementModel(name, endorsementUrl, newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
       baseEmailModel = endorsementEmailTemplateProcessors.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH,
               //CC helpdesk unless we are sending the email to helpdesk
               Optional.ofNullable(emailAddress)
@@ -111,8 +111,10 @@ class OrganizationEmailManager {
    */
   List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
-    OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(HELPDESK_NAME, null,
-            newOrganization, endorsingNode);
+    URL organizationUrl = config.generateOrganizationUrl(newOrganization.getKey());
+
+    OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel.
+            buildEndorsedModel(HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
 
     try {
       baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH));
@@ -127,9 +129,9 @@ class OrganizationEmailManager {
               .stream().findFirst();
 
       if (pointOfContactEmail.isPresent()) {
-        templateDataModel = new OrganizationTemplateDataModel(
-                pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
-                null, newOrganization, endorsingNode);
+        templateDataModel = OrganizationTemplateDataModel.
+                buildEndorsedModel(pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
+                        newOrganization, organizationUrl, endorsingNode);
         baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
       }
     }

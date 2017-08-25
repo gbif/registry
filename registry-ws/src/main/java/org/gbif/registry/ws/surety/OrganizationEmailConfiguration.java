@@ -16,6 +16,7 @@ import org.apache.commons.lang3.BooleanUtils;
 class OrganizationEmailConfiguration {
 
   static final String CONFIRM_ORGANIZATION_URL_TEMPLATE = "mail.urlTemplate.confirmOrganization";
+  static final String ORGANIZATION_URL_TEMPLATE = "mail.urlTemplate.organization";
   static final String MAIL_ENABLED_PROPERTY = "mail.enable";
   static final String HELPDESK_EMAIL_PROPERTY = "helpdesk.email";
 
@@ -23,6 +24,7 @@ class OrganizationEmailConfiguration {
           "email/subjects/email_subjects", Locale.ENGLISH);
 
   private final String endorsementUrlTemplate;
+  private final String organizationUrlTemplate;
   private final boolean emailEnabled;
   private final String helpdeskEmail;
 
@@ -55,12 +57,13 @@ class OrganizationEmailConfiguration {
 
   private OrganizationEmailConfiguration(Properties filteredProperties){
     endorsementUrlTemplate = filteredProperties.getProperty(CONFIRM_ORGANIZATION_URL_TEMPLATE);
+    organizationUrlTemplate = filteredProperties.getProperty(ORGANIZATION_URL_TEMPLATE);
     emailEnabled = BooleanUtils.toBoolean(filteredProperties.getProperty(MAIL_ENABLED_PROPERTY));
     helpdeskEmail = filteredProperties.getProperty(HELPDESK_EMAIL_PROPERTY);
   }
 
   /**
-   * Generate (from a url template) the URL to visit in order to endorse an organization.
+   * Generates (from a url template) the URL to visit in order to endorse an organization.
    * @param organizationKey
    * @param confirmationKey
    * @return
@@ -68,6 +71,16 @@ class OrganizationEmailConfiguration {
    */
   URL generateEndorsementUrl(UUID organizationKey, UUID confirmationKey) throws MalformedURLException {
     return new URL(MessageFormat.format(endorsementUrlTemplate, organizationKey.toString(), confirmationKey.toString()));
+  }
+
+  /**
+   * Generates (from a url template) the URL to visit an organization page.
+   * @param organizationKey
+   * @return
+   * @throws MalformedURLException
+   */
+  URL generateOrganizationUrl(UUID organizationKey) throws MalformedURLException {
+    return new URL(MessageFormat.format(organizationUrlTemplate, organizationKey.toString()));
   }
 
   boolean isEmailEnabled() {
