@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.surety;
 
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -64,6 +65,9 @@ public class OrganizationEmailTemplateManagerTest {
     endorsingNode.setKey(UUID.randomUUID());
     Organization org = Organizations.newInstance(endorsingNode.getKey());
     org.setKey(UUID.randomUUID());
+
+    org.getComments().add(generateComment("This is a very important comment.\nI even include another line."));
+    org.getComments().add(generateComment("This is a also important."));
     BaseEmailModel baseEmail = organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, null, UUID.randomUUID(), endorsingNode);
 
@@ -81,6 +85,12 @@ public class OrganizationEmailTemplateManagerTest {
     assertNotNull("We can generate the model from the template", baseEmail);
     // we should have a CC to helpdesk
     assertNotNull(baseEmail.getCcAddress());
+  }
+
+  private static Comment generateComment(String comment) {
+    Comment myComment = new Comment();
+    myComment.setContent(comment);
+    return myComment;
   }
 
   @Test

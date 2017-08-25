@@ -1,9 +1,11 @@
 package org.gbif.registry;
 
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
@@ -62,7 +64,7 @@ public class OrganizationCreationIT {
     final Injector webserviceAppKey = webserviceAppKeyClient();
     OrganizationService organizationService = webserviceAppKey.getInstance(OrganizationService.class);
 
-    Organization organization = prepareOrganization(nodeService, organizationService);
+    Organization organization = prepareOrganization(prepareNode(nodeService), organizationService);
 
     assertEquals(Long.valueOf(0), nodeService.endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest()).getCount());
     assertEquals(Long.valueOf(1), nodeService.pendingEndorsements(new PagingRequest()).getCount());
@@ -84,6 +86,9 @@ public class OrganizationCreationIT {
 
     //We should also have a contact
     assertEquals(1, webserviceInj.getInstance(OrganizationService.class).get(organization.getKey()).getContacts().size());
+
+    // and a comment
+    assertEquals(1, webserviceInj.getInstance(OrganizationService.class).get(organization.getKey()).getComments().size());
   }
 
   @Test
@@ -94,7 +99,7 @@ public class OrganizationCreationIT {
     NodeResource nodeService =  webservice.getInstance(NodeResource.class);
     OrganizationService organizationService = webserviceAppClientWithAppKey.getInstance(OrganizationService.class);
 
-    Organization organization = prepareOrganization(nodeService, organizationService);
+    Organization organization = prepareOrganization(prepareNode(nodeService), organizationService);
     assertEquals(Long.valueOf(0), nodeService.endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest()).getCount());
     assertFalse("endorsement should NOT be confirmed using appkey and no confirmation code",
             organizationService.confirmEndorsement(organization.getKey(), null));
@@ -120,7 +125,7 @@ public class OrganizationCreationIT {
     NodeResource nodeService =  webservice().getInstance(NodeResource.class);
     OrganizationService organizationService = webserviceAppKeyClient().getInstance(OrganizationService.class);
 
-    Organization organization = prepareOrganization(nodeService, organizationService);
+    Organization organization = prepareOrganization(prepareNode(nodeService), organizationService);
     organization = organizationService.get(organization.getKey());
     organization.setEndorsementApproved(true);
 
@@ -128,15 +133,21 @@ public class OrganizationCreationIT {
     organizationService.update(organization);
   }
 
-  private static Organization prepareOrganization(NodeResource nodeService, OrganizationService organizationService) {
+  private static Node prepareNode(NodeService nodeService) {
     //first create a Node (we need one for endorsement)
     Node node = Nodes.newInstance();
     nodeService.create(node);
-    node = nodeService.list(new PagingRequest()).getResults().get(0);
+    return nodeService.list(new PagingRequest()).getResults().get(0);
+  }
 
+  private static Organization prepareOrganization(Node node, OrganizationService organizationService) {
     Organization o = Organizations.newInstance(node.getKey());
     Contact organizationContact = Contacts.newInstance();
     o.getContacts().add(organizationContact);
+
+    Comment comment = new Comment();
+    comment.setContent("I would like to comment on that.");
+    o.getComments().add(comment);
 
     UUID newOrganizationKey = organizationService.create(o);
     o.setKey(newOrganizationKey);
