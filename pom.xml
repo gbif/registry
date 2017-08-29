@@ -90,7 +90,7 @@
     <gbif-common-service.version>0.16</gbif-common-service.version>
     <gbif-common-test.version>0.7</gbif-common-test.version>
     <gbif-common-ws.version>0.40</gbif-common-ws.version>
-    <gbif-common.version>0.35</gbif-common.version>
+    <gbif-common.version>0.36-SNAPSHOT</gbif-common.version>
     <gbif-doi.version>1.5</gbif-doi.version>
     <gbif-download-query-tools.version>1.18</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>

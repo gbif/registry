@@ -22,7 +22,7 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
 
   static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organisation,
                                                              Node endorsingNode, boolean reachableNodeManager){
-    return new OrganizationTemplateDataModel(name, url, organisation, null, endorsingNode, false);
+    return new OrganizationTemplateDataModel(name, url, organisation, null, endorsingNode, reachableNodeManager);
   }
 
   static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organisation, URL organizationUrl, Node endorsingNode){

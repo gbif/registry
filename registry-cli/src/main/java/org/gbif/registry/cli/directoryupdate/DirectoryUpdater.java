@@ -7,7 +7,7 @@ import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.directory.DirectoryRegistryConstantsMapping;
+import org.gbif.registry.directory.DirectoryRegistryMapping;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
@@ -160,9 +160,9 @@ public class DirectoryUpdater {
     String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
     return !Objects.equals(registryNode.getTitle(), titleFromDirectory)
             || !Objects.equals(registryNode.getCountry(), participant.getCountryCode())
-            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
+            || !Objects.equals(DirectoryRegistryMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()),
             registryNode.getParticipationStatus())
-            || !Objects.equals(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()),
+            || !Objects.equals(DirectoryRegistryMapping.PARTICIPATION_TYPE.get(participant.getType()),
             registryNode.getType())
             || !Objects.equals(registryNode.getGbifRegion(), participant.getGbifRegion());
   }
@@ -181,10 +181,10 @@ public class DirectoryUpdater {
     String titleFromDirectory = directoryNode != null ? directoryNode.getName() : participant.getName();
     registryNode.setTitle(titleFromDirectory);
     registryNode.setCountry(participant.getCountryCode());
-    registryNode.setParticipationStatus(DirectoryRegistryConstantsMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
-    registryNode.setType(DirectoryRegistryConstantsMapping.PARTICIPATION_TYPE.get(participant.getType()));
+    registryNode.setParticipationStatus(DirectoryRegistryMapping.PARTICIPATION_STATUS.get(participant.getParticipationStatus()));
+    registryNode.setType(DirectoryRegistryMapping.PARTICIPATION_TYPE.get(participant.getType()));
     registryNode.setGbifRegion(participant.getGbifRegion());
-    registryNode.setContinent(DirectoryRegistryConstantsMapping.GBIF_REGION_CONTINENT.get(participant.getGbifRegion()));
+    registryNode.setContinent(DirectoryRegistryMapping.GBIF_REGION_CONTINENT.get(participant.getGbifRegion()));
 
     return registryNode;
   }
