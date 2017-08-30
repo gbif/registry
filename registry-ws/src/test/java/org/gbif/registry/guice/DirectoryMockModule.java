@@ -48,6 +48,9 @@ public class DirectoryMockModule extends AbstractModule {
     }
   }
 
+  /**
+   * Mock all directory services.
+   */
   private static class NodeServiceMock implements NodeService {
 
     @Override
