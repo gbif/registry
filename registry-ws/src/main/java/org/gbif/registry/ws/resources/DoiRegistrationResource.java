@@ -69,7 +69,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Generates a new DOI based on the DoiType.
    */
-  @POST
+  @GET
   @Path("gen/{type}")
   @Override
   public DOI generate(@NotNull @PathParam("type") DoiType doiType) {
@@ -215,7 +215,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Check that the user is authenticated.
    */
   private void checkIsUserAuthenticated() {
-     if(securityContext == null)
+     if(securityContext == null || (securityContext != null  && securityContext.getUserPrincipal() == null))
        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
   }
 
