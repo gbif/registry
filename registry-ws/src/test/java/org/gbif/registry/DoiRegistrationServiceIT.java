@@ -38,7 +38,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
-import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
+import static org.gbif.registry.guice.RegistryTestModules.webserviceBasicAuthClient;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -78,7 +78,7 @@ public class DoiRegistrationServiceIT {
   @Parameters
   public static Iterable<Object[]> data() {
     final Injector webservice = webservice();
-    final Injector client = webserviceClient();
+    final Injector client = webserviceBasicAuthClient(TEST_ADMIN_USER, TEST_ADMIN_USER);
 
     return ImmutableList.of(
       new Object[] {webservice.getInstance(DoiRegistrationResource.class), null},
