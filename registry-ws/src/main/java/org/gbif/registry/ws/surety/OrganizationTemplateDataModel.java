@@ -16,11 +16,17 @@ import javax.annotation.Nullable;
 public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
 
   private final Organization organisation;
+  private final URL organizationUrl;
   private final Node endorsingNode;
   private final boolean reachableNodeManager;
 
-  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation, Node endorsingNode) {
-    this(name, url, organisation, endorsingNode, false);
+  static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organisation,
+                                                             Node endorsingNode, boolean reachableNodeManager){
+    return new OrganizationTemplateDataModel(name, url, organisation, null, endorsingNode, reachableNodeManager);
+  }
+
+  static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organisation, URL organizationUrl, Node endorsingNode){
+    return new OrganizationTemplateDataModel(name, null, organisation, organizationUrl, endorsingNode, false);
   }
 
   /**
@@ -28,19 +34,25 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
    * @param name
    * @param url
    * @param organisation
+   * @param organizationUrl
    * @param endorsingNode
    * @param reachableNodeManager
    */
-  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation, Node endorsingNode,
-                                       boolean reachableNodeManager) {
+  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation,
+                                       @Nullable URL organizationUrl, Node endorsingNode, boolean reachableNodeManager) {
     super(name, url);
     this.organisation = organisation;
+    this.organizationUrl = organizationUrl;
     this.endorsingNode = endorsingNode;
     this.reachableNodeManager = reachableNodeManager;
   }
 
   public Organization getOrganisation() {
     return organisation;
+  }
+
+  public URL getOrganizationUrl() {
+    return organizationUrl;
   }
 
   public Node getEndorsingNode() {

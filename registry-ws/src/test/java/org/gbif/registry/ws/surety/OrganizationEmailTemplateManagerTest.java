@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.surety;
 
+import org.gbif.api.model.directory.Person;
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -35,6 +37,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class OrganizationEmailTemplateManagerTest {
 
+  private static final String TEST_NODE_MANAGER_EMAIL = "nodemanager@b.com";
   private OrganizationEmailConfiguration config;
   private OrganizationEmailManager organizationEmailTemplateManager;
 
@@ -64,6 +67,9 @@ public class OrganizationEmailTemplateManagerTest {
     endorsingNode.setKey(UUID.randomUUID());
     Organization org = Organizations.newInstance(endorsingNode.getKey());
     org.setKey(UUID.randomUUID());
+
+    org.getComments().add(generateComment("This is a very important comment.\nI even include another line."));
+    org.getComments().add(generateComment("This is a also important."));
     BaseEmailModel baseEmail = organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, null, UUID.randomUUID(), endorsingNode);
 
@@ -72,15 +78,24 @@ public class OrganizationEmailTemplateManagerTest {
     assertNull(baseEmail.getCcAddress());
 
     //now try with a NodeManager
-    Contact c = Contacts.newInstance();
-    c.setType(ContactType.NODE_MANAGER);
+    Person nodeManager = new Person();
+    nodeManager.setEmail(TEST_NODE_MANAGER_EMAIL);
+    nodeManager.setFirstName("Lars");
+    nodeManager.setSurname("Eller");
     org.getContacts().add(Contacts.newInstance());
     baseEmail = organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
-            org, c, UUID.randomUUID(), endorsingNode);
+            org, nodeManager, UUID.randomUUID(), endorsingNode);
 
     assertNotNull("We can generate the model from the template", baseEmail);
+    assertEquals(TEST_NODE_MANAGER_EMAIL, baseEmail.getEmailAddress());
     // we should have a CC to helpdesk
     assertNotNull(baseEmail.getCcAddress());
+  }
+
+  private static Comment generateComment(String comment) {
+    Comment myComment = new Comment();
+    myComment.setContent(comment);
+    return myComment;
   }
 
   @Test

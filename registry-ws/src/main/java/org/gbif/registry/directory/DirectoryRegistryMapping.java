@@ -1,8 +1,11 @@
 package org.gbif.registry.directory;
 
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
@@ -10,11 +13,18 @@ import org.gbif.api.vocabulary.directory.ParticipantPersonRole;
 import org.gbif.api.vocabulary.directory.ParticipantType;
 
 import com.google.common.collect.ImmutableBiMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Provides mapping between Directory and Registry enumerations
+ * Provides mapping between Directory and Registry concepts (e.g. enumerations)
  */
-public class DirectoryRegistryConstantsMapping {
+public class DirectoryRegistryMapping {
+
+  private static Logger LOG = LoggerFactory.getLogger(DirectoryRegistryMapping.class);
+
+  private DirectoryRegistryMapping() {
+  }
 
   /**
    * Maps contact types to participant roles.
@@ -31,7 +41,8 @@ public class DirectoryRegistryConstantsMapping {
 
   /**
    * Return the Directory ParticipationStatus from a Registry ParticipationStatus
-   * PARTICIPATION_STATUS.get(org.gbif.api.vocabulary.directory.ParticipationStatus) returns org.gbif.api.vocabulary.ParticipationStatus
+   * PARTICIPATION_STATUS.get(org.gbif.api.vocabulary.directory.ParticipationStatus) returns
+   * org.gbif.api.vocabulary.ParticipationStatus
    */
   public static final ImmutableBiMap<org.gbif.api.vocabulary.directory.ParticipationStatus, ParticipationStatus> PARTICIPATION_STATUS =
           ImmutableBiMap.of(org.gbif.api.vocabulary.directory.ParticipationStatus.VOTING, ParticipationStatus.VOTING,
@@ -53,4 +64,21 @@ public class DirectoryRegistryConstantsMapping {
                   .put(GbifRegion.NORTH_AMERICA, Continent.NORTH_AMERICA)
                   .put(GbifRegion.OCEANIA, Continent.OCEANIA).build();
 
+
+  /**
+   * Gets the Directory participantID from a Registry Node.
+   */
+  public static Integer findParticipantID(Node node) {
+    for (Identifier id : node.getIdentifiers()) {
+      if (IdentifierType.GBIF_PARTICIPANT == id.getType()) {
+        try {
+          return Integer.parseInt(id.getIdentifier());
+        } catch (NumberFormatException e) {
+          LOG.error("Directory participantId is no integer: {}", id.getIdentifier());
+        }
+      }
+    }
+    return null;
   }
+
+}

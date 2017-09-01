@@ -144,9 +144,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       // for trusted app, we accept contacts to include on the endorsement request
       Optional.ofNullable(organization.getContacts())
               .filter( c -> !c.isEmpty())
-              .ifPresent( contacts -> {
-                contacts.forEach( c -> addContact(newOrganization, c, security));
-              });
+              .ifPresent( contacts -> contacts.forEach(c -> addContact(newOrganization, c, security)));
+      Optional.ofNullable(organization.getComments())
+              .filter( c -> !c.isEmpty())
+              .ifPresent( comments -> comments.forEach(c -> addComment(newOrganization, c, security)));
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;

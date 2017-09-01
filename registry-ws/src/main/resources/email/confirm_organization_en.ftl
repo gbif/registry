@@ -49,6 +49,20 @@ Contacts:
 </p>
 </#if>
 
+<#if organisation.comments?has_content>
+<p>
+Additional information:
+<ul style="list-style: none;">
+<#list organisation.comments! as comment>
+<#--comments can be in Markdown but we only support endline for now-->
+  <#list comment.content?split("\n") as subcomment>
+    <li>${subcomment}</li>
+  </#list>
+</#list>
+</ul>
+</p>
+</#if>
+
 <p>If you wish to endorse <b>${organisation.title!}</b> please click the following link: <a href="${url}">Endorse ${organisation.title!}</a></p>
 <p>If you do not want to endorse <b>${organisation.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
 

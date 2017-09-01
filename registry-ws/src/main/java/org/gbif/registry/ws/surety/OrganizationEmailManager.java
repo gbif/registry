@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.surety;
 
+import org.gbif.api.model.directory.Person;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -55,30 +56,29 @@ class OrganizationEmailManager {
    * If nodeManagerContact does not contain an email address, the model will be set to send the message to helpdesk.
    *
    * @param newOrganization
-   * @param nodeManagerContact the {@link Contact} representing the NodeManager or null if there is none
+   * @param nodeManager the {@link Person} representing the NodeManager or null if there is none
    * @param confirmationKey
    * @param endorsingNode
    *
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
-                                                           Contact nodeManagerContact,
+                                                           Person nodeManager,
                                                            UUID confirmationKey,
                                                            Node endorsingNode) throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
     Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
 
-    Optional<String> nodeManagerEmailAddress =
-            Optional.ofNullable(nodeManagerContact)
-                    .map(Contact::getEmail)
-                    .flatMap(emails -> emails.stream().findFirst());
+    Optional<String> nodeManagerEmailAddress = Optional.ofNullable(nodeManager).map(Person::getEmail);
 
     String name = HELPDESK_NAME;
     String emailAddress = config.getHelpdeskEmail();
     // do we have an email to contact the node manager ?
     if (nodeManagerEmailAddress.isPresent()) {
-      name = Optional.ofNullable(StringUtils.trimToNull(nodeManagerContact.computeCompleteName()))
+      name = Optional.ofNullable(StringUtils.trimToNull(
+              org.gbif.utils.text.StringUtils.thenJoin(StringUtils::trimToNull, nodeManager.getFirstName(),
+                      nodeManager.getSurname())))
               .orElse(endorsingNode.getTitle());
       emailAddress = nodeManagerEmailAddress.get();
     }
@@ -86,8 +86,8 @@ class OrganizationEmailManager {
     BaseEmailModel baseEmailModel;
     try {
       URL endorsementUrl = config.generateEndorsementUrl(newOrganization.getKey(), confirmationKey);
-      OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(name, endorsementUrl,
-              newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
+      OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel
+              .buildEndorsementModel(name, endorsementUrl, newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
       baseEmailModel = endorsementEmailTemplateProcessors.buildEmail(emailAddress, templateDataModel, Locale.ENGLISH,
               //CC helpdesk unless we are sending the email to helpdesk
               Optional.ofNullable(emailAddress)
@@ -111,8 +111,10 @@ class OrganizationEmailManager {
    */
   List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
-    OrganizationTemplateDataModel templateDataModel = new OrganizationTemplateDataModel(HELPDESK_NAME, null,
-            newOrganization, endorsingNode);
+    URL organizationUrl = config.generateOrganizationUrl(newOrganization.getKey());
+
+    OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel.
+            buildEndorsedModel(HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
 
     try {
       baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(config.getHelpdeskEmail(), templateDataModel, Locale.ENGLISH));
@@ -127,9 +129,9 @@ class OrganizationEmailManager {
               .stream().findFirst();
 
       if (pointOfContactEmail.isPresent()) {
-        templateDataModel = new OrganizationTemplateDataModel(
-                pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
-                null, newOrganization, endorsingNode);
+        templateDataModel = OrganizationTemplateDataModel.
+                buildEndorsedModel(pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
+                        newOrganization, organizationUrl, endorsingNode);
         baseEmailModelList.add(endorsedEmailTemplateProcessors.buildEmail(pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
       }
     }

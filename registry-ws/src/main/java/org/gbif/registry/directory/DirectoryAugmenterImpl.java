@@ -5,13 +5,11 @@ import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.directory.ParticipantPerson;
 import org.gbif.api.model.directory.Person;
 import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.IdentifierType;
 
 import java.net.URI;
 import java.util.List;
@@ -26,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.registry.directory.DirectoryRegistryMapping.findParticipantID;
+
 @Singleton
 public class DirectoryAugmenterImpl implements Augmenter {
-
-
 
   private static Logger LOG = LoggerFactory.getLogger(DirectoryAugmenterImpl.class);
 
@@ -44,21 +42,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     this.personService = personService;
   }
 
-  /**
-   * Gets the participantID from the Node.
-   */
-  private static Integer findParticipantID(Node node) {
-    for (Identifier id : node.getIdentifiers()) {
-      if (IdentifierType.GBIF_PARTICIPANT == id.getType()) {
-        try {
-          return Integer.parseInt(id.getIdentifier());
-        } catch (NumberFormatException e) {
-          LOG.error("Directory participantId is no integer: {}", id.getIdentifier());
-        }
-      }
-    }
-    return null;
-  }
+
 
   @Override
   public Node augment(Node registryNode) {
@@ -200,7 +184,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
         person = personService.get(participantPerson.getPersonId());
         contactType = null;
         if( participantPerson.getRole() != null) {
-          contactType = DirectoryRegistryConstantsMapping.PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
+          contactType = DirectoryRegistryMapping.PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
         }
         contact = personToContact(person, participant.getName(), contactType);
         contacts.add(contact);
@@ -225,7 +209,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
             person = personService.get(nodePerson.getPersonId());
             contactType = null;
             if (nodePerson.getRole() != null) {
-              contactType = DirectoryRegistryConstantsMapping.NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+              contactType = DirectoryRegistryMapping.NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
             }
             contact = personToContact(person, currentNode.getName(), contactType);
             contacts.add(contact);
