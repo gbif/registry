@@ -69,7 +69,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Generates a new DOI based on the DoiType.
    */
-  @GET
+  @POST
   @Path("gen/{type}")
   @Override
   public DOI generate(@NotNull @PathParam("type") DoiType doiType) {

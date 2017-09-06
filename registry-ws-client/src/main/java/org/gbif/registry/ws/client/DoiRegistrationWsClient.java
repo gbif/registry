@@ -42,7 +42,7 @@ public class DoiRegistrationWsClient extends BaseWsClient implements DoiRegistra
 
   @Override
   public DOI generate(DoiType doiType) {
-    return getResource("gen", doiType.name()).type(MediaType.APPLICATION_JSON).get(DOI.class);
+    return getResource("gen", doiType.name()).type(MediaType.APPLICATION_JSON).post(DOI.class);
   }
 
   @Override
