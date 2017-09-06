@@ -111,15 +111,14 @@ public class DoiRegistrationResource implements DoiRegistrationService {
             //Persist the DOI
             Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
               doi -> {
-                Optional.ofNullable(doiPersistenceService.get(doi))
-                  .ifPresent(doiData -> { //if DOI is not NEW throw an exception
+                Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> { //if DOI is not NEW throw an exception
                     if (DoiStatus.NEW != doiData.getStatus()) {
                       throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                                                           .entity("Doi already exists")
                                                           .build());
                     }
                   });
-                doiPersistenceService.create(doi, DoiType.DATA_PACKAGE);
+                doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
               }
             );
           });
