@@ -9,10 +9,13 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 public class CitationGenerator {
 
   private static final ZoneId UTC = ZoneId.of("UTC");
+  private static final ContactType MANDATORY_CONTACT_TYPE = ContactType.ORIGINATOR;
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE = EnumSet.of(ContactType.ORIGINATOR,
           ContactType.METADATA_AUTHOR);
 
@@ -96,7 +100,8 @@ public class CitationGenerator {
   /**
    * Extracts an ordered list of unique authors from a list of contacts.
    * A {@link Contact} is identified as an author when his {@link ContactType} is contained in
-   * {@link #AUTHOR_CONTACT_TYPE}
+   * {@link #AUTHOR_CONTACT_TYPE}.
+   * But, we shall at least have one contact of type MANDATORY_CONTACT_TYPE.
    *
    * @param contacts list of contacts available
    *
@@ -107,10 +112,18 @@ public class CitationGenerator {
       return new ArrayList<>();
     }
 
-    List<Contact> uniqueContacts = getUniqueAuthors(contacts);
-    return uniqueContacts.stream()
-            .filter(ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()))
-            .collect(Collectors.toList());
+    List<Contact> uniqueContacts = getUniqueAuthors(contacts,
+            (ctc) -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()));
+
+    // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
+    Optional<Contact> firstOriginator = uniqueContacts.stream()
+            .filter( ctc -> MANDATORY_CONTACT_TYPE == ctc.getType())
+            .findFirst();
+
+    if(firstOriginator.isPresent()) {
+      return uniqueContacts;
+    }
+    return Collections.emptyList();
   }
 
   /**
@@ -136,15 +149,16 @@ public class CitationGenerator {
    * This method is used to get the list of "unique" authors.
    * Currently, uniqueness is based on lastName + firstNames.
    * The order of the provided list will be preserved which also means the first {@link ContactType} found for
-   * a contact is the one that will be used for this contact.
-   * @param authors
+   * a contact is the one that will be used for this contact (after applying the filter).
+   * @param authors a list of contacts representing possible authors
+   * @param filter {@link Predicate} used to pre-filter contacts
    * @return
    */
-  private static List<Contact> getUniqueAuthors(List<Contact> authors){
+  private static List<Contact> getUniqueAuthors(List<Contact> authors, Predicate<Contact> filter){
     List<Contact> uniqueContact = new ArrayList<>();
     if(authors != null) {
       authors.forEach(ctc -> {
-        if (isNotAlreadyInList(ctc, uniqueContact)) {
+        if (filter.test(ctc) && isNotAlreadyInList(ctc, uniqueContact)) {
           uniqueContact.add(ctc);
         }
       });

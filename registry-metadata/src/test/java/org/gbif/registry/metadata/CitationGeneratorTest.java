@@ -129,6 +129,24 @@ public class CitationGeneratorTest {
   }
 
   @Test
+  public void testCompleteCitationNoOriginator() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+    Dataset dataset = getTestDatasetObject();
+
+    Contact c2 = new Contact();
+    c2.setLastName("Doe");
+    c2.setFirstName("John D.");
+    c2.setType(ContactType.METADATA_AUTHOR);
+    dataset.getContacts().add(c2);
+
+    assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
+                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    LocalDate.now().toString() + ".",
+            CitationGenerator.generateCitation(dataset, org));
+  }
+
+  @Test
   public void testAuthors(){
     Organization org = new Organization();
     org.setTitle("Cited Organization");
