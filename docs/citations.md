@@ -1,6 +1,7 @@
 # How citations are generated
 
 In order to offer a consistent citations, all citations are auto-generated for all datasets.
+ * Documentation available on the GBIF.org [FAQ](https://www.gbif.org/faq#citation)
  * Based on discussion from [Issue #4](https://github.com/gbif/registry/issues/4).
  * Source Code: [CitationGenerator.java](https://github.com/gbif/registry/blob/master/registry-metadata/src/main/java/org/gbif/registry/metadata/CitationGenerator.java)
 
@@ -23,8 +24,12 @@ Occurrence Dataset https://doi.org/10.15468/ej3i4f accessed via GBIF.org on 2017
 ### Author List Generation
 
 From the dataset contacts, in order, take all (unique person based on the first and last name)
-`ContactType.ORIGINATOR` and `ContactType.METADATA_AUTHOR`.
+`ContactType.ORIGINATOR` and `ContactType.METADATA_AUTHOR`. For each of the eligible contacts,
+use the form `lastName` and first letter of `firstNames` (e.g. Smirnov I).
 
-For each contacts, use the form `lastName` and first letter of `firstNames` (e.g. Smirnov I).
-In case a contact doesn't represent a person (absence of first or last name), the name of the organization that is publishing
-the dataset will be used.
+Note:
+  * At least one `ContactType.ORIGINATOR` shall be present. Otherwise the authors are replaced
+  by the organization (`{organization.title}`) publishing the dataset. If the organization name is used, it won't be repeated in the citation.
+  * An author is only considered if a firstName and lastName are both provided.
+  * The name of the organization on the contact itself is ignored for the citation generation.
+  `organization.title` represents the name of the organization registered with GBIF that is publishing this dataset.
