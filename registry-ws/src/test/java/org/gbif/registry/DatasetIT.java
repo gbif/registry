@@ -352,7 +352,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       resp.getCount());
   }
 
+
   @Test
+  @Ignore("See https://github.com/gbif/registry/issues/22")
   public void testDismaxSearch() throws InterruptedException {
 
     Dataset d = newAndCreate(1);
@@ -424,10 +426,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     organizationService.update(publisher);
     // jenkins sometimes fails to update solr in time for the query to include the modified index.
     // allow for some extra time (it should have no bad impact on the real time index)
+
+    // TODO: https://github.com/gbif/registry/issues/22
     Thread.sleep(100);
   }
 
   @Test
+  @Ignore("See https://github.com/gbif/registry/issues/22")
   public void testSearchListener() throws InterruptedException {
     Dataset d = newEntity();
     d = create(d, 1);
