@@ -29,6 +29,9 @@ public class CitationGenerator {
   private static final ContactType MANDATORY_CONTACT_TYPE = ContactType.ORIGINATOR;
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE = EnumSet.of(ContactType.ORIGINATOR,
           ContactType.METADATA_AUTHOR);
+  private static final Predicate<Contact> IS_NAME_PROVIDED_FCT = (ctc) -> StringUtils.isNotBlank(ctc.getFirstName()) &&
+          StringUtils.isNotBlank(ctc.getLastName());
+  private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE = (ctc) -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType());
 
   /**
    * Utility class
@@ -109,18 +112,18 @@ public class CitationGenerator {
    */
   public static List<Contact> getAuthors(List<Contact> contacts) {
     if (contacts == null || contacts.isEmpty()) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
 
     List<Contact> uniqueContacts = getUniqueAuthors(contacts,
-            (ctc) -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType()));
+            (ctc) -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
 
     // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
     Optional<Contact> firstOriginator = uniqueContacts.stream()
-            .filter( ctc -> MANDATORY_CONTACT_TYPE == ctc.getType())
+            .filter(ctc -> MANDATORY_CONTACT_TYPE == ctc.getType())
             .findFirst();
 
-    if(firstOriginator.isPresent()) {
+    if (firstOriginator.isPresent()) {
       return uniqueContacts;
     }
     return Collections.emptyList();
@@ -135,11 +138,11 @@ public class CitationGenerator {
    */
   public static List<String> generateAuthorsName(List<Contact> authors) {
     if (authors == null || authors.isEmpty()) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
 
     return authors.stream()
-            .filter(ctc -> StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName()))
+            .filter(IS_NAME_PROVIDED_FCT)
             .map(CitationGenerator::getAuthorName)
             .collect(Collectors.toList());
   }

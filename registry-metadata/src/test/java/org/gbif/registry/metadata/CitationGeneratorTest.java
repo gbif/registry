@@ -50,12 +50,7 @@ public class CitationGeneratorTest {
     org.setTitle("Cited Organization");
 
     Dataset dataset = getTestDatasetObject();
-
-    Contact c = new Contact();
-    c.setLastName("Doe");
-    c.setFirstName("John D.");
-    c.setType(ContactType.ORIGINATOR);
-    dataset.getContacts().add(c);
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
             "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
@@ -68,11 +63,8 @@ public class CitationGeneratorTest {
     org.setTitle("Cited Organization");
 
     Dataset dataset = getTestDatasetObject();
-
-    Contact c = new Contact();
-    c.setOrganization("We are not using this field int the citation");
-    c.setType(ContactType.ORIGINATOR);
-    dataset.getContacts().add(c);
+    dataset.getContacts().add(createContact(null, null, "We are not using this field int the citation",
+            ContactType.ORIGINATOR));
 
     assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
                     "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
@@ -86,11 +78,7 @@ public class CitationGeneratorTest {
 
     Dataset dataset = getTestDatasetObject();
     dataset.setPubDate(null);
-    Contact c = new Contact();
-    c.setLastName("Doe");
-    c.setFirstName("John");
-    c.setType(ContactType.ORIGINATOR);
-    dataset.getContacts().add(c);
+    dataset.getContacts().add(createContact("John", "Doe", ContactType.ORIGINATOR));
 
     assertEquals("Doe J. Dataset to be cited. Version 2.1. Cited Organization. " +
                     "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
@@ -104,23 +92,9 @@ public class CitationGeneratorTest {
 
     Dataset dataset = getTestDatasetObject();
 
-    Contact c = new Contact();
-    c.setLastName("Doe");
-    c.setFirstName("John D.");
-    c.setType(ContactType.ORIGINATOR);
-
-    Contact c1 = new Contact();
-    c1.setLastName("Carey");
-    c1.setFirstName("Jim");
-    c1.setType(ContactType.PROGRAMMER);
-
-    Contact c2 = new Contact();
-    c2.setLastName("Doe");
-    c2.setFirstName("John D.");
-    c2.setType(ContactType.METADATA_AUTHOR);
-
-    dataset.getContacts().add(c);
-    dataset.getContacts().add(c2);
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact("Jim", "Carey", ContactType.PROGRAMMER));
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
                     "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
@@ -133,12 +107,22 @@ public class CitationGeneratorTest {
     Organization org = new Organization();
     org.setTitle("Cited Organization");
     Dataset dataset = getTestDatasetObject();
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
-    Contact c2 = new Contact();
-    c2.setLastName("Doe");
-    c2.setFirstName("John D.");
-    c2.setType(ContactType.METADATA_AUTHOR);
-    dataset.getContacts().add(c2);
+    assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
+                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    LocalDate.now().toString() + ".",
+            CitationGenerator.generateCitation(dataset, org));
+  }
+
+  @Test
+  public void testCompleteCitationOriginatorNoName() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+    Dataset dataset = getTestDatasetObject();
+
+    dataset.getContacts().add(createContact(null, null, "Test Org." , ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
     assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
                     "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
@@ -153,28 +137,13 @@ public class CitationGeneratorTest {
 
     Dataset dataset = getTestDatasetObject();
 
-    Contact c = new Contact();
-    c.setLastName("Doe");
-    c.setFirstName("John D.");
-    c.setType(ContactType.ORIGINATOR);
-    dataset.getContacts().add(c);
-
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact("John D.", "Doe", "Awesome Organization", ContactType.ORIGINATOR));
     //author with incomplete name
-    c = new Contact();
-    c.setLastName("Doe");
-    c.setOrganization("Awesome Organization");
-    c.setType(ContactType.ORIGINATOR);
-    dataset.getContacts().add(c);
+    dataset.getContacts().add(createContact("Programmer", "Last", ContactType.PROGRAMMER));
 
-    //not an author
-    c = new Contact();
-    c.setLastName("Last");
-    c.setFirstName("Programmer");
-    c.setType(ContactType.PROGRAMMER);
-    dataset.getContacts().add(c);
-
-    //we expect 2 authors
-    assertEquals(2, getAuthors(dataset.getContacts()).size());
+    //we expect 1 author since the names (first and last) are mandatory
+    assertEquals(1, getAuthors(dataset.getContacts()).size());
 
     //but, we can only generate the name for one of them
     assertEquals(1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
@@ -190,5 +159,18 @@ public class CitationGeneratorTest {
     dataset.setType(DatasetType.CHECKLIST);
 
     return dataset;
+  }
+
+  private Contact createContact(String firstName, String lastName, ContactType ct) {
+    return createContact(firstName, lastName, null, ct);
+  }
+
+  private Contact createContact(String firstName, String lastName, String organization, ContactType ct) {
+    Contact c = new Contact();
+    c.setFirstName(firstName);
+    c.setLastName(lastName);
+    c.setOrganization(organization);
+    c.setType(ct);
+    return c;
   }
 }
