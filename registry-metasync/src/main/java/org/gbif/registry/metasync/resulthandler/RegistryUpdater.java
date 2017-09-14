@@ -88,17 +88,12 @@ public class RegistryUpdater {
 
         // only override existing license when a supported license was detected
         License updatedLicense = (updated.getLicense() == null) ? License.UNSPECIFIED : updated.getLicense();
-        switch (updatedLicense) {
-          case UNSPECIFIED:
-            LOG.warn("License not updated - no machine readable license was detected!");
-            break;
-          case UNSUPPORTED:
-            LOG.warn("License not updated - no supported machine readable license was detected!");
-            break;
-          default:
-            LOG.info("License {} updated from machine readable license detected {}", existingDataset.getLicense(), updatedLicense);
-            existingDataset.setLicense(updatedLicense);
-            break;
+
+        // we only allow to update the license if it's a concrete one (not UNSPECIFIED or UNSUPPORTED)
+        if(updatedLicense.isConcrete()) {
+          existingDataset.setLicense(updatedLicense);
+        } else {
+          LOG.warn("The license update for dataset {} was ignored : {}", datasetKey, updatedLicense);
         }
 
         // perform update
