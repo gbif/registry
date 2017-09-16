@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * Helper class tha generates a Citation String from {@link Dataset} and {@link Organization} objects.
+ * Documentation : /docs/citations.md
  */
 public class CitationGenerator {
 
