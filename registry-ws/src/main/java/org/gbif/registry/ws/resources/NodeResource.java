@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -23,6 +24,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -123,14 +125,34 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     }
   }
 
+  /**
+   * Decorates the Nodes in the response with the Augmenter.
+   */
+  private PagingResponse<Node> decorateResponse(PagingResponse<Node> response) {
+    for (Node n : response.getResults()) {
+      nodeAugmenter.augment(n);
+    }
+    return response;
+  }
+
+  @Override
+  public PagingResponse<Node> search(String query, @Nullable Pageable page) {
+    return decorateResponse(super.search(query, page));
+  }
 
   @Override
   public PagingResponse<Node> list(@Nullable Pageable page) {
-    PagingResponse<Node> resp = super.list(page);
-    for (Node n : resp.getResults()) {
-      nodeAugmenter.augment(n);
-    }
-    return resp;
+    return decorateResponse(super.list(page));
+  }
+
+  @Override
+  public PagingResponse<Node> listByIdentifier(IdentifierType type, String identifier, @Nullable Pageable page) {
+    return decorateResponse(super.listByIdentifier(type, identifier, page));
+  }
+
+  @Override
+  public PagingResponse<Node> listByIdentifier(String identifier, @Nullable Pageable page) {
+    return decorateResponse(super.listByIdentifier(identifier, page));
   }
 
   @GET
