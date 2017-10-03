@@ -55,4 +55,11 @@ public class EmlValidatorTest {
     validator.validate(getEMLMetadataAsStreamSource("eml/ipt_eml.xml"));
   }
 
+  // see https://github.com/gbif/registry/issues/26
+  @Test(expected = InvalidEmlException.class)
+  public void testDownloadEml() throws Exception {
+    EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
+    validator.validate(getEMLMetadataAsStreamSource("eml/download_metadata.xml"));
+  }
+
 }
