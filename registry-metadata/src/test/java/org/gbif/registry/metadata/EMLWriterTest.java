@@ -7,8 +7,10 @@ import org.gbif.api.model.registry.eml.Project;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.utils.file.FileUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.util.UUID;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -18,14 +20,15 @@ import static org.junit.Assert.assertTrue;
 
 public class EMLWriterTest {
 
+  private static final String TEST_EML_FILE = "eml-metadata-profile/sample2-v1.0.1.xml";
   private static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-  EMLWriter emlWriter = EMLWriter.newInstance();
-  EMLWriter emlWriterDOI = EMLWriter.newInstance(true);
+  private EMLWriter emlWriter = EMLWriter.newInstance();
+  private EMLWriter emlWriterDOI = EMLWriter.newInstance(true);
 
   @Test
   public void testWrite() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream(TEST_EML_FILE));
     d.setKey(UUID.randomUUID());
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
@@ -35,7 +38,7 @@ public class EMLWriterTest {
   @Test
   public void testWriteOmitXmlDeclaration() throws Exception {
     EMLWriter emlWriter = EMLWriter.newInstance(false, true);
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream(TEST_EML_FILE));
     d.setKey(UUID.randomUUID());
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
@@ -44,7 +47,7 @@ public class EMLWriterTest {
 
   @Test
   public void testWriteNullContact() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream(TEST_EML_FILE));
     d.setKey(UUID.randomUUID());
     d.getContacts().clear();
     StringWriter writer = new StringWriter();
@@ -64,13 +67,33 @@ public class EMLWriterTest {
 
   @Test
   public void testNullAddress() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    Dataset d = DatasetParser.build(FileUtils.classpathStream(TEST_EML_FILE));
     d.setKey(UUID.randomUUID());
     Contact c = d.getContacts().get(0);
     c.getAddress().add(null);
     c.getAddress().add(null);
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
+  }
+
+  @Test
+  public void testNoLastName() throws Exception {
+    Dataset d = DatasetParser.build(FileUtils.classpathStream(TEST_EML_FILE));
+    d.setKey(UUID.randomUUID());
+
+    // remove all lastName for this test
+    d.getContacts().forEach( c -> {
+      if(c.getFirstName() != null){
+        c.setLastName(null);
+      }
+    });
+    StringWriter writer = new StringWriter();
+    emlWriter.writeTo(d, writer);
+    ByteArrayInputStream bas = new ByteArrayInputStream(writer.toString().getBytes());
+    StreamSource ss = new StreamSource(bas);
+
+    EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
+    validator.validate(ss);
   }
 
   @Test

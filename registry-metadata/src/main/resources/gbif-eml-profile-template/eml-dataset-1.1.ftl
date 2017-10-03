@@ -12,10 +12,15 @@
     </#if>
   </#macro>
   <#macro contact ct withRole=false>
-    <#if ct.lastName?has_content>
+    <#if ct.computeCompleteName()?has_content>
     <individualName>
-      <@elem "givenName", ct.firstName! />
-        <surName>${ct.lastName!}</surName>
+      <#if ct.lastName?has_content>
+        <@elem "givenName", ct.firstName! />
+          <surName>${ct.lastName!}</surName>
+      <#else>
+          <#--surName is mandatory in EML so but all we have if no lastname is available-->
+          <surName>${ct.computeCompleteName()}</surName>
+      </#if>
     </individualName>
     </#if>
     <@elem "organizationName", ct.organization! />
