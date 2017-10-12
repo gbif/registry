@@ -140,6 +140,11 @@ class IdentityServiceImpl implements IdentityService {
     return userMapper.getByKey(key);
   }
 
+  @Override
+  public GbifUser getBySystemSetting(String key, String value) {
+    return userMapper.getBySystemSetting(key, value);
+  }
+
   /**
    * Get a {@link GbifUser} using its identifier (username or email).
    * The username is case insensitive.

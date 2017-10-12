@@ -16,6 +16,7 @@ public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
   GbifUser get(String userName);
   GbifUser getByKey(int key);
   GbifUser getByEmail(String email);
+  GbifUser getBySystemSetting(@Param("key")String key, @Param("value")String value);
 
   /**
    * Update the lastLogin date to "now()".

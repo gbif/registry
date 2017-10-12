@@ -50,8 +50,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import org.mybatis.guice.transactional.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
@@ -83,9 +81,7 @@ import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
 public class UserManagementResource {
-
-  private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
-
+  
   //filters roles that are deprecated
   private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter(r ->
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
@@ -113,7 +109,7 @@ public class UserManagementResource {
 
   /**
    * GET a {@link UserAdminView} of a user.
-   * Mostly for admin console and access by authorized appkey (e.g. portal node backend).
+   * Mostly for admin console and access by authorized appkey (e.g. portal nodejs backend).
    * Returns the identified user account.
    * @return the {@link UserAdminView} or null
    */
@@ -124,6 +120,22 @@ public class UserManagementResource {
                                @Context HttpServletRequest request) {
 
     GbifUser user = identityService.get(username);
+    if(user == null) {
+      return null;
+    }
+    return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
+  }
+
+  @GET
+  @RolesAllowed({ADMIN_ROLE, APP_ROLE})
+  @Path("/find")
+  public UserAdminView getUserBySystemSetting(@Context HttpServletRequest request) {
+    GbifUser user = null;
+    if(request.getParameterNames().hasMoreElements()){
+      String paramName = request.getParameterNames().nextElement();
+      user = identityService.getBySystemSetting(paramName, request.getParameter(paramName));
+    }
+
     if(user == null) {
       return null;
     }

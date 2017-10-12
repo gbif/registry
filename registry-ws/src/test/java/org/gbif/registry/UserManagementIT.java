@@ -20,6 +20,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Test;
@@ -169,6 +170,19 @@ public class UserManagementIT extends PlainAPIBaseIT {
     ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(testUser.getUserName()));
     assertResponse(Response.Status.OK, cr);
 
+    assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
+  }
+
+  @Test
+  public void getUserBySystemSettings() {
+    GbifUser testUser = userTestFixture.prepareUser();
+    GbifUser createdUser = userMapper.get(testUser.getUserName());
+    createdUser.setSystemSettings(ImmutableMap.of("my.settings.key", "100_tacos=100$"));
+    userMapper.update(createdUser);
+
+    ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path("find"),
+            ImmutableMap.of("my.settings.key", "100_tacos=100$"));
+    assertResponse(Response.Status.OK, cr);
     assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
   }
 

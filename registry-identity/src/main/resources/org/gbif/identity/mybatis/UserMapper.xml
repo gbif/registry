@@ -95,6 +95,12 @@
     WHERE lower(u.email) = lower(#{x}) AND u.deleted IS NULL
   </select>
 
+  <select id="getBySystemSetting" resultMap="USER_MAP" parameterType="java.lang.String">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    WHERE u.system_settings->#{key} = #{value} AND u.deleted IS NULL
+  </select>
+
   <update id="update" parameterType="GbifUser">
     UPDATE public.user
     SET <include refid="USER_UPDATE"/>

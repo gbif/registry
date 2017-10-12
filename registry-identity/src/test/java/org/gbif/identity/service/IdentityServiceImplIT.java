@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -152,6 +153,21 @@ public class IdentityServiceImplIT {
     //but we should be able to login using the lowercase version
     newUser = identityService.get("myemail@b.com");
     assertNotNull("Can get the user using the email in lowercase", newUser.getKey());
+  }
+
+  @Test
+  public void testGetBySystemSetting() throws Exception {
+    GbifUser u1 = generateUser();
+    u1.setSystemSettings(ImmutableMap.of("my.app.setting", "secret-magic"));
+
+    // create
+    UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the Username to be set. " + result.getConstraintViolation(), result.getUsername());
+    GbifUser newUser = identityService.getBySystemSetting("my.app.setting", "secret-magic");
+    assertNotNull("Can get the user using systemSettings", newUser.getKey());
+
+    newUser = identityService.getBySystemSetting("my.app.setting", "wrong-magic");
+    assertNull("Can NOT get the user using wrong systemSettings", newUser);
   }
 
   @Test

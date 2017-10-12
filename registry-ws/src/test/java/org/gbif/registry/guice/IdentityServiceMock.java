@@ -45,6 +45,12 @@ public class IdentityServiceMock implements IdentityService {
             .orElse(null);
   }
 
+  @Nullable
+  @Override
+  public GbifUser getBySystemSetting(String key, String value) {
+    return null;
+  }
+
   /**
    * Authenticates the user by a simple match of username and pwd.
    */

@@ -45,6 +45,17 @@ public interface IdentityService extends IdentityAccessService {
   @Nullable
   GbifUser getByKey(int id);
 
+
+  /**
+   * Get a user by systemSettings (e.g. Orcid login).
+   * The key and the value shall match.
+   * @param key key of the systemSetting to check
+   * @param value value of the systemSetting to check
+   * @return The user or null
+   */
+  @Nullable
+  GbifUser getBySystemSetting(String key, String value);
+
   /**
    * Checks if a user requires a confirmation.
    * Confirmation can be for a new user or a password change.
