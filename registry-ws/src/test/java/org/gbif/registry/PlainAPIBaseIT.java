@@ -5,11 +5,12 @@ import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServerWithIdentity;
 import org.gbif.registry.ws.fixtures.TestClient;
-import org.gbif.registry.ws.util.JerseyBaseClient;
 import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.util.JerseyBaseClient;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import javax.ws.rs.HttpMethod;
@@ -120,11 +121,16 @@ public abstract class PlainAPIBaseIT {
    *
    * @return
    */
-  public ClientResponse getWithSignedRequest(String username, Function<UriBuilder, UriBuilder> uriBuilder) {
-    ClientRequest clientRequest = generateGetClientRequest(uriBuilder);
+  public ClientResponse getWithSignedRequest(String username, Function<UriBuilder, UriBuilder> uriBuilder,
+                                             Map<String, String> queryParameters) {
+    ClientRequest clientRequest = generateGetClientRequest(uriBuilder, queryParameters);
     //sign the request, we create users using the appKeys
     getAuthService().signRequest(username, clientRequest);
     return publicClient.getClient().handle(clientRequest);
+  }
+
+  public ClientResponse getWithSignedRequest(String username, Function<UriBuilder, UriBuilder> uriBuilder) {
+    return getWithSignedRequest(username, uriBuilder, null);
   }
 
   public ClientResponse putWithSignedRequest(String username, @Nullable Object entity, Function<UriBuilder, UriBuilder> uriBuilder) {
@@ -143,7 +149,7 @@ public abstract class PlainAPIBaseIT {
    * @return
    */
   private ClientRequest generatePostClientRequest(Function<UriBuilder, UriBuilder> uriBuilder) {
-    return generateClientRequest(HttpMethod.POST, uriBuilder);
+    return generateClientRequest(HttpMethod.POST, uriBuilder, null);
   }
 
   /**
@@ -151,22 +157,33 @@ public abstract class PlainAPIBaseIT {
    * @param uriBuilder
    * @return
    */
-  private ClientRequest generateGetClientRequest(Function<UriBuilder, UriBuilder> uriBuilder) {
-    return generateClientRequest(HttpMethod.GET, uriBuilder);
+  private ClientRequest generateGetClientRequest(Function<UriBuilder, UriBuilder> uriBuilder,
+                                                 Map<String, String> queryParameters) {
+    return generateClientRequest(HttpMethod.GET, uriBuilder, queryParameters);
   }
 
   private ClientRequest generatePutClientRequest(Function<UriBuilder, UriBuilder> uriBuilder) {
-    return generateClientRequest(HttpMethod.PUT, uriBuilder);
+    return generateClientRequest(HttpMethod.PUT, uriBuilder, null);
   }
 
   /**
    * Generate a ClientRequest using a {@link Function} to get the URL to point to.
    * @param httpMethod
-   * @param uriBuilder
+   * @param uriBuilderFct
+   * @param queryParameters optional, can be null
    * @return
    */
-  private ClientRequest generateClientRequest(String httpMethod, Function<UriBuilder, UriBuilder> uriBuilder) {
-    URI uri = uriBuilder.apply(UriBuilder.fromUri(wsBaseUrl).path(getResourcePath())).build();
+  private ClientRequest generateClientRequest(String httpMethod, Function<UriBuilder, UriBuilder> uriBuilderFct,
+                                              Map<String, String> queryParameters) {
+
+    UriBuilder uriBuilder = uriBuilderFct.apply(UriBuilder.fromUri(wsBaseUrl).path(getResourcePath()));
+    if(queryParameters != null) {
+      for( Map.Entry<String, String> entry : queryParameters.entrySet()) {
+        uriBuilder = uriBuilder.queryParam(entry.getKey(), entry.getValue());
+      }
+    }
+
+    URI uri = uriBuilder.build();
     return ClientRequest.create().type(MediaType.APPLICATION_JSON_TYPE)
             .build(uri, httpMethod);
   }
