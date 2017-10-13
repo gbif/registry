@@ -39,3 +39,10 @@ Options:
  * `--list-failed-doi`: list all DOIs from the database (dataset and download) with the status FAILED
  * `--doi <doi> --export <file name>`: export the Datacite metadata document from the database into the file specified.
  * `--skip-dia`: skip the diagnostic, used with `--doi-list <DOI file> --fix-doi` to not print the diagnostic of each DOIs.
+
+### dataset-updater
+Temporary tool to force the update of a dataset in the database by re-interpreting its metadata document (EML).
+
+```shell
+java -jar registry-cli.jar dataset-updater --log-config logback-util.xml --conf dataset-updater.yaml --dataset-key e95d0010-b3f1-11de-82f8-b8a03c50a862
+```
