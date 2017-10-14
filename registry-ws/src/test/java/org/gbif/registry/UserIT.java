@@ -60,7 +60,7 @@ public class UserIT extends PlainAPIBaseIT {
 
   @Override
   protected String getResourcePath() {
-    return UserTestFixture.USER_RESOURCE_PATH;
+    return UserTestFixture.IDENTITY_RESOURCE_PATH;
   }
 
   @Override

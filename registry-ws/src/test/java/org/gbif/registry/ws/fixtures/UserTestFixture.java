@@ -20,7 +20,12 @@ import static org.junit.Assert.fail;
  */
 public class UserTestFixture {
 
+  public static final String IDENTITY_RESOURCE_PATH = "identity";
+  public static final String IDENTITY_ADMIN_RESOURCE_PATH = "admin/identity";
   public static final String USER_RESOURCE_PATH = "user";
+
+  public static final String RESET_PASSWORD_PATH = "resetPassword";
+  public static final String UPDATE_PASSWORD_PATH = "updatePassword";
 
   public static final String USERNAME = "user_12";
   public static final String ALTERNATE_USERNAME = "user_13";

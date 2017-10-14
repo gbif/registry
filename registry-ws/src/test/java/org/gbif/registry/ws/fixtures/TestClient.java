@@ -9,7 +9,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 
-import static org.gbif.registry.ws.fixtures.UserTestFixture.USER_RESOURCE_PATH;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.IDENTITY_RESOURCE_PATH;
 
 /**
  * Generates and offer utilities related to authenticated client in the context of testing.
@@ -66,7 +66,7 @@ public class TestClient {
    */
   public ClientResponse login(String username, String password) {
     return generateAuthenticatedClient(username, password,
-            USER_RESOURCE_PATH).get(wr -> wr.path("login"));
+            IDENTITY_RESOURCE_PATH).get(wr -> wr.path("login"));
   }
 
   /**

@@ -41,7 +41,7 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
  * - keys (user id) are not considered public, therefore the username is used as key
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser})
  */
-@Path("user")
+@Path("identity")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton

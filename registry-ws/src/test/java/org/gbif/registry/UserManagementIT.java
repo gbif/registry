@@ -17,7 +17,6 @@ import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.util.UUID;
-import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +25,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Test;
 
 import static org.gbif.registry.ws.fixtures.UserTestFixture.ALTERNATE_USERNAME;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.IDENTITY_ADMIN_RESOURCE_PATH;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.RESET_PASSWORD_PATH;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.UPDATE_PASSWORD_PATH;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.USER_RESOURCE_PATH;
 import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
 
 import static junit.framework.TestCase.assertEquals;
@@ -41,10 +44,7 @@ import static org.junit.Assert.assertNull;
 public class UserManagementIT extends PlainAPIBaseIT {
 
   private static final String CHANGED_PASSWORD = "123456";
-  private static final String RESET_PASSWORD_PATH = "resetPassword";
-  private static final String UPDATE_PASSWORD_PATH = "updatePassword";
 
-  private static final String RESOURCE_PATH = "admin/user";
   private GbifAuthService gbifAuthService = GbifAuthService.singleKeyAuthService(
           TestConstants.IT_APP_KEY, TestConstants.IT_APP_SECRET);
 
@@ -70,7 +70,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     String newUserName = ALTERNATE_USERNAME;
 
     ClientResponse cr = postSignedRequest(TestConstants.IT_APP_KEY,
-            UserTestFixture.generateUser(newUserName), Function.identity());
+            UserTestFixture.generateUser(newUserName), (uriBldr) -> uriBldr.path(USER_RESOURCE_PATH));
     assertResponse(Response.Status.CREATED, cr);
 
     //test we can't login (challengeCode not confirmed)
@@ -97,7 +97,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     GbifAuthService gbifAuthServiceKey2 = GbifAuthService.singleKeyAuthService(
             TestConstants.IT_APP_KEY2, TestConstants.IT_APP_SECRET2);
     ClientResponse cr = postSignedRequest(gbifAuthServiceKey2, TestConstants.IT_APP_KEY2,
-            UserTestFixture.generateUser(newUserName), Function.identity());
+            UserTestFixture.generateUser(newUserName), (uriBldr) -> uriBldr.path(USER_RESOURCE_PATH));
     //it will authenticate since the appKey is valid but it won't get the APP role
     assertResponse(Response.Status.FORBIDDEN, cr);
   }
@@ -167,7 +167,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     GbifUser testUser = userTestFixture.prepareUser();
     GbifUser createdUser = userMapper.get(testUser.getUserName());
 
-    ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(testUser.getUserName()));
+    ClientResponse cr = getWithSignedRequest(TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(USER_RESOURCE_PATH).path(testUser.getUserName()));
     assertResponse(Response.Status.OK, cr);
 
     assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
@@ -195,7 +195,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
     assertResponse(Response.Status.OK, cr);
 
     testUser.setFirstName(newUserFirstName);
-    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser, uriBldr -> uriBldr.path(testUser.getUserName()));
+    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser, uriBldr -> uriBldr.path(USER_RESOURCE_PATH).path(testUser.getUserName()));
     assertResponse(Response.Status.NO_CONTENT, cr);
 
     //load user directly from the database
@@ -209,12 +209,12 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
     //update user2 using email from user1
     testUser2.setEmail(testUser.getEmail());
-    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
+    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(USER_RESOURCE_PATH).path(ALTERNATE_USERNAME));
     assertEquals(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), cr.getStatus());
     assertEquals(ModelMutationError.EMAIL_ALREADY_IN_USE, cr.getEntity(UserModelMutationResult.class).getError());
 
     testUser2.setEmail("12345@mail.com");
-    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
+    cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(USER_RESOURCE_PATH).path(ALTERNATE_USERNAME));
     assertResponse(Response.Status.NO_CONTENT, cr);
   }
 
@@ -225,7 +225,7 @@ public class UserManagementIT extends PlainAPIBaseIT {
 
   @Override
   protected String getResourcePath() {
-    return RESOURCE_PATH;
+    return IDENTITY_ADMIN_RESOURCE_PATH;
   }
 
   @Override
