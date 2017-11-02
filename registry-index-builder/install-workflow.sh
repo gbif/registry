@@ -42,4 +42,4 @@ echo "Create collection"
 curl -s """${solr_url}"/admin/collections?action=CREATE\&name="${solr_collection}"\&"${solr_opts}"\&collection.configName="${solr_collection}"""
 
 echo "Running Oozie workflow"
-oozie job --oozie ${oozie_url} -config $P.properties -D oozie.wf.application.path=${namenode}/registry-index-builder-$P/ -run
+sudo -E -u hdfs oozie job --oozie ${oozie_url} -config $P.properties -D oozie.wf.application.path=${namenode}/registry-index-builder-$P/ -run
