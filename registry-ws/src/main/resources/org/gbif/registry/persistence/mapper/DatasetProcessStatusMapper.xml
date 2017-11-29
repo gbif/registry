@@ -11,8 +11,11 @@
     </constructor>
   </resultMap>
 
-   <!-- Partial auto-mapping -->
+  <!-- Partial auto-mapping -->
   <resultMap id="DATASET_PROCESS_STATUS_MAP" type="DatasetProcessStatus" autoMapping="true">
+    <!-- Default of DATE only gives day precision and we need second precision -->
+    <result property="startedCrawling" column="startedCrawling" jdbcType="TIMESTAMP"/>
+    <result property="finishedCrawling" column="finishedCrawling" jdbcType="TIMESTAMP"/>
     <association property="crawlJob" resultMap="CRAWL_JOB_MAP"/>
   </resultMap>
 
@@ -30,8 +33,8 @@
     #{crawlJob.attempt,jdbcType=INTEGER},
     #{crawlJob.targetUrl,jdbcType=VARCHAR},
     #{crawlJob.endpointType,jdbcType=OTHER},
-    #{startedCrawling,jdbcType=DATE},
-    #{finishedCrawling,jdbcType=DATE},
+    #{startedCrawling,jdbcType=TIMESTAMP},
+    #{finishedCrawling,jdbcType=TIMESTAMP},
     #{finishReason,jdbcType=OTHER},
     #{processStateOccurrence,jdbcType=OTHER},
     #{processStateChecklist,jdbcType=OTHER},
@@ -52,14 +55,14 @@
   </sql>
 
 
-   <!--
-    key, created and deleted are never changed
-   -->
+  <!--
+   key, created and deleted are never changed
+  -->
   <sql id="DATASET_PROCESS_STATUS_UPDATE">
     target_url= #{crawlJob.targetUrl,jdbcType=VARCHAR},
     endpoint_type =#{crawlJob.endpointType,jdbcType=OTHER},
-    started_crawling = #{startedCrawling,jdbcType=DATE},
-    finished_crawling =#{finishedCrawling,jdbcType=DATE},
+    started_crawling = #{startedCrawling,jdbcType=TIMESTAMP},
+    finished_crawling = #{finishedCrawling,jdbcType=TIMESTAMP},
     finish_reason = #{finishReason,jdbcType=OTHER},
     process_state_occurrence = #{processStateOccurrence,jdbcType=OTHER},
     process_state_checklist = #{processStateChecklist,jdbcType=OTHER},
@@ -97,7 +100,7 @@
     UPDATE crawl_history
     SET <include refid="DATASET_PROCESS_STATUS_UPDATE"/>
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
-     AND attempt = #{crawlJob.attempt,jdbcType=INTEGER}
+    AND attempt = #{crawlJob.attempt,jdbcType=INTEGER}
   </update>
 
 
@@ -134,18 +137,18 @@
 
   <select id="countAborted" resultType="Integer">
     SELECT COUNT(*) FROM (
-      SELECT DISTINCT ON (dataset_key) dataset_key, finish_reason, started_crawling, finished_crawling
-      FROM crawl_history
-      ORDER BY started_crawling desc, dataset_key
+    SELECT DISTINCT ON (dataset_key) dataset_key, finish_reason, started_crawling, finished_crawling
+    FROM crawl_history
+    ORDER BY started_crawling desc, dataset_key
     ) AS crawls
     WHERE finish_reason='ABORT'
   </select>
 
   <select id="listAborted" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="Pageable">
     SELECT * FROM (
-      SELECT DISTINCT ON (dataset_key) <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
-      FROM crawl_history
-      ORDER BY started_crawling DESC, dataset_key
+    SELECT DISTINCT ON (dataset_key) <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+    FROM crawl_history
+    ORDER BY started_crawling DESC, dataset_key
     ) AS crawls
     WHERE finish_reason='ABORT'
     LIMIT #{page.limit} OFFSET #{page.offset}
