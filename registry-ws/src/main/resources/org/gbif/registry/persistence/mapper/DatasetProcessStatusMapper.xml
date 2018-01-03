@@ -59,8 +59,8 @@
    key, created and deleted are never changed
   -->
   <sql id="DATASET_PROCESS_STATUS_UPDATE">
-    target_url= #{crawlJob.targetUrl,jdbcType=VARCHAR},
-    endpoint_type =#{crawlJob.endpointType,jdbcType=OTHER},
+    target_url = #{crawlJob.targetUrl,jdbcType=VARCHAR},
+    endpoint_type = #{crawlJob.endpointType,jdbcType=OTHER},
     started_crawling = #{startedCrawling,jdbcType=TIMESTAMP},
     finished_crawling = #{finishedCrawling,jdbcType=TIMESTAMP},
     finish_reason = #{finishReason,jdbcType=OTHER},
