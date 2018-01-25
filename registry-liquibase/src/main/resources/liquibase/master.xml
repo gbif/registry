@@ -54,4 +54,5 @@
   <include file="liquibase/048-users.xml"/>
   <include file="liquibase/049-challenge-code-table.xml"/>
   <include file="liquibase/050-user-email-index.xml"/>
+  <include file="liquibase/051-download-erase.xml"/>
 </databaseChangeLog>

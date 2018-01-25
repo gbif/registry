@@ -30,7 +30,10 @@ import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Collection;
 import java.util.UUID;
 import javax.validation.ValidationException;
@@ -113,6 +116,8 @@ public class OccurrenceDownloadIT {
     download.setRequest(request);
     download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
+    download.setEraseAfter(Date.from(OffsetDateTime.now(ZoneOffset.UTC).plusMonths(6).toInstant()));
+
     return download;
   }
 

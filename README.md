@@ -4,8 +4,6 @@ The GBIF Registry is a core component of the architecture responsible for provid
 
 As a distributed network, the registry serves a central coordination mechanism, used for example to allow publishers to declare their existence and for data integrating components to discover how to access published datasets and interoperate with the publisher.
 
-See also: http://www.gbif.org/infrastructure/registry
-
 ## To build the project
 
 1. Create an empty PostgreSQL database "registry_it".  You may need to run

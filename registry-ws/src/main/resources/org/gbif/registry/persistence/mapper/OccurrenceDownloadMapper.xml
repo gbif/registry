@@ -16,7 +16,7 @@
   </resultMap>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after
   </sql>
 
 
@@ -33,6 +33,7 @@
     doi = #{doi,jdbcType=VARCHAR},
     total_records = #{totalRecords,jdbcType=INTEGER},
     license = #{license,jdbcType=OTHER},
+    erase_after = #{eraseAfter,jdbcType=TIMESTAMP},
     modified = now()
   </sql>
 
@@ -50,7 +51,8 @@
     #{request.sendNotification,jdbcType=BOOLEAN},
     #{request.format,jdbcType=OTHER},
     now(), <!-- created -->
-    now() <!-- modified -->
+    now(), <!-- modified -->
+    #{eraseAfter,jdbcType=TIMESTAMP}
   </sql>
 
   <select id="get" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">

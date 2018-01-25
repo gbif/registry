@@ -17,7 +17,7 @@ enabling us to automate the reporting of those uses to publishers and users alik
 
 <h2>Join one of the communities</h2>
 
-<p>The <a href="http://lists.gbif.org/mailman/listinfo/api-users">GBIF API users list</a> provides an active peer-to-peer discussion
+<p>The <a href="https://lists.gbif.org/mailman/listinfo/api-users">GBIF API users list</a> provides an active peer-to-peer discussion
 group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
 
 <p>With the release of our new website in August 2017, we now expect to turn our attention to developing a replacement
