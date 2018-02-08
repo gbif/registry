@@ -323,6 +323,9 @@
             <@contact ct=personnel withRole=true/>
           </personnel>
           </#list>
+          <abstract>
+              <para>${dataset.project.abstract!}</para>
+          </abstract>
           <funding>
               <para>${dataset.project.funding!}</para>
           </funding>

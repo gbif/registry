@@ -744,6 +744,11 @@ public class DatasetParserTest {
     // Project ID
     assertEquals("AODN:60978150-1641-11dd-a326-00188b4c0af8", dataset.getProject().getIdentifier());
 
+    // Project abstract and descriptions.
+    assertTrue(dataset.getProject().getAbstract().startsWith("Reef Life Survey (RLS) aims to improve"));
+    assertTrue(dataset.getProject().getStudyAreaDescription().startsWith("RLS surveys have been undertaken"));
+    assertTrue(dataset.getProject().getDesignDescription().startsWith("As of December 2015, the majority of global data"));
+
     // Multiple collections
     List<Collection> collections = dataset.getCollections();
     assertEquals(2, collections.size());

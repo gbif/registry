@@ -361,6 +361,7 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addCallParam(prefix, 0, "id");
     digester.addBeanPropertySetter(prefix + "/title", "title");
     addContactRules(digester, prefix + "/personnel", "addContact");
+    digester.addBeanPropertySetter(prefix + "/abstract/para", "abstract");
     digester.addBeanPropertySetter(prefix + "/funding/para", "funding");
     digester.addBeanPropertySetter(prefix + "/studyAreaDescription/descriptor/descriptorValue", "studyAreaDescription");
     digester.addBeanPropertySetter(prefix + "/designDescription/description/para", "designDescription");

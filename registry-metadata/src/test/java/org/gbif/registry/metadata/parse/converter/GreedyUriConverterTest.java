@@ -47,6 +47,9 @@ public class GreedyUriConverterTest {
     uri = (URI) CONVERTER.convertToType(URI.class, "http://www.gbif.org");
     assertNotNull(uri);
     assertEquals("http", uri.getScheme());
+    uri = (URI) CONVERTER.convertToType(URI.class, "https://www.gbif.org");
+    assertNotNull(uri);
+    assertEquals("https", uri.getScheme());
 
     assertEquals("http://www.wii.gov.in", CONVERTER.convert("http://www.wii.gov.in").toString());
     assertEquals("http://www.wii.gov.in", CONVERTER.convert("www.wii.gov.in").toString());
