@@ -241,7 +241,7 @@ public class LegacyOrganizationResource {
     body.append("If you did not request this information, please disregard this message\n\n");
 
     body.append("GBIF (Global Biodiversity Information Facility)\n");
-    body.append("http://www.gbif.org\n");
+    body.append("https://www.gbif.org\n");
     body.append(ccEmail);
 
     return body.toString();

@@ -61,7 +61,7 @@ public class OaipmhModule extends AbstractModule {
                       "\t<dc:description>\n" +
                       "\t\tThe GBIF Registry — the entities that make up the GBIF network.\n" +
                       "\t\tThis OAI-PMH service exposes Datasets, organized into sets of country, installation and resource type.\n" +
-                      "\t\tFor more information, see http://www.gbif.org/developer/registry\n" +
+                      "\t\tFor more information, see https://www.gbif.org/developer/registry\n" +
                       "\t</dc:description>\n" +
                       "</oai_dc:dc>\n"
       ));

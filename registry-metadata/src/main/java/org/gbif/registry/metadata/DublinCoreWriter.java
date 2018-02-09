@@ -46,7 +46,7 @@ public class DublinCoreWriter {
 
   //We should probably use @Named("portal.url") but it would be more appropriate to wait
   //until we turn this class in a non static one.
-  private static final String IDENTIFIER_PREFIX = "http://www.gbif.org/dataset/";
+  private static final String IDENTIFIER_PREFIX = "https://www.gbif.org/dataset/";
   private static final FastDateFormat FDF = DateFormatUtils.ISO_DATE_FORMAT;
   private static final TemporalCoverageFormatterVisitor TC_FORMATTER = new DcTemporalTemporalCoverageFormatter();
 

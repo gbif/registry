@@ -47,6 +47,6 @@
         </#if>
     </#list>
     <dc:format>${dc.format}</dc:format>
-    <dc:source>Global Biodiversity Information Facility (GBIF) http://www.gbif.org</dc:source>
+    <dc:source>Global Biodiversity Information Facility (GBIF) https://www.gbif.org</dc:source>
 </oai_dc:dc>
 </#escape>
