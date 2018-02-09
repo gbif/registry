@@ -289,8 +289,8 @@ public class DoiSynchronizerService {
       return false;
     }
 
-    // only handle download with status SUCCEEDED
-    if (Download.Status.SUCCEEDED != download.getStatus()) {
+    // only handle download with status SUCCEEDED or FILE_ERASED
+    if (Download.Status.SUCCEEDED != download.getStatus() || Download.Status.FILE_ERASED != download.getStatus()) {
       LOG.error("Download with DOI {} status is {}", doi, download.getStatus());
       return false;
     }
