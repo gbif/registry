@@ -52,7 +52,7 @@ public class DublinCoreWriterTest {
     d.setPubDate(calendar.getTime());
     d.setDescription("Description d'un dataset sur les claviers qwerty");
 
-    d.setHomepage(URI.create("http:///www.gbif.org"));
+    d.setHomepage(URI.create("http://www.gbif.org"));
     d.setPurpose("Le but de ce dataset est de ...");
     List<KeywordCollection> listKeyWordColl = Lists.newArrayList();
     KeywordCollection keyword = new KeywordCollection();
