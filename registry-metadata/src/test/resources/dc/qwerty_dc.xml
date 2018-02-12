@@ -2,10 +2,10 @@
     <dc:title>This is a keyboard dataset</dc:title>
     <dc:publisher>Qwerty U</dc:publisher>
 
-    <dc:identifier>http://www.gbif.org/dataset/bdd601cc-00a7-431c-9724-d5b03170fcb2</dc:identifier>
+    <dc:identifier>https://www.gbif.org/dataset/bdd601cc-00a7-431c-9724-d5b03170fcb2</dc:identifier>
     <dc:subject>keyboard, qwerty</dc:subject>
 
-    <dc:source>http:///www.gbif.org</dc:source>
+    <dc:source>http://www.gbif.org</dc:source>
     <dc:description>Description d&apos;un dataset sur les claviers qwerty</dc:description>
     <dc:description>Le but de ce dataset est de ...</dc:description>
     <dc:description>3 occurrences</dc:description>
@@ -25,5 +25,5 @@
     <dc:coverage>-10,20 / 10,-20 (min, max Latitude / min, max Longitude)</dc:coverage>
     <dc:format>application/dwca+zip</dc:format>
 
-    <dc:source>Global Biodiversity Information Facility (GBIF) http://www.gbif.org</dc:source>
+    <dc:source>Global Biodiversity Information Facility (GBIF) https://www.gbif.org</dc:source>
 </oai_dc:dc>
