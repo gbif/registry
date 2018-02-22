@@ -168,6 +168,9 @@
     <if test="country != null" >
       AND o.country = #{country,jdbcType=OTHER}
     </if>
+    <if test="isEndorsed != null" >
+      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -183,6 +186,9 @@
     </if>
     <if test="country != null" >
       AND o.country = #{country,jdbcType=OTHER}
+    </if>
+    <if test="isEndorsed != null" >
+      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
     </if>
   </select>
 

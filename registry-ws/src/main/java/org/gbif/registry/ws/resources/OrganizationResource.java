@@ -201,7 +201,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
-    return list(null, null, null, query, page);
+    return list(null, null, null, null, query, page);
   }
 
   /**
@@ -213,6 +213,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   public PagingResponse<Organization> list(@Nullable @Context Country country,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
+    @Nullable @QueryParam("isEndorsed") Boolean isEndorsed,
     @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
 
@@ -224,15 +225,15 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     // short circuited list all
-    if (country == null && Strings.isNullOrEmpty(query)) {
+    if (country == null && isEndorsed == null && Strings.isNullOrEmpty(query)) {
       return list(page);
     }
 
-    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query and country.
-    long total = organizationMapper.count(query, country);
+    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query, country and endorsement.
+    long total = organizationMapper.count(query, country, isEndorsed);
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
-                                            organizationMapper.search(query, country, page));
+                                            organizationMapper.search(query, country, isEndorsed, page));
   }
 
   @GET

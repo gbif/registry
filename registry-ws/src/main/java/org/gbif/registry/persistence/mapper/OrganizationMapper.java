@@ -107,12 +107,11 @@ public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization
    * Overloaded search to allow it to scope the search by country.
    */
   List<Organization> search(@Nullable @Param("query") String query, @Param("country") Country country,
-                            @Nullable @Param("page") Pageable page);
-
+                            @Param("isEndorsed") Boolean isEndorsed, @Nullable @Param("page") Pageable page);
 
   /**
    * Overloaded count to allow a search scoped by country.
    */
-  int count(@Nullable @Param("query") String query, @Param("country") Country country);
+  int count(@Nullable @Param("query") String query, @Param("country") Country country, @Param("isEndorsed") Boolean isEndorsed);
 
 }
