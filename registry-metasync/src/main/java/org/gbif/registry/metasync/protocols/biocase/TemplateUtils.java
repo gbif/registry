@@ -40,7 +40,7 @@ final class TemplateUtils {
 
   /**
    * Returns a string that can be used to retrieve metadata about a specific dataset identified by a title. You get that
-   * title by first doing an inventory request. Under tho hood this does a {@code search} request.
+   * title by first doing an inventory request. Under the hood this does a {@code search} request.
    */
   public static String getBiocaseMetadataRequest(String contentNamespace, String datasetTitle) {
     Context context = new VelocityContext();

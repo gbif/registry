@@ -126,8 +126,10 @@ public class BiocaseMetadataSynchroniserTest {
     assertThat(dataset.getCitation().getText()).isEqualTo(
       "Jahn, R. (Ed.) 2013+ (continuously updated): Collections of Phytoplankton at BGBM");
     // endpoints
-    assertThat(dataset.getEndpoints().size()).isEqualTo(1);
-    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.BIOCASE);
+    assertThat(dataset.getEndpoints().size()).isEqualTo(3);
+    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.DWC_ARCHIVE);
+    assertThat(dataset.getEndpoints().get(1).getType()).isEqualTo(EndpointType.OTHER);
+    assertThat(dataset.getEndpoints().get(2).getType()).isEqualTo(EndpointType.BIOCASE);
   }
 
   /**
@@ -196,7 +198,7 @@ public class BiocaseMetadataSynchroniserTest {
 
     Dataset dataset = syncResult.addedDatasets.get(0);
     assertThat(dataset.getTitle()).isEqualTo("Pontaurus");
-    // dectected license CC0 1.0 in License/URI="https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    // detected license CC0 1.0 in License/URI="https://creativecommons.org/publicdomain/zero/1.0/legalcode"
     assertThat(dataset.getLicense()).isEqualTo(License.CC0_1_0);
     assertThat(dataset.getRights()).isNull();
     // endpoints

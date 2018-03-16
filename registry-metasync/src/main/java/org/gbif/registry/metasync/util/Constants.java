@@ -19,6 +19,7 @@ public final class Constants {
   public static final String DATE_LAST_UPDATED = "dateLastUpdated";
   public static final String DECLARED_COUNT = "declaredCount";
   public static final String INSTALLATION_VERSION = "version";
+  public static final String ARCHIVE_ORIGIN = "archiveOrigin";
   // END: "Names" used in Machine Tags
 
   private Constants() {

@@ -9,6 +9,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.util.Constants;
@@ -67,7 +68,7 @@ public class RegistryUpdater {
       Dataset existingDataset = entry.getKey();
       UUID datasetKey = existingDataset.getKey();
       if (skipDatasetUpdate(existingDataset)) {
-        LOG.info("Dataset [{}] updated at source untouched in Registry because it's locked or contains a DwC-A "
+        LOG.info("Dataset [{}] has been updated at source, but will not be updated in the Registry because it's locked or contains a DwC-A "
           + "endpoint, which takes precedence", datasetKey);
       } else {
         LOG.info("Updating dataset [{}]", datasetKey);
@@ -179,7 +180,8 @@ public class RegistryUpdater {
   /**
    * Check if the dataset update should be skipped. Currently, there are 2 reasons for skipping:
    * 1) The dataset has been locked for automatic updates
-   * 2) The dataset has been migrated to DwC-A, in other words, it has an endpoint of type Darwin Core.
+   * 2) The dataset has been migrated to IPT/HTTP, in other words, it has an endpoint of type Darwin Core
+   *    which wasn't added by a BioCASe sync.
    *
    * @param existingDataset existing dataset (dataset as it currently exists in registry)
    * @return true if the dataset update should be skipped, false otherwise
@@ -189,9 +191,14 @@ public class RegistryUpdater {
     if (existingDataset.isLockedForAutoUpdate()) {
       return true;
     }
-    // is the dataset migrated to DwC-A?
+    // is the dataset migrated to IPT/HTTP DwC-A?
     for (Endpoint endpoint : existingDataset.getEndpoints()) {
       if (endpoint.getType() == EndpointType.DWC_ARCHIVE) {
+        for (MachineTag tag : endpoint.getMachineTags()) {
+          if (tag.getNamespace().equals(Constants.METADATA_NAMESPACE) && tag.getName().equals(Constants.ARCHIVE_ORIGIN)) {
+            return !tag.getValue().equals(InstallationType.BIOCASE_INSTALLATION.name());
+          }
+        }
         return true;
       }
     }
@@ -202,7 +209,7 @@ public class RegistryUpdater {
   private void saveDeletedDatasets(SyncResult result) {
     for (Dataset dataset : result.deletedDatasets) {
       if (dataset.isLockedForAutoUpdate()) {
-        LOG.info("Dataset [{}] deleted at source but left in Registry because it's locked", dataset.getKey());
+        LOG.info("Dataset [{}] was deleted at source, but left in the Registry because it's locked", dataset.getKey());
       } else {
         LOG.info("Deleting dataset [{}]", dataset.getKey());
         datasetService.delete(dataset.getKey());

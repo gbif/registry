@@ -25,10 +25,12 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.BaseProtocolHandler;
+import org.gbif.registry.metasync.protocols.biocase.model.BiocaseArchive;
 import org.gbif.registry.metasync.protocols.biocase.model.InventoryDataset;
 import org.gbif.registry.metasync.protocols.biocase.model.NewDatasetInventory;
 import org.gbif.registry.metasync.protocols.biocase.model.OldDatasetInventory;
@@ -39,6 +41,7 @@ import org.gbif.registry.metasync.util.Constants;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -99,8 +102,8 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
           if (capabilities.getPreferredSchema() == null) {
             throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
           }
-          List<String> datasetInventory = getDatasetInventory(capabilities, endpoint);
-          for (String datasetTitle : datasetInventory) {
+          Map<String,InventoryDataset> datasetInventory = getDatasetInventory(capabilities, endpoint);
+          for (String datasetTitle : datasetInventory.keySet()) {
             Dataset newDataset;
 
             if (capabilities.getPreferredSchema().equals(Constants.ABCD_12_SCHEMA)) {
@@ -108,7 +111,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
               newDataset = convertToDataset(metadata, endpoint, capabilities);
             } else {
               SimpleAbcd206Metadata metadata = get206Metadata(endpoint, datasetTitle, capabilities);
-              newDataset = convertToDataset(metadata, endpoint, capabilities);
+              newDataset = convertToDataset(metadata, endpoint, capabilities, datasetInventory.get(datasetTitle));
             }
 
             Dataset existingDataset = findDataset(datasetTitle, datasets);
@@ -151,7 +154,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
    * Tries to get an inventory (list) of Datasets for this BioCASe Endpoint. Depending on the version of the
    * Installation there are two ways to do this.
    */
-  private List<String> getDatasetInventory(Capabilities capabilities, Endpoint endpoint) throws MetadataException {
+  private Map<String,InventoryDataset> getDatasetInventory(Capabilities capabilities, Endpoint endpoint) throws MetadataException {
     String version = capabilities.getVersions().get("pywrapper");
     if (checkIfSupportsNewInventory(version)) {
       return doNewStyleInventory(endpoint);
@@ -198,14 +201,13 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
    * Does a request against the dedicated {@code inventory} endpoint which lists all Datasets that are available as well
    * as all Archives.
    */
-  // TODO: Need to return information about archives
-  private List<String> doNewStyleInventory(Endpoint endpoint) throws MetadataException {
+  private Map<String,InventoryDataset> doNewStyleInventory(Endpoint endpoint) throws MetadataException {
     URI uri = buildUri(endpoint.getUrl(), "inventory", "1");
     NewDatasetInventory inventory = doHttpRequest(uri, newDigester(NewDatasetInventory.class));
-    List<String> datasets = Lists.newArrayList();
+    Map<String,InventoryDataset> datasets = new HashMap<>();
     if (inventory == null) return datasets;
     for (InventoryDataset inventoryDataset : inventory.getDatasets()) {
-      datasets.add(inventoryDataset.getTitle());
+      datasets.put(inventoryDataset.getTitle(), inventoryDataset);
     }
     return datasets;
   }
@@ -213,11 +215,16 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
   /**
    * Does a search request against this Endpoint specially crafted to only find all Dataset titles.
    */
-  private List<String> doOldStyleInventory(Endpoint endpoint, Capabilities capabilities) throws MetadataException {
+  private Map<String,InventoryDataset> doOldStyleInventory(Endpoint endpoint, Capabilities capabilities) throws MetadataException {
     String requestParameter = TemplateUtils.getBiocaseInventoryRequest(capabilities.getPreferredSchema());
     URI uri = buildUri(endpoint.getUrl(), "request", requestParameter);
     OldDatasetInventory inventory = doHttpRequest(uri, newDigester(OldDatasetInventory.class));
-    return inventory.getDatasets();
+    Map<String,InventoryDataset> datasets = new HashMap<>();
+    if (inventory == null) return datasets;
+    for (String title : inventory.getDatasets()) {
+      datasets.put(title, null);
+    }
+    return datasets;
   }
 
   /**
@@ -241,7 +248,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
   }
 
   private Dataset convertToDataset(
-    SimpleAbcd206Metadata metadata, Endpoint installationEndpoint, Capabilities capabilities
+    SimpleAbcd206Metadata metadata, Endpoint installationEndpoint, Capabilities capabilities, InventoryDataset inventoryDataset
   ) {
     Dataset dataset = new Dataset();
     dataset.setTitle(metadata.getName());
@@ -277,6 +284,27 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
 
     dataset.setContacts(metadata.getContacts());
 
+    // Add DWC-A and ABCD-A endpoints.
+    if (inventoryDataset != null) {
+      for (BiocaseArchive archive : inventoryDataset.getArchives()) {
+        Endpoint archiveEndpoint = new Endpoint();
+        archiveEndpoint.setUrl(archive.getArchiveUrl());
+        archiveEndpoint.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE,
+                                                             Constants.ARCHIVE_ORIGIN,
+                                                             InstallationType.BIOCASE_INSTALLATION.name()));
+
+        if (archive.getRowType() != null && archive.getRowType().toString().equals(DwcTerm.Occurrence.qualifiedName())) {
+          LOG.info("Found BioCASe occurrence DWCA {}", archive);
+          archiveEndpoint.setType(EndpointType.DWC_ARCHIVE);
+        } else {
+          LOG.info("Found BioCASe ABCD archive (or non-occurrence DWCA) {}", archive);
+          archiveEndpoint.setType(EndpointType.OTHER);
+        }
+        dataset.addEndpoint(archiveEndpoint);
+      }
+    }
+
+    // Add BioCASe endpoint.
     Endpoint endpoint = new Endpoint();
     endpoint.setType(EndpointType.BIOCASE);
     endpoint.setUrl(installationEndpoint.getUrl());
