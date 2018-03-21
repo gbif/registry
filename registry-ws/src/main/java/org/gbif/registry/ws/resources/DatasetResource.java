@@ -153,6 +153,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
 
+  // OBIS network; TODO replace with value from Constants in GBIF API.
+  private final UUID OBIS_NETWORK_KEY = UUID.fromString("2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6");
+
   private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
           .expireAfterWrite(5, TimeUnit.MINUTES)
           .build(
@@ -634,20 +637,32 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Set the generated GBIF citation on the provided Dataset object.
-   * This function is used until we decide if we store the GBIF generated citation in the database.
    *
-   * see https://github.com/gbif/registry/issues/4
+   * Where the provider is in particular networks, we only check for a DOI.
+   *
    * @param dataset
    * @return
    */
   private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null && dataset.getPublishingOrganizationKey() != null) {
+    if (dataset == null || dataset.getPublishingOrganizationKey() == null) return;
+
+    boolean generateGbifCitation = ! networkMapper.listByDataset(dataset.getKey()).stream()
+      .filter(network -> network.getKey().equals(OBIS_NETWORK_KEY)).findAny().isPresent();
+
+    Citation originalCitation = dataset.getCitation();
+
+    if (generateGbifCitation || originalCitation == null || originalCitation.getText().length() == 0) {
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
-      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
+      Citation citation = originalCitation == null ? new Citation() : originalCitation;
       citation.setText(CitationGenerator.generateCitation(dataset,
               ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
+    } else {
+      // Check DOI exists, and append it if it doesn't.
+      if (!originalCitation.getText().toLowerCase().contains("doi.org") && !originalCitation.getText().toLowerCase().contains("doi:")) {
+        originalCitation.setText(originalCitation.getText() + " " + dataset.getDoi().getUrl().toString());
+      }
     }
   }
 
