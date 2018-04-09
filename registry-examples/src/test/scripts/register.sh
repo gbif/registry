@@ -34,9 +34,11 @@ for dataset_file in *.@(zip|eml) ; do
 		case $dataset_file in
 			*.eml)
 				dataset_type=METADATA
+				endpoint_type=EML
 				;;
 			*)
 				dataset_type=OCCURRENCE
+				endpoint_type=DWC_ARCHIVE
 				;;
 		esac
 
@@ -68,7 +70,7 @@ for dataset_file in *.@(zip|eml) ; do
 		# Add an endpoint, the location GBIF.org will retrieve the archive file from:
 		cat > $dataset_file.endpoint_json <<-EOF
 		{
-			"type": "DWC_ARCHIVE",
+			"type": "$endpoint_type",
 			"url": "$ACCESS_ENDPOINT/$dataset_file"
 		}
 		EOF

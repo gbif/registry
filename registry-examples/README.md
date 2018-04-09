@@ -4,11 +4,11 @@ This project contains examples demonstrating how to implement the registry web s
 
 ## Java
 
-See the code in src/main/java.
+See the code in [src/test/java](src/test/java).
 
 ## Bash
 
-See the code in src/main/scripts.
+See the code in [src/test/scripts](src/test/scripts).
 
 ## Setup instructions (GBIF registry developers)
 

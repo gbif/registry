@@ -2,7 +2,7 @@
 
 Registration with GBIF can be achived with two REST calls.
 
-This script demonstrates the two calls, and records the response (the dataset key).
+This script demonstrates the two calls to register a metadata-only dataset, and records the response (the dataset key).
 
 To run it, just run `./register.sh` — it uses the test GBIF at GBIF-UAT.org.
 
