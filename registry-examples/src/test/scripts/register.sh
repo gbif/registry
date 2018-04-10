@@ -24,28 +24,30 @@ GBIF_PASSWORD=Demo123
 shopt -s extglob
 for dataset_file in *.@(zip|eml) ; do
 
+	# Guess dataset type (script doesn't handle checklists)
+	case $dataset_file in
+		*.eml)
+			dataset_type=METADATA
+			endpoint_type=EML
+			;;
+		*)
+			dataset_type=OCCURRENCE
+			endpoint_type=DWC_ARCHIVE
+			;;
+	esac
+
 	# Check if the dataset is already registered.
 	if [[ -e $dataset_file.registration ]]; then
 		dataset=$(cat $dataset_file.registration)
 		echo "Dataset $dataset_file is already registered at $dataset"
 	else
 
-		# Guess dataset type (script doesn't handle checklists)
-		case $dataset_file in
-			*.eml)
-				dataset_type=METADATA
-				endpoint_type=EML
-				;;
-			*)
-				dataset_type=OCCURRENCE
-				endpoint_type=DWC_ARCHIVE
-				;;
-		esac
-
 		echo "Registering dataset $dataset_file"
 
 		# Make a JSON object representing the minimum metadata necessary to register a dataset.  The rest of the metadata will
 		# be added when GBIF.org retrieves the dataset for indexing.
+
+		# If using your own DOIs, add "doi": "10.xxxx/xxxx" to this JSON object.
 
 		cat > $dataset_file.registration_json <<-EOF
 		{
