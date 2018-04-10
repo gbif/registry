@@ -131,7 +131,7 @@
     LEFT JOIN organization o ON o.key = d.publishing_organization_key
     LEFT JOIN dataset_identifier ON dataset_key = d.key
     LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
-    WHERE d.doi = #{doi} OR i.identifier = #{doi}
+    WHERE lower(d.doi) = lower(#{doi}) OR lower(i.identifier) = lower(#{doi})
     ORDER BY d.key, d.created DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -145,7 +145,7 @@
     LEFT JOIN organization o ON o.key = d.publishing_organization_key
     LEFT JOIN dataset_identifier ON dataset_key = d.key
     LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
-    WHERE d.doi = #{doi} OR i.identifier = #{doi}
+    WHERE lower(d.doi) = lower(#{doi}) OR lower(i.identifier) = lower(#{doi})
   </select>
 
   <select id="title" resultType="String">
