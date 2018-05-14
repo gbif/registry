@@ -85,9 +85,9 @@ public class CitationGenerator {
     }
 
     if (dataset.getType() != null) {
-      joiner.add(StringUtils.capitalize(dataset.getType().name().toLowerCase()));
+      joiner.add(StringUtils.capitalize(dataset.getType().name().replace('_', ' ').toLowerCase()));
     }
-    joiner.add("Dataset");
+    joiner.add("dataset");
 
     // add DOI as the identifier.
     if (dataset.getDoi() != null) {
