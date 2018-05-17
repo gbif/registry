@@ -30,7 +30,8 @@ import java.util.Objects;
 public class PartialDateProvider implements InjectableProvider<QueryParam, Parameter> {
 
 
-  private static final String[] SUPPORTED_FORMATS = new String[]{"yyyy/MM","yyyy-MM"};
+  private static final String YEAR_ONLY_FORMAT =  "yyyy";
+  private static final String[] SUPPORTED_FORMATS = new String[]{"yyyy/MM","yyyy-MM", YEAR_ONLY_FORMAT};
 
   @Context
   private final HttpContext context;
@@ -66,43 +67,39 @@ public class PartialDateProvider implements InjectableProvider<QueryParam, Param
           if (context.getRequest().getQueryParameters() != null
               && context.getRequest().getQueryParameters().containsKey(a.value())) {
             String dateValue = context.getRequest().getQueryParameters().getFirst(a.value());
-            return adjustedDate(dateValue, a.value());
+            return tryDateParse(dateValue, a.value());
           }
           return null;
     };
   }
 
-
   /**
+   * Tries to parse the input using the supported formats.
    * Adjust the date to the first or last day of the month depending on the param name.
    */
-  private Date adjustedDate(String dateValue, String paramName) {
-    Date date = Strings.isNullOrEmpty(dateValue)? null : tryDateParse(dateValue);
-    if (Objects.nonNull(date)) {
-      Calendar cal = Calendar.getInstance();
-      cal.setTime(date);
-      if (paramName.startsWith("from")) {
-        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
-      } else if (paramName.startsWith("to")) {
-        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+  private Date tryDateParse(String dateValue,String paramName) {
+    if (!Strings.isNullOrEmpty(dateValue)) {
+      for (String dateFormat : SUPPORTED_FORMATS) {
+        try {
+          Date date = new SimpleDateFormat(dateFormat).parse(dateValue);
+          Calendar cal = Calendar.getInstance();
+          cal.setTime(date);
+          if (paramName.startsWith("from")) {
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+          } else if (paramName.startsWith("to")) {
+            if (YEAR_ONLY_FORMAT.equals(dateFormat)) {
+              cal.set(Calendar.MONTH, cal.getActualMaximum(Calendar.MONTH));
+            }
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+          }
+          return cal.getTime();
+        } catch (ParseException ex) {
+          // DO NOTHING
+        }
       }
-      return cal.getTime();
     }
     throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
       .entity("Unaccepted parameter value " +  paramName + ":" + dateValue).build());
   }
 
-  /**
-   * Tries to parse the input using the supported formats.
-   */
-  private Date tryDateParse(String dateValue) {
-    for(String dateFormat : SUPPORTED_FORMATS) {
-      try {
-        return new SimpleDateFormat(dateFormat).parse(dateValue);
-      } catch (ParseException ex) {
-        //DO NOTHING
-      }
-    }
-    return null;
-  }
 }
