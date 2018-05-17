@@ -10,7 +10,9 @@ import com.sun.jersey.spi.inject.Injectable;
 import com.sun.jersey.spi.inject.InjectableProvider;
 
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -86,7 +88,8 @@ public class PartialDateProvider implements InjectableProvider<QueryParam, Param
       }
       return cal.getTime();
     }
-    return null; //nothing to adjust
+    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+      .entity("Unaccepted parameter value " +  paramName + ":" + dateValue).build());
   }
 
   /**
