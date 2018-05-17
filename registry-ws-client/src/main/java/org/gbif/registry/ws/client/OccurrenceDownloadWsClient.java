@@ -79,12 +79,12 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
 
   @Override
   public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country) {
-    return statsServiceCall(fromDate, toDate, country, "monthlyStats");
+    return statsServiceCall(fromDate, toDate, country, "stats");
   }
 
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadRecordsHostedByCountry(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country) {
-    return statsServiceCall(fromDate, toDate, country, "downloadedRecords");
+    return statsServiceCall(fromDate, toDate, country, "stats/downloadedRecords");
   }
 
   private Map<Integer,Map<Integer,Long>> statsServiceCall(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country, String path) {
