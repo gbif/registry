@@ -166,12 +166,12 @@
     <where>
       <if test="fromDate != null" >
         <![CDATA[
-            AND oc.created >= #{fromDate,jdbcType=OTHER}
+            AND oc.created >= #{fromDate,jdbcType=TIMESTAMP}
           ]]>
       </if>
       <if test="toDate != null" >
         <![CDATA[
-            AND oc.created <= #{toDate,jdbcType=OTHER}
+            AND oc.created <= #{toDate,jdbcType=TIMESTAMP}
           ]]>
       </if>
     </where>
