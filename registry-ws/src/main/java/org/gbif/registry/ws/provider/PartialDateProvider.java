@@ -15,7 +15,9 @@ import javax.ws.rs.ext.Provider;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * This annotation is used to mark Date parameter that can accept partial dates as input.
@@ -57,17 +59,35 @@ public class PartialDateProvider implements InjectableProvider<QueryParam, Param
       return null;
     }
 
-    //Resturns a new instance of the partial date provider.
+    //Returns a new instance of the partial date provider.
     return () -> {
           if (context.getRequest().getQueryParameters() != null
               && context.getRequest().getQueryParameters().containsKey(a.value())) {
             String dateValue = context.getRequest().getQueryParameters().getFirst(a.value());
-            return Strings.isNullOrEmpty(dateValue)? null : tryDateParse(dateValue);
+            return adjustedDate(dateValue, a.value());
           }
           return null;
     };
   }
 
+
+  /**
+   * Adjust the date to the first or last day of the month depending on the param name.
+   */
+  private Date adjustedDate(String dateValue, String paramName) {
+    Date date = Strings.isNullOrEmpty(dateValue)? null : tryDateParse(dateValue);
+    if (Objects.nonNull(date)) {
+      Calendar cal = Calendar.getInstance();
+      cal.setTime(date);
+      if (paramName.startsWith("from")) {
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+      } else if (paramName.startsWith("to")) {
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+      }
+      return cal.getTime();
+    }
+    return null; //nothing to adjust
+  }
 
   /**
    * Tries to parse the input using the supported formats.
