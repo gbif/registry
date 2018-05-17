@@ -51,8 +51,12 @@ public interface OccurrenceDownloadMapper {
   int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
 
 
-  List<Facet.Count> getMonthlyStats(@Nullable @Param("fromDate") Date fromDate, @Nullable @Param("toDate") Date toDate,
-                              @Nullable @Param("country") String country);
+  List<Facet.Count> getMonthlyStats(@Nullable @Param("fromDate") Date fromDate,
+                                    @Nullable @Param("toDate") Date toDate,
+                                    @Nullable @Param("country") String country);
 
+  List<Facet.Count> getDownloadedRecordsByCountry(@Nullable @Param("fromDate") Date fromDate,
+                                                  @Nullable @Param("toDate") Date toDate,
+                                                  @Nullable @Param("country") String country);
 
 }

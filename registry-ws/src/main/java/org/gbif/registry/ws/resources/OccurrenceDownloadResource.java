@@ -173,13 +173,23 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GET
-  @Path("monthlystats")
+  @Path("stats")
   @Override
   @NullToNotFound
   public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
                                            @Nullable @QueryParam("toDate") @PartialDate Date toDate,
                                            @Context Country country) {
     return groupByYear(occurrenceDownloadMapper.getMonthlyStats(fromDate, toDate, Optional.ofNullable(country).map(Country::getIso2LetterCode).orElse(null)));
+  }
+
+  @GET
+  @Path("stats/downloadedRecords")
+  @Override
+  @NullToNotFound
+  public Map<Integer, Map<Integer, Long>> getDownloadRecordsHostedByCountry(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
+                                                                            @Nullable @QueryParam("toDate") @PartialDate Date toDate,
+                                                                            @Context Country country) {
+    return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByCountry(fromDate, toDate, Optional.ofNullable(country).map(Country::getIso2LetterCode).orElse(null)));
   }
 
   /**
