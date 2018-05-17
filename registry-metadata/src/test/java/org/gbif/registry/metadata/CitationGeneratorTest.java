@@ -53,7 +53,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
-            "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+            "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -67,7 +67,7 @@ public class CitationGeneratorTest {
             ContactType.ORIGINATOR));
 
     assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
-                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+                    "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -81,7 +81,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John", "Doe", ContactType.ORIGINATOR));
 
     assertEquals("Doe J. Dataset to be cited. Version 2.1. Cited Organization. " +
-                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
+                    "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " + LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
 
@@ -97,7 +97,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
     assertEquals("Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. " +
-                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
             LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset,org));
   }
@@ -110,7 +110,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
     assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
-                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
                     LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset, org));
   }
@@ -125,7 +125,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John D.", "Doe", ContactType.METADATA_AUTHOR));
 
     assertEquals("Cited Organization (2009). Dataset to be cited. Version 2.1. " +
-                    "Checklist Dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
+                    "Sampling event dataset https://doi.org/10.5072/abcd accessed via GBIF.org on " +
                     LocalDate.now().toString() + ".",
             CitationGenerator.generateCitation(dataset, org));
   }
@@ -156,7 +156,7 @@ public class CitationGeneratorTest {
     dataset.setDoi(new DOI(TEST_PREFIX+"/abcd"));
     dataset.setPubDate(new Date(LocalDate.of(2009,2,8).atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()));
 
-    dataset.setType(DatasetType.CHECKLIST);
+    dataset.setType(DatasetType.SAMPLING_EVENT);
 
     return dataset;
   }
