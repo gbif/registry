@@ -13,7 +13,6 @@
 package org.gbif.registry.ws.client;
 
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Comment;
@@ -96,7 +95,7 @@ class GenericTypes {
   public static final GenericType<Map<UUID, String>> TITLES_MAP_TYPE = new GenericType<Map<UUID, String>>() {
   };
 
-  public static final GenericType<List<Facet.Count>> LIST_FACET_COUNT_TYPE = new GenericType<List<Facet.Count>>() {
+  public static final GenericType<Map<Integer, Map<Integer,Long>>> DOWNLOADS_MONTHLY_STATS_TYPE = new GenericType<Map<Integer, Map<Integer,Long>>>() {
   };
 
   private GenericTypes() {
