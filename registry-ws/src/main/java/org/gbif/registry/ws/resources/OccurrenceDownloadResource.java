@@ -4,11 +4,13 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
@@ -16,10 +18,12 @@ import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.gbif.ws.server.provider.CountryProvider;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.Set;
+import java.util.*;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
@@ -167,4 +171,25 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     }
     throw new NotFoundException();
   }
+
+  @GET
+  @Path("monthlystats")
+  @Override
+  @NullToNotFound
+  public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
+                                           @Nullable @QueryParam("toDate") @PartialDate Date toDate,
+                                           @Context Country country) {
+    return groupByYear(occurrenceDownloadMapper.getMonthlyStats(fromDate, toDate, Optional.ofNullable(country).map(Country::getIso2LetterCode).orElse(null)));
+  }
+
+  /**
+   * Aggregates the download statistics in tree structure of month grouped by year.
+   */
+  private Map<Integer,Map<Integer,Long>> groupByYear(List<Facet.Count> counts) {
+    Map<Integer,Map<Integer,Long>> yearsGrouping = new HashMap<>();
+    counts.forEach(count -> yearsGrouping.computeIfAbsent(Integer.valueOf(count.getName().substring(0,4)), year -> new TreeMap<>()).put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
+    return  yearsGrouping;
+  }
+
+
 }

@@ -14,9 +14,12 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -46,5 +49,10 @@ public interface OccurrenceDownloadMapper {
   List<Download> listByUser(@Param("creator") String creator, @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
 
   int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
+
+
+  List<Facet.Count> getMonthlyStats(@Nullable @Param("fromDate") Date fromDate, @Nullable @Param("toDate") Date toDate,
+                              @Nullable @Param("country") String country);
+
 
 }

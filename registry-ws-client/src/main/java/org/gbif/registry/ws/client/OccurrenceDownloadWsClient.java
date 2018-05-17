@@ -2,12 +2,18 @@ package org.gbif.registry.ws.client;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsGetClient;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -74,4 +80,13 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, downloadKey, "datasets");
   }
 
+
+  @Override
+  public List<Facet.Count> getMonthlyStats(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country) {
+    MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    Optional.ofNullable(fromDate).ifPresent( d -> params.add("fromDate", simpleDateFormat.format(d)));
+    Optional.ofNullable(toDate).ifPresent( d -> params.add("toDate", simpleDateFormat.format(d)));
+    return get(GenericTypes.LIST_FACET_COUNT_TYPE, null, params ,null,"montlystats");
+  }
 }

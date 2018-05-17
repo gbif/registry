@@ -15,6 +15,11 @@
     <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
   </resultMap>
 
+  <resultMap id="DOWNLOADS_STATS_MAP" type="Count" autoMapping="true">
+    <result property="name" column="year_month" />
+    <result property="count" column="count" />
+  </resultMap>
+
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
     key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after
   </sql>
@@ -66,6 +71,7 @@
     FROM occurrence_download
     WHERE doi = #{doi,jdbcType=VARCHAR}
   </select>
+
 
   <insert id="create" parameterType="Download">
     INSERT INTO occurrence_download(<include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>)
@@ -147,6 +153,30 @@
              open="(" separator="," close=")">
       #{item}
     </foreach>
+  </select>
+
+  <select id="getMonthlyStats" resultType="Count" resultMap="DOWNLOADS_STATS_MAP" parameterType="map">
+    SELECT to_char(oc.created,'YYYY-MM') AS year_month, COUNT(oc.*) AS count
+    FROM occurrence_download oc
+    <if test="country != null">
+      <![CDATA[
+    JOIN "user" u ON oc.created_by = u.username AND u.settings -> 'country' = #{country,jdbcType=OTHER}
+    ]]>
+    </if>
+    <where>
+      <if test="fromDate != null" >
+        <![CDATA[
+            AND oc.created >= #{fromDate,jdbcType=OTHER}
+          ]]>
+      </if>
+      <if test="toDate != null" >
+        <![CDATA[
+            AND oc.created <= #{toDate,jdbcType=OTHER}
+          ]]>
+      </if>
+    </where>
+    GROUP BY year_month
+    ORDER BY year_month DESC;
   </select>
 
 </mapper>
