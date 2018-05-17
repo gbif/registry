@@ -26,7 +26,7 @@ import java.util.Date;
 public class PartialDateProvider implements InjectableProvider<QueryParam, Parameter> {
 
 
-  private static final String[] SUPPORTED_FORMATS = new String[]{"MM/yyyy","MM-yyyy"};
+  private static final String[] SUPPORTED_FORMATS = new String[]{"yyyy/MM","yyyy-MM"};
 
   @Context
   private final HttpContext context;
