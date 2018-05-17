@@ -85,8 +85,7 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
 
   /**
    * Get a Dataset list from a DOI, dataset.dois and alternate identifier are searched.
-   * Multiple dataset could share the same DOI since this is not enforced.
-   *
+   * Multiple datasets could share the same DOI since this is not enforced.
    */
   List<Dataset> listByDOI(@Param("doi") String doi, @Nullable @Param("page") Pageable page);
 
