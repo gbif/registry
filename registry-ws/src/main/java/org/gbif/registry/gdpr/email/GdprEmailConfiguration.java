@@ -2,6 +2,7 @@ package org.gbif.registry.gdpr.email;
 
 import org.gbif.registry.surety.SuretyConstants;
 
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.commons.lang3.BooleanUtils;
@@ -38,13 +39,13 @@ public class GdprEmailConfiguration {
 
   private GdprEmailConfiguration(Properties filteredProperties) {
     gdprMailEnabled = BooleanUtils.toBoolean(filteredProperties.getProperty(GDPR_MAIL_ENABLED_PROP));
-    subject = filteredProperties.getProperty(SUBJECT_PROP);
-    informationPage = filteredProperties.getProperty(INFORMATION_PAGE_PROP);
-    nodeUrlTemplate = filteredProperties.getProperty(NODE_URL_TEMPLATE_PROP);
-    organizationUrlTemplate = filteredProperties.getProperty(ORGANIZATION_URL_TEMPLATE_PROP);
-    installationUrlTemplate = filteredProperties.getProperty(INSTALLATION_URL_TEMPLATE_PROP);
-    networkUrlTemplate = filteredProperties.getProperty(NETWORK_URL_TEMPLATE_PROP);
-    datasetUrlTemplate = filteredProperties.getProperty(DATASET_URL_TEMPLATE_PROP);
+    subject = Objects.requireNonNull(filteredProperties.getProperty(SUBJECT_PROP));
+    informationPage = Objects.requireNonNull(filteredProperties.getProperty(INFORMATION_PAGE_PROP));
+    nodeUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(NODE_URL_TEMPLATE_PROP));
+    organizationUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(ORGANIZATION_URL_TEMPLATE_PROP));
+    installationUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(INSTALLATION_URL_TEMPLATE_PROP));
+    networkUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(NETWORK_URL_TEMPLATE_PROP));
+    datasetUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(DATASET_URL_TEMPLATE_PROP));
   }
 
   public boolean isGdprMailEnabled() {
