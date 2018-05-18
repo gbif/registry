@@ -1,4 +1,4 @@
-package org.gbif.registry.gdpr.email;
+package org.gbif.registry.dataprivacy.email;
 
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
@@ -24,24 +24,24 @@ import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 
 /**
- * Manager to send gdpr-related emails.
+ * Manager to send dataprivacy-related emails.
  */
 @Singleton
-public class GdprEmailManager {
+public class DataPrivacyEmailManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GdprEmailManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DataPrivacyEmailManager.class);
 
-  private final GdprEmailConfiguration config;
+  private final DataPrivacyEmailConfiguration config;
   private final EmailTemplateProcessor templateProcessor;
   private final EmailSender emailSender;
   private final Map<EntityType, String> urlTemplatesByEntityType = new HashMap<>();
 
   @Inject
-  public GdprEmailManager(
-    GdprEmailConfiguration config, EmailTemplateProcessor templateProcessor, EmailSender emailSender
+  public DataPrivacyEmailManager(
+    DataPrivacyEmailConfiguration config, EmailTemplateProcessor templateProcessor, EmailSender emailSender
   ) {
     this.config = config;
     this.templateProcessor = templateProcessor;
@@ -58,18 +58,18 @@ public class GdprEmailManager {
   }
 
   /**
-   * Sends a gdpr notification email.
+   * Sends a data privacy notification email.
    *
    * @param email   destination email.
    * @param context context with information related to the entity change.
    */
-  public void sendGdprNotification(String email, Map<EntityType, List<UUID>> context) {
+  public void sendDataPrivacyNotification(String email, Map<EntityType, List<UUID>> context) {
     BaseEmailModel emailModel;
     try {
-      emailModel = generateGdprNotificationEmail(email, context);
+      emailModel = generateDataPrivacyNotificationEmail(email, context);
     } catch (IOException | TemplateException exc) {
       LOG.error(SuretyConstants.NOTIFY_ADMIN,
-                "Error while trying to generate gdpr notificaiton email for email {}",
+                "Error while trying to generate data privacy notificaiton email for email {}",
                 email,
                 exc);
       return;
@@ -78,11 +78,12 @@ public class GdprEmailManager {
   }
 
   @VisibleForTesting
-  BaseEmailModel generateGdprNotificationEmail(String email, Map<EntityType, List<UUID>> context)
+  BaseEmailModel generateDataPrivacyNotificationEmail(String email, Map<EntityType, List<UUID>> context)
     throws IOException, TemplateException {
     // create template data model
-    GdprNotificationTemplateDataModel templateDataModel =
-      GdprNotificationTemplateDataModel.newInstance(new URL(config.getInformationPage()), generateSampleUrls(context));
+    DataPrivacyNotificationTemplateDataModel templateDataModel = DataPrivacyNotificationTemplateDataModel.newInstance(
+      new URL(config.getInformationPage()),
+      generateSampleUrls(context));
 
     // build email with the template processor
     return templateProcessor.buildEmail(email, templateDataModel, Locale.ENGLISH);

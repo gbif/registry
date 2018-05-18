@@ -1,9 +1,8 @@
-package org.gbif.registry.cli.gdprnotification;
+package org.gbif.registry.cli.dataprivacynotification;
 
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.MailConfiguration;
-import org.gbif.registry.gdpr.GdprConfiguration;
 
 import java.util.Properties;
 import javax.validation.Valid;
@@ -14,7 +13,7 @@ import com.beust.jcommander.ParametersDelegate;
 import com.google.common.base.Objects;
 
 @SuppressWarnings("PublicField")
-public class GdprNotificationConfiguration {
+public class DataPrivacyNotificationConfiguration {
 
   @ParametersDelegate
   @NotNull
@@ -34,7 +33,7 @@ public class GdprNotificationConfiguration {
   @ParametersDelegate
   @NotNull
   @Valid
-  public GdprConfiguration gdprConfig = new GdprConfiguration();
+  public DataPrivacyConfiguration dataPrivacyConfig = new DataPrivacyConfiguration();
 
   @Parameter(names = "--queue-name")
   @NotNull
@@ -55,53 +54,53 @@ public class GdprNotificationConfiguration {
   }
 
   /**
-   * Gdpr specific configuration.
+   * Data privacy specific configuration.
    */
-  public static class GdprConfiguration {
+  public static class DataPrivacyConfiguration {
 
     private static final String URL_TEMPLATE_PROP_PREFIX = "urlTemplate.";
-    private static final String GDPR_PREFIX = "gdpr.";
-    private static final String MAIL_PREFIX = GDPR_PREFIX + "surety.mail.";
+    private static final String DATA_PRIVACY_PREFIX = "dataPrivacy.";
+    private static final String MAIL_PREFIX = DATA_PRIVACY_PREFIX + "surety.mail.";
 
     @NotNull
-    @Parameter(names = "--gdpr-version")
-    public String gdprVersion;
+    @Parameter(names = "--dataPrivacy-version")
+    public String dataPrivacyVersion;
 
-    @Parameter(names = "--gdpr-mail-enabled")
+    @Parameter(names = "--dataPrivacy-mail-enabled")
     public boolean mailEnabled = false;
 
     @NotNull
-    @Parameter(names = "--gdpr-subject")
+    @Parameter(names = "--dataPrivacy-subject")
     public String subject;
 
     @NotNull
-    @Parameter(names = "--gdpr-infoPage")
+    @Parameter(names = "--dataPrivacy-infoPage")
     public String informationPage;
 
     @NotNull
-    @Parameter(names = "--gdpr-node-urlTemplate")
+    @Parameter(names = "--dataPrivacy-node-urlTemplate")
     public String nodeUrlTemplate;
 
     @NotNull
-    @Parameter(names = "--gdpr-organization-urlTemplate")
+    @Parameter(names = "--dataPrivacy-organization-urlTemplate")
     public String organizationUrlTemplate;
 
     @NotNull
-    @Parameter(names = "--gdpr-installation-urlTemplate")
+    @Parameter(names = "--dataPrivacy-installation-urlTemplate")
     public String installationUrlTemplate;
 
     @NotNull
-    @Parameter(names = "--gdpr-network-urlTemplate")
+    @Parameter(names = "--dataPrivacy-network-urlTemplate")
     public String networkUrlTemplate;
 
     @NotNull
-    @Parameter(names = "--gdpr-dataset-urlTemplate")
+    @Parameter(names = "--dataPrivacy-dataset-urlTemplate")
     public String datasetUrlTemplate;
 
     public Properties toProperties() {
       Properties props = new Properties();
 
-      props.put(GDPR_PREFIX + "version", this.gdprVersion);
+      props.put(DATA_PRIVACY_PREFIX + "version", this.dataPrivacyVersion);
       props.put(MAIL_PREFIX + "enabled", this.mailEnabled);
       props.put(MAIL_PREFIX + "subject", this.subject);
       props.put(MAIL_PREFIX + "informationPage", this.informationPage);

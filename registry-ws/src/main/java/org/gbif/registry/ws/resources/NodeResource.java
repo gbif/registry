@@ -35,7 +35,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.gdpr.GdprService;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.util.List;
@@ -83,9 +83,9 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     EventBus eventBus,
     Augmenter nodeAugmenter,
     EditorAuthorizationService userAuthService,
-    GdprService gdprService) {
+    DataPrivacyService dataPrivacyService) {
     super(nodeMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-      Node.class, eventBus, userAuthService, gdprService);
+      Node.class, eventBus, userAuthService, dataPrivacyService);
     this.nodeMapper = nodeMapper;
     this.organizationMapper = organizationMapper;
     this.nodeAugmenter = nodeAugmenter;

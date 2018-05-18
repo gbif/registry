@@ -1,4 +1,4 @@
-package org.gbif.registry.gdpr.email;
+package org.gbif.registry.dataprivacy.email;
 
 import org.gbif.registry.surety.email.BaseEmailModel;
 
@@ -19,24 +19,24 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 
 /**
- * Tests the {@link GdprEmailManager}.
+ * Tests the {@link DataPrivacyEmailManager}.
  */
-public class GdprEmailManagerTest {
+public class DataPrivacyEmailManagerTest {
 
   private static final String TEST_EMAIL = "test@test.com";
 
   private static Injector injector;
   private static Map<EntityType, List<UUID>> context;
-  private static GdprEmailManager emailManager;
+  private static DataPrivacyEmailManager emailManager;
 
   @BeforeClass
   public static void setup() {
     injector = webservice();
-    emailManager = injector.getInstance(GdprEmailManager.class);
+    emailManager = injector.getInstance(DataPrivacyEmailManager.class);
 
     // create context
     context = new HashMap<>();
@@ -66,11 +66,11 @@ public class GdprEmailManagerTest {
 
   @Test
   public void testGenerateEmail() {
-    GdprEmailConfiguration config = injector.getInstance(GdprEmailConfiguration.class);
+    DataPrivacyEmailConfiguration config = injector.getInstance(DataPrivacyEmailConfiguration.class);
 
     BaseEmailModel baseEmailModel = null;
     try {
-      baseEmailModel = emailManager.generateGdprNotificationEmail(TEST_EMAIL, context);
+      baseEmailModel = emailManager.generateDataPrivacyNotificationEmail(TEST_EMAIL, context);
     } catch (IOException | TemplateException e) {
       Assert.fail(e.getMessage());
     }
@@ -84,7 +84,7 @@ public class GdprEmailManagerTest {
 
   @Test
   public void sendEmailTest() {
-    emailManager.sendGdprNotification(TEST_EMAIL, context);
+    emailManager.sendDataPrivacyNotification(TEST_EMAIL, context);
   }
 
 }

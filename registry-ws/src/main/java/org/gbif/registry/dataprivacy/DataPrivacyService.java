@@ -1,4 +1,4 @@
-package org.gbif.registry.gdpr;
+package org.gbif.registry.dataprivacy;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -8,8 +8,8 @@ import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.GdprNotificationMessage;
-import org.gbif.registry.persistence.mapper.GdprNotificationMapper;
+import org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage;
+import org.gbif.registry.persistence.mapper.DataPrivacyNotificationMapper;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -25,28 +25,30 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Service to work with Gdpr that acts as the main point for any operation related to Gdpr.
+ * Service to work with Data Privacy that acts as the main point for any operation related to Data Privacy.
  */
 @Singleton
-public class GdprService {
+public class DataPrivacyService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GdprService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DataPrivacyService.class);
 
   @Inject(optional = true)
   private MessagePublisher messagePublisher;
 
-  private final GdprNotificationMapper gdprNotificationMapper;
-  private final GdprConfiguration config;
+  private final DataPrivacyNotificationMapper dataPrivacyNotificationMapper;
+  private final DataPrivacyConfiguration config;
 
   @Inject
-  public GdprService(GdprConfiguration config, GdprNotificationMapper gdprNotificationMapper) {
+  public DataPrivacyService(
+    DataPrivacyConfiguration config, DataPrivacyNotificationMapper dataPrivacyNotificationMapper
+  ) {
     this.config = config;
-    this.gdprNotificationMapper = gdprNotificationMapper;
+    this.dataPrivacyNotificationMapper = dataPrivacyNotificationMapper;
   }
 
   public boolean existsNotification(String email) {
@@ -55,22 +57,26 @@ public class GdprService {
 
   public boolean existsNotification(String email, String version) {
     Objects.requireNonNull(email);
-    return gdprNotificationMapper.existsNotification(email,
-                                                     Strings.isNullOrEmpty(version) ? config.getVersion() : version);
+    return dataPrivacyNotificationMapper.existsNotification(email,
+                                                            Strings.isNullOrEmpty(version)
+                                                              ? config.getVersion()
+                                                              : version);
   }
 
   public void createNotification(String email, String version, Map<EntityType, List<UUID>> context) {
     Objects.requireNonNull(email);
-    gdprNotificationMapper.create(email, Strings.isNullOrEmpty(version) ? config.getVersion() : version, context);
+    dataPrivacyNotificationMapper.create(email,
+                                         Strings.isNullOrEmpty(version) ? config.getVersion() : version,
+                                         context);
   }
 
-  public <T extends NetworkEntity> void checkGdprNotification(UUID uuid, Class<T> objectClass, Contact contact) {
-    checkGdprNotification(uuid, getEntityType(objectClass), contact);
+  public <T extends NetworkEntity> void checkDataPrivacyNotification(UUID uuid, Class<T> objectClass, Contact contact) {
+    checkDataPrivacyNotification(uuid, getEntityType(objectClass), contact);
   }
 
-  public void checkGdprNotification(UUID uuid, EntityType entityType, Contact contact) {
-    if (!config.isGdprEnabled()) {
-      LOG.info("GDPR check disabled");
+  public void checkDataPrivacyNotification(UUID uuid, EntityType entityType, Contact contact) {
+    if (!config.isDataPrivacyEnabled()) {
+      LOG.info("Data privacy check disabled");
       return;
     }
 
@@ -87,23 +93,24 @@ public class GdprService {
         return;
       }
 
-      if (!gdprNotificationMapper.existsNotification(email, config.getVersion())) {
+      if (!dataPrivacyNotificationMapper.existsNotification(email, config.getVersion())) {
         if (messagePublisher != null) {
           try {
             // create context
             Map<EntityType, List<UUID>> context = new HashMap<>();
             context.put(entityType, Collections.singletonList(uuid));
             // create message
-            GdprNotificationMessage message = new GdprNotificationMessage(email, context, config.getVersion());
+            DataPrivacyNotificationMessage message =
+              new DataPrivacyNotificationMessage(email, context, config.getVersion());
             // send message
-            LOG.info("Sending GDPR message to queue for {} and version {}", email, config.getVersion());
+            LOG.info("Sending data privacy message to queue for {} and version {}", email, config.getVersion());
             messagePublisher.send(message);
           } catch (IOException e) {
-            LOG.error("Unable to send GDPR notification message to the queue for email {}", email, e);
+            LOG.error("Unable to send data privacy message to the queue for email {}", email, e);
           }
         } else {
-          LOG.warn("Registry is configured to run without messaging capabilities.  Unable to send GDPR notification "
-                   + "message to the queue for email {}", email);
+          LOG.warn("Registry is configured to run without messaging capabilities. "
+                   + "Unable to send data privacy message to the queue for email {}", email);
         }
       }
     });

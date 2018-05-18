@@ -45,6 +45,7 @@ import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.metadata.CitationGenerator;
@@ -65,7 +66,6 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.gdpr.GdprService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.io.ByteArrayInputStream;
@@ -117,7 +117,7 @@ import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
@@ -154,7 +154,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
-  private final GdprService gdprService;
+  private final DataPrivacyService dataPrivacyService;
 
   private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
           .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -177,9 +177,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     CommentMapper commentMapper, EventBus eventBus, DatasetSearchService searchService, MetadataMapper metadataMapper,
     DatasetProcessStatusMapper datasetProcessStatusMapper, NetworkMapper networkMapper,
     EditorAuthorizationService userAuthService, OrganizationMapper organizationMapper, DoiGenerator doiGenerator,
-    DataCiteDoiHandlerStrategy doiHandlingStrategy, GdprService gdprService) {
+    DataCiteDoiHandlerStrategy doiHandlingStrategy, DataPrivacyService dataPrivacyService) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-      Dataset.class, eventBus, userAuthService, gdprService);
+      Dataset.class, eventBus, userAuthService, dataPrivacyService);
     this.searchService = searchService;
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
@@ -191,7 +191,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.organizationMapper = organizationMapper;
     this.doiGenerator = doiGenerator;
     this.doiHandlerStrategy = doiHandlingStrategy;
-    this.gdprService = gdprService;
+    this.dataPrivacyService = dataPrivacyService;
   }
 
   @GET
@@ -620,7 +620,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       c.setModifiedBy(user);
       c.setModified(new Date());
       WithMyBatis.addContact(contactMapper, datasetMapper, datasetKey, c);
-      gdprService.checkGdprNotification(datasetKey, EntityType.Dataset, c);
+      dataPrivacyService.checkDataPrivacyNotification(datasetKey, EntityType.Dataset, c);
     }
   }
 

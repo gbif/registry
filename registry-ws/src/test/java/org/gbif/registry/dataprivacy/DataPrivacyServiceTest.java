@@ -1,4 +1,4 @@
-package org.gbif.registry.gdpr;
+package org.gbif.registry.dataprivacy;
 
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
@@ -16,13 +16,13 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 
 /**
- * Tests the {@link GdprService}.
+ * Tests the {@link DataPrivacyService}.
  */
-public class GdprServiceTest {
+public class DataPrivacyServiceTest {
 
   /**
    * Truncates the tables
@@ -34,12 +34,12 @@ public class GdprServiceTest {
 
   private static Injector injector;
   private static Map<EntityType, List<UUID>> context;
-  private static GdprService gdprService;
+  private static DataPrivacyService dataPrivacyService;
 
   @BeforeClass
   public static void setup() {
     injector = webservice();
-    gdprService = injector.getInstance(GdprService.class);
+    dataPrivacyService = injector.getInstance(DataPrivacyService.class);
 
     // create context
     context = new HashMap<>();
@@ -57,20 +57,20 @@ public class GdprServiceTest {
 
   @Test
   public void existsNotificationTest() {
-    GdprConfiguration config = injector.getInstance(GdprConfiguration.class);
+    DataPrivacyConfiguration config = injector.getInstance(DataPrivacyConfiguration.class);
 
-    gdprService.createNotification(TEST_EMAIL, null, context);
+    dataPrivacyService.createNotification(TEST_EMAIL, null, context);
 
-    Assert.assertTrue(gdprService.existsNotification(TEST_EMAIL));
-    Assert.assertTrue(gdprService.existsNotification(TEST_EMAIL, config.getVersion()));
-    Assert.assertFalse(gdprService.existsNotification(TEST_EMAIL + "aa"));
-    Assert.assertFalse(gdprService.existsNotification(TEST_EMAIL, "-1"));
+    Assert.assertTrue(dataPrivacyService.existsNotification(TEST_EMAIL));
+    Assert.assertTrue(dataPrivacyService.existsNotification(TEST_EMAIL, config.getVersion()));
+    Assert.assertFalse(dataPrivacyService.existsNotification(TEST_EMAIL + "aa"));
+    Assert.assertFalse(dataPrivacyService.existsNotification(TEST_EMAIL, "-1"));
   }
 
   @Test(expected = PersistenceException.class)
   public void duplicateKeyTest() {
-    gdprService.createNotification(TEST_EMAIL, null, context);
-    gdprService.createNotification(TEST_EMAIL, null, context);
+    dataPrivacyService.createNotification(TEST_EMAIL, null, context);
+    dataPrivacyService.createNotification(TEST_EMAIL, null, context);
   }
 
 }

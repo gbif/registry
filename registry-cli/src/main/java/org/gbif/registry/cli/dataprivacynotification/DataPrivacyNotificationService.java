@@ -1,25 +1,25 @@
-package org.gbif.registry.cli.gdprnotification;
+package org.gbif.registry.cli.dataprivacynotification;
 
 import org.gbif.common.messaging.MessageListener;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 
-public class GdprNotificationService extends AbstractIdleService {
+public class DataPrivacyNotificationService extends AbstractIdleService {
 
   // we use a pool size of 1 in order to avoid race conditions when consulting the DB.
   private static final int POOL_SIZE = 1;
 
-  private final GdprNotificationConfiguration configuration;
+  private final DataPrivacyNotificationConfiguration configuration;
   private MessageListener listener;
 
-  public GdprNotificationService(GdprNotificationConfiguration configuration) {
+  public DataPrivacyNotificationService(DataPrivacyNotificationConfiguration configuration) {
     this.configuration = configuration;
   }
 
   @Override
   protected void startUp() throws Exception {
     listener = new MessageListener(configuration.messaging.getConnectionParameters());
-    listener.listen(configuration.queueName, POOL_SIZE, GdprNotificationListener.newInstance(configuration));
+    listener.listen(configuration.queueName, POOL_SIZE, DataPrivacyNotificationListener.newInstance(configuration));
   }
 
   @Override

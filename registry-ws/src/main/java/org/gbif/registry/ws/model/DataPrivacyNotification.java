@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 
 /**
- * Models a Gdpr Notification.
+ * Models a Data Privacy Notification.
  */
-public class GdprNotification {
+public class DataPrivacyNotification {
 
   private String email;
   private String version;

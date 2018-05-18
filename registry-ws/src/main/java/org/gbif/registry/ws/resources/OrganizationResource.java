@@ -36,7 +36,7 @@ import org.gbif.registry.ws.authorization.OrganizationAuthorization;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
-import org.gbif.registry.gdpr.GdprService;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;
@@ -107,7 +107,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     OrganizationEndorsementService<UUID> organizationEndorsementService,
     EventBus eventBus,
     EditorAuthorizationService userAuthService,
-    GdprService gdprService) {
+    DataPrivacyService dataPrivacyService) {
     super(organizationMapper,
       commentMapper,
       contactMapper,
@@ -118,7 +118,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       Organization.class,
       eventBus,
       userAuthService,
-      gdprService);
+      dataPrivacyService);
 
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;

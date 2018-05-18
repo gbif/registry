@@ -5,7 +5,7 @@
 
   <changeSet id="53" author="mlopez" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
-      CREATE TABLE gdpr_notification (
+      CREATE TABLE data_privacy_notification (
         email varchar(254) CHECK (assert_min_length(email, 5)) NOT NULL,
         version char(1) CHECK (assert_min_length(version, 1)) NOT NULL,
         timestamp_sent timestamp with time zone NOT NULL DEFAULT now(),

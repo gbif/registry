@@ -6,9 +6,9 @@ import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
 
-import static org.gbif.common.messaging.api.messages.GdprNotificationMessage.EntityType;
+import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 
-public interface GdprNotificationMapper {
+public interface DataPrivacyNotificationMapper {
 
   boolean existsNotification(@Param("email") String email, @Param("version") String version);
 

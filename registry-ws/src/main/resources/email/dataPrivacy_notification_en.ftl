@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="" type="org.gbif.registry.gdpr.email.GdprNotificationTemplateDataModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.dataprivacy.email.DataPrivacyNotificationTemplateDataModel" -->
 <p>Dear user,</p>
 
 

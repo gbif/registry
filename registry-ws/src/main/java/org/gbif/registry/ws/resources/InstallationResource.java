@@ -36,7 +36,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.gdpr.GdprService;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -108,7 +108,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     MetasyncHistoryMapper metasyncHistoryMapper,
     EventBus eventBus,
     EditorAuthorizationService userAuthService,
-    GdprService gdprService) {
+    DataPrivacyService dataPrivacyService) {
     super(installationMapper,
       commentMapper,
       contactMapper,
@@ -119,7 +119,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       Installation.class,
       eventBus,
       userAuthService,
-      gdprService);
+      dataPrivacyService);
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
     this.organizationMapper = organizationMapper;

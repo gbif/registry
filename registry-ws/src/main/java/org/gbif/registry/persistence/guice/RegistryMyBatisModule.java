@@ -53,7 +53,7 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.GdprNotificationMapper;
+import org.gbif.registry.persistence.mapper.DataPrivacyNotificationMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -129,7 +129,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(MetasyncHistoryMapper.class);
       addMapperClass(UserRightsMapper.class);
       addMapperClass(DoiMapper.class);
-      addMapperClass(GdprNotificationMapper.class);
+      addMapperClass(DataPrivacyNotificationMapper.class);
 
       //from registry-surety module
       addMapperClass(ChallengeCodeMapper.class);
@@ -219,7 +219,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(UserRightsMapper.class);
     expose(DoiMapper.class);
     expose(ChallengeCodeMapper.class);
-    expose(GdprNotificationMapper.class);
+    expose(DataPrivacyNotificationMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);

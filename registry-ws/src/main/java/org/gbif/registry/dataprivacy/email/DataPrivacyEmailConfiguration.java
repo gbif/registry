@@ -1,4 +1,4 @@
-package org.gbif.registry.gdpr.email;
+package org.gbif.registry.dataprivacy.email;
 
 import org.gbif.registry.surety.SuretyConstants;
 
@@ -8,12 +8,12 @@ import java.util.Properties;
 import org.apache.commons.lang3.BooleanUtils;
 
 /**
- * Configuration for gdpr emails.
+ * Configuration for dataprivacy emails.
  */
-public class GdprEmailConfiguration {
+public class DataPrivacyEmailConfiguration {
 
   // property names
-  private static final String GDPR_MAIL_ENABLED_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.enable";
+  private static final String DATA_PRIVACY_PREFIX = SuretyConstants.PROPERTY_PREFIX + "mail.enabled";
   private static final String SUBJECT_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.subject";
   private static final String INFORMATION_PAGE_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.informationPage";
   private static final String NODE_URL_TEMPLATE_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.urlTemplate.node";
@@ -24,7 +24,7 @@ public class GdprEmailConfiguration {
   private static final String NETWORK_URL_TEMPLATE_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.urlTemplate.network";
   private static final String DATASET_URL_TEMPLATE_PROP = SuretyConstants.PROPERTY_PREFIX + "mail.urlTemplate.dataset";
 
-  private final boolean gdprMailEnabled;
+  private final boolean dataPrivacyMailEnabled;
   private final String subject;
   private final String informationPage;
   private final String nodeUrlTemplate;
@@ -33,12 +33,12 @@ public class GdprEmailConfiguration {
   private final String networkUrlTemplate;
   private final String datasetUrlTemplate;
 
-  public static GdprEmailConfiguration from(Properties filteredProperties) {
-    return new GdprEmailConfiguration(filteredProperties);
+  public static DataPrivacyEmailConfiguration from(Properties filteredProperties) {
+    return new DataPrivacyEmailConfiguration(filteredProperties);
   }
 
-  private GdprEmailConfiguration(Properties filteredProperties) {
-    gdprMailEnabled = BooleanUtils.toBoolean(filteredProperties.getProperty(GDPR_MAIL_ENABLED_PROP));
+  private DataPrivacyEmailConfiguration(Properties filteredProperties) {
+    dataPrivacyMailEnabled = BooleanUtils.toBoolean(filteredProperties.getProperty(DATA_PRIVACY_PREFIX));
     subject = Objects.requireNonNull(filteredProperties.getProperty(SUBJECT_PROP));
     informationPage = Objects.requireNonNull(filteredProperties.getProperty(INFORMATION_PAGE_PROP));
     nodeUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(NODE_URL_TEMPLATE_PROP));
@@ -48,8 +48,8 @@ public class GdprEmailConfiguration {
     datasetUrlTemplate = Objects.requireNonNull(filteredProperties.getProperty(DATASET_URL_TEMPLATE_PROP));
   }
 
-  public boolean isGdprMailEnabled() {
-    return gdprMailEnabled;
+  public boolean isDataPrivacyMailEnabled() {
+    return dataPrivacyMailEnabled;
   }
 
   public String getSubject() {

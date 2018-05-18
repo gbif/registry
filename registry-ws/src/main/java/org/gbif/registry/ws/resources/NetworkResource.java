@@ -27,7 +27,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.gdpr.GdprService;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -69,7 +69,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     DatasetMapper datasetMapper,
     EventBus eventBus,
     EditorAuthorizationService userAuthService,
-    GdprService gdprService) {
+    DataPrivacyService dataPrivacyService) {
     super(networkMapper,
       commentMapper,
       contactMapper,
@@ -80,7 +80,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
       Network.class,
       eventBus,
       userAuthService,
-      gdprService);
+      dataPrivacyService);
     this.datasetMapper = datasetMapper;
     this.networkMapper = networkMapper;
   }

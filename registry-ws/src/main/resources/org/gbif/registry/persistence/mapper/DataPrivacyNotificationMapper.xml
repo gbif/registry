@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="org.gbif.registry.persistence.mapper.GdprNotificationMapper">
+<mapper namespace="org.gbif.registry.persistence.mapper.DataPrivacyNotificationMapper">
 
   <select id="existsNotification" resultType="java.lang.Boolean">
     SELECT EXISTS(
       SELECT true
-      FROM gdpr_notification notif
+      FROM data_privacy_notification notif
       WHERE notif.email = #{email} AND notif.version = #{version}
     )
   </select>
 
   <insert id="create">
-    INSERT INTO gdpr_notification (email, version, context) VALUES (#{email}, #{version},
+    INSERT INTO data_privacy_notification (email, version, context) VALUES (#{email}, #{version},
     #{context,jdbcType=OTHER,typeHandler=ContextTypeHandler}::hstore);
   </insert>
 
