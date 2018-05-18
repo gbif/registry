@@ -27,6 +27,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.gdpr.GdprService;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -67,7 +68,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     CommentMapper commentMapper,
     DatasetMapper datasetMapper,
     EventBus eventBus,
-    EditorAuthorizationService userAuthService) {
+    EditorAuthorizationService userAuthService,
+    GdprService gdprService) {
     super(networkMapper,
       commentMapper,
       contactMapper,
@@ -77,7 +79,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
       tagMapper,
       Network.class,
       eventBus,
-      userAuthService);
+      userAuthService,
+      gdprService);
     this.datasetMapper = datasetMapper;
     this.networkMapper = networkMapper;
   }
@@ -129,5 +132,4 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   public void removeConstituent(@PathParam("key") UUID networkKey, @PathParam("datasetKey") UUID datasetKey) {
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
   }
-
 }

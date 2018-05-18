@@ -1,0 +1,17 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="53" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      CREATE TABLE gdpr_notification (
+        email varchar(254) CHECK (assert_min_length(email, 5)) NOT NULL,
+        version char(1) CHECK (assert_min_length(version, 1)) NOT NULL,
+        timestamp_sent timestamp with time zone NOT NULL DEFAULT now(),
+        context hstore,
+        PRIMARY KEY (email, version)
+      );
+    </sql>
+  </changeSet>
+</databaseChangeLog>

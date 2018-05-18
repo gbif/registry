@@ -36,6 +36,7 @@ import org.gbif.registry.ws.authorization.OrganizationAuthorization;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
+import org.gbif.registry.gdpr.GdprService;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;
@@ -105,7 +106,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     InstallationMapper installationMapper,
     OrganizationEndorsementService<UUID> organizationEndorsementService,
     EventBus eventBus,
-    EditorAuthorizationService userAuthService) {
+    EditorAuthorizationService userAuthService,
+    GdprService gdprService) {
     super(organizationMapper,
       commentMapper,
       contactMapper,
@@ -115,7 +117,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       tagMapper,
       Organization.class,
       eventBus,
-      userAuthService);
+      userAuthService,
+      gdprService);
 
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
@@ -348,6 +351,4 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
     return password.toString();
   }
-
-
 }

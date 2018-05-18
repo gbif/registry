@@ -3,6 +3,7 @@ package org.gbif.registry.search.dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.events.EventModule;
+import org.gbif.registry.gdpr.GdprModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
 import org.gbif.registry.search.guice.RegistrySearchModule;
@@ -28,7 +29,8 @@ public class DatasetIndexBuilderTest {
           new RegistrySearchModule(props),
           new DirectoryModule(props),
           new StubModule(),
-          EventModule.withoutRabbit(props)
+          EventModule.withoutRabbit(props),
+          new GdprModule(props)
       );
 
       DatasetIndexBuilder idxBuilder = new DatasetIndexBuilder(inj.getInstance(DatasetService.class), inj.getInstance(DatasetIndexService.class));

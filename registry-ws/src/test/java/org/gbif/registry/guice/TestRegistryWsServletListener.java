@@ -14,6 +14,7 @@ package org.gbif.registry.guice;
 
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
+import org.gbif.registry.gdpr.GdprModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.DatasetIndexService;
@@ -115,7 +116,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
             new RegistrySearchModule(props),
             getSecurityModule(props),
             new TitleLookupMockModule(),
-            new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props))
+            new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props)),
+            new GdprModule(props)
     );
   }
 

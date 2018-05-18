@@ -18,6 +18,7 @@ import org.gbif.registry.directory.DirectoryModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.events.VarnishPurgeModule;
+import org.gbif.registry.gdpr.GdprModule;
 import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
@@ -127,7 +128,8 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
                               new OccurrenceMetricsModule(getMetricsProperties(properties)),
-                              new OaipmhModule(properties));
+                              new OaipmhModule(properties),
+                              new GdprModule(properties));
   }
 
   @VisibleForTesting
