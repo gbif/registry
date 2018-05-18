@@ -11,7 +11,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
 /**
- * Guice model for the gdpr emails.
+ * Guice module for the gdpr emails.
  */
 public class GdprEmailModule extends PrivateModule {
 
