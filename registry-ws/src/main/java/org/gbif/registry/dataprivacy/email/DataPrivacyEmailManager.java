@@ -64,6 +64,11 @@ public class DataPrivacyEmailManager {
    * @param context context with information related to the entity change.
    */
   public void sendDataPrivacyNotification(String email, Map<EntityType, List<UUID>> context) {
+    if (!config.isDataPrivacyMailEnabled()) {
+      LOG.info("Data privacy mail disabled");
+      return;
+    }
+
     BaseEmailModel emailModel;
     try {
       emailModel = generateDataPrivacyNotificationEmail(email, context);

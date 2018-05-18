@@ -23,12 +23,12 @@ public class DataPrivacyNotificationModule {
   }
 
   public Injector getInjector() {
-    Properties mailProperties = config.dataPrivacyConfig.toProperties();
+    Properties dataPrivacyProperties = config.dataPrivacyConfig.toProperties();
 
     return Guice.createInjector(new RegistryMyBatisModule(config.registry.toRegistryProperties()),
                                 new GbifApplicationAuthModule(config.registry.user, config.registry.password),
-                                new DataPrivacyModule(mailProperties),
-                                new DataPrivacyEmailModule(mailProperties),
+                                new DataPrivacyModule(dataPrivacyProperties),
+                                new DataPrivacyEmailModule(dataPrivacyProperties),
                                 new EmailManagerModule(config.mailConfig.toMailProperties()));
   }
 }
