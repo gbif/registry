@@ -15,6 +15,7 @@ package org.gbif.registry.persistence.guice;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
@@ -159,6 +160,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("UUID").to(UUID.class);
       addAlias("Country").to(Country.class);
       addAlias("Language").to(Language.class);
+      addAlias("Count").to(Facet.Count.class);
 
       addAlias("UriTypeHandler").to(UriTypeHandler.class);
       addAlias("UuidTypeHandler").to(UuidTypeHandler.class);

@@ -95,6 +95,9 @@ class GenericTypes {
   public static final GenericType<Map<UUID, String>> TITLES_MAP_TYPE = new GenericType<Map<UUID, String>>() {
   };
 
+  public static final GenericType<Map<Integer, Map<Integer,Long>>> DOWNLOADS_STATS_TYPE = new GenericType<Map<Integer, Map<Integer,Long>>>() {
+  };
+
   private GenericTypes() {
     throw new UnsupportedOperationException("Can't initialize class");
   }
