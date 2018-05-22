@@ -43,7 +43,8 @@ public class DataPrivacyNotificationListener extends AbstractMessageCallback<Dat
     if (dataPrivacyService.existsNotification(dataPrivacyNotificationMessage.getEmail(),
                                               dataPrivacyNotificationMessage.getVersion())) {
       // email already sent
-      LOG.info("Data privacy email notification already sent to {}", dataPrivacyNotificationMessage.getEmail());
+      LOG.info("Data privacy email notification was already sent before for {} - skipped",
+               dataPrivacyNotificationMessage.getEmail());
       return;
     }
 
@@ -53,6 +54,7 @@ public class DataPrivacyNotificationListener extends AbstractMessageCallback<Dat
 
     // create notification in DB
     if (sent) {
+      LOG.info("Data privacy email sent to {}", dataPrivacyNotificationMessage.getEmail());
       dataPrivacyService.createNotification(dataPrivacyNotificationMessage.getEmail(),
                                             dataPrivacyNotificationMessage.getVersion(),
                                             dataPrivacyNotificationMessage.getContext());
