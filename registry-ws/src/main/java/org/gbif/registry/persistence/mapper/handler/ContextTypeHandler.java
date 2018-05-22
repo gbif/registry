@@ -19,7 +19,7 @@ import org.postgresql.util.HStoreConverter;
 import static org.gbif.common.messaging.api.messages.DataPrivacyNotificationMessage.EntityType;
 
 /**
- * Provides convertion from the key value pairs to HStore.
+ * Provides conversion from the key value pairs to HStore.
  * When reading, the caller is guaranteed ordering of the content.
  */
 public class ContextTypeHandler extends BaseTypeHandler<Map<EntityType, List<UUID>>> {
