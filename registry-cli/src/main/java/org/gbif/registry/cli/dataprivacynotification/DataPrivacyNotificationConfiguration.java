@@ -101,7 +101,7 @@ public class DataPrivacyNotificationConfiguration {
       Properties props = new Properties();
 
       props.put(DATA_PRIVACY_PREFIX + "version", this.dataPrivacyVersion);
-      props.put(MAIL_PREFIX + "enabled", this.mailEnabled);
+      props.put(MAIL_PREFIX + "enabled", String.valueOf(this.mailEnabled));
       props.put(MAIL_PREFIX + "subject", this.subject);
       props.put(MAIL_PREFIX + "informationPage", this.informationPage);
       props.put(MAIL_PREFIX + URL_TEMPLATE_PROP_PREFIX + "node", this.nodeUrlTemplate);

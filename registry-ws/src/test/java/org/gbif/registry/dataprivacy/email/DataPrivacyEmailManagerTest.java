@@ -84,7 +84,7 @@ public class DataPrivacyEmailManagerTest {
 
   @Test
   public void sendEmailTest() {
-    emailManager.sendDataPrivacyNotification(TEST_EMAIL, context);
+    Assert.assertTrue(emailManager.sendDataPrivacyNotification(TEST_EMAIL, context));
   }
 
 }

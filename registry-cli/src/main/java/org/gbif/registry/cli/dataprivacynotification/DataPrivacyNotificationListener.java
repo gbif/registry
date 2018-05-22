@@ -48,13 +48,15 @@ public class DataPrivacyNotificationListener extends AbstractMessageCallback<Dat
     }
 
     // send email
-    dataPrivacyEmailManager.sendDataPrivacyNotification(dataPrivacyNotificationMessage.getEmail(),
-                                                 dataPrivacyNotificationMessage.getContext());
+    boolean sent = dataPrivacyEmailManager.sendDataPrivacyNotification(dataPrivacyNotificationMessage.getEmail(),
+                                                                       dataPrivacyNotificationMessage.getContext());
 
     // create notification in DB
-    dataPrivacyService.createNotification(dataPrivacyNotificationMessage.getEmail(),
-                                          dataPrivacyNotificationMessage.getVersion(),
-                                          dataPrivacyNotificationMessage.getContext());
+    if (sent) {
+      dataPrivacyService.createNotification(dataPrivacyNotificationMessage.getEmail(),
+                                            dataPrivacyNotificationMessage.getVersion(),
+                                            dataPrivacyNotificationMessage.getContext());
+    }
 
   }
 }

@@ -63,10 +63,10 @@ public class DataPrivacyEmailManager {
    * @param email   destination email.
    * @param context context with information related to the entity change.
    */
-  public void sendDataPrivacyNotification(String email, Map<EntityType, List<UUID>> context) {
+  public boolean sendDataPrivacyNotification(String email, Map<EntityType, List<UUID>> context) {
     if (!config.isDataPrivacyMailEnabled()) {
       LOG.info("Data privacy mail disabled");
-      return;
+      return false;
     }
 
     BaseEmailModel emailModel;
@@ -77,9 +77,11 @@ public class DataPrivacyEmailManager {
                 "Error while trying to generate data privacy notificaiton email for email {}",
                 email,
                 exc);
-      return;
+      return false;
     }
     emailSender.send(emailModel);
+
+    return true;
   }
 
   @VisibleForTesting
