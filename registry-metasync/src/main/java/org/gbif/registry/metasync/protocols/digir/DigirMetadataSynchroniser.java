@@ -22,9 +22,12 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.util.MachineTagUtils;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.SyncResult;
@@ -41,8 +44,6 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.HttpClient;
-
-import static org.gbif.registry.metasync.util.Constants.METADATA_NAMESPACE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -98,10 +99,8 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
 
     installation.setDescription(metadata.getHost().getDescription());
 
-    installation.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                      Constants.DIGIR_CODE,
-                                                      metadata.getHost().getCode()));
-    installation.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
+    installation.addMachineTag(MachineTag.newInstance(TagName.DIGIR_CODE, metadata.getHost().getCode()));
+    installation.addMachineTag(MachineTag.newInstance(TagNamespace.GBIF_METASYNC.getNamespace(),
                                                       Constants.INSTALLATION_VERSION,
                                                       metadata.getImplementation()));
   }
@@ -128,13 +127,7 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     // Maps currently existing DiGIR codes to the Datasets from our Registry that use those codes
     Map<String, Dataset> codeMap = Maps.newHashMap();
     for (Dataset dataset : datasets) {
-
-      // Find the "code" machine tag
-      for (MachineTag tag : dataset.getMachineTags()) {
-        if (tag.getNamespace().equals(METADATA_NAMESPACE) && tag.getName().equals(Constants.DIGIR_CODE)) {
-          codeMap.put(tag.getValue(), dataset);
-        }
-      }
+      MachineTagUtils.firstTag(dataset, TagName.DIGIR_CODE, (mt) -> codeMap.put(mt.getValue(), dataset));
     }
 
     // Sort in either updated or added Datasets using the just built Map
@@ -172,7 +165,7 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     dataset.setCitation(new Citation(resource.getCitation(), null));
     dataset.setRights(resource.getUseRestrictions());
     dataset.setContacts(convertToRegistryContacts(resource.getContacts()));
-    dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE, Constants.DIGIR_CODE, resource.getCode()));
+    dataset.addMachineTag(MachineTag.newInstance(TagName.DIGIR_CODE, resource.getCode()));
 
     // Respect publisher issued DOIs if provided.
     if (DOI.isParsable(resource.getCode())) {
@@ -180,27 +173,19 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     }
 
     if (resource.getNumberOfRecords() != 0) {
-      dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                   Constants.DECLARED_COUNT,
-                                                   String.valueOf(resource.getNumberOfRecords())));
+      dataset.addMachineTag(MachineTag.newInstance(TagName.DECLARED_COUNT, String.valueOf(resource.getNumberOfRecords())));
     }
 
     if (resource.getMaxSearchResponseRecords() != 0) {
-      dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                   Constants.DIGIR_MAX_SEARCH_RESPONSE_RECORDS,
-                                                   String.valueOf(resource.getMaxSearchResponseRecords())));
+      dataset.addMachineTag(MachineTag.newInstance(TagName.MAX_SEARCH_RESPONSE_RECORDS, String.valueOf(resource.getMaxSearchResponseRecords())));
     }
 
     if (resource.getDateLastUpdated() != null) {
-      dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                   Constants.DATE_LAST_UPDATED,
-                                                   resource.getDateLastUpdated().toString()));
+      dataset.addMachineTag(MachineTag.newInstance(TagName.DATE_LAST_UPDATED, resource.getDateLastUpdated().toString()));
     }
 
     for (Map.Entry<String, URI> entry : resource.getConceptualSchemas().entrySet()) {
-      dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                   Constants.CONCEPTUAL_SCHEMA,
-                                                   entry.getValue().toASCIIString()));
+      dataset.addMachineTag(MachineTag.newInstance(TagName.CONCEPTUAL_SCHEMA, entry.getValue().toASCIIString()));
     }
 
     // Each DiGIR Dataset has exactly one Endpoint, we create and populate it here

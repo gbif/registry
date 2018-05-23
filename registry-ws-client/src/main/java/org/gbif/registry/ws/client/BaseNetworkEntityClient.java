@@ -173,14 +173,12 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
 
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+    delete(targetEntityKey.toString(), "machineTag", String.valueOf(namespace));
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+    delete(targetEntityKey.toString(), "machineTag", String.valueOf(namespace), String.valueOf(name));
   }
 
   @Override

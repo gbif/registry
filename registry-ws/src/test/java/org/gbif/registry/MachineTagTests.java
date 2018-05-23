@@ -37,17 +37,24 @@ public class MachineTagTests {
     // test additions
     service.addMachineTag(entity.getKey(), MachineTags.newInstance());
     service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
-    assertEquals("2 machine tags have been added", 2, machineTags.size());
+    assertEquals("3 machine tags have been added", 3, machineTags.size());
 
     // test deletion, ensuring correct one is deleted
     service.deleteMachineTag(entity.getKey(), machineTags.get(0).getKey());
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
-    assertEquals("1 machine tag should remain after the deletion", 1, machineTags.size());
+    assertEquals("2 machine tags should remain after the deletion", 2, machineTags.size());
     MachineTag expected = MachineTags.newInstance();
     MachineTag created = machineTags.get(0);
     assertLenientEquals("Created machine tag does not read as expected", expected, created);
+
+    // test bulk deletion
+    service.deleteMachineTags(entity.getKey(), "hit.gbif.org", "indexedRecords");
+    machineTags = service.listMachineTags(entity.getKey());
+    assertNotNull(machineTags);
+    assertEquals("0 machine tags should remain after the deletion", 0, machineTags.size());
   }
 }

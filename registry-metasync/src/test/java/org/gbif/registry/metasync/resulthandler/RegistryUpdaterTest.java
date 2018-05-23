@@ -13,11 +13,11 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.TagName;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.HttpGetMatcher;
 import org.gbif.registry.metasync.protocols.biocase.BiocaseMetadataSynchroniser;
 import org.gbif.registry.metasync.protocols.tapir.TapirMetadataSynchroniser;
-import org.gbif.registry.metasync.util.Constants;
 
 import java.io.IOException;
 import java.net.URI;
@@ -256,11 +256,8 @@ public class RegistryUpdaterTest {
     // add 2 MachineTags 1 with metasync.gbif.org namespace, and another not having it
     List<MachineTag> machineTags = Lists.newArrayList();
 
-    MachineTag machineTag = new MachineTag();
+    MachineTag machineTag = MachineTag.newInstance(TagName.DECLARED_COUNT, "1000");
     machineTag.setKey(1);
-    machineTag.setNamespace(Constants.METADATA_NAMESPACE);
-    machineTag.setName(Constants.DECLARED_COUNT);
-    machineTag.setValue("1000");
     machineTags.add(machineTag);
 
     MachineTag machineTag2 = new MachineTag();
