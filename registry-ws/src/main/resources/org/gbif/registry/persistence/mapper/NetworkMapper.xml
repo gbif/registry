@@ -309,6 +309,15 @@
       network_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING network_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      network_key = #{targetEntityKey,jdbcType=OTHER} AND
+      namespace = #{namespace} AND
+      name = #{name}
+  </delete>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO network_comment(network_key,comment_key)

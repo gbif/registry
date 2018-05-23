@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.metasync.api.ErrorCode;
@@ -289,9 +290,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
       for (BiocaseArchive archive : inventoryDataset.getArchives()) {
         Endpoint archiveEndpoint = new Endpoint();
         archiveEndpoint.setUrl(archive.getArchiveUrl());
-        archiveEndpoint.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE,
-                                                             Constants.ARCHIVE_ORIGIN,
-                                                             InstallationType.BIOCASE_INSTALLATION.name()));
+        archiveEndpoint.addMachineTag(MachineTag.newInstance(TagName.ARCHIVE_ORIGIN, InstallationType.BIOCASE_INSTALLATION.name()));
 
         if (archive.getRowType() != null && archive.getRowType().toString().equals(DwcTerm.Occurrence.qualifiedName())) {
           LOG.info("Found BioCASe occurrence DWCA {}", archive);
@@ -308,9 +307,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     Endpoint endpoint = new Endpoint();
     endpoint.setType(EndpointType.BIOCASE);
     endpoint.setUrl(installationEndpoint.getUrl());
-    endpoint.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE,
-                                                  Constants.CONCEPTUAL_SCHEMA,
-                                                  capabilities.getPreferredSchema()));
+    endpoint.addMachineTag(MachineTag.newInstance(TagName.CONCEPTUAL_SCHEMA, capabilities.getPreferredSchema()));
 
     dataset.addEndpoint(endpoint);
     return dataset;
@@ -344,9 +341,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     Endpoint endpoint = new Endpoint();
     endpoint.setType(EndpointType.BIOCASE);
     endpoint.setUrl(installationEndpoint.getUrl());
-    endpoint.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE,
-                                                  Constants.CONCEPTUAL_SCHEMA,
-                                                  capabilities.getPreferredSchema()));
+    endpoint.addMachineTag(MachineTag.newInstance(TagName.CONCEPTUAL_SCHEMA, capabilities.getPreferredSchema()));
 
     dataset.addEndpoint(endpoint);
     return dataset;

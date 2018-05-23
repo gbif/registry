@@ -24,6 +24,8 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.registry.metasync.api.ErrorCode;
 import org.gbif.registry.metasync.api.MetadataException;
@@ -35,7 +37,6 @@ import org.gbif.registry.metasync.protocols.tapir.model.metadata.TapirContact;
 import org.gbif.registry.metasync.protocols.tapir.model.metadata.TapirMetadata;
 import org.gbif.registry.metasync.protocols.tapir.model.metadata.TapirRelatedEntity;
 import org.gbif.registry.metasync.protocols.tapir.model.search.TapirSearch;
-import org.gbif.registry.metasync.util.Constants;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -50,8 +51,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.registry.metasync.util.Constants.METADATA_NAMESPACE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -273,9 +272,7 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
       if (found) break;
       for (Schema schema : capabilities.getSchemas()) {
         if (schema.getNamespace().toASCIIString().equalsIgnoreCase(entry.getKey())) {
-          dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-                                                       Constants.CONCEPTUAL_SCHEMA,
-                                                       schema.getNamespace().toASCIIString()));
+          dataset.addMachineTag(MachineTag.newInstance(TagName.CONCEPTUAL_SCHEMA, schema.getNamespace().toASCIIString()));
           found = true;
           break;
         }
@@ -287,9 +284,7 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
 
     // if search response brought back the number of records, add corresponding tag
     if (search != null && search.getNumberOfRecords() != 0) {
-      dataset.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
-        Constants.DECLARED_COUNT,
-        String.valueOf(search.getNumberOfRecords())));
+      dataset.addMachineTag(MachineTag.newInstance(TagName.DECLARED_COUNT, String.valueOf(search.getNumberOfRecords())));
     }
 
     return dataset;
@@ -316,11 +311,14 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
    * Updates the Installation with the data that is universal across all Datasets. As the Installation itself doesn't
    * have any Metadata Endpoint there is very little information we can extract.
    */
+  /*
+   * There don't seem to be any of these in the Registry database.
+   */
   private void updateInstallation(Installation installation, TapirMetadata updaterMetadata) {
-    installation.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
+    installation.addMachineTag(MachineTag.newInstance(TagNamespace.GBIF_METASYNC.getNamespace(),
                                                       "version",
                                                       updaterMetadata.getSoftwareVersion()));
-    installation.addMachineTag(MachineTag.newInstance(METADATA_NAMESPACE,
+    installation.addMachineTag(MachineTag.newInstance(TagNamespace.GBIF_METASYNC.getNamespace(),
                                                       "software_name",
                                                       updaterMetadata.getSoftwareName()));
   }

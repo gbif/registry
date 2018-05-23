@@ -2,39 +2,39 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.EndpointMapper">
 
-  
+
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="ENDPOINT_MAP" type="Endpoint" autoMapping="true">
     <id property="key" column="key"/>
     <collection property="machineTags" column="key" select="listEndpointMachineTags"/>
-  </resultMap>  
+  </resultMap>
 
   <sql id="WRITABLE_ENDPOINT_FIELDS">
     type,url,description,created,created_by,modified,modified_by
   </sql>
-  
+
   <sql id="ENDPOINT_FIELDS">
     key,<include refid="org.gbif.registry.persistence.mapper.EndpointMapper.WRITABLE_ENDPOINT_FIELDS"/>
   </sql>
 
-  <!-- 
+  <!--
     key, created_by and created are never changed
    -->
   <sql id="ENDPOINT_UPDATE">
     type = #{type, jdbcType=OTHER},
-    url = #{url, jdbcType=VARCHAR}, 
+    url = #{url, jdbcType=VARCHAR},
     description = #{description, jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{modifiedBy}
   </sql>
-  
+
   <sql id="WRITABLE_ENDPOINT_FIELD_TYPES">
     #{type, jdbcType=OTHER},
-    #{url, jdbcType=VARCHAR}, 
+    #{url, jdbcType=VARCHAR},
     #{description, jdbcType=VARCHAR},
-    now(), <!-- created -->    
-    #{createdBy},  
-    now(), <!-- modified -->    
+    now(), <!-- created -->
+    #{createdBy},
+    now(), <!-- modified -->
     #{createdBy}
   </sql>
 
@@ -42,7 +42,7 @@
     INSERT INTO endpoint(<include refid="WRITABLE_ENDPOINT_FIELDS"/>)
     VALUES(<include refid="WRITABLE_ENDPOINT_FIELD_TYPES"/>)
   </insert>
-  
+
   <insert id="addMachineTag" >
     INSERT INTO endpoint_machine_tag(endpoint_key,machine_tag_key)
     VALUES(
@@ -50,11 +50,28 @@
      #{machineTagKey,jdbcType=INTEGER}
     )
   </insert>
-  
+
   <select id="listEndpointMachineTags" resultType="MachineTag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
     FROM machine_tag INNER JOIN endpoint_machine_tag ON machine_tag_key = key
     WHERE endpoint_key = #{key,jdbcType=OTHER}
     ORDER BY namespace
   </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING endpoint_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      endpoint_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING endpoint_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      endpoint_key = #{targetEntityKey,jdbcType=OTHER} AND
+      namespace = #{namespace} AND
+      name = #{name}
+  </delete>
 </mapper>
