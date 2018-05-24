@@ -95,7 +95,7 @@ public class CustomDownloadDataCiteConverterTest {
   /**
    * @return list of DatasetOccurrenceDownloadUsage populated from usedDatasets.txt
    */
-  private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException {
+  private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException, ParseException {
     File csv = FileUtils.getClasspathFile("customdownload/usedDatasets.txt");
     List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
 
