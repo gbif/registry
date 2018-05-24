@@ -32,6 +32,7 @@ import org.gbif.registry.metasync.api.MetadataException;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.BaseProtocolHandler;
 import org.gbif.registry.metasync.protocols.biocase.model.BiocaseArchive;
+import org.gbif.registry.metasync.protocols.biocase.model.BiocaseCount;
 import org.gbif.registry.metasync.protocols.biocase.model.InventoryDataset;
 import org.gbif.registry.metasync.protocols.biocase.model.NewDatasetInventory;
 import org.gbif.registry.metasync.protocols.biocase.model.OldDatasetInventory;
@@ -115,6 +116,11 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
               newDataset = convertToDataset(metadata, endpoint, capabilities, datasetInventory.get(datasetTitle));
             }
 
+            Long count = getDatasetCount(endpoint, datasetTitle, capabilities);
+            if (count != null && count > 0) {
+              newDataset.addMachineTag(MachineTag.newInstance(TagName.DECLARED_COUNT, String.valueOf(count)));
+            }
+
             Dataset existingDataset = findDataset(datasetTitle, datasets);
             if (existingDataset == null) {
               added.add(newDataset);
@@ -134,6 +140,22 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
 
       return new SyncResult(updated, added, deleted, installation);
     }
+  }
+
+  /**
+   * Query for the number of records in the dataset, that is, the number we expect to crawl.
+   */
+  @Override
+  public Long getDatasetCount(Dataset dataset, Endpoint endpoint) throws MetadataException {
+    Capabilities capabilities = getCapabilities(endpoint);
+    if (capabilities.getPreferredSchema() == null) {
+      throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
+    }
+
+    Long count = getDatasetCount(endpoint, dataset.getTitle(), capabilities);
+
+    LOG.info("Retrieved count of {}", count);
+    return count;
   }
 
   public URI buildUri(URI url, String parameter, String value) throws MetadataException {
@@ -162,6 +184,16 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
     } else {
       return doOldStyleInventory(endpoint, capabilities);
     }
+  }
+
+  /**
+   * Tries to get a count for this BioCASe Endpoint.
+   */
+  private Long getDatasetCount(Endpoint endpoint, String datasetTitle, Capabilities capabilities) throws MetadataException {
+    String requestParameter = TemplateUtils.getBiocaseCountRequest(capabilities.getPreferredSchema(), datasetTitle);
+    URI uri = buildUri(endpoint.getUrl(), "request", requestParameter);
+    BiocaseCount count = doHttpRequest(uri, newDigester(BiocaseCount.class));
+    return count.getCount();
   }
 
   /**

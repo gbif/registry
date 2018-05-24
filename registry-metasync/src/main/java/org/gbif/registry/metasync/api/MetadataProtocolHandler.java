@@ -16,6 +16,7 @@
 package org.gbif.registry.metasync.api;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 
 import java.util.List;
@@ -40,4 +41,8 @@ public interface MetadataProtocolHandler {
   // TODO: Document if return can be null
   SyncResult syncInstallation(Installation installation, List<Dataset> datasets) throws MetadataException;
 
+  /**
+   * Retrieves the dataset count for a dataset at an endpoint.
+   */
+  Long getDatasetCount(Dataset dataset, Endpoint endpoint) throws MetadataException;
 }

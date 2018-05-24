@@ -26,6 +26,8 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
@@ -371,12 +373,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(
-    @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
+  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
     machineTag.setValue(value);
+    return addMachineTag(targetEntityKey, machineTag);
+  }
+
+  @Override
+  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
+    MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
 
@@ -424,6 +431,11 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
+    deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
+  }
+
+  @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
     // TODO: Write implementation
     throw new UnsupportedOperationException("Not implemented yet");
@@ -446,9 +458,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(
-    @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name
-  ) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
+    deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
+  }
+
+  @Override
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
     WithMyBatis.deleteMachineTags(mapper, targetEntityKey, namespace, name);
   }
 

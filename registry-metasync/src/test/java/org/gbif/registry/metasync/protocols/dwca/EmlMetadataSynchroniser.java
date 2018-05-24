@@ -1,6 +1,7 @@
 package org.gbif.registry.metasync.protocols.dwca;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.service.registry.DatasetService;
@@ -57,6 +58,11 @@ public class EmlMetadataSynchroniser implements MetadataProtocolHandler {
     List<Dataset> deleted = Lists.newArrayList();
     Map<Dataset, Dataset> updated = Maps.newHashMap();
     return new SyncResult(updated, added, deleted, installation);
+  }
+
+  @Override
+  public Long getDatasetCount(Dataset dataset, Endpoint endpoint) {
+    return null;
   }
 
   /**
