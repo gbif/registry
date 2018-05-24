@@ -161,6 +161,16 @@ public class TapirMetadataSynchroniser extends BaseProtocolHandler {
   }
 
   /**
+   * Query for the number of records in the dataset, that is, the number we expect to crawl.
+   *
+   * There are only four working TaPIR datasets, so I'm not implementing this (2018-05).
+   */
+  @Override
+  public Long getDatasetCount(Dataset dataset, Endpoint endpoint) {
+    return null;
+  }
+
+  /**
    * Gets the <em>local id</em> from the Endpoint. This is the last part of the URL and the only uniquely identifying
    * piece for a TAPIR Dataset.
    */

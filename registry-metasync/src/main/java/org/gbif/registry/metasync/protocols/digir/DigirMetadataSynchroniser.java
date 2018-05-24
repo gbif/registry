@@ -86,6 +86,28 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     return mapToDatasets(metadata, datasets, endpoint.getUrl(), installation);
   }
 
+  /**
+   * Query for the number of records in the dataset, that is, the number we expect to crawl.
+   */
+  @Override
+  public Long getDatasetCount(Dataset dataset, Endpoint endpoint) throws MetadataException {
+    try {
+      DigirMetadata metadata = getDigirMetadata(endpoint);
+
+      String code = MachineTagUtils.firstTag(dataset, TagName.DIGIR_CODE).getValue();
+
+      DigirResource resource = metadata.getResources().stream().filter((r) -> code.equals(r.getCode())).findFirst().get();
+
+      if (resource.getNumberOfRecords() != 0) {
+        return new Long(resource.getNumberOfRecords());
+      }
+
+      return null;
+    } catch (Exception e) {
+      throw new MetadataException("Unable to retrieve count of DiGIR dataset ["+dataset.getKey()+"]", e, ErrorCode.OTHER_ERROR);
+    }
+  }
+
   private DigirMetadata getDigirMetadata(Endpoint endpoint) throws MetadataException {
     return doHttpRequest(endpoint.getUrl(), newDigester(DigirMetadata.class));
   }
