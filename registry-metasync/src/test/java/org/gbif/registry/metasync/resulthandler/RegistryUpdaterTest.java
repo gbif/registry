@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.HttpGetMatcher;
 import org.gbif.registry.metasync.protocols.biocase.BiocaseMetadataSynchroniser;
@@ -67,15 +68,14 @@ public class RegistryUpdaterTest {
   public static void init() throws IOException {
     HttpClient client = mock(HttpClient.class);
     // mock endpoint responses
-    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr?op=capabilities")))).thenReturn(
-      prepareResponse(200, "tapir/capabilities1.xml"));
-    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr")))).thenReturn(
-      prepareResponse(200, "tapir/metadata1.xml"));
+    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr?op=capabilities"))))
+      .thenReturn(prepareResponse(200, "tapir/capabilities1.xml"));
+    when(client.execute(argThat(HttpGetMatcher.matchUrl("http://localhost/nmr"))))
+      .thenReturn(prepareResponse(200, "tapir/metadata1.xml"));
     when(
       client.execute(argThat(HttpGetMatcher
         .matchUrl("http://localhost/nmr?op=s&t=http%3A%2F%2Frs.gbif.org%2Ftemplates%2Ftapir%2Fdwc%2F1.4%2Fsci_name_range.xml&count=true&start=0&limit=1&lower=AAA&upper=zzz"))))
-      .thenReturn(
-        prepareResponse(200, "tapir/search1.xml"));
+      .thenReturn(prepareResponse(200, "tapir/search1.xml"));
     synchroniser = new TapirMetadataSynchroniser(client);
   }
 
@@ -118,7 +118,7 @@ public class RegistryUpdaterTest {
     verify(updater.getDatasetService(), times(1)).update(any(Dataset.class));
 
     // delete 1 existing machine tag, add 2 new
-    verify(updater.getDatasetService(), times(1)).deleteMachineTag(any(UUID.class), anyInt());
+    verify(updater.getDatasetService(), times(1)).deleteMachineTags(any(UUID.class), any(TagNamespace.class));
     verify(updater.getDatasetService(), times(2)).addMachineTag(any(UUID.class), any(MachineTag.class));
 
     // delete 1 existing contact, add 2 new
