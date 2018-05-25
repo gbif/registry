@@ -392,7 +392,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
   @DELETE
-  @Path("{key}/machineTag/{machineTagKey}")
+  @Path("{key}/machineTag/{machineTagKey: [0-9]+}")
   @Consumes(MediaType.WILDCARD)
   public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey,
                                @Context SecurityContext security) {
