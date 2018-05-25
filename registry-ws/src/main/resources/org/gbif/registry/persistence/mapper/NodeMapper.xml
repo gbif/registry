@@ -230,6 +230,15 @@
       node_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING node_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND
+      namespace = #{namespace} AND
+      name = #{name}
+  </delete>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO node_comment(node_key,comment_key)

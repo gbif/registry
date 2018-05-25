@@ -21,8 +21,8 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.TagName;
 import org.gbif.registry.metasync.api.SyncResult;
-import org.gbif.registry.metasync.util.Constants;
 
 import java.io.IOException;
 import java.net.URI;
@@ -115,7 +115,7 @@ public class DigirMetadataSynchroniserTest {
   @Test
   public void testDeletedDataset() throws Exception {
     Dataset dataset = new Dataset();
-    dataset.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE, Constants.DIGIR_CODE, "foobar"));
+    dataset.addMachineTag(MachineTag.newInstance(TagName.DIGIR_CODE, "foobar"));
     dataset.setTitle("Foobar");
 
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test2.xml"));
@@ -130,9 +130,7 @@ public class DigirMetadataSynchroniserTest {
   @Test
   public void testUpdatedDataset() throws Exception {
     Dataset dataset = new Dataset();
-    dataset.addMachineTag(MachineTag.newInstance(Constants.METADATA_NAMESPACE,
-                                                 Constants.DIGIR_CODE,
-                                                 "doi:10.1594/PANGAEA.51131"));
+    dataset.addMachineTag(MachineTag.newInstance(TagName.DIGIR_CODE,"doi:10.1594/PANGAEA.51131"));
     dataset.setTitle("Foobar");
 
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test2.xml"));

@@ -15,6 +15,9 @@ import org.apache.velocity.context.Context;
  */
 final class TemplateUtils {
 
+  private static final String ABCD_12_NAME_CONCEPT = "/DataSets/DataSet/Units/Unit/Identifications/Identification/TaxonIdentified/NameAuthorYearString";
+  private static final String ABCD_206_NAME_CONCEPT = "/DataSets/DataSet/Units/Unit/Identifications/Identification/Result/TaxonIdentified/ScientificName/FullScientificNameString";
+
   private static final VelocityEngine VELOCITY_ENGINE = new VelocityEngine();
 
   static {
@@ -49,15 +52,34 @@ final class TemplateUtils {
     context.put("titleConcept", getTitlePath(contentNamespace));
 
     if (contentNamespace.equals(Constants.ABCD_12_SCHEMA)) {
-      context.put("nameConcept",
-                  "/DataSets/DataSet/Units/Unit/Identifications/Identification/TaxonIdentified/NameAuthorYearString");
+      context.put("nameConcept",ABCD_12_NAME_CONCEPT);
     } else if (contentNamespace.equals(Constants.ABCD_206_SCHEMA)) {
-      context.put("nameConcept",
-                  "/DataSets/DataSet/Units/Unit/Identifications/Identification/Result/TaxonIdentified/ScientificName/FullScientificNameString");
+      context.put("nameConcept",ABCD_206_NAME_CONCEPT);
     }
 
     StringWriter writer = new StringWriter();
     VELOCITY_ENGINE.mergeTemplate("/biocase/metadata.xml.vm", "UTF-8", context, writer);
+    return writer.toString();
+  }
+
+  /**
+   * Returns a string that can be used to retrieve metadata about a specific dataset identified by a title. You get that
+   * title by first doing an inventory request. Under the hood this does a {@code search} request.
+   */
+  public static String getBiocaseCountRequest(String contentNamespace, String datasetTitle) {
+    Context context = new VelocityContext();
+    context.put("contentNamespace", contentNamespace);
+    context.put("datasetTitle", datasetTitle);
+    context.put("titleConcept", getTitlePath(contentNamespace));
+
+    if (contentNamespace.equals(Constants.ABCD_12_SCHEMA)) {
+      context.put("nameConcept",ABCD_12_NAME_CONCEPT);
+    } else if (contentNamespace.equals(Constants.ABCD_206_SCHEMA)) {
+      context.put("nameConcept",ABCD_206_NAME_CONCEPT);
+    }
+
+    StringWriter writer = new StringWriter();
+    VELOCITY_ENGINE.mergeTemplate("/biocase/count.xml.vm", "UTF-8", context, writer);
     return writer.toString();
   }
 

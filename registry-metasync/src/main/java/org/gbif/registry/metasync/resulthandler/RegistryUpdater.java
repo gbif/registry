@@ -7,10 +7,13 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
+import org.gbif.api.util.MachineTagUtils;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.util.Constants;
 
@@ -116,10 +119,7 @@ public class RegistryUpdater {
         // Machine tags with namepace "metasync.gbif.org" are derived 100% from the metadata sync
         // delete existing machine tags in this namespace, and replace with new/updated machine tags
         for (MachineTag machineTag : existingDataset.getMachineTags()) {
-          // TODO: replace below with datasetService.deleteMachineTags(uuid, namespace); once implemented
-          if (machineTag.getNamespace().equalsIgnoreCase(Constants.METADATA_NAMESPACE)) {
-            datasetService.deleteMachineTag(datasetKey, machineTag.getKey());
-          }
+          datasetService.deleteMachineTags(datasetKey, TagNamespace.GBIF_METASYNC.getNamespace());
         }
         for (MachineTag machineTag : updated.getMachineTags()) {
           datasetService.addMachineTag(datasetKey, machineTag);
@@ -194,10 +194,8 @@ public class RegistryUpdater {
     // is the dataset migrated to IPT/HTTP DwC-A?
     for (Endpoint endpoint : existingDataset.getEndpoints()) {
       if (endpoint.getType() == EndpointType.DWC_ARCHIVE) {
-        for (MachineTag tag : endpoint.getMachineTags()) {
-          if (tag.getNamespace().equals(Constants.METADATA_NAMESPACE) && tag.getName().equals(Constants.ARCHIVE_ORIGIN)) {
-            return !tag.getValue().equals(InstallationType.BIOCASE_INSTALLATION.name());
-          }
+        for (MachineTag tag : MachineTagUtils.list(endpoint, TagName.ARCHIVE_ORIGIN)) {
+          return !tag.getValue().equals(InstallationType.BIOCASE_INSTALLATION.name());
         }
         return true;
       }

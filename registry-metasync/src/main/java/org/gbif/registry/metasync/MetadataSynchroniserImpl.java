@@ -3,6 +3,7 @@ package org.gbif.registry.metasync;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.metasync.api.ErrorCode;
@@ -63,6 +64,22 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
     }
 
     throw new IllegalArgumentException("Installation of type [" + installation.getType() + "] not supported");
+  }
+
+  @Override
+  public Long getDatasetCount(Dataset dataset, Endpoint endpoint) throws MetadataException {
+    checkNotNull(dataset, "dataset can't be null");
+    checkNotNull(endpoint, "endpoint can't be null");
+
+    Installation installation = validateInstallation(dataset.getInstallationKey());
+
+    for (MetadataProtocolHandler protocolHandler : protocolHandlers) {
+      if (protocolHandler.canHandle(installation)) {
+        return protocolHandler.getDatasetCount(dataset, endpoint);
+      }
+    }
+
+    return null;
   }
 
   @Override
@@ -184,7 +201,7 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
 
   /**
    * Gets all hosted datasets for an Installation.
-   * 
+   *
    * @param key of the Installation
    * @return list of Datasets for this Installation, might be empty but never null
    */

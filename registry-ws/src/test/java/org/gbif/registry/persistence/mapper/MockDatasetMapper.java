@@ -295,6 +295,11 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public int deleteMachineTags(@Param("targetEntityKey") UUID entityKey, @Param("namespace") String namespace, @Param("name") String name) {
+    return 0;
+  }
+
+  @Override
   public List<MachineTag> listMachineTags(@Param("targetEntityKey") UUID targetEntityKey) {
     return null;
   }

@@ -26,6 +26,8 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
@@ -360,10 +362,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public int addMachineTag(@PathParam("key") UUID targetEntityKey, @NotNull @Trim MachineTag machineTag,
     @Context SecurityContext security) {
 
-      if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
-              && !userAuthService.allowedToModifyNamespace(security.getUserPrincipal(), machineTag.getNamespace())) {
-          throw new WebApplicationException(Response.Status.FORBIDDEN);
-      }
+    if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
+      && !userAuthService.allowedToModifyNamespace(security.getUserPrincipal(), machineTag.getNamespace())) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
 
     machineTag.setCreatedBy(security.getUserPrincipal().getName());
     return addMachineTag(targetEntityKey, machineTag);
@@ -376,8 +378,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(
-    @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
+  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -385,23 +386,29 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addMachineTag(targetEntityKey, machineTag);
   }
 
-    /**
-     * The webservice method to delete a machine tag.
-     * Ensures that the caller is authorized to perform the action by looking at the namespace.
-     */
-    @DELETE
-    @Path("{key}/machineTag/{machineTagKey}")
-    @Consumes(MediaType.WILDCARD)
-    public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey,
-                                 @Context SecurityContext security) {
-        if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
-                && !userAuthService.allowedToDeleteMachineTag(security.getUserPrincipal(), machineTagKey)) {
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-        }
-        deleteMachineTag(targetEntityKey, machineTagKey);
-    }
+  @Override
+  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
+    MachineTag machineTag = MachineTag.newInstance(tagName, value);
+    return addMachineTag(targetEntityKey, machineTag);
+  }
 
-    /**
+  /**
+   * The webservice method to delete a machine tag.
+   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   */
+  @DELETE
+  @Path("{key}/machineTag/{machineTagKey: [0-9]+}")
+  @Consumes(MediaType.WILDCARD)
+  public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey,
+                               @Context SecurityContext security) {
+    if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
+      && !userAuthService.allowedToDeleteMachineTag(security.getUserPrincipal(), machineTagKey)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+    deleteMachineTag(targetEntityKey, machineTagKey);
+  }
+
+  /**
    * Deletes the MachineTag according to interface without security restrictions.
    *
    * @param targetEntityKey key of target entity to delete MachineTag from
@@ -412,18 +419,57 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     WithMyBatis.deleteMachineTag(mapper, targetEntityKey, machineTagKey);
   }
 
+  /**
+   * The webservice method to delete all machine tag in a namespace.
+   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   */
+  @DELETE
+  @Path("{key}/machineTag/{namespace}")
+  @Consumes(MediaType.WILDCARD)
+  public void deleteMachineTags(@PathParam("key") UUID targetEntityKey, @PathParam("namespace") String namespace,
+                                @Context SecurityContext security) {
+    if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
+      && !userAuthService.allowedToModifyNamespace(security.getUserPrincipal(), namespace)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+    deleteMachineTags(targetEntityKey, namespace);
+  }
+
+  @Override
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
+    deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
+  }
+
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
     // TODO: Write implementation
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
+  /**
+   * The webservice method to delete all machine tag of a particular name in a namespace.
+   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   */
+  @DELETE
+  @Path("{key}/machineTag/{namespace}/{name}")
+  @Consumes(MediaType.WILDCARD)
+  public void deleteMachineTags(@PathParam("key") UUID targetEntityKey, @PathParam("namespace") String namespace,
+                                @PathParam("name") String name, @Context SecurityContext security) {
+    if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
+      && !userAuthService.allowedToModifyNamespace(security.getUserPrincipal(), namespace)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+    deleteMachineTags(targetEntityKey, namespace, name);
+  }
+
   @Override
-  public void deleteMachineTags(
-    @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name
-    ) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
+    deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
+  }
+
+  @Override
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
+    WithMyBatis.deleteMachineTags(mapper, targetEntityKey, namespace, name);
   }
 
   @GET
@@ -652,9 +698,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public int addIdentifier(UUID targetEntityKey, @Valid Identifier identifier) {
-      int key = WithMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
-      eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
-      return key;
+    int key = WithMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
+    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
+    return key;
   }
 
   /**

@@ -5,11 +5,12 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.util.MachineTagUtils;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.TagName;
 import org.gbif.registry.metasync.api.SyncResult;
 import org.gbif.registry.metasync.protocols.HttpGetMatcher;
-import org.gbif.registry.metasync.util.Constants;
 
 import java.io.IOException;
 import java.net.URI;
@@ -89,12 +90,7 @@ public class TapirMetadataSynchroniserTest {
     assertThat(ds1.getDoi()).isEqualTo(new DOI("10.1234/doi"));
 
     // Assert the declared record count machine tag was found, and that its value was 167348
-    MachineTag count = null;
-    for (MachineTag tag : ds1.getMachineTags()) {
-      if (tag.getName().equalsIgnoreCase(Constants.DECLARED_COUNT)) {
-        count = tag;
-      }
-    }
+    MachineTag count = MachineTagUtils.firstTag(ds1, TagName.DECLARED_COUNT);
     assertThat(count).isNotNull();
     assertThat(Integer.valueOf(count.getValue())).isEqualTo(167348);
   }
