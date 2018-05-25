@@ -15,7 +15,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.metasync.api.SyncResult;
-import org.gbif.registry.metasync.util.Constants;
 
 import java.util.Map;
 import java.util.UUID;
@@ -118,9 +117,7 @@ public class RegistryUpdater {
 
         // Machine tags with namepace "metasync.gbif.org" are derived 100% from the metadata sync
         // delete existing machine tags in this namespace, and replace with new/updated machine tags
-        for (MachineTag machineTag : existingDataset.getMachineTags()) {
-          datasetService.deleteMachineTags(datasetKey, TagNamespace.GBIF_METASYNC.getNamespace());
-        }
+        datasetService.deleteMachineTags(datasetKey, TagNamespace.GBIF_METASYNC);
         for (MachineTag machineTag : updated.getMachineTags()) {
           datasetService.addMachineTag(datasetKey, machineTag);
         }
