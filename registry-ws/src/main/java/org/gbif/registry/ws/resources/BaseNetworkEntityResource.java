@@ -42,6 +42,7 @@ import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
+import org.gbif.registry.dataprivacy.DataPrivacyService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -112,6 +113,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final Class<T> objectClass;
   private final EventBus eventBus;
   private final EditorAuthorizationService userAuthService;
+  private final DataPrivacyService dataPrivacyService;
+
 
   protected BaseNetworkEntityResource(
     BaseNetworkEntityMapper<T> mapper,
@@ -123,7 +126,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     TagMapper tagMapper,
     Class<T> objectClass,
     EventBus eventBus,
-    EditorAuthorizationService userAuthService) {
+    EditorAuthorizationService userAuthService,
+    DataPrivacyService dataPrivacyService) {
     this.mapper = mapper;
     this.commentMapper = commentMapper;
     this.machineTagMapper = machineTagMapper;
@@ -134,6 +138,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.objectClass = objectClass;
     this.eventBus = eventBus;
     this.userAuthService = userAuthService;
+    this.dataPrivacyService = dataPrivacyService;
   }
 
   /**
@@ -510,6 +515,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public int addContact(UUID targetEntityKey, @Valid Contact contact) {
     int key = WithMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    dataPrivacyService.checkDataPrivacyNotification(targetEntityKey, objectClass, contact);
     return key;
   }
 
@@ -541,6 +547,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void updateContact(UUID targetEntityKey, @Valid Contact contact) {
     WithMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
     eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    dataPrivacyService.checkDataPrivacyNotification(targetEntityKey, objectClass, contact);
   }
 
   /**
@@ -666,7 +673,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
 
-
   @GET
   @Path("{key}/identifier")
   @Override
@@ -686,4 +692,5 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
     return new PagingResponse<T>(page, count, result);
   }
+
 }

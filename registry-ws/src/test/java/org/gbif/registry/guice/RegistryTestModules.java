@@ -18,6 +18,8 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.inject.IdentityServiceTestModule;
 import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
+import org.gbif.registry.dataprivacy.DataPrivacyModule;
+import org.gbif.registry.dataprivacy.email.DataPrivacyEmailModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
@@ -131,7 +133,9 @@ public class RegistryTestModules {
                   new SecurityModule(p),
                   new DoiModule(p),
                   new RabbitMockModule(),
-                  new TitleLookupMockModule());
+                  new TitleLookupMockModule(),
+                  new DataPrivacyModule(p),
+                  new DataPrivacyEmailModule(p));
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

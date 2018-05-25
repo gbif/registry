@@ -53,6 +53,7 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
+import org.gbif.registry.persistence.mapper.DataPrivacyNotificationMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -64,6 +65,7 @@ import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.handler.ContextTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
@@ -127,6 +129,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(MetasyncHistoryMapper.class);
       addMapperClass(UserRightsMapper.class);
       addMapperClass(DoiMapper.class);
+      addMapperClass(DataPrivacyNotificationMapper.class);
 
       //from registry-surety module
       addMapperClass(ChallengeCodeMapper.class);
@@ -168,6 +171,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
+      addAlias("ContextTypeHandler").to(ContextTypeHandler.class);
     }
 
     @Override
@@ -215,6 +219,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(UserRightsMapper.class);
     expose(DoiMapper.class);
     expose(ChallengeCodeMapper.class);
+    expose(DataPrivacyNotificationMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
