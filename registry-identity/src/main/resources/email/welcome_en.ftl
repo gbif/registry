@@ -1,4 +1,3 @@
-<#assign gbifdomain="demo.gbif.org">
 Thanks for registering at GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
 of free and open biodiversity records made available by the GBIF community of participants and publishers.
 
@@ -13,7 +12,7 @@ assigned to each search result you download, you help ensure that they get full 
 <p>The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
 maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
 ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://${gbifdomain}/citation-guidelines">Want more details?</a></p>
+enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines">Want more details?</a></p>
 
 <h2>Join one of the communities</h2>
 
@@ -28,9 +27,9 @@ Please contact <a href="mailto:communication@gbif.org">communication@gbif.org</a
 
 <h2>Learn how others use the data</h2>
 
-<p>What can you do with GBIF-mediated data? Have a look at some <a href="https://${gbifdomain}/resource/search?contentType=dataUse">recent highlights</a>!
+<p>What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse">recent highlights</a>!
 As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-compiles it each year in our <a href="https://${gbifdomain}/science-review">Science Review</a>.</p>
+compiles it each year in our <a href="https://www.gbif.org/science-review">Science Review</a>.</p>
 
 <h2>Send us your feedback</h2>
 
@@ -38,7 +37,7 @@ compiles it each year in our <a href="https://${gbifdomain}/science-review">Scie
 to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
 You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
 
-<p>We are also working to <a href="https://${gbifdomain}/faq">consolidate and improve FAQs</a> previously scattered across various webpages
+<p>We are also working to <a href="https://www.gbif.org/faq">consolidate and improve FAQs</a> previously scattered across various webpages
 in a single location and will add to them as needed.</p>
 
 <p>For press inquiries, email <a href="mailto:communication@gbif.org">communication@gbif.org</a>. For all other private enquiries or
@@ -48,7 +47,7 @@ non-technical questions, email <a href="mailto:info@gbif.org">info@gbif.org</a>.
 
 <p>Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
 via <a href="https://twitter.com/GBIF">Twitter</a>, <a href="https://www.facebook.com/gbifnews">Facebook</a>,
-<a href="https://www.linkedin.com/groups/55171">LinkedIn</a> and the <a href="https://${gbifdomain}/newsletters">GBIF newsletter</a>.</p>
+<a href="https://www.linkedin.com/groups/55171">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters">GBIF newsletter</a>.</p>
 
 <p>Thanks, on behalf of the GBIF network,</p>
 
