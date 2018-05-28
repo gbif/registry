@@ -71,7 +71,7 @@ public class MetadataSynchroniserImpl implements MetadataSynchroniser {
     checkNotNull(dataset, "dataset can't be null");
     checkNotNull(endpoint, "endpoint can't be null");
 
-    Installation installation = validateInstallation(dataset.getInstallationKey());
+    Installation installation = installationService.get(dataset.getInstallationKey());
 
     for (MetadataProtocolHandler protocolHandler : protocolHandlers) {
       if (protocolHandler.canHandle(installation)) {
