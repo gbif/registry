@@ -62,6 +62,7 @@ public class EmlMetadataSynchroniser implements MetadataProtocolHandler {
 
   @Override
   public Long getDatasetCount(Dataset dataset, Endpoint endpoint) {
+    LOG.info("Not implemented, returning null");
     return null;
   }
 

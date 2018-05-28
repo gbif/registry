@@ -44,6 +44,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
@@ -54,6 +56,7 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
  * Endpoint.
  */
 public class DigirMetadataSynchroniser extends BaseProtocolHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(DigirMetadataSynchroniser.class);
 
   // keyword used to identify if an endpoint is of type DIGIR_MANIS
   private static final String MANIS_KEYWORD = "manis";
@@ -97,6 +100,8 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
       String code = MachineTagUtils.firstTag(dataset, TagName.DIGIR_CODE).getValue();
 
       DigirResource resource = metadata.getResources().stream().filter((r) -> code.equals(r.getCode())).findFirst().get();
+
+      LOG.info("Retrieved count of {}", resource.getNumberOfRecords());
 
       if (resource.getNumberOfRecords() != 0) {
         return new Long(resource.getNumberOfRecords());
