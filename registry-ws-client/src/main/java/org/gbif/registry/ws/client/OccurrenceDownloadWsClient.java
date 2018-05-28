@@ -78,20 +78,33 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
 
 
   @Override
-  public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country) {
-    return statsServiceCall(fromDate, toDate, country, "stats");
+  public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable Date fromDate, @Nullable Date toDate,
+                                                        @Nullable Country userCountry,
+                                                        @Nullable Country publishingCountry,
+                                                        @Nullable UUID datasetKey) {
+    return statsServiceCall(fromDate, toDate, userCountry, publishingCountry, datasetKey,"stats");
   }
 
   @Override
-  public Map<Integer, Map<Integer, Long>> getDownloadRecordsHostedByCountry(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country) {
-    return statsServiceCall(fromDate, toDate, country, "stats/downloadedRecords");
+  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsStats(@Nullable Date fromDate,
+                                                                            @Nullable Date toDate,
+                                                                            @Nullable Country userCountry,
+                                                                            @Nullable Country publishingCountry,
+                                                                            @Nullable UUID datasetKey) {
+    return statsServiceCall(fromDate, toDate, userCountry, publishingCountry, datasetKey,"stats/downloadedRecords");
   }
 
-  private Map<Integer,Map<Integer,Long>> statsServiceCall(@Nullable Date fromDate, @Nullable Date toDate, @Nullable Country country, String path) {
+  private Map<Integer,Map<Integer,Long>> statsServiceCall(@Nullable Date fromDate, @Nullable Date toDate,
+                                                          @Nullable Country userCountry,
+                                                          @Nullable Country publishingCountry,
+                                                          @Nullable UUID datasetKey, String path) {
     MultivaluedMap<String, String> params = new MultivaluedMapImpl();
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM");
     Optional.ofNullable(fromDate).ifPresent( d -> params.add("fromDate", simpleDateFormat.format(d)));
     Optional.ofNullable(toDate).ifPresent( d -> params.add("toDate", simpleDateFormat.format(d)));
+    Optional.ofNullable(userCountry).ifPresent( c -> params.add("country", c.getIso2LetterCode()));
+    Optional.ofNullable(publishingCountry).ifPresent( c -> params.add("country", c.getIso2LetterCode()));
+    Optional.ofNullable(datasetKey).ifPresent( dk -> params.add("datasetKey", dk.toString()));
     return get(GenericTypes.DOWNLOADS_STATS_TYPE, null, params ,null,path);
   }
 }
