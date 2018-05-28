@@ -17,10 +17,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
@@ -53,10 +50,14 @@ public interface OccurrenceDownloadMapper {
 
   List<Facet.Count> getMonthlyStats(@Nullable @Param("fromDate") Date fromDate,
                                     @Nullable @Param("toDate") Date toDate,
-                                    @Nullable @Param("country") String country);
+                                    @Nullable @Param("userCountry") String userCountry,
+                                    @Nullable @Param("publishingCountry") String publishingCountry,
+                                    @Nullable @Param("datasetKey") UUID datasetKey);
 
-  List<Facet.Count> getDownloadedRecordsByCountry(@Nullable @Param("fromDate") Date fromDate,
-                                                  @Nullable @Param("toDate") Date toDate,
-                                                  @Nullable @Param("country") String country);
+  List<Facet.Count> getDownloadedRecordsMonthlyStats(@Nullable @Param("fromDate") Date fromDate,
+                                                     @Nullable @Param("toDate") Date toDate,
+                                                     @Nullable @Param("userCountry") String userCountry,
+                                                     @Nullable @Param("publishingCountry") String publishingCountry,
+                                                     @Nullable @Param("datasetKey") UUID datasetKey);
 
 }

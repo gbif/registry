@@ -21,7 +21,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * This annotation is used to mark Date parameter that can accept partial dates as input.
+ * Provider that accepts and transforms partial Dates.
  * For example: 01-2018 or 01/2018 will be translated into 01-01-2018.
  */
 @Provider

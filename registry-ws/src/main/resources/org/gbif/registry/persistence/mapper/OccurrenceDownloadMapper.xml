@@ -158,12 +158,20 @@
   <select id="getMonthlyStats" resultType="Count" resultMap="DOWNLOADS_STATS_MAP" parameterType="map">
     SELECT to_char(oc.created,'YYYY-MM') AS year_month, COUNT(oc.*) AS count
     FROM occurrence_download oc
-    <if test="country != null">
+    <if test="userCountry != null">
       <![CDATA[
-    JOIN "user" u ON oc.created_by = u.username AND u.settings -> 'country' = #{country,jdbcType=OTHER}
+    JOIN "user" u ON oc.created_by = u.username AND u.settings -> 'country' = #{userCountry,jdbcType=OTHER}
     ]]>
     </if>
-    WHERE oc.status = 'SUCCEEDED'
+    <if test="datasetKey != null and publishingCountry == null">
+    JOIN dataset_occurrence_download dod ON oc.key = dod.download_key AND dod.dataset_key = #{datasetKey,jdbcType=OTHER}
+    </if>
+    <if test="publishingCountry != null">
+    JOIN dataset_occurrence_download dod ON dod.download_key = oc.key <if test="datasetKey != null"> AND dod.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+    JOIN dataset d ON d.key = dod.dataset_key
+    JOIN organization o ON d.publishing_organization_key = o.key AND o.country = #{publishingCountry,jdbcType=OTHER}
+    </if>
+    WHERE (oc.status = 'SUCCEEDED' OR oc.status = 'FILE_ERASED')
     <if test="fromDate != null" >
       <![CDATA[
           AND oc.created >= #{fromDate,jdbcType=TIMESTAMP}
@@ -179,25 +187,24 @@
   </select>
 
 
-  <select id="getDownloadedRecordsByCountry" resultType="Count" resultMap="DOWNLOADS_STATS_MAP" parameterType="map">
+  <select id="getDownloadedRecordsMonthlyStats" resultType="Count" resultMap="DOWNLOADS_STATS_MAP" parameterType="map">
     SELECT to_char(oc.created,'YYYY-MM') AS year_month, SUM(dod.number_records) AS count
     FROM dataset_occurrence_download dod
-    JOIN occurrence_download oc ON oc.key = dod.download_key
-    <if test="country != null">
-    JOIN dataset d ON d.key = dod.dataset_key
-    JOIN organization o ON d.publishing_organization_key = o.key AND o.country = #{country,jdbcType=OTHER}
-    </if>
-    WHERE oc.status = 'SUCCEEDED'
-    <if test="fromDate != null" >
+    JOIN occurrence_download oc ON oc.key = dod.download_key AND (oc.status = 'SUCCEEDED' OR oc.status = 'FILE_ERASED')
+    <if test="fromDate != null"><![CDATA[AND oc.created >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="toDate != null"><![CDATA[AND oc.created <= #{toDate,jdbcType=TIMESTAMP}]]></if>
+    <if test="userCountry != null">
       <![CDATA[
-          AND oc.created >= #{fromDate,jdbcType=TIMESTAMP}
-        ]]>
+    JOIN "user" u ON oc.created_by = u.username AND u.settings -> 'country' = #{userCountry,jdbcType=OTHER}
+    ]]>
     </if>
-    <if test="toDate != null" >
-      <![CDATA[
-          AND oc.created <= #{toDate,jdbcType=TIMESTAMP}
-        ]]>
+    <if test="publishingCountry != null">
+    JOIN dataset d ON dod.dataset_key = d.key <if test="datasetKey != null">AND dod.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+    JOIN organization o ON d.publishing_organization_key = o.key AND o.country = #{publishingCountry,jdbcType=OTHER}
     </if>
+    <where>
+      <if test="datasetKey != null">dod.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+    </where>
     GROUP BY year_month
     ORDER BY year_month DESC;
   </select>
