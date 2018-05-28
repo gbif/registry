@@ -17,6 +17,8 @@ enabling us to automate the reporting of those uses to publishers and users alik
 
 <h2>Join one of the communities</h2>
 
+<p>For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/">GBIF community forum</a> launched in May 2018.</p>
+
 <p>The <a href="https://lists.gbif.org/mailman/listinfo/api-users">GBIF API users list</a> provides an active peer-to-peer discussion
 group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
 
