@@ -46,6 +46,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
@@ -147,6 +148,18 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
    */
   @Override
   public Long getDatasetCount(Dataset dataset, Endpoint endpoint) throws MetadataException {
+    // BioCASe archive endpoints could be passed through, but we need the real BioCASe endpoint.
+    // (And it's important to get an up-to-date count, as the archive might be old.)
+    if (endpoint.getType() != EndpointType.BIOCASE) {
+      Optional<Endpoint> newEndpoint = dataset.getEndpoints().stream().filter((e) -> e.getType() == EndpointType.BIOCASE).findAny();
+      if (newEndpoint.isPresent()) {
+        endpoint = newEndpoint.get();
+      } else {
+        LOG.warn("No BioCASe endpoint for a BioCASe archive dataset, can't retrieve count. (Have {})", endpoint);
+        return null;
+      }
+    }
+
     Capabilities capabilities = getCapabilities(endpoint);
     if (capabilities.getPreferredSchema() == null) {
       throw new MetadataException("No preferred schema", ErrorCode.PROTOCOL_ERROR);
