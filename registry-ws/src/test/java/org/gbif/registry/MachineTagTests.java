@@ -56,5 +56,15 @@ public class MachineTagTests {
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
     assertEquals("0 machine tags should remain after the deletion", 0, machineTags.size());
+
+    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+    machineTags = service.listMachineTags(entity.getKey());
+    assertNotNull(machineTags);
+    assertEquals("2 machine tags have been added", 2, machineTags.size());
+    service.deleteMachineTags(entity.getKey(), "hit.gbif.org");
+    machineTags = service.listMachineTags(entity.getKey());
+    assertNotNull(machineTags);
+    assertEquals("0 machine tags should remain after the deletion", 0, machineTags.size());
   }
 }

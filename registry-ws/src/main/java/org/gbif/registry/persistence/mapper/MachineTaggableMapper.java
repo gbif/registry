@@ -32,7 +32,7 @@ public interface MachineTaggableMapper<T extends MachineTaggable> {
 
   int deleteMachineTag(@Param("targetEntityKey") UUID entityKey, @Param("machineTagKey") int machineTagKey);
 
-  int deleteMachineTags(@Param("targetEntityKey") UUID entityKey, @Param("namespace") String namespace, @Param("name") String name);
+  int deleteMachineTags(@Param("targetEntityKey") UUID entityKey, @Param("namespace") String namespace, @Nullable @Param("name") String name);
 
   List<MachineTag> listMachineTags(@Param("targetEntityKey") UUID targetEntityKey);
 

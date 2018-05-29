@@ -376,8 +376,10 @@
     WHERE
       machine_tag_key = machine_tag.key AND
       dataset_key = #{targetEntityKey,jdbcType=OTHER} AND
-      namespace = #{namespace} AND
-      name = #{name}
+      namespace = #{namespace}
+      <if test="name != null" >
+        AND name = #{name}
+      </if>
   </delete>
 
   <select id="listByMachineTag" resultMap="DATASET_MAP" parameterType="Pageable">

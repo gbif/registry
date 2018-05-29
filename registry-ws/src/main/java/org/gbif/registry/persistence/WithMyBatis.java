@@ -196,7 +196,7 @@ public class WithMyBatis {
   }
 
   public static void deleteMachineTags(
-    MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey, String namespace, String name
+    MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey, String namespace, @Nullable String name
   ) {
     machineTaggableMapper.deleteMachineTags(targetEntityKey, namespace, name);
   }

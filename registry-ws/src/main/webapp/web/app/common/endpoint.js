@@ -19,10 +19,10 @@ angular.module('endpoint', ['services.notifications'])
     'DIGIR_MANIS',
     'TAPIR',
     'BIOCASE',
+    'BIOCASE_XML_ARCHIVE',
     'OAI_PMH',
-    'OTHER'  
-  ];	
-  
+    'OTHER'
+  ];
 	var resetState = function() {
 	  $state.transitionTo(type + '.endpoint', { key: key}); 
 	}
