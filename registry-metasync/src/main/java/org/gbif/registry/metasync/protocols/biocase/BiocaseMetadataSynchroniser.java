@@ -328,8 +328,8 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
           LOG.info("Found BioCASe occurrence DWCA {}", archive);
           archiveEndpoint.setType(EndpointType.DWC_ARCHIVE);
         } else {
-          LOG.info("Found BioCASe ABCD archive (or non-occurrence DWCA) {}", archive);
-          archiveEndpoint.setType(EndpointType.OTHER);
+          LOG.info("Found BioCASe XML archive (or non-occurrence DWCA) {}", archive);
+          archiveEndpoint.setType(EndpointType.BIOCASE_XML_ARCHIVE);
         }
         dataset.addEndpoint(archiveEndpoint);
       }
