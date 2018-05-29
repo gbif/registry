@@ -201,7 +201,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
-    return list(null, null, null, null, query, page);
+    return list(null, null, null, null, null, null, null, query, page);
   }
 
   /**
@@ -210,18 +210,28 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * additionally be supported, such as dataset search.
    */
   @GET
-  public PagingResponse<Organization> list(@Nullable @Context Country country,
+  public PagingResponse<Organization> list(
+    @Nullable @Context Country country,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("isEndorsed") Boolean isEndorsed,
+    @Nullable @QueryParam("machineTagNamespace") String namespace,
+    @Nullable @QueryParam("machineTagName") String name,
+    @Nullable @QueryParam("machineTagValue") String value,
     @Nullable @QueryParam("q") String query,
-    @Nullable @Context Pageable page) {
+    @Nullable @Context Pageable page
+  ) {
 
     // Hack: Intercept identifier search
     if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
+    }
+
+    // Intercept machine tag search
+    if (!Strings.isNullOrEmpty(namespace) || !Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(value)) {
+      return listByMachineTag(namespace, name, value, page);
     }
 
     // short circuited list all

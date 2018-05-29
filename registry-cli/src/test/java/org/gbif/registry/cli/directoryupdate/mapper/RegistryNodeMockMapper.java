@@ -149,6 +149,16 @@ public class RegistryNodeMockMapper implements NodeMapper {
   }
 
   @Override
+  public long countByMachineTag(@Nullable @Param("namespace") String namespace, @Param("name") String name, @Param("value") String value) {
+    return 0;
+  }
+
+  @Override
+  public List listByMachineTag(@Nullable @Param("namespace") String namespace, @Param("name") String name, @Param("value") String value, Pageable page) {
+    return null;
+  }
+
+  @Override
   public Node get(@Param("key") UUID key) {
     return null;
   }

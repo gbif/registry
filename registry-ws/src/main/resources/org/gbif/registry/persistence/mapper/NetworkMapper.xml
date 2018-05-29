@@ -285,7 +285,7 @@
       network_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
   </delete>
 
-    <!-- MACHINE TAGS -->
+  <!-- MACHINE TAGS -->
   <insert id="addMachineTag">
     INSERT INTO network_machine_tag(network_key,machine_tag_key)
     VALUES(
@@ -317,6 +317,37 @@
       namespace = #{namespace} AND
       name = #{name}
   </delete>
+
+  <select id="listByMachineTag" resultMap="NETWORK_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (n.key) <include refid="NETWORK_FIELDS"/>
+    FROM network n
+    INNER JOIN network_machine_tag nm ON nm.network_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY n.key, n.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT n.key)
+    FROM network n
+    INNER JOIN network_machine_tag nm ON nm.network_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
 
   <!-- COMMENTS -->
   <insert id="addComment">

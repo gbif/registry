@@ -292,6 +292,37 @@
       name = #{name}
   </delete>
 
+  <select id="listByMachineTag" resultMap="INSTALLATION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
+    FROM installation i
+    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY i.key, i.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT i.key)
+    FROM installation i
+    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO installation_comment(installation_key,comment_key)

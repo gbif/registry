@@ -130,15 +130,21 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * additionally be supported, such as dataset search.
    */
   @GET
-  public PagingResponse<Installation> list(@Nullable @QueryParam("q") String query,
+  public PagingResponse<Installation> list(
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
+    @Nullable @QueryParam("machineTagNamespace") String namespace,
+    @Nullable @QueryParam("machineTagName") String name,
+    @Nullable @QueryParam("machineTagValue") String value,
+    @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
+    } else if (namespace != null) {
+      return listByMachineTag(namespace, name, value, page);
     } else if (Strings.isNullOrEmpty(query)) {
       return list(page);
     } else {

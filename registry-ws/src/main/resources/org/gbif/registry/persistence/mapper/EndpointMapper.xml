@@ -74,4 +74,35 @@
       namespace = #{namespace} AND
       name = #{name}
   </delete>
+
+  <select id="listByMachineTag" resultMap="ENDPOINT_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (e.key) <include refid="ENDPOINT_FIELDS"/>
+    FROM endpoint e
+    INNER JOIN endpoint_machine_tag em ON em.endpoint_key = e.key
+    INNER JOIN machine_tag m ON em.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY e.key, e.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT e.key)
+    FROM endpoint e
+    INNER JOIN endpoint_machine_tag em ON em.endpoint_key = e.key
+    INNER JOIN machine_tag m ON em.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
 </mapper>

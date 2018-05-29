@@ -229,12 +229,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * additionally be supported, such as dataset search.
    */
   @GET
-  public PagingResponse<Dataset> list(@Nullable @Context Country country,
+  public PagingResponse<Dataset> list(
+    @Nullable @Context Country country,
     @Nullable @QueryParam("type") DatasetType datasetType,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
+    @Nullable @QueryParam("machineTagNamespace") String namespace,
+    @Nullable @QueryParam("machineTagName") String name,
+    @Nullable @QueryParam("machineTagValue") String value,
     @Nullable @QueryParam("q") String query,
-    @Nullable @Context Pageable page) {
+    @Nullable @Context Pageable page
+  ) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (country == null && datasetType != null) {
       return listByType(datasetType, page);
@@ -244,6 +249,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
+    } else if (namespace != null) {
+      return listByMachineTag(namespace, name, value, page);
     } else if (!Strings.isNullOrEmpty(query)) {
       return search(query, page);
     } else {

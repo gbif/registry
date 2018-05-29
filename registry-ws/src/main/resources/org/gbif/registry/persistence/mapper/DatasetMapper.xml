@@ -380,6 +380,38 @@
       name = #{name}
   </delete>
 
+  <select id="listByMachineTag" resultMap="DATASET_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>
+    FROM dataset d
+    INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
+    INNER JOIN machine_tag m ON dm.machine_tag_key = m.key
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY d.key, d.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT d.key)
+    FROM dataset d
+    INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
+    INNER JOIN machine_tag m ON dm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO dataset_comment(dataset_key,comment_key)

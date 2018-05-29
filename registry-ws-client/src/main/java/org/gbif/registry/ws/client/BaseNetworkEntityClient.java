@@ -203,6 +203,11 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> extends BaseWsGetC
   }
 
   @Override
+  public PagingResponse<T> listByMachineTag(String namespace, @Nullable String name, @Nullable String value, @Nullable Pageable page) {
+    return get(pagingType, null, QueryParamBuilder.create("machineTagNamespace", namespace, "machineTagName", name, "machineTagValue", value).build(), page);
+  }
+
+  @Override
   public int addComment(UUID targetEntityKey, Comment comment) {
     return post(Integer.class, comment, targetEntityKey.toString(), "comment");
   }

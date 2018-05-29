@@ -355,6 +355,37 @@
       name = #{name}
   </delete>
 
+  <select id="listByMachineTag" resultMap="ORGANIZATION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
+    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY o.key, o.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT o.key)
+    FROM organization o
+    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
+    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO organization_comment(organization_key,comment_key)
