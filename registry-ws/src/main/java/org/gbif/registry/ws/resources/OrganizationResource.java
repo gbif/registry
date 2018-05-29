@@ -83,7 +83,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Singleton
 public class OrganizationResource extends BaseNetworkEntityResource<Organization> implements OrganizationService {
 
-  protected static final int MINIMUM_PASSWORD_SIZE = 6;
+  protected static final int MINIMUM_PASSWORD_SIZE = 12;
   protected static final int MAXIMUM_PASSWORD_SIZE = 15;
   private static final String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
   private final DatasetMapper datasetMapper;
