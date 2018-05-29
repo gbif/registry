@@ -128,7 +128,7 @@ public class BiocaseMetadataSynchroniserTest {
     // endpoints
     assertThat(dataset.getEndpoints().size()).isEqualTo(3);
     assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.DWC_ARCHIVE);
-    assertThat(dataset.getEndpoints().get(1).getType()).isEqualTo(EndpointType.OTHER);
+    assertThat(dataset.getEndpoints().get(1).getType()).isEqualTo(EndpointType.BIOCASE_XML_ARCHIVE);
     assertThat(dataset.getEndpoints().get(2).getType()).isEqualTo(EndpointType.BIOCASE);
   }
 
