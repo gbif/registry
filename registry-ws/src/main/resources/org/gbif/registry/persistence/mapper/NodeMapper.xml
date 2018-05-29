@@ -235,8 +235,10 @@
     WHERE
       machine_tag_key = machine_tag.key AND
       node_key = #{targetEntityKey,jdbcType=OTHER} AND
-      namespace = #{namespace} AND
-      name = #{name}
+      namespace = #{namespace}
+      <if test="name != null" >
+        AND name = #{name}
+      </if>
   </delete>
 
   <select id="listByMachineTag" resultMap="NODE_MAP" parameterType="Pageable">

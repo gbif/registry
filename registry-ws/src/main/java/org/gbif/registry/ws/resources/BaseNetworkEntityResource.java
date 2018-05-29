@@ -436,8 +436,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
-    // TODO: Write implementation
-    throw new UnsupportedOperationException("Not implemented yet");
+    WithMyBatis.deleteMachineTags(mapper, targetEntityKey, namespace, null);
   }
 
   /**
