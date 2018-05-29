@@ -205,6 +205,15 @@ public class WithMyBatis {
     return machineTaggableMapper.listMachineTags(targetEntityKey);
   }
 
+  public static <T extends NetworkEntity> PagingResponse<T> listByMachineTag(
+    MachineTaggableMapper mapper, String namespace, @Nullable String name, @Nullable String value, @Nullable Pageable page
+  ) {
+    Preconditions.checkNotNull(page, "To list by machine tag you must supply a page");
+    Preconditions.checkNotNull(namespace, "To list by machine tag you must supply a namespace");
+    long total = mapper.countByMachineTag(namespace, name, value);
+    return new PagingResponse<T>(page.getOffset(), page.getLimit(), total, mapper.listByMachineTag(namespace, name, value, page));
+  }
+
   @Transactional
   public static int addTag(TagMapper tagMapper, TaggableMapper taggableMapper, UUID targetEntityKey, Tag tag) {
     // Mybatis needs an object to set the key on

@@ -239,6 +239,37 @@
       name = #{name}
   </delete>
 
+  <select id="listByMachineTag" resultMap="NODE_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (n.key) <include refid="NODE_FIELDS"/>
+    FROM node n
+    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY n.key, n.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT n.key)
+    FROM node n
+    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO node_comment(node_key,comment_key)

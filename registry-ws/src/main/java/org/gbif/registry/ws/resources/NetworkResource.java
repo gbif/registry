@@ -89,15 +89,22 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * additionally be supported, such as dataset search.
    */
   @GET
-  public PagingResponse<Network> list(@Nullable @QueryParam("q") String query,
+  public PagingResponse<Network> list(
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
-    @Nullable @Context Pageable page) {
+    @Nullable @QueryParam("machineTagNamespace") String namespace,
+    @Nullable @QueryParam("machineTagName") String name,
+    @Nullable @QueryParam("machineTagValue") String value,
+    @Nullable @QueryParam("q") String query,
+    @Nullable @Context Pageable page
+  ) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
+    } else if (namespace != null) {
+      return listByMachineTag(namespace, name, value, page);
     } else if (Strings.isNullOrEmpty(query)) {
       return list(page);
     } else {

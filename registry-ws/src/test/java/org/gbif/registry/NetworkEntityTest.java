@@ -385,6 +385,52 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   }
 
   @Test
+  public void testMachineTagSearch() {
+    T entity1 = create(newEntity(), 1);
+    T entity2 = create(newEntity(), 2);
+
+    machineTagService.addMachineTag(entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "one"));
+    machineTagService.addMachineTag(entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "two"));
+    machineTagService.addMachineTag(entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "three"));
+    machineTagService.addMachineTag(entity2.getKey(), new MachineTag("test.gbif.org", "network-entity", "four"));
+
+    PagingResponse<T> res;
+
+    res = service.listByMachineTag("test.gbif.org", "network-entity", "one", null);
+    assertEquals(Long.valueOf(1), res.getCount());
+    assertEquals(1, res.getResults().size());
+    res = service.listByMachineTag("test.gbif.org", "network-entity", null, null);
+    assertEquals(Long.valueOf(2), res.getCount());
+    assertEquals(2, res.getResults().size());
+    res = service.listByMachineTag("test.gbif.org", null, null, null);
+    assertEquals(Long.valueOf(2), res.getCount());
+    assertEquals(2, res.getResults().size());
+
+    res = service.listByMachineTag("test.gbif.org", "network-entity", "five", null);
+    System.out.println("Results " + res.getResults());
+    System.out.println("Count " + res.getCount());
+    System.err.println("Results " + res.getResults());
+    System.err.println("Count " + res.getCount());
+    assertEquals(Long.valueOf(0), res.getCount());
+
+    res = service.listByMachineTag("test.gbif.org", "nothing", null, null);
+    assertEquals(Long.valueOf(0), res.getCount());
+
+    res = service.listByMachineTag("not-in-test.gbif.org", null, null, null);
+    assertEquals(Long.valueOf(0), res.getCount());
+
+    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(0, 1));
+    assertEquals(Long.valueOf(2), res.getCount());
+    assertEquals(1, res.getResults().size());
+    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(1, 1));
+    assertEquals(Long.valueOf(2), res.getCount());
+    assertEquals(1, res.getResults().size());
+    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(2, 1));
+    assertEquals(Long.valueOf(2), res.getCount());
+    assertEquals(0, res.getResults().size());
+  }
+
+  @Test
   public void testTags() {
     T entity = create(newEntity(), 1);
     TagTests.testAddDelete(tagService, entity);

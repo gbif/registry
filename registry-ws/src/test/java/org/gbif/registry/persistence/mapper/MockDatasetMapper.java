@@ -305,6 +305,16 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public long countByMachineTag(@Nullable @Param("namespace") String namespace, @Param("name") String name, @Param("value") String value) {
+    return 0;
+  }
+
+  @Override
+  public List listByMachineTag(@Nullable @Param("namespace") String namespace, @Param("name") String name, @Param("value") String value, Pageable page) {
+    return null;
+  }
+
+  @Override
   public Dataset get(@Param("key") UUID key) {
     return null;
   }

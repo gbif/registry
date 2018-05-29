@@ -85,7 +85,6 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
 /**
  * Provides a skeleton implementation of the following.
  * <ul>
@@ -472,6 +471,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public List<MachineTag> listMachineTags(@PathParam("key") UUID targetEntityKey) {
     return WithMyBatis.listMachineTags(mapper, targetEntityKey);
+  }
+
+  @Override
+  public PagingResponse<T> listByMachineTag(String namespace, @Nullable String name, @Nullable String value,
+                                            @Nullable Pageable page) {
+    page = page == null ? new PagingRequest() : page;
+    return WithMyBatis.listByMachineTag(mapper, namespace, name, value, page);
   }
 
   /**
