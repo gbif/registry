@@ -183,7 +183,7 @@ public class RegistryUpdater {
    * @param existingDataset existing dataset (dataset as it currently exists in registry)
    * @return true if the dataset update should be skipped, false otherwise
    */
-  private boolean skipDatasetUpdate(Dataset existingDataset) {
+  static boolean skipDatasetUpdate(Dataset existingDataset) {
     // is the dataset locked for auto update?
     if (existingDataset.isLockedForAutoUpdate()) {
       return true;

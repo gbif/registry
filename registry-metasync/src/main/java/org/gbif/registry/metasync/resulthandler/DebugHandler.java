@@ -1,5 +1,7 @@
 package org.gbif.registry.metasync.resulthandler;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.metasync.api.SyncResult;
 
 import org.slf4j.Logger;
@@ -28,6 +30,33 @@ public final class DebugHandler {
                result.addedDatasets.size(),
                result.deletedDatasets.size(),
                result.existingDatasets.size());
+
+      // Added datasets
+      for (Dataset dataset : result.addedDatasets) {
+        dataset.setPublishingOrganizationKey(result.installation.getOrganizationKey());
+        dataset.setInstallationKey(result.installation.getKey());
+        dataset.setType(DatasetType.OCCURRENCE);
+        LOG.info("Dataset {} «{}» is to be added", dataset.getKey(), dataset.getTitle());
+      }
+
+      // Deleted datasets
+      for (Dataset dataset : result.deletedDatasets) {
+        if (dataset.isLockedForAutoUpdate()) {
+          LOG.info("Dataset {} «{}» is locked, but would otherwise be deleted", dataset.getKey(), dataset.getTitle());
+        } else {
+          LOG.info("Dataset {} «{}» is to be deleted", dataset.getKey(), dataset.getTitle());
+        }
+      }
+
+      // Updated datasets
+      for (Dataset existingDataset : result.existingDatasets.keySet()) {
+        if (RegistryUpdater.skipDatasetUpdate(existingDataset)) {
+          LOG.info("Dataset {} «{}» is locked, but would otherwise be updated", existingDataset.getKey(), existingDataset.getTitle());
+        } else {
+          LOG.info("Dataset {} «{}» is to be updated", existingDataset.getKey(), existingDataset.getTitle());
+        }
+      }
+
     } else {
       LOG.info("Installation [{}] failed sync. Reason: [{}]",
                result.installation.getKey(),
