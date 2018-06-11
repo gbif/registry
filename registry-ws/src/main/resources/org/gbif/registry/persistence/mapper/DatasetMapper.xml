@@ -13,6 +13,7 @@
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="comments" column="key" select="listComments"/>
+    <collection property="networks" column="key" select="listNetworks"/>
   </resultMap>
 
   <!-- maps a citation object  -->
@@ -437,6 +438,13 @@
       comment_key = comment.key AND
       dataset_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
+
+  <select id="listNetworks" resultType="Network">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.NetworkMapper.NETWORK_FIELDS"/>
+    FROM network n INNER JOIN dataset_network ON network_key = n.key
+    WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
 
   <select id="listDatasetsInNetwork" resultMap="DATASET_MAP" parameterType="Pageable">
     SELECT <include refid="DATASET_FIELDS"/>
