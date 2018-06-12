@@ -439,11 +439,9 @@
       dataset_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="listNetworks" resultType="Network">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.NetworkMapper.NETWORK_FIELDS"/>
-    FROM network n INNER JOIN dataset_network ON network_key = n.key
-    WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
-    ORDER BY created DESC
+  <select id="listNetworks" resultType="UUID">
+    SELECT network_key
+    FROM dataset_network ON dataset_key = #{targetEntityKey,jdbcType=OTHER}
   </select>
 
   <select id="listDatasetsInNetwork" resultMap="DATASET_MAP" parameterType="Pageable">
