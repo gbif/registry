@@ -110,16 +110,16 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
       throw new MetadataException(e, ErrorCode.IO_EXCEPTION);
     }
 
-    // Everything but HTTP status 200 is an error
-    if (response.getStatusLine().getStatusCode() != 200) {
-      LOG.debug("Received HTTP code[{}] cause[{}] for request: {}", response.getStatusLine().getStatusCode(),
-        response.getStatusLine().getReasonPhrase(), uri);
-      String cause = String.format("Received HTTP code[%d], phrase[%s]", response.getStatusLine().getStatusCode(),
-        response.getStatusLine().getReasonPhrase());
-      throw new MetadataException(cause, ErrorCode.HTTP_ERROR);
-    }
-
     try {
+      // Everything but HTTP status 200 is an error
+      if (response.getStatusLine().getStatusCode() != 200) {
+        LOG.debug("Received HTTP code[{}] cause[{}] for request: {}", response.getStatusLine().getStatusCode(),
+          response.getStatusLine().getReasonPhrase(), uri);
+        String cause = String.format("Received HTTP code[%d], phrase[%s]", response.getStatusLine().getStatusCode(),
+          response.getStatusLine().getReasonPhrase());
+        throw new MetadataException(cause, ErrorCode.HTTP_ERROR);
+      }
+
       return digester.parse(response.getEntity().getContent());
     } catch (SAXException e) {
       throw new MetadataException(e, ErrorCode.PROTOCOL_ERROR);
@@ -132,7 +132,6 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
         LOG.warn("Error consuming content after an exception", e2);
       }
     }
-
   }
 
   /**
