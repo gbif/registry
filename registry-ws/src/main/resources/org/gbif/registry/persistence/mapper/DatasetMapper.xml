@@ -441,7 +441,7 @@
 
   <select id="listNetworks" resultType="UUID">
     SELECT network_key
-    FROM dataset_network ON dataset_key = #{targetEntityKey,jdbcType=OTHER}
+    FROM dataset_network WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
   </select>
 
   <select id="listDatasetsInNetwork" resultMap="DATASET_MAP" parameterType="Pageable">
