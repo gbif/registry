@@ -57,4 +57,6 @@
   <include file="liquibase/051-download-erase.xml"/>
   <include file="liquibase/052-add-simple-avro-download-format.xml"/>
   <include file="liquibase/053-occurrence_download_download_key_index.xml"/>
+  <include file="liquibase/054-add-biocase-xml-archive-endpoint-type.xml"/>
+  <include file="liquibase/055-add-download-statistics.xml"/>
 </databaseChangeLog>
