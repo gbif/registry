@@ -190,7 +190,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Path("stats/downloadedRecords")
   @Override
   @NullToNotFound
-  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
+  public Map<Integer,Map<Integer,Long>> getDownloadedRecordsStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
                                                                             @Nullable @QueryParam("toDate") @PartialDate Date toDate,
                                                                             @QueryParam("userCountry") Country userCountry,
                                                                             @QueryParam("publishingCountry") Country publishingCountry,
@@ -205,10 +205,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
    * Aggregates the download statistics in tree structure of month grouped by year.
    */
   private Map<Integer,Map<Integer,Long>> groupByYear(List<Facet.Count> counts) {
-    Map<Integer,Map<Integer,Long>> yearsGrouping = new HashMap<>();
+    Map<Integer,Map<Integer,Long>> yearsGrouping = new TreeMap<>();
     counts.forEach(count -> yearsGrouping.computeIfAbsent(Integer.valueOf(count.getName().substring(0,4)), year -> new TreeMap<>()).put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
     return  yearsGrouping;
   }
-
-
 }
