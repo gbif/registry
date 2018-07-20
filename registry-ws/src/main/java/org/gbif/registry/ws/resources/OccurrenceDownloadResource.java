@@ -172,31 +172,25 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GET
-  @Path("stats")
+  @Path("statistics/downloadsByUserCountry")
   @Override
   @NullToNotFound
-  public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
-                                                        @Nullable @QueryParam("toDate") @PartialDate Date toDate,
-                                                        @QueryParam("userCountry") Country userCountry,
-                                                        @QueryParam("publishingCountry") Country publishingCountry,
-                                                        @QueryParam("datasetKey") UUID datasetKey) {
-    return groupByYear(occurrenceDownloadMapper.getMonthlyStats(fromDate, toDate,
-      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null),
-      Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-      datasetKey));
+  public Map<Integer,Map<Integer,Long>> getDownloadsByUserCountry(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
+                                                                  @Nullable @QueryParam("toDate") @PartialDate Date toDate,
+                                                                  @QueryParam("userCountry") Country userCountry) {
+    return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
+      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
 
   @GET
-  @Path("stats/downloadedRecords")
+  @Path("statistics/downloadedRecordsByDataset")
   @Override
   @NullToNotFound
-  public Map<Integer,Map<Integer,Long>> getDownloadedRecordsStats(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
-                                                                            @Nullable @QueryParam("toDate") @PartialDate Date toDate,
-                                                                            @QueryParam("userCountry") Country userCountry,
-                                                                            @QueryParam("publishingCountry") Country publishingCountry,
-                                                                            @QueryParam("datasetKey") UUID datasetKey) {
-    return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsMonthlyStats(fromDate, toDate,
-      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null),
+  public Map<Integer,Map<Integer,Long>> getDownloadedRecordsByDataset(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
+                                                                      @Nullable @QueryParam("toDate") @PartialDate Date toDate,
+                                                                      @QueryParam("publishingCountry") Country publishingCountry,
+                                                                      @QueryParam("datasetKey") UUID datasetKey) {
+    return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
       Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
       datasetKey));
   }
