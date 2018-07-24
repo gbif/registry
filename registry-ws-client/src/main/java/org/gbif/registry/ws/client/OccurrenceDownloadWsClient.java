@@ -76,22 +76,19 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, downloadKey, "datasets");
   }
 
-
   @Override
-  public Map<Integer,Map<Integer,Long>> getMonthlyStats(@Nullable Date fromDate, @Nullable Date toDate,
-                                                        @Nullable Country userCountry,
-                                                        @Nullable Country publishingCountry,
-                                                        @Nullable UUID datasetKey) {
-    return statsServiceCall(fromDate, toDate, userCountry, publishingCountry, datasetKey,"stats");
+  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable Date fromDate,
+                                                                        @Nullable Date toDate,
+                                                                        @Nullable Country publishingCountry,
+                                                                        @Nullable UUID datasetKey) {
+    return statsServiceCall(fromDate, toDate, null, publishingCountry, datasetKey,"statistics/downloadedRecordsByDataset");
   }
 
   @Override
-  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsStats(@Nullable Date fromDate,
-                                                                            @Nullable Date toDate,
-                                                                            @Nullable Country userCountry,
-                                                                            @Nullable Country publishingCountry,
-                                                                            @Nullable UUID datasetKey) {
-    return statsServiceCall(fromDate, toDate, userCountry, publishingCountry, datasetKey,"stats/downloadedRecords");
+  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(@Nullable Date fromDate,
+                                                                    @Nullable Date toDate,
+                                                                    @Nullable Country userCountry) {
+    return statsServiceCall(fromDate, toDate, userCountry, null, null,"statistics/downloadsByUserCountry");
   }
 
   private Map<Integer,Map<Integer,Long>> statsServiceCall(@Nullable Date fromDate, @Nullable Date toDate,
@@ -102,8 +99,8 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM");
     Optional.ofNullable(fromDate).ifPresent( d -> params.add("fromDate", simpleDateFormat.format(d)));
     Optional.ofNullable(toDate).ifPresent( d -> params.add("toDate", simpleDateFormat.format(d)));
-    Optional.ofNullable(userCountry).ifPresent( c -> params.add("country", c.getIso2LetterCode()));
-    Optional.ofNullable(publishingCountry).ifPresent( c -> params.add("country", c.getIso2LetterCode()));
+    Optional.ofNullable(userCountry).ifPresent( c -> params.add("userCountry", c.getIso2LetterCode()));
+    Optional.ofNullable(publishingCountry).ifPresent( c -> params.add("publishingCountry", c.getIso2LetterCode()));
     Optional.ofNullable(datasetKey).ifPresent( dk -> params.add("datasetKey", dk.toString()));
     return get(GenericTypes.DOWNLOADS_STATS_TYPE, null, params ,null,path);
   }
