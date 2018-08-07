@@ -130,7 +130,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     }
   }
 
-
   @GET
   @Path("user/{user}")
   @NullToNotFound
@@ -140,7 +139,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
                                         occurrenceDownloadMapper.listByUser(user,page,status));
   }
-
 
   @PUT
   @Path("{key}")
@@ -163,10 +161,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathParam("key") String downloadKey,
                                                                    @Context Pageable page){
     Download download = get(downloadKey);
-    if(download != null) {
-      return new PagingResponse<>(page,
-                                   download.getNumberDatasets(),
-                                   datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page));
+    if (download != null) {
+      List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
+      clearSensitiveData(securityContext, usages);
+      return new PagingResponse(page, download.getNumberDatasets(), usages);
     }
     throw new NotFoundException();
   }
