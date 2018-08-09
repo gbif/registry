@@ -148,7 +148,10 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   public void downloadChanged(Download download, Download previousDownload, GbifUser user) {
     Preconditions.checkNotNull(download, "download can not be null");
 
-    if (download.isAvailable() && (previousDownload == null || previousDownload.getStatus() != Download.Status.SUCCEEDED)) {
+    if (download.isAvailable() &&
+      (previousDownload == null ||
+        (previousDownload.getStatus() != Download.Status.SUCCEEDED && previousDownload.getStatus() != Download.Status.FILE_ERASED))
+      ) {
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download, user), download.getKey());
       } catch (Exception error) {
