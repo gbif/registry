@@ -295,9 +295,9 @@ public class DoiSynchronizerService {
       return false;
     }
 
-    //retrieve User
+    // retrieve User
     String creatorName = download.getRequest().getCreator();
-    GbifUser user = identityAccessService.get(creatorName);
+    GbifUser user = identityAccessService.get("occdownload.gbif.org");
 
     if (user == null) {
       LOG.error("No user with creator name {} can be found", creatorName);
