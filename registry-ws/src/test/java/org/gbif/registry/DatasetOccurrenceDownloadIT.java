@@ -12,11 +12,10 @@
  */
 package org.gbif.registry;
 
-import org.gbif.api.model.common.DOI;
+
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
@@ -29,7 +28,6 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
@@ -41,7 +39,8 @@ import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
@@ -160,15 +159,12 @@ public class DatasetOccurrenceDownloadIT {
   public void testAddAndGetOccurrenceDatasetOne() {
     Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
     final Dataset testDataset = createTestDataset();
-    DatasetOccurrenceDownloadUsage downloadDataset = new DatasetOccurrenceDownloadUsage();
-    downloadDataset.setDownloadKey(occurrenceDownload.getKey());
-    downloadDataset.setDatasetKey(testDataset.getKey());
-    downloadDataset.setNumberRecords(1000L);
-    downloadDataset.setDatasetTitle(testDataset.getTitle());
-    downloadDataset.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
-    downloadDataset.setDatasetCitation(testDataset.getCitation().getText());
+    
     occurrenceDownloadService.create(occurrenceDownload);
-    datasetOccurrenceDownloadUsageService.bulkCreate(Arrays.asList(downloadDataset));
+    Map<UUID,Long> datasetCitation = new HashMap();
+    datasetCitation.put(testDataset.getKey(), 1000L);
+    occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
+    
     assertEquals("List operation should return 1 record", 1,
       datasetOccurrenceDownloadUsageService.listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
         .getResults().size());
@@ -184,33 +180,27 @@ public class DatasetOccurrenceDownloadIT {
     Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
     final Dataset testDataset1 = createTestDataset();
     final Dataset testDataset2 = createTestDataset();
-    
-    DatasetOccurrenceDownloadUsage downloadDataset1 = new DatasetOccurrenceDownloadUsage();
-    downloadDataset1.setDownloadKey(occurrenceDownload.getKey());
-    downloadDataset1.setDatasetKey(testDataset1.getKey());
-    downloadDataset1.setNumberRecords(1000L);
-    downloadDataset1.setDatasetTitle(testDataset1.getTitle());
-    downloadDataset1.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
-    downloadDataset1.setDatasetCitation(testDataset1.getCitation().getText());
-    
-    DatasetOccurrenceDownloadUsage downloadDataset2 = new DatasetOccurrenceDownloadUsage();
-    downloadDataset2.setDownloadKey(occurrenceDownload.getKey());
-    downloadDataset2.setDatasetKey(testDataset2.getKey());
-    downloadDataset2.setNumberRecords(10000L);
-    downloadDataset2.setDatasetTitle(testDataset2.getTitle());
-    downloadDataset2.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
-    downloadDataset2.setDatasetCitation(testDataset2.getCitation().getText());
+    final Dataset testDataset3 = createTestDataset();
     
     occurrenceDownloadService.create(occurrenceDownload);
-    datasetOccurrenceDownloadUsageService.bulkCreate(Arrays.asList(downloadDataset1,downloadDataset2));
+    
+    Map<UUID,Long> datasetCitation = new HashMap();
+    datasetCitation.put(testDataset1.getKey(), 1000L);
+    datasetCitation.put(testDataset2.getKey(), 10000L);
+    datasetCitation.put(testDataset3.getKey(), 100000L);
+    occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
+    
     assertEquals("List operation should return 1 record", 1,
       datasetOccurrenceDownloadUsageService.listByDataset(testDataset1.getKey(), new PagingRequest(0, 3))
         .getResults().size());
     assertEquals("List operation should return 1 record", 1,
         datasetOccurrenceDownloadUsageService.listByDataset(testDataset2.getKey(), new PagingRequest(0, 3))
           .getResults().size());
+    assertEquals("List operation should return 1 record", 1,
+        datasetOccurrenceDownloadUsageService.listByDataset(testDataset3.getKey(), new PagingRequest(0, 3))
+          .getResults().size());
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertEquals(occDownload2.getNumberDatasets(), 2);
+    assertEquals(occDownload2.getNumberDatasets(), 3);
   }
 
 }
