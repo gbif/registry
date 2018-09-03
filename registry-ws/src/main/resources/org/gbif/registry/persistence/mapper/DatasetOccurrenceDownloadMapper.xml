@@ -16,18 +16,6 @@
     download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
   </sql>
 
-  <insert id="create" parameterType="DatasetOccurrenceDownload">
-    INSERT INTO dataset_occurrence_download(download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records)
-    VALUES(
-     #{downloadKey,jdbcType=VARCHAR},
-     #{datasetKey,jdbcType=OTHER},
-     #{datasetTitle,jdbcType=VARCHAR},
-     #{datasetDOI,jdbcType=VARCHAR},
-     #{datasetCitation,jdbcType=VARCHAR},
-     #{numberRecords,jdbcType=INTEGER}
-    )
-  </insert>
-
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="Pageable">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
@@ -53,5 +41,20 @@
     FROM dataset_occurrence_download
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
+
+  <insert id="bulkCreate" parameterType="java.util.List">
+    INSERT INTO dataset_occurrence_download(download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records)
+    VALUES
+     <foreach item="item" collection="list" separator=",">
+     (
+     #{item.downloadKey,jdbcType=VARCHAR},
+     #{item.datasetKey,jdbcType=OTHER},
+     #{item.datasetTitle,jdbcType=VARCHAR},
+     #{item.datasetDOI,jdbcType=VARCHAR},
+     #{item.datasetCitation,jdbcType=VARCHAR},
+     #{item.numberRecords,jdbcType=INTEGER}
+    )
+    </foreach>
+  </insert>
 
 </mapper>
