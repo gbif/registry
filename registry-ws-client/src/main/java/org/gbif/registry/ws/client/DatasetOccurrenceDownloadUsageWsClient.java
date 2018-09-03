@@ -7,7 +7,6 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsGetClient;
-import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -31,10 +30,5 @@ public class DatasetOccurrenceDownloadUsageWsClient extends BaseWsGetClient<Down
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(UUID datasetKey, Pageable page) {
     return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, DATASET, String.valueOf(datasetKey));
-  }
-
-  @Override
-  public void bulkCreate(List<DatasetOccurrenceDownloadUsage> downloadDataset) {
-    post(downloadDataset, DATASET);
   }
 }

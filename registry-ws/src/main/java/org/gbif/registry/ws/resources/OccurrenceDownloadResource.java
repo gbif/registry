@@ -168,6 +168,16 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     }
     throw new NotFoundException();
   }
+  
+  @POST
+  @Path("{key}/datasets")
+  @Transactional
+  @Validate(groups = {PrePersist.class, Default.class})
+  @RolesAllowed(ADMIN_ROLE)
+  @Override
+  public void createUsages(@PathParam("key") String downloadkey,@Valid @NotNull Map<UUID,Long> datasetCitations) {
+    datasetOccurrenceDownloadMapper.createUsages(downloadkey, datasetCitations);
+  }
 
   @GET
   @Path("statistics/downloadsByUserCountry")

@@ -104,4 +104,9 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     Optional.ofNullable(datasetKey).ifPresent( dk -> params.add("datasetKey", dk.toString()));
     return get(GenericTypes.DOWNLOADS_STATS_TYPE, null, params ,null,path);
   }
+
+  @Override
+  public void createUsages(String downloadKey, Map<UUID, Long> datasetCitations) {
+    post(datasetCitations,downloadKey+"/datasets");
+  }
 }

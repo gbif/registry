@@ -41,20 +41,19 @@
     FROM dataset_occurrence_download
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
-
-  <insert id="bulkCreate" parameterType="java.util.List">
-    INSERT INTO dataset_occurrence_download(download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records)
-    VALUES
-     <foreach item="item" collection="list" separator=",">
-     (
-     #{item.downloadKey,jdbcType=VARCHAR},
-     #{item.datasetKey,jdbcType=OTHER},
-     #{item.datasetTitle,jdbcType=VARCHAR},
-     #{item.datasetDOI,jdbcType=VARCHAR},
-     #{item.datasetCitation,jdbcType=VARCHAR},
-     #{item.numberRecords,jdbcType=INTEGER}
-    )
-    </foreach>
+  
+  <insert id="createUsages">
+    INSERT INTO dataset_occurrence_download ( 
+    WITH dataset_usages(dataset_key, number_records) AS
+	((VALUES
+	<foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
+	cast(#{key} as uuid),#{value}
+	</foreach>
+	))
+	SELECT #{downloadkey} as download_key, dataset.key, number_records, title, doi, citation 
+	FROM dataset 
+	JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key
+	);
   </insert>
 
 </mapper>
