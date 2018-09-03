@@ -10,13 +10,8 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 import java.util.List;
 import java.util.UUID;
-import javax.annotation.security.RolesAllowed;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -26,10 +21,6 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
-
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData;
 
 /**
@@ -61,15 +52,6 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
     clearSensitiveData(securityContext, usages);
     return new PagingResponse<>(page,
       (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
-  }
-  
-  @POST
-  @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
-  @RolesAllowed(ADMIN_ROLE)
-  @Override
-  public void bulkCreate(@Valid @NotNull List<DatasetOccurrenceDownloadUsage> downloadDataset) {
-     datasetOccurrenceDownloadMapper.bulkCreate(downloadDataset);
   }
 
 }

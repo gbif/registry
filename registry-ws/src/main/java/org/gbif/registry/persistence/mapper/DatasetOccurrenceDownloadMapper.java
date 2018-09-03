@@ -16,6 +16,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.ibatis.annotations.Param;
@@ -33,5 +34,5 @@ public interface DatasetOccurrenceDownloadMapper {
   List<DatasetOccurrenceDownloadUsage> listByDownload(@Param("downloadKey") String downloadKey,
                                                      @Nullable @Param("page") Pageable page);
   
-  void bulkCreate(List<DatasetOccurrenceDownloadUsage> downloadDataset);
+  void createUsages(@Param("downloadkey")String downloadkey,@Param("citationMap")Map<UUID,Long> downloadDataset);
 }
