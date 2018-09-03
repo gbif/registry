@@ -41,7 +41,7 @@ import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
+import java.util.Arrays;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
@@ -157,7 +157,7 @@ public class DatasetOccurrenceDownloadIT {
    * Tests the process of persist a {@link DatasetOccurrenceDownload} and list the downloads by dataset key.
    */
   @Test
-  public void testAddAndGetOccurrenceDataset() {
+  public void testAddAndGetOccurrenceDatasetOne() {
     Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
     final Dataset testDataset = createTestDataset();
     DatasetOccurrenceDownloadUsage downloadDataset = new DatasetOccurrenceDownloadUsage();
@@ -168,12 +168,49 @@ public class DatasetOccurrenceDownloadIT {
     downloadDataset.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
     downloadDataset.setDatasetCitation(testDataset.getCitation().getText());
     occurrenceDownloadService.create(occurrenceDownload);
-    datasetOccurrenceDownloadUsageService.create(downloadDataset);
+    datasetOccurrenceDownloadUsageService.bulkCreate(Arrays.asList(downloadDataset));
     assertEquals("List operation should return 1 record", 1,
       datasetOccurrenceDownloadUsageService.listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
         .getResults().size());
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertEquals(occDownload2.getNumberDatasets(), 1);
+  }
+  
+  /**
+   * Tests the process of persist a list of {@link DatasetOccurrenceDownload} and list the downloads by dataset key.
+   */
+  @Test
+  public void testAddAndGetOccurrenceDatasetMany() {
+    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
+    final Dataset testDataset1 = createTestDataset();
+    final Dataset testDataset2 = createTestDataset();
+    
+    DatasetOccurrenceDownloadUsage downloadDataset1 = new DatasetOccurrenceDownloadUsage();
+    downloadDataset1.setDownloadKey(occurrenceDownload.getKey());
+    downloadDataset1.setDatasetKey(testDataset1.getKey());
+    downloadDataset1.setNumberRecords(1000L);
+    downloadDataset1.setDatasetTitle(testDataset1.getTitle());
+    downloadDataset1.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
+    downloadDataset1.setDatasetCitation(testDataset1.getCitation().getText());
+    
+    DatasetOccurrenceDownloadUsage downloadDataset2 = new DatasetOccurrenceDownloadUsage();
+    downloadDataset2.setDownloadKey(occurrenceDownload.getKey());
+    downloadDataset2.setDatasetKey(testDataset2.getKey());
+    downloadDataset2.setNumberRecords(10000L);
+    downloadDataset2.setDatasetTitle(testDataset2.getTitle());
+    downloadDataset2.setDatasetDOI(new DOI("doi:10.1234/1ASCDU"));
+    downloadDataset2.setDatasetCitation(testDataset2.getCitation().getText());
+    
+    occurrenceDownloadService.create(occurrenceDownload);
+    datasetOccurrenceDownloadUsageService.bulkCreate(Arrays.asList(downloadDataset1,downloadDataset2));
+    assertEquals("List operation should return 1 record", 1,
+      datasetOccurrenceDownloadUsageService.listByDataset(testDataset1.getKey(), new PagingRequest(0, 3))
+        .getResults().size());
+    assertEquals("List operation should return 1 record", 1,
+        datasetOccurrenceDownloadUsageService.listByDataset(testDataset2.getKey(), new PagingRequest(0, 3))
+          .getResults().size());
+    Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertEquals(occDownload2.getNumberDatasets(), 2);
   }
 
 }

@@ -18,15 +18,12 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
 
 /**
  * Mapper that perform operations on dataset usages in occurrence downloads.
  */
 public interface DatasetOccurrenceDownloadMapper {
-
-  void create(DatasetOccurrenceDownloadUsage downloadDataset);
 
   List<DatasetOccurrenceDownloadUsage> listByDataset(@Param("datasetKey") UUID datasetKey,
     @Nullable @Param("page") Pageable page);
@@ -35,4 +32,6 @@ public interface DatasetOccurrenceDownloadMapper {
 
   List<DatasetOccurrenceDownloadUsage> listByDownload(@Param("downloadKey") String downloadKey,
                                                      @Nullable @Param("page") Pageable page);
+  
+  void bulkCreate(List<DatasetOccurrenceDownloadUsage> downloadDataset);
 }

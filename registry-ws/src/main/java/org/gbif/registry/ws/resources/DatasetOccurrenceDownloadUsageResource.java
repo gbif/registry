@@ -8,7 +8,6 @@ import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
-
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
@@ -52,16 +51,6 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
   }
 
-
-  @POST
-  @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
-  @RolesAllowed(ADMIN_ROLE)
-  @Override
-  public void create(@Valid @NotNull DatasetOccurrenceDownloadUsage downloadDataset) {
-    datasetOccurrenceDownloadMapper.create(downloadDataset);
-  }
-
   @GET
   @Path("/{datasetKey}")
   @NullToNotFound
@@ -72,6 +61,15 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
     clearSensitiveData(securityContext, usages);
     return new PagingResponse<>(page,
       (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
+  }
+  
+  @POST
+  @Transactional
+  @Validate(groups = {PrePersist.class, Default.class})
+  @RolesAllowed(ADMIN_ROLE)
+  @Override
+  public void bulkCreate(@Valid @NotNull List<DatasetOccurrenceDownloadUsage> downloadDataset) {
+     datasetOccurrenceDownloadMapper.bulkCreate(downloadDataset);
   }
 
 }
