@@ -3,7 +3,6 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.ws.server.interceptor.NullToNotFound;
