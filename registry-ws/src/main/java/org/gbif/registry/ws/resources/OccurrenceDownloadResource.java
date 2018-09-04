@@ -175,8 +175,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Validate(groups = {PrePersist.class, Default.class})
   @RolesAllowed(ADMIN_ROLE)
   @Override
-  public void createUsages(@PathParam("key") String downloadkey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
-    datasetOccurrenceDownloadMapper.createUsages(downloadkey, datasetCitations);
+  public void createUsages(@PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
+    datasetOccurrenceDownloadMapper.createUsages(downloadKey, datasetCitations);
   }
 
   @GET
