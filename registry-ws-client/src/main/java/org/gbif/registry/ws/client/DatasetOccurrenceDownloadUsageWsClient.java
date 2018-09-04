@@ -20,7 +20,7 @@ import com.sun.jersey.api.client.filter.ClientFilter;
 public class DatasetOccurrenceDownloadUsageWsClient extends BaseWsGetClient<Download, String> implements
   DatasetOccurrenceDownloadUsageService {
 
-  private static final String DATASET = "dataset";
+  private static final String DATASET_PATH = "dataset";
   
   @Inject
   public DatasetOccurrenceDownloadUsageWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
@@ -29,6 +29,6 @@ public class DatasetOccurrenceDownloadUsageWsClient extends BaseWsGetClient<Down
 
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(UUID datasetKey, Pageable page) {
-    return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, DATASET, String.valueOf(datasetKey));
+    return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, DATASET_PATH, String.valueOf(datasetKey));
   }
 }
