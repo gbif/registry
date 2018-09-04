@@ -43,17 +43,18 @@
   </select>
   
   <insert id="createUsages">
-    INSERT INTO dataset_occurrence_download ( 
-    WITH dataset_usages(dataset_key, number_records) AS
+	INSERT INTO dataset_occurrence_download (
+	WITH dataset_usages(dataset_key, number_records) AS
 	((VALUES
-	<foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
-	cast(#{key} as uuid),#{value}
+	<foreach item="value" index="key" collection="citationMap"
+		open="(" separator="),(" close=")">
+		cast(#{key} as uuid),#{value}
 	</foreach>
 	))
-	SELECT #{downloadkey} as download_key, dataset.key, number_records, title, doi, citation 
-	FROM dataset 
-	JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key
-	);
-  </insert>
+	SELECT #{downloadkey} as download_key, dataset.key, number_records,
+	title, doi, citation
+	FROM dataset
+	JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key);
+</insert>
 
 </mapper>

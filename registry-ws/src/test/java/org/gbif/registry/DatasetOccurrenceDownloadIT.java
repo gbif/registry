@@ -169,7 +169,7 @@ public class DatasetOccurrenceDownloadIT {
       datasetOccurrenceDownloadUsageService.listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
         .getResults().size());
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertEquals(occDownload2.getNumberDatasets(), 1);
+    assertEquals(1,occDownload2.getNumberDatasets());
   }
   
   /**
@@ -200,7 +200,7 @@ public class DatasetOccurrenceDownloadIT {
         datasetOccurrenceDownloadUsageService.listByDataset(testDataset3.getKey(), new PagingRequest(0, 3))
           .getResults().size());
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertEquals(occDownload2.getNumberDatasets(), 3);
+    assertEquals(3,occDownload2.getNumberDatasets());
   }
 
 }
