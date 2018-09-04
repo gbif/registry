@@ -107,6 +107,6 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
 
   @Override
   public void createUsages(String downloadKey, Map<UUID, Long> datasetCitations) {
-    post(datasetCitations,downloadKey+"/datasets");
+    post(datasetCitations, downloadKey + "/datasets");
   }
 }
