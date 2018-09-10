@@ -88,7 +88,7 @@
 
   <select id="countDatasetsInNetwork" resultType="int">
     SELECT COUNT(*) AS num_constituents
-    FROM dataset_network
+    FROM dataset_network dn
     JOIN dataset d ON d.key = dn.dataset_key
     WHERE d.deleted IS NULL AND network_key = #{networkKey,jdbcType=OTHER}
   </select>
