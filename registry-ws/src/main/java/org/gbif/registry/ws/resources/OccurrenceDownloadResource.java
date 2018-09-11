@@ -23,6 +23,8 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
@@ -41,6 +43,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -70,6 +73,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   //Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
+  private static final int BATCH_SIZE = 5_000;
 
   // This Guice injection is only used for testing purpose
   @Inject(optional = true)
@@ -176,7 +180,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @RolesAllowed(ADMIN_ROLE)
   @Override
   public void createUsages(@PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
-    datasetOccurrenceDownloadMapper.createUsages(downloadKey, datasetCitations);
+    Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
+    .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
   @GET
