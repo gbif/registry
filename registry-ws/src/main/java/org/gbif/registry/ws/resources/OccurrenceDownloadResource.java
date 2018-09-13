@@ -12,7 +12,6 @@ import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
-import org.gbif.occurrence.query.TitleLookup;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
@@ -22,8 +21,14 @@ import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
@@ -66,13 +71,11 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
-  private final TitleLookup titleLookup;
   private final IdentityAccessService identityService;
   private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
   //Page size to iterate over dataset usages
-  private static final int USAGES_PAGE_SIZE = 400;
   private static final int BATCH_SIZE = 5_000;
 
   // This Guice injection is only used for testing purpose
@@ -82,14 +85,15 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private SecurityContext securityContext;
 
   @Inject
-  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper, DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy, IdentityAccessService identityService, TitleLookup titleLookup) {
+  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper,
+                                    DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+                                    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy,
+                                    IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;
     this.doiGenerator = doiGenerator;
     this.identityService = identityService;
-    this.titleLookup = titleLookup;
   }
 
   @POST
@@ -109,7 +113,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Nullable
   @NullToNotFound
   @Override
-  public Download get(@PathParam("key") String key) {
+  public Download get(@NotNull @PathParam("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
     if (download == null && DOI.isParsable(key)) { //maybe it's a DOI?
      download = occurrenceDownloadMapper.getByDOI(new DOI(key));
@@ -137,8 +141,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GET
   @Path("user/{user}")
   @NullToNotFound
-  public PagingResponse<Download> listByUser(@PathParam("user") String user, @Context Pageable page, @Nullable @QueryParam("status")
-  Set<Download.Status> status) {
+  public PagingResponse<Download> listByUser(@NotNull @PathParam("user") String user, @Context Pageable page,
+                                             @Nullable @QueryParam("status") Set<Download.Status> status) {
     checkUserIsInSecurityContext(user, securityContext);
     return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
                                         occurrenceDownloadMapper.listByUser(user,page,status));
@@ -148,7 +152,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Path("{key}")
   @Transactional
   @Override
-  public void update(Download download) {
+  public void update(@NotNull Download download) {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
@@ -162,13 +166,13 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Path("{key}/datasets")
   @Override
   @NullToNotFound
-  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@PathParam("key") String downloadKey,
-                                                                   @Context Pageable page){
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@NotNull @PathParam("key") String downloadKey,
+                                                                          @Context Pageable page){
     Download download = get(downloadKey);
     if (download != null) {
       List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
       clearSensitiveData(securityContext, usages);
-      return new PagingResponse(page, download.getNumberDatasets(), usages);
+      return new PagingResponse<>(page, download.getNumberDatasets(), usages);
     }
     throw new NotFoundException();
   }
@@ -179,7 +183,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Validate(groups = {PrePersist.class, Default.class})
   @RolesAllowed(ADMIN_ROLE)
   @Override
-  public void createUsages(@PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
+  public void createUsages(@NotNull @PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
     .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
@@ -211,7 +215,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   /**
    * Aggregates the download statistics in tree structure of month grouped by year.
    */
-  private Map<Integer,Map<Integer,Long>> groupByYear(List<Facet.Count> counts) {
+  private Map<Integer, Map<Integer,Long>> groupByYear(List<Facet.Count> counts) {
     Map<Integer,Map<Integer,Long>> yearsGrouping = new TreeMap<>();
     counts.forEach(count -> yearsGrouping.computeIfAbsent(Integer.valueOf(count.getName().substring(0,4)), year -> new TreeMap<>()).put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
     return  yearsGrouping;
