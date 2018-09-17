@@ -7,6 +7,7 @@
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
       ALTER TYPE enum_download_format ADD VALUE 'SIMPLE_AVRO' AFTER 'SIMPLE_CSV';
+      ALTER TYPE enum_download_format ADD VALUE 'SPECIES_LIST' AFTER 'SIMPLE_AVRO';
       ]]>
     </sql>
   </changeSet>
