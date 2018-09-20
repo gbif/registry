@@ -139,7 +139,7 @@ public class OaipmhEndpoint {
 
     if(until != null){
       try {
-        untilDate = dateProvider.parse(from);
+        untilDate = dateProvider.parse(until);
       } catch (ParseException pEx) {
         return handleOAIRequestBadArgument(reqBuilder.build(), "until=" + until);
       }
