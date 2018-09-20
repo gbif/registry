@@ -59,4 +59,6 @@
   <include file="liquibase/053-occurrence_download_download_key_index.xml"/>
   <include file="liquibase/054-add-biocase-xml-archive-endpoint-type.xml"/>
   <include file="liquibase/055-add-download-statistics.xml"/>
+  <include file="liquibase/056-add-download-user-statistics.xml"/>
+  <include file="liquibase/057-add-species-list-download-format.xml"/>
 </databaseChangeLog>
