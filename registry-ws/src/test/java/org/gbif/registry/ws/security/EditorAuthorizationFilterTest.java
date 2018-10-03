@@ -41,14 +41,13 @@ public class EditorAuthorizationFilterTest {
     when(secContext.isUserInRole(eq(UserRoles.EDITOR_ROLE))).thenReturn(true);
 
     // setup mocks to authorize only based on user
-    when(authService.allowedToModifyEntity(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(
-      new Answer<Boolean>() {
-        @Override
-        public Boolean answer(InvocationOnMock invocation) throws Throwable {
-          Object[] args = invocation.getArguments();
-          return ((Principal) args[0]).getName().equals(userWithRights);
-        }
-      });
+    when(authService.allowedToModifyEntity(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
+      @Override
+      public Boolean answer(InvocationOnMock invocation) throws Throwable {
+        Object[] args = invocation.getArguments();
+        return ((Principal) args[0]).getName().equals(userWithRights);
+      }
+    });
     when(authService.allowedToModifyInstallation(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
       @Override
       public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -75,7 +74,7 @@ public class EditorAuthorizationFilterTest {
   @Test
   public void testFilterGET() throws Exception {
     setRequestUser(userWithRights);
-    // GETs dont need auth
+    // GETs don't need auth
     mockRequest("GET", "dataset");
     filter.filter(mockRequest);
   }
