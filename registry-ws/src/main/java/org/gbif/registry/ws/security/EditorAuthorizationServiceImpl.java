@@ -22,30 +22,30 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
 
   @Inject
   public EditorAuthorizationServiceImpl(DatasetService datasetService, InstallationService installationService,
-    OrganizationService organizationService, UserRightsMapper userRightsMapper) {
+                                        OrganizationService organizationService, UserRightsMapper userRightsMapper) {
     this.datasetService = datasetService;
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.userRightsMapper = userRightsMapper;
   }
 
-    @Override
-    public boolean allowedToModifyNamespace(Principal user, String ns) {
-        if (user == null) {
-            return false;
-        }
-        return userRightsMapper.namespaceExistsForUser(user.getName(), ns);
+  @Override
+  public boolean allowedToModifyNamespace(Principal user, String ns) {
+    if (user == null) {
+      return false;
     }
+    return userRightsMapper.namespaceExistsForUser(user.getName(), ns);
+  }
 
-    @Override
-    public boolean allowedToDeleteMachineTag(Principal user, int machineTagKey) {
-        if (user == null) {
-            return false;
-        }
-        return userRightsMapper.allowedToDeleteMachineTag(user.getName(), machineTagKey);
+  @Override
+  public boolean allowedToDeleteMachineTag(Principal user, int machineTagKey) {
+    if (user == null) {
+      return false;
     }
+    return userRightsMapper.allowedToDeleteMachineTag(user.getName(), machineTagKey);
+  }
 
-    @Override
+  @Override
   public boolean allowedToModifyEntity(Principal user, UUID key) {
     if (user == null) {
       return false;
@@ -61,8 +61,12 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     if (allowedToModifyEntity(user, datasetKey)) {
       return true;
     }
-    // try higher organization or node rights
     Dataset d = datasetService.get(datasetKey);
+    // try installation rights
+    if (allowedToModifyInstallation(user, d.getInstallationKey())) {
+      return true;
+    }
+    // try higher organization or node rights
     return d == null ? false : allowedToModifyOrganization(user, d.getPublishingOrganizationKey());
   }
 
