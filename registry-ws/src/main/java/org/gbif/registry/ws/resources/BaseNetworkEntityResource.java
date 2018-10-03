@@ -152,8 +152,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, APP_ROLE)) {
-      UUID entityKeyToBeAssesed = owningEntityKey(entity);
-      if (entityKeyToBeAssesed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssesed)) {
+      UUID entityKeyToBeAssessed = owningEntityKey(entity);
+      if (entityKeyToBeAssessed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssessed)) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       }
     }

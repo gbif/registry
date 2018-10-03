@@ -359,5 +359,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return password.toString();
   }
 
-
+  @Override
+  protected UUID owningEntityKey(@NotNull Organization entity) {
+    return entity.getEndorsingNodeKey();
+  }
 }
