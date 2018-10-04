@@ -12,11 +12,26 @@
  */
 package org.gbif.registry;
 
+import static org.gbif.registry.guice.RegistryTestModules.webservice;
+import static org.gbif.registry.guice.RegistryTestModules.webserviceBasicAuthClient;
+import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import java.security.AccessControlException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.UUID;
+import javax.validation.ValidationException;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.DownloadRequest;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
@@ -28,18 +43,6 @@ import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.security.AccessControlException;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Collection;
-import java.util.UUID;
-import javax.validation.ValidationException;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -47,14 +50,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import static org.gbif.registry.guice.RegistryTestModules.webservice;
-import static org.gbif.registry.guice.RegistryTestModules.webserviceBasicAuthClient;
-import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Injector;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} implementations.
@@ -109,7 +106,7 @@ public class OccurrenceDownloadIT {
     Download download = new Download();
     final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
     DownloadRequest request =
-      new DownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TestConstants.TEST_ADMIN, emails,
+      new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TestConstants.TEST_ADMIN, emails,
         true, DownloadFormat.DWCA);
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);

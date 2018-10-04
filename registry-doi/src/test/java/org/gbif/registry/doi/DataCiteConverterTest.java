@@ -1,9 +1,22 @@
 package org.gbif.registry.doi;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import java.net.URI;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -18,25 +31,10 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
-
-import java.net.URI;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
+import org.junit.Test;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DataCiteConverterTest {
 
@@ -144,7 +142,7 @@ public class DataCiteConverterTest {
     download.setSize(100);
     download.setStatus(Download.Status.SUCCEEDED);
     download.setTotalRecords(10);
-    DownloadRequest downloadRequest = new DownloadRequest();
+    DownloadRequest downloadRequest = new PredicateDownloadRequest();
     downloadRequest.setCreator("dev@gbif.org");
     download.setRequest(downloadRequest);
 
