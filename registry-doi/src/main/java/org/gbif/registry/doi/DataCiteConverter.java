@@ -3,6 +3,9 @@ package org.gbif.registry.doi;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SQLDownloadRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -466,10 +469,7 @@ public class DataCiteConverter {
    * Tries to get the human readable version of the download query, if fails returns the raw query.
    */
   private static String getFilterQuery(Download d, TitleLookup titleLookup) {
-    try {
-      return new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
-    } catch (Exception ex) {
-      return d.getRequest().getPredicate().toString();
-    }
+    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SQLDownloadRequest) d.getRequest()).getSQL()
+        : new HumanFilterBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
   }
 }
