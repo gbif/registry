@@ -29,7 +29,6 @@ import static org.gbif.registry.ws.fixtures.TestClient.buildPublicClient;
 /**
  * This abstract class is used to test access to API endpoint using plain call (NOT using a Java ws-client).
  * If a ws-client exists for the API you are testing this class is probably not what you need.
- *
  */
 public abstract class PlainAPIBaseIT {
 
@@ -105,7 +104,7 @@ public abstract class PlainAPIBaseIT {
   protected ClientResponse postSignedRequest(GbifAuthService authService, String username, @Nullable Object entity, Function<UriBuilder, UriBuilder> uriBuilder) {
     ClientRequest clientRequest = generatePostClientRequest(uriBuilder);
 
-    if(entity != null) {
+    if (entity != null) {
       clientRequest.setEntity(entity);
     }
     //sign the request, we create users using the appKeys
@@ -135,9 +134,16 @@ public abstract class PlainAPIBaseIT {
 
   public ClientResponse putWithSignedRequest(String username, @Nullable Object entity, Function<UriBuilder, UriBuilder> uriBuilder) {
     ClientRequest clientRequest = generatePutClientRequest(uriBuilder);
-    if(entity != null) {
+    if (entity != null) {
       clientRequest.setEntity(entity);
     }
+    //sign the request, we create users using the appKeys
+    getAuthService().signRequest(username, clientRequest);
+    return publicClient.getClient().handle(clientRequest);
+  }
+
+  public ClientResponse deleteWithSignedRequest(String username, Function<UriBuilder, UriBuilder> uriBuilder) {
+    ClientRequest clientRequest = generateDeleteClientRequest(uriBuilder);
     //sign the request, we create users using the appKeys
     getAuthService().signRequest(username, clientRequest);
     return publicClient.getClient().handle(clientRequest);
@@ -164,6 +170,10 @@ public abstract class PlainAPIBaseIT {
 
   private ClientRequest generatePutClientRequest(Function<UriBuilder, UriBuilder> uriBuilder) {
     return generateClientRequest(HttpMethod.PUT, uriBuilder, null);
+  }
+
+  private ClientRequest generateDeleteClientRequest(Function<UriBuilder, UriBuilder> uriBuilder) {
+    return generateClientRequest(HttpMethod.DELETE, uriBuilder, null);
   }
 
   /**
