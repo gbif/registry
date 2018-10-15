@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -182,6 +183,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   @Override
   protected Dataset create(Dataset orig, int expectedCount) {
     return create(orig, expectedCount, buildExpectedProcessedProperties(orig));
+  }
+
+  protected Dataset duplicateForCreateAsEditorTest(Dataset entity) throws Exception {
+    Dataset duplicate = (Dataset) BeanUtils.cloneBean(entity);
+    duplicate.setPublishingOrganizationKey(entity.getPublishingOrganizationKey());
+    duplicate.setInstallationKey(entity.getInstallationKey());
+    return duplicate;
+  }
+
+  protected UUID keyForCreateAsEditorTest(Dataset entity) {
+    return organizationService.get(entity.getPublishingOrganizationKey()).getEndorsingNodeKey();
   }
 
   @Test
