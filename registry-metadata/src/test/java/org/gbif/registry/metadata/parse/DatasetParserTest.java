@@ -652,7 +652,7 @@ public class DatasetParserTest {
     assertEquals("Creator 1", creator1.getFirstName());
     assertEquals("Edgar", creator1.getLastName());
     assertNotNull(creator1.getUserId());
-    assertEquals("http://orcid.org/0000-0003-0833-9001", creator1.getUserId().get(0));
+    assertEquals("https://orcid.org/0000-0003-0833-9001", creator1.getUserId().get(0));
 
     // test Creator #2
     Contact creator2 = contactList.get(1);
@@ -661,7 +661,7 @@ public class DatasetParserTest {
     assertEquals("Creator 2", creator2.getFirstName());
     assertEquals("Stuart-Smith", creator2.getLastName());
     assertNotNull(creator2.getUserId());
-    assertEquals("http://orcid.org/0000-0002-8874-0083", creator2.getUserId().get(0));
+    assertEquals("https://orcid.org/0000-0002-8874-0083", creator2.getUserId().get(0));
 
     // test Metadata Provider #1
     Contact provider1 = contactList.get(2);
