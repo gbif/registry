@@ -14,7 +14,7 @@
 
   <name>GBIF Registry</name>
   <description>The projects to provide the registry, web services and client</description>
-  <url>http://github.org/gbif/registry</url>
+  <url>https://github.org/gbif/registry</url>
 
   <scm>
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
