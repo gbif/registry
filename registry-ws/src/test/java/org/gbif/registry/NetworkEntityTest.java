@@ -45,6 +45,8 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -58,6 +60,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -125,6 +128,45 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     create(newEntity(), 1);
     create(newEntity(), 2);
   }
+
+  @Ignore("Use during development.")
+  @Test
+  public void testCreateAsEditor() {
+    // Create as admin.
+    T entity = create(newEntity(), 1);
+
+    if (pp == null) {
+      return;
+    } else {
+      this.pp.setPrincipal(TestConstants.TEST_EDITOR);
+    }
+
+    // Grant appropriate rights to the normal user.
+    // This is very ugly, but there aren't APIs for editor rights.
+    T anotherEntity = null;
+    try {
+      anotherEntity = duplicateForCreateAsEditorTest(entity);
+      anotherEntity.setModified(null);
+      anotherEntity.setCreated(null);
+      anotherEntity.setKey(null);
+
+      Connection c = LiquibaseModules.database().getConnection();
+      PreparedStatement ps = c.prepareStatement("INSERT INTO editor_rights VALUES(?, ?)");
+      ps.setString(1, TestConstants.TEST_EDITOR);
+      ps.setObject(2, keyForCreateAsEditorTest(entity));
+      ps.execute();
+      ps.close();
+      c.close();
+
+    } catch (Exception e) {}
+
+    // Create as the editor user
+    create(anotherEntity, 2);
+  }
+
+  protected abstract T duplicateForCreateAsEditorTest(T entity) throws Exception;
+
+  protected abstract UUID keyForCreateAsEditorTest(T entity);
 
   @Test
   public void testTitles() {

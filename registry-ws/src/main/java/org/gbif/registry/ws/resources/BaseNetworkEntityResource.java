@@ -47,6 +47,7 @@ import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -152,8 +153,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public UUID create(@NotNull @Trim T entity, @Context SecurityContext security) {
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(security, ADMIN_ROLE, APP_ROLE)) {
-      UUID entityKeyToBeAssessed = owningEntityKey(entity);
-      if (entityKeyToBeAssessed == null || !userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssessed)) {
+      boolean allowed = false;
+      for (UUID entityKeyToBeAssessed : owningEntityKeys(entity)) {
+        if (entityKeyToBeAssessed == null) {
+          throw new WebApplicationException(Response.Status.FORBIDDEN);
+        }
+        if (userAuthService.allowedToModifyEntity(security.getUserPrincipal(), entityKeyToBeAssessed)) {
+          allowed = true;
+          break;
+        }
+      }
+      if (!allowed) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       }
     }
@@ -166,8 +176,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Override this method to extract the entity key that governs security rights for creating.
    * If null is returned only admins are allowed to create new entities which is the default.
    */
-  protected UUID owningEntityKey(@NotNull T entity) {
-    return null;
+  protected List<UUID> owningEntityKeys(@NotNull T entity) {
+    return new ArrayList<>();
   }
 
   @Validate(groups = {PrePersist.class, Default.class})

@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Installation;
@@ -122,4 +123,13 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());
   }
 
+  protected Installation duplicateForCreateAsEditorTest(Installation entity) throws Exception {
+    Installation duplicate = (Installation) BeanUtils.cloneBean(entity);
+    duplicate.setOrganizationKey(entity.getOrganizationKey());
+    return duplicate;
+  }
+
+  protected UUID keyForCreateAsEditorTest(Installation entity) {
+    return organizationService.get(entity.getOrganizationKey()).getEndorsingNodeKey();
+  }
 }
