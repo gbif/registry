@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.security;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.model.common.User;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
@@ -48,7 +47,7 @@ public class UserUpdateRulesManager {
   }
 
   /**
-   * Create a {@link User} from a {@link UserCreation}.
+   * Create a {@link GbifUser} from a {@link UserCreation}.
    * @param userCreate
    * @return
    */
