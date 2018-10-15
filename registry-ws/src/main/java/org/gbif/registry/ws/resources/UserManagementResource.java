@@ -81,7 +81,7 @@ import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
 public class UserManagementResource {
-  
+
   //filters roles that are deprecated
   private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter(r ->
           !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
@@ -341,4 +341,74 @@ public class UserManagementResource {
     return buildResponse(Response.Status.UNAUTHORIZED);
   }
 
+  /**
+   * List the editor rights for a user.
+   */
+  @GET
+  @RolesAllowed({ADMIN_ROLE, USER_ROLE})
+  @Path("/{username}/editorRight")
+  public Response editorRights(@PathParam("username") String username,
+                                 @Context SecurityContext securityContext, @Context HttpServletRequest request) {
+    // Non-admin users can only see their own entry.
+    if (!SecurityContextCheck.checkUserInRole(securityContext, ADMIN_ROLE)) {
+      if (!securityContext.getUserPrincipal().getName().equals(username)) {
+        return ResponseUtils.buildResponse(Response.Status.UNAUTHORIZED);
+      }
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return buildResponse(Response.Status.NOT_FOUND);
+    }
+
+    List<UUID> rights = identityService.listEditorRights(username);
+    return Response.ok(rights).build();
+  }
+
+  /**
+   * Add an entity right for a user.
+   */
+  @POST
+  @RolesAllowed({ADMIN_ROLE})
+  @Path("/{username}/editorRight")
+  public Response addEditorRight(@PathParam("username") String username, UUID key,
+                             @Context SecurityContext securityContext, @Context HttpServletRequest request) {
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return buildResponse(Response.Status.NOT_FOUND);
+    }
+
+    if (identityService.listEditorRights(username).contains(key)) {
+      return buildResponse(Response.Status.CONFLICT);
+    } else {
+      identityService.addEditorRight(username, key);
+      return Response.ok(key).build();
+    }
+  }
+
+  /**
+   * Delete an entity right for a user.
+   */
+  @DELETE
+  @RolesAllowed(ADMIN_ROLE)
+  @Path("/{username}/editorRight/{key}")
+  public Response deleteEditorRight(@PathParam("username") String username, @PathParam("key") UUID key,
+                                @Context SecurityContext securityContext, @Context HttpServletRequest request) {
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return buildResponse(Response.Status.NOT_FOUND);
+    }
+
+    if (!identityService.listEditorRights(username).contains(key)) {
+      return buildResponse(Response.Status.NOT_FOUND);
+    } else {
+      identityService.deleteEditorRight(username, key);
+      return Response.noContent().build();
+    }
+  }
 }

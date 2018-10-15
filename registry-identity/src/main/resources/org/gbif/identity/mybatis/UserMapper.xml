@@ -131,4 +131,23 @@
     WHERE key = #{key}
   </update>
 
+  <select id="listEditorRights" resultType="java.util.UUID">
+    SELECT key
+    FROM editor_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+  </select>
+
+  <update id="addEditorRight">
+    INSERT INTO editor_rights(username,key)
+    VALUES(
+      #{userName,jdbcType=VARCHAR},
+      #{key,jdbcType=OTHER}
+    )
+  </update>
+
+  <delete id="deleteEditorRight">
+    DELETE FROM editor_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+    AND key = #{key,jdbcType=OTHER}
+  </delete>
 </mapper>

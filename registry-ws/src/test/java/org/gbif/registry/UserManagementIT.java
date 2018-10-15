@@ -3,6 +3,7 @@ package org.gbif.registry;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.identity.model.ModelMutationError;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
@@ -13,6 +14,7 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
+import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.ws.response.GbifResponseStatus;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -216,6 +218,66 @@ public class UserManagementIT extends PlainAPIBaseIT {
     testUser2.setEmail("12345@mail.com");
     cr = putWithSignedRequest(TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
     assertResponse(Response.Status.NO_CONTENT, cr);
+  }
+
+  @Test
+  public void testUserEditorRights() {
+    /* Create a first admin user; this can't be done through the API. */
+    UserCreation adminUserCreation = UserTestFixture.generateUser(TestConstants.TEST_ADMIN);
+    GbifUser adminUser = userTestFixture.prepareUser(adminUserCreation);
+    adminUser.addRole(UserRole.REGISTRY_ADMIN);
+    userMapper.update(adminUser);
+
+    GbifUser testUser = userTestFixture.prepareUser();
+    UUID key = UUID.randomUUID();
+
+    // Admin add right
+    ClientResponse cr = postSignedRequest(TestConstants.TEST_ADMIN, key, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.CREATED, cr);
+
+    // Admin see rights
+    cr = getWithSignedRequest(TestConstants.TEST_ADMIN, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.OK, cr);
+
+    // See own rights
+    cr = getWithSignedRequest(testUser.getUserName(), uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.OK, cr);
+
+    // Admin delete right
+    cr = deleteWithSignedRequest(TestConstants.TEST_ADMIN, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight/"+key));
+    assertResponse(Response.Status.NO_CONTENT, cr);
+  }
+
+  @Test
+  public void testUserEditorRightsErrors() {
+    /* Create a first admin user; this can't be done through the API. */
+    UserCreation adminUserCreation = UserTestFixture.generateUser(TestConstants.TEST_ADMIN);
+    GbifUser adminUser = userTestFixture.prepareUser(adminUserCreation);
+    adminUser.addRole(UserRole.REGISTRY_ADMIN);
+    userMapper.update(adminUser);
+
+    GbifUser testUser = userTestFixture.prepareUser();
+    UUID key = UUID.randomUUID();
+
+    // User doesn't exist
+    ClientResponse cr = postSignedRequest(TestConstants.TEST_ADMIN, key, uriBldr -> uriBldr.path("someOtherUser"+"/editorRight"));
+    assertResponse(Response.Status.NOT_FOUND, cr);
+
+    // Not an admin user
+    cr = postSignedRequest(testUser.getUserName(), key, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.FORBIDDEN, cr);
+    System.err.println(cr);
+
+    // Right already exists
+    cr = postSignedRequest(TestConstants.TEST_ADMIN, key, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.CREATED, cr);
+    cr = postSignedRequest(TestConstants.TEST_ADMIN, key, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight"));
+    assertResponse(Response.Status.CONFLICT, cr);
+
+    // Right doesn't exist
+    cr = deleteWithSignedRequest(TestConstants.TEST_ADMIN, uriBldr -> uriBldr.path(testUser.getUserName()+"/editorRight/"+UUID.randomUUID()));
+    assertResponse(Response.Status.NOT_FOUND, cr);
+    System.err.println(cr);
   }
 
   @Override
