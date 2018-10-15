@@ -89,6 +89,23 @@ public class DatabaseInitializer extends ExternalResource {
       connection.prepareStatement("TRUNCATE gbif_doi").execute();
       connection.commit();
 
+      /*
+       * These tables aren't truncated, so we probably aren't testing them properly.
+       * – crawl_history
+       * – dataset_network
+       * – dataset_occurrence_download
+       * – download_statistics
+       * – download_user_statistics
+       * – downloaded_records_statistics
+       * – endpoint_machine_tag
+       * – metasync_history
+       * – namespace_rights
+       * – network_identifier
+       * – node_contact
+       * – node_endpoint
+       * – occurrence_download
+       */
+
     } catch (SQLException e) {
       Throwables.propagate(e);
     } finally {

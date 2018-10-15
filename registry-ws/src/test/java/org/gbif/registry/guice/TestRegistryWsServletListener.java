@@ -23,6 +23,7 @@ import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
+import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -60,12 +61,13 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
           Lists.newArrayList(
                   LegacyAuthorizationFilter.class,
+                  EditorAuthorizationFilter.class,
                   AppIdentityFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
             new WsJerseyModuleConfiguration()
-                    .resourcePackages("org.gbif.registry.ws,org.gbif.registry.ws.provider,org.gbif.registry.oaipmh")
+                    .resourcePackages("org.gbif.registry.ws, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh")
                     .useAuthenticationFilter(IdentityFilter.class)
                     .requestFilters(requestFilters));
   }

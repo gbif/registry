@@ -12,7 +12,10 @@
  */
 package org.gbif.registry;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
@@ -150,4 +153,13 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
     return o;
   }
 
+  protected Organization duplicateForCreateAsEditorTest(Organization entity) throws Exception {
+    Organization duplicate = (Organization) BeanUtils.cloneBean(entity);
+    duplicate.setEndorsingNodeKey(entity.getEndorsingNodeKey());
+    return duplicate;
+  }
+
+  protected UUID keyForCreateAsEditorTest(Organization entity) {
+    return entity.getEndorsingNodeKey();
+  }
 }
