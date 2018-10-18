@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import com.google.common.collect.Lists;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -359,5 +360,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return password.toString();
   }
 
-
+  @Override
+  protected List<UUID> owningEntityKeys(@NotNull Organization entity) {
+    return Lists.newArrayList(entity.getEndorsingNodeKey());
+  }
 }

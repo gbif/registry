@@ -282,4 +282,18 @@ class IdentityServiceImpl implements IdentityService {
     return new PagingResponse<>(page == null ? new PagingRequest() : page, count, result);
   }
 
+  @Override
+  public List<UUID> listEditorRights(String userName) {
+    return userMapper.listEditorRights(userName);
+  }
+
+  @Override
+  public void addEditorRight(String userName, UUID key) {
+    userMapper.addEditorRight(userName, key);
+  }
+
+  @Override
+  public void deleteEditorRight(String userName, UUID key) {
+    userMapper.deleteEditorRight(userName, key);
+  }
 }

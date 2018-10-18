@@ -38,6 +38,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import java.util.UUID;
+
 /**
  * This is parameterized to run the same test routines for the following:
  * <ol>
@@ -69,4 +71,17 @@ public class NetworkIT extends NetworkEntityTest<Network> {
     return Networks.newInstance();
   }
 
+  /**
+   * Test doesn't make sense for a network.
+   */
+  @Override
+  public void testCreateAsEditor() {}
+
+  protected Network duplicateForCreateAsEditorTest(Network entity) throws Exception {
+    throw new UnsupportedOperationException();
+  }
+
+  protected UUID keyForCreateAsEditorTest(Network entity) {
+    return null;
+  }
 }
