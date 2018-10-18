@@ -46,6 +46,7 @@ public class DatabaseInitializer extends ExternalResource {
     try {
       connection.setAutoCommit(false);
       connection.prepareStatement("DELETE FROM public.user").execute();
+      connection.prepareStatement("DELETE FROM editor_rights").execute();
       connection.commit();
 
     } catch (SQLException e) {

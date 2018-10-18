@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.identity.model.UserModelMutationResult;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -143,4 +144,25 @@ public interface IdentityService extends IdentityAccessService {
   UserModelMutationResult updatePassword(int userKey, String newPassword);
 
   void resetPassword(int userKey);
+
+  /**
+   * Lists the entity keys the user has editor permissions on.
+   * @param userName
+   * @return
+   */
+  List<UUID> listEditorRights(String userName);
+
+  /**
+   * Grant the user rights over the given entity.
+   * @param userName
+   * @param key
+   */
+  void addEditorRight(String userName, UUID key);
+
+  /**
+   * Remove rights from the given entity for the user.
+   * @param userName
+   * @param key
+   */
+  void deleteEditorRight(String userName, UUID key);
 }

@@ -64,6 +64,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
+            LOG.warn("User {} is not allowed to modify organization {}", user, m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
           }
         }
@@ -71,6 +72,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         m = DATASET_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(m.group(1)))) {
+            LOG.warn("User {} is not allowed to modify dataset {}", user, m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
           }
         }
@@ -78,6 +80,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         m = INSTALLATION_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(m.group(1)))) {
+            LOG.warn("User {} is not allowed to modify installation {}", user, m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
           }
         }
@@ -85,6 +88,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         m = NODE_NETWORK_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(m.group(1)))) {
+            LOG.warn("User {} is not allowed to modify node {}", user, m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
           }
         }

@@ -12,6 +12,7 @@
  */
 package org.gbif.registry;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -283,4 +284,17 @@ public class NodeIT extends NetworkEntityTest<Node> {
     return Nodes.newInstance();
   }
 
+  /**
+   * Test doesn't make sense for a node.
+   */
+  @Override
+  public void testCreateAsEditor() {}
+
+  protected Node duplicateForCreateAsEditorTest(Node entity) throws Exception {
+    throw new UnsupportedOperationException();
+  }
+
+  protected UUID keyForCreateAsEditorTest(Node entity) {
+    return null;
+  }
 }

@@ -150,9 +150,8 @@ public class SecurityContextCheck {
    * provided roles.
    *
    * @param securityContext
-   * @param roles           this methods will return true if a the user is at least int one role. If no role is
-   *                        provided
-   *                        this method will return false.
+   * @param roles           this methods will return true if the user is at least in one role. If no role is
+   *                        provided this method will return false.
    *
    * @return the user is at least in one of the provided role(s)
    */
