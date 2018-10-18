@@ -9,7 +9,7 @@
     <result property="request.creator" column="created_by" />
     <result property="totalRecords" column="total_records"/>
     <result property="request.notificationAddressesAsString" column="notification_addresses"/>
-    <result property="request.predicate" column="filter" typeHandler="PredicateTypeHandler"/>
+    <result property="filter" column="filter" />
     <result property="request.sendNotification" column="send_notification"/>
     <result property="request.format" column="format"/>
     <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
