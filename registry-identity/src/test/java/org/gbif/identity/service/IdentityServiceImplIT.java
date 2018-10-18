@@ -194,6 +194,26 @@ public class IdentityServiceImplIT {
     assertNotNull("Can login after the challenge code is confirmed", identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
   }
 
+  @Test
+  public void testCrudEditorRights() {
+    GbifUser u1 = generateUser();
+
+    // create
+    UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
+    assertNotNull("Expected the Username to be set", result.getUsername());
+
+    UUID randomUuid = UUID.randomUUID();
+
+    identityService.addEditorRight(result.getUsername(), randomUuid);
+
+    assertEquals(1, identityService.listEditorRights(result.getUsername()).size());
+    assertEquals(randomUuid, identityService.listEditorRights(result.getUsername()).get(0));
+
+    identityService.deleteEditorRight(result.getUsername(), randomUuid);
+
+    assertEquals(0, identityService.listEditorRights(result.getUsername()).size());
+  }
+
   /**
    * Generates a different user on each call.
    * Thread-Safe

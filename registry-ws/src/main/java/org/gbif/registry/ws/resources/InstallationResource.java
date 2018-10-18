@@ -283,7 +283,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   }
 
   @Override
-  protected UUID owningEntityKey(@NotNull Installation entity) {
-    return entity.getOrganizationKey();
+  protected List<UUID> owningEntityKeys(@NotNull Installation entity) {
+    return Lists.newArrayList(entity.getOrganizationKey());
   }
 }

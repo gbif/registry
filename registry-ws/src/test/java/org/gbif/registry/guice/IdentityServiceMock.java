@@ -9,6 +9,7 @@ import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.fixtures.TestConstants;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -137,6 +138,21 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public void resetPassword(int userKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<UUID> listEditorRights(String userName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void addEditorRight(String userName, UUID key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void deleteEditorRight(String userName, UUID key) {
     throw new UnsupportedOperationException();
   }
 

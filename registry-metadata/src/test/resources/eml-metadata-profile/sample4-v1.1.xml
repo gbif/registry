@@ -27,7 +27,7 @@
     <phone>+123456789</phone>
     <electronicMailAddress>graham@rls.org</electronicMailAddress>
     <onlineUrl>http://reeflifesurvey.com/</onlineUrl>
-          <userId directory="http://orcid.org/">0000-0003-0833-9001</userId>
+          <userId directory="https://orcid.org/">0000-0003-0833-9001</userId>
       </creator>
       <creator>
     <individualName>
@@ -46,7 +46,7 @@
     <phone>+123456789</phone>
     <electronicMailAddress>rick@rls.org</electronicMailAddress>
     <onlineUrl>http://reeflifesurvey.com/</onlineUrl>
-          <userId directory="http://orcid.org/">0000-0002-8874-0083</userId>
+          <userId directory="http://orcid.org/">https://orcid.org/0000-0002-8874-0083</userId>
       </creator>
       <metadataProvider>
     <individualName>

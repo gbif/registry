@@ -72,6 +72,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -1012,8 +1013,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @Override
-  protected UUID owningEntityKey(@NotNull Dataset entity) {
-    return entity.getPublishingOrganizationKey();
+  protected List<UUID> owningEntityKeys(@NotNull Dataset entity) {
+    List<UUID> keys = new ArrayList();
+    keys.add(entity.getPublishingOrganizationKey());
+    keys.add(ORGANIZATION_CACHE.getUnchecked(entity.getPublishingOrganizationKey()).getEndorsingNodeKey());
+    return keys;
   }
 
   @GET
