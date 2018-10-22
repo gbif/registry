@@ -61,4 +61,6 @@
   <include file="liquibase/055-add-download-statistics.xml"/>
   <include file="liquibase/056-add-download-user-statistics.xml"/>
   <include file="liquibase/057-add-species-list-download-format.xml"/>
+  <include file="liquibase/058-add-grbio-identifier-types.xml"/>
+  <include file="liquibase/059-grbio-migration.xml"/>
 </databaseChangeLog>
