@@ -5,7 +5,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SQLDownloadRequest;
+import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -469,7 +469,7 @@ public class DataCiteConverter {
    * Tries to get the human readable version of the download query, if fails returns the raw query.
    */
   private static String getFilterQuery(Download d, TitleLookup titleLookup) {
-    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SQLDownloadRequest) d.getRequest()).getSQL()
+    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest) d.getRequest()).getSQL()
         : new HumanFilterBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
   }
 }
