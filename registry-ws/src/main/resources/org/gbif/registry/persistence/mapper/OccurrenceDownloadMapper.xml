@@ -3,18 +3,36 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
   <!-- Auto-mapping -->
-  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download" autoMapping="true">
+  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download">
     <id property="key" column="key"/>
-    <result property="doi" column="doi" />
-    <result property="request.creator" column="created_by" />
-    <result property="totalRecords" column="total_records"/>
-    <result property="request.notificationAddressesAsString" column="notification_addresses"/>
-    <result property="filter" column="filter" />
-    <result property="request.sendNotification" column="send_notification"/>
-    <result property="request.format" column="format"/>
-    <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
+    	<result property="doi" column="doi" />
+    	<result property="request.creator" column="created_by" />
+    	<result property="totalRecords" column="total_records"/>
+    	<association property="request" javaType="DownloadRequest">
+    		<result property="notificationAddressesAsString" column="notification_addresses"/>
+    		<result property="sendNotification" column="send_notification"/>
+    		<result property="format" column="format"/>
+        	<discriminator javaType="DownloadFormat" column="format">
+				<case value="SQL" resultType="SQLDownloadRequest">
+					<result property="sql" column="filter" />		
+				</case>
+				<case value="DWCA" resultType="PredicateDownloadRequest">
+					<result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+				</case>
+				<case value="SIMPLE_CSV" resultType="PredicateDownloadRequest">
+					<result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+				</case>
+				<case value="SIMPLE_AVRO" resultType="PredicateDownloadRequest">
+					<result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+				</case>
+				<case value="SPECIES_LIST" resultType="PredicateDownloadRequest">
+					<result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+				</case>
+			</discriminator>
+  		</association>
+    	<association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
   </resultMap>
-
+  
   <resultMap id="DOWNLOADS_STATISTICS_COUNT_MAP" type="Count" autoMapping="true">
     <result property="name" column="year_month" />
     <result property="count" column="number_downloads" />
@@ -51,8 +69,12 @@
     #{key,jdbcType=VARCHAR},
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
-  	#{request.predicate,jdbcType=VARCHAR},
-    #{status,jdbcType=OTHER},
+    <if test="format = 'SQL'"> #{request.sql,jdbcType=VARCHAR}, </if>
+    <if test="format = 'DWCA'">#{request.predicate,jdbcType=VARCHAR}, </if>
+    <if test="format = 'SIMPLE_CSV'">#{request.predicate,jdbcType=VARCHAR}, </if>
+    <if test="format = 'SIMPLE_AVRO'">#{request.predicate,jdbcType=VARCHAR}, </if>
+    <if test="format = 'SPECIES_LIST'">#{request.predicate,jdbcType=VARCHAR}, </if>
+  	#{status,jdbcType=OTHER},
     #{downloadLink,jdbcType=VARCHAR},
     #{size,jdbcType=BIGINT},
     #{totalRecords,jdbcType=INTEGER},

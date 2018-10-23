@@ -19,6 +19,10 @@ import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.DownloadRequest;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SQLDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Comment;
@@ -168,6 +172,10 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
+      addAlias("SQLDownloadRequest").to(SQLDownloadRequest.class);
+      addAlias("PredicateDownloadRequest").to(PredicateDownloadRequest.class);
+      addAlias("DownloadFormat").to(DownloadFormat.class);
+      addAlias("DownloadRequest").to(DownloadRequest.class);
     }
 
     @Override
