@@ -69,11 +69,10 @@
     #{key,jdbcType=VARCHAR},
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
-    <if test="format = 'SQL'"> #{request.sql,jdbcType=VARCHAR}, </if>
-    <if test="format = 'DWCA'">#{request.predicate,jdbcType=VARCHAR}, </if>
-    <if test="format = 'SIMPLE_CSV'">#{request.predicate,jdbcType=VARCHAR}, </if>
-    <if test="format = 'SIMPLE_AVRO'">#{request.predicate,jdbcType=VARCHAR}, </if>
-    <if test="format = 'SPECIES_LIST'">#{request.predicate,jdbcType=VARCHAR}, </if>
+    <choose>
+      <when test="request.format.name().equals('SQL')"> #{request.sql,jdbcType=VARCHAR},</when>
+      <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=PredicateTypeHandler},</otherwise>
+    </choose>
   	#{status,jdbcType=OTHER},
     #{downloadLink,jdbcType=VARCHAR},
     #{size,jdbcType=BIGINT},
