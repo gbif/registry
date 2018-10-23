@@ -157,7 +157,7 @@ public class DatasetOccurrenceDownloadIT {
    */
   @Test
   public void testAddAndGetOccurrenceDatasetOne() {
-    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
+    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset = createTestDataset();
     
     occurrenceDownloadService.create(occurrenceDownload);
@@ -177,7 +177,7 @@ public class DatasetOccurrenceDownloadIT {
    */
   @Test
   public void testAddAndGetOccurrenceDatasetMany() {
-    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
+    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset1 = createTestDataset();
     final Dataset testDataset2 = createTestDataset();
     final Dataset testDataset3 = createTestDataset();

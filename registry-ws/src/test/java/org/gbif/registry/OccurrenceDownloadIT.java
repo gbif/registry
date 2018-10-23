@@ -18,20 +18,22 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 import java.security.AccessControlException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 import javax.validation.ValidationException;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
-import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
@@ -97,20 +99,16 @@ public class OccurrenceDownloadIT {
         client.getInstance(SimplePrincipalProvider.class)});
   }
 
+
   /**
-   * Creates {@link Download} instance with test data.
+   * Creates {@link Download} instance with test data using a predicate request.
    * The key is generated randomly using the class java.util.UUID.
    * The instance generated should be ready and valid to be persisted.
    */
-  protected static Download getTestInstance() {
+  protected static Download getTestInstanceDownload() {
     Download download = new Download();
-    final Collection<String> emails = Arrays.asList("downloadtest@gbif.org");
-    DownloadRequest request =
-      new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"), TestConstants.TEST_ADMIN, emails,
-        true, DownloadFormat.DWCA);
     download.setKey(UUID.randomUUID().toString());
     download.setStatus(Download.Status.PREPARING);
-    download.setRequest(request);
     download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
     download.setEraseAfter(Date.from(OffsetDateTime.now(ZoneOffset.UTC).plusMonths(6).toInstant()));
@@ -118,9 +116,35 @@ public class OccurrenceDownloadIT {
     return download;
   }
 
+  /**
+   * Creates {@link Download} instance with test data using a predicate request.
+   * The key is generated randomly using the class java.util.UUID.
+   * The instance generated should be ready and valid to be persisted.
+   */
+  protected static Download getTestInstancePredicateDownload() {
+    Download download = getTestInstanceDownload();;
+    download.setRequest(
+      new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
+        TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
+        true, DownloadFormat.DWCA));
+    return download;
+  }
+
+  /**
+   * Creates {@link Download} instance with test data using a predicate request.
+   * The key is generated randomly using the class java.util.UUID.
+   * The instance generated should be ready and valid to be persisted.
+   */
+  protected static Download getTestInstanceSqlDownload() {
+    Download download = getTestInstanceDownload();
+    download.setRequest(new SqlDownloadRequest("SELECT datasetKey FROM occurrence", TestConstants.TEST_ADMIN,
+      Collections.singleton("downloadtest@gbif.org"), true));
+    return download;
+  }
+
   @Before
   public void setup() {
-    setPrincipal(TestConstants.TEST_ADMIN);
+    setPrincipal();
   }
 
 
@@ -129,7 +153,15 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testCreate() {
-    occurrenceDownloadService.create(getTestInstance());
+    occurrenceDownloadService.create(getTestInstancePredicateDownload());
+  }
+
+  /**
+   * Persists a valid {@link Download} instance.
+   */
+  @Test
+  public void testCreateSqlDownload() {
+    occurrenceDownloadService.create(getTestInstanceSqlDownload());
   }
 
   /**
@@ -137,7 +169,7 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testCreateAndGet() {
-    Download occurrenceDownload = getTestInstance();
+    Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownloadService.create(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
@@ -148,7 +180,7 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testDownloadFormatPersistence() {
-    Download occurrenceDownload = getTestInstance();
+    Download occurrenceDownload = getTestInstancePredicateDownload();
     DownloadFormat format = occurrenceDownload.getRequest().getFormat();
     occurrenceDownloadService.create(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
@@ -161,7 +193,7 @@ public class OccurrenceDownloadIT {
    */
   @Test(expected = ValidationException.class)
   public void testCreateWithNullStatus() {
-    Download occurrenceDownload = getTestInstance();
+    Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownload.setStatus(null);
     occurrenceDownloadService.create(occurrenceDownload);
   }
@@ -171,12 +203,20 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testList() {
-    for (int i = 1; i <= 5; i++) {
-      occurrenceDownloadService.create(getTestInstance());
+    //3 PredicateDownloads
+    for (int i = 1; i <= 3; i++) {
+      occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
 
-    assertTrue("List operation should return 5 records",
-      occurrenceDownloadService.list(new PagingRequest(0, 20), null).getResults().size() > 0);
+    //3 SqlDownloads
+    for (int i = 1; i <= 3; i++) {
+      occurrenceDownloadService.create(getTestInstanceSqlDownload());
+    }
+
+    PagingResponse<Download> downloads = occurrenceDownloadService.list(new PagingRequest(0, 20), null);
+    assertEquals(6, downloads.getResults().size());
+    assertEquals(3, downloads.getResults().stream().filter(d -> d.getRequest() instanceof SqlDownloadRequest).count());
+    assertEquals(3, downloads.getResults().stream().filter(d -> d.getRequest() instanceof PredicateDownloadRequest).count());
   }
 
   /**
@@ -187,7 +227,7 @@ public class OccurrenceDownloadIT {
     // This test applies to web service calls only, requires a security context.
     if (simplePrincipalProvider != null) {
       for (int i = 1; i <= 5; i++) {
-        occurrenceDownloadService.create(getTestInstance());
+        occurrenceDownloadService.create(getTestInstancePredicateDownload());
       }
       final Injector clientBasicAuth = webserviceBasicAuthClient(TestConstants.TEST_USER, TestConstants.TEST_USER);
       OccurrenceDownloadService downloadServiceAuth = clientBasicAuth.getInstance(OccurrenceDownloadService.class);
@@ -206,7 +246,7 @@ public class OccurrenceDownloadIT {
   @Test
   public void testListByUser() {
     for (int i = 1; i <= 5; i++) {
-      occurrenceDownloadService.create(getTestInstance());
+      occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue("List by user operation should return 5 records",
       occurrenceDownloadService.listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5),null).getResults().size() > 0);
@@ -218,7 +258,7 @@ public class OccurrenceDownloadIT {
   @Test
   public void testListByStatus() {
     for (int i = 1; i <= 5; i++) {
-      occurrenceDownloadService.create(getTestInstance());
+      occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue("List by user operation should return 5 records",
                occurrenceDownloadService.list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES).getResults().size() > 0);
@@ -230,7 +270,7 @@ public class OccurrenceDownloadIT {
   @Test
   public void testListByUserAndStatus() {
     for (int i = 1; i <= 5; i++) {
-      occurrenceDownloadService.create(getTestInstance());
+      occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue("List by user and status operation should return 5 records",
                occurrenceDownloadService.listByUser(TestConstants.TEST_ADMIN, new PagingRequest(0, 5),
@@ -242,7 +282,7 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testUpdateStatus() {
-    Download occurrenceDownload = getTestInstance();
+    Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownloadService.create(occurrenceDownload);
     occurrenceDownload.setStatus(Download.Status.RUNNING);
     occurrenceDownload.setSize(200L);
@@ -251,9 +291,9 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setLicense(License.CC0_1_0);
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertTrue(occurrenceDownload2.getStatus() == Download.Status.RUNNING);
-    assertTrue(occurrenceDownload2.getSize() == 200L);
-    assertTrue(occurrenceDownload2.getTotalRecords() == 600L);
+    assertSame(Download.Status.RUNNING, occurrenceDownload2.getStatus());
+    assertSame(200L, occurrenceDownload2.getSize());
+    assertSame(600L, occurrenceDownload2.getTotalRecords());
   }
 
 
@@ -262,7 +302,7 @@ public class OccurrenceDownloadIT {
    */
   @Test
   public void testUpdateStatusCompleted() {
-    Download occurrenceDownload = getTestInstance();
+    Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownloadService.create(occurrenceDownload);
     // reload to get latest db modifications like created date
     occurrenceDownload = occurrenceDownloadService.get(occurrenceDownload.getKey());
@@ -273,17 +313,17 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setDoi(new DOI("doi:10.1234/1ASCDU"));
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertTrue(occurrenceDownload2.getStatus() == Download.Status.SUCCEEDED);
-    assertTrue(occurrenceDownload2.getModified() != null);
-    assertTrue(occurrenceDownload2.getSize() == 200L);
-    assertTrue(occurrenceDownload2.getTotalRecords() == 600L);
+    assertSame(Download.Status.SUCCEEDED, occurrenceDownload2.getStatus());
+    assertNotNull(occurrenceDownload2.getModified());
+    assertSame(200L, occurrenceDownload2.getSize());
+    assertSame(600L, occurrenceDownload2.getTotalRecords());
   }
 
 
-  private void setPrincipal(String username) {
+  private void setPrincipal() {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(username);
+      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
     }
   }
 
