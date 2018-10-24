@@ -19,7 +19,6 @@ import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.SqlDownloadRequest;
@@ -41,6 +40,7 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
 import org.gbif.mybatis.guice.MyBatisModule;
 import org.gbif.mybatis.type.CountryTypeHandler;
 import org.gbif.mybatis.type.LanguageTypeHandler;
@@ -150,6 +150,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Comment").to(Comment.class);
       addAlias("Metadata").to(Metadata.class);
       addAlias("Download").to(Download.class);
+      addAlias("DownloadRequest").to(DownloadRequest.class);
+      addAlias("PredicateDownloadRequest").to(PredicateDownloadRequest.class);
+      addAlias("SqlDownloadRequest").to(SqlDownloadRequest.class);
       addAlias("DatasetOccurrenceDownload").to(DatasetOccurrenceDownloadUsage.class);
       addAlias("DatasetProcessStatus").to(DatasetProcessStatus.class);
       addAlias("CrawlJob").to(CrawlJob.class);
@@ -172,10 +175,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
-      addAlias("SQLDownloadRequest").to(SqlDownloadRequest.class);
-      addAlias("PredicateDownloadRequest").to(PredicateDownloadRequest.class);
-      addAlias("DownloadFormat").to(DownloadFormat.class);
-      addAlias("DownloadRequest").to(DownloadRequest.class);
+
     }
 
     @Override
