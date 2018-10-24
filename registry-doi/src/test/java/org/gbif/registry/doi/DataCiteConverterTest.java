@@ -15,8 +15,11 @@ import java.util.UUID;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -142,8 +145,10 @@ public class DataCiteConverterTest {
     download.setSize(100);
     download.setStatus(Download.Status.SUCCEEDED);
     download.setTotalRecords(10);
-    DownloadRequest downloadRequest = new PredicateDownloadRequest();
+    PredicateDownloadRequest downloadRequest = new PredicateDownloadRequest();
     downloadRequest.setCreator("dev@gbif.org");
+    downloadRequest.setPredicate(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "3"));
+    downloadRequest.setFormat(DownloadFormat.DWCA);
     download.setRequest(downloadRequest);
 
     GbifUser user = new GbifUser();
@@ -157,7 +162,7 @@ public class DataCiteConverterTest {
     when(tl.getDatasetTitle(anyString())).thenReturn("PonTaurus");
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
 
-    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
+     DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
     String xml = DataCiteValidator.toXml(download.getDoi(), metadata);
     assertTrue(xml.contains(du1.getDatasetDOI().getDoiName()));
     assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
