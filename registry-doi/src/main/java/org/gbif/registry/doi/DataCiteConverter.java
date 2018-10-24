@@ -469,7 +469,7 @@ public class DataCiteConverter {
    * Tries to get the human readable version of the download query, if fails returns the raw query.
    */
   private static String getFilterQuery(Download d, TitleLookup titleLookup) {
-    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest) d.getRequest()).getSQL()
+    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest) d.getRequest()).getSql()
         : new HumanFilterBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
   }
 }
