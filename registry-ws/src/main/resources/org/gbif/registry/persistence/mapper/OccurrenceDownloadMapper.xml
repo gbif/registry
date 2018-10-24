@@ -165,7 +165,7 @@
   </select>
 
   <!-- Append safe ordering -->
-  <select id="listByStatus" resultType="Download">
+  <select id="listByStatus" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     WHERE status IN
