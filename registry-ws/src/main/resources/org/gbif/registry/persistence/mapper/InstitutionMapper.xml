@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.InstitutionMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="INSTITUTION_MAP" type="Institution" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="disciplines" column="discipline" typeHandler="StringArrayTypeHandler"/>
+    <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
+    <association property="address" column="address_key" select="listAddress" />
+    <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
+    <collection property="contacts" column="key" select="listStaff"/>
+    <collection property="tags" column="key" select="listTags"/>
+    <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <!-- TODO: subqueries -->
+  </resultMap>
+
+  <sql id="INSTITUTION_WRITE_FIELDS">
+    key, code, name, description, type, active, homepage, catalog_url, api_url, institutional_governance, discipline,
+    latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
+    taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
+    created_by, modified_by, created, modified
+  </sql>
+
+  <sql id="INSTITUTION_READ_FIELDS">
+    i.key, i.code, i.name, i.description, i.type, i.active, i.homepage, i.catalog_url, i.api_url,
+    i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
+    i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
+    i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
+    i.created, i.modified, i.deleted
+  </sql>
+
+  <sql id="INSTITUTION_PARAMS_CREATE">
+    #{key,jdbcType=OTHER},
+    #{code,jdbcType=VARCHAR},
+    #{name,jdbcType=VARCHAR},
+    #{description,jdbcType=VARCHAR},
+    #{type,jdbcType=OTHER},
+    #{active,jdbcType=BOOLEAN},
+    #{homepage,jdbcType=VARCHAR},
+    #{catalogUrl,jdbcType=VARCHAR},
+    #{apiUrl,jdbcType=VARCHAR},
+    #{institutionalGovernance,jdbcType=OTHER},
+    #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{latitude,jdbcType=NUMERIC},
+    #{longitude,jdbcType=NUMERIC},
+    #{mailingAddress.key,jdbcType=INTEGER},
+    #{address.key,jdbcType=INTEGER},
+    #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{foundingDate,jdbcType=DATE},
+    #{geographicDescription,jdbcType=VARCHAR},
+    #{taxonomicDescription,jdbcType=VARCHAR},
+    #{numberSpecimens,jdbcType=INTEGER},
+    #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    #{logoUrl,jdbcType=VARCHAR},
+    #{citesPermitNumber,jdbcType=VARCHAR},
+    #{createdBy,jdbcType=VARCHAR},
+    #{modifiedBy,jdbcType=VARCHAR},
+    now(), <!-- created -->
+    now() <!-- modified -->
+  </sql>
+
+  <sql id="INSTITUTION_PARAMS_UPDATE">
+    key = #{key,jdbcType=OTHER},
+    code = #{code,jdbcType=VARCHAR},
+    name = #{name,jdbcType=VARCHAR},
+    description = #{description,jdbcType=VARCHAR},
+    type = #{type,jdbcType=OTHER},
+    active = #{active,jdbcType=BOOLEAN},
+    homepage = #{homepage,jdbcType=VARCHAR},
+    catalog_url = #{catalogUrl,jdbcType=VARCHAR},
+    api_url = #{apiUrl,jdbcType=VARCHAR},
+    institutional_governance = #{institutionalGovernance,jdbcType=OTHER},
+    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    latitude = #{latitude,jdbcType=NUMERIC},
+    longitude = #{longitude,jdbcType=NUMERIC},
+    mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
+    address_key = #{address.key,jdbcType=INTEGER},
+    additional_names = #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    founding_date = #{foundingDate,jdbcType=DATE},
+    geographic_description = #{geographicDescription,jdbcType=VARCHAR},
+    taxonomic_description = #{taxonomicDescription,jdbcType=VARCHAR},
+    number_specimens = #{numberSpecimens,jdbcType=INTEGER},
+    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    logo_url = #{logoUrl,jdbcType=VARCHAR},
+    cites_permit_number = #{citesPermitNumber,jdbcType=VARCHAR},
+    created_by = #{createdBy,jdbcType=VARCHAR},
+    modified_by = #{modifiedBy,jdbcType=VARCHAR},
+    created = now(), <!-- created -->
+    modified = now() <!-- modified -->
+  </sql>
+
+  <sql id="SIMPLE_SEARCH">
+    query @@ fulltext_search
+    OR EXISTS(
+    SELECT key
+    FROM address maddr
+    WHERE maddr.key=i.mailing_address_key AND query @@ maddr.fulltext_search
+    )
+    OR EXISTS(
+    SELECT key
+    FROM address addr
+    WHERE addr.key=i.address_key AND query @@ addr.fulltext_search
+    )
+  </sql>
+
+  <insert id="create" parameterType="Institution">
+    INSERT INTO institution(<include refid="INSTITUTION_WRITE_FIELDS"/>)
+    VALUES(<include refid="INSTITUTION_PARAMS_CREATE"/>)
+  </insert>
+
+  <update id="update" parameterType="Institution">
+    UPDATE institution
+    SET <include refid="INSTITUTION_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE institution
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="INSTITUTION_MAP">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    WHERE i.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="listStaff" resultMap="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_READ_FIELDS"/>
+    FROM collection_staff INNER JOIN institution_contact ON collection_staff_key = key
+    WHERE institution_key = #{key,jdbcType=OTHER}
+    ORDER BY created ASC
+  </select>
+
+  <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.AddressMapper.ADDRESS_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.AddressMapper.ADDRESS_READ_FIELDS"/>
+    FROM address
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="list" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    WHERE i.deleted IS NULL
+    ORDER BY i.created DESC, i.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <!-- Basic paging search functionality -->
+  <select id="search" resultMap="INSTITUTION_MAP">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    <if test="query != null" >
+      JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/>
+    </if>
+    WHERE i.deleted IS NULL
+    ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <!-- TAGS -->
+  <insert id="addTag">
+    INSERT INTO institution_tag(institution_key,tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{tagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listTags" resultType="Tag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
+    FROM tag INNER JOIN institution_tag ON tag_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
+  <delete id="deleteTag">
+    DELETE FROM tag USING institution_tag
+    WHERE
+    tag_key = tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- IDENTIFIERS -->
+  <insert id="addIdentifier">
+    INSERT INTO institution_identifier(institution_key,identifier_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{identifierKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listIdentifiers" resultType="Identifier">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    FROM identifier INNER JOIN institution_identifier ON identifier_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of identifier to trigger cascade delete of the join table -->
+  <delete id="deleteIdentifier">
+    DELETE FROM identifier USING institution_identifier
+    WHERE
+    identifier_key = identifier.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+  </delete>
+
+</mapper>
