@@ -134,6 +134,17 @@
     </if>
   </select>
 
+  <select id="listCollectionsByInstitution" resultMap="COLLECTION_MAP" parameterType="Pageable">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    WHERE c.institution_key = #{institutionKey,jdbcType=OTHER}
+    AND c.deleted IS NULL
+    ORDER BY c.created DESC, c.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="COLLECTION_MAP">
     SELECT <include refid="COLLECTION_READ_FIELDS"/>
