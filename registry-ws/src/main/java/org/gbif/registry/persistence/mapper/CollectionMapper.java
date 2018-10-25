@@ -21,8 +21,9 @@ public interface CollectionMapper extends TaggableMapper, IdentifiableMapper {
 
   List<Collection> list(@Nullable @Param("page") Pageable page);
 
-  List<Collection> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
+  List<Collection> listCollectionsByInstitution(
+    @Param("institutionKey") UUID institutionKey, @Nullable @Param("page") Pageable page);
 
-  // TODO: collections by institution or by staff
+  List<Collection> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
 
 }

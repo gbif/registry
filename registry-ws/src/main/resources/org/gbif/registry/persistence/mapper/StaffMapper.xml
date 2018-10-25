@@ -123,4 +123,26 @@
     </if>
   </select>
 
+  <select id="listStaffByInstitution" resultMap="STAFF_MAP" parameterType="Pageable">
+    SELECT <include refid="STAFF_READ_FIELDS"/>
+    FROM collection_staff s
+    WHERE s.primary_institution_key = #{institutionKey,jdbcType=OTHER}
+    AND s.deleted IS NULL
+    ORDER BY s.created DESC, s.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="listStaffByCollection" resultMap="STAFF_MAP" parameterType="Pageable">
+    SELECT <include refid="STAFF_READ_FIELDS"/>
+    FROM collection_staff s
+    WHERE s.primary_collection_key = #{collectionKey,jdbcType=OTHER}
+    AND s.deleted IS NULL
+    ORDER BY s.created DESC, s.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
 </mapper>
