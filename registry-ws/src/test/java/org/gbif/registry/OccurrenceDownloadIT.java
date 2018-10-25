@@ -295,8 +295,8 @@ public class OccurrenceDownloadIT {
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertSame(Download.Status.RUNNING, occurrenceDownload2.getStatus());
-    assertSame(200L, occurrenceDownload2.getSize());
-    assertSame(600L, occurrenceDownload2.getTotalRecords());
+    assertEquals(200, occurrenceDownload2.getSize());
+    assertEquals(600, occurrenceDownload2.getTotalRecords());
   }
 
 
@@ -318,8 +318,8 @@ public class OccurrenceDownloadIT {
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertSame(Download.Status.SUCCEEDED, occurrenceDownload2.getStatus());
     assertNotNull(occurrenceDownload2.getModified());
-    assertSame(200L, occurrenceDownload2.getSize());
-    assertSame(600L, occurrenceDownload2.getTotalRecords());
+    assertEquals(200L, occurrenceDownload2.getSize());
+    assertEquals(600L, occurrenceDownload2.getTotalRecords());
   }
 
 
