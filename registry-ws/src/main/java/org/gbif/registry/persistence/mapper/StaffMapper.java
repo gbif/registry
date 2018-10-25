@@ -21,6 +21,12 @@ public interface StaffMapper {
 
   List<Staff> list(@Nullable @Param("page") Pageable page);
 
+  List<Staff> listStaffByInstitution(
+    @Param("institutionKey") UUID institutionKey, @Nullable @Param("page") Pageable page);
+
+  List<Staff> listStaffByCollection(
+    @Param("collectionKey") UUID collectionKey, @Nullable @Param("page") Pageable page);
+
   List<Staff> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
 
 
