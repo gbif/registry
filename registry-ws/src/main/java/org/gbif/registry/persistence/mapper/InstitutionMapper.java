@@ -23,4 +23,8 @@ public interface InstitutionMapper extends TaggableMapper, IdentifiableMapper {
 
   List<Institution> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
 
+  int count();
+
+  int countWithFilter(@Nullable @Param("query") String query);
+
 }
