@@ -165,13 +165,13 @@
     </if>
   </select>
 
-  <select id="count" resultType="Integer">
+  <select id="count" resultType="Long">
     SELECT COUNT(*)
     FROM institution
     WHERE deleted IS NULL
   </select>
 
-  <select id="countWithFilter" resultType="Integer">
+  <select id="countWithFilter" resultType="Long">
     SELECT COUNT(*)
     FROM institution i <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
     WHERE i.deleted IS NULL
