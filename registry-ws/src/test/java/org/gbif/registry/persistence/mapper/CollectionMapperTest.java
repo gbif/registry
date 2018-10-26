@@ -67,9 +67,9 @@ public class CollectionMapperTest {
     collection.setPreservationTypes(preservationTypes);
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
+    assertNotNull(address.getKey());
 
     collection.setAddress(address);
 
@@ -83,7 +83,7 @@ public class CollectionMapperTest {
     assertEquals(2, collectionStored.getPreservationTypes().size());
 
     // assert address
-    assertEquals((Integer) 1, collectionStored.getAddress().getKey());
+    assertNotNull(collectionStored.getAddress().getKey());
     assertEquals("dummy address", collectionStored.getAddress().getAddress());
 
     // update entity
@@ -100,7 +100,6 @@ public class CollectionMapperTest {
     assertEquals(3, collectionStored.getPreservationTypes().size());
 
     // assert address
-    assertEquals((Integer) 1, collectionStored.getAddress().getKey());
     assertEquals("dummy address", collectionStored.getAddress().getAddress());
 
     // delete address
@@ -183,7 +182,6 @@ public class CollectionMapperTest {
     col1.setModifiedBy("test");
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
 

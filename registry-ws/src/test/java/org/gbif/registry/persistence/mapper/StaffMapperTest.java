@@ -59,9 +59,9 @@ public class StaffMapperTest {
     staff.setModifiedBy("TEST");
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
+    assertNotNull(address.getKey());
 
     staff.setMailingAddress(address);
 
@@ -74,7 +74,7 @@ public class StaffMapperTest {
     assertEquals("test@test.com", staffStored.getEmail());
 
     // assert address
-    assertEquals((Integer) 1, staffStored.getMailingAddress().getKey());
+    assertNotNull(staffStored.getMailingAddress().getKey());
     assertEquals("dummy address", staffStored.getMailingAddress().getAddress());
 
     staff.setFirstName("FN2");
@@ -89,7 +89,6 @@ public class StaffMapperTest {
     assertEquals("test@test.com", staffStored.getEmail());
 
     // assert address
-    assertEquals((Integer) 1, staffStored.getMailingAddress().getKey());
     assertEquals("dummy address", staffStored.getMailingAddress().getAddress());
 
     // delete address
@@ -147,7 +146,6 @@ public class StaffMapperTest {
     s1.setModifiedBy("test");
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
 

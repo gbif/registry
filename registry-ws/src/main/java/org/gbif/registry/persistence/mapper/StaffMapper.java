@@ -29,5 +29,4 @@ public interface StaffMapper {
 
   List<Staff> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
 
-
 }

@@ -41,7 +41,6 @@
   </sql>
 
   <sql id="STAFF_PARAMS_UPDATE">
-    key = #{key,jdbcType=OTHER},
     first_name = #{firstName,jdbcType=VARCHAR},
     last_name = #{lastName,jdbcType=VARCHAR},
     position = #{position,jdbcType=VARCHAR},
