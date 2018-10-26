@@ -158,6 +158,24 @@
     </if>
   </select>
 
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM collection c
+    WHERE c.deleted IS NULL
+  </select>
+
+  <select id="countWithFilter" resultType="Integer">
+    SELECT COUNT(*)
+    FROM collection c <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
+    WHERE c.deleted IS NULL
+  </select>
+
+  <select id="countByInstitution" resultType="Integer">
+    SELECT COUNT(*)
+    FROM collection c
+    WHERE c.institution_key = #{institutionKey,jdbcType=OTHER} AND c.deleted IS NULL
+  </select>
+
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO collection_tag(collection_key,tag_key)

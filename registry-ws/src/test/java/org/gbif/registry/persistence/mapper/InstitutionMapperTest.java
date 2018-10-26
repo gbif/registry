@@ -206,4 +206,26 @@ public class InstitutionMapperTest {
     assertEquals(1, cols.size());
   }
 
+  @Test
+  public void countTest() {
+    Institution inst1 = new Institution();
+    inst1.setKey(UUID.randomUUID());
+    inst1.setCode("i1");
+    inst1.setName("n1");
+    inst1.setCreatedBy("test");
+    inst1.setModifiedBy("test");
+
+    Institution inst2 = new Institution();
+    inst2.setKey(UUID.randomUUID());
+    inst2.setCode("i2");
+    inst2.setName("n2");
+    inst2.setCreatedBy("test");
+    inst2.setModifiedBy("test");
+
+    institutionMapper.create(inst1);
+    institutionMapper.create(inst2);
+
+    assertEquals(2, institutionMapper.count());
+  }
+
 }
