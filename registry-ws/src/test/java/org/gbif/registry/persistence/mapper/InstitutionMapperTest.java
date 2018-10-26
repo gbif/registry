@@ -72,9 +72,9 @@ public class InstitutionMapperTest {
     institution.setAdditionalNames(additionalNames);
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
+    assertNotNull(address.getKey());
 
     institution.setAddress(address);
 
@@ -91,7 +91,7 @@ public class InstitutionMapperTest {
     assertTrue(institutionStored.isActive());
 
     // assert address
-    assertEquals((Integer) 1, institutionStored.getAddress().getKey());
+    assertNotNull(institutionStored.getAddress().getKey());
     assertEquals("dummy address", institutionStored.getAddress().getAddress());
 
     // update entity
@@ -110,7 +110,6 @@ public class InstitutionMapperTest {
     assertTrue(institutionStored.isActive());
 
     // assert address
-    assertEquals((Integer) 1, institutionStored.getAddress().getKey());
     assertEquals("dummy address", institutionStored.getAddress().getAddress());
 
     // delete address
@@ -170,7 +169,6 @@ public class InstitutionMapperTest {
     inst1.setModifiedBy("test");
 
     Address address = new Address();
-    address.setKey(1);
     address.setAddress("dummy address");
     addressMapper.create(address);
 
