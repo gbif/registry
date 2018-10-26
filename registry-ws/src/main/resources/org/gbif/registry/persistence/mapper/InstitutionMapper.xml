@@ -131,7 +131,7 @@
 
   <select id="listStaff" resultMap="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_READ_FIELDS"/>
-    FROM collection_staff INNER JOIN institution_contact ON collection_staff_key = key
+    FROM collection_staff s INNER JOIN institution_contact ON collection_staff_key = s.key
     WHERE institution_key = #{key,jdbcType=OTHER}
     ORDER BY created ASC
   </select>
