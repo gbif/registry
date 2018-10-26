@@ -1,8 +1,6 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.database.DatabaseInitializer;
@@ -10,8 +8,6 @@ import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.guice.RegistryTestModules;
 
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +20,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class StaffMapperTest {
 
