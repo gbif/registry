@@ -8,7 +8,7 @@
   </resultMap>
 
   <sql id="ADDRESS_WRITE_FIELDS">
-    key, address, city, province, postal_code, country
+    address, city, province, postal_code, country
   </sql>
 
   <sql id="ADDRESS_READ_FIELDS">
@@ -16,7 +16,6 @@
   </sql>
 
   <sql id="ADDRESS_PARAMS_CREATE">
-    #{key,jdbcType=INTEGER},
     #{address,jdbcType=VARCHAR},
     #{city,jdbcType=VARCHAR},
     #{province,jdbcType=VARCHAR},
@@ -25,7 +24,6 @@
   </sql>
 
   <sql id="ADDRESS_PARAMS_UPDATE">
-    key = #{key,jdbcType=INTEGER},
     address = #{address,jdbcType=VARCHAR},
     city = #{city,jdbcType=VARCHAR},
     province = #{province,jdbcType=VARCHAR},
@@ -33,7 +31,7 @@
     country = #{country,jdbcType=VARCHAR}
   </sql>
 
-  <insert id="create" parameterType="Address">
+  <insert id="create" parameterType="Address" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO address(<include refid="ADDRESS_WRITE_FIELDS"/>)
     VALUES(<include refid="ADDRESS_PARAMS_CREATE"/>)
   </insert>

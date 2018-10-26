@@ -50,7 +50,6 @@
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
-    key = #{key,jdbcType=OTHER},
     code = #{code,jdbcType=VARCHAR},
     name = #{name,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
