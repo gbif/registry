@@ -29,4 +29,12 @@ public interface StaffMapper {
 
   List<Staff> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
 
+  int count();
+
+  int countWithFilter(@Nullable @Param("query") String query);
+
+  int countByInstitution(@Param("institutionKey") UUID institutionKey);
+
+  int countByCollection(@Param("collectionKey") UUID collectionKey);
+
 }
