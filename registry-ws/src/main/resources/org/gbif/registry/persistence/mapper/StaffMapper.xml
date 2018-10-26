@@ -18,7 +18,7 @@
   <sql id="STAFF_READ_FIELDS">
     s.key, s.first_name, s.last_name, s.position, s.area_responsibility, s.research_pursuits, s.phone, s.fax, s.email,
     s.mailing_address_key, s.primary_institution_key, s.primary_collection_key, s.created_by, s.modified_by,
-    s.created, s.modified
+    s.created, s.modified, s.deleted
   </sql>
 
   <sql id="STAFF_PARAMS_CREATE">
