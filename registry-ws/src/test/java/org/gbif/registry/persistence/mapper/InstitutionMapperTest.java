@@ -1,28 +1,20 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.DoiData;
-import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
-import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.guice.RegistryTestModules;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.google.inject.Injector;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
