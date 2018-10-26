@@ -1,10 +1,12 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
@@ -85,11 +87,133 @@ public class InstitutionMapperTest {
     assertEquals("dummy description", institutionStored.getDescription());
     assertEquals("test", institutionStored.getCreatedBy());
     assertEquals(2, institutionStored.getAdditionalNames().size());
+    assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
     assertTrue(institutionStored.isActive());
 
     // assert address
     assertEquals((Integer) 1, institutionStored.getAddress().getKey());
     assertEquals("dummy address", institutionStored.getAddress().getAddress());
+
+    // update entity
+    institution.setDescription("Another dummy description");
+    additionalNames.add("name 4");
+    institution.setAdditionalNames(additionalNames);
+    institutionMapper.update(institution);
+    institutionStored = institutionMapper.get(key);
+
+    assertEquals("CODE", institutionStored.getCode());
+    assertEquals("NAME", institutionStored.getName());
+    assertEquals("Another dummy description", institutionStored.getDescription());
+    assertEquals("test", institutionStored.getCreatedBy());
+    assertEquals(3, institutionStored.getAdditionalNames().size());
+    assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
+    assertTrue(institutionStored.isActive());
+
+    // assert address
+    assertEquals((Integer) 1, institutionStored.getAddress().getKey());
+    assertEquals("dummy address", institutionStored.getAddress().getAddress());
+
+    // delete address
+    institution.setAddress(null);
+    institutionMapper.update(institution);
+    institutionStored = institutionMapper.get(key);
+    assertNull(institutionStored.getAddress());
+
+    // delete entity
+    institutionMapper.delete(key);
+    institutionStored = institutionMapper.get(key);
+    assertNotNull(institutionStored.getDeleted());
+  }
+
+  @Test
+  public void listTest() {
+    Institution inst1 = new Institution();
+    inst1.setKey(UUID.randomUUID());
+    inst1.setCode("i1");
+    inst1.setName("n1");
+    inst1.setCreatedBy("test");
+    inst1.setModifiedBy("test");
+
+    Institution inst2 = new Institution();
+    inst2.setKey(UUID.randomUUID());
+    inst2.setCode("i2");
+    inst2.setName("n2");
+    inst2.setCreatedBy("test");
+    inst2.setModifiedBy("test");
+
+    institutionMapper.create(inst1);
+    institutionMapper.create(inst2);
+
+    Pageable pageable = new Pageable() {
+      @Override
+      public int getLimit() {
+        return 5;
+      }
+
+      @Override
+      public long getOffset() {
+        return 0;
+      }
+    };
+
+    List<Institution> cols = institutionMapper.list(pageable);
+    assertEquals(2, cols.size());
+  }
+
+  @Test
+  public void searchTest() {
+    Institution inst1 = new Institution();
+    inst1.setKey(UUID.randomUUID());
+    inst1.setCode("i1");
+    inst1.setName("n1");
+    inst1.setCreatedBy("test");
+    inst1.setModifiedBy("test");
+
+    Address address = new Address();
+    address.setKey(1);
+    address.setAddress("dummy address");
+    addressMapper.create(address);
+
+    inst1.setAddress(address);
+
+    Institution inst2 = new Institution();
+    inst2.setKey(UUID.randomUUID());
+    inst2.setCode("i2");
+    inst2.setName("n1");
+    inst2.setCreatedBy("test");
+    inst2.setModifiedBy("test");
+
+    institutionMapper.create(inst1);
+    institutionMapper.create(inst2);
+
+    Pageable pageable = new Pageable() {
+      @Override
+      public int getLimit() {
+        return 5;
+      }
+
+      @Override
+      public long getOffset() {
+        return 0;
+      }
+    };
+
+    List<Institution> cols = institutionMapper.search("i1 n1", pageable);
+    assertEquals(1, cols.size());
+    assertEquals("i1", cols.get(0).getCode());
+    assertEquals("n1", cols.get(0).getName());
+
+    cols = institutionMapper.search("i2 i1", pageable);
+    assertEquals(0, cols.size());
+
+    cols = institutionMapper.search("i3", pageable);
+    assertEquals(0, cols.size());
+
+    cols = institutionMapper.search("n1", pageable);
+    assertEquals(2, cols.size());
+
+    cols = institutionMapper.search("dummy address", pageable);
+    assertEquals(1, cols.size());
   }
 
 }
