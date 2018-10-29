@@ -1,10 +1,12 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -18,16 +20,38 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.annotation.security.RolesAllowed;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
+import javax.validation.groups.Default;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
+
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// TODO: validations, trim and other annotations. Security and transactional too
-
+@Singleton
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@Path("institution")
 public class InstitutionResource implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
@@ -47,12 +71,21 @@ public class InstitutionResource implements InstitutionService {
     this.tagMapper = tagMapper;
   }
 
-  // TODO: create another method for the ws since the signature changes
-
+  @POST
   @Trim
+  @NullToNotFound
+  @Validate
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public UUID create(@NotNull Institution entity, @Context SecurityContext security) {
+    entity.setCreatedBy(security.getUserPrincipal().getName());
+    entity.setModifiedBy(security.getUserPrincipal().getName());
+    return create(entity);
+  }
+
   @Transactional
+  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public UUID create(@NotNull Institution institution) {
+  public UUID create(@Valid Institution institution) {
     checkArgument(
         institution.getKey() == null, "Unable to create an institutio which already has a key");
 
@@ -91,19 +124,41 @@ public class InstitutionResource implements InstitutionService {
     return institution.getKey();
   }
 
-  // TODO: ws
+  @DELETE
+  @Path("{key}")
+  @NullToNotFound
+  @Validate
   @Transactional
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public void delete(@PathParam("key") @NotNull UUID key, @Context SecurityContext security) {
+    Institution institutionToDelete = get(key);
+    institutionToDelete.setModifiedBy(security.getUserPrincipal().getName());
+    update(institutionToDelete);
+
+    delete(key);
+  }
+
+  @Transactional
+  @Validate
   @Override
   public void delete(@NotNull UUID uuid) {
-    // TODO: modifiedby
     institutionMapper.delete(uuid);
   }
 
-  // TODO: ws
+  @GET
+  @Path("{key}")
+  @Nullable
   @NullToNotFound
+  @Validate(validateReturnedValue = true)
   @Override
-  public Institution get(@NotNull UUID uuid) {
+  public Institution get(@PathParam("key") @NotNull UUID uuid) {
     return institutionMapper.get(uuid);
+  }
+
+  @GET
+  public PagingResponse<Institution> list(
+      @Nullable @QueryParam("q") String query, @Nullable @Context Pageable page) {
+    return Strings.isNullOrEmpty(query) ? list(page) : list(query, page);
   }
 
   @Override
@@ -123,12 +178,28 @@ public class InstitutionResource implements InstitutionService {
     long total = institutionMapper.countWithFilter(query);
 
     return new PagingResponse<>(
-      pageable.getOffset(), pageable.getLimit(), total, institutionMapper.search(query, pageable));
+        pageable.getOffset(),
+        pageable.getLimit(),
+        total,
+        institutionMapper.search(query, pageable));
+  }
+
+  @DELETE
+  @Path("{key}")
+  @NullToNotFound
+  @Validate
+  @Transactional
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public void update(@PathParam("key") @NotNull UUID key, @Context SecurityContext security) {
+    Institution institutionToDelete = get(key);
+    institutionToDelete.setModifiedBy(security.getUserPrincipal().getName());
+    update(institutionToDelete);
   }
 
   @Transactional
+  @Validate
   @Override
-  public void update(@NotNull Institution institution) {
+  public void update(@NotNull @Valid Institution institution) {
     Institution institutionOld = get(institution.getKey());
 
     if (institutionOld.getDeleted() != null) {
@@ -142,19 +213,90 @@ public class InstitutionResource implements InstitutionService {
     institutionMapper.update(institution);
   }
 
+  @GET
+  @Path("{key}/contact")
+  @Nullable
+  @NullToNotFound
+  @Validate(validateReturnedValue = true)
+  @Override
+  public List<Staff> listContacts(@PathParam("key") @NotNull UUID uuid) {
+    return institutionMapper.listContacts(uuid);
+  }
+
+  @POST
+  @Path("{key}/contact/{staffKey}")
+  @Validate
+  @Transactional
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
+  public void addContact(
+      @PathParam("key") @NotNull UUID institutionKey,
+      @PathParam("staffKey") @NotNull UUID staffKey) {
+    institutionMapper.addContact(institutionKey, staffKey);
+  }
+
+  @DELETE
+  @Path("{key}/contact/{staffKey}")
+  @Validate
+  @Transactional
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
+  public void removeContact(
+      @PathParam("key") @NotNull UUID institutionKey,
+      @PathParam("staffKey") @NotNull UUID staffKey) {
+    institutionMapper.removeContact(institutionKey, staffKey);
+  }
+
+  @POST
+  @Path("{key}/identifier")
+  @Validate(groups = {PrePersist.class, Default.class})
+  @Trim
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public int addIdentifier(
+      @PathParam("key") @NotNull UUID institutionKey,
+      @Valid @NotNull Identifier identifier,
+      @Context SecurityContext security) {
+    identifier.setCreatedBy(security.getUserPrincipal().getName());
+    return addIdentifier(institutionKey, identifier);
+  }
+
   @Override
   public int addIdentifier(@NotNull UUID uuid, @NotNull Identifier identifier) {
     return WithMyBatis.addIdentifier(identifierMapper, institutionMapper, uuid, identifier);
   }
 
+  @DELETE
+  @Path("{key}/identifier/{identifierKey}")
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @Transactional
   @Override
-  public void deleteIdentifier(@NotNull UUID uuid, int identifierKey) {
-    WithMyBatis.deleteIdentifier(institutionMapper, uuid, identifierKey);
+  public void deleteIdentifier(
+      @PathParam("key") @NotNull UUID institutionKey,
+      @PathParam("identifierKey") @NotNull int identifierKey) {
+    WithMyBatis.deleteIdentifier(institutionMapper, institutionKey, identifierKey);
   }
 
+  @GET
+  @Path("{key}/identifier")
+  @Nullable
+  @NullToNotFound
+  @Validate(validateReturnedValue = true)
   @Override
-  public List<Identifier> listIdentifiers(@NotNull UUID uuid) {
+  public List<Identifier> listIdentifiers(@PathParam("key") @NotNull UUID uuid) {
     return WithMyBatis.listIdentifiers(institutionMapper, uuid);
+  }
+
+  @POST
+  @Path("{key}/tag")
+  @Validate(groups = {PrePersist.class, Default.class})
+  @Trim
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public int addTag(
+      @PathParam("key") @NotNull UUID institutionKey,
+      @Valid @NotNull Tag tag,
+      @Context SecurityContext security) {
+    tag.setCreatedBy(security.getUserPrincipal().getName());
+    return addTag(institutionKey, tag);
   }
 
   @Override
@@ -169,13 +311,23 @@ public class InstitutionResource implements InstitutionService {
     return WithMyBatis.addTag(tagMapper, institutionMapper, uuid, tag);
   }
 
+  @DELETE
+  @Path("{key}/tag/{tagKey}")
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @Transactional
   @Override
-  public void deleteTag(@NotNull UUID uuid, int tagKey) {
-    WithMyBatis.deleteTag(institutionMapper, uuid, tagKey);
+  public void deleteTag(
+      @PathParam("key") @NotNull UUID institutionKey, @PathParam("tagKey") int tagKey) {
+    WithMyBatis.deleteTag(institutionMapper, institutionKey, tagKey);
   }
 
+  @GET
+  @Path("{key}/tag")
+  @Nullable
+  @NullToNotFound
+  @Validate(validateReturnedValue = true)
   @Override
-  public List<Tag> listTags(@NotNull UUID uuid, @Nullable String owner) {
+  public List<Tag> listTags(@NotNull UUID uuid, @QueryParam("owner") @Nullable String owner) {
     return WithMyBatis.listTags(institutionMapper, uuid, owner);
   }
 }

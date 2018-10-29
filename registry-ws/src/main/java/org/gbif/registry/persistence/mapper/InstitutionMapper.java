@@ -1,6 +1,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 
 import java.util.List;
@@ -26,5 +27,11 @@ public interface InstitutionMapper extends TaggableMapper, IdentifiableMapper {
   long count();
 
   long countWithFilter(@Nullable @Param("query") String query);
+
+  List<Staff> listContacts(@Param("key") UUID key);
+
+  void addContact(@Param("institutionKey") UUID institutionKey, @Param("staffKey") UUID contactKey);
+
+  void removeContact(@Param("institutionKey") UUID institutionKey, @Param("staffKey") UUID contactKey);
 
 }
