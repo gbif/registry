@@ -186,7 +186,7 @@ public class CitationGenerator {
 
   /**
    * Given a {@link Contact}, generates a a String for that contact for citation purpose.
-   * The organisation will be used (if present) in case we don't have both lastName and firstNames of the contact.
+   * The organization will be used (if present) in case we don't have both lastName and firstNames of the contact.
    *
    * @param creator
    *
@@ -196,7 +196,7 @@ public class CitationGenerator {
     StringBuilder sb = new StringBuilder();
     String lastName = StringUtils.trimToNull(creator.getLastName());
     String firstNames = StringUtils.trimToNull(creator.getFirstName());
-    String organisation = StringUtils.trimToNull(creator.getOrganization());
+    String organization = StringUtils.trimToNull(creator.getOrganization());
 
     if (lastName != null && firstNames != null) {
       sb.append(lastName);
@@ -210,8 +210,8 @@ public class CitationGenerator {
               .collect(Collectors.joining(" ")));
     } else if (lastName != null) {
       sb.append(lastName);
-    } else if (organisation != null) {
-      sb.append(organisation);
+    } else if (organization != null) {
+      sb.append(organization);
     }
     return sb.toString();
   }

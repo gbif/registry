@@ -90,7 +90,7 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
     OrganizationService service = (OrganizationService) this.getService();
     assertTrue("Should find only The Tim", service.suggest("The").size() == 1);
-    assertTrue("Should find both organisations", service.suggest("Tim").size() == 2);
+    assertTrue("Should find both organizations", service.suggest("Tim").size() == 2);
   }
 
   @Test
