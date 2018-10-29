@@ -14,7 +14,7 @@
     <li ng-class="{active: $state.includes('node.machineTag')}"><a href="" ng-click="transitionTo('machineTag')">Machine tags ({{counts.machineTags}}) <i class="icon-chevron-right"></i></a></li>
     <li ng-class="{active: $state.includes('node.comment')}"><a href="" ng-click="transitionTo('comment')">Comments ({{counts.comments}}) <i class="icon-chevron-right"></i></a></li>
     <li ng-class="{active: $state.includes('node.pending')}"><a href="" ng-click="transitionTo('pending')" ng-class="{'alert-error': counts.pendingEndorsements>0}"><i ng-show="counts.pendingEndorsements>0" class="icon-warning-sign"></i> Pending endorsements ({{counts.pendingEndorsements}})<i class="icon-chevron-right"></i></a></li>
-    <li ng-class="{active: $state.includes('node.organization')}"><a href="" ng-click="transitionTo('organization')">Endorsed organisations ({{counts.organizations}}) <i class="icon-chevron-right"></i></a></li>
+    <li ng-class="{active: $state.includes('node.organization')}"><a href="" ng-click="transitionTo('organization')">Endorsed organizations ({{counts.organizations}}) <i class="icon-chevron-right"></i></a></li>
     <li ng-class="{active: $state.includes('node.dataset')}"><a href="" ng-click="transitionTo('dataset')">Endorsed datasets ({{counts.datasets}}) <i class="icon-chevron-right"></i></a></li>
     <li ng-class="{active: $state.includes('node.installation')}"><a href="" ng-click="transitionTo('installation')">Installations ({{counts.installations}}) <i class="icon-chevron-right"></i></a></li>
   </ul>
