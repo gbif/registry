@@ -161,7 +161,7 @@ public class DatasetOccurrenceDownloadIT {
     final Dataset testDataset = createTestDataset();
     
     occurrenceDownloadService.create(occurrenceDownload);
-    Map<UUID,Long> datasetCitation = new HashMap();
+    Map<UUID,Long> datasetCitation = new HashMap<>();
     datasetCitation.put(testDataset.getKey(), 1000L);
     occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
     
@@ -184,7 +184,7 @@ public class DatasetOccurrenceDownloadIT {
     
     occurrenceDownloadService.create(occurrenceDownload);
     
-    Map<UUID,Long> datasetCitation = new HashMap();
+    Map<UUID,Long> datasetCitation = new HashMap<>();
     datasetCitation.put(testDataset1.getKey(), 1000L);
     datasetCitation.put(testDataset2.getKey(), 10000L);
     datasetCitation.put(testDataset3.getKey(), 100000L);
