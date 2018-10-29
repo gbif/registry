@@ -12,6 +12,8 @@
  */
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
@@ -55,6 +57,8 @@ class GenericTypes {
   };
   public static final GenericType<PagingResponse<Network>> PAGING_NETWORK = new GenericType<PagingResponse<Network>>() {
   };
+  public static final GenericType<PagingResponse<Institution>> PAGING_INSTITUTION = new GenericType<PagingResponse<Institution>>() {
+  };
   public static final GenericType<List<Network>> LIST_NETWORK = new GenericType<List<Network>>() {
   };
   public static final GenericType<List<KeyTitleResult>> LIST_KEY_TITLE = new GenericType<List<KeyTitleResult>>() {
@@ -74,6 +78,8 @@ class GenericTypes {
   public static final GenericType<List<Country>> LIST_COUNTRY = new GenericType<List<Country>>() {
   };
   public static final GenericType<List<Metadata>> LIST_METADATA = new GenericType<List<Metadata>>() {
+  };
+  public static final GenericType<List<Staff>> LIST_STAFF = new GenericType<List<Staff>>() {
   };
   public static final GenericType<Metadata> METADATA = new GenericType<Metadata>() {
   };
