@@ -63,8 +63,10 @@ Additional information:
 </p>
 </#if>
 
-<p>If you wish to endorse <b>${organisation.title!}</b> please click the following link: <a href="${url}">Endorse ${organisation.title!}</a></p>
-<p>If you do not want to endorse <b>${organisation.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
+<#if !hasReachableNodeManager()>
+  <p>If you wish to endorse <b>${organisation.title!}</b> please click the following link: <a href="${url}">Endorse ${organisation.title!}</a></p>
+  <p>If you do not want to endorse <b>${organisation.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
+</#if>
 
 <p>Kind regards,</p>
 <p>The GBIF Secretariat</p>
