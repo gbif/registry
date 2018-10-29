@@ -8,47 +8,47 @@ import java.net.URL;
 import javax.annotation.Nullable;
 
 /**
- * Specialized model that contains data to be used by the templace to generate an email related to
+ * Specialized model that contains data to be used by the template to generate an email related to
  * {@link Organization}.
  *
  * This class is required to be public for Freemarker.
  */
 public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
 
-  private final Organization organisation;
+  private final Organization organization;
   private final URL organizationUrl;
   private final Node endorsingNode;
   private final boolean reachableNodeManager;
 
-  static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organisation,
+  static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organization,
                                                              Node endorsingNode, boolean reachableNodeManager){
-    return new OrganizationTemplateDataModel(name, url, organisation, null, endorsingNode, reachableNodeManager);
+    return new OrganizationTemplateDataModel(name, url, organization, null, endorsingNode, reachableNodeManager);
   }
 
-  static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organisation, URL organizationUrl, Node endorsingNode){
-    return new OrganizationTemplateDataModel(name, null, organisation, organizationUrl, endorsingNode, false);
+  static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organization, URL organizationUrl, Node endorsingNode){
+    return new OrganizationTemplateDataModel(name, null, organization, organizationUrl, endorsingNode, false);
   }
 
   /**
    *
    * @param name
    * @param url
-   * @param organisation
+   * @param organization
    * @param organizationUrl
    * @param endorsingNode
    * @param reachableNodeManager
    */
-  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organisation,
+  public OrganizationTemplateDataModel(String name, @Nullable URL url, Organization organization,
                                        @Nullable URL organizationUrl, Node endorsingNode, boolean reachableNodeManager) {
     super(name, url);
-    this.organisation = organisation;
+    this.organization = organization;
     this.organizationUrl = organizationUrl;
     this.endorsingNode = endorsingNode;
     this.reachableNodeManager = reachableNodeManager;
   }
 
-  public Organization getOrganisation() {
-    return organisation;
+  public Organization getOrganization() {
+    return organization;
   }
 
   public URL getOrganizationUrl() {
