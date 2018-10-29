@@ -65,7 +65,7 @@ public class DatasetIndexUpdateListener {
       }
 
     } else if (event.getObjectClass().equals(Installation.class)) {
-      // we only care about the hosting organisation
+      // we only care about the hosting organization
       Installation i1 = (Installation)event.getOldObject();
       Installation i2 = (Installation)event.getNewObject();
       if (!i1.getOrganizationKey().equals(i2.getOrganizationKey())) {
