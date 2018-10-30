@@ -3,6 +3,8 @@ package org.gbif.registry.cli.directoryupdate;
 import org.gbif.directory.client.guice.DirectoryWsClientModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,8 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.threeten.bp.LocalTime;
-import org.threeten.bp.temporal.ChronoUnit;
 
 /**
  *
