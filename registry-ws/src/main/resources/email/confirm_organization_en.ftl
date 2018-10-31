@@ -6,27 +6,30 @@
 <p>A new organization is requesting to be endorsed by <b>${endorsingNode.title}.</b><p>
 
 <p>
-    <b>${organisation.title!}</b>
-<ul style="list-style: none;">
-  <#list organisation.address! as addr>
-  <li>${addr}</li>
-  </#list>
-    <li>${organisation.city!}</li>
-    <li>${organisation.province!}</li>
-    <li>${organisation.postalCode!}</li>
-    <li>${organisation.country.title!}</li>
-</ul>
+    <b>${organization.title!}</b>
+    <ul style="list-style: none;">
+    <#list organization.address! as addr>
+      <li>${addr}</li>
+    </#list>
+    <li>${organization.city!}</li>
+    <li>${organization.province!}</li>
+    <li>${organization.postalCode!}</li>
+    <li>${organization.country.title!}</li>
+    <#list organization.homepage! as homepage>
+      <li><a href="${homepage}">${homepage}</a></li>
+    </#list>
+  </ul>
 </p>
 
 <p>
 Description:
-${organisation.description!}
+${organization.description!}
 </p>
 
-<#if organisation.contacts?has_content>
+<#if organization.contacts?has_content>
 <p>
 Contacts:
-  <#list organisation.contacts! as contact>
+  <#list organization.contacts! as contact>
     <ul style="list-style: none;">
     <#if contact.firstName?has_content><li>${contact.computeCompleteName()}</li></#if>
     <#if contact.type?has_content><li>${contact.type}</li></#if>
@@ -49,11 +52,11 @@ Contacts:
 </p>
 </#if>
 
-<#if organisation.comments?has_content>
+<#if organization.comments?has_content>
 <p>
 Additional information:
 <ul style="list-style: none;">
-<#list organisation.comments! as comment>
+<#list organization.comments! as comment>
 <#--comments can be in Markdown but we only support endline for now-->
   <#list comment.content?split("\n") as subcomment>
     <li>${subcomment}</li>
@@ -63,8 +66,12 @@ Additional information:
 </p>
 </#if>
 
-<p>If you wish to endorse <b>${organisation.title!}</b> please click the following link: <a href="${url}">Endorse ${organisation.title!}</a></p>
-<p>If you do not want to endorse <b>${organisation.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
+<#if !hasReachableNodeManager()>
+  <p>If you wish to endorse <b>${organization.title!}</b> please click the following link: <a href="${url}">Endorse ${organization.title!}</a></p>
+  <p>If you do not want to endorse <b>${organization.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
+</#if>
+
+<p>If you have any questions start by consulting our <a href="https://www.gbif.org/endorsement-guidelines">endorsement guidelines</a>.</p>
 
 <p>Kind regards,</p>
 <p>The GBIF Secretariat</p>

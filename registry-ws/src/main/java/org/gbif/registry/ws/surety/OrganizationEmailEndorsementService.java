@@ -96,7 +96,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   /**
    * Confirm the endorsement of an organization using, optionally, a challengeCode.
    * If a challengeCode is provided, it shall be the expected one.
-   * If no challengeCode is provided, the organisation endorsement will be approved without verification.
+   * If no challengeCode is provided, the organization endorsement will be approved without verification.
    * The caller is responsible to determine if a challengeCode should be used or not.
    *
    * @param organizationKey

@@ -7,7 +7,7 @@
 
 -- Add organization named "Test Organization #1"
 INSERT INTO organization(key,endorsing_node_key,endorsement_approved,password,title,description,language,email,phone,homepage,logo_url,address,city,country,postal_code,latitude,longitude,created,modified,created_by,modified_by)
-VALUES('0a16da09-7719-40de-8d4f-56a15ed52fb6'::uuid,'02c40d2a-1cba-4633-90b7-e36e5e97aba8'::uuid,true::boolean,'password','Test Organisation #1','Test Organisation for IPT','EN','{helpdesk@gbif.org}','{+45 35 32 14 70}','{https://www.gbif.org/}','https://rs.gbif.org/style/logo.svg','{Universitetsparken 15}','Copenhagen','DK','2100','55.6761','55.6761',now(),now(),'Script', 'Script');
+VALUES('0a16da09-7719-40de-8d4f-56a15ed52fb6'::uuid,'02c40d2a-1cba-4633-90b7-e36e5e97aba8'::uuid,true::boolean,'password','Test Organization #1','Test Organization for IPT','EN','{helpdesk@gbif.org}','{+45 35 32 14 70}','{https://www.gbif.org/}','https://rs.gbif.org/style/logo.svg','{Universitetsparken 15}','Copenhagen','DK','2100','55.6761','55.6761',now(),now(),'Script', 'Script');
 
 INSERT INTO contact(key,first_name,last_name,position,email,phone,organization,address,city,country,postal_code,created_by,modified_by,created,modified)
 VALUES(21000,'GBIF','Helpdesk','{Programmer}','{helpdesk@gbif.org}','{+45 35 32 14 70}','GBIF','{Universitetsparken 15}','Copenhagen','DK','2100','Script','Script',now(),now());
@@ -40,7 +40,7 @@ VALUES('8949a635-0eb0-4bf1-aaf9-9af97a0ea949'::uuid,21002,'ADMINISTRATIVE_POINT_
 
 -- Add organization used exclusively for Jenkins
 INSERT INTO organization(key,endorsing_node_key,endorsement_approved,password,title,description,language,email,phone,homepage,logo_url,address,city,country,postal_code,latitude,longitude,created,modified,created_by,modified_by)
-VALUES('62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,'02c40d2a-1cba-4633-90b7-e36e5e97aba8'::uuid,true::boolean,'password','Test Organisation Jenkins','Test Organisation for IPT built by Jenkins','EN','{helpdesk@gbif.org}','{+45 35 32 14 70}','{https://builds.gbif.org/}','https://rs.gbif.org/style/logo.svg','{Universitetsparken 15}','Copenhagen','DK','2100','55.6761','55.6761',now(),now(),'Script', 'Script');
+VALUES('62922b92-69d1-4c4b-831c-b23d5412a124'::uuid,'02c40d2a-1cba-4633-90b7-e36e5e97aba8'::uuid,true::boolean,'password','Test Organization Jenkins','Test Organization for IPT built by Jenkins','EN','{helpdesk@gbif.org}','{+45 35 32 14 70}','{https://builds.gbif.org/}','https://rs.gbif.org/style/logo.svg','{Universitetsparken 15}','Copenhagen','DK','2100','55.6761','55.6761',now(),now(),'Script', 'Script');
 
 INSERT INTO contact(key,first_name,last_name,position,email,phone,organization,address,city,country,postal_code,created_by,modified_by,created,modified)
 VALUES(21003,'GBIF','Helpdesk','{Programmer}','{helpdesk@gbif.org}','{+45 35 32 14 70}','GBIF','{Universitetsparken 15}','Copenhagen','DK','2100','Script','Script',now(),now());

@@ -155,7 +155,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Confirm the endorsement of an organisation.
+   * Confirm the endorsement of an organization.
    *
    * @param organizationKey
    * @param confirmationKeyParameter
