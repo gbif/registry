@@ -52,8 +52,8 @@ public class IdentityUpdateValidationCheck {
     LOG.info("Node tests produced {} errors", nodeErrorCount);
 
     LOG.info("Starting Organization tests");
-    int organisationErrorCount = verifyEntity(injector.getInstance(OrganizationService.class));
-    LOG.info("Organization tests produced {} errors", organisationErrorCount);
+    int organizationErrorCount = verifyEntity(injector.getInstance(OrganizationService.class));
+    LOG.info("Organization tests produced {} errors", organizationErrorCount);
 
     LOG.info("Starting Installation tests");
     int installationErrorCount = verifyEntity(injector.getInstance(InstallationService.class));
@@ -70,7 +70,7 @@ public class IdentityUpdateValidationCheck {
     // summarise again jsut for ease of reading
     LOG.info("Test results:");
     LOG.info("Node tests produced {} errors", nodeErrorCount);
-    LOG.info("Organization tests produced {} errors", organisationErrorCount);
+    LOG.info("Organization tests produced {} errors", organizationErrorCount);
     LOG.info("Installation tests produced {} errors", installationErrorCount);
     LOG.info("Dataset tests produced {} errors", datasetErrorCount);
     LOG.info("Network tests produced {} errors", networkErrorCount);
