@@ -1,11 +1,13 @@
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsGetClient;
@@ -20,22 +22,22 @@ import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
-public class InstitutionWsClient extends BaseWsGetClient<Institution, UUID>
-    implements InstitutionService {
+public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
+    implements CollectionService {
 
   /**
    * @param resource the base url to the underlying webservice
    * @param authFilter optional authentication filter, can be null
    */
   @Inject
-  protected InstitutionWsClient(
+  protected CollectionWsClient(
       @RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
-    super(Institution.class, resource.path("institution"), authFilter);
+    super(Collection.class, resource.path("collection"), authFilter);
   }
 
   @Override
-  public UUID create(@NotNull Institution institution) {
-    return post(UUID.class, institution, "/");
+  public UUID create(@NotNull Collection collection) {
+    return post(UUID.class, collection, "/");
   }
 
   @Override
@@ -44,27 +46,38 @@ public class InstitutionWsClient extends BaseWsGetClient<Institution, UUID>
   }
 
   @Override
-  public Institution get(@NotNull UUID uuid) {
+  public Collection get(@NotNull UUID uuid) {
     return get(uuid.toString());
   }
 
   @Override
-  public PagingResponse<Institution> list(@Nullable Pageable pageable) {
-    return get(GenericTypes.PAGING_INSTITUTION, null, null, pageable);
+  public PagingResponse<Collection> list(@Nullable Pageable pageable) {
+    return get(GenericTypes.PAGING_COLLECTION, null, null, pageable);
   }
 
   @Override
-  public PagingResponse<Institution> search(String query, @Nullable Pageable pageable) {
+  public PagingResponse<Collection> listByInstitution(
+    UUID institutionKey, @Nullable Pageable pageable
+  ) {
     return get(
-        GenericTypes.PAGING_INSTITUTION,
+      GenericTypes.PAGING_COLLECTION,
+      null,
+      QueryParamBuilder.create("institution", institutionKey).build(),
+      pageable);
+  }
+
+  @Override
+  public PagingResponse<Collection> search(String query, @Nullable Pageable pageable) {
+    return get(
+        GenericTypes.PAGING_COLLECTION,
         null,
         QueryParamBuilder.create("q", query).build(),
         pageable);
   }
 
   @Override
-  public void update(@NotNull Institution institution) {
-    put(institution, institution.getKey().toString());
+  public void update(@NotNull Collection collection) {
+    put(collection, collection.getKey().toString());
   }
 
   @Override

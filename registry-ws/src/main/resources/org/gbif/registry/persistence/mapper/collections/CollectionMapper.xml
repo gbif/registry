@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="org.gbif.registry.persistence.mapper.CollectionMapper">
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.CollectionMapper">
 
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="COLLECTION_MAP" type="SciCollection" autoMapping="true">
@@ -110,15 +110,15 @@
     WHERE c.key = #{key,jdbcType=OTHER}
   </select>
 
-  <select id="listStaff" resultMap="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_MAP">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.StaffMapper.STAFF_READ_FIELDS"/>
+  <select id="listStaff" resultMap="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_READ_FIELDS"/>
     FROM collection_staff s INNER JOIN collection_contact ON collection_staff_key = s.key
     WHERE collection_key = #{key,jdbcType=OTHER}
     ORDER BY created ASC
   </select>
 
-  <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.AddressMapper.ADDRESS_MAP">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.AddressMapper.ADDRESS_READ_FIELDS"/>
+  <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_READ_FIELDS"/>
     FROM address
     WHERE key = #{key,jdbcType=OTHER}
   </select>
@@ -175,6 +175,27 @@
     FROM collection c
     WHERE c.institution_key = #{institutionKey,jdbcType=OTHER} AND c.deleted IS NULL
   </select>
+
+  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_READ_FIELDS"/>
+    FROM collection_staff s INNER JOIN collection_contact ON collection_staff_key = s.key
+    WHERE collection_key = #{key,jdbcType=OTHER}
+    ORDER BY created ASC
+  </select>
+
+  <insert id="addContact">
+    INSERT INTO collection_contact(collection_key,collection_staff_key)
+    VALUES(
+    #{entityKey,jdbcType=OTHER},
+    #{staffKey,jdbcType=OTHER}
+    )
+  </insert>
+
+  <delete id="removeContact">
+    DELETE FROM collection_contact
+    WHERE
+    collection_key = #{entityKey,jdbcType=OTHER} AND collection_staff_key = #{staffKey,jdbcType=INTEGER}
+  </delete>
 
   <!-- TAGS -->
   <insert id="addTag">
