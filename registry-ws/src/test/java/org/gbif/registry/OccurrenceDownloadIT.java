@@ -92,7 +92,7 @@ public class OccurrenceDownloadIT {
     final Injector webservice = webservice();
     final Injector client = webserviceClient();
 
-    return ImmutableList.<Object[]>of(
+    return ImmutableList.of(
       new Object[] {webservice.getInstance(OccurrenceDownloadResource.class), null},
       new Object[] {client.getInstance(OccurrenceDownloadService.class),
         client.getInstance(SimplePrincipalProvider.class)});
