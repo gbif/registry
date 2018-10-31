@@ -50,8 +50,8 @@ import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.persistence.mapper.AddressMapper;
-import org.gbif.registry.persistence.mapper.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -61,7 +61,7 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
@@ -69,7 +69,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.StaffMapper;
+import org.gbif.registry.persistence.mapper.collections.StaffMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
@@ -135,6 +135,8 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(MetasyncHistoryMapper.class);
       addMapperClass(UserRightsMapper.class);
       addMapperClass(DoiMapper.class);
+
+      // collections
       addMapperClass(InstitutionMapper.class);
       addMapperClass(CollectionMapper.class);
       addMapperClass(StaffMapper.class);

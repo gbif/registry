@@ -9,10 +9,13 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiFunction;
 
 import com.google.inject.Injector;
 import org.junit.Before;
@@ -26,14 +29,30 @@ import static org.junit.Assert.assertNull;
 
 public class CollectionMapperTest {
 
+  private static final BiFunction<Integer, Long, Pageable> PAGE =
+      (limit, offset) ->
+          new Pageable() {
+            @Override
+            public int getLimit() {
+              return limit;
+            }
+
+            @Override
+            public long getOffset() {
+              return offset;
+            }
+          };
+
   private CollectionMapper collectionMapper;
   private AddressMapper addressMapper;
 
   @ClassRule
-  public static LiquibaseInitializer liquibase = new LiquibaseInitializer(LiquibaseModules.database());
+  public static LiquibaseInitializer liquibase =
+      new LiquibaseInitializer(LiquibaseModules.database());
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
+  public final DatabaseInitializer databaseRule =
+      new DatabaseInitializer(LiquibaseModules.database());
 
   @Before
   public void setup() {
@@ -136,34 +155,10 @@ public class CollectionMapperTest {
     collectionMapper.create(col2);
     collectionMapper.create(col3);
 
-    Pageable pageable = new Pageable() {
-      @Override
-      public int getLimit() {
-        return 5;
-      }
-
-      @Override
-      public long getOffset() {
-        return 0;
-      }
-    };
-
-    List<Collection> cols = collectionMapper.list(pageable);
+    List<Collection> cols = collectionMapper.list(PAGE.apply(5, 0L));
     assertEquals(3, cols.size());
 
-    pageable = new Pageable() {
-      @Override
-      public int getLimit() {
-        return 2;
-      }
-
-      @Override
-      public long getOffset() {
-        return 0;
-      }
-    };
-
-    cols = collectionMapper.list(pageable);
+    cols = collectionMapper.list(PAGE.apply(2, 0L));
     assertEquals(2, cols.size());
   }
 
@@ -192,17 +187,7 @@ public class CollectionMapperTest {
     collectionMapper.create(col1);
     collectionMapper.create(col2);
 
-    Pageable pageable = new Pageable() {
-      @Override
-      public int getLimit() {
-        return 5;
-      }
-
-      @Override
-      public long getOffset() {
-        return 0;
-      }
-    };
+    Pageable pageable = PAGE.apply(5, 0L);
 
     List<Collection> cols = collectionMapper.search("c1 n1", pageable);
     assertEquals(1, cols.size());
@@ -221,5 +206,4 @@ public class CollectionMapperTest {
     cols = collectionMapper.search("dummy address", pageable);
     assertEquals(1, cols.size());
   }
-
 }

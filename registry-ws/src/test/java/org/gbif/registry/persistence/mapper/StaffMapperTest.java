@@ -7,9 +7,12 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.StaffMapper;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiFunction;
 
 import com.google.inject.Injector;
 import org.junit.Before;
@@ -23,14 +26,30 @@ import static org.junit.Assert.assertNull;
 
 public class StaffMapperTest {
 
+  private static final BiFunction<Integer, Long, Pageable> PAGE =
+      (limit, offset) ->
+          new Pageable() {
+            @Override
+            public int getLimit() {
+              return limit;
+            }
+
+            @Override
+            public long getOffset() {
+              return offset;
+            }
+          };
+
   private StaffMapper staffMapper;
   private AddressMapper addressMapper;
 
   @ClassRule
-  public static LiquibaseInitializer liquibase = new LiquibaseInitializer(LiquibaseModules.database());
+  public static LiquibaseInitializer liquibase =
+      new LiquibaseInitializer(LiquibaseModules.database());
 
   @Rule
-  public final DatabaseInitializer databaseRule = new DatabaseInitializer(LiquibaseModules.database());
+  public final DatabaseInitializer databaseRule =
+      new DatabaseInitializer(LiquibaseModules.database());
 
   @Before
   public void setup() {
@@ -115,19 +134,7 @@ public class StaffMapperTest {
     staffMapper.create(s1);
     staffMapper.create(s2);
 
-    Pageable pageable = new Pageable() {
-      @Override
-      public int getLimit() {
-        return 5;
-      }
-
-      @Override
-      public long getOffset() {
-        return 0;
-      }
-    };
-
-    List<Staff> staffs = staffMapper.list(pageable);
+    List<Staff> staffs = staffMapper.list(PAGE.apply(5, 0L));
     assertEquals(2, staffs.size());
   }
 
@@ -156,17 +163,7 @@ public class StaffMapperTest {
     staffMapper.create(s1);
     staffMapper.create(s2);
 
-    Pageable pageable = new Pageable() {
-      @Override
-      public int getLimit() {
-        return 5;
-      }
-
-      @Override
-      public long getOffset() {
-        return 0;
-      }
-    };
+    Pageable pageable = PAGE.apply(5, 0L);
 
     List<Staff> staffs = staffMapper.search("FN1", pageable);
     assertEquals(1, staffs.size());
@@ -181,5 +178,4 @@ public class StaffMapperTest {
     staffs = staffMapper.search("dummy address", pageable);
     assertEquals(1, staffs.size());
   }
-
 }

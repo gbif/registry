@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -58,6 +59,8 @@ class GenericTypes {
   public static final GenericType<PagingResponse<Network>> PAGING_NETWORK = new GenericType<PagingResponse<Network>>() {
   };
   public static final GenericType<PagingResponse<Institution>> PAGING_INSTITUTION = new GenericType<PagingResponse<Institution>>() {
+  };
+  public static final GenericType<PagingResponse<Collection>> PAGING_COLLECTION = new GenericType<PagingResponse<Collection>>() {
   };
   public static final GenericType<List<Network>> LIST_NETWORK = new GenericType<List<Network>>() {
   };
