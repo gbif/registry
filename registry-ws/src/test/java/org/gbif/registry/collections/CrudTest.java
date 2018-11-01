@@ -80,24 +80,24 @@ public abstract class CrudTest<T extends CollectionEntity> {
 
     UUID key = crudService.create(entity);
     assertNotNull(key);
-    T entityStored = crudService.get(key);
-    assertEquals(key, entityStored.getKey());
-    assertNewEntity(entityStored);
-    assertNotNull(entityStored.getCreatedBy());
-    assertNotNull(entityStored.getCreated());
-    assertNotNull(entityStored.getModifiedBy());
-    assertNotNull(entityStored.getModified());
+    T entitySaved = crudService.get(key);
+    assertEquals(key, entitySaved.getKey());
+    assertNewEntity(entitySaved);
+    assertNotNull(entitySaved.getCreatedBy());
+    assertNotNull(entitySaved.getCreated());
+    assertNotNull(entitySaved.getModifiedBy());
+    assertNotNull(entitySaved.getModified());
 
     // update
-    entity = updateEntity(entityStored);
+    entity = updateEntity(entitySaved);
     crudService.update(entity);
-    entityStored = crudService.get(key);
-    assertUpdatedEntity(entityStored);
+    entitySaved = crudService.get(key);
+    assertUpdatedEntity(entitySaved);
 
     // delete
     crudService.delete(key);
-    entityStored = crudService.get(key);
-    assertNotNull(entityStored.getDeleted());
+    entitySaved = crudService.get(key);
+    assertNotNull(entitySaved.getDeleted());
   }
 
   @Test

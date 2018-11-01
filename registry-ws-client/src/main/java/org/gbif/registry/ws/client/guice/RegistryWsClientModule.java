@@ -14,6 +14,7 @@ package org.gbif.registry.ws.client.guice;
 
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.StaffService;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
@@ -37,6 +38,7 @@ import org.gbif.registry.ws.client.NetworkWsClient;
 import org.gbif.registry.ws.client.NodeWsClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadWsClient;
 import org.gbif.registry.ws.client.OrganizationWsClient;
+import org.gbif.registry.ws.client.StaffWsClient;
 import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -88,6 +90,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
     expose(DoiRegistrationService.class);
     expose(InstitutionService.class);
     expose(CollectionService.class);
+    expose(StaffService.class);
   }
 
   @Override
@@ -121,6 +124,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       bind(DatasetProcessStatusService.class).to(DatasetWsClient.class).in(Scopes.SINGLETON);
       bind(InstitutionService.class).to(InstitutionWsClient.class).in(Scopes.SINGLETON);
       bind(CollectionService.class).to(CollectionWsClient.class).in(Scopes.SINGLETON);
+      bind(StaffService.class).to(StaffWsClient.class).in(Scopes.SINGLETON);
 
       expose(NodeService.class);
       expose(OrganizationService.class);
@@ -135,6 +139,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       expose(DoiRegistrationService.class);
       expose(InstitutionService.class);
       expose(CollectionService.class);
+      expose(StaffService.class);
     }
 
     @Provides
