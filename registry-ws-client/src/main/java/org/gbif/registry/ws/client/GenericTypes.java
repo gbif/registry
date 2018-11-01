@@ -62,6 +62,8 @@ class GenericTypes {
   };
   public static final GenericType<PagingResponse<Collection>> PAGING_COLLECTION = new GenericType<PagingResponse<Collection>>() {
   };
+  public static final GenericType<PagingResponse<Staff>> PAGING_STAFF = new GenericType<PagingResponse<Staff>>() {
+  };
   public static final GenericType<List<Network>> LIST_NETWORK = new GenericType<List<Network>>() {
   };
   public static final GenericType<List<KeyTitleResult>> LIST_KEY_TITLE = new GenericType<List<KeyTitleResult>>() {

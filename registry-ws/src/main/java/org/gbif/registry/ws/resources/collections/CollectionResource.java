@@ -68,7 +68,7 @@ public class CollectionResource extends BaseCollectionResource<Collection>
   public PagingResponse<Collection> listByInstitution(
       UUID institutionKey, @Nullable Pageable pageable) {
     pageable = pageable == null ? new PagingRequest() : pageable;
-    long total = collectionMapper.count();
+    long total = collectionMapper.countByInstitution(institutionKey);
 
     return new PagingResponse<>(
         pageable.getOffset(),

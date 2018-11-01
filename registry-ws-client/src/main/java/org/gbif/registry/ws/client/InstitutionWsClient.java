@@ -44,11 +44,6 @@ public class InstitutionWsClient extends BaseWsGetClient<Institution, UUID>
   }
 
   @Override
-  public Institution get(@NotNull UUID uuid) {
-    return get(uuid.toString());
-  }
-
-  @Override
   public PagingResponse<Institution> list(@Nullable Pageable pageable) {
     return get(GenericTypes.PAGING_INSTITUTION, null, null, pageable);
   }
@@ -74,7 +69,7 @@ public class InstitutionWsClient extends BaseWsGetClient<Institution, UUID>
 
   @Override
   public void addContact(@NotNull UUID uuid, @NotNull UUID staffKey) {
-    post(UUID.class, staffKey, uuid.toString(), "contact");
+    post(staffKey, uuid.toString(), "contact", staffKey.toString());
   }
 
   @Override

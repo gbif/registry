@@ -34,6 +34,7 @@ import org.gbif.registry.ws.resources.InstallationResource;
 import org.gbif.registry.ws.resources.NetworkResource;
 import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
+import org.gbif.registry.ws.resources.collections.StaffResource;
 import org.gbif.registry.ws.resources.legacy.IptResource;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
