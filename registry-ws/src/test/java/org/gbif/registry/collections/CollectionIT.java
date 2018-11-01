@@ -3,6 +3,7 @@ package org.gbif.registry.collections;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
+import org.gbif.api.model.collections.vocabulary.AccessionStatus;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.ContactService;
@@ -30,6 +31,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class CollectionIT extends BaseCollectionTest<Collection> {
@@ -37,9 +39,11 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
   private static final String CODE = "code";
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
+  private static final AccessionStatus ACCESSION_STATUS = AccessionStatus.INSTITUTIONAL;
   private static final String CODE_UPDATED = "code2";
   private static final String NAME_UPDATED = "name2";
   private static final String DESCRIPTION_UPDATED = "dummy description updated";
+  private static final AccessionStatus ACCESSION_STATUS_UPDATED = AccessionStatus.PROJECT;
 
   private final CollectionService collectionService;
   private final InstitutionService institutionService;
@@ -116,28 +120,39 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     collection.setCode(CODE);
     collection.setName(NAME);
     collection.setDescription(DESCRIPTION);
+    collection.setActive(true);
+    collection.setAccessionStatus(ACCESSION_STATUS);
     return collection;
   }
 
   @Override
-  protected void assertNewEntity(Collection entity) {
-    assertEquals(CODE, entity.getCode());
-    assertEquals(NAME, entity.getName());
-    assertEquals(DESCRIPTION, entity.getDescription());
+  protected void assertNewEntity(Collection collection) {
+    assertEquals(CODE, collection.getCode());
+    assertEquals(NAME, collection.getName());
+    assertEquals(DESCRIPTION, collection.getDescription());
+    assertEquals(ACCESSION_STATUS, collection.getAccessionStatus());
+    assertTrue(collection.isActive());
   }
 
   @Override
-  protected Collection updateEntity(Collection entity) {
-    entity.setCode(CODE_UPDATED);
-    entity.setName(NAME_UPDATED);
-    entity.setDescription(DESCRIPTION_UPDATED);
-    return entity;
+  protected Collection updateEntity(Collection collection) {
+    collection.setCode(CODE_UPDATED);
+    collection.setName(NAME_UPDATED);
+    collection.setDescription(DESCRIPTION_UPDATED);
+    collection.setAccessionStatus(ACCESSION_STATUS_UPDATED);
+    return collection;
   }
 
   @Override
-  protected void assertUpdatedEntity(Collection entity) {
-    assertEquals(CODE_UPDATED, entity.getCode());
-    assertEquals(NAME_UPDATED, entity.getName());
-    assertEquals(DESCRIPTION_UPDATED, entity.getDescription());
+  protected void assertUpdatedEntity(Collection collection) {
+    assertEquals(CODE_UPDATED, collection.getCode());
+    assertEquals(NAME_UPDATED, collection.getName());
+    assertEquals(DESCRIPTION_UPDATED, collection.getDescription());
+    assertEquals(ACCESSION_STATUS_UPDATED, collection.getAccessionStatus());
+  }
+
+  @Override
+  protected Collection newInvalidEntity() {
+    return new Collection();
   }
 }

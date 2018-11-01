@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
+/** Generic mapper for CRUD operations. Initially implemented for collections. */
 public interface CrudMapper<T> {
 
   T get(@Param("key") UUID key);
@@ -25,5 +26,4 @@ public interface CrudMapper<T> {
   long count();
 
   long countWithFilter(@Nullable @Param("query") String query);
-
 }
