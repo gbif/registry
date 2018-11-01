@@ -40,7 +40,7 @@ public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
 
   @Override
   public void delete(@NotNull UUID uuid) {
-    delete(uuid.toString());
+    delete(String.valueOf(uuid));
   }
 
   @Override
@@ -70,38 +70,38 @@ public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
 
   @Override
   public void update(@NotNull Collection collection) {
-    put(collection, collection.getKey().toString());
+    put(collection, String.valueOf(collection.getKey()));
   }
 
   @Override
   public List<Staff> listContacts(@NotNull UUID uuid) {
-    return get(GenericTypes.LIST_STAFF, null, null, (Pageable) null, uuid.toString(), "contact");
+    return get(GenericTypes.LIST_STAFF, null, null, (Pageable) null, String.valueOf(uuid), "contact");
   }
 
   @Override
   public void addContact(@NotNull UUID uuid, @NotNull UUID staffKey) {
-    post(staffKey, uuid.toString(), "contact", staffKey.toString());
+    post(staffKey, String.valueOf(uuid), "contact", String.valueOf(staffKey));
   }
 
   @Override
   public void removeContact(@NotNull UUID uuid, @NotNull UUID staffKey) {
-    delete(uuid.toString(), "contact", staffKey.toString());
+    delete(String.valueOf(uuid), "contact", String.valueOf(staffKey));
   }
 
   @Override
   public int addIdentifier(@NotNull UUID uuid, @NotNull Identifier identifier) {
-    return post(Integer.class, identifier, uuid.toString(), "identifier");
+    return post(Integer.class, identifier, String.valueOf(uuid), "identifier");
   }
 
   @Override
   public void deleteIdentifier(@NotNull UUID uuid, int identifierKey) {
-    delete(uuid.toString(), "identifier", String.valueOf(identifierKey));
+    delete(String.valueOf(uuid), "identifier", String.valueOf(identifierKey));
   }
 
   @Override
   public List<Identifier> listIdentifiers(@NotNull UUID uuid) {
     return get(
-        GenericTypes.LIST_IDENTIFIER, null, null, (Pageable) null, uuid.toString(), "identifier");
+        GenericTypes.LIST_IDENTIFIER, null, null, (Pageable) null, String.valueOf(uuid), "identifier");
   }
 
   @Override
@@ -111,16 +111,16 @@ public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
 
   @Override
   public int addTag(@NotNull UUID uuid, @NotNull Tag tag) {
-    return post(Integer.class, tag, uuid.toString(), "tag");
+    return post(Integer.class, tag, String.valueOf(uuid), "tag");
   }
 
   @Override
   public void deleteTag(@NotNull UUID uuid, int tagKey) {
-    delete(uuid.toString(), "tag", String.valueOf(tagKey));
+    delete(String.valueOf(uuid), "tag", String.valueOf(tagKey));
   }
 
   @Override
   public List<Tag> listTags(@NotNull UUID uuid, @Nullable String s) {
-    return get(GenericTypes.LIST_TAG, null, null, (Pageable) null, uuid.toString(), "tag");
+    return get(GenericTypes.LIST_TAG, null, null, (Pageable) null, String.valueOf(uuid), "tag");
   }
 }

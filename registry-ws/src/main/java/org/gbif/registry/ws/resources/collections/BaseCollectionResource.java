@@ -46,6 +46,14 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Base class to implement the main methods of {@link CollectionEntity} that are also @link *
+ * Taggable}, {@link Identifiable} and {@link Contactable}. * *
+ *
+ * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
+ *
+ * @param <T>
+ */
 public abstract class BaseCollectionResource<
         T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
@@ -177,8 +185,7 @@ public abstract class BaseCollectionResource<
   @Transactional
   @Override
   public void deleteIdentifier(
-      @PathParam("key") @NotNull UUID entityKey,
-      @PathParam("identifierKey") @NotNull int identifierKey) {
+      @PathParam("key") @NotNull UUID entityKey, @PathParam("identifierKey") int identifierKey) {
     WithMyBatis.deleteIdentifier(identifiableMapper, entityKey, identifierKey);
   }
 

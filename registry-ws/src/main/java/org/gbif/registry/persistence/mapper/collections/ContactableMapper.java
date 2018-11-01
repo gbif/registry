@@ -7,6 +7,9 @@ import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
 
+/**
+ * Generic mapper to work with collections-related contacts. It works with {@link Staff} entities.
+ */
 public interface ContactableMapper {
 
   List<Staff> listContacts(@Param("key") UUID key);

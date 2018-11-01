@@ -30,6 +30,14 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+/**
+ * Base class to tests the main operations of {@link CollectionEntity} that are also {@link
+ * Taggable}, {@link Identifiable} and {@link Contactable}.
+ *
+ * <p>It inherits from {@link CrudTest} to test the CRUD operations.
+ *
+ * @param <T>
+ */
 public abstract class BaseCollectionTest<
         T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends CrudTest<T> {
@@ -124,6 +132,9 @@ public abstract class BaseCollectionTest<
     assertEquals(key2, response.getResults().get(0).getKey());
 
     assertEquals(0, crudService.search("c", page).getResults().size());
+
+    crudService.delete(key2);
+    assertEquals(0, crudService.search("city2", page).getResults().size());
   }
 
   @Test
@@ -210,5 +221,4 @@ public abstract class BaseCollectionTest<
     contactService.removeContact(entityKey2, staffKey2);
     assertEquals(0, contactService.listContacts(entityKey2).size());
   }
-
 }
