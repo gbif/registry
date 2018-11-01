@@ -31,6 +31,7 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
 public abstract class BaseCrudResource<T extends CollectionEntity> implements CrudService<T> {
 
   private final CrudMapper<T> crudMapper;
@@ -96,7 +97,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     long total = crudMapper.countWithFilter(query);
 
     return new PagingResponse<>(
-      pageable.getOffset(), pageable.getLimit(), total, crudMapper.search(query, pageable));
+        pageable.getOffset(), pageable.getLimit(), total, crudMapper.search(query, pageable));
   }
 
   @PUT
@@ -106,12 +107,11 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void update(
-    @PathParam("key") @NotNull UUID key,
-    @NotNull @Trim T entity,
-    @Context SecurityContext security) {
+      @PathParam("key") @NotNull UUID key,
+      @NotNull @Trim T entity,
+      @Context SecurityContext security) {
     checkArgument(
-      key.equals(entity.getKey()),
-      "Provided entity must have the same key as the resource URL");
+        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(security.getUserPrincipal().getName());
     update(entity);
   }
@@ -121,6 +121,10 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Override
   public void update(@Valid @NotNull T entity) {
     T entityOld = get(entity.getKey());
+
+    if (entityOld == null) {
+      throw new IllegalArgumentException("Entity doesn't exist");
+    }
 
     if (entityOld.getDeleted() != null) {
       throw new IllegalArgumentException("Can't update a deleted entity");

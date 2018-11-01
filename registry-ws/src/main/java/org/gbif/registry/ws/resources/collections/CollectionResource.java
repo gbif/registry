@@ -24,6 +24,10 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+/**
+ * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
+ * implementation of {@link CollectionService}.
+ */
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

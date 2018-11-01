@@ -48,7 +48,7 @@ public class StaffWsClient extends BaseWsGetClient<Staff, UUID> implements Staff
 
   @Override
   public void delete(@NotNull UUID uuid) {
-    delete(uuid.toString());
+    delete(String.valueOf(uuid));
   }
 
   @Override
@@ -64,6 +64,6 @@ public class StaffWsClient extends BaseWsGetClient<Staff, UUID> implements Staff
 
   @Override
   public void update(@NotNull Staff staff) {
-    put(staff, staff.getKey().toString());
+    put(staff, String.valueOf(staff.getKey()));
   }
 }

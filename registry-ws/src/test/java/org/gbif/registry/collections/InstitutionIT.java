@@ -13,6 +13,8 @@ import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.registry.ws.resources.collections.StaffResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
@@ -28,6 +30,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
@@ -36,9 +39,11 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
   private static final String CODE = "code";
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
+  private static final URI HOMEPAGE = URI.create("http://dummy");
   private static final String CODE_UPDATED = "code2";
   private static final String NAME_UPDATED = "name2";
   private static final String DESCRIPTION_UPDATED = "dummy description updated";
+  private static final String ADDITIONAL_NAME = "additional name";
 
   @Parameters
   public static Iterable<Object[]> data() {
@@ -76,22 +81,26 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     institution.setCode(CODE);
     institution.setName(NAME);
     institution.setDescription(DESCRIPTION);
+    institution.setHomepage(HOMEPAGE);
     return institution;
   }
 
   @Override
-  protected void assertNewEntity(Institution entity) {
-    assertEquals(CODE, entity.getCode());
-    assertEquals(NAME, entity.getName());
-    assertEquals(DESCRIPTION, entity.getDescription());
+  protected void assertNewEntity(Institution institution) {
+    assertEquals(CODE, institution.getCode());
+    assertEquals(NAME, institution.getName());
+    assertEquals(DESCRIPTION, institution.getDescription());
+    assertEquals(HOMEPAGE, institution.getHomepage());
+    assertNull(institution.getAdditionalNames());
   }
 
   @Override
-  protected Institution updateEntity(Institution entity) {
-    entity.setCode(CODE_UPDATED);
-    entity.setName(NAME_UPDATED);
-    entity.setDescription(DESCRIPTION_UPDATED);
-    return entity;
+  protected Institution updateEntity(Institution institution) {
+    institution.setCode(CODE_UPDATED);
+    institution.setName(NAME_UPDATED);
+    institution.setDescription(DESCRIPTION_UPDATED);
+    institution.setAdditionalNames(Arrays.asList(ADDITIONAL_NAME));
+    return institution;
   }
 
   @Override
@@ -99,5 +108,11 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     assertEquals(CODE_UPDATED, entity.getCode());
     assertEquals(NAME_UPDATED, entity.getName());
     assertEquals(DESCRIPTION_UPDATED, entity.getDescription());
+    assertEquals(1, entity.getAdditionalNames().size());
+  }
+
+  @Override
+  protected Institution newInvalidEntity() {
+    return new Institution();
   }
 }

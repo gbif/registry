@@ -239,4 +239,9 @@ public class StaffIT extends CrudTest<Staff> {
     assertEquals(PHONE_UPDATED, staff.getPhone());
     assertEquals(EMAIL, staff.getEmail());
   }
+
+  @Override
+  protected Staff newInvalidEntity() {
+    return new Staff();
+  }
 }

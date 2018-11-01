@@ -9,16 +9,16 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
+/** Mapper for {@link Staff} entities. */
 public interface StaffMapper extends CrudMapper<Staff> {
 
   List<Staff> listStaffByInstitution(
-    @Param("institutionKey") UUID institutionKey, @Nullable @Param("page") Pageable page);
+      @Param("institutionKey") UUID institutionKey, @Nullable @Param("page") Pageable page);
 
   List<Staff> listStaffByCollection(
-    @Param("collectionKey") UUID collectionKey, @Nullable @Param("page") Pageable page);
+      @Param("collectionKey") UUID collectionKey, @Nullable @Param("page") Pageable page);
 
   long countByInstitution(@Param("institutionKey") UUID institutionKey);
 
   long countByCollection(@Param("collectionKey") UUID collectionKey);
-
 }

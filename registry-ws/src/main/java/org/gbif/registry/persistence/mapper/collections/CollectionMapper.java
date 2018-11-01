@@ -11,6 +11,9 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
+/**
+ * Mapper for {@link Collection} entities.
+ */
 public interface CollectionMapper
     extends CrudMapper<Collection>, ContactableMapper, TaggableMapper, IdentifiableMapper {
 

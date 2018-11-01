@@ -30,6 +30,10 @@ import org.mybatis.guice.transactional.Transactional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Class that acts both as the WS endpoint for {@link Staff} entities and also provides an *
+ * implementation of {@link StaffService}.
+ */
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -64,7 +68,8 @@ public class StaffResource extends BaseCrudResource<Staff> implements StaffServi
   }
 
   @Override
-  public PagingResponse<Staff> listByInstitution(@NotNull UUID institutionKey, @Nullable Pageable pageable) {
+  public PagingResponse<Staff> listByInstitution(
+      @NotNull UUID institutionKey, @Nullable Pageable pageable) {
     pageable = pageable == null ? new PagingRequest() : pageable;
     long total = staffMapper.countByInstitution(institutionKey);
 
@@ -76,7 +81,8 @@ public class StaffResource extends BaseCrudResource<Staff> implements StaffServi
   }
 
   @Override
-  public PagingResponse<Staff> listByCollection(@NotNull UUID collectionKey, @Nullable Pageable pageable) {
+  public PagingResponse<Staff> listByCollection(
+      @NotNull UUID collectionKey, @Nullable Pageable pageable) {
     pageable = pageable == null ? new PagingRequest() : pageable;
     long total = staffMapper.countByCollection(collectionKey);
     return new PagingResponse<>(
