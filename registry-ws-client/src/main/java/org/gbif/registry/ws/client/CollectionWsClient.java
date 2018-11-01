@@ -1,14 +1,12 @@
 package org.gbif.registry.ws.client;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsGetClient;
 import org.gbif.ws.client.QueryParamBuilder;
@@ -43,11 +41,6 @@ public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
   @Override
   public void delete(@NotNull UUID uuid) {
     delete(uuid.toString());
-  }
-
-  @Override
-  public Collection get(@NotNull UUID uuid) {
-    return get(uuid.toString());
   }
 
   @Override
@@ -87,7 +80,7 @@ public class CollectionWsClient extends BaseWsGetClient<Collection, UUID>
 
   @Override
   public void addContact(@NotNull UUID uuid, @NotNull UUID staffKey) {
-    post(UUID.class, staffKey, uuid.toString(), "contact");
+    post(staffKey, uuid.toString(), "contact", staffKey.toString());
   }
 
   @Override

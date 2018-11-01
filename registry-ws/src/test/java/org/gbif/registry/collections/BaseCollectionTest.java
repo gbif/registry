@@ -4,6 +4,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
@@ -12,6 +13,7 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.StaffService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
@@ -37,18 +39,21 @@ public abstract class BaseCollectionTest<
   private final ContactService contactService;
   private final TagService tagService;
   private final IdentifierService identifierService;
+  private final StaffService staffService;
 
   public BaseCollectionTest(
       CrudService<T> crudService,
       ContactService contactService,
       TagService tagService,
       IdentifierService identifierService,
+      StaffService staffService,
       @Nullable SimplePrincipalProvider pp) {
     super(crudService, pp);
     this.crudService = crudService;
     this.contactService = contactService;
     this.tagService = tagService;
     this.identifierService = identifierService;
+    this.staffService = staffService;
     this.pp = pp;
   }
 
@@ -76,18 +81,18 @@ public abstract class BaseCollectionTest<
     entity.setIdentifiers(Arrays.asList(identifier));
 
     UUID key = crudService.create(entity);
-    T entityStored = crudService.get(key);
+    T entitySaved = crudService.get(key);
 
-    assertNotNull(entityStored.getAddress());
-    assertEquals("address", entityStored.getAddress().getAddress());
-    assertEquals(Country.AFGHANISTAN, entityStored.getAddress().getCountry());
-    assertNotNull(entityStored.getMailingAddress());
-    assertEquals("mailing", entityStored.getMailingAddress().getAddress());
-    assertEquals(1, entityStored.getTags().size());
-    assertEquals("value", entityStored.getTags().get(0).getValue());
-    assertEquals(1, entityStored.getIdentifiers().size());
-    assertEquals("id", entityStored.getIdentifiers().get(0).getIdentifier());
-    assertEquals(IdentifierType.LSID, entityStored.getIdentifiers().get(0).getType());
+    assertNotNull(entitySaved.getAddress());
+    assertEquals("address", entitySaved.getAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entitySaved.getAddress().getCountry());
+    assertNotNull(entitySaved.getMailingAddress());
+    assertEquals("mailing", entitySaved.getMailingAddress().getAddress());
+    assertEquals(1, entitySaved.getTags().size());
+    assertEquals("value", entitySaved.getTags().get(0).getValue());
+    assertEquals(1, entitySaved.getIdentifiers().size());
+    assertEquals("id", entitySaved.getIdentifiers().get(0).getIdentifier());
+    assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
   }
 
   @Test
@@ -160,6 +165,50 @@ public abstract class BaseCollectionTest<
     assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
-  // TODO: contacts tests
+  @Test
+  public void contactsTest() {
+    // entities
+    T entity1 = newEntity();
+    UUID entityKey1 = crudService.create(entity1);
+
+    T entity2 = newEntity();
+    UUID entityKey2 = crudService.create(entity2);
+
+    T entity3 = newEntity();
+    UUID entityKey3 = crudService.create(entity3);
+
+    // contacts
+    Staff staff1 = new Staff();
+    staff1.setFirstName("name1");
+    UUID staffKey1 = staffService.create(staff1);
+
+    Staff staff2 = new Staff();
+    staff2.setFirstName("name2");
+    UUID staffKey2 = staffService.create(staff2);
+
+    // add contacts
+    contactService.addContact(entityKey1, staffKey1);
+    contactService.addContact(entityKey1, staffKey2);
+    contactService.addContact(entityKey2, staffKey2);
+
+    // list contacts
+    List<Staff> contactsEntity1 = contactService.listContacts(entityKey1);
+    assertEquals(2, contactsEntity1.size());
+
+    List<Staff> contactsEntity2 = contactService.listContacts(entityKey2);
+    assertEquals(1, contactsEntity2.size());
+    assertEquals("name2", contactsEntity2.get(0).getFirstName());
+
+    assertEquals(0, contactService.listContacts(entityKey3).size());
+
+    // remove contacts
+    contactService.removeContact(entityKey1, staffKey2);
+    contactsEntity1 = contactService.listContacts(entityKey1);
+    assertEquals(1, contactsEntity1.size());
+    assertEquals("name1", contactsEntity1.get(0).getFirstName());
+
+    contactService.removeContact(entityKey2, staffKey2);
+    assertEquals(0, contactService.listContacts(entityKey2).size());
+  }
 
 }

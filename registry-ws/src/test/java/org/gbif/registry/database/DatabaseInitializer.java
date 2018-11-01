@@ -22,8 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Rule that will truncate the tables ready for a new test. It is expected to do this before each test by using the
- * following:
+ * A Rule that will truncate the tables ready for a new test. It is expected to do this before each
+ * test by using the following:
  *
  * <pre>
  * @Rule
@@ -86,9 +86,15 @@ public class DatabaseInitializer extends ExternalResource {
       connection.prepareStatement("DELETE FROM node").execute();
       connection.prepareStatement("DELETE FROM public.user").execute();
       connection.prepareStatement("DELETE FROM challenge_code").execute();
-      connection.prepareStatement("DELETE FROM institution").execute();
-      connection.prepareStatement("DELETE FROM collection").execute();
+      connection.prepareStatement("DELETE FROM collection_contact").execute();
+      connection.prepareStatement("DELETE FROM collection_identifier").execute();
+      connection.prepareStatement("DELETE FROM collection_tag").execute();
+      connection.prepareStatement("DELETE FROM institution_contact").execute();
+      connection.prepareStatement("DELETE FROM institution_identifier").execute();
+      connection.prepareStatement("DELETE FROM institution_tag").execute();
       connection.prepareStatement("DELETE FROM collection_staff").execute();
+      connection.prepareStatement("DELETE FROM collection").execute();
+      connection.prepareStatement("DELETE FROM institution").execute();
       connection.prepareStatement("DELETE FROM address").execute();
       connection.prepareStatement("TRUNCATE gbif_doi").execute();
       connection.commit();
