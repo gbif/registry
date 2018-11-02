@@ -72,9 +72,12 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.collections.StaffMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
+import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.service.guice.PrivateServiceModule;
@@ -186,6 +189,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
+      addAlias("DisciplineArrayTypeHandler").to(DisciplineArrayTypeHandler.class);
+      addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
+      addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
     }
 
     @Override
