@@ -15,7 +15,7 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
-public class StaffWsClient extends BaseCrudCollectionsClient<Staff> implements StaffService {
+public class StaffWsClient extends BaseCrudClient<Staff> implements StaffService {
 
   private static final GenericType<PagingResponse<Staff>> PAGING_STAFF =
       new GenericType<PagingResponse<Staff>>() {};

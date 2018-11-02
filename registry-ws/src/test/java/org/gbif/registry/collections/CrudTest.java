@@ -14,7 +14,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.junit.Before;

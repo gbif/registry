@@ -21,9 +21,15 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
+/**
+ * Base ws client for {@link CollectionEntity} that are also {@link Taggable}, {@link Identifiable}
+ * and {@link Contactable}.
+ *
+ * @param <T>
+ */
 public abstract class BaseExtendableCollectionEntityClient<
         T extends CollectionEntity & Taggable & Identifiable & Contactable>
-    extends BaseCrudCollectionsClient<T> implements TagService, IdentifierService, ContactService {
+    extends BaseCrudClient<T> implements TagService, IdentifierService, ContactService {
 
   protected static final GenericType<List<Staff>> LIST_STAFF = new GenericType<List<Staff>>() {};
   protected static final GenericType<List<Tag>> LIST_TAG = new GenericType<List<Tag>>() {};

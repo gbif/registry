@@ -1,28 +1,18 @@
 package org.gbif.registry.collections;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.StaffService;
-import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.database.LiquibaseInitializer;
-import org.gbif.registry.database.LiquibaseModules;
-import org.gbif.registry.grizzly.RegistryServer;
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.registry.ws.resources.collections.StaffResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 

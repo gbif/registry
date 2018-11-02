@@ -15,12 +15,13 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
-public abstract class BaseCrudCollectionsClient<T extends CollectionEntity> extends BaseWsGetClient<T, UUID>
+/** Base ws client for {@link CollectionEntity}. */
+public abstract class BaseCrudClient<T extends CollectionEntity> extends BaseWsGetClient<T, UUID>
     implements CrudService<T> {
 
   private final GenericType<PagingResponse<T>> pagingType;
 
-  protected BaseCrudCollectionsClient(
+  protected BaseCrudClient(
       Class<T> resourceClass,
       WebResource resource,
       @Nullable ClientFilter authFilter,
@@ -46,16 +47,11 @@ public abstract class BaseCrudCollectionsClient<T extends CollectionEntity> exte
 
   @Override
   public PagingResponse<T> search(String query, @Nullable Pageable pageable) {
-    return get(
-        pagingType,
-        null,
-        QueryParamBuilder.create("q", query).build(),
-        pageable);
+    return get(pagingType, null, QueryParamBuilder.create("q", query).build(), pageable);
   }
 
   @Override
   public void update(@NotNull T entity) {
     put(entity, String.valueOf(entity.getKey()));
   }
-
 }
