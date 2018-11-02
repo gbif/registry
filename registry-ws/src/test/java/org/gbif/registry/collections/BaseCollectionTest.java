@@ -3,7 +3,6 @@ package org.gbif.registry.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
