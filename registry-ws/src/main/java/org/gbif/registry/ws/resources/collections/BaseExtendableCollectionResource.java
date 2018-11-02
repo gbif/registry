@@ -51,11 +51,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Taggable}, {@link Identifiable} and {@link Contactable}. * *
  *
  * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
- *
- * @param <T>
  */
-public abstract class BaseExtendableCollectionResource<
-        T extends CollectionEntity & Taggable & Identifiable & Contactable>
+public abstract class BaseExtendableCollectionResource<T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
 
   private final CrudMapper<T> crudMapper;
@@ -135,8 +132,7 @@ public abstract class BaseExtendableCollectionResource<
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void addContact(
-      @PathParam("key") @NotNull UUID entityKey, @NotNull UUID staffKey) {
+  public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID staffKey) {
     contactableMapper.addContact(entityKey, staffKey);
   }
 
