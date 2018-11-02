@@ -32,7 +32,7 @@ import com.google.inject.Singleton;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("collection")
-public class CollectionResource extends BaseCollectionResource<Collection>
+public class CollectionResource extends BaseExtendableCollectionResource<Collection>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;

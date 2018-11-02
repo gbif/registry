@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * @param <T>
  */
-public abstract class BaseCollectionResource<
+public abstract class BaseExtendableCollectionResource<
         T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
 
@@ -66,7 +66,7 @@ public abstract class BaseCollectionResource<
   private final IdentifierMapper identifierMapper;
   private final ContactableMapper contactableMapper;
 
-  protected BaseCollectionResource(
+  protected BaseExtendableCollectionResource(
       CrudMapper<T> crudMapper,
       AddressMapper addressMapper,
       TaggableMapper taggableMapper,
@@ -82,16 +82,6 @@ public abstract class BaseCollectionResource<
     this.identifiableMapper = identifiableMapper;
     this.identifierMapper = identifierMapper;
     this.contactableMapper = contactableMapper;
-  }
-
-  @GET
-  @Path("{key}/contact")
-  @Nullable
-  @NullToNotFound
-  @Validate(validateReturnedValue = true)
-  @Override
-  public List<Staff> listContacts(@PathParam("key") @NotNull UUID key) {
-    return contactableMapper.listContacts(key);
   }
 
   @Transactional
@@ -140,13 +130,13 @@ public abstract class BaseCollectionResource<
   }
 
   @POST
-  @Path("{key}/contact/{staffKey}")
+  @Path("{key}/contact")
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void addContact(
-      @PathParam("key") @NotNull UUID entityKey, @PathParam("staffKey") @NotNull UUID staffKey) {
+      @PathParam("key") @NotNull UUID entityKey, @NotNull UUID staffKey) {
     contactableMapper.addContact(entityKey, staffKey);
   }
 
@@ -159,6 +149,16 @@ public abstract class BaseCollectionResource<
   public void removeContact(
       @PathParam("key") @NotNull UUID entityKey, @PathParam("staffKey") @NotNull UUID staffKey) {
     contactableMapper.removeContact(entityKey, staffKey);
+  }
+
+  @GET
+  @Path("{key}/contact")
+  @Nullable
+  @NullToNotFound
+  @Validate(validateReturnedValue = true)
+  @Override
+  public List<Staff> listContacts(@PathParam("key") @NotNull UUID key) {
+    return contactableMapper.listContacts(key);
   }
 
   @POST

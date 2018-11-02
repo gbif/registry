@@ -30,7 +30,7 @@ import com.google.inject.Singleton;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("institution")
-public class InstitutionResource extends BaseCollectionResource<Institution>
+public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
     implements InstitutionService {
 
   @Inject

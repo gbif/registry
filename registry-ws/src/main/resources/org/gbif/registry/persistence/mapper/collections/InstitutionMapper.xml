@@ -5,7 +5,7 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="INSTITUTION_MAP" type="Institution" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="disciplines" column="discipline" typeHandler="StringArrayTypeHandler"/>
+    <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
@@ -41,7 +41,7 @@
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
     #{institutionalGovernance,jdbcType=OTHER},
-    #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     #{latitude,jdbcType=NUMERIC},
     #{longitude,jdbcType=NUMERIC},
     #{mailingAddress.key,jdbcType=INTEGER},
@@ -70,7 +70,7 @@
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
     institutional_governance = #{institutionalGovernance,jdbcType=OTHER},
-    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     latitude = #{latitude,jdbcType=NUMERIC},
     longitude = #{longitude,jdbcType=NUMERIC},
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},

@@ -16,11 +16,11 @@ import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
-public class StaffWsClient extends BaseWsGetClient<Staff, UUID> implements StaffService {
+public class StaffWsClient extends BaseCrudCollectionsClient<Staff> implements StaffService {
 
   @Inject
   protected StaffWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
-    super(Staff.class, resource.path("staff"), authFilter);
+    super(Staff.class, resource.path("staff"), authFilter, GenericTypes.PAGING_STAFF);
   }
 
   @Override
@@ -39,31 +39,5 @@ public class StaffWsClient extends BaseWsGetClient<Staff, UUID> implements Staff
         null,
         QueryParamBuilder.create("collection", collectionKey).build(),
         pageable);
-  }
-
-  @Override
-  public UUID create(@NotNull Staff staff) {
-    return post(UUID.class, staff, "/");
-  }
-
-  @Override
-  public void delete(@NotNull UUID uuid) {
-    delete(String.valueOf(uuid));
-  }
-
-  @Override
-  public PagingResponse<Staff> list(@Nullable Pageable pageable) {
-    return get(GenericTypes.PAGING_STAFF, null, null, pageable);
-  }
-
-  @Override
-  public PagingResponse<Staff> search(String query, @Nullable Pageable pageable) {
-    return get(
-        GenericTypes.PAGING_STAFF, null, QueryParamBuilder.create("q", query).build(), pageable);
-  }
-
-  @Override
-  public void update(@NotNull Staff staff) {
-    put(staff, String.valueOf(staff.getKey()));
   }
 }

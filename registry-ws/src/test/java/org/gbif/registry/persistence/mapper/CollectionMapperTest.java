@@ -26,6 +26,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class CollectionMapperTest {
 
@@ -95,6 +96,7 @@ public class CollectionMapperTest {
     assertEquals("NAME", collectionStored.getName());
     assertEquals(AccessionStatus.INSTITUTIONAL, collectionStored.getAccessionStatus());
     assertEquals(2, collectionStored.getPreservationTypes().size());
+    assertTrue(collectionStored.getPreservationTypes().contains(PreservationType.SAMPLE_CRYOPRESERVED));
 
     // assert address
     assertNotNull(collectionStored.getAddress().getKey());
