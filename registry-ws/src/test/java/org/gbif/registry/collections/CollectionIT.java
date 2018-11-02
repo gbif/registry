@@ -2,16 +2,11 @@ package org.gbif.registry.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.collections.vocabulary.AccessionStatus;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.StaffService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.TagService;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.registry.ws.resources.collections.StaffResource;
@@ -22,7 +17,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
