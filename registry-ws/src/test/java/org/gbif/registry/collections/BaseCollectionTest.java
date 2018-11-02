@@ -34,11 +34,8 @@ import static org.junit.Assert.assertNotNull;
  * Taggable}, {@link Identifiable} and {@link Contactable}.
  *
  * <p>It inherits from {@link CrudTest} to test the CRUD operations.
- *
- * @param <T>
  */
-public abstract class BaseCollectionTest<
-        T extends CollectionEntity & Taggable & Identifiable & Contactable>
+public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends CrudTest<T> {
 
   private final CrudService<T> crudService;
