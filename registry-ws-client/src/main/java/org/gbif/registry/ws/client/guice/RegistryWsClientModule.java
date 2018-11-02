@@ -27,18 +27,18 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
-import org.gbif.registry.ws.client.CollectionWsClient;
+import org.gbif.registry.ws.client.collections.CollectionWsClient;
 import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageWsClient;
 import org.gbif.registry.ws.client.DatasetSearchWsClient;
 import org.gbif.registry.ws.client.DatasetWsClient;
 import org.gbif.registry.ws.client.DoiRegistrationWsClient;
 import org.gbif.registry.ws.client.InstallationWsClient;
-import org.gbif.registry.ws.client.InstitutionWsClient;
+import org.gbif.registry.ws.client.collections.InstitutionWsClient;
 import org.gbif.registry.ws.client.NetworkWsClient;
 import org.gbif.registry.ws.client.NodeWsClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadWsClient;
 import org.gbif.registry.ws.client.OrganizationWsClient;
-import org.gbif.registry.ws.client.StaffWsClient;
+import org.gbif.registry.ws.client.collections.StaffWsClient;
 import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -70,7 +70,7 @@ import com.sun.jersey.api.client.WebResource;
 public class RegistryWsClientModule extends GbifWsClientModule {
 
   public RegistryWsClientModule(Properties properties) {
-    super(properties, NodeWsClient.class.getPackage());
+    super(properties, NodeWsClient.class.getPackage(), CollectionWsClient.class.getPackage());
   }
 
   @Override

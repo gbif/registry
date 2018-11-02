@@ -2,7 +2,10 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.vocabulary.Discipline;
+import org.gbif.api.model.collections.vocabulary.InstitutionGovernance;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
@@ -76,6 +79,9 @@ public class InstitutionMapperTest {
     institution.setModifiedBy("test");
     institution.setActive(true);
     institution.setHomepage(URI.create("http://dummy.com"));
+    List<Discipline> disciplines = new ArrayList<>();
+    disciplines.add(Discipline.AGRICULTURAL_ANIMAL_SCIENCE);
+    institution.setDisciplines(disciplines);
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -98,6 +104,8 @@ public class InstitutionMapperTest {
     assertEquals("dummy description", institutionStored.getDescription());
     assertEquals("test", institutionStored.getCreatedBy());
     assertEquals(2, institutionStored.getAdditionalNames().size());
+    assertEquals(1, institutionStored.getDisciplines().size());
+    assertTrue(institutionStored.getDisciplines().contains(Discipline.AGRICULTURAL_ANIMAL_SCIENCE));
     assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
     assertTrue(institutionStored.isActive());
 
