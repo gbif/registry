@@ -1,18 +1,24 @@
 package org.gbif.registry.collections;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.StaffService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
-import org.gbif.registry.ws.resources.collections.StaffResource;
+import org.gbif.registry.ws.resources.collections.PersonResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -35,6 +41,9 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
   private static final String DESCRIPTION_UPDATED = "dummy description updated";
   private static final String ADDITIONAL_NAME = "additional name";
 
+  private final InstitutionService institutionService;
+  private final PersonService personService;
+
   @Parameters
   public static Iterable<Object[]> data() {
     final Injector client = webserviceClient();
@@ -42,27 +51,100 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     return ImmutableList.<Object[]>of(
         new Object[] {
           webservice.getInstance(InstitutionResource.class),
-          webservice.getInstance(StaffResource.class),
+          webservice.getInstance(PersonResource.class),
           null
         },
         new Object[] {
           client.getInstance(InstitutionService.class),
-          client.getInstance(StaffService.class),
+          client.getInstance(PersonService.class),
           client.getInstance(SimplePrincipalProvider.class)
         });
   }
 
   public InstitutionIT(
       InstitutionService institutionService,
-      StaffService staffService,
+      PersonService personService,
       @Nullable SimplePrincipalProvider pp) {
     super(
         institutionService,
         institutionService,
         institutionService,
         institutionService,
-        staffService,
+        personService,
         pp);
+    this.institutionService = institutionService;
+    this.personService = personService;
+  }
+
+  @Test
+  public void listWithoutParametersTest() {
+    Institution institution1 = newEntity();
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    UUID key2 = institutionService.create(institution2);
+
+    Institution institution3 = newEntity();
+    UUID key3 = institutionService.create(institution3);
+
+    PagingResponse<Institution> response = institutionService.list(null, PAGE.apply(5, 0L));
+    assertEquals(3, response.getResults().size());
+
+    institutionService.delete(key3);
+
+    response = institutionService.list(null, PAGE.apply(5, 0L));
+    assertEquals(2, response.getResults().size());
+
+    response = institutionService.list(null, PAGE.apply(1, 0L));
+    assertEquals(1, response.getResults().size());
+
+    response = institutionService.list(null, PAGE.apply(0, 0L));
+    assertEquals(0, response.getResults().size());
+  }
+
+  @Test
+  public void listQueryTest() {
+    Institution institution1 = newEntity();
+    Address address = new Address();
+    address.setAddress("dummy address");
+    address.setCity("city");
+    institution1.setAddress(address);
+    UUID key1 = institutionService.create(institution1);
+
+    // add contact
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey = personService.create(person1);
+    institutionService.addContact(key1, personKey);
+
+    Institution institution2 = newEntity();
+    Address address2 = new Address();
+    address2.setAddress("dummy address2");
+    address2.setCity("city2");
+    institution2.setAddress(address2);
+    UUID key2 = institutionService.create(institution2);
+
+    Pageable page = PAGE.apply(5, 0L);
+    PagingResponse<Institution> response = institutionService.list("dummy", page);
+    assertEquals(2, response.getResults().size());
+
+    response = institutionService.list("city", page);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key1, response.getResults().get(0).getKey());
+
+    response = institutionService.list("city2", page);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key2, response.getResults().get(0).getKey());
+
+    assertEquals(0, institutionService.list("c", page).getResults().size());
+
+    // person search
+    assertEquals(1, institutionService.list("first name", page).getResults().size());
+    institutionService.removeContact(key1, personKey);
+    assertEquals(0, institutionService.list("first name", page).getResults().size());
+
+    institutionService.delete(key2);
+    assertEquals(0, institutionService.list("city2", page).getResults().size());
   }
 
   @Override

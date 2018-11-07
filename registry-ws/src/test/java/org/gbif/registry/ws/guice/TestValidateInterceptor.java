@@ -2,7 +2,7 @@ package org.gbif.registry.ws.guice;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Staff;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Endpoint;
@@ -64,7 +64,7 @@ public class TestValidateInterceptor implements MethodInterceptor {
           arg instanceof Tag ||
           arg instanceof Institution ||
           arg instanceof Collection ||
-          arg instanceof Staff) {
+          arg instanceof Person) {
           addRequiredFields(invocation.getArguments()[i]);
         }
       }

@@ -2,7 +2,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Staff;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.PrePersist;
@@ -63,14 +63,10 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   private final IdentifierMapper identifierMapper;
   private final ContactableMapper contactableMapper;
 
-  protected BaseExtendableCollectionResource(
-      CrudMapper<T> crudMapper,
-      AddressMapper addressMapper,
-      TaggableMapper taggableMapper,
-      TagMapper tagMapper,
-      IdentifiableMapper identifiableMapper,
-      IdentifierMapper identifierMapper,
-      ContactableMapper contactableMapper) {
+  protected BaseExtendableCollectionResource(CrudMapper<T> crudMapper, AddressMapper addressMapper,
+                                             TaggableMapper taggableMapper, TagMapper tagMapper,
+                                             IdentifiableMapper identifiableMapper, IdentifierMapper identifierMapper,
+                                             ContactableMapper contactableMapper) {
     super(crudMapper);
     this.crudMapper = crudMapper;
     this.addressMapper = addressMapper;
@@ -132,19 +128,19 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID staffKey) {
-    contactableMapper.addContact(entityKey, staffKey);
+  public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
+    contactableMapper.addContact(entityKey, personKey);
   }
 
   @DELETE
-  @Path("{key}/contact/{staffKey}")
+  @Path("{key}/contact/{personKey}")
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void removeContact(
-      @PathParam("key") @NotNull UUID entityKey, @PathParam("staffKey") @NotNull UUID staffKey) {
-    contactableMapper.removeContact(entityKey, staffKey);
+      @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey) {
+    contactableMapper.removeContact(entityKey, personKey);
   }
 
   @GET
@@ -153,7 +149,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @NullToNotFound
   @Validate(validateReturnedValue = true)
   @Override
-  public List<Staff> listContacts(@PathParam("key") @NotNull UUID key) {
+  public List<Person> listContacts(@PathParam("key") @NotNull UUID key) {
     return contactableMapper.listContacts(key);
   }
 
@@ -161,10 +157,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/identifier")
   @Trim
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public int addIdentifier(
-      @PathParam("key") @NotNull UUID entityKey,
-      @NotNull Identifier identifier,
-      @Context SecurityContext security) {
+  public int addIdentifier(@PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier,
+                           @Context SecurityContext security) {
     identifier.setCreatedBy(security.getUserPrincipal().getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -180,8 +174,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
   @Override
-  public void deleteIdentifier(
-      @PathParam("key") @NotNull UUID entityKey, @PathParam("identifierKey") int identifierKey) {
+  public void deleteIdentifier(@PathParam("key") @NotNull UUID entityKey, @PathParam("identifierKey") int identifierKey) {
     WithMyBatis.deleteIdentifier(identifiableMapper, entityKey, identifierKey);
   }
 
@@ -199,10 +192,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/tag")
   @Trim
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public int addTag(
-      @PathParam("key") @NotNull UUID entityKey,
-      @NotNull Tag tag,
-      @Context SecurityContext security) {
+  public int addTag(@PathParam("key") @NotNull UUID entityKey, @NotNull Tag tag, @Context SecurityContext security) {
     tag.setCreatedBy(security.getUserPrincipal().getName());
     return addTag(entityKey, tag);
   }
@@ -225,8 +215,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
   @Override
-  public void deleteTag(
-      @PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
+  public void deleteTag(@PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
     WithMyBatis.deleteTag(taggableMapper, entityKey, tagKey);
   }
 
@@ -236,8 +225,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @NullToNotFound
   @Validate(validateReturnedValue = true)
   @Override
-  public List<Tag> listTags(
-      @PathParam("key") @NotNull UUID key, @QueryParam("owner") @Nullable String owner) {
+  public List<Tag> listTags(@PathParam("key") @NotNull UUID key, @QueryParam("owner") @Nullable String owner) {
     return WithMyBatis.listTags(taggableMapper, key, owner);
   }
 }

@@ -2,7 +2,7 @@ package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Staff;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
@@ -28,7 +28,7 @@ import com.sun.jersey.api.client.filter.ClientFilter;
 public abstract class BaseExtendableCollectionEntityClient<T extends CollectionEntity & Taggable & Identifiable & Contactable>
     extends BaseCrudClient<T> implements TagService, IdentifierService, ContactService {
 
-  protected static final GenericType<List<Staff>> LIST_STAFF = new GenericType<List<Staff>>() {};
+  protected static final GenericType<List<Person>> LIST_PERSON = new GenericType<List<Person>>() {};
   protected static final GenericType<List<Tag>> LIST_TAG = new GenericType<List<Tag>>() {};
   protected static final GenericType<List<Identifier>> LIST_IDENTIFIER =
       new GenericType<List<Identifier>>() {};
@@ -42,8 +42,8 @@ public abstract class BaseExtendableCollectionEntityClient<T extends CollectionE
   }
 
   @Override
-  public List<Staff> listContacts(@NotNull UUID key) {
-    return get(LIST_STAFF, null, null, (Pageable) null, String.valueOf(key), "contact");
+  public List<Person> listContacts(@NotNull UUID key) {
+    return get(LIST_PERSON, null, null, (Pageable) null, String.valueOf(key), "contact");
   }
 
   @Override

@@ -148,7 +148,7 @@ CREATE TRIGGER collection_fulltext_update
   BEFORE INSERT OR UPDATE ON collection
   FOR EACH ROW EXECUTE PROCEDURE collection_change_trigger();
 
-CREATE TABLE collection_staff (
+CREATE TABLE collection_person (
   key uuid NOT NULL PRIMARY KEY,
 	first_name varchar NOT NULL CHECK (assert_min_length(first_name, 1)),
 	last_name varchar CHECK (assert_min_length(last_name, 1)),
@@ -169,11 +169,11 @@ CREATE TABLE collection_staff (
 	deleted timestamptz NULL
 );
 
-CREATE INDEX colstaff_fulltext_search_idx ON collection_staff USING gin(fulltext_search);
+CREATE INDEX colperson_fulltext_search_idx ON collection_person USING gin(fulltext_search);
 
-CREATE OR REPLACE FUNCTION colstaff_change_trigger()
+CREATE OR REPLACE FUNCTION colperson_change_trigger()
 RETURNS TRIGGER AS
-$colstaffchange$
+$colpersonchange$
     BEGIN
       NEW.fulltext_search :=
         TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.first_name,''))) ||
@@ -186,17 +186,17 @@ $colstaffchange$
         TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.email,'')));
       RETURN NEW;
     END;
-$colstaffchange$
+$colpersonchange$
 LANGUAGE plpgsql;
 
-CREATE TRIGGER colstaff_fulltext_update
-  BEFORE INSERT OR UPDATE ON collection_staff
-  FOR EACH ROW EXECUTE PROCEDURE colstaff_change_trigger();
+CREATE TRIGGER colperson_fulltext_update
+  BEFORE INSERT OR UPDATE ON collection_person
+  FOR EACH ROW EXECUTE PROCEDURE colperson_change_trigger();
 
-CREATE TABLE collection_contact (
+CREATE TABLE collection_collection_person (
 	collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
-	collection_staff_key uuid NOT NULL REFERENCES collection_staff(key) ON DELETE CASCADE,
-	PRIMARY KEY (collection_staff_key, collection_key)
+	collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,
+	PRIMARY KEY (collection_person_key, collection_key)
 );
 
 CREATE TABLE collection_identifier (
@@ -211,10 +211,10 @@ CREATE TABLE collection_tag (
 	PRIMARY KEY (collection_key, tag_key)
 );
 
-CREATE TABLE institution_contact (
+CREATE TABLE institution_collection_person (
 	institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
-	collection_staff_key uuid NOT NULL REFERENCES collection_staff(key) ON DELETE CASCADE,
-	PRIMARY KEY (institution_key, collection_staff_key)
+	collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,
+	PRIMARY KEY (institution_key, collection_person_key)
 );
 
 CREATE TABLE institution_identifier (

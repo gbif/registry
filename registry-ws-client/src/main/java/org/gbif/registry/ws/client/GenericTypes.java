@@ -12,9 +12,6 @@
  */
 package org.gbif.registry.ws.client;
 
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Staff;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;

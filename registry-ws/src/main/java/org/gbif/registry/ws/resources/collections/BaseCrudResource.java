@@ -1,9 +1,6 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
@@ -44,6 +41,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Trim
   @NullToNotFound
   @Validate
+  @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public UUID create(@NotNull T entity, @Context SecurityContext security) {
     entity.setCreatedBy(security.getUserPrincipal().getName());
@@ -80,24 +78,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Override
   public T get(@PathParam("key") @NotNull UUID key) {
     return crudMapper.get(key);
-  }
-
-  @Override
-  public PagingResponse<T> list(@Nullable Pageable pageable) {
-    pageable = pageable == null ? new PagingRequest() : pageable;
-    long total = crudMapper.count();
-
-    return new PagingResponse<>(
-        pageable.getOffset(), pageable.getLimit(), total, crudMapper.list(pageable));
-  }
-
-  @Override
-  public PagingResponse<T> search(String query, @Nullable Pageable pageable) {
-    pageable = pageable == null ? new PagingRequest() : pageable;
-    long total = crudMapper.countWithFilter(query);
-
-    return new PagingResponse<>(
-        pageable.getOffset(), pageable.getLimit(), total, crudMapper.search(query, pageable));
   }
 
   @PUT
