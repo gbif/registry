@@ -17,8 +17,11 @@ import org.apache.ibatis.annotations.Param;
 public interface CollectionMapper
     extends CrudMapper<Collection>, ContactableMapper, TaggableMapper, IdentifiableMapper {
 
-  List<Collection> listCollectionsByInstitution(
-      @Param("institutionKey") UUID institutionKey, @Nullable @Param("page") Pageable page);
+  List<Collection> list(@Nullable @Param("institutionKey") UUID institutionKey,
+                    @Nullable @Param("query") String query,
+                    @Nullable @Param("page") Pageable page);
 
-  long countByInstitution(@Param("institutionKey") UUID institutionKey);
+  long count(@Nullable @Param("institutionKey") UUID institutionKey,
+             @Nullable @Param("query") String query);
+
 }

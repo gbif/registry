@@ -1,15 +1,18 @@
 package org.gbif.registry.collections;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.vocabulary.AccessionStatus;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.StaffService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
-import org.gbif.registry.ws.resources.collections.StaffResource;
+import org.gbif.registry.ws.resources.collections.PersonResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -41,34 +44,101 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
 
   private final CollectionService collectionService;
   private final InstitutionService institutionService;
+  private final PersonService personService;
 
   @Parameterized.Parameters
   public static Iterable<Object[]> data() {
     final Injector client = webserviceClient();
     final Injector webservice = webservice();
-    return ImmutableList.<Object[]>of(
-        new Object[] {
-          webservice.getInstance(CollectionResource.class),
-          webservice.getInstance(InstitutionResource.class),
-          webservice.getInstance(StaffResource.class),
-          null
-        },
-        new Object[] {
-          client.getInstance(CollectionService.class),
-          client.getInstance(InstitutionService.class),
-          client.getInstance(StaffService.class),
-          client.getInstance(SimplePrincipalProvider.class)
-        });
+    return ImmutableList.<Object[]>of(new Object[] {webservice.getInstance(CollectionResource.class),
+                                        webservice.getInstance(InstitutionResource.class), webservice.getInstance(PersonResource.class), null},
+                                      new Object[] {client.getInstance(CollectionService.class),
+                                        client.getInstance(InstitutionService.class),
+                                        client.getInstance(PersonService.class),
+                                        client.getInstance(SimplePrincipalProvider.class)});
   }
 
   public CollectionIT(
-      CollectionService collectionService,
-      InstitutionService institutionService,
-      StaffService staffService,
-      @Nullable SimplePrincipalProvider pp) {
-    super(collectionService, collectionService, collectionService, collectionService, staffService, pp);
+    CollectionService collectionService,
+    InstitutionService institutionService,
+    PersonService personService,
+    @Nullable SimplePrincipalProvider pp
+  ) {
+    super(collectionService, collectionService, collectionService, collectionService, personService, pp);
     this.collectionService = collectionService;
     this.institutionService = institutionService;
+    this.personService = personService;
+  }
+
+  @Test
+  public void listWithoutParametersTest() {
+    Collection collection1 = newEntity();
+    UUID key1 = collectionService.create(collection1);
+
+    Collection collection2 = newEntity();
+    UUID key2 = collectionService.create(collection2);
+
+    Collection collection3 = newEntity();
+    UUID key3 = collectionService.create(collection3);
+
+    PagingResponse<Collection> response = collectionService.list(null, null, PAGE.apply(5, 0L));
+    assertEquals(3, response.getResults().size());
+
+    collectionService.delete(key3);
+
+    response = collectionService.list(null, null, PAGE.apply(5, 0L));
+    assertEquals(2, response.getResults().size());
+
+    response = collectionService.list(null, null, PAGE.apply(1, 0L));
+    assertEquals(1, response.getResults().size());
+
+    response = collectionService.list(null, null, PAGE.apply(0, 0L));
+    assertEquals(0, response.getResults().size());
+  }
+
+  @Test
+  public void listQueryTest() {
+    Collection collection1 = newEntity();
+    Address address = new Address();
+    address.setAddress("dummy address");
+    address.setCity("city");
+    collection1.setAddress(address);
+    UUID key1 = collectionService.create(collection1);
+
+    // add contact
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey = personService.create(person1);
+    collectionService.addContact(key1, personKey);
+
+    Collection collection2 = newEntity();
+    Address address2 = new Address();
+    address2.setAddress("dummy address2");
+    address2.setCity("city2");
+    collection2.setAddress(address2);
+    UUID key2 = collectionService.create(collection2);
+
+    Pageable page = PAGE.apply(5, 0L);
+    PagingResponse<Collection> response = collectionService.list("dummy", null, page);
+    assertEquals(2, response.getResults().size());
+
+    response = collectionService.list("city", null, page);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key1, response.getResults().get(0).getKey());
+
+    response = collectionService.list("city2", null, page);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key2, response.getResults().get(0).getKey());
+
+    assertEquals(0, collectionService.list("c", null, page).getResults().size());
+
+    // person search
+    assertEquals(1, collectionService.list("first name", null, page).getResults().size());
+    collectionService.removeContact(key1, personKey);
+    assertEquals(0, collectionService.list("first name", null, page).getResults().size());
+
+    collectionService.delete(key2);
+    assertEquals(0, collectionService.list("city2", null, page).getResults().size());
   }
 
   @Test
@@ -84,7 +154,6 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     institution2.setName("name2");
     UUID institutionKey2 = institutionService.create(institution2);
 
-    // staff
     Collection collection1 = newEntity();
     collection1.setInstitutionKey(institutionKey1);
     collectionService.create(collection1);
@@ -97,15 +166,54 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     collection3.setInstitutionKey(institutionKey2);
     collectionService.create(collection3);
 
-    PagingResponse<Collection> response =
-        collectionService.listByInstitution(institutionKey1, PAGE.apply(5, 0L));
+    PagingResponse<Collection> response = collectionService.list(null, institutionKey1, PAGE.apply(5, 0L));
     assertEquals(2, response.getResults().size());
 
-    response = collectionService.listByInstitution(institutionKey2, PAGE.apply(2, 0L));
+    response = collectionService.list(null, institutionKey2, PAGE.apply(2, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = collectionService.listByInstitution(UUID.randomUUID(), PAGE.apply(2, 0L));
+    response = collectionService.list(null, UUID.randomUUID(), PAGE.apply(2, 0L));
     assertEquals(0, response.getResults().size());
+  }
+
+  @Test
+  public void listMultipleParamsTest() {
+    // institutions
+    Institution institution1 = new Institution();
+    institution1.setCode("code1");
+    institution1.setName("name1");
+    UUID institutionKey1 = institutionService.create(institution1);
+
+    Institution institution2 = new Institution();
+    institution2.setCode("code2");
+    institution2.setName("name2");
+    UUID institutionKey2 = institutionService.create(institution2);
+
+    Collection collection1 = newEntity();
+    collection1.setCode("code1");
+    collection1.setInstitutionKey(institutionKey1);
+    collectionService.create(collection1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode("code2");
+    collection2.setInstitutionKey(institutionKey1);
+    collectionService.create(collection2);
+
+    Collection collection3 = newEntity();
+    collection3.setInstitutionKey(institutionKey2);
+    collectionService.create(collection3);
+
+    PagingResponse<Collection> response = collectionService.list("code1", institutionKey1, PAGE.apply(5, 0L));
+    assertEquals(1, response.getResults().size());
+
+    response = collectionService.list("foo", institutionKey1, PAGE.apply(5, 0L));
+    assertEquals(0, response.getResults().size());
+
+    response = collectionService.list("code2", institutionKey2, PAGE.apply(5, 0L));
+    assertEquals(0, response.getResults().size());
+
+    response = collectionService.list("code2", institutionKey1, PAGE.apply(5, 0L));
+    assertEquals(1, response.getResults().size());
   }
 
   @Override

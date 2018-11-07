@@ -157,10 +157,10 @@ public class CollectionMapperTest {
     collectionMapper.create(col2);
     collectionMapper.create(col3);
 
-    List<Collection> cols = collectionMapper.list(PAGE.apply(5, 0L));
+    List<Collection> cols = collectionMapper.list(null, null, PAGE.apply(5, 0L));
     assertEquals(3, cols.size());
 
-    cols = collectionMapper.list(PAGE.apply(2, 0L));
+    cols = collectionMapper.list(null, null, PAGE.apply(2, 0L));
     assertEquals(2, cols.size());
   }
 
@@ -191,21 +191,21 @@ public class CollectionMapperTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Collection> cols = collectionMapper.search("c1 n1", pageable);
+    List<Collection> cols = collectionMapper.list(null,"c1 n1", pageable);
     assertEquals(1, cols.size());
     assertEquals("c1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
-    cols = collectionMapper.search("c2 c1", pageable);
+    cols = collectionMapper.list(null,"c2 c1", pageable);
     assertEquals(0, cols.size());
 
-    cols = collectionMapper.search("c3", pageable);
+    cols = collectionMapper.list(null,"c3", pageable);
     assertEquals(0, cols.size());
 
-    cols = collectionMapper.search("n1", pageable);
+    cols = collectionMapper.list(null,"n1", pageable);
     assertEquals(2, cols.size());
 
-    cols = collectionMapper.search("dummy address", pageable);
+    cols = collectionMapper.list(null,"dummy address", pageable);
     assertEquals(1, cols.size());
   }
 }

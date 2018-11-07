@@ -18,7 +18,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -29,29 +28,21 @@ import com.google.inject.Singleton;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("institution")
+@Path("grbio/institution")
 public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
     implements InstitutionService {
 
+  private final InstitutionMapper institutionMapper;
+
   @Inject
-  public InstitutionResource(
-      InstitutionMapper institutionMapper,
-      AddressMapper addressMapper,
-      IdentifierMapper identifierMapper,
-      TagMapper tagMapper) {
-    super(
-        institutionMapper,
-        addressMapper,
-        institutionMapper,
-        tagMapper,
-        institutionMapper,
-        identifierMapper,
-        institutionMapper);
+  public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper, TagMapper tagMapper) {
+    super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper);
+    this.institutionMapper = institutionMapper;
   }
 
   @GET
-  public PagingResponse<Institution> list(
-      @Nullable @QueryParam("q") String query, @Nullable @Context Pageable page) {
-    return Strings.isNullOrEmpty(query) ? list(page) : search(query, page);
+  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @Context Pageable page) {
+    long total = institutionMapper.count(query);
+    return new PagingResponse<>(page, total, institutionMapper.list(query, page));
   }
 }

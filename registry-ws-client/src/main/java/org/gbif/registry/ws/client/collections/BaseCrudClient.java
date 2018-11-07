@@ -1,11 +1,9 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.ws.client.BaseWsGetClient;
-import org.gbif.ws.client.QueryParamBuilder;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -38,16 +36,6 @@ public abstract class BaseCrudClient<T extends CollectionEntity> extends BaseWsG
   @Override
   public void delete(@NotNull UUID uuid) {
     delete(String.valueOf(uuid));
-  }
-
-  @Override
-  public PagingResponse<T> list(@Nullable Pageable pageable) {
-    return get(pagingType, null, null, pageable);
-  }
-
-  @Override
-  public PagingResponse<T> search(String query, @Nullable Pageable pageable) {
-    return get(pagingType, null, QueryParamBuilder.create("q", query).build(), pageable);
   }
 
   @Override
