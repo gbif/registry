@@ -3,9 +3,7 @@ package org.gbif.registry.persistence.mapper;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.vocabulary.Discipline;
-import org.gbif.api.model.collections.vocabulary.InstitutionGovernance;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
@@ -162,7 +160,7 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    List<Institution> cols = institutionMapper.list(PAGE.apply(5, 0L));
+    List<Institution> cols = institutionMapper.list(null, PAGE.apply(5, 0L));
     assertEquals(2, cols.size());
   }
 
@@ -193,21 +191,21 @@ public class InstitutionMapperTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Institution> cols = institutionMapper.search("i1 n1", pageable);
+    List<Institution> cols = institutionMapper.list("i1 n1", pageable);
     assertEquals(1, cols.size());
     assertEquals("i1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
-    cols = institutionMapper.search("i2 i1", pageable);
+    cols = institutionMapper.list("i2 i1", pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.search("i3", pageable);
+    cols = institutionMapper.list("i3", pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.search("n1", pageable);
+    cols = institutionMapper.list("n1", pageable);
     assertEquals(2, cols.size());
 
-    cols = institutionMapper.search("dummy address", pageable);
+    cols = institutionMapper.list("dummy address", pageable);
     assertEquals(1, cols.size());
   }
 
@@ -230,6 +228,6 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    assertEquals(2, institutionMapper.count());
+    assertEquals(2, institutionMapper.count(null));
   }
 }

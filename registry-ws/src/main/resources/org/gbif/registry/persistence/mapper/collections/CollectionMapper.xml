@@ -9,7 +9,7 @@
     <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
-    <collection property="contacts" column="key" select="listStaff"/>
+    <collection property="contacts" column="key" select="listContacts"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
   </resultMap>
@@ -83,6 +83,12 @@
     FROM address addr
     WHERE addr.key=c.address_key AND query @@ addr.fulltext_search
     )
+    OR EXISTS(
+    SELECT key
+    FROM collection_person p
+    INNER JOIN collection_collection_person cp on cp.collection_key=c.key
+    WHERE query @@ p.fulltext_search
+    )
   </sql>
 
   <insert id="create" parameterType="SciCollection">
@@ -110,48 +116,23 @@
     WHERE c.key = #{key,jdbcType=OTHER}
   </select>
 
-  <select id="listStaff" resultMap="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_MAP">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_READ_FIELDS"/>
-    FROM collection_staff s INNER JOIN collection_contact ON collection_staff_key = s.key
-    WHERE collection_key = #{key,jdbcType=OTHER}
-    ORDER BY created ASC
-  </select>
-
   <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_READ_FIELDS"/>
     FROM address
     WHERE key = #{key,jdbcType=OTHER}
   </select>
 
-  <select id="list" resultType="SciCollection"  resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
-    FROM collection c
-    WHERE c.deleted IS NULL
-    ORDER BY c.created DESC, c.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="listCollectionsByInstitution" resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
-    FROM collection c
-    WHERE c.institution_key = #{institutionKey,jdbcType=OTHER}
-    AND c.deleted IS NULL
-    ORDER BY c.created DESC, c.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
   <!-- Basic paging search functionality -->
-  <select id="search" resultMap="COLLECTION_MAP">
+  <select id="list" resultType="SciCollection"  resultMap="COLLECTION_MAP" parameterType="Pageable">
     SELECT <include refid="COLLECTION_READ_FIELDS"/>
     FROM collection c
     <if test="query != null" >
       JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/>
     </if>
     WHERE c.deleted IS NULL
+    <if test="institutionKey != null" >
+      AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -160,41 +141,32 @@
 
   <select id="count" resultType="Long">
     SELECT COUNT(*)
-    FROM collection c
-    WHERE c.deleted IS NULL
-  </select>
-
-  <select id="countWithFilter" resultType="Long">
-    SELECT COUNT(*)
     FROM collection c <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
     WHERE c.deleted IS NULL
+    <if test="institutionKey != null" >
+      AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
   </select>
 
-  <select id="countByInstitution" resultType="Long">
-    SELECT COUNT(*)
-    FROM collection c
-    WHERE c.institution_key = #{institutionKey,jdbcType=OTHER} AND c.deleted IS NULL
-  </select>
-
-  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_MAP">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.StaffMapper.STAFF_READ_FIELDS"/>
-    FROM collection_staff s INNER JOIN collection_contact ON collection_staff_key = s.key
+  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.PersonMapper.COLLECTION_PERSON_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.PersonMapper.PERSON_READ_FIELDS"/>
+    FROM collection_person p INNER JOIN collection_collection_person ON collection_person_key = p.key
     WHERE collection_key = #{key,jdbcType=OTHER}
     ORDER BY created ASC
   </select>
 
   <insert id="addContact">
-    INSERT INTO collection_contact(collection_key,collection_staff_key)
+    INSERT INTO collection_collection_person(collection_key,collection_person_key)
     VALUES(
     #{entityKey,jdbcType=OTHER},
-    #{staffKey,jdbcType=OTHER}
+    #{personKey,jdbcType=OTHER}
     )
   </insert>
 
   <delete id="removeContact">
-    DELETE FROM collection_contact
+    DELETE FROM collection_collection_person
     WHERE
-    collection_key = #{entityKey,jdbcType=OTHER} AND collection_staff_key = #{staffKey,jdbcType=INTEGER}
+    collection_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
   </delete>
 
   <!-- TAGS -->

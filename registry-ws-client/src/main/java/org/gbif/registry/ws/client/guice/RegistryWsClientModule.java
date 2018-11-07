@@ -14,7 +14,7 @@ package org.gbif.registry.ws.client.guice;
 
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.StaffService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
@@ -27,18 +27,18 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
-import org.gbif.registry.ws.client.collections.CollectionWsClient;
 import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageWsClient;
 import org.gbif.registry.ws.client.DatasetSearchWsClient;
 import org.gbif.registry.ws.client.DatasetWsClient;
 import org.gbif.registry.ws.client.DoiRegistrationWsClient;
 import org.gbif.registry.ws.client.InstallationWsClient;
-import org.gbif.registry.ws.client.collections.InstitutionWsClient;
 import org.gbif.registry.ws.client.NetworkWsClient;
 import org.gbif.registry.ws.client.NodeWsClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadWsClient;
 import org.gbif.registry.ws.client.OrganizationWsClient;
-import org.gbif.registry.ws.client.collections.StaffWsClient;
+import org.gbif.registry.ws.client.collections.CollectionWsClient;
+import org.gbif.registry.ws.client.collections.InstitutionWsClient;
+import org.gbif.registry.ws.client.collections.PersonWsClient;
 import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -90,7 +90,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
     expose(DoiRegistrationService.class);
     expose(InstitutionService.class);
     expose(CollectionService.class);
-    expose(StaffService.class);
+    expose(PersonService.class);
   }
 
   @Override
@@ -124,7 +124,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       bind(DatasetProcessStatusService.class).to(DatasetWsClient.class).in(Scopes.SINGLETON);
       bind(InstitutionService.class).to(InstitutionWsClient.class).in(Scopes.SINGLETON);
       bind(CollectionService.class).to(CollectionWsClient.class).in(Scopes.SINGLETON);
-      bind(StaffService.class).to(StaffWsClient.class).in(Scopes.SINGLETON);
+      bind(PersonService.class).to(PersonWsClient.class).in(Scopes.SINGLETON);
 
       expose(NodeService.class);
       expose(OrganizationService.class);
@@ -139,7 +139,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       expose(DoiRegistrationService.class);
       expose(InstitutionService.class);
       expose(CollectionService.class);
-      expose(StaffService.class);
+      expose(PersonService.class);
     }
 
     @Provides

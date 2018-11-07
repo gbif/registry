@@ -15,7 +15,7 @@ package org.gbif.registry.persistence.guice;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Staff;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -50,8 +50,6 @@ import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -61,7 +59,6 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
@@ -69,9 +66,12 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.collections.StaffMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
@@ -142,7 +142,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       // collections
       addMapperClass(InstitutionMapper.class);
       addMapperClass(CollectionMapper.class);
-      addMapperClass(StaffMapper.class);
+      addMapperClass(PersonMapper.class);
       addMapperClass(AddressMapper.class);
 
       //from registry-surety module
@@ -177,7 +177,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Count").to(Facet.Count.class);
       addAlias("Institution").to(Institution.class);
       addAlias("SciCollection").to(Collection.class);
-      addAlias("Staff").to(Staff.class);
+      addAlias("CollectionPerson").to(Person.class);
       addAlias("Address").to(Address.class);
 
       addAlias("UriTypeHandler").to(UriTypeHandler.class);
@@ -241,7 +241,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(ChallengeCodeMapper.class);
     expose(InstitutionMapper.class);
     expose(CollectionMapper.class);
-    expose(StaffMapper.class);
+    expose(PersonMapper.class);
     expose(AddressMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService

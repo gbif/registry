@@ -3,16 +3,14 @@ package org.gbif.registry.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Staff;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.collections.StaffService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
@@ -43,21 +41,21 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
   private final ContactService contactService;
   private final TagService tagService;
   private final IdentifierService identifierService;
-  private final StaffService staffService;
+  private final PersonService personService;
 
   public BaseCollectionTest(
       CrudService<T> crudService,
       ContactService contactService,
       TagService tagService,
       IdentifierService identifierService,
-      StaffService staffService,
+      PersonService personService,
       @Nullable SimplePrincipalProvider pp) {
     super(crudService, pp);
     this.crudService = crudService;
     this.contactService = contactService;
     this.tagService = tagService;
     this.identifierService = identifierService;
-    this.staffService = staffService;
+    this.personService = personService;
     this.pp = pp;
   }
 
@@ -97,40 +95,6 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
     assertEquals(1, entitySaved.getIdentifiers().size());
     assertEquals("id", entitySaved.getIdentifiers().get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
-  }
-
-  @Test
-  public void searchTest() {
-    T entity1 = newEntity();
-    Address address = new Address();
-    address.setAddress("dummy address");
-    address.setCity("city");
-    entity1.setAddress(address);
-    UUID key1 = crudService.create(entity1);
-
-    T entity2 = newEntity();
-    Address address2 = new Address();
-    address2.setAddress("dummy address2");
-    address2.setCity("city2");
-    entity2.setAddress(address2);
-    UUID key2 = crudService.create(entity2);
-
-    Pageable page = PAGE.apply(5, 0L);
-    PagingResponse<T> response = crudService.search("dummy", page);
-    assertEquals(2, response.getResults().size());
-
-    response = crudService.search("city", page);
-    assertEquals(1, response.getResults().size());
-    assertEquals(key1, response.getResults().get(0).getKey());
-
-    response = crudService.search("city2", page);
-    assertEquals(1, response.getResults().size());
-    assertEquals(key2, response.getResults().get(0).getKey());
-
-    assertEquals(0, crudService.search("c", page).getResults().size());
-
-    crudService.delete(key2);
-    assertEquals(0, crudService.search("city2", page).getResults().size());
   }
 
   @Test
@@ -185,36 +149,36 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
     UUID entityKey3 = crudService.create(entity3);
 
     // contacts
-    Staff staff1 = new Staff();
-    staff1.setFirstName("name1");
-    UUID staffKey1 = staffService.create(staff1);
+    Person person1 = new Person();
+    person1.setFirstName("name1");
+    UUID personKey1 = personService.create(person1);
 
-    Staff staff2 = new Staff();
-    staff2.setFirstName("name2");
-    UUID staffKey2 = staffService.create(staff2);
+    Person person2 = new Person();
+    person2.setFirstName("name2");
+    UUID personKey2 = personService.create(person2);
 
     // add contacts
-    contactService.addContact(entityKey1, staffKey1);
-    contactService.addContact(entityKey1, staffKey2);
-    contactService.addContact(entityKey2, staffKey2);
+    contactService.addContact(entityKey1, personKey1);
+    contactService.addContact(entityKey1, personKey2);
+    contactService.addContact(entityKey2, personKey2);
 
     // list contacts
-    List<Staff> contactsEntity1 = contactService.listContacts(entityKey1);
+    List<Person> contactsEntity1 = contactService.listContacts(entityKey1);
     assertEquals(2, contactsEntity1.size());
 
-    List<Staff> contactsEntity2 = contactService.listContacts(entityKey2);
+    List<Person> contactsEntity2 = contactService.listContacts(entityKey2);
     assertEquals(1, contactsEntity2.size());
     assertEquals("name2", contactsEntity2.get(0).getFirstName());
 
     assertEquals(0, contactService.listContacts(entityKey3).size());
 
     // remove contacts
-    contactService.removeContact(entityKey1, staffKey2);
+    contactService.removeContact(entityKey1, personKey2);
     contactsEntity1 = contactService.listContacts(entityKey1);
     assertEquals(1, contactsEntity1.size());
     assertEquals("name1", contactsEntity1.get(0).getFirstName());
 
-    contactService.removeContact(entityKey2, staffKey2);
+    contactService.removeContact(entityKey2, personKey2);
     assertEquals(0, contactService.listContacts(entityKey2).size());
   }
 }

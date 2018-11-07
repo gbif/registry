@@ -2,7 +2,6 @@ package org.gbif.registry.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
@@ -102,32 +101,6 @@ public abstract class CrudTest<T extends CollectionEntity> {
     crudService.delete(key);
     entitySaved = crudService.get(key);
     assertNotNull(entitySaved.getDeleted());
-  }
-
-  @Test
-  public void listTest() {
-    T entity1 = newEntity();
-    UUID key1 = crudService.create(entity1);
-
-    T entity2 = newEntity();
-    UUID key2 = crudService.create(entity2);
-
-    T entity3 = newEntity();
-    UUID key3 = crudService.create(entity3);
-
-    PagingResponse<T> response = crudService.list(PAGE.apply(5, 0L));
-    assertEquals(3, response.getResults().size());
-
-    crudService.delete(key3);
-
-    response = crudService.list(PAGE.apply(5, 0L));
-    assertEquals(2, response.getResults().size());
-
-    response = crudService.list(PAGE.apply(1, 0L));
-    assertEquals(1, response.getResults().size());
-
-    response = crudService.list(PAGE.apply(0, 0L));
-    assertEquals(0, response.getResults().size());
   }
 
   @Test(expected = ValidationException.class)
