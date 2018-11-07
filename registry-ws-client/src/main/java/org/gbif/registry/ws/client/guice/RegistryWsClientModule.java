@@ -12,6 +12,9 @@
  */
 package org.gbif.registry.ws.client.guice;
 
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
@@ -33,6 +36,9 @@ import org.gbif.registry.ws.client.NetworkWsClient;
 import org.gbif.registry.ws.client.NodeWsClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadWsClient;
 import org.gbif.registry.ws.client.OrganizationWsClient;
+import org.gbif.registry.ws.client.collections.CollectionWsClient;
+import org.gbif.registry.ws.client.collections.InstitutionWsClient;
+import org.gbif.registry.ws.client.collections.PersonWsClient;
 import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -64,7 +70,7 @@ import com.sun.jersey.api.client.WebResource;
 public class RegistryWsClientModule extends GbifWsClientModule {
 
   public RegistryWsClientModule(Properties properties) {
-    super(properties, NodeWsClient.class.getPackage());
+    super(properties, NodeWsClient.class.getPackage(), CollectionWsClient.class.getPackage());
   }
 
   @Override
@@ -82,6 +88,9 @@ public class RegistryWsClientModule extends GbifWsClientModule {
     expose(DatasetProcessStatusService.class);
     expose(MetasyncHistoryService.class);
     expose(DoiRegistrationService.class);
+    expose(InstitutionService.class);
+    expose(CollectionService.class);
+    expose(PersonService.class);
   }
 
   @Override
@@ -113,6 +122,9 @@ public class RegistryWsClientModule extends GbifWsClientModule {
         Scopes.SINGLETON);
       bind(DoiRegistrationService.class).to(DoiRegistrationWsClient.class).in(Scopes.SINGLETON);
       bind(DatasetProcessStatusService.class).to(DatasetWsClient.class).in(Scopes.SINGLETON);
+      bind(InstitutionService.class).to(InstitutionWsClient.class).in(Scopes.SINGLETON);
+      bind(CollectionService.class).to(CollectionWsClient.class).in(Scopes.SINGLETON);
+      bind(PersonService.class).to(PersonWsClient.class).in(Scopes.SINGLETON);
 
       expose(NodeService.class);
       expose(OrganizationService.class);
@@ -125,6 +137,9 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       expose(DatasetProcessStatusService.class);
       expose(MetasyncHistoryService.class);
       expose(DoiRegistrationService.class);
+      expose(InstitutionService.class);
+      expose(CollectionService.class);
+      expose(PersonService.class);
     }
 
     @Provides
