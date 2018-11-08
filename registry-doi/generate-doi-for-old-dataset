@@ -16,7 +16,7 @@ echo >&2 "Generating DOI for dataset $datasetKey"
     # Check if it already has a DOI
     newDoi=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .doi)
     if [[ $newDoi = 'null' ]]; then
-        newDoi=$(echo -n 10.15468/; tr -dc a-z0-9 < /dev/urandom | head -c${1:-6})
+        newDoi=$(echo -n 10.15468/; {tr -dc a-z0-9 < /dev/urandom || :} | head -c6)
         echo >&2 "Assigning DOI $newDoi"
         echo "UPDATE dataset SET doi = '$newDoi' WHERE key = '$datasetKey' AND doi IS NULL;"
         echo "INSERT INTO gbif_doi (doi, type, status, created, modified) VALUES ('$newDoi', 'DATASET', 'NEW', now(), now());"
