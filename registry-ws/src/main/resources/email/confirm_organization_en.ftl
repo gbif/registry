@@ -66,7 +66,7 @@ Additional information:
 </p>
 </#if>
 
-<#if !hasReachableNodeManager()>
+<#if hasReachableNodeManager()>
   <p>If you wish to endorse <b>${organization.title!}</b> please click the following link: <a href="${url}">Endorse ${organization.title!}</a></p>
   <p>If you do not want to endorse <b>${organization.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
 </#if>
