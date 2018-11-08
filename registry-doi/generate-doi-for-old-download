@@ -23,7 +23,7 @@ date=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r
     # Check if it already has a DOI
     newDoi=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r .doi)
     if [[ $newDoi = 'null' ]]; then
-        newDoi=$(echo -n 10.15468/dl.; tr -dc a-z0-9 < /dev/urandom | head -c${1:-6})
+        newDoi=$(echo -n 10.15468/dl.; {tr -dc a-z0-9 < /dev/urandom || :} | head -c6)
         echo >&2 "Assigning DOI $newDoi"
         echo "UPDATE occurrence_download SET doi = '$newDoi' WHERE key = '$downloadKey' AND doi IS NULL;"
         echo "INSERT INTO gbif_doi (doi, type, status, created, modified) VALUES ('$newDoi', 'DOWNLOAD', 'NEW', now(), now());"
