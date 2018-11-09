@@ -166,7 +166,13 @@
     <if test="query != null" >
       JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/>
     </if>
+    <if test="contactKey != null" >
+      INNER JOIN institution_collection_person icp on icp.institution_key = i.key
+    </if>
     WHERE i.deleted IS NULL
+    <if test="contactKey != null" >
+      AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}

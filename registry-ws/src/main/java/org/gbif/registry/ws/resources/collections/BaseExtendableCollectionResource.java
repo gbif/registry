@@ -11,6 +11,8 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
+import org.gbif.registry.events.ChangedComponentEvent;
+import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -38,6 +40,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
@@ -62,12 +65,14 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   private final IdentifiableMapper identifiableMapper;
   private final IdentifierMapper identifierMapper;
   private final ContactableMapper contactableMapper;
+  private final EventBus eventBus;
+  private final Class<T> objectClass;
 
   protected BaseExtendableCollectionResource(CrudMapper<T> crudMapper, AddressMapper addressMapper,
                                              TaggableMapper taggableMapper, TagMapper tagMapper,
                                              IdentifiableMapper identifiableMapper, IdentifierMapper identifierMapper,
-                                             ContactableMapper contactableMapper) {
-    super(crudMapper);
+                                             ContactableMapper contactableMapper, EventBus eventBus, Class<T> objectClass) {
+    super(crudMapper, eventBus, objectClass);
     this.crudMapper = crudMapper;
     this.addressMapper = addressMapper;
     this.taggableMapper = taggableMapper;
@@ -75,6 +80,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     this.identifiableMapper = identifiableMapper;
     this.identifierMapper = identifierMapper;
     this.contactableMapper = contactableMapper;
+    this.eventBus = eventBus;
+    this.objectClass = objectClass;
   }
 
   @Transactional
@@ -119,6 +126,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
       }
     }
 
+    eventBus.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
 
@@ -130,6 +138,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Override
   public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
     contactableMapper.addContact(entityKey, personKey);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @DELETE
@@ -141,6 +150,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   public void removeContact(
       @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @GET
@@ -165,8 +175,10 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(@NotNull UUID key, @Valid @NotNull Identifier identifier) {
-    return WithMyBatis.addIdentifier(identifierMapper, identifiableMapper, key, identifier);
+  public int addIdentifier(@NotNull UUID entityKey, @Valid @NotNull Identifier identifier) {
+    int identifierKey = WithMyBatis.addIdentifier(identifierMapper, identifiableMapper, entityKey, identifier);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
+    return identifierKey;
   }
 
   @DELETE
@@ -176,6 +188,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Override
   public void deleteIdentifier(@PathParam("key") @NotNull UUID entityKey, @PathParam("identifierKey") int identifierKey) {
     WithMyBatis.deleteIdentifier(identifiableMapper, entityKey, identifierKey);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
 
   @GET
@@ -206,8 +219,10 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addTag(@NotNull UUID key, @Valid @NotNull Tag tag) {
-    return WithMyBatis.addTag(tagMapper, taggableMapper, key, tag);
+  public int addTag(@NotNull UUID entityKey, @Valid @NotNull Tag tag) {
+    int tagKey = WithMyBatis.addTag(tagMapper, taggableMapper, entityKey, tag);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    return tagKey;
   }
 
   @DELETE
@@ -217,6 +232,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Override
   public void deleteTag(@PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
     WithMyBatis.deleteTag(taggableMapper, entityKey, tagKey);
+    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
   @GET

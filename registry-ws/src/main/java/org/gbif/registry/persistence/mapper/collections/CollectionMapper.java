@@ -18,8 +18,9 @@ public interface CollectionMapper
     extends CrudMapper<Collection>, ContactableMapper, TaggableMapper, IdentifiableMapper {
 
   List<Collection> list(@Nullable @Param("institutionKey") UUID institutionKey,
-                    @Nullable @Param("query") String query,
-                    @Nullable @Param("page") Pageable page);
+                        @Nullable @Param("contactKey") UUID contactKey,
+                        @Nullable @Param("query") String query,
+                        @Nullable @Param("page") Pageable page);
 
   long count(@Nullable @Param("institutionKey") UUID institutionKey,
              @Nullable @Param("query") String query);
