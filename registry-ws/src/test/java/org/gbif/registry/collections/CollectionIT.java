@@ -81,18 +81,18 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     Collection collection3 = newEntity();
     UUID key3 = collectionService.create(collection3);
 
-    PagingResponse<Collection> response = collectionService.list(null, null, PAGE.apply(5, 0L));
+    PagingResponse<Collection> response = collectionService.list(null, null, null, PAGE.apply(5, 0L));
     assertEquals(3, response.getResults().size());
 
     collectionService.delete(key3);
 
-    response = collectionService.list(null, null, PAGE.apply(5, 0L));
+    response = collectionService.list(null, null, null, PAGE.apply(5, 0L));
     assertEquals(2, response.getResults().size());
 
-    response = collectionService.list(null, null, PAGE.apply(1, 0L));
+    response = collectionService.list(null, null, null, PAGE.apply(1, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = collectionService.list(null, null, PAGE.apply(0, 0L));
+    response = collectionService.list(null, null, null, PAGE.apply(0, 0L));
     assertEquals(0, response.getResults().size());
   }
 
@@ -119,26 +119,26 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     UUID key2 = collectionService.create(collection2);
 
     Pageable page = PAGE.apply(5, 0L);
-    PagingResponse<Collection> response = collectionService.list("dummy", null, page);
+    PagingResponse<Collection> response = collectionService.list("dummy", null, null, page);
     assertEquals(2, response.getResults().size());
 
-    response = collectionService.list("city", null, page);
+    response = collectionService.list("city", null, null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = collectionService.list("city2", null, page);
+    response = collectionService.list("city2", null, null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(0, collectionService.list("c", null, page).getResults().size());
+    assertEquals(0, collectionService.list("c", null, null, page).getResults().size());
 
     // person search
-    assertEquals(1, collectionService.list("first name", null, page).getResults().size());
+    assertEquals(1, collectionService.list("first name", null, null, page).getResults().size());
     collectionService.removeContact(key1, personKey);
-    assertEquals(0, collectionService.list("first name", null, page).getResults().size());
+    assertEquals(0, collectionService.list("first name", null, null, page).getResults().size());
 
     collectionService.delete(key2);
-    assertEquals(0, collectionService.list("city2", null, page).getResults().size());
+    assertEquals(0, collectionService.list("city2", null, null, page).getResults().size());
   }
 
   @Test
@@ -166,13 +166,13 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     collection3.setInstitutionKey(institutionKey2);
     collectionService.create(collection3);
 
-    PagingResponse<Collection> response = collectionService.list(null, institutionKey1, PAGE.apply(5, 0L));
+    PagingResponse<Collection> response = collectionService.list(null, institutionKey1, null, PAGE.apply(5, 0L));
     assertEquals(2, response.getResults().size());
 
-    response = collectionService.list(null, institutionKey2, PAGE.apply(2, 0L));
+    response = collectionService.list(null, institutionKey2, null, PAGE.apply(2, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = collectionService.list(null, UUID.randomUUID(), PAGE.apply(2, 0L));
+    response = collectionService.list(null, UUID.randomUUID(), null, PAGE.apply(2, 0L));
     assertEquals(0, response.getResults().size());
   }
 
@@ -203,17 +203,48 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     collection3.setInstitutionKey(institutionKey2);
     collectionService.create(collection3);
 
-    PagingResponse<Collection> response = collectionService.list("code1", institutionKey1, PAGE.apply(5, 0L));
+    PagingResponse<Collection> response = collectionService.list("code1", institutionKey1, null, PAGE.apply(5, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = collectionService.list("foo", institutionKey1, PAGE.apply(5, 0L));
+    response = collectionService.list("foo", institutionKey1, null, PAGE.apply(5, 0L));
     assertEquals(0, response.getResults().size());
 
-    response = collectionService.list("code2", institutionKey2, PAGE.apply(5, 0L));
+    response = collectionService.list("code2", institutionKey2, null, PAGE.apply(5, 0L));
     assertEquals(0, response.getResults().size());
 
-    response = collectionService.list("code2", institutionKey1, PAGE.apply(5, 0L));
+    response = collectionService.list("code2", institutionKey1, null, PAGE.apply(5, 0L));
     assertEquals(1, response.getResults().size());
+  }
+
+  @Test
+  public void listByContactTest() {
+    // persons
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey1 = personService.create(person1);
+
+    Person person2 = new Person();
+    person2.setFirstName("first name2");
+    UUID personKey2 = personService.create(person2);
+
+    // collections
+    Collection collection1 = newEntity();
+    UUID collectionKey1 = collectionService.create(collection1);
+
+    Collection collection2 = newEntity();
+    UUID collectionKey2 = collectionService.create(collection2);
+
+    // add contacts
+    collectionService.addContact(collectionKey1, personKey1);
+    collectionService.addContact(collectionKey1, personKey2);
+    collectionService.addContact(collectionKey2, personKey2);
+
+    assertEquals(1, collectionService.list(null, null, personKey1, PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(2, collectionService.list(null, null, personKey2, PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(0, collectionService.list(null, null, UUID.randomUUID(), PAGE.apply(5, 0L)).getResults().size());
+
+    collectionService.removeContact(collectionKey1, personKey2);
+    assertEquals(1, collectionService.list(null, null, personKey1, PAGE.apply(5, 0L)).getResults().size());
   }
 
   @Override

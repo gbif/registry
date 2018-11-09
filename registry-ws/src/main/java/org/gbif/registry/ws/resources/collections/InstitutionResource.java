@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -9,6 +10,7 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 
+import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -18,6 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -33,16 +36,21 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
+  private final EventBus eventBus;
 
   @Inject
-  public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper, TagMapper tagMapper) {
-    super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper);
+  public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper,
+                             TagMapper tagMapper, EventBus eventBus) {
+    super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper,
+          eventBus, Institution.class);
     this.institutionMapper = institutionMapper;
+    this.eventBus = eventBus;
   }
 
   @GET
-  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @Context Pageable page) {
+  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @Nullable @QueryParam("contact") UUID contactKey, @Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     long total = institutionMapper.count(query);
-    return new PagingResponse<>(page, total, institutionMapper.list(query, page));
+    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
   }
 }

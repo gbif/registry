@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -19,6 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,19 +36,24 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
+  private final EventBus eventBus;
 
   @Inject
   public CollectionResource(CollectionMapper collectionMapper, AddressMapper addressMapper,
-                            IdentifierMapper identifierMapper,TagMapper tagMapper) {
-    super(collectionMapper, addressMapper, collectionMapper, tagMapper, collectionMapper, identifierMapper, collectionMapper);
+                            IdentifierMapper identifierMapper,TagMapper tagMapper, EventBus eventBus) {
+    super(collectionMapper, addressMapper, collectionMapper, tagMapper, collectionMapper, identifierMapper, collectionMapper,
+          eventBus, Collection.class);
     this.collectionMapper = collectionMapper;
+    this.eventBus = eventBus;
   }
 
   @GET
   public PagingResponse<Collection> list(@Nullable @QueryParam("q") String query,
                                          @Nullable @QueryParam("institution") UUID institutionKey,
+                                         @Nullable @QueryParam("contact") UUID contactKey,
                                          @Nullable @Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     long total = collectionMapper.count(institutionKey, query);
-    return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, query, page));
+    return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
   }
 }

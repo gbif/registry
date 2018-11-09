@@ -30,8 +30,8 @@ public class PersonWsClient extends BaseCrudClient<Person> implements PersonServ
   ) {
     return get(PAGING_PERSON,
                null,
-               QueryParamBuilder.create("institution", institutionKey)
-                 .queryParam("collection", collectionKey)
+               QueryParamBuilder.create("primaryInstitution", institutionKey)
+                 .queryParam("primaryCollection", collectionKey)
                  .queryParam("q", query)
                  .build(),
                pageable);
