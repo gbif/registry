@@ -2,6 +2,8 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.registry.events.DeleteEvent;
+import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.ws.server.interceptor.NullToNotFound;
@@ -20,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
@@ -32,9 +35,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public abstract class BaseCrudResource<T extends CollectionEntity> implements CrudService<T> {
 
   private final CrudMapper<T> crudMapper;
+  private final EventBus eventBus;
+  private final Class<T> objectClass;
 
-  protected BaseCrudResource(CrudMapper<T> crudMapper) {
+  protected BaseCrudResource(CrudMapper<T> crudMapper, EventBus eventBus, Class<T> objectClass) {
     this.crudMapper = crudMapper;
+    this.eventBus = eventBus;
+    this.objectClass = objectClass;
   }
 
   @POST
@@ -67,7 +74,9 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Validate
   @Override
   public void delete(@NotNull UUID key) {
+    T objectToDelete = get(key);
     crudMapper.delete(key);
+    eventBus.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
   @GET
@@ -115,5 +124,8 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     }
 
     crudMapper.update(entity);
+
+    T newEntity = get(entity.getKey());
+    eventBus.post(UpdateEvent.newInstance(newEntity, entityOld, objectClass));
   }
 }

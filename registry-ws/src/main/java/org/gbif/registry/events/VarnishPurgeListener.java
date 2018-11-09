@@ -1,9 +1,16 @@
 package org.gbif.registry.events;
 
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
@@ -11,6 +18,7 @@ import org.gbif.varnish.VarnishPurger;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -87,16 +95,23 @@ public class VarnishPurgeListener {
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
+  private final InstitutionService institutionService;
+  private final CollectionService collectionService;
+  private final PersonService personService;
   private final VarnishPurger purger;
   private static final Joiner PATH_JOINER = Joiner.on("/").skipNulls();
 
   @Inject
   public VarnishPurgeListener(CloseableHttpClient client, EventBus eventBus, URI apiBaseUrl,
                               OrganizationService organizationService,InstallationService installationService,
-                              DatasetService datasetService) {
+                              DatasetService datasetService, InstitutionService institutionService,
+                              CollectionService collectionService, PersonService personService) {
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
+    this.institutionService = institutionService;
+    this.collectionService = collectionService;
+    this.personService = personService;
     eventBus.register(this);
 
     purger = new VarnishPurger(client, apiBaseUrl);
@@ -116,8 +131,16 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
+  public final <T extends CollectionEntity> void createdCollection(CreateEvent<T> event) {
+    purgeEntityAndBanLists(event.getObjectClass(), event.getNewObject().getKey());
 
+    if (event.getObjectClass().equals(Person.class)) {
+      cascadePersonChange((Person) event.getNewObject());
+    }
+  }
+
+  @Subscribe
+  public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
     purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
 
     if (event.getObjectClass().equals(Organization.class)) {
@@ -126,6 +149,15 @@ public class VarnishPurgeListener {
       cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getOldObject(), (Installation) event.getNewObject());
+    }
+  }
+
+  @Subscribe
+  public final <T extends CollectionEntity> void updatedCollection(UpdateEvent<T> event) {
+    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+
+    if (event.getObjectClass().equals(Person.class)) {
+      cascadePersonChange((Person) event.getOldObject(), (Person) event.getNewObject());
     }
   }
 
@@ -143,6 +175,15 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
+  public final <T extends CollectionEntity> void deletedCollection(DeleteEvent<T> event) {
+    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+
+    if (event.getObjectClass().equals(Person.class)) {
+      cascadePersonChange((Person) event.getOldObject());
+    }
+  }
+
+  @Subscribe
   public final void componentChange(ChangedComponentEvent event) {
     purgeEntityAndBanLists(event.getTargetClass(), event.getTargetEntityKey());
     // keys have not changed, only some component of the entity itself
@@ -152,6 +193,8 @@ public class VarnishPurgeListener {
       cascadeDatasetChange(datasetService.get(event.getTargetEntityKey()));
     } else if (event.getTargetClass().equals(Installation.class)) {
       cascadeInstallationChange(installationService.get(event.getTargetEntityKey()));
+    } else if (event.getTargetClass().equals(Person.class)) {
+      cascadePersonChange((Person) personService.get(event.getTargetEntityKey()));
     }
   }
 
@@ -214,6 +257,25 @@ public class VarnishPurgeListener {
       nodekeys.add(o.getEndorsingNodeKey());
     }
     purger.ban(String.format("%node/%s/organization", purger.anyKey(nodekeys)));
+  }
+
+  private void cascadePersonChange(Person ... persons) {
+    Set<UUID> collectionKeys = new UUIDHashSet();
+    for (Person p : persons) {
+      List<Collection> collections = collectionService.list(null, null, p.getKey(), null).getResults();
+      collections.forEach(c -> collectionKeys.add(c.getKey()));
+    }
+
+    Set<UUID> institutionKeys = new UUIDHashSet();
+    for (Person p : persons) {
+      List<Institution> institutions = institutionService.list(null, p.getKey(), null).getResults();
+      institutions.forEach(i -> institutionKeys.add(i.getKey()));
+    }
+
+    // /collection/{collectionKey}/contact BAN
+    purger.ban(String.format("collection/%s/contact", purger.anyKey(collectionKeys)));
+    // /institution/{institutionKey}/contact BAN
+    purger.ban(String.format("institution/%s/contact", purger.anyKey(institutionKeys)));
   }
 
   /**
