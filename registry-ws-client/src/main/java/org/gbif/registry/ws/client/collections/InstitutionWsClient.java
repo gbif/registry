@@ -7,6 +7,7 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.QueryParamBuilder;
 
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.google.inject.Inject;
@@ -33,8 +34,11 @@ public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<In
 
   @Override
   public PagingResponse<Institution> list(
-    @Nullable String query, @Nullable Pageable pageable
+    @Nullable String query, @Nullable UUID contactKey, @Nullable Pageable pageable
   ) {
-    return get(PAGING_INSTITUTION, null, QueryParamBuilder.create("q", query).build(), pageable);
+    return get(PAGING_INSTITUTION,
+               null,
+               QueryParamBuilder.create("q", query).queryParam("contact", contactKey).build(),
+               pageable);
   }
 }
