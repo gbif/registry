@@ -33,11 +33,14 @@ public class CollectionWsClient extends BaseExtendableCollectionEntityClient<Col
 
   @Override
   public PagingResponse<Collection> list(
-    @Nullable String query, @Nullable UUID institutionKey, @Nullable Pageable pageable
+    @Nullable String query, @Nullable UUID institutionKey, @Nullable UUID contactKey, @Nullable Pageable pageable
   ) {
     return get(PAGING_COLLECTION,
                null,
-               QueryParamBuilder.create("institution", institutionKey).queryParam("q", query).build(),
+               QueryParamBuilder.create("institution", institutionKey)
+                 .queryParam("contact", contactKey)
+                 .queryParam("q", query)
+                 .build(),
                pageable);
   }
 }

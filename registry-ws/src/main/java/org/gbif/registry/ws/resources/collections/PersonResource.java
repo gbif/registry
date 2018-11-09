@@ -2,9 +2,11 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 
@@ -21,6 +23,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
@@ -40,19 +43,22 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
   private final PersonMapper personMapper;
   private final AddressMapper addressMapper;
+  private final EventBus eventBus;
 
   @Inject
-  public PersonResource(PersonMapper personMapper, AddressMapper addressMapper) {
-    super(personMapper);
+  public PersonResource(PersonMapper personMapper, AddressMapper addressMapper, EventBus eventBus) {
+    super(personMapper, eventBus, Person.class);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
+    this.eventBus = eventBus;
   }
 
   @GET
   public PagingResponse<Person> list(@Nullable @QueryParam("q") String query,
-                                     @Nullable @QueryParam("institution") UUID institutionKey,
-                                     @Nullable @QueryParam("collection") UUID collectionKey,
+                                     @Nullable @QueryParam("primaryInstitution") UUID institutionKey,
+                                     @Nullable @QueryParam("primaryCollection") UUID collectionKey,
                                      @Nullable @Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     long total = personMapper.count(institutionKey, collectionKey, query);
     return new PagingResponse<>(page, total, personMapper.list(institutionKey, collectionKey, query, page));
   }
@@ -73,6 +79,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
 
+    eventBus.post(CreateEvent.newInstance(person, Person.class));
     return person.getKey();
   }
 }

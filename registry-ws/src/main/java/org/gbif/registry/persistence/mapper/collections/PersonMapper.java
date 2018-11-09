@@ -20,7 +20,7 @@ public interface PersonMapper extends CrudMapper<Person> {
                     @Nullable @Param("page") Pageable page);
 
   long count(@Nullable @Param("institutionKey") UUID institutionKey,
-                    @Nullable @Param("collectionKey") UUID collectionKey,
-                    @Nullable @Param("query") String query);
+             @Nullable @Param("collectionKey") UUID collectionKey,
+             @Nullable @Param("query") String query);
 
 }

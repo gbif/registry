@@ -6,6 +6,7 @@ import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
@@ -15,7 +16,9 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface InstitutionMapper extends CrudMapper<Institution>, ContactableMapper, TaggableMapper, IdentifiableMapper {
 
-  List<Institution> list(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
+  List<Institution> list(@Nullable @Param("query") String query,
+                         @Nullable @Param("contactKey") UUID contactKey,
+                         @Nullable @Param("page") Pageable page);
 
   long count(@Nullable @Param("query") String query);
 
