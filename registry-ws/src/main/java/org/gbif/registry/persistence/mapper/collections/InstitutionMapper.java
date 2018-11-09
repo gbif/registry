@@ -20,6 +20,6 @@ public interface InstitutionMapper extends CrudMapper<Institution>, ContactableM
                          @Nullable @Param("contactKey") UUID contactKey,
                          @Nullable @Param("page") Pageable page);
 
-  long count(@Nullable @Param("query") String query);
+  long count(@Nullable @Param("query") String query, @Nullable @Param("contactKey") UUID contactKey);
 
 }

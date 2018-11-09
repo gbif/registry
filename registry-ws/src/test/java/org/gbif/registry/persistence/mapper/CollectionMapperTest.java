@@ -208,4 +208,24 @@ public class CollectionMapperTest {
     cols = collectionMapper.list(null,null,"dummy address", pageable);
     assertEquals(1, cols.size());
   }
+
+  @Test
+  public void countTest() {
+    Collection col1 = new Collection();
+    col1.setKey(UUID.randomUUID());
+    col1.setCode("c1");
+    col1.setName("n1");
+    col1.setCreatedBy("test");
+    col1.setModifiedBy("test");
+
+    collectionMapper.create(col1);
+
+    assertEquals(1, collectionMapper.count(null, null, null));
+    assertEquals(0, collectionMapper.count(null, UUID.randomUUID(), null));
+    assertEquals(1, collectionMapper.count(null, null, "c1"));
+    assertEquals(0, collectionMapper.count(null, null, "foo"));
+    assertEquals(0, collectionMapper.count(UUID.randomUUID(), null, null));
+  }
+
+
 }

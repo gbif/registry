@@ -23,6 +23,7 @@ public interface CollectionMapper
                         @Nullable @Param("page") Pageable page);
 
   long count(@Nullable @Param("institutionKey") UUID institutionKey,
+             @Nullable @Param("contactKey") UUID contactKey,
              @Nullable @Param("query") String query);
 
 }
