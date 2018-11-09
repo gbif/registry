@@ -148,9 +148,15 @@
   <select id="count" resultType="Long">
     SELECT COUNT(*)
     FROM collection c <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
+    <if test="contactKey != null" >
+      INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
+    </if>
     WHERE c.deleted IS NULL
     <if test="institutionKey != null" >
       AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
+    <if test="contactKey != null" >
+      AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
     </if>
   </select>
 

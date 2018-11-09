@@ -228,6 +228,6 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    assertEquals(2, institutionMapper.count(null));
+    assertEquals(2, institutionMapper.count(null, null));
   }
 }
