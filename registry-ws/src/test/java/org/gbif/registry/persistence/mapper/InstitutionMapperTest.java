@@ -160,7 +160,7 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    List<Institution> cols = institutionMapper.list(null, PAGE.apply(5, 0L));
+    List<Institution> cols = institutionMapper.list(null, null, PAGE.apply(5, 0L));
     assertEquals(2, cols.size());
   }
 
@@ -191,21 +191,21 @@ public class InstitutionMapperTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Institution> cols = institutionMapper.list("i1 n1", pageable);
+    List<Institution> cols = institutionMapper.list("i1 n1", null, pageable);
     assertEquals(1, cols.size());
     assertEquals("i1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
-    cols = institutionMapper.list("i2 i1", pageable);
+    cols = institutionMapper.list("i2 i1", null, pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.list("i3", pageable);
+    cols = institutionMapper.list("i3", null, pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.list("n1", pageable);
+    cols = institutionMapper.list("n1", null, pageable);
     assertEquals(2, cols.size());
 
-    cols = institutionMapper.list("dummy address", pageable);
+    cols = institutionMapper.list("dummy address", null, pageable);
     assertEquals(1, cols.size());
   }
 

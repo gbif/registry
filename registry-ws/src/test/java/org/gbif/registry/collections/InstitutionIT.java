@@ -87,18 +87,18 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     Institution institution3 = newEntity();
     UUID key3 = institutionService.create(institution3);
 
-    PagingResponse<Institution> response = institutionService.list(null, PAGE.apply(5, 0L));
+    PagingResponse<Institution> response = institutionService.list(null, null, PAGE.apply(5, 0L));
     assertEquals(3, response.getResults().size());
 
     institutionService.delete(key3);
 
-    response = institutionService.list(null, PAGE.apply(5, 0L));
+    response = institutionService.list(null, null, PAGE.apply(5, 0L));
     assertEquals(2, response.getResults().size());
 
-    response = institutionService.list(null, PAGE.apply(1, 0L));
+    response = institutionService.list(null, null, PAGE.apply(1, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = institutionService.list(null, PAGE.apply(0, 0L));
+    response = institutionService.list(null, null, PAGE.apply(0, 0L));
     assertEquals(0, response.getResults().size());
   }
 
@@ -125,26 +125,57 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     UUID key2 = institutionService.create(institution2);
 
     Pageable page = PAGE.apply(5, 0L);
-    PagingResponse<Institution> response = institutionService.list("dummy", page);
+    PagingResponse<Institution> response = institutionService.list("dummy", null, page);
     assertEquals(2, response.getResults().size());
 
-    response = institutionService.list("city", page);
+    response = institutionService.list("city", null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = institutionService.list("city2", page);
+    response = institutionService.list("city2", null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(0, institutionService.list("c", page).getResults().size());
+    assertEquals(0, institutionService.list("c", null, page).getResults().size());
 
     // person search
-    assertEquals(1, institutionService.list("first name", page).getResults().size());
+    assertEquals(1, institutionService.list("first name", null, page).getResults().size());
     institutionService.removeContact(key1, personKey);
-    assertEquals(0, institutionService.list("first name", page).getResults().size());
+    assertEquals(0, institutionService.list("first name", null, page).getResults().size());
 
     institutionService.delete(key2);
-    assertEquals(0, institutionService.list("city2", page).getResults().size());
+    assertEquals(0, institutionService.list("city2", null, page).getResults().size());
+  }
+
+  @Test
+  public void listByContactTest() {
+    // persons
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey1 = personService.create(person1);
+
+    Person person2 = new Person();
+    person2.setFirstName("first name2");
+    UUID personKey2 = personService.create(person2);
+
+    // institutions
+    Institution institution1 = newEntity();
+    UUID instutionKey1 = institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    UUID instutionKey2 = institutionService.create(institution2);
+
+    // add contacts
+    institutionService.addContact(instutionKey1, personKey1);
+    institutionService.addContact(instutionKey1, personKey2);
+    institutionService.addContact(instutionKey2, personKey2);
+
+    assertEquals(1, institutionService.list(null, personKey1, PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(2, institutionService.list(null, personKey2, PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(0, institutionService.list(null, UUID.randomUUID(), PAGE.apply(5, 0L)).getResults().size());
+
+    institutionService.removeContact(instutionKey1, personKey2);
+    assertEquals(1, institutionService.list(null, personKey2, PAGE.apply(5, 0L)).getResults().size());
   }
 
   @Override
