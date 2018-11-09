@@ -48,7 +48,7 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
   }
 
   @GET
-  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @QueryParam("contact") @Nullable UUID contactKey, @Context Pageable page) {
+  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @Nullable @QueryParam("contact") UUID contactKey, @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
     long total = institutionMapper.count(query);
     return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
