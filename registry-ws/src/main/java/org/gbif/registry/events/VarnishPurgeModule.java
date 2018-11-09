@@ -1,11 +1,18 @@
 package org.gbif.registry.events;
 
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
+import org.gbif.registry.ws.resources.collections.CollectionResource;
+import org.gbif.registry.ws.resources.collections.InstitutionResource;
+import org.gbif.registry.ws.resources.collections.PersonResource;
 import org.gbif.utils.HttpUtil;
 
 import java.net.URI;
 import java.util.Properties;
 
 import com.google.inject.PrivateModule;
+import com.google.inject.Scopes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
@@ -52,6 +59,9 @@ public class VarnishPurgeModule extends PrivateModule {
       bind(CloseableHttpClient.class).toInstance(HttpUtil.newMultithreadedClient(
         DEFAULT_HTTP_TIMEOUT_MSECS, httpThreads, httpThreads));
       bind(VarnishPurgeListener.class).asEagerSingleton();
+      bind(InstitutionService.class).to(InstitutionResource.class).in(Scopes.SINGLETON);
+      bind(CollectionService.class).to(CollectionResource.class).in(Scopes.SINGLETON);
+      bind(PersonService.class).to(PersonResource.class).in(Scopes.SINGLETON);
       LOG.info("Varnish purging enabled with {} threads and API {}", httpThreads, apiRoot);
     } else {
       LOG.warn("No varnish purging configured. Please set purging.threads greater than zero if you want it");
