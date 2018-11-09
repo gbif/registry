@@ -70,7 +70,7 @@ public class RegistryWsServletListener extends GbifServletListener {
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
   }
 
-  private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
+  private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.resources.collections, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
 
   /**
    * Get a subset of properties related to metrics.
