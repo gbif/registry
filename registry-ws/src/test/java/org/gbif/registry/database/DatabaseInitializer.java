@@ -54,6 +54,7 @@ public class DatabaseInitializer extends ExternalResource {
       connection.prepareStatement("DELETE FROM node_machine_tag").execute();
       connection.prepareStatement("DELETE FROM node_tag").execute();
       connection.prepareStatement("DELETE FROM node_comment").execute();
+      connection.prepareStatement("DELETE FROM occurrence_download").execute();
       connection.prepareStatement("DELETE FROM organization_contact").execute();
       connection.prepareStatement("DELETE FROM organization_endpoint").execute();
       connection.prepareStatement("DELETE FROM organization_machine_tag").execute();

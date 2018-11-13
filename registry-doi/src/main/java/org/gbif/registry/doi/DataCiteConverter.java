@@ -3,6 +3,9 @@ package org.gbif.registry.doi;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -47,12 +50,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DataCiteConverter {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DataCiteConverter.class);
 
   private static final ObjectFactory FACTORY = new ObjectFactory();
 
@@ -86,6 +86,10 @@ public class DataCiteConverter {
   private static final String LICENSE_INFO = "Data from some individual datasets included in this download may be licensed under less restrictive terms.";
   protected static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   private static final String DWCA_FORMAT = "Darwin Core Archive";
+
+  private DataCiteConverter() {
+    //DO nothing
+  }
 
   private static String fdate(Date date) {
     return DateFormatUtils.ISO_DATE_FORMAT.format(date);
@@ -396,8 +400,7 @@ public class DataCiteConverter {
       return null;
     }
 
-    ContributorType contributorType = REGISTRY_DATACITE_ROLE_MAPPING.containsKey(contact.getType()) ?
-            REGISTRY_DATACITE_ROLE_MAPPING.get(contact.getType()) : ContributorType.RELATED_PERSON;
+    ContributorType contributorType = REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON);
     contributor.setContributorType(contributorType);
 
     for(String userId : contact.getUserId()){
@@ -422,15 +425,15 @@ public class DataCiteConverter {
       return null;
     }
 
-    for(Pattern pattern : SUPPORTED_SCHEMES.keySet()){
-      Matcher matcher = pattern.matcher(userId);
+    for(Map.Entry<Pattern,String> scheme : SUPPORTED_SCHEMES.entrySet()){
+      Matcher matcher = scheme.getKey().matcher(userId);
       if(matcher.matches()){
         DataCiteMetadata.Creators.Creator.NameIdentifier nid =
                 FACTORY.createDataCiteMetadataCreatorsCreatorNameIdentifier();
         // group 0 = the entire string
         nid.setSchemeURI(matcher.group(1));
         nid.setValue(matcher.group(2));
-        nid.setNameIdentifierScheme(SUPPORTED_SCHEMES.get(pattern));
+        nid.setNameIdentifierScheme(scheme.getValue());
         return nid;
       }
     }
@@ -447,15 +450,15 @@ public class DataCiteConverter {
       return null;
     }
 
-    for(Pattern pattern : SUPPORTED_SCHEMES.keySet()){
-      Matcher matcher = pattern.matcher(userId);
+    for(Map.Entry<Pattern,String> scheme : SUPPORTED_SCHEMES.entrySet()){
+      Matcher matcher = scheme.getKey().matcher(userId);
       if(matcher.matches()){
         DataCiteMetadata.Contributors.Contributor.NameIdentifier nid =
                 FACTORY.createDataCiteMetadataContributorsContributorNameIdentifier();
         // group 0 = the entire string
         nid.setSchemeURI(matcher.group(1));
         nid.setValue(matcher.group(2));
-        nid.setNameIdentifierScheme(SUPPORTED_SCHEMES.get(pattern));
+        nid.setNameIdentifierScheme(scheme.getValue());
         return nid;
       }
     }
@@ -466,10 +469,7 @@ public class DataCiteConverter {
    * Tries to get the human readable version of the download query, if fails returns the raw query.
    */
   private static String getFilterQuery(Download d, TitleLookup titleLookup) {
-    try {
-      return new HumanFilterBuilder(titleLookup).humanFilterString(d.getRequest().getPredicate());
-    } catch (Exception ex) {
-      return d.getRequest().getPredicate().toString();
-    }
+    return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest)d.getRequest()).getSql()
+        : new HumanFilterBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest)d.getRequest()).getPredicate());
   }
 }
