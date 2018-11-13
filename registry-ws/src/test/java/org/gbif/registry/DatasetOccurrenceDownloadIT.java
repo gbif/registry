@@ -157,11 +157,11 @@ public class DatasetOccurrenceDownloadIT {
    */
   @Test
   public void testAddAndGetOccurrenceDatasetOne() {
-    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
+    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset = createTestDataset();
     
     occurrenceDownloadService.create(occurrenceDownload);
-    Map<UUID,Long> datasetCitation = new HashMap();
+    Map<UUID,Long> datasetCitation = new HashMap<>();
     datasetCitation.put(testDataset.getKey(), 1000L);
     occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
     
@@ -177,14 +177,14 @@ public class DatasetOccurrenceDownloadIT {
    */
   @Test
   public void testAddAndGetOccurrenceDatasetMany() {
-    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstance();
+    Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset1 = createTestDataset();
     final Dataset testDataset2 = createTestDataset();
     final Dataset testDataset3 = createTestDataset();
     
     occurrenceDownloadService.create(occurrenceDownload);
     
-    Map<UUID,Long> datasetCitation = new HashMap();
+    Map<UUID,Long> datasetCitation = new HashMap<>();
     datasetCitation.put(testDataset1.getKey(), 1000L);
     datasetCitation.put(testDataset2.getKey(), 10000L);
     datasetCitation.put(testDataset3.getKey(), 100000L);
