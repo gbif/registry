@@ -220,6 +220,7 @@ public class RegistryUpdater {
 
       // default license to CC-BY 4.0 whenever it hasn't been specified
       if (dataset.getLicense() == null || dataset.getLicense() == License.UNSPECIFIED) {
+        LOG.warn("Defaulting to CC_BY_4_0 license");
         dataset.setLicense(License.CC_BY_4_0);
       }
 
