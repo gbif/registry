@@ -219,7 +219,7 @@ public class OccurrenceDownloadIT {
     //All numbers are compare to 2 different values because this each run twice: one for the WS and once for the MyBatis layer
     assertTrue("A total of 6 or 12 records must be returned", resultSize == 6 || resultSize == 12);
     assertTrue("A total of 3 or 6 SqlDownloads must be returned", numberOfSqlDownloads == 3L || numberOfSqlDownloads == 6L);
-    assertTrue("A total of 3 or 12 PredicateDownloads must be returned", numberOfPredicateDownloads == 3L || numberOfPredicateDownloads == 6L);
+    assertTrue("A total of 3 or 6 PredicateDownloads must be returned", numberOfPredicateDownloads == 3L || numberOfPredicateDownloads == 6L);
   }
 
   /**
