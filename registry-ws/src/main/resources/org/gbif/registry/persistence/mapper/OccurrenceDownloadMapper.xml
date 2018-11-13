@@ -2,19 +2,45 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
-  <!-- Auto-mapping -->
-  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download" autoMapping="true">
+  <!-- Maps a occurrence download  and handles the different types of downloads-->
+  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download" autoMapping="false">
     <id property="key" column="key"/>
     <result property="doi" column="doi" />
-    <result property="request.creator" column="created_by" />
+    <result property="license" column="license"/>
+    <result property="status" column="status"/>
+    <result property="downloadLink" column="download_link"/>
+    <result property="size" column="size"/>
     <result property="totalRecords" column="total_records"/>
-    <result property="request.notificationAddressesAsString" column="notification_addresses"/>
-    <result property="request.predicate" column="filter" typeHandler="PredicateTypeHandler"/>
-    <result property="request.sendNotification" column="send_notification"/>
-    <result property="request.format" column="format"/>
-    <association property="numberDatasets" column="key" select="COUNT_DATASETS"/>
-  </resultMap>
+    <result property="created" column="created"/>
+    <result property="modified" column="modified"/>
+    <result property="eraseAfter" column="erase_after"/>
 
+    <association property="request" javaType="DownloadRequest">
+      <result property="notificationAddressesAsString" column="notification_addresses"/>
+      <result property="sendNotification" column="send_notification"/>
+      <result property="format" column="format"/>
+      <discriminator javaType="string" column="format">
+        <case value="SQL" resultType="SQLDownloadRequest">
+          <result property="sql" column="filter" />
+        </case>
+        <case value="DWCA" resultType="PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_CSV" resultType="PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_AVRO" resultType="PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+        </case>
+        <case value="SPECIES_LIST" resultType="PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+        </case>
+      </discriminator>
+    </association>
+
+    <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
+  </resultMap>
+  
   <resultMap id="DOWNLOADS_STATISTICS_COUNT_MAP" type="Count" autoMapping="true">
     <result property="name" column="year_month" />
     <result property="count" column="number_downloads" />
@@ -51,8 +77,11 @@
     #{key,jdbcType=VARCHAR},
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
-  	#{request.predicate,jdbcType=VARCHAR},
-    #{status,jdbcType=OTHER},
+    <choose>
+      <when test="request.format.name().equals('SQL')"> #{request.sql,jdbcType=VARCHAR},</when>
+      <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=PredicateTypeHandler},</otherwise>
+    </choose>
+  	#{status,jdbcType=OTHER},
     #{downloadLink,jdbcType=VARCHAR},
     #{size,jdbcType=BIGINT},
     #{totalRecords,jdbcType=INTEGER},
@@ -121,7 +150,7 @@
   </select>
 
   <!-- Append safe ordering -->
-  <select id="list" resultType="Download">
+  <select id="list" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     ORDER BY created DESC, key
@@ -136,7 +165,7 @@
   </select>
 
   <!-- Append safe ordering -->
-  <select id="listByStatus" resultType="Download">
+  <select id="listByStatus" resultType="Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     WHERE status IN
