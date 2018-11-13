@@ -674,6 +674,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
     // assign CC-BY 4.0 (default license) when license not specified yet
     if (dataset.getLicense() == null || dataset.getLicense().equals(License.UNSPECIFIED)) {
+      LOG.warn("Dataset created with the V1 API does not specify a license, defaulting to CC_BY_4_0");
       dataset.setLicense(License.CC_BY_4_0);
     }
 

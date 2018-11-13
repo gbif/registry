@@ -49,7 +49,7 @@ public class IptResource {
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
-  private static Long ONE = new Long(1);
+  private static Long ONE = 1L;
 
   @Inject
   public IptResource(InstallationService installationService, OrganizationService organizationService,
@@ -202,9 +202,10 @@ public class IptResource {
    * organization key are mandatory. Only after both the dataset and primary contact have been persisted is a
    * Response with Status.CREATED returned.
    * </br>
-   * Before being persisted, the dataset is assigned license CC-BY 4.0. This GBIF-default license gets replaced
-   * by the publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT EML
+   * Before being persisted, the dataset is the UNSPECIFIED license.  This will be replaced (if possible) by the
+   * publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT EML
    * metadata document always includes a machine readable license.
+   * See discussion at https://github.com/gbif/registry/issues/71
    *
    * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
    * @param security SecurityContext (security related information)
@@ -231,8 +232,8 @@ public class IptResource {
       if (contact != null && LegacyResourceUtils.isValid(dataset, organizationService, installationService)) {
         // generate a new GBIF API Dataset instance, derived from the LegacyDataset
         Dataset apiDataset = dataset.toApiDataset();
-        // assign GBIF-default license
-        apiDataset.setLicense(License.CC_BY_4_0);
+        // assign "null" license, which will be replaced on the first crawl
+        apiDataset.setLicense(License.UNSPECIFIED);
         // persist dataset
         UUID key = datasetService.create(apiDataset);
         // persist contact
