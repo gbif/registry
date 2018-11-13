@@ -12,6 +12,10 @@
  */
 package org.gbif.registry.persistence.guice;
 
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -67,9 +71,16 @@ import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
+import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.service.guice.PrivateServiceModule;
@@ -131,6 +142,12 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addMapperClass(UserRightsMapper.class);
       addMapperClass(DoiMapper.class);
 
+      // collections
+      addMapperClass(InstitutionMapper.class);
+      addMapperClass(CollectionMapper.class);
+      addMapperClass(PersonMapper.class);
+      addMapperClass(AddressMapper.class);
+
       //from registry-surety module
       addMapperClass(ChallengeCodeMapper.class);
 
@@ -164,6 +181,10 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Country").to(Country.class);
       addAlias("Language").to(Language.class);
       addAlias("Count").to(Facet.Count.class);
+      addAlias("Institution").to(Institution.class);
+      addAlias("SciCollection").to(Collection.class);
+      addAlias("CollectionPerson").to(Person.class);
+      addAlias("Address").to(Address.class);
 
       addAlias("UriTypeHandler").to(UriTypeHandler.class);
       addAlias("UuidTypeHandler").to(UuidTypeHandler.class);
@@ -174,7 +195,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("PredicateTypeHandler").to(PredicateTypeHandler.class);
       addAlias("StringArrayTypeHandler").to(StringArrayTypeHandler.class);
       addAlias("UriArrayTypeHandler").to(UriArrayTypeHandler.class);
-
+      addAlias("DisciplineArrayTypeHandler").to(DisciplineArrayTypeHandler.class);
+      addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
+      addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
     }
 
     @Override
@@ -222,6 +245,10 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(UserRightsMapper.class);
     expose(DoiMapper.class);
     expose(ChallengeCodeMapper.class);
+    expose(InstitutionMapper.class);
+    expose(CollectionMapper.class);
+    expose(PersonMapper.class);
+    expose(AddressMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
