@@ -26,6 +26,8 @@ import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
+import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.app.ConfUtils;
@@ -67,7 +69,9 @@ public class RegistryWsServletListener extends GbifServletListener {
     requestFilters.add(LegacyAuthorizationFilter.class);
     requestFilters.add(EditorAuthorizationFilter.class);
     requestFilters.add(AppIdentityFilter.class);
+    requestFilters.add(JwtRequestFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
+    responseFilters.add(JwtResponseFilter.class);
   }
 
   private static final String PACKAGES = "org.gbif.registry.ws.resources, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh";
