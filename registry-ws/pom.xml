@@ -434,6 +434,11 @@
       <artifactId>xoai-data-provider</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt</artifactId>
+    </dependency>
+
     <!-- test scope -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
