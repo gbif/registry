@@ -1,25 +1,15 @@
 package org.gbif.registry.ws.security.jwt;
 
-import org.gbif.api.model.common.GbifUser;
-
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-
 import javax.ws.rs.core.Cookie;
 
-import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.sun.jersey.spi.container.ContainerRequest;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.IncorrectClaimException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;

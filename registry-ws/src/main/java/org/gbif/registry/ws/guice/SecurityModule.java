@@ -3,6 +3,7 @@ package org.gbif.registry.ws.guice;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.EditorAuthorizationServiceImpl;
 import org.gbif.registry.ws.security.jwt.JwtConfiguration;
+import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.guice.WsAuthModule;
 
 import java.util.Map;
@@ -18,16 +19,18 @@ import com.google.inject.Singleton;
  */
 public class SecurityModule extends WsAuthModule {
 
-  private final Properties jwtProperties;
+  private static final String JWT_PREFIX = "jwt.";
+
+  private final Properties properties;
 
   public SecurityModule(Properties properties) {
     super(properties);
-    jwtProperties = properties;
+    this.properties = properties;
   }
 
   public SecurityModule(Map<String, String> keys, Properties properties) {
     super(keys);
-    jwtProperties = properties;
+    this.properties = properties;
   }
 
   @Override
@@ -41,7 +44,7 @@ public class SecurityModule extends WsAuthModule {
   @Provides
   @Singleton
   private JwtConfiguration provideJwtConfiguration() {
-    return JwtConfiguration.from(jwtProperties);
+    return JwtConfiguration.from(PropertiesUtil.filterProperties(properties, JWT_PREFIX));
   }
 
 }
