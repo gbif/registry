@@ -24,7 +24,6 @@ import javax.ws.rs.core.SecurityContext;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sun.jersey.spi.container.ContainerRequest;
-import io.jsonwebtoken.Jwt;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
