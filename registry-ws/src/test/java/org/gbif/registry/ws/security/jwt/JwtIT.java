@@ -65,11 +65,30 @@ public class JwtIT {
   public void validTokenTest() {
     String token = login(JwtDatabaseInitializer.ADMIN_USER);
 
-    ClientResponse personResponse = getPersonResource().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+    WebResource personResource = getPersonResource();
+
+    ClientResponse personResponse = personResource.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
       .type(MediaType.APPLICATION_JSON)
       .post(ClientResponse.class, createPerson());
 
     assertEquals(Response.Status.CREATED.getStatusCode(), personResponse.getStatus());
+
+    personResponse = personResource.header(HttpHeaders.AUTHORIZATION, "bearer" + token)
+      .type(MediaType.APPLICATION_JSON)
+      .post(ClientResponse.class, createPerson());
+
+    assertEquals(Response.Status.CREATED.getStatusCode(), personResponse.getStatus());
+  }
+
+  @Test
+  public void invalidHeaderTest() {
+    String token = login(JwtDatabaseInitializer.ADMIN_USER);
+
+    ClientResponse personResponse = getPersonResource().header(HttpHeaders.AUTHORIZATION, "beare " + token)
+      .type(MediaType.APPLICATION_JSON)
+      .post(ClientResponse.class, createPerson());
+
+    assertEquals(Response.Status.FORBIDDEN.getStatusCode(), personResponse.getStatus());
   }
 
   @Test
