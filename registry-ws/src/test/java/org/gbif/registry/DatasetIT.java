@@ -12,7 +12,6 @@
  */
 package org.gbif.registry;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -67,6 +66,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.inject.Injector;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.apache.solr.client.solrj.SolrClient;
 import org.junit.Ignore;

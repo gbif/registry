@@ -25,6 +25,7 @@ import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
+import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
@@ -62,7 +63,8 @@ public class TestRegistryWsServletListener extends GbifServletListener {
           Lists.newArrayList(
                   LegacyAuthorizationFilter.class,
                   EditorAuthorizationFilter.class,
-                  AppIdentityFilter.class);
+                  AppIdentityFilter.class,
+                  JwtRequestFilter.class);
 
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
@@ -98,7 +100,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
    * @return the SecurityModule instance
    */
   protected Module getSecurityModule(Properties props) {
-    return new SecurityModule(TestConstants.getIntegrationTestAppKeys());
+    return new SecurityModule(TestConstants.getIntegrationTestAppKeys(), props);
   }
 
   @Override
