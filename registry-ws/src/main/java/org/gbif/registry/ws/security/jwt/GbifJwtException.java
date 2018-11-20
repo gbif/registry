@@ -1,5 +1,8 @@
 package org.gbif.registry.ws.security.jwt;
 
+/**
+ * Exception to handle all the possible JWT error cases.
+ */
 public class GbifJwtException extends Exception {
 
   private final JwtErrorCode errorCode;
