@@ -66,6 +66,7 @@ public class JwtConfiguration {
     return securityContext;
   }
 
+  // custom GBIF claims
   public class GbifClaims {
 
     public static final String USERNAME = "username";

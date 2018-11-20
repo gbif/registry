@@ -29,7 +29,6 @@ public class JwtUtils {
   }
 
   public static Optional<String> findTokenInRequest(ContainerRequest containerRequest, JwtConfiguration config) {
-    // TODO: ask morten if the token will come always in the header or in the cookie too?
     // check header first
     return Optional.ofNullable(containerRequest.getHeaderValue(HttpHeaders.AUTHORIZATION))
       .filter(JwtUtils::containsBearer)

@@ -11,6 +11,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 
+/**
+ * Class that handle all the authentication coming from JWT tokens.
+ */
 public class JwtAuthenticator {
 
   private final JwtConfiguration jwtConfiguration;
