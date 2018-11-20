@@ -21,7 +21,6 @@ public class JwtDatabaseInitializer extends DatabaseInitializer {
   static final String TEST_USER = "testuser";
 
   private final IdentityService identityService;
-  private boolean initialized = false;
 
   public JwtDatabaseInitializer(DataSource dataSource) {
     super(dataSource);
@@ -30,19 +29,13 @@ public class JwtDatabaseInitializer extends DatabaseInitializer {
   }
 
   @Override
-  protected synchronized void before() throws Throwable {
-    if (initialized) {
-      return;
-    }
-
+  protected void before() throws Throwable {
     // clean db
     super.before();
 
     // add users
     createUser(ADMIN_USER, Sets.newHashSet(UserRole.USER, UserRole.REGISTRY_ADMIN, UserRole.REGISTRY_EDITOR));
     createUser(TEST_USER, Sets.newHashSet(UserRole.USER));
-
-    initialized = true;
   }
 
   private void createUser(String username, Set<UserRole> roles) {
