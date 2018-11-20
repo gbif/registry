@@ -15,6 +15,11 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Filter to validate the JWT tokens.
+ * <p>
+ * If the token is not present this validation is skipped.
+ */
 public class JwtRequestFilter implements ContainerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(JwtRequestFilter.class);
@@ -37,12 +42,15 @@ public class JwtRequestFilter implements ContainerRequestFilter {
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
+      LOG.debug("Skipping JWT validation");
       return containerRequest;
     }
 
     try {
       GbifUser gbifUser = jwtAuthenticator.authenticate(token.get());
+      LOG.debug("JWT succesfully validated for user {}", gbifUser.getUserName());
 
+      // set the user to the security context
       containerRequest.setSecurityContext(new SecurityContext() {
 
         private final GbifUserPrincipal gbifUserPrincipal = new GbifUserPrincipal(gbifUser);
@@ -68,19 +76,8 @@ public class JwtRequestFilter implements ContainerRequestFilter {
         }
       });
 
-      // generate a new token with a new expiration
-      containerRequest.getRequestHeaders()
-        .putSingle(ContainerRequest.AUTHORIZATION, "Bearer " + JwtUtils.generateJwt(gbifUser, jwtConfiguration));
-
     } catch (GbifJwtException e) {
-      // TODO: ask Morten if these error codes are ok for him??
-//      if (GbifJwtException.JwtErrorCode.EXPIRED_TOKEN == e.getErrorCode()
-//          || GbifJwtException.JwtErrorCode.INVALID_TOKEN == e.getErrorCode()) {
-//        throw new WebApplicationException(Response.Status.UNAUTHORIZED);
-//      }
-//      if (GbifJwtException.JwtErrorCode.INVALID_USERNAME == e.getErrorCode()) {
-//        throw new WebApplicationException(Response.Status.FORBIDDEN);
-//      }
+      LOG.warn("JWT validation failed: {}", e.getErrorCode());
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
 

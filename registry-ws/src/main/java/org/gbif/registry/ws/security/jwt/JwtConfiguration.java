@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.security.jwt;
 
+import org.gbif.utils.file.properties.PropertiesUtil;
+
 import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -7,6 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class JwtConfiguration {
 
   // property keys
+  private static final String JWT_PREFIX = "jwt";
   private static final String SIGNING_KEY_PROP = ".signingKey";
   private static final String EXPIRY_TIME_PROP = ".expiryTimeInMs";
   private static final String ISSUER_PROP = ".issuer";
@@ -14,7 +17,7 @@ public class JwtConfiguration {
   private static final String SECURITY_CONTEXT_PROP = ".securityContext";
 
   // defaults
-  private static final long DEFAULT_EXPIRY = 2 * 60 * 60 * 1000L; // 24h
+  private static final long DEFAULT_EXPIRY = 7 * 24 * 60 * 60 * 1000L; // 7 days
   private static final String DEFAULT_ISSUER = "GBIF-REGISTRY";
   private static final String DEFAULT_COOKIE_NAME = "token";
   private static final String DEFAULT_SECURITY_CONTEXT = "JWT";
@@ -43,7 +46,7 @@ public class JwtConfiguration {
 
   public static JwtConfiguration from(Properties properties) {
     checkArgument(properties != null);
-    return new JwtConfiguration(properties);
+    return new JwtConfiguration(PropertiesUtil.filterProperties(properties, JWT_PREFIX));
   }
 
   public String getSigningKey() {

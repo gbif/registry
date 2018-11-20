@@ -34,10 +34,7 @@ public class JwtUtilsTest {
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(key).expiryTimeInMs(60 * 1000L).issuer("issuer").build();
 
-    GbifUser user = new GbifUser();
-    user.setUserName("user");
-
-    String token = JwtUtils.generateJwt(user, config);
+    String token = JwtUtils.generateJwt("user", config);
 
     Claims claims = Jwts.parser()
       .requireIssuer(config.getIssuer())
@@ -52,10 +49,7 @@ public class JwtUtilsTest {
   public void generateUnsignedTokenTest() {
     JwtConfiguration config = JwtConfiguration.newBuilder().expiryTimeInMs(60 * 1000L).issuer("issuer").build();
 
-    GbifUser user = new GbifUser();
-    user.setUserName("user");
-
-    JwtUtils.generateJwt(user, config);
+    JwtUtils.generateJwt("user", config);
   }
 
   @Test

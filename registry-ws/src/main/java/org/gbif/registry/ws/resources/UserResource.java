@@ -81,7 +81,7 @@ public class UserResource {
     identityService.updateLastLogin(user.getKey());
 
     return Response.ok(LoggedUser.from(user))
-      .header(ContainerRequest.AUTHORIZATION, "Bearer " + JwtUtils.generateJwt(user, jwtConfiguration))
+      .header(ContainerRequest.AUTHORIZATION, "Bearer " + JwtUtils.generateJwt(user.getUserName(), jwtConfiguration))
       .build();
   }
 

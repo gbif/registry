@@ -9,15 +9,9 @@ import java.nio.charset.StandardCharsets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Injector;
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.CustomMatcher;
-import org.hamcrest.Description;
 import org.hamcrest.Matchers;
-import org.hamcrest.TypeSafeMatcher;
-import org.hamcrest.core.CombinableMatcher;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -50,7 +44,7 @@ public class JwtAuthenticatorTest {
   public void validAuthenticationTest() throws GbifJwtException {
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(signingKey).expiryTimeInMs(EXPIRY_TIME).issuer(ISSUER).build();
-    String token = JwtUtils.generateJwt(user, config);
+    String token = JwtUtils.generateJwt(user.getUserName(), config);
 
     JwtAuthenticator jwtAuthenticator = new JwtAuthenticator(config, identityService);
 
@@ -65,7 +59,7 @@ public class JwtAuthenticatorTest {
 
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(signingKey).expiryTimeInMs(0L).issuer(ISSUER).build();
-    String token = JwtUtils.generateJwt(user, config);
+    String token = JwtUtils.generateJwt(user.getUserName(), config);
 
     JwtAuthenticator jwtAuthenticator = new JwtAuthenticator(config, identityService);
 
@@ -79,7 +73,7 @@ public class JwtAuthenticatorTest {
 
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(signingKey).expiryTimeInMs(EXPIRY_TIME).issuer(ISSUER).build();
-    String token = JwtUtils.generateJwt(user, config);
+    String token = JwtUtils.generateJwt(user.getUserName(), config);
 
     JwtConfiguration configParsing =
       JwtConfiguration.newBuilder().signingKey(generateTestSigningKey("fake")).issuer(ISSUER).build();
@@ -95,7 +89,7 @@ public class JwtAuthenticatorTest {
 
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(signingKey).expiryTimeInMs(EXPIRY_TIME).issuer(ISSUER).build();
-    String token = JwtUtils.generateJwt(user, config);
+    String token = JwtUtils.generateJwt(user.getUserName(), config);
 
     JwtConfiguration configParsing = JwtConfiguration.newBuilder().signingKey(signingKey).issuer("fake issuer").build();
     JwtAuthenticator jwtAuthenticator = new JwtAuthenticator(configParsing, identityService);
@@ -110,9 +104,7 @@ public class JwtAuthenticatorTest {
 
     JwtConfiguration config =
       JwtConfiguration.newBuilder().signingKey(signingKey).expiryTimeInMs(EXPIRY_TIME).issuer(ISSUER).build();
-    GbifUser fakeUser = new GbifUser();
-    fakeUser.setUserName("fake name");
-    String token = JwtUtils.generateJwt(fakeUser, config);
+    String token = JwtUtils.generateJwt("fake user", config);
 
     JwtAuthenticator jwtAuthenticator = new JwtAuthenticator(config, identityService);
 

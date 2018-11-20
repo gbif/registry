@@ -24,7 +24,7 @@ public class JwtAuthenticator {
 
   public GbifUser authenticate(String token) throws GbifJwtException {
     // validate and parse the token
-    Claims claims = null;
+    Claims claims;
     try {
       claims = Jwts.parser()
         .requireIssuer(jwtConfiguration.getIssuer())

@@ -8,17 +8,23 @@ import org.gbif.registry.ws.fixtures.TestClient;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.registry.ws.security.jwt.JwtUtils;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.util.function.Function;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.assertj.core.util.Strings;
 import org.junit.Test;
 
 import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests related to the user (identity) module representing actions a user can initiate by himself.
@@ -124,6 +130,16 @@ public class UserIT extends PlainAPIBaseIT {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getWithSignedRequest(user.getUserName(), (uriBuilder -> uriBuilder.path("login")));
     assertResponse(Response.Status.FORBIDDEN, cr);
+  }
+
+  @Test
+  public void testLoginWithJwt() {
+    GbifUser user = userTestFixture.prepareUser();
+    ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
+    String authHeader = cr.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    assertNotNull(authHeader);
+    assertTrue(JwtUtils.containsBearer(authHeader));
+    assertTrue(!Strings.isNullOrEmpty(JwtUtils.removeBearer(authHeader)));
   }
 
 }
