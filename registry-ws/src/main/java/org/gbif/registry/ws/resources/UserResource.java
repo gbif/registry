@@ -91,8 +91,7 @@ public class UserResource {
   @RolesAllowed({USER_ROLE})
   @Path("/changePassword")
   public Response changePassword(@Context SecurityContext securityContext,
-                                 AuthenticationDataParameters authenticationDataParameters
-  ) {
+                                 AuthenticationDataParameters authenticationDataParameters) {
     // the user shall be authenticated using basic auth. scheme
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
