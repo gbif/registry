@@ -602,9 +602,7 @@ public class LegacyDatasetResourceIT {
     assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
     assertNotNull(dataset.getCreated());
     assertNotNull(dataset.getModified());
-    // The persisted Legacy (GBRDS) dataset gets assigned GBIF-default license CC-BY 4.0.
-    // Note Legacy (GBRDS) datasets can only be assigned license via EML metadata document, and parsed/set during crawling
-    assertEquals(License.CC_BY_4_0, dataset.getLicense());
+    assertEquals(License.UNSPECIFIED, dataset.getLicense());
 
     // check dataset's primary contact was properly persisted
     Contact contact = dataset.getContacts().get(0);
