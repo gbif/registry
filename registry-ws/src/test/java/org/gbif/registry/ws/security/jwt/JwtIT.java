@@ -9,7 +9,6 @@ import org.gbif.registry.guice.RegistryTestModules;
 
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -125,18 +124,6 @@ public class JwtIT {
       .post(ClientResponse.class, createPerson());
 
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), personResponse.getStatus());
-  }
-
-  @Test
-  public void cookieWithTokenTest() {
-    String token = login(JwtDatabaseInitializer.ADMIN_USER);
-
-    Cookie cookie = new Cookie(jwtConfiguration.getCookieName(), token);
-
-    ClientResponse personResponse =
-      getPersonResource().cookie(cookie).type(MediaType.APPLICATION_JSON).post(ClientResponse.class, createPerson());
-
-    assertEquals(Response.Status.CREATED.getStatusCode(), personResponse.getStatus());
   }
 
   @Test

@@ -1,9 +1,6 @@
 package org.gbif.registry.ws.security.jwt;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import javax.ws.rs.core.Cookie;
 
 import com.google.common.hash.Hashing;
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -14,7 +11,6 @@ import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class JwtUtilsTest {
 
@@ -47,42 +43,25 @@ public class JwtUtilsTest {
     final String token = "abctoken";
     // mock request
     ContainerRequest containerRequest = Mockito.mock(ContainerRequest.class);
-    JwtConfiguration config = JwtConfiguration.newBuilder().cookieName("test").build();
 
     // no token present in request
-    assertFalse(JwtUtils.findTokenInRequest(containerRequest, config).isPresent());
+    assertFalse(JwtUtils.findTokenInRequest(containerRequest).isPresent());
 
     // token in header
     Mockito.when(containerRequest.getHeaderValue(ContainerRequest.AUTHORIZATION)).thenReturn("Bearer " + token);
-    assertEquals(token, JwtUtils.findTokenInRequest(containerRequest, config).get());
+    assertEquals(token, JwtUtils.findTokenInRequest(containerRequest).get());
 
     // empty bearer
     Mockito.when(containerRequest.getHeaderValue(ContainerRequest.AUTHORIZATION)).thenReturn("Bearer");
-    assertEquals("", JwtUtils.findTokenInRequest(containerRequest, config).get());
+    assertEquals("", JwtUtils.findTokenInRequest(containerRequest).get());
 
     // empty header
     Mockito.when(containerRequest.getHeaderValue(ContainerRequest.AUTHORIZATION)).thenReturn("");
-    assertFalse(JwtUtils.findTokenInRequest(containerRequest, config).isPresent());
+    assertFalse(JwtUtils.findTokenInRequest(containerRequest).isPresent());
 
     // null header
     Mockito.when(containerRequest.getHeaderValue(ContainerRequest.AUTHORIZATION)).thenReturn(null);
-    assertFalse(JwtUtils.findTokenInRequest(containerRequest, config).isPresent());
-
-    // add cookie
-    Map<String, Cookie> cookieMap = new HashMap<>();
-    cookieMap.put(config.getCookieName(), new Cookie(config.getCookieName(), token));
-
-    Mockito.when(containerRequest.getCookies()).thenReturn(cookieMap);
-    assertEquals(token, JwtUtils.findTokenInRequest(containerRequest, config).get());
-
-    // empty cookie
-    cookieMap.put(config.getCookieName(), new Cookie(config.getCookieName(), ""));
-    Mockito.when(containerRequest.getCookies()).thenReturn(cookieMap);
-    assertTrue(JwtUtils.findTokenInRequest(containerRequest, config).isPresent());
-
-    // null cookies
-    Mockito.when(containerRequest.getCookies()).thenReturn(new HashMap<>());
-    assertFalse(JwtUtils.findTokenInRequest(containerRequest, config).isPresent());
+    assertFalse(JwtUtils.findTokenInRequest(containerRequest).isPresent());
   }
 
   private String generateTestSigningKey(String string) {
