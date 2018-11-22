@@ -14,6 +14,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.InterpretationRemark;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
@@ -79,7 +80,6 @@ public class EnumerationResource {
                   .map(EnumerationResource::languageToMap)
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
-
   //Only includes InterpretationRemark that are NOT deprecated
   private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
           Stream.concat(
@@ -88,6 +88,12 @@ public class EnumerationResource {
                   .filter(val -> !val.isDeprecated())
                   .map( val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+
+  // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as URLs.
+  private static final List<String> BASIC_EXTENSIONS =
+    Arrays.stream(Extension.values())
+      .map(Extension::name)
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
    * An inventory of the enumerations supported.
@@ -155,6 +161,17 @@ public class EnumerationResource {
     return INTERPRETATION_REMARKS;
   }
 
+  /**
+   * Gets the Extension enumeration.  This exists to avoid use of the ExtensionSerializer, which assumes JSON keys,
+   * since in this case we want values.
+   *
+   * @return The enumeration values.
+   */
+  @Path("basic/Extension")
+  @GET()
+  public List<String> getExtensionEnumeration() {
+    return BASIC_EXTENSIONS;
+  }
 
   /**
    * Gets the values of the named enumeration should the enumeration exist.
@@ -222,5 +239,4 @@ public class EnumerationResource {
     info.put("relatedTerms", interpretationRemark.getRelatedTerms());
     return info;
   }
-
 }

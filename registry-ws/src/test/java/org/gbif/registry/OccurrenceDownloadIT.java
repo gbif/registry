@@ -121,22 +121,48 @@ public class OccurrenceDownloadIT {
    * The instance generated should be ready and valid to be persisted.
    */
   protected static Download getTestInstancePredicateDownload() {
-    Download download = getTestInstanceDownload();;
+    Download download = getTestInstanceDownload();
     download.setRequest(
       new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
         TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
         true, DownloadFormat.DWCA));
     return download;
   }
-
+  
   /**
    * Creates {@link Download} instance with test data using a predicate request.
+   * The key is generated randomly using the class java.util.UUID.
+   * The instance generated should be ready and valid to be persisted.
+   */
+  protected static Download getTestInstanceNullPredicateDownload() {
+    Download download = getTestInstanceDownload();
+    download.setRequest(
+      new PredicateDownloadRequest(null,
+        TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
+        true, DownloadFormat.DWCA));
+    return download;
+  }
+
+  /**
+   * Creates {@link Download} instance with test data using a sql request.
    * The key is generated randomly using the class java.util.UUID.
    * The instance generated should be ready and valid to be persisted.
    */
   protected static Download getTestInstanceSqlDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(new SqlDownloadRequest("SELECT datasetKey FROM occurrence", TestConstants.TEST_ADMIN,
+      Collections.singleton("downloadtest@gbif.org"), true));
+    return download;
+  }
+  
+  /**
+   * Creates {@link Download} instance with test data using a null sql request.
+   * The key is generated randomly using the class java.util.UUID.
+   * The instance generated should be ready and valid to be persisted.
+   */
+  protected static Download getTestInstanceNullSqlDownload() {
+    Download download = getTestInstanceDownload();
+    download.setRequest(new SqlDownloadRequest(null, TestConstants.TEST_ADMIN,
       Collections.singleton("downloadtest@gbif.org"), true));
     return download;
   }
@@ -154,7 +180,23 @@ public class OccurrenceDownloadIT {
   public void testCreate() {
     occurrenceDownloadService.create(getTestInstancePredicateDownload());
   }
+  
+  /**
+   * Persists a valid {@link Download} instance with null predicates.
+   */
+  @Test
+  public void testCreateWithNullPredicate() {
+    occurrenceDownloadService.create(getTestInstanceNullPredicateDownload());
+  }
 
+  /**
+   * Persists a valid {@link Download} instance with null sql predicates.
+   */
+  @Test
+  public void testCreateWithNullSql() {
+    occurrenceDownloadService.create(getTestInstanceNullSqlDownload());
+  }
+  
   /**
    * Persists a valid {@link Download} instance.
    */
@@ -173,7 +215,29 @@ public class OccurrenceDownloadIT {
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
   }
+  
+  /**
+   * Tests the create and get(key) methods for null predicate.
+   */
+  @Test
+  public void testCreateAndGetNullPredicate() {
+    Download occurrenceDownload = getTestInstanceNullPredicateDownload();
+    occurrenceDownloadService.create(occurrenceDownload);
+    Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertNotNull(occurrenceDownload2);
+  }
 
+  /**
+   * Tests the create and get(key) methods for null sql predicate.
+   */
+  @Test
+  public void testCreateAndGetNullSql() {
+    Download occurrenceDownload = getTestInstanceNullSqlDownload();
+    occurrenceDownloadService.create(occurrenceDownload);
+    Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertNotNull(occurrenceDownload2);
+  }
+  
   /**
    * Tests the persistence of the DownloadRequest's DownloadFormat.
    */

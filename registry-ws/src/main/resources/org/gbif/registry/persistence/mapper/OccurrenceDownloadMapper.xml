@@ -18,6 +18,7 @@
     <association property="request" javaType="DownloadRequest">
       <result property="notificationAddressesAsString" column="notification_addresses"/>
       <result property="sendNotification" column="send_notification"/>
+      <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <discriminator javaType="string" column="format">
         <case value="SQL" resultType="SQLDownloadRequest">
