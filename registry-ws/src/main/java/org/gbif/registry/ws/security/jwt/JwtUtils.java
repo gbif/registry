@@ -5,7 +5,6 @@ import org.gbif.registry.ws.security.jwt.JwtConfiguration.GbifClaims;
 import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -18,6 +17,8 @@ public class JwtUtils {
   //Patterns that catches case insensitive versions of word 'bearer'
   private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer");
 
+  private JwtUtils() {}
+
   public static String generateJwt(String username, JwtConfiguration config) {
     return Jwts.builder()
       .setExpiration(new Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
@@ -28,14 +29,11 @@ public class JwtUtils {
       .compact();
   }
 
-  public static Optional<String> findTokenInRequest(ContainerRequest containerRequest, JwtConfiguration config) {
+  public static Optional<String> findTokenInRequest(ContainerRequest containerRequest) {
     // check header first
     return Optional.ofNullable(containerRequest.getHeaderValue(HttpHeaders.AUTHORIZATION))
       .filter(JwtUtils::containsBearer)
-      .map(s -> Optional.of(removeBearer(s)))
-      // if not found check cookie
-      .orElseGet(() -> Optional.ofNullable(containerRequest.getCookies().get(config.getCookieName()))
-        .map(Cookie::getValue));
+      .map(JwtUtils::removeBearer);
   }
 
   /**

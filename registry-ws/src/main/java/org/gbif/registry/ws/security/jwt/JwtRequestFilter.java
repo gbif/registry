@@ -38,7 +38,7 @@ public class JwtRequestFilter implements ContainerRequestFilter {
   @Override
   public ContainerRequest filter(ContainerRequest containerRequest) {
 
-    Optional<String> token = JwtUtils.findTokenInRequest(containerRequest, jwtConfiguration);
+    Optional<String> token = JwtUtils.findTokenInRequest(containerRequest);
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
