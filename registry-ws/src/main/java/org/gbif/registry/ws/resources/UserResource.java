@@ -5,6 +5,8 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.registry.ws.security.jwt.JwtConfiguration;
+import org.gbif.registry.ws.security.jwt.JwtUtils;
 import org.gbif.ws.response.GbifResponseStatus;
 
 import javax.annotation.security.RolesAllowed;
@@ -21,6 +23,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.jersey.spi.container.ContainerRequest;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
@@ -29,15 +32,15 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 
 /**
  * The "/user" resource represents the "endpoints" the user can call using its own credentials.
- *
+ * <p>
  * Web layer relating to authentication.
- *
+ * <p>
  * Design and implementation decisions:
  * - This resource contains mostly the routing to the business logic ({@link IdentityService}) including
- *   authorizations. This resource does NOT implement the service but aggregates it (by Dependency Injection).
+ * authorizations. This resource does NOT implement the service but aggregates it (by Dependency Injection).
  * - Methods can return {@link Response} instead of object to minimize usage of exceptions and provide
- *   better control over the HTTP code returned. This also allows to return an entity in case
- *   of errors (e.g. {@link UserModelMutationResult}
+ * better control over the HTTP code returned. This also allows to return an entity in case
+ * of errors (e.g. {@link UserModelMutationResult}
  * - keys (user id) are not considered public, therefore the username is used as key
  * - In order to strictly control the data that is exposed this class uses "view models" (e.g. {@link LoggedUser})
  */
@@ -48,38 +51,41 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 public class UserResource {
 
   private final IdentityService identityService;
+  private final JwtConfiguration jwtConfiguration;
 
   /**
    * Main {@link UserResource} constructor
+   *
    * @param identityService implementation of the identity service to use.
    */
   @Inject
-  public UserResource(IdentityService identityService) {
+  public UserResource(IdentityService identityService, JwtConfiguration jwtConfiguration) {
     this.identityService = identityService;
+    this.jwtConfiguration = jwtConfiguration;
   }
 
   /**
    * Check the credentials of a user using Basic Authentication and return a {@link LoggedUser} if successful.
+   *
    * @return the user as {@link LoggedUser}
    */
   @GET
   @Path("/login")
-  public LoggedUser login(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+  public Response login(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
     // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
     GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
     identityService.updateLastLogin(user.getKey());
-    return LoggedUser.from(user);
+
+    return Response.ok(LoggedUser.from(user))
+      .header(ContainerRequest.AUTHORIZATION, "Bearer " + JwtUtils.generateJwt(user.getUserName(), jwtConfiguration))
+      .build();
   }
 
   /**
    * Allows a user to change its own password.
-   *
-   * @param securityContext
-   * @param authenticationDataParameters
-   * @return
    */
   @PUT
   @RolesAllowed({USER_ROLE})
@@ -93,9 +99,9 @@ public class UserResource {
     String identifier = securityContext.getUserPrincipal().getName();
     GbifUser user = identityService.get(identifier);
     if (user != null) {
-      UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
-              authenticationDataParameters.getPassword());
-      if(updatePasswordMutationResult.containsError()) {
+      UserModelMutationResult updatePasswordMutationResult =
+        identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
+      if (updatePasswordMutationResult.containsError()) {
         return buildResponse(GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus(), updatePasswordMutationResult);
       }
     }

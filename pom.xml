@@ -136,6 +136,7 @@
     <xoai.version>4.1.0-gbif-1</xoai.version>
     <yammer.version>2.2.0</yammer.version>
     <dbunit.version>2.4.9</dbunit.version>
+    <jjwt.version>0.9.1</jjwt.version>
   </properties>
 
   <!--
@@ -771,6 +772,11 @@
             <artifactId>commons-logging</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt</artifactId>
+        <version>${jjwt.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
