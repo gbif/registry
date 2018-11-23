@@ -1,9 +1,16 @@
 package org.gbif.registry.ws.security.jwt;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Configuration for JWT authentication.
+ * <p>
+ * All the values are read from the application properties file but only the signing key is required.
+ * The other fields have default values.
+ */
 public class JwtConfiguration {
 
   // property keys
@@ -13,7 +20,7 @@ public class JwtConfiguration {
   private static final String SECURITY_CONTEXT_PROP = "securityContext";
 
   // defaults
-  private static final long DEFAULT_EXPIRY = 7 * 24 * 60 * 60 * 1000L; // 7 days
+  private static final long DEFAULT_EXPIRY = TimeUnit.DAYS.toMillis(7);
   private static final String DEFAULT_ISSUER = "GBIF-REGISTRY";
   private static final String DEFAULT_SECURITY_CONTEXT = "JWT";
 
