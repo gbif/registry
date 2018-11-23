@@ -48,7 +48,7 @@ public class JwtRequestFilter implements ContainerRequestFilter {
 
     try {
       GbifUser gbifUser = jwtAuthenticator.authenticate(token.get());
-      LOG.debug("JWT succesfully validated for user {}", gbifUser.getUserName());
+      LOG.debug("JWT successfully validated for user {}", gbifUser.getUserName());
 
       // set the user to the security context
       containerRequest.setSecurityContext(new SecurityContext() {
