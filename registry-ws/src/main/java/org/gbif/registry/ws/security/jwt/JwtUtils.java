@@ -19,6 +19,18 @@ public class JwtUtils {
 
   private JwtUtils() {}
 
+  /**
+   * Generates a JWT with the configuration specified.
+   * <p>
+   * It always sets the following fields:
+   * <ul>
+   * <li>expiration: takes the time from the {@link JwtConfiguration}</li>
+   * <li>Issued time: sets the current time when the token is issued</li>
+   * <li>Issuer: takes the issuer from the {@link JwtConfiguration}</li>
+   * <li>Username claim: custom claim to store the username received as a parameter</li>
+   * <li>signature: signs the token using {@link SignatureAlgorithm#HS256} and the key specified in the {@link JwtConfiguration}</li>
+   * </ul>
+   */
   public static String generateJwt(String username, JwtConfiguration config) {
     return Jwts.builder()
       .setExpiration(new Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
@@ -29,6 +41,9 @@ public class JwtUtils {
       .compact();
   }
 
+  /**
+   * Tries to find the token in the {@link HttpHeaders#AUTHORIZATION} header.
+   */
   public static Optional<String> findTokenInRequest(ContainerRequest containerRequest) {
     // check header first
     return Optional.ofNullable(containerRequest.getHeaderValue(HttpHeaders.AUTHORIZATION))

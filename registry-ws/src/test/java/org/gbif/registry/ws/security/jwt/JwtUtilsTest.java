@@ -29,6 +29,7 @@ public class JwtUtilsTest {
       .getBody();
 
     assertEquals("user", claims.get(JwtConfiguration.GbifClaims.USERNAME));
+    assertEquals(config.getIssuer(), claims.getIssuer());
   }
 
   @Test(expected = IllegalArgumentException.class)
