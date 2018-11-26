@@ -3,7 +3,6 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
-import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtConfiguration;
@@ -24,7 +23,8 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.sun.jersey.spi.container.ContainerRequest;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ObjectNode;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
@@ -50,6 +50,8 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
 public class UserResource {
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final IdentityService identityService;
   private final JwtConfiguration jwtConfiguration;
@@ -80,7 +82,12 @@ public class UserResource {
     GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
     identityService.updateLastLogin(user.getKey());
 
-    return Response.ok(new LoggedUserWithJwt(LoggedUser.from(user), JwtUtils.generateJwt(user.getUserName(), jwtConfiguration))).build();
+    // build response with LoggedUser + JWT.
+    // JWT is not added to the LoggedUser class because we only want to return it in this method
+    ObjectNode jsonNode = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
+    jsonNode.put(JwtConfiguration.TOKEN_FIELD_RESPONSE, JwtUtils.generateJwt(user.getUserName(), jwtConfiguration));
+
+    return Response.ok(jsonNode).build();
   }
 
   /**
