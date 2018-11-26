@@ -2,6 +2,8 @@ package org.gbif.registry;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
+import org.gbif.api.service.common.LoggedUser;
+import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.fixtures.TestClient;
@@ -11,6 +13,7 @@ import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtUtils;
 import org.gbif.ws.security.GbifAuthService;
 
+import java.io.IOException;
 import java.util.function.Function;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
@@ -19,6 +22,7 @@ import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.assertj.core.util.Strings;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
@@ -33,6 +37,8 @@ import static org.junit.Assert.assertTrue;
  * most of the tests use a direct HTTP client.
  */
 public class UserIT extends PlainAPIBaseIT {
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private TestClient testClient;
   private IdentityService identityService;
@@ -133,13 +139,12 @@ public class UserIT extends PlainAPIBaseIT {
   }
 
   @Test
-  public void testLoginWithJwt() {
-    GbifUser user = userTestFixture.prepareUser();
+  public void testLoginWithJwt() throws IOException {
+    userTestFixture.prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
-    String authHeader = cr.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-    assertNotNull(authHeader);
-    assertTrue(JwtUtils.containsBearer(authHeader));
-    assertTrue(!Strings.isNullOrEmpty(JwtUtils.removeBearer(authHeader)));
+    String body = cr.getEntity(String.class);
+    String token = OBJECT_MAPPER.readValue(body, LoggedUserWithJwt.class).getJwt();
+    assertTrue(!Strings.isNullOrEmpty(token));
   }
 
 }

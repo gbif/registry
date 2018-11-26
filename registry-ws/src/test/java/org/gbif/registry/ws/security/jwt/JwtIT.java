@@ -1,12 +1,14 @@
 package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.grizzly.RegistryServerWithIdentity;
 import org.gbif.registry.guice.RegistryTestModules;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 import javax.ws.rs.core.HttpHeaders;
@@ -22,6 +24,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import org.assertj.core.util.Strings;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -42,6 +45,7 @@ public class JwtIT {
   @Rule
   public final JwtDatabaseInitializer databaseRule = new JwtDatabaseInitializer(LiquibaseModules.database());
 
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Function<String, String> BASIC_AUTH_HEADER = username -> "Basic " + java.util.Base64.getEncoder()
     .encodeToString(String.format("%s:%s", username, username).getBytes());
 
@@ -61,7 +65,7 @@ public class JwtIT {
   }
 
   @Test
-  public void validTokenTest() {
+  public void validTokenTest() throws IOException {
     String token = login(JwtDatabaseInitializer.ADMIN_USER);
 
     WebResource personResource = getPersonResource();
@@ -80,7 +84,7 @@ public class JwtIT {
   }
 
   @Test
-  public void invalidHeaderTest() {
+  public void invalidHeaderTest() throws IOException {
     String token = login(JwtDatabaseInitializer.ADMIN_USER);
 
     ClientResponse personResponse = getPersonResource().header(HttpHeaders.AUTHORIZATION, "beare " + token)
@@ -103,7 +107,7 @@ public class JwtIT {
   }
 
   @Test
-  public void insufficientRolesTest() {
+  public void insufficientRolesTest() throws IOException {
     String token = login(JwtDatabaseInitializer.TEST_USER);
 
     WebResource webResourcePerson = client.resource("http://localhost:" + RegistryServer.getPort() + "/grbio/person");
@@ -147,20 +151,17 @@ public class JwtIT {
   /**
    * Logs in a user and returns the JWT token.
    */
-  private String login(String user) {
+  private String login(String user) throws IOException {
     WebResource webResourceLogin = client.resource("http://localhost:" + RegistryServer.getPort() + "/user/login");
 
     ClientResponse loginResponse = webResourceLogin.
-      header(HttpHeaders.AUTHORIZATION, BASIC_AUTH_HEADER.apply(user)).
+      header(HttpHeaders.AUTHORIZATION, BASIC_AUTH_HEADER.apply(user)).accept(MediaType.APPLICATION_JSON).
       get(ClientResponse.class);
 
     assertEquals(Response.Status.OK.getStatusCode(), loginResponse.getStatus());
 
-    String authHeader = loginResponse.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-    assertNotNull(authHeader);
-    assertTrue(JwtUtils.containsBearer(authHeader));
-
-    String token = JwtUtils.removeBearer(authHeader);
+    String body = loginResponse.getEntity(String.class);
+    String token = OBJECT_MAPPER.readValue(body, LoggedUserWithJwt.class).getJwt();
     assertTrue(!Strings.isNullOrEmpty(token));
 
     return token;

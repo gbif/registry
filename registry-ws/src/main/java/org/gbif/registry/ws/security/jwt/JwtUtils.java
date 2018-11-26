@@ -58,13 +58,11 @@ public class JwtUtils {
    *
    * @return a token without whitespaces and the word 'bearer'
    */
-  @VisibleForTesting
-  public static String removeBearer(String token) {
+  private static String removeBearer(String token) {
     return BEARER_PATTERN.matcher(token).replaceAll("").trim();
   }
 
-  @VisibleForTesting
-  public static boolean containsBearer(String header) {
+  private static boolean containsBearer(String header) {
     return BEARER_PATTERN.matcher(header).find();
   }
 
