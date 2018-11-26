@@ -2,20 +2,17 @@ package org.gbif.registry;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
-import org.gbif.api.service.common.LoggedUser;
-import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.ws.fixtures.TestClient;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
-import org.gbif.registry.ws.security.jwt.JwtUtils;
+import org.gbif.registry.ws.security.jwt.JwtConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 
 import java.io.IOException;
 import java.util.function.Function;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Injector;
@@ -143,7 +140,7 @@ public class UserIT extends PlainAPIBaseIT {
     userTestFixture.prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
     String body = cr.getEntity(String.class);
-    String token = OBJECT_MAPPER.readValue(body, LoggedUserWithJwt.class).getJwt();
+    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
     assertTrue(!Strings.isNullOrEmpty(token));
   }
 

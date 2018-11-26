@@ -13,6 +13,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public class JwtConfiguration {
 
+  public static final String TOKEN_FIELD_RESPONSE = "token";
+
   // property keys
   private static final String SIGNING_KEY_PROP = "signingKey";
   private static final String EXPIRY_TIME_PROP = "expiryTimeInMs";
