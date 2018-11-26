@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
@@ -161,7 +160,7 @@ public class JwtIT {
     assertEquals(Response.Status.OK.getStatusCode(), loginResponse.getStatus());
 
     String body = loginResponse.getEntity(String.class);
-    String token = OBJECT_MAPPER.readValue(body, LoggedUserWithJwt.class).getJwt();
+    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
     assertTrue(!Strings.isNullOrEmpty(token));
 
     return token;
