@@ -3,6 +3,7 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
+import org.gbif.api.service.common.LoggedUserWithJwt;
 import org.gbif.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtConfiguration;
@@ -79,9 +80,7 @@ public class UserResource {
     GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
     identityService.updateLastLogin(user.getKey());
 
-    return Response.ok(LoggedUser.from(user))
-      .header(ContainerRequest.AUTHORIZATION, "Bearer " + JwtUtils.generateJwt(user.getUserName(), jwtConfiguration))
-      .build();
+    return Response.ok(new LoggedUserWithJwt(LoggedUser.from(user), JwtUtils.generateJwt(user.getUserName(), jwtConfiguration))).build();
   }
 
   /**
