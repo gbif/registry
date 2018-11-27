@@ -70,6 +70,17 @@ public class TestClient {
   }
 
   /**
+   * Call the login endpoint using a HTTP Basic authentication.
+   * @param username
+   * @param password
+   * @return
+   */
+  public ClientResponse loginPost(String username, String password) {
+    return generateAuthenticatedClient(username, password,
+                                       USER_RESOURCE_PATH).post(wr -> wr.path("login"), null);
+  }
+
+  /**
    * Generate a new {@link JerseyBaseClient} for another resource than the one defined by this test.
    *
    * @param userName

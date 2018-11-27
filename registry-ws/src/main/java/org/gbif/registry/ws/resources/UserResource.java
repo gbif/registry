@@ -13,9 +13,11 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,6 +25,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
@@ -74,20 +77,42 @@ public class UserResource {
    */
   @GET
   @Path("/login")
-  public Response login(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+  public Response loginGet(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
     // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
-    GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
+    JsonNode userResponse = getUserResponse(securityContext.getUserPrincipal().getName());
+
+    CacheControl cacheControl = new CacheControl();
+    cacheControl.setPrivate(true);
+    cacheControl.setNoCache(true);
+    cacheControl.setNoStore(true);
+
+    return Response.ok(userResponse).cacheControl(cacheControl).build();
+  }
+
+  @POST
+  @Path("/login")
+  public Response loginPost(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+    // the user shall be authenticated using basic auth. scheme only.
+    ensureNotGbifScheme(securityContext);
+    ensureUserSetInSecurityContext(securityContext);
+
+    JsonNode userResponse = getUserResponse(securityContext.getUserPrincipal().getName());
+
+    return Response.ok(userResponse).build();
+  }
+
+  private ObjectNode getUserResponse(String username) {
+    GbifUser user = identityService.get(username);
     identityService.updateLastLogin(user.getKey());
 
-    // build response with LoggedUser + JWT.
     // JWT is not added to the LoggedUser class because we only want to return it in this method
     ObjectNode jsonNode = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
     jsonNode.put(JwtConfiguration.TOKEN_FIELD_RESPONSE, JwtUtils.generateJwt(user.getUserName(), jwtConfiguration));
 
-    return Response.ok(jsonNode).build();
+    return jsonNode;
   }
 
   /**
