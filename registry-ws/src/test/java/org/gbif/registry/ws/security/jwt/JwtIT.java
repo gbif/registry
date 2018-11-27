@@ -155,9 +155,9 @@ public class JwtIT {
 
     ClientResponse loginResponse = webResourceLogin.
       header(HttpHeaders.AUTHORIZATION, BASIC_AUTH_HEADER.apply(user)).accept(MediaType.APPLICATION_JSON).
-      get(ClientResponse.class);
+      post(ClientResponse.class);
 
-    assertEquals(Response.Status.OK.getStatusCode(), loginResponse.getStatus());
+    assertEquals(Response.Status.CREATED.getStatusCode(), loginResponse.getStatus());
 
     String body = loginResponse.getEntity(String.class);
     String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
