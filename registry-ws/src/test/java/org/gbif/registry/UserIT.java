@@ -89,19 +89,45 @@ public class UserIT extends PlainAPIBaseIT {
 
   @Test
   public void testLoginNoCredentials() {
+    // GET login
     ClientResponse cr = getPublicClient().get(LOGIN_RESOURCE_FCT);
+    assertResponse(Response.Status.UNAUTHORIZED, cr);
+
+    // POST login
+    cr = getPublicClient().post(LOGIN_RESOURCE_FCT, null);
     assertResponse(Response.Status.UNAUTHORIZED, cr);
   }
 
   @Test
-  public void testLogin() {
+  public void testLoginGet() throws IOException {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
     assertResponse(Response.Status.OK, cr);
 
+    // check jwt token
+    String body = cr.getEntity(String.class);
+    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
+    assertTrue(!Strings.isNullOrEmpty(token));
+
     //try to login using the email instead of the username
     cr = testClient.login(user.getEmail(), getPassword());
     assertResponse(Response.Status.OK, cr);
+  }
+
+  @Test
+  public void testLoginPost() throws IOException {
+    GbifUser user = userTestFixture.prepareUser();
+    ClientResponse cr = getAuthenticatedClient().post(LOGIN_RESOURCE_FCT, null);
+    assertResponse(Response.Status.CREATED, cr);
+
+    // check jwt token
+    String body = cr.getEntity(String.class);
+    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
+    assertTrue(!Strings.isNullOrEmpty(token));
+
+    //try to login using the email instead of the username
+    cr = testClient.loginPost(user.getEmail(), getPassword());
+    assertResponse(Response.Status.CREATED, cr);
   }
 
   @Test
@@ -133,15 +159,6 @@ public class UserIT extends PlainAPIBaseIT {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getWithSignedRequest(user.getUserName(), (uriBuilder -> uriBuilder.path("login")));
     assertResponse(Response.Status.FORBIDDEN, cr);
-  }
-
-  @Test
-  public void testLoginWithJwt() throws IOException {
-    userTestFixture.prepareUser();
-    ClientResponse cr = getAuthenticatedClient().get(LOGIN_RESOURCE_FCT);
-    String body = cr.getEntity(String.class);
-    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
-    assertTrue(!Strings.isNullOrEmpty(token));
   }
 
 }
