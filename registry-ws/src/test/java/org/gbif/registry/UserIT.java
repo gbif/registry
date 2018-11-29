@@ -8,6 +8,8 @@ import org.gbif.registry.ws.fixtures.TestClient;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.ws.resources.UserResource;
 import org.gbif.registry.ws.security.jwt.JwtConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 
@@ -19,12 +21,14 @@ import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.assertj.core.util.Strings;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.junit.Test;
 
 import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -159,6 +163,24 @@ public class UserIT extends PlainAPIBaseIT {
     GbifUser user = userTestFixture.prepareUser();
     ClientResponse cr = getWithSignedRequest(user.getUserName(), (uriBuilder -> uriBuilder.path("login")));
     assertResponse(Response.Status.FORBIDDEN, cr);
+  }
+
+  @Test
+  public void testWhoAmI() throws IOException {
+    // create test user
+    UserCreation userCreation = userTestFixture.generateUser(UserTestFixture.USERNAME);
+    GbifUser user = userTestFixture.prepareUser(userCreation);
+
+    ClientResponse cr = getAuthenticatedClient().get(wr -> wr.path("whoami"));
+    assertResponse(Response.Status.OK, cr);
+    String body = cr.getEntity(String.class);
+    JsonNode node = OBJECT_MAPPER.readTree(body);
+
+    assertEquals(userCreation.getUserName(), node.get("userName").asText());
+    assertEquals(userCreation.getEmail(), node.get("email").asText());
+
+    ArrayNode roles = (ArrayNode) node.get(UserResource.ROLES_FIELD_RESPONSE);
+    assertEquals(user.getRoles().size(), roles.size());
   }
 
 }
