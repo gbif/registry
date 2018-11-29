@@ -60,8 +60,7 @@ public class UserResource {
 
   @VisibleForTesting
   public static final String ROLES_FIELD_RESPONSE = "roles";
-  @VisibleForTesting
-  public static final String EDITOR_RIGHTS_FIELD_RESPONSE = "editorRoleScopes";
+  static final String EDITOR_RIGHTS_FIELD_RESPONSE = "editorRoleScopes";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
