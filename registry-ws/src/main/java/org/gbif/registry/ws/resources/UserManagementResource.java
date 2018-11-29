@@ -23,6 +23,7 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -258,7 +259,7 @@ public class UserManagementResource {
   @RolesAllowed(ADMIN_ROLE)
   public PagingResponse<GbifUser> search(@QueryParam("q") String query, @Context @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    String q = Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(query));
+    String q = Optional.ofNullable(query).map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v))).orElse(null);
     return identityService.search(q, page);
   }
 
