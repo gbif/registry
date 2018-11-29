@@ -9,6 +9,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.ws.guice.Trim;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -49,7 +50,9 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
   }
 
   @GET
-  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query, @Nullable @QueryParam("contact") UUID contactKey, @Context Pageable page) {
+  public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query,
+                                          @Nullable @QueryParam("contact") UUID contactKey,
+                                          @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = Strings.emptyToNull(query);
     long total = institutionMapper.count(query, contactKey);
