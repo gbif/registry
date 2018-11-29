@@ -122,6 +122,10 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     PagingResponse<Collection> response = collectionService.list("dummy", null, null, page);
     assertEquals(2, response.getResults().size());
 
+    // empty queries are ignored and return all elements
+    response = collectionService.list("", null, null, page);
+    assertEquals(2, response.getResults().size());
+
     response = collectionService.list("city", null, null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
