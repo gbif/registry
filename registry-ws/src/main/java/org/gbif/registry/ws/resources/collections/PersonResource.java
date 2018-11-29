@@ -23,6 +23,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,6 +60,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
                                      @Nullable @QueryParam("primaryCollection") UUID collectionKey,
                                      @Nullable @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
+    query = Strings.emptyToNull(query);
     long total = personMapper.count(institutionKey, collectionKey, query);
     return new PagingResponse<>(page, total, personMapper.list(institutionKey, collectionKey, query, page));
   }
