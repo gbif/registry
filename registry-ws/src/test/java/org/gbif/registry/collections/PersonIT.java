@@ -138,6 +138,10 @@ public class PersonIT extends CrudTest<Person> {
     PagingResponse<Person> response = personService.list("dummy", null, null, page);
     assertEquals(2, response.getResults().size());
 
+    // empty queries are ignored and return all elements
+    response = personService.list("", null, null, page);
+    assertEquals(2, response.getResults().size());
+
     response = personService.list("city", null, null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
