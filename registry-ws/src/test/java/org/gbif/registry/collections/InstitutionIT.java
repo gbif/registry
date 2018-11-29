@@ -128,6 +128,10 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     PagingResponse<Institution> response = institutionService.list("dummy", null, page);
     assertEquals(2, response.getResults().size());
 
+    // empty queries are ignored and return all elements
+    response = institutionService.list("", null, page);
+    assertEquals(2, response.getResults().size());
+
     response = institutionService.list("city", null, page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());

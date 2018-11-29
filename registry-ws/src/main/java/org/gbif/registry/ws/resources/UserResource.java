@@ -9,6 +9,9 @@ import org.gbif.registry.ws.security.jwt.JwtConfiguration;
 import org.gbif.registry.ws.security.jwt.JwtUtils;
 import org.gbif.ws.response.GbifResponseStatus;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -23,10 +26,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
@@ -53,6 +57,10 @@ import static org.gbif.registry.ws.util.ResponseUtils.buildResponse;
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
 public class UserResource {
+
+  @VisibleForTesting
+  public static final String ROLES_FIELD_RESPONSE = "roles";
+  static final String EDITOR_RIGHTS_FIELD_RESPONSE = "editorRoleScopes";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -82,14 +90,9 @@ public class UserResource {
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
-    JsonNode userResponse = getUserResponse(securityContext.getUserPrincipal().getName());
+    ObjectNode userResponse = getUserWithJwtAtLoginResponse(securityContext.getUserPrincipal().getName());
 
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setPrivate(true);
-    cacheControl.setNoCache(true);
-    cacheControl.setNoStore(true);
-
-    return Response.ok(userResponse).cacheControl(cacheControl).build();
+    return Response.ok(userResponse).cacheControl(createNoCacheHeaders()).build();
   }
 
   @POST
@@ -99,20 +102,65 @@ public class UserResource {
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
-    JsonNode userResponse = getUserResponse(securityContext.getUserPrincipal().getName());
+    ObjectNode userResponse = getUserWithJwtAtLoginResponse(securityContext.getUserPrincipal().getName());
 
     return Response.ok(userResponse).build();
   }
 
-  private ObjectNode getUserResponse(String username) {
+  // only to use in login since it updates the last login
+  private ObjectNode getUserWithJwtAtLoginResponse(String username) {
+    // get the user
     GbifUser user = identityService.get(username);
+
+    if (user == null) {
+      return OBJECT_MAPPER.createObjectNode();
+    }
+
     identityService.updateLastLogin(user.getKey());
 
-    // JWT is not added to the LoggedUser class because we only want to return it in this method
-    ObjectNode jsonNode = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
-    jsonNode.put(JwtConfiguration.TOKEN_FIELD_RESPONSE, JwtUtils.generateJwt(user.getUserName(), jwtConfiguration));
+    // build response
+    ObjectNode response = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
+    // add jwt token
+    response.put(JwtConfiguration.TOKEN_FIELD_RESPONSE, JwtUtils.generateJwt(user.getUserName(), jwtConfiguration));
 
-    return jsonNode;
+    return response;
+  }
+
+  @GET
+  @Path("/whoami")
+  public Response whoAmI(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+    // the user shall be authenticated using basic auth. scheme
+    ensureNotGbifScheme(securityContext);
+    ensureUserSetInSecurityContext(securityContext);
+
+    ObjectNode response = getWhoAmIResponse(securityContext.getUserPrincipal().getName());
+
+    return Response.ok(response).cacheControl(createNoCacheHeaders()).build();
+  }
+
+  private ObjectNode getWhoAmIResponse(String username) {
+    // get the user
+    GbifUser user = identityService.get(username);
+
+    if (user == null) {
+      return OBJECT_MAPPER.createObjectNode();
+    }
+
+    // get editor rights
+    List<UUID> editorRights = identityService.listEditorRights(username);
+
+    // build response
+    ObjectNode response = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
+
+    // add roles
+    ArrayNode rolesArray = response.putArray(ROLES_FIELD_RESPONSE);
+    Optional.ofNullable(user.getRoles()).ifPresent(userRoles -> userRoles.forEach(role -> rolesArray.add(role.name())));
+
+    // add editor rights
+    ArrayNode editorRightsArray = response.putArray(EDITOR_RIGHTS_FIELD_RESPONSE);
+    Optional.ofNullable(editorRights).ifPresent(rights -> rights.forEach(v -> editorRightsArray.add(v.toString())));
+
+    return response;
   }
 
   /**
@@ -121,8 +169,9 @@ public class UserResource {
   @PUT
   @RolesAllowed({USER_ROLE})
   @Path("/changePassword")
-  public Response changePassword(@Context SecurityContext securityContext,
-                                 AuthenticationDataParameters authenticationDataParameters) {
+  public Response changePassword(
+    @Context SecurityContext securityContext, AuthenticationDataParameters authenticationDataParameters
+  ) {
     // the user shall be authenticated using basic auth. scheme
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
@@ -137,6 +186,15 @@ public class UserResource {
       }
     }
     return Response.noContent().build();
+  }
+
+  private static CacheControl createNoCacheHeaders() {
+    CacheControl cacheControl = new CacheControl();
+    cacheControl.setPrivate(true);
+    cacheControl.setNoCache(true);
+    cacheControl.setNoStore(true);
+
+    return cacheControl;
   }
 
 }
