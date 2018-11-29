@@ -20,6 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -53,6 +54,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
                                          @Nullable @QueryParam("contact") UUID contactKey,
                                          @Nullable @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
+    query = Strings.emptyToNull(query);
     long total = collectionMapper.count(institutionKey, contactKey, query);
     return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
   }
