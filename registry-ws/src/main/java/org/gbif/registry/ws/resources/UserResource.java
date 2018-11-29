@@ -159,6 +159,7 @@ public class UserResource {
     // add editor rights
     ArrayNode editorRightsArray = response.putArray(EDITOR_RIGHTS_FIELD_RESPONSE);
     Optional.ofNullable(editorRights).ifPresent(rights -> rights.forEach(v -> editorRightsArray.add(v.toString())));
+
     return response;
   }
 
