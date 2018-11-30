@@ -171,8 +171,8 @@ public class UserIT extends PlainAPIBaseIT {
     UserCreation userCreation = userTestFixture.generateUser(UserTestFixture.USERNAME);
     GbifUser user = userTestFixture.prepareUser(userCreation);
 
-    ClientResponse cr = getAuthenticatedClient().get(wr -> wr.path("whoami"));
-    assertResponse(Response.Status.OK, cr);
+    ClientResponse cr = getAuthenticatedClient().post(wr -> wr.path("whoami"), null);
+    assertResponse(Response.Status.CREATED, cr);
     String body = cr.getEntity(String.class);
     JsonNode node = OBJECT_MAPPER.readTree(body);
 
