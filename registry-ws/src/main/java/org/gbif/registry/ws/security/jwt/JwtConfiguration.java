@@ -69,7 +69,7 @@ public class JwtConfiguration {
   // custom GBIF claims
   public class GbifClaims {
 
-    public static final String USERNAME = "username";
+    public static final String USERNAME = "userName";
   }
 
   public static Builder newBuilder() {
