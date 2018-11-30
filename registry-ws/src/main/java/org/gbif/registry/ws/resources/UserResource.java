@@ -126,7 +126,7 @@ public class UserResource {
     return response;
   }
 
-  @GET
+  @POST
   @Path("/whoami")
   public Response whoAmI(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
     // the user shall be authenticated using basic auth. scheme
