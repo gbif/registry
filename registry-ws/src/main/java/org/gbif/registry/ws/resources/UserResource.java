@@ -29,6 +29,7 @@ import javax.ws.rs.core.SecurityContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.http.HttpStatus;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -60,7 +61,8 @@ public class UserResource {
 
   @VisibleForTesting
   public static final String ROLES_FIELD_RESPONSE = "roles";
-  static final String EDITOR_RIGHTS_FIELD_RESPONSE = "editorRoleScopes";
+  @VisibleForTesting
+  public static final String EDITOR_RIGHTS_FIELD_RESPONSE = "editorRoleScopes";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -90,9 +92,7 @@ public class UserResource {
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
-    ObjectNode userResponse = getUserWithJwtAtLoginResponse(securityContext.getUserPrincipal().getName());
-
-    return Response.ok(userResponse).cacheControl(createNoCacheHeaders()).build();
+    return login(securityContext.getUserPrincipal().getName());
   }
 
   @POST
@@ -102,52 +102,35 @@ public class UserResource {
     ensureNotGbifScheme(securityContext);
     ensureUserSetInSecurityContext(securityContext);
 
-    ObjectNode userResponse = getUserWithJwtAtLoginResponse(securityContext.getUserPrincipal().getName());
-
-    return Response.ok(userResponse).build();
+    return login(securityContext.getUserPrincipal().getName());
   }
 
   // only to use in login since it updates the last login
-  private ObjectNode getUserWithJwtAtLoginResponse(String username) {
+  private Response login(String username) {
     // get the user
     GbifUser user = identityService.get(username);
 
     if (user == null) {
-      return OBJECT_MAPPER.createObjectNode();
+      return Response.status(HttpStatus.SC_BAD_REQUEST).build();
     }
 
     identityService.updateLastLogin(user.getKey());
 
     // build response
-    ObjectNode response = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
+    ObjectNode response = buildResponseUserLogged(user);
     // add jwt token
     response.put(JwtConfiguration.TOKEN_FIELD_RESPONSE, JwtUtils.generateJwt(user.getUserName(), jwtConfiguration));
-
-    return response;
-  }
-
-  @POST
-  @Path("/whoami")
-  public Response whoAmI(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
-    // the user shall be authenticated using basic auth. scheme
-    ensureNotGbifScheme(securityContext);
-    ensureUserSetInSecurityContext(securityContext);
-
-    ObjectNode response = getWhoAmIResponse(securityContext.getUserPrincipal().getName());
 
     return Response.ok(response).cacheControl(createNoCacheHeaders()).build();
   }
 
-  private ObjectNode getWhoAmIResponse(String username) {
-    // get the user
-    GbifUser user = identityService.get(username);
-
+  private ObjectNode buildResponseUserLogged(GbifUser user) {
     if (user == null) {
       return OBJECT_MAPPER.createObjectNode();
     }
 
     // get editor rights
-    List<UUID> editorRights = identityService.listEditorRights(username);
+    List<UUID> editorRights = identityService.listEditorRights(user.getUserName());
 
     // build response
     ObjectNode response = OBJECT_MAPPER.valueToTree(LoggedUser.from(user));
@@ -161,6 +144,23 @@ public class UserResource {
     Optional.ofNullable(editorRights).ifPresent(rights -> rights.forEach(v -> editorRightsArray.add(v.toString())));
 
     return response;
+  }
+
+  @POST
+  @Path("/whoami")
+  public Response whoAmI(@Context SecurityContext securityContext, @Context HttpServletRequest request) {
+    // the user shall be authenticated using basic auth. scheme
+    ensureNotGbifScheme(securityContext);
+    ensureUserSetInSecurityContext(securityContext);
+
+    // get the user
+    GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
+
+    if (user == null) {
+      return Response.status(HttpStatus.SC_BAD_REQUEST).build();
+    }
+
+    return Response.ok(buildResponseUserLogged(user)).cacheControl(createNoCacheHeaders()).build();
   }
 
   /**
