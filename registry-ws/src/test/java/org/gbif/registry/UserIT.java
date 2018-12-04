@@ -110,8 +110,9 @@ public class UserIT extends PlainAPIBaseIT {
 
     // check jwt token
     String body = cr.getEntity(String.class);
-    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
-    assertTrue(!Strings.isNullOrEmpty(token));
+    JsonNode node = OBJECT_MAPPER.readTree(body);
+    assertUserLogged(node, user);
+    assertTrue(!Strings.isNullOrEmpty(node.get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText()));
 
     //try to login using the email instead of the username
     cr = testClient.login(user.getEmail(), getPassword());
@@ -126,8 +127,9 @@ public class UserIT extends PlainAPIBaseIT {
 
     // check jwt token
     String body = cr.getEntity(String.class);
-    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
-    assertTrue(!Strings.isNullOrEmpty(token));
+    JsonNode node = OBJECT_MAPPER.readTree(body);
+    assertUserLogged(node, user);
+    assertTrue(!Strings.isNullOrEmpty(node.get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText()));
 
     //try to login using the email instead of the username
     cr = testClient.loginPost(user.getEmail(), getPassword());
@@ -174,13 +176,17 @@ public class UserIT extends PlainAPIBaseIT {
     ClientResponse cr = getAuthenticatedClient().post(wr -> wr.path("whoami"), null);
     assertResponse(Response.Status.CREATED, cr);
     String body = cr.getEntity(String.class);
-    JsonNode node = OBJECT_MAPPER.readTree(body);
+    assertUserLogged(OBJECT_MAPPER.readTree(body), user);
+  }
 
-    assertEquals(userCreation.getUserName(), node.get("userName").asText());
-    assertEquals(userCreation.getEmail(), node.get("email").asText());
-
+  private void assertUserLogged(JsonNode node, GbifUser user) {
+    assertEquals(user.getUserName(), node.get("userName").asText());
+    assertEquals(user.getEmail(), node.get("email").asText());
+    assertEquals(user.getFirstName(), node.get("firstName").asText());
+    assertTrue(node.has(UserResource.ROLES_FIELD_RESPONSE));
     ArrayNode roles = (ArrayNode) node.get(UserResource.ROLES_FIELD_RESPONSE);
     assertEquals(user.getRoles().size(), roles.size());
+    assertTrue(node.has(UserResource.EDITOR_RIGHTS_FIELD_RESPONSE));
   }
 
 }
