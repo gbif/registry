@@ -374,8 +374,13 @@ public class DatasetWrapper {
         LOG.debug("No machine readable license was detected!");
         break;
       case UNSUPPORTED:
-        LOG.debug("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
-        target.setLicense(license);
+        // The metadata may provide multiple licenses, in which case we choose one we support.
+        if (target.getLicense() == null || target.getLicense().equals(License.UNSPECIFIED)) {
+          LOG.debug("An unsupported machine readable license was detected with URI {} and title {}", uriString, title);
+          target.setLicense(license);
+        } else {
+          LOG.debug("An additional unsupported machine readable license was detected with URI {} and title {}, it will be ignored", uriString, title);
+        }
         break;
       default:
         LOG.debug("A supported machine readable license was detected: {}", license.name());
