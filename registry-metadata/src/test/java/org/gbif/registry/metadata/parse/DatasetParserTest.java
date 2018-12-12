@@ -838,4 +838,13 @@ public class DatasetParserTest {
     assertNotNull(dataset.getCitation().getText());
     assertTrue(dataset.getCitation().getText().startsWith("Droege, G., Güntsch, A., Holetschek, J., Kusber"));
   }
+
+  /**
+   * Plazi provide multiple licenses, we need to use the first (CC0) and not overwrite that with the second (custom).
+   */
+  @Test
+  public void testEmlParsingPlaziLicense() throws IOException {
+    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/3920856d-4923-4276-ae0b-e8b3478df276.xml"));
+    assertEquals(License.CC0_1_0, dataset.getLicense());
+  }
 }
