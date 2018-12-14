@@ -14,6 +14,7 @@ import org.gbif.api.model.registry.eml.TaxonomicCoverage;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.curatorial.CuratorialUnitComposite;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
@@ -28,12 +29,17 @@ import org.gbif.api.vocabulary.Rank;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.registry.metadata.CleanUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Year;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -70,7 +76,7 @@ public class DatasetWrapper {
   /**
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year, ignoring whitespace
    *
-   * @param dateString To set in format YYYY-MM-DD
+   * @param dateString To set in format YYYY-MM-DD or YYYY
    *
    * @return the parsed date
    *
@@ -82,23 +88,18 @@ public class DatasetWrapper {
     if (Strings.isNullOrEmpty(dateString)) {
       return null;
     }
-    // kill whitespace
-    dateString = dateString.replaceAll("\\s", "");
-    dateString = dateString.replaceAll("[\\,._#//]", "-");
-    Date date;
-    try {
-      SimpleDateFormat iso = new SimpleDateFormat("yyyy-MM-dd");
-      date = iso.parse(dateString);
-    } catch (ParseException e) {
-      if (dateString.length() == 4) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
-        date = sdf.parse(dateString);
-        date = new Date(date.getTime() + 1);
-      } else {
-        throw e;
+
+    ParseResult<TemporalAccessor> result = DateParsers.defaultNumericalDateParser().parse(dateString);
+    if (result.getStatus() == ParseResult.STATUS.SUCCESS) {
+      TemporalAccessor ta = result.getPayload();
+      if (ta.isSupported(ChronoField.DAY_OF_MONTH)) {
+        return Date.from(LocalDate.from(ta).atStartOfDay(ZoneOffset.UTC).toInstant());
+      } else if (ta.isSupported(ChronoField.YEAR)) {
+        return Date.from(Year.from(ta).atDay(1).atStartOfDay(ZoneOffset.UTC).plusNanos(1000).toInstant());
       }
     }
-    return date;
+
+    return null;
   }
 
   public void addBibliographicCitation(Citation citation) {
@@ -290,6 +291,17 @@ public class DatasetWrapper {
   }
 
   public void addTemporalCoverage(TemporalCoverage coverage) {
+    if (coverage instanceof DateRange) {
+      DateRange rangeCoverage = (DateRange) coverage;
+
+      // If the end date is only accurate to the nearest year, set it to the 31 December, for users who don't realize
+      // the 0.001s hack.
+      if (rangeCoverage.getEnd() != null && rangeCoverage.getEnd().toInstant().getNano() == 1_000_000) {
+        Year year = Year.from(rangeCoverage.getEnd().toInstant().atZone(ZoneOffset.UTC));
+        rangeCoverage.setEnd(Date.from(year.atDay(year.isLeap() ? 366 : 365).atStartOfDay(ZoneOffset.UTC).plusNanos(1_000_000).toInstant()));
+      }
+    }
+
     target.getTemporalCoverages().add(coverage);
   }
 
