@@ -13,11 +13,12 @@ public class DateConverterTest {
 
   @Test
   public void parseDates() throws Throwable {
-    assertLang(2000, 10, 20, "2000-10-20");
-    assertLang(2000, 10, 20, "20.10.2000");
+    assertLang(2000, 10, 20, 0, "2000-10-20");
+    assertLang(2000, 10, 20, 0, "20.10.2000");
+    assertLang(2000, 1, 1, 1, "2000");
   }
 
-  private void assertLang(Integer year, Integer month, Integer day, String value) throws Throwable {
+  private void assertLang(Integer year, Integer month, Integer day, Integer millis, String value) throws Throwable {
     Date d = (Date) converter.convertToType(Date.class, value);
 
     Calendar cal = Calendar.getInstance();
@@ -31,6 +32,9 @@ public class DateConverterTest {
     }
     if (day != null) {
       assertEquals(day, (Integer) cal.get(Calendar.DAY_OF_MONTH));
+    }
+    if (millis != null) {
+      assertEquals(millis, (Integer) cal.get(Calendar.MILLISECOND));
     }
     if (year == null && month == null && day==null) {
       assertNull(d);

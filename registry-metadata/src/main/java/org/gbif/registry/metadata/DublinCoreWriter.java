@@ -13,6 +13,8 @@ import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -181,19 +183,28 @@ public class DublinCoreWriter {
    */
   private static class DcTemporalTemporalCoverageFormatter implements TemporalCoverageFormatterVisitor {
 
+    private String formatYearOrYmd(Date date) {
+      if (date == null) {
+        return "";
+      }
+
+      if (date.toInstant().getNano() == 1000) {
+        return String.valueOf(date.toInstant().atZone(ZoneOffset.UTC).getYear());
+      } else {
+        return FDF.format(date);
+      }
+    }
+
     @Override
     public String format(DateRange dateRange) {
-      String startDate = dateRange.getStart() != null ? FDF.format(dateRange.getStart()) : "";
-      String endDate = dateRange.getEnd() != null ? FDF.format(dateRange.getEnd()) : "";
+      String startDate = formatYearOrYmd(dateRange.getStart());
+      String endDate = formatYearOrYmd(dateRange.getEnd());
       return startDate + "/" + endDate;
     }
 
     @Override
     public String format(SingleDate singleDate) {
-      if(singleDate.getDate() == null){
-        return "";
-      }
-      return FDF.format(singleDate.getDate());
+      return formatYearOrYmd(singleDate.getDate());
     }
 
     // unsupported
