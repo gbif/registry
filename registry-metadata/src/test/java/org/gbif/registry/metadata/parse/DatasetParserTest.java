@@ -34,7 +34,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.input.ReaderInputStream;
@@ -48,7 +50,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class DatasetParserTest {
-
 
   @Test
   public void testDetectParserType() throws Exception {
@@ -837,6 +838,22 @@ public class DatasetParserTest {
     assertNotNull(dataset.getCitation());
     assertNotNull(dataset.getCitation().getText());
     assertTrue(dataset.getCitation().getText().startsWith("Droege, G., Güntsch, A., Holetschek, J., Kusber"));
+  }
+
+  /**
+   * Check dates are in UTC, and ranges use the endpoints of the range.
+   *
+   * An improvement would be to use only the year, not 1st January.
+   */
+  @Test
+  public void testEmlParsingYearCoverage() throws IOException {
+    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/temporalCoverageRange.xml"));
+    assertEquals("Testing date range", dataset.getTitle());
+    DateRange dateRange = (DateRange) dataset.getTemporalCoverages().get(0);
+    assertEquals(Date.from(ZonedDateTime.parse("1986-01-01T00:00:00.001Z").toInstant()), dateRange.getStart());
+    assertEquals(Date.from(ZonedDateTime.parse("2018-12-31T00:00:00.001Z").toInstant()), dateRange.getEnd());
+
+    assertEquals(Date.from(ZonedDateTime.parse("2018-12-12T00:00:00.000Z").toInstant()), dataset.getPubDate());
   }
 
   /**

@@ -405,25 +405,20 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addSetNext("eml/dataset/coverage/temporalCoverage/singleDateTime", "addTemporalCoverage");
 
     digester.addObjectCreate("eml/dataset/coverage/temporalCoverage/rangeOfDates", DateRange.class);
-    digester
-      .addBeanPropertySetter("eml/dataset/coverage/temporalCoverage/rangeOfDates/beginDate/calendarDate", "start");
+    digester.addBeanPropertySetter("eml/dataset/coverage/temporalCoverage/rangeOfDates/beginDate/calendarDate", "start");
     digester.addBeanPropertySetter("eml/dataset/coverage/temporalCoverage/rangeOfDates/endDate/calendarDate", "end");
     digester.addSetNext("eml/dataset/coverage/temporalCoverage/rangeOfDates", "addTemporalCoverage");
 
     digester.addObjectCreate("eml/additionalMetadata/metadata/gbif/livingTimePeriod", VerbatimTimePeriod.class);
     digester.addBeanPropertySetter("eml/additionalMetadata/metadata/gbif/livingTimePeriod", "period");
-    digester.addCallMethod("eml/additionalMetadata/metadata/gbif/livingTimePeriod", "setType", 1,
-      new Class[] {VerbatimTimePeriodType.class});
-    digester.addObjectParam("eml/additionalMetadata/metadata/gbif/livingTimePeriod", 0,
-      VerbatimTimePeriodType.LIVING_TIME_PERIOD);
+    digester.addCallMethod("eml/additionalMetadata/metadata/gbif/livingTimePeriod", "setType", 1, new Class[] {VerbatimTimePeriodType.class});
+    digester.addObjectParam("eml/additionalMetadata/metadata/gbif/livingTimePeriod", 0, VerbatimTimePeriodType.LIVING_TIME_PERIOD);
     digester.addSetNext("eml/additionalMetadata/metadata/gbif/livingTimePeriod", "addTemporalCoverage");
 
     digester.addObjectCreate("eml/additionalMetadata/metadata/gbif/formationPeriod", VerbatimTimePeriod.class);
     digester.addBeanPropertySetter("eml/additionalMetadata/metadata/gbif/formationPeriod", "period");
-    digester.addCallMethod("eml/additionalMetadata/metadata/gbif/formationPeriod", "setType", 1,
-      new Class[] {VerbatimTimePeriodType.class});
-    digester.addObjectParam("eml/additionalMetadata/metadata/gbif/formationPeriod", 0,
-      VerbatimTimePeriodType.FORMATION_PERIOD);
+    digester.addCallMethod("eml/additionalMetadata/metadata/gbif/formationPeriod", "setType", 1, new Class[] {VerbatimTimePeriodType.class});
+    digester.addObjectParam("eml/additionalMetadata/metadata/gbif/formationPeriod", 0, VerbatimTimePeriodType.FORMATION_PERIOD);
     digester.addSetNext("eml/additionalMetadata/metadata/gbif/formationPeriod", "addTemporalCoverage");
   }
 
