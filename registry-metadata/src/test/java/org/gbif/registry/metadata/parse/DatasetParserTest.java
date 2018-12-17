@@ -34,10 +34,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.io.input.ReaderInputStream;
 import org.junit.Test;
@@ -223,6 +225,7 @@ public class DatasetParserTest {
   public void verifyV101(Dataset dataset) {
     Calendar cal = Calendar.getInstance();
     cal.clear();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
 
     assertNotNull(dataset);
 
