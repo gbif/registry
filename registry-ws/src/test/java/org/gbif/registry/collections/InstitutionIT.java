@@ -111,12 +111,6 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     institution1.setAddress(address);
     UUID key1 = institutionService.create(institution1);
 
-    // add contact
-    Person person1 = new Person();
-    person1.setFirstName("first name");
-    UUID personKey = personService.create(person1);
-    institutionService.addContact(key1, personKey);
-
     Institution institution2 = newEntity();
     Address address2 = new Address();
     address2.setAddress("dummy address2");
@@ -141,11 +135,6 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     assertEquals(key2, response.getResults().get(0).getKey());
 
     assertEquals(0, institutionService.list("c", null, page).getResults().size());
-
-    // person search
-    assertEquals(1, institutionService.list("first name", null, page).getResults().size());
-    institutionService.removeContact(key1, personKey);
-    assertEquals(0, institutionService.list("first name", null, page).getResults().size());
 
     institutionService.delete(key2);
     assertEquals(0, institutionService.list("city2", null, page).getResults().size());
