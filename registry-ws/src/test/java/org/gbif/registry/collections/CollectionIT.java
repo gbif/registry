@@ -105,12 +105,6 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     collection1.setAddress(address);
     UUID key1 = collectionService.create(collection1);
 
-    // add contact
-    Person person1 = new Person();
-    person1.setFirstName("first name");
-    UUID personKey = personService.create(person1);
-    collectionService.addContact(key1, personKey);
-
     Collection collection2 = newEntity();
     Address address2 = new Address();
     address2.setAddress("dummy address2");
@@ -135,11 +129,6 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     assertEquals(key2, response.getResults().get(0).getKey());
 
     assertEquals(0, collectionService.list("c", null, null, page).getResults().size());
-
-    // person search
-    assertEquals(1, collectionService.list("first name", null, null, page).getResults().size());
-    collectionService.removeContact(key1, personKey);
-    assertEquals(0, collectionService.list("first name", null, null, page).getResults().size());
 
     collectionService.delete(key2);
     assertEquals(0, collectionService.list("city2", null, null, page).getResults().size());
