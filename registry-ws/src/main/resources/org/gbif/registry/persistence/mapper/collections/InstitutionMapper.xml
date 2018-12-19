@@ -92,19 +92,8 @@
     query @@ fulltext_search
     OR EXISTS(
     SELECT key
-    FROM address maddr
-    WHERE maddr.key=i.mailing_address_key AND query @@ maddr.fulltext_search
-    )
-    OR EXISTS(
-    SELECT key
     FROM address addr
-    WHERE addr.key=i.address_key AND query @@ addr.fulltext_search
-    )
-    OR EXISTS(
-    SELECT key
-    FROM collection_person p
-    INNER JOIN institution_collection_person ip on ip.institution_key=i.key
-    WHERE query @@ p.fulltext_search
+    WHERE addr.key IN (i.mailing_address_key,i.address_key) AND query @@ addr.fulltext_search
     )
   </sql>
 
