@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -66,6 +67,11 @@ public class RegistryNodeMockMapper implements NodeMapper {
   @Override
   public int deleteContact(UUID entityKey, int contactKey) {
     return 0;
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String q) {
+    throw new UnsupportedOperationException();
   }
 
   @Override

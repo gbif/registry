@@ -13,11 +13,14 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Node;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
@@ -58,5 +61,11 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
    */
   @Override
   int deleteContact(UUID entityKey, int contactKey);
+
+  /**
+   * A simple suggest by title service.
+   */
+  List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
+
 
 }

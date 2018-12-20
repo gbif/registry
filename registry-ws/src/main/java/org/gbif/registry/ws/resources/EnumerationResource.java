@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Extension;
@@ -20,6 +21,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import javax.swing.plaf.BorderUIResource;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,7 +41,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.inject.Singleton;
@@ -110,10 +115,14 @@ public class EnumerationResource {
   private static Map<String, Enum<?>[]> enumerations() {
     try {
       ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
-      ImmutableMap.Builder<String, Enum<?>[]> builder = ImmutableMap.builder();
+      ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
 
-      List<ClassInfo> infos = cp.getTopLevelClasses(Country.class.getPackage().getName()).asList();
-      for (ClassInfo info : infos) {
+      // create a list with gbif and collection enums
+      ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
+        .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
+        .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList());
+
+      for (ClassInfo info : infosListBuilder.build()) {
         Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());
         // verify that it is an Enumeration
         if (vocab != null && vocab.getEnumConstants() != null) {
