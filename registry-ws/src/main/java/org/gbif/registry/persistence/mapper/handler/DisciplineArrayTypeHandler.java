@@ -1,6 +1,6 @@
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.model.collections.vocabulary.Discipline;
+import org.gbif.api.vocabulary.collections.Discipline;
 
 import java.sql.Array;
 import java.sql.CallableStatement;

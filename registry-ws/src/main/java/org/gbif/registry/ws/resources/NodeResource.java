@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -245,5 +246,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   public PagingResponse<Installation> installations(@PathParam("key") UUID nodeKey, @Context Pageable page) {
     return pagingResponse(page, installationMapper.countInstallationsEndorsedBy(nodeKey),
       installationMapper.listInstallationsEndorsedBy(nodeKey, page));
+  }
+
+  @Path("suggest")
+  @GET
+  @Override
+  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
+    return nodeMapper.suggest(label);
   }
 }

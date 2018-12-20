@@ -2,9 +2,9 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.vocabulary.AccessionStatus;
-import org.gbif.api.model.collections.vocabulary.PreservationType;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;
