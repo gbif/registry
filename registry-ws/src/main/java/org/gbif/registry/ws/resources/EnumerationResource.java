@@ -117,7 +117,7 @@ public class EnumerationResource {
       ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
       ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
 
-      // create a list with gbif and collection enums
+      // create a list with gbif and collection vocabulary enums
       ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
         .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
         .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList());
