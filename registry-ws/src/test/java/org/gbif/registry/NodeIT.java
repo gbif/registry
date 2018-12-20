@@ -297,4 +297,20 @@ public class NodeIT extends NetworkEntityTest<Node> {
   protected UUID keyForCreateAsEditorTest(Node entity) {
     return null;
   }
+
+  @Test
+  public void testSuggest() {
+    Node node1 = Nodes.newInstance();
+    node1.setTitle("The Node");
+    UUID key1 = nodeService.create(node1);
+
+    Node node2 = Nodes.newInstance();
+    node2.setTitle("The Great Node");
+    UUID key2 = nodeService.create(node2);
+
+    NodeService service = (NodeService) this.getService();
+    assertTrue("Should find only The Great Node", service.suggest("Great").size() == 1);
+    assertTrue("Should find both nodes", service.suggest("the").size() == 2);
+  }
+
 }

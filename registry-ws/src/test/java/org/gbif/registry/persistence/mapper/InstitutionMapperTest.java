@@ -2,8 +2,8 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.vocabulary.Discipline;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.database.LiquibaseInitializer;
 import org.gbif.registry.database.LiquibaseModules;

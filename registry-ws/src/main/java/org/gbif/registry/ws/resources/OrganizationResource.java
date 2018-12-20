@@ -312,6 +312,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Path("suggest")
   @GET
+  @Override
   public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
     return organizationMapper.suggest(label);
   }

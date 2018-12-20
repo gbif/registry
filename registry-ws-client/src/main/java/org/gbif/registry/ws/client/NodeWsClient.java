@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.ws.client.guice.RegistryWs;
@@ -26,11 +27,13 @@ import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Client-side implementation to the NodeService.
@@ -81,5 +84,12 @@ public class NodeWsClient extends BaseNetworkEntityClient<Node> implements NodeS
   @Override
   public PagingResponse<Installation> installations(UUID nodeKey, Pageable page) {
     return get(GenericTypes.PAGING_INSTALLATION, null, null, page, String.valueOf(nodeKey), "installation");
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String q) {
+    MultivaluedMap queryParams = new MultivaluedMapImpl();
+    queryParams.putSingle("q", q);
+    return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
 }
