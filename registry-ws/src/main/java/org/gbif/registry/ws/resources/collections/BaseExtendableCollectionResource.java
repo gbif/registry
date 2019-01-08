@@ -22,7 +22,6 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.ContactableMapper;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
-import org.gbif.ws.server.interceptor.NullToNotFound;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,13 +30,17 @@ import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.eventbus.EventBus;
@@ -135,8 +138,16 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   @Override
   public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
+    // check if the contact exists
+    List<Person> contacts = contactableMapper.listContacts(entityKey);
+
+    if (contacts != null && contacts.stream().anyMatch(p -> p.getKey().equals(personKey))) {
+      throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity("Duplicate contact").build());
+    }
+
     contactableMapper.addContact(entityKey, personKey);
     eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
@@ -156,7 +167,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @GET
   @Path("{key}/contact")
   @Nullable
-  @NullToNotFound
   @Validate(validateReturnedValue = true)
   @Override
   public List<Person> listContacts(@PathParam("key") @NotNull UUID key) {
@@ -194,7 +204,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @GET
   @Path("{key}/identifier")
   @Nullable
-  @NullToNotFound
   @Validate(validateReturnedValue = true)
   @Override
   public List<Identifier> listIdentifiers(@PathParam("key") @NotNull UUID key) {
@@ -238,7 +247,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @GET
   @Path("{key}/tag")
   @Nullable
-  @NullToNotFound
   @Validate(validateReturnedValue = true)
   @Override
   public List<Tag> listTags(@PathParam("key") @NotNull UUID key, @QueryParam("owner") @Nullable String owner) {

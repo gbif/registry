@@ -21,7 +21,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
  * <p>It inherits from {@link CrudTest} to test the CRUD operations.
  */
 public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable & Identifiable & Contactable>
-    extends CrudTest<T> {
+  extends CrudTest<T> {
 
   private final CrudService<T> crudService;
   private final SimplePrincipalProvider pp;
@@ -44,12 +47,13 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
   private final PersonService personService;
 
   public BaseCollectionTest(
-      CrudService<T> crudService,
-      ContactService contactService,
-      TagService tagService,
-      IdentifierService identifierService,
-      PersonService personService,
-      @Nullable SimplePrincipalProvider pp) {
+    CrudService<T> crudService,
+    ContactService contactService,
+    TagService tagService,
+    IdentifierService identifierService,
+    PersonService personService,
+    @Nullable SimplePrincipalProvider pp
+  ) {
     super(crudService, pp);
     this.crudService = crudService;
     this.contactService = contactService;
@@ -181,4 +185,21 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
     contactService.removeContact(entityKey2, personKey2);
     assertEquals(0, contactService.listContacts(entityKey2).size());
   }
+
+  @Test(expected = RuntimeException.class)
+  public void duplicateContactTest() {
+    // entities
+    T entity1 = newEntity();
+    UUID entityKey1 = crudService.create(entity1);
+
+    // contacts
+    Person person1 = new Person();
+    person1.setFirstName("name1");
+    UUID personKey1 = personService.create(person1);
+
+    // add contacts
+    contactService.addContact(entityKey1, personKey1);
+    contactService.addContact(entityKey1, personKey1);
+  }
+
 }
