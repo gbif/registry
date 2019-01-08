@@ -46,7 +46,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 
   @POST
   @Trim
-  @NullToNotFound
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
@@ -58,7 +57,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 
   @DELETE
   @Path("{key}")
-  @NullToNotFound
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
@@ -91,7 +89,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 
   @PUT
   @Path("{key}")
-  @NullToNotFound
   @Validate
   @Transactional
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
