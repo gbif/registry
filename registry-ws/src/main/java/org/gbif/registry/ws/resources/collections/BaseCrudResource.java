@@ -2,7 +2,9 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.registry.events.DeleteCollectionEntityEvent;
 import org.gbif.registry.events.DeleteEvent;
+import org.gbif.registry.events.UpdateCollectionEntityEvent;
 import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
@@ -74,7 +76,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   public void delete(@NotNull UUID key) {
     T objectToDelete = get(key);
     crudMapper.delete(key);
-    eventBus.post(DeleteEvent.newInstance(objectToDelete, objectClass));
+    eventBus.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
   }
 
   @GET
@@ -123,6 +125,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     crudMapper.update(entity);
 
     T newEntity = get(entity.getKey());
-    eventBus.post(UpdateEvent.newInstance(newEntity, entityOld, objectClass));
+    eventBus.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
   }
 }
