@@ -6,6 +6,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.registry.events.CreateCollectionEntityEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
@@ -81,7 +82,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
 
-    eventBus.post(CreateEvent.newInstance(person, Person.class));
+    eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
   }
 }

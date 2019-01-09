@@ -131,15 +131,6 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends CollectionEntity> void createdCollection(CreateEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getNewObject().getKey());
-
-    if (event.getObjectClass().equals(Person.class)) {
-      cascadePersonChange((Person) event.getNewObject());
-    }
-  }
-
-  @Subscribe
   public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
     purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
 
@@ -149,15 +140,6 @@ public class VarnishPurgeListener {
       cascadeDatasetChange((Dataset) event.getOldObject(), (Dataset) event.getNewObject());
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getOldObject(), (Installation) event.getNewObject());
-    }
-  }
-
-  @Subscribe
-  public final <T extends CollectionEntity> void updatedCollection(UpdateEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
-
-    if (event.getObjectClass().equals(Person.class)) {
-      cascadePersonChange((Person) event.getOldObject(), (Person) event.getNewObject());
     }
   }
 
@@ -175,7 +157,25 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends CollectionEntity> void deletedCollection(DeleteEvent<T> event) {
+  public final <T extends CollectionEntity> void createdCollection(CreateCollectionEntityEvent<T> event) {
+    purgeEntityAndBanLists(event.getObjectClass(), event.getNewObject().getKey());
+
+    if (event.getObjectClass().equals(Person.class)) {
+      cascadePersonChange((Person) event.getNewObject());
+    }
+  }
+
+  @Subscribe
+  public final <T extends CollectionEntity> void updatedCollection(UpdateCollectionEntityEvent<T> event) {
+    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+
+    if (event.getObjectClass().equals(Person.class)) {
+      cascadePersonChange((Person) event.getOldObject(), (Person) event.getNewObject());
+    }
+  }
+
+  @Subscribe
+  public final <T extends CollectionEntity> void deletedCollection(DeleteCollectionEntityEvent<T> event) {
     purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
 
     if (event.getObjectClass().equals(Person.class)) {
