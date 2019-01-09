@@ -12,6 +12,7 @@ import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.registry.events.ChangedComponentEvent;
+import org.gbif.registry.events.CreateCollectionEntityEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
@@ -129,7 +130,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
       }
     }
 
-    eventBus.post(CreateEvent.newInstance(entity, objectClass));
+    eventBus.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
 
