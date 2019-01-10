@@ -132,4 +132,19 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
   protected UUID keyForCreateAsEditorTest(Installation entity) {
     return organizationService.get(entity.getOrganizationKey()).getEndorsingNodeKey();
   }
+
+  @Test
+  public void testSuggest() {
+    Installation installation1 = newEntity();
+    installation1.setTitle("The installation");
+    UUID key1 = getService().create(installation1);
+
+    Installation installation2 = newEntity();
+    installation2.setTitle("The Great installation");
+    UUID key2 = getService().create(installation2);
+
+    InstallationService service = (InstallationService) this.getService();
+    assertEquals("Should find only The Great installation", 1, service.suggest("Great").size());
+    assertEquals("Should find both installations", 2, service.suggest("the").size());
+  }
 }

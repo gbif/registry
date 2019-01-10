@@ -309,8 +309,8 @@ public class NodeIT extends NetworkEntityTest<Node> {
     UUID key2 = nodeService.create(node2);
 
     NodeService service = (NodeService) this.getService();
-    assertTrue("Should find only The Great Node", service.suggest("Great").size() == 1);
-    assertTrue("Should find both nodes", service.suggest("the").size() == 2);
+    assertEquals("Should find only The Great Node", 1, service.suggest("Great").size());
+    assertEquals("Should find both nodes", 2, service.suggest("the").size());
   }
 
 }

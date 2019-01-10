@@ -281,4 +281,22 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
   protected Collection newInvalidEntity() {
     return new Collection();
   }
+
+  @Test
+  public void testSuggest() {
+    Collection collection1 = newEntity();
+    collection1.setCode("CC");
+    collection1.setName("Collection name");
+    UUID key1 = collectionService.create(collection1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode("CC2");
+    collection2.setName("Collection name2");
+    UUID key2 = collectionService.create(collection2);
+
+    assertEquals(2, collectionService.suggest("collection").size());
+    assertEquals(2, collectionService.suggest("CC").size());
+    assertEquals(1, collectionService.suggest("CC2").size());
+    assertEquals(1, collectionService.suggest("name2").size());
+  }
 }

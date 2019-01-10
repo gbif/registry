@@ -5,11 +5,13 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.Valid;
@@ -83,5 +85,12 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
     eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
+  }
+
+  @Path("suggest")
+  @GET
+  @Override
+  public List<PersonSuggestResult> suggest(@QueryParam("q") String q) {
+    return personMapper.suggest(q);
   }
 }

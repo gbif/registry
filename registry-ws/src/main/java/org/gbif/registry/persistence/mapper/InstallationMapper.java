@@ -14,6 +14,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,5 +41,10 @@ public interface InstallationMapper extends BaseNetworkEntityMapper<Installation
   long countNonPublishing();
 
   List<Installation> nonPublishing(@Nullable @Param("page") Pageable page);
+
+  /**
+   * A simple suggest by title service.
+   */
+  List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
 }

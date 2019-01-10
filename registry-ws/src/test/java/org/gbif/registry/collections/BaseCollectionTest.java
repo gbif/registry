@@ -21,10 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
