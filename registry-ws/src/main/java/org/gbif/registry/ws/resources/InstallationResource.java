@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -285,5 +286,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Override
   protected List<UUID> owningEntityKeys(@NotNull Installation entity) {
     return Lists.newArrayList(entity.getOrganizationKey());
+  }
+
+  @Path("suggest")
+  @GET
+  @Override
+  public List<KeyTitleResult> suggest(@QueryParam("q") String q) {
+    return installationMapper.suggest(q);
   }
 }

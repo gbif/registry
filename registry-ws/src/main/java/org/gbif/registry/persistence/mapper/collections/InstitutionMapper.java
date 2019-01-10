@@ -2,6 +2,7 @@ package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
@@ -22,4 +23,8 @@ public interface InstitutionMapper extends CrudMapper<Institution>, ContactableM
 
   long count(@Nullable @Param("query") String query, @Nullable @Param("contactKey") UUID contactKey);
 
+  /**
+   * A simple suggest by title service.
+   */
+  List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
 }
