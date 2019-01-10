@@ -4,13 +4,14 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.ws.guice.Trim;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
@@ -57,5 +58,12 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     query = Strings.emptyToNull(query);
     long total = institutionMapper.count(query, contactKey);
     return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
+  }
+
+  @Path("suggest")
+  @GET
+  @Override
+  public List<KeyCodeNameResult> suggest(@QueryParam("q") String q) {
+    return institutionMapper.suggest(q);
   }
 }
