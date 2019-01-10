@@ -211,4 +211,22 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
   protected Institution newInvalidEntity() {
     return new Institution();
   }
+
+  @Test
+  public void testSuggest() {
+    Institution institution1 = newEntity();
+    institution1.setCode("II");
+    institution1.setName("Institution name");
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode("II2");
+    institution2.setName("Institution name2");
+    UUID key2 = institutionService.create(institution2);
+
+    assertEquals(2, institutionService.suggest("institution").size());
+    assertEquals(2, institutionService.suggest("II").size());
+    assertEquals(1, institutionService.suggest("II2").size());
+    assertEquals(1, institutionService.suggest("name2").size());
+  }
 }

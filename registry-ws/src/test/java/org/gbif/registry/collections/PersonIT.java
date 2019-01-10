@@ -308,4 +308,23 @@ public class PersonIT extends CrudTest<Person> {
   protected Person newInvalidEntity() {
     return new Person();
   }
+
+  @Test
+  public void testSuggest() {
+    Person person1 = newEntity();
+    person1.setFirstName("first");
+    person1.setLastName("second");
+    UUID key1 = personService.create(person1);
+
+    Person person2 = newEntity();
+    person2.setFirstName("first");
+    person2.setLastName("second2");
+    UUID key2 = personService.create(person2);
+
+    assertEquals(2, personService.suggest("first").size());
+    assertEquals(2, personService.suggest("sec").size());
+    assertEquals(1, personService.suggest("second2").size());
+    assertEquals(2, personService.suggest("first second").size());
+    assertEquals(1, personService.suggest("first second2").size());
+  }
 }
