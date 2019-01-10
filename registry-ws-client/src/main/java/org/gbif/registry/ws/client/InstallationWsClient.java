@@ -17,17 +17,21 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Client-side implementation to the InstallationService.
@@ -71,5 +75,12 @@ public class InstallationWsClient extends BaseNetworkEntityClient<Installation> 
   public PagingResponse<MetasyncHistory> listMetasync(UUID installationKey, Pageable page) {
     Preconditions.checkNotNull(installationKey, "Listing metasync for an installation needs an installation key");
     return get(GenericTypes.METASYNC_HISTORY, page, installationKey.toString(), "metasync");
+  }
+
+  @Override
+  public List<KeyTitleResult> suggest(@Nullable String q) {
+    MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
+    queryParams.putSingle("q", q);
+    return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
 }

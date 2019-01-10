@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
@@ -32,6 +33,8 @@ public abstract class BaseExtendableCollectionEntityClient<T extends CollectionE
   protected static final GenericType<List<Tag>> LIST_TAG = new GenericType<List<Tag>>() {};
   protected static final GenericType<List<Identifier>> LIST_IDENTIFIER =
       new GenericType<List<Identifier>>() {};
+  protected static final GenericType<List<KeyCodeNameResult>> LIST_KEY_CODE_NAME =
+    new GenericType<List<KeyCodeNameResult>>() {};
 
   protected BaseExtendableCollectionEntityClient(
       Class resourceClass,
