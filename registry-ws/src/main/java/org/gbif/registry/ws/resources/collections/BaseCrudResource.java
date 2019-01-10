@@ -2,10 +2,8 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
-import org.gbif.registry.events.DeleteCollectionEntityEvent;
-import org.gbif.registry.events.DeleteEvent;
-import org.gbif.registry.events.UpdateCollectionEntityEvent;
-import org.gbif.registry.events.UpdateEvent;
+import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
+import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.ws.server.interceptor.NullToNotFound;

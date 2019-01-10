@@ -1,4 +1,4 @@
-package org.gbif.registry.events;
+package org.gbif.registry.events.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 
