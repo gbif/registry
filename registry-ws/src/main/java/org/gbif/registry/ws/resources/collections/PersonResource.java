@@ -6,8 +6,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.registry.events.CreateCollectionEntityEvent;
-import org.gbif.registry.events.CreateEvent;
+import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 

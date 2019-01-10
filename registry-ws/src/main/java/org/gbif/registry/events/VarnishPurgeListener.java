@@ -14,6 +14,9 @@ import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
+import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
+import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.varnish.VarnishPurger;
 
 import java.net.URI;
