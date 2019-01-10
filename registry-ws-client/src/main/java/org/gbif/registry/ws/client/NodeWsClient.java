@@ -88,7 +88,7 @@ public class NodeWsClient extends BaseNetworkEntityClient<Node> implements NodeS
 
   @Override
   public List<KeyTitleResult> suggest(@Nullable String q) {
-    MultivaluedMap queryParams = new MultivaluedMapImpl();
+    MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     queryParams.putSingle("q", q);
     return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
   }
