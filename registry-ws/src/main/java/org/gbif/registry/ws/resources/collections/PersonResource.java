@@ -71,6 +71,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   @Path("deleted")
   @Override
   public PagingResponse<Person> listDeleted(@Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, personMapper.countDeleted(), personMapper.deleted(page));
   }
 
@@ -94,8 +95,8 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     return person.getKey();
   }
 
-  @Path("suggest")
   @GET
+  @Path("suggest")
   @Override
   public List<PersonSuggestResult> suggest(@QueryParam("q") String q) {
     return personMapper.suggest(q);

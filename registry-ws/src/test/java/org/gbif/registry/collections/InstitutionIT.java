@@ -229,4 +229,25 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     assertEquals(1, institutionService.suggest("II2").size());
     assertEquals(1, institutionService.suggest("name2").size());
   }
+
+  @Test
+  public void listDeletedTest() {
+    Institution institution1 = newEntity();
+    institution1.setCode("code1");
+    institution1.setName("Institution name");
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode("code2");
+    institution2.setName("Institution name2");
+    UUID key2 = institutionService.create(institution2);
+
+    assertEquals(0, institutionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    institutionService.delete(key1);
+    assertEquals(1, institutionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    institutionService.delete(key2);
+    assertEquals(2, institutionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+  }
 }

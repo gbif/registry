@@ -65,11 +65,12 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
   @Path("deleted")
   @Override
   public PagingResponse<Collection> listDeleted(@Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
   }
 
-  @Path("suggest")
   @GET
+  @Path("suggest")
   @Override
   public List<KeyCodeNameResult> suggest(@QueryParam("q") String q) {
     return collectionMapper.suggest(q);
