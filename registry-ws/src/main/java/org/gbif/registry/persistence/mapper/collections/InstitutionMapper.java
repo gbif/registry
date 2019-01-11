@@ -27,4 +27,14 @@ public interface InstitutionMapper extends CrudMapper<Institution>, ContactableM
    * A simple suggest by title service.
    */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
+
+  /**
+   * @return the institutions marked as deleted
+   */
+  List<Institution> deleted(@Param("page") Pageable page);
+
+  /**
+   * @return the count of the institutions marked as deleted.
+   */
+  long countDeleted();
 }
