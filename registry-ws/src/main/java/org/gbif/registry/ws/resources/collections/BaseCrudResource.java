@@ -3,7 +3,6 @@ package org.gbif.registry.ws.resources.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
-import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.ws.server.interceptor.NullToNotFound;
@@ -11,7 +10,6 @@ import org.gbif.ws.server.interceptor.NullToNotFound;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -100,29 +98,5 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(security.getUserPrincipal().getName());
     update(entity);
-  }
-
-  @Transactional
-  @Validate
-  @Override
-  public void update(@Valid @NotNull T entity) {
-    T entityOld = get(entity.getKey());
-
-    if (entityOld == null) {
-      throw new IllegalArgumentException("Entity doesn't exist");
-    }
-
-    if (entityOld.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't update a deleted entity");
-    }
-
-    if (entity.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't delete an entity when updating");
-    }
-
-    crudMapper.update(entity);
-
-    T newEntity = get(entity.getKey());
-    eventBus.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
   }
 }

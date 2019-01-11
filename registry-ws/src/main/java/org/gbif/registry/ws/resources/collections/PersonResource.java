@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
+import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 
@@ -93,6 +94,49 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
     eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
+  }
+
+  @Transactional
+  @Validate
+  @Override
+  public void update(@Valid @NotNull Person person) {
+    Person oldPerson = get(person.getKey());
+
+    if (oldPerson == null) {
+      throw new IllegalArgumentException("Entity doesn't exist");
+    }
+
+    if (oldPerson.getDeleted() != null) {
+      throw new IllegalArgumentException("Can't update a deleted entity");
+    }
+
+    if (person.getDeleted() != null) {
+      throw new IllegalArgumentException("Can't delete an entity when updating");
+    }
+
+    // update mailing address
+    if (person.getMailingAddress() != null) {
+      if (oldPerson.getMailingAddress() == null) {
+        checkArgument(
+          person.getMailingAddress().getKey() == null,
+          "Unable to create an address which already has a key");
+        addressMapper.create(person.getMailingAddress());
+      } else {
+        addressMapper.update(person.getMailingAddress());
+      }
+    }
+
+    // update entity
+    personMapper.update(person);
+
+    // check if we have to delete the mailing address
+    if (person.getMailingAddress() == null && oldPerson.getMailingAddress() != null) {
+      addressMapper.delete(oldPerson.getMailingAddress().getKey());
+    }
+
+    // check if we have to delete the address
+    Person newPerson = get(person.getKey());
+    eventBus.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
   }
 
   @GET

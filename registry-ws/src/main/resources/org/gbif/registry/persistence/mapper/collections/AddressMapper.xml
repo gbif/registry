@@ -42,4 +42,8 @@
     WHERE key = #{key,jdbcType=INTEGER}
   </update>
 
+  <delete id="delete">
+    DELETE from address WHERE key = #{key,jdbcType=INTEGER}
+  </delete>
+
 </mapper>
