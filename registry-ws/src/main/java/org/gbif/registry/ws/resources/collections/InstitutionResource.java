@@ -64,11 +64,12 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
   @Path("deleted")
   @Override
   public PagingResponse<Institution> listDeleted(@Context Pageable page) {
+    page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
   }
 
-  @Path("suggest")
   @GET
+  @Path("suggest")
   @Override
   public List<KeyCodeNameResult> suggest(@QueryParam("q") String q) {
     return institutionMapper.suggest(q);

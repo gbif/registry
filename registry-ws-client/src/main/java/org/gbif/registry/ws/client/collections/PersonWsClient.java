@@ -44,6 +44,11 @@ public class PersonWsClient extends BaseCrudClient<Person> implements PersonServ
   }
 
   @Override
+  public PagingResponse<Person> listDeleted(@Nullable Pageable pageable) {
+    return get(PAGING_PERSON, pageable, "deleted");
+  }
+
+  @Override
   public List<PersonSuggestResult> suggest(@Nullable String q) {
     MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     queryParams.putSingle("q", q);
