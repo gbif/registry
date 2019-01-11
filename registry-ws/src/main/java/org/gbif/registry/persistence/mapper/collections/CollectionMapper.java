@@ -32,4 +32,13 @@ public interface CollectionMapper
    */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
 
+  /**
+   * @return the collections marked as deleted
+   */
+  List<Collection> deleted(@Param("page") Pageable page);
+
+  /**
+   * @return the count of the collections marked as deleted.
+   */
+  long countDeleted();
 }

@@ -327,4 +327,25 @@ public class PersonIT extends CrudTest<Person> {
     assertEquals(2, personService.suggest("first second").size());
     assertEquals(1, personService.suggest("first second2").size());
   }
+
+  @Test
+  public void listDeletedTest() {
+    Person person1 = newEntity();
+    person1.setFirstName("first");
+    person1.setLastName("second");
+    UUID key1 = personService.create(person1);
+
+    Person person2 = newEntity();
+    person2.setFirstName("first2");
+    person2.setLastName("second2");
+    UUID key2 = personService.create(person2);
+
+    assertEquals(0, personService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    personService.delete(key1);
+    assertEquals(1, personService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    personService.delete(key2);
+    assertEquals(2, personService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+  }
 }

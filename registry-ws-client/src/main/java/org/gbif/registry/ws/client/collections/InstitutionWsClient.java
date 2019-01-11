@@ -47,6 +47,11 @@ public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<In
   }
 
   @Override
+  public PagingResponse<Institution> listDeleted(@Nullable Pageable pageable) {
+    return get(PAGING_INSTITUTION, pageable, "deleted");
+  }
+
+  @Override
   public List<KeyCodeNameResult> suggest(@Nullable String q) {
     MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     queryParams.putSingle("q", q);
