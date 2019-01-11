@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
@@ -13,6 +14,7 @@ import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
+import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -131,6 +133,58 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
     eventBus.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
     return entity.getKey();
+  }
+
+  @Transactional
+  @Validate
+  @Override
+  public void update(@Valid @NotNull T entity) {
+    T entityOld = get(entity.getKey());
+
+    if (entityOld == null) {
+      throw new IllegalArgumentException("Entity doesn't exist");
+    }
+
+    if (entityOld.getDeleted() != null) {
+      throw new IllegalArgumentException("Can't update a deleted entity");
+    }
+
+    if (entity.getDeleted() != null) {
+      throw new IllegalArgumentException("Can't delete an entity when updating");
+    }
+
+    // update mailing address
+    updateAddress(entity.getMailingAddress(), entityOld.getMailingAddress());
+
+    // update address
+    updateAddress(entity.getAddress(), entityOld.getAddress());
+
+    // update entity
+    crudMapper.update(entity);
+
+    // check if we can delete the mailing address
+    if (entity.getMailingAddress() == null && entityOld.getMailingAddress() != null) {
+      addressMapper.delete(entityOld.getMailingAddress().getKey());
+    }
+
+    // check if we can delete the address
+    if (entity.getAddress() == null && entityOld.getAddress() != null) {
+      addressMapper.delete(entityOld.getAddress().getKey());
+    }
+
+    T newEntity = get(entity.getKey());
+    eventBus.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
+  }
+
+  private void updateAddress(Address newAddress, Address oldAddress) {
+    if (newAddress != null) {
+      if (oldAddress == null) {
+        checkArgument(newAddress.getKey() == null, "Unable to create an address which already has a key");
+        addressMapper.create(newAddress);
+      } else {
+        addressMapper.update(newAddress);
+      }
+    }
   }
 
   @POST

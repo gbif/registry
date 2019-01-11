@@ -8,4 +8,6 @@ public interface AddressMapper {
   void create(Address address);
 
   void update(Address address);
+
+  void delete(Integer key);
 }
