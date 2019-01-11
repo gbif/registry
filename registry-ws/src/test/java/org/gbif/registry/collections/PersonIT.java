@@ -29,6 +29,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
@@ -347,5 +348,43 @@ public class PersonIT extends CrudTest<Person> {
 
     personService.delete(key2);
     assertEquals(2, personService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+  }
+
+  @Test
+  public void updateAddressesTest() {
+    // entities
+    Person person = newEntity();
+    UUID entityKey = personService.create(person);
+    assertNewEntity(person);
+    person = personService.get(entityKey);
+
+    // update adding address
+    Address address = new Address();
+    address.setAddress("address");
+    address.setCountry(Country.AFGHANISTAN);
+    address.setCity("city");
+    person.setMailingAddress(address);
+
+    personService.update(person);
+    person = personService.get(entityKey);
+    address = person.getMailingAddress();
+
+    assertNotNull(person.getMailingAddress().getKey());
+    assertEquals("address", person.getMailingAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, person.getMailingAddress().getCountry());
+    assertEquals("city", person.getMailingAddress().getCity());
+
+    // update address
+    address.setAddress("address2");
+
+    personService.update(person);
+    person = personService.get(entityKey);
+    assertEquals("address2", person.getMailingAddress().getAddress());
+
+    // delete address
+    person.setMailingAddress(null);
+    personService.update(person);
+    person = personService.get(entityKey);
+    assertNull(person.getMailingAddress());
   }
 }

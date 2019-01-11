@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * Base class to tests the main operations of {@link CollectionEntity} that are also {@link
@@ -197,6 +198,59 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
     // add contacts
     contactService.addContact(entityKey1, personKey1);
     contactService.addContact(entityKey1, personKey1);
+  }
+
+  @Test
+  public void updateAddressesTest() {
+    // entities
+    T entity = newEntity();
+    UUID entityKey = crudService.create(entity);
+    assertNewEntity(entity);
+    entity = crudService.get(entityKey);
+
+    // update adding address
+    Address address = new Address();
+    address.setAddress("address");
+    address.setCountry(Country.AFGHANISTAN);
+    address.setCity("city");
+    entity.setAddress(address);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("mailing address");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    mailingAddress.setCity("city mailing");
+    entity.setMailingAddress(mailingAddress);
+
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
+    address = entity.getAddress();
+    mailingAddress = entity.getMailingAddress();
+
+    assertNotNull(entity.getAddress().getKey());
+    assertEquals("address", entity.getAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entity.getAddress().getCountry());
+    assertEquals("city", entity.getAddress().getCity());
+    assertNotNull(entity.getMailingAddress().getKey());
+    assertEquals("mailing address", entity.getMailingAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entity.getMailingAddress().getCountry());
+    assertEquals("city mailing", entity.getMailingAddress().getCity());
+
+    // update address
+    address.setAddress("address2");
+    mailingAddress.setAddress("mailing address2");
+
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
+    assertEquals("address2", entity.getAddress().getAddress());
+    assertEquals("mailing address2", entity.getMailingAddress().getAddress());
+
+    // delete address
+    entity.setAddress(null);
+    entity.setMailingAddress(null);
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
+    assertNull(entity.getAddress());
+    assertNull(entity.getMailingAddress());
   }
 
 }
