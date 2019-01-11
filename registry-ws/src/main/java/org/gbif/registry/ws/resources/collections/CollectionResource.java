@@ -61,6 +61,13 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
     return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
   }
 
+  @GET
+  @Path("deleted")
+  @Override
+  public PagingResponse<Collection> listDeleted(@Context Pageable page) {
+    return new PagingResponse<>(page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
+  }
+
   @Path("suggest")
   @GET
   @Override

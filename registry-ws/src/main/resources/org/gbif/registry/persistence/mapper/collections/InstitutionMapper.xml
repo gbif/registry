@@ -180,6 +180,22 @@
     </if>
   </select>
 
+  <select id="deleted" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    WHERE i.deleted IS NOT NULL
+    ORDER BY i.created DESC, i.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDeleted" resultType="Long">
+    SELECT count(*)
+    FROM institution
+    WHERE deleted IS NOT NULL
+  </select>
+
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO institution_tag(institution_key,tag_key)
