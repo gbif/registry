@@ -48,6 +48,12 @@ public class CollectionWsClient extends BaseExtendableCollectionEntityClient<Col
                pageable);
   }
 
+
+  @Override
+  public PagingResponse<Collection> listDeleted(@Nullable Pageable pageable) {
+    return get(PAGING_COLLECTION, pageable, "deleted");
+  }
+
   @Override
   public List<KeyCodeNameResult> suggest(@Nullable String q) {
     MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();

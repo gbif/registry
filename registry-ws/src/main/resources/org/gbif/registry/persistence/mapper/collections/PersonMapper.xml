@@ -129,6 +129,22 @@
     </if>
   </select>
 
+  <select id="deleted" resultType="CollectionPerson"  resultMap="COLLECTION_PERSON_MAP" parameterType="Pageable">
+    SELECT <include refid="PERSON_READ_FIELDS"/>
+    FROM collection_person p
+    WHERE p.deleted IS NOT NULL
+    ORDER BY p.created DESC, p.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDeleted" resultType="Long">
+    SELECT count(*)
+    FROM collection_person
+    WHERE deleted IS NOT NULL
+  </select>
+
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.PersonSuggestResult">
     SELECT key,first_name,last_name,email FROM (

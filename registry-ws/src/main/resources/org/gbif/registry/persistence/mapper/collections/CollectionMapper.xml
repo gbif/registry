@@ -149,6 +149,22 @@
     </if>
   </select>
 
+  <select id="deleted" resultType="SciCollection"  resultMap="COLLECTION_MAP" parameterType="Pageable">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    WHERE c.deleted IS NOT NULL
+    ORDER BY c.created DESC, c.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDeleted" resultType="Long">
+    SELECT count(*)
+    FROM collection
+    WHERE deleted IS NOT NULL
+  </select>
+
   <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.PersonMapper.COLLECTION_PERSON_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.PersonMapper.PERSON_READ_FIELDS"/>
     FROM collection_person p INNER JOIN collection_collection_person ON collection_person_key = p.key

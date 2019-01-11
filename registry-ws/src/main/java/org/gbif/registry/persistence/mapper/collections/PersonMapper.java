@@ -29,4 +29,14 @@ public interface PersonMapper extends CrudMapper<Person> {
    */
   List<PersonSuggestResult> suggest(@Nullable @Param("q") String q);
 
+  /**
+   * @return the persons marked as deleted
+   */
+  List<Person> deleted(@Param("page") Pageable page);
+
+  /**
+   * @return the count of the persons marked as deleted.
+   */
+  long countDeleted();
+
 }
