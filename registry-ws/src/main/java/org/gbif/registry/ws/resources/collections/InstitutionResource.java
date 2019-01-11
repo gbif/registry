@@ -60,6 +60,13 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
   }
 
+  @GET
+  @Path("deleted")
+  @Override
+  public PagingResponse<Institution> listDeleted(@Context Pageable page) {
+    return new PagingResponse<>(page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
+  }
+
   @Path("suggest")
   @GET
   @Override
