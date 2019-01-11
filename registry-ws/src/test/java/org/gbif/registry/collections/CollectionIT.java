@@ -299,4 +299,26 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     assertEquals(1, collectionService.suggest("CC2").size());
     assertEquals(1, collectionService.suggest("name2").size());
   }
+
+  @Test
+  public void listDeletedTest() {
+    Collection collection1 = newEntity();
+    collection1.setCode("code1");
+    collection1.setName("Collection name");
+    UUID key1 = collectionService.create(collection1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode("code2");
+    collection2.setName("Collection name2");
+    UUID key2 = collectionService.create(collection2);
+
+    assertEquals(0, collectionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    collectionService.delete(key1);
+    assertEquals(1, collectionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+
+    collectionService.delete(key2);
+    assertEquals(2, collectionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+  }
+
 }
