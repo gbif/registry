@@ -90,11 +90,6 @@
 
   <sql id="SIMPLE_SEARCH">
     query @@ fulltext_search
-    OR EXISTS(
-    SELECT key
-    FROM address addr
-    WHERE addr.key IN (i.mailing_address_key,i.address_key) AND query @@ addr.fulltext_search
-    )
   </sql>
 
   <insert id="create" parameterType="Institution">

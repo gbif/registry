@@ -152,6 +152,15 @@ public class PersonIT extends CrudTest<Person> {
     assertEquals(key2, response.getResults().get(0).getKey());
 
     assertEquals(0, personService.list("c", null, null, page).getResults().size());
+
+    // update address
+    person2 = personService.get(key2);
+    person2.getMailingAddress().setCity("city3");
+    personService.update(person2);
+    assertEquals(1, personService.list("city3", null, null, page).getResults().size());
+
+    personService.delete(key2);
+    assertEquals(0, personService.list("city3", null, null, page).getResults().size());
   }
 
   @Test
