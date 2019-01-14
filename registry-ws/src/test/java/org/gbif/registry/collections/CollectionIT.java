@@ -130,8 +130,14 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
 
     assertEquals(0, collectionService.list("c", null, null, page).getResults().size());
 
+    // update address
+    collection2 = collectionService.get(key2);
+    collection2.getAddress().setCity("city3");
+    collectionService.update(collection2);
+    assertEquals(1, collectionService.list("city3", null, null, page).getResults().size());
+
     collectionService.delete(key2);
-    assertEquals(0, collectionService.list("city2", null, null, page).getResults().size());
+    assertEquals(0, collectionService.list("city3", null, null, page).getResults().size());
   }
 
   @Test
