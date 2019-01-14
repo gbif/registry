@@ -59,11 +59,6 @@
 
   <sql id="SIMPLE_SEARCH">
     query @@ fulltext_search
-    OR EXISTS(
-    SELECT key
-    FROM address maddr
-    WHERE maddr.key=p.mailing_address_key AND query @@ maddr.fulltext_search
-    )
   </sql>
 
   <insert id="create" parameterType="CollectionPerson">

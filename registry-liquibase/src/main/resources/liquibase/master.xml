@@ -64,4 +64,5 @@
   <include file="liquibase/058-add-grbio-identifier-types.xml"/>
   <include file="liquibase/059-grbio-migration.xml"/>
   <include file="liquibase/060-add-sql-download-format.xml"/>
+  <include file="liquibase/061-moved-fulltext-address-to-collections.xml" />
 </databaseChangeLog>
