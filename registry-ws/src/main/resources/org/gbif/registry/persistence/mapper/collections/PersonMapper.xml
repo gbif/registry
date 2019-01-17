@@ -54,7 +54,8 @@
     created_by = #{createdBy,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     created = now(), <!-- created -->
-    modified = now() <!-- modified -->
+    modified = now(), <!-- modified -->
+    deleted = null <!-- if we're updating it can't be deleted -->
   </sql>
 
   <sql id="SIMPLE_SEARCH">

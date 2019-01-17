@@ -61,7 +61,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
  */
 public abstract class BaseExtendableCollectionResource<T extends CollectionEntity & Taggable & Identifiable & Contactable>
-    extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
+  extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
 
   private final CrudMapper<T> crudMapper;
   private final AddressMapper addressMapper;
@@ -96,16 +96,12 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
     if (entity.getAddress() != null) {
-      checkArgument(
-          entity.getAddress().getKey() == null,
-          "Unable to create an address which already has a key");
+      checkArgument(entity.getAddress().getKey() == null, "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
     }
 
     if (entity.getMailingAddress() != null) {
-      checkArgument(
-          entity.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
+      checkArgument(entity.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
       addressMapper.create(entity.getMailingAddress());
     }
 
@@ -123,8 +119,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
     if (!entity.getIdentifiers().isEmpty()) {
       for (Identifier identifier : entity.getIdentifiers()) {
-        checkArgument(
-            identifier.getKey() == null, "Unable to create an identifier which already has a key");
+        checkArgument(identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(entity.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         identifiableMapper.addIdentifier(entity.getKey(), identifier.getKey());
@@ -140,17 +135,15 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Override
   public void update(@Valid @NotNull T entity) {
     T entityOld = get(entity.getKey());
-
-    if (entityOld == null) {
-      throw new IllegalArgumentException("Entity doesn't exist");
-    }
+    checkArgument(entityOld != null, "Entity doesn't exist");
 
     if (entityOld.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't update a deleted entity");
-    }
-
-    if (entity.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't delete an entity when updating");
+      // if it's deleted we only allow to update it if we undelete it
+      checkArgument(entity.getDeleted() == null,
+                    "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+    } else {
+      // not allowed to delete when updating
+      checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
     }
 
     // update mailing address
