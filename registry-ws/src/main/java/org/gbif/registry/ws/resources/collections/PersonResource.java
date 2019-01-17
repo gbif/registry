@@ -83,9 +83,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {
-      checkArgument(
-          person.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
+      checkArgument(person.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
       addressMapper.create(person.getMailingAddress());
     }
 
@@ -101,25 +99,22 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   @Override
   public void update(@Valid @NotNull Person person) {
     Person oldPerson = get(person.getKey());
-
-    if (oldPerson == null) {
-      throw new IllegalArgumentException("Entity doesn't exist");
-    }
+    checkArgument(oldPerson != null, "Entity doesn't exist");
 
     if (oldPerson.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't update a deleted entity");
-    }
-
-    if (person.getDeleted() != null) {
-      throw new IllegalArgumentException("Can't delete an entity when updating");
+      // if it's deleted we only allow to update it if we undelete it
+      checkArgument(person.getDeleted() == null,
+                    "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+    } else {
+      // not allowed to delete when updating
+      checkArgument(person.getDeleted() == null, "Can't delete an entity when updating");
     }
 
     // update mailing address
     if (person.getMailingAddress() != null) {
       if (oldPerson.getMailingAddress() == null) {
-        checkArgument(
-          person.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
+        checkArgument(person.getMailingAddress().getKey() == null,
+                      "Unable to create an address which already has a key");
         addressMapper.create(person.getMailingAddress());
       } else {
         addressMapper.update(person.getMailingAddress());
