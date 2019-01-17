@@ -120,7 +120,25 @@ public abstract class CrudTest<T extends CollectionEntity> {
     UUID key = crudService.create(entity);
     entity.setKey(key);
     crudService.delete(key);
+    entity = crudService.get(key);
+    assertNotNull(entity.getDeleted());
     crudService.update(entity);
+  }
+
+  @Test
+  public void restoreDeletedEntityTest() {
+    T entity = newEntity();
+    UUID key = crudService.create(entity);
+    entity.setKey(key);
+    crudService.delete(key);
+    entity = crudService.get(key);
+    assertNotNull(entity.getDeleted());
+
+    // restore it
+    entity.setDeleted(null);
+    crudService.update(entity);
+    entity = crudService.get(key);
+    assertNull(entity.getDeleted());
   }
 
   @Test(expected = ValidationException.class)
