@@ -72,8 +72,8 @@
     deleted = null <!-- if we're updating it can't be deleted -->
   </sql>
 
-  <sql id="SIMPLE_SEARCH">
-    query @@ fulltext_search
+  <sql id="FULLTEXT_SEARCH">
+    JOIN to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query ON query @@ fulltext_search
   </sql>
 
   <insert id="create" parameterType="SciCollection">
@@ -112,7 +112,7 @@
     SELECT <include refid="COLLECTION_READ_FIELDS"/>
     FROM collection c
     <if test="query != null" >
-      JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/>
+      <include refid="FULLTEXT_SEARCH"/>
     </if>
     <if test="contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
@@ -132,7 +132,10 @@
 
   <select id="count" resultType="Long">
     SELECT COUNT(*)
-    FROM collection c <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
+    FROM collection c
+    <if test="query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
     <if test="contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
     </if>

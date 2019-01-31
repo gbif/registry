@@ -134,7 +134,8 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(0, institutionService.list("c", null, page).getResults().size());
+    assertEquals(2, institutionService.list("c", null, page).getResults().size());
+    assertEquals(2, institutionService.list("dum add", null, page).getResults().size());
 
     // update address
     institution2 = institutionService.get(key2);
