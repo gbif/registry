@@ -22,7 +22,7 @@
 
   <!--
     Simple fulltext search on the search field or contact search field.
-    plainto_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
+    to_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
     Uses the default configuration english for the English language.
     E.g. no prefix search is supported.
    -->
@@ -110,7 +110,7 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="INSTALLATION_MAP">
     SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i<if test="query != null" >, plainto_tsquery('english',unaccent(#{query})) AS query</if>
+    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
@@ -123,7 +123,7 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM installation i<if test="query != null" >, plainto_tsquery('english',unaccent(#{query})) AS query</if>
+    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
