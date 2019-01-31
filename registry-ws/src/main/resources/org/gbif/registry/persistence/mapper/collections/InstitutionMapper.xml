@@ -89,8 +89,8 @@
     deleted = null <!-- if we're updating it can't be deleted -->
   </sql>
 
-  <sql id="SIMPLE_SEARCH">
-    query @@ fulltext_search
+  <sql id="FULLTEXT_SEARCH">
+    JOIN to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query ON query @@ fulltext_search
   </sql>
 
   <insert id="create" parameterType="Institution">
@@ -149,7 +149,7 @@
     SELECT <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     <if test="query != null" >
-      JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/>
+      <include refid="FULLTEXT_SEARCH"/>
     </if>
     <if test="contactKey != null" >
       INNER JOIN institution_collection_person icp on icp.institution_key = i.key
@@ -166,7 +166,10 @@
 
   <select id="count" resultType="Long">
     SELECT COUNT(*)
-    FROM institution i <if test="query != null" > JOIN plainto_tsquery('english',unaccent(#{query})) AS query ON  <include refid="SIMPLE_SEARCH"/> </if>
+    FROM institution i
+    <if test="query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
     <if test="contactKey != null" >
       INNER JOIN institution_collection_person icp on icp.institution_key = i.key
     </if>
