@@ -14,6 +14,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class JwtConfiguration {
 
   public static final String TOKEN_FIELD_RESPONSE = "token";
+  public static final String TOKEN_HEADER_RESPONSE = "token";
 
   // property keys
   private static final String SIGNING_KEY_PROP = "signingKey";
@@ -22,7 +23,7 @@ public class JwtConfiguration {
   private static final String SECURITY_CONTEXT_PROP = "securityContext";
 
   // defaults
-  private static final long DEFAULT_EXPIRY = TimeUnit.DAYS.toMillis(7);
+  private static final long DEFAULT_EXPIRY = TimeUnit.MINUTES.toMillis(30);
   private static final String DEFAULT_ISSUER = "GBIF-REGISTRY";
   private static final String DEFAULT_SECURITY_CONTEXT = "JWT";
 
