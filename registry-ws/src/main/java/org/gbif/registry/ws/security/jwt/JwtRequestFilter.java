@@ -15,6 +15,9 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.registry.ws.security.jwt.JwtConfiguration.TOKEN_HEADER_RESPONSE;
+import static org.gbif.registry.ws.security.jwt.JwtUtils.generateJwt;
+
 /**
  * Filter to validate the JWT tokens.
  * <p>
@@ -75,6 +78,10 @@ public class JwtRequestFilter implements ContainerRequestFilter {
           return jwtConfiguration.getSecurityContext();
         }
       });
+
+      // refresh the token and add it to the headers
+      containerRequest.getRequestHeaders()
+        .putSingle(TOKEN_HEADER_RESPONSE, generateJwt(gbifUser.getUserName(), jwtConfiguration));
 
     } catch (GbifJwtException e) {
       LOG.warn("JWT validation failed: {}", e.getErrorCode());
