@@ -27,7 +27,7 @@ public class PersonWsClient extends BaseCrudClient<Person> implements PersonServ
 
   @Inject
   protected PersonWsClient(@RegistryWs WebResource resource, @Nullable ClientFilter authFilter) {
-    super(Person.class, resource.path("grbio/person"), authFilter, PAGING_PERSON);
+    super(Person.class, resource.path("grscicoll/person"), authFilter, PAGING_PERSON);
   }
 
   @Override
