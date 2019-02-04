@@ -32,7 +32,7 @@ public class CollectionWsClient extends BaseExtendableCollectionEntityClient<Col
   protected CollectionWsClient(
     @RegistryWs WebResource resource, @Nullable ClientFilter authFilter
   ) {
-    super(Collection.class, resource.path("grbio/collection"), authFilter, PAGING_COLLECTION);
+    super(Collection.class, resource.path("grscicoll/collection"), authFilter, PAGING_COLLECTION);
   }
 
   @Override
