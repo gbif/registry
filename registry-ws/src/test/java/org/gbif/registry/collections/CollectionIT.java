@@ -128,7 +128,8 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(0, collectionService.list("c", null, null, page).getResults().size());
+    assertEquals(2, collectionService.list("c", null, null, page).getResults().size());
+    assertEquals(2, collectionService.list("dum add", null, null, page).getResults().size());
 
     // update address
     collection2 = collectionService.get(key2);
