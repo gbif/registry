@@ -34,7 +34,7 @@ import com.google.inject.Singleton;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("grbio/collection")
+@Path("grscicoll/collection")
 public class CollectionResource extends BaseExtendableCollectionResource<Collection>
     implements CollectionService {
 

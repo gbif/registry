@@ -33,7 +33,7 @@ public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<In
   protected InstitutionWsClient(
     @RegistryWs WebResource resource, @Nullable ClientFilter authFilter
   ) {
-    super(Institution.class, resource.path("grbio/institution"), authFilter, PAGING_INSTITUTION);
+    super(Institution.class, resource.path("grscicoll/institution"), authFilter, PAGING_INSTITUTION);
   }
 
   @Override
