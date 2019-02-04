@@ -31,7 +31,6 @@
     Simple fulltext search on the search field or contact search field.
     to_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
     Uses the default configuration english for the English language.
-    E.g. no prefix search is supported.
    -->
   <sql id="SIMPLE_SEARCH">
     AND (
