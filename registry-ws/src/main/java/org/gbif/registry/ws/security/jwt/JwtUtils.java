@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.HttpHeaders;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.sun.jersey.spi.container.ContainerRequest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

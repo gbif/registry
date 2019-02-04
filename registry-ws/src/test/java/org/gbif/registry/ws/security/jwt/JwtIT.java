@@ -29,8 +29,13 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.gbif.registry.ws.security.jwt.JwtConfiguration.TOKEN_FIELD_RESPONSE;
+import static org.gbif.registry.ws.security.jwt.JwtConfiguration.TOKEN_HEADER_RESPONSE;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class JwtIT {
@@ -74,12 +79,8 @@ public class JwtIT {
       .post(ClientResponse.class, createPerson());
 
     assertEquals(Response.Status.CREATED.getStatusCode(), personResponse.getStatus());
-
-    personResponse = personResource.header(HttpHeaders.AUTHORIZATION, "bearer" + token)
-      .type(MediaType.APPLICATION_JSON)
-      .post(ClientResponse.class, createPerson());
-
-    assertEquals(Response.Status.CREATED.getStatusCode(), personResponse.getStatus());
+    assertNotNull(personResponse.getHeaders().get(TOKEN_HEADER_RESPONSE));
+    assertNotEquals(token, personResponse.getHeaders().get(TOKEN_HEADER_RESPONSE));
   }
 
   @Test
@@ -103,6 +104,7 @@ public class JwtIT {
       .post(ClientResponse.class, createPerson());
 
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), personResponse.getStatus());
+    assertNull(personResponse.getHeaders().get(TOKEN_HEADER_RESPONSE));
   }
 
   @Test
@@ -160,7 +162,7 @@ public class JwtIT {
     assertEquals(Response.Status.CREATED.getStatusCode(), loginResponse.getStatus());
 
     String body = loginResponse.getEntity(String.class);
-    String token = OBJECT_MAPPER.readTree(body).get(JwtConfiguration.TOKEN_FIELD_RESPONSE).asText();
+    String token = OBJECT_MAPPER.readTree(body).get(TOKEN_FIELD_RESPONSE).asText();
     assertTrue(!Strings.isNullOrEmpty(token));
 
     return token;
