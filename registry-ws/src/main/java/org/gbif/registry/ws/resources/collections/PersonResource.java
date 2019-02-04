@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("grbio/person")
+@Path("grscicoll/person")
 public class PersonResource extends BaseCrudResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;

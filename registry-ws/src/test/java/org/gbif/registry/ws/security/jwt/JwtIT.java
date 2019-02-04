@@ -111,9 +111,7 @@ public class JwtIT {
   public void insufficientRolesTest() throws IOException {
     String token = login(JwtDatabaseInitializer.TEST_USER);
 
-    WebResource webResourcePerson = client.resource("http://localhost:" + RegistryServer.getPort() + "/grbio/person");
-
-    ClientResponse personResponse = webResourcePerson.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+    ClientResponse personResponse = getPersonResource().header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
       .type(MediaType.APPLICATION_JSON)
       .post(ClientResponse.class, createPerson());
 
@@ -169,7 +167,7 @@ public class JwtIT {
   }
 
   private WebResource getPersonResource() {
-    return client.resource("http://localhost:" + RegistryServer.getPort() + "/grbio/person");
+    return client.resource("http://localhost:" + RegistryServer.getPort() + "/grscicoll/person");
   }
 
   private Person createPerson() {
