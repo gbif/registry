@@ -34,7 +34,7 @@ import com.google.inject.Singleton;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("grbio/institution")
+@Path("grscicoll/institution")
 public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
     implements InstitutionService {
 
