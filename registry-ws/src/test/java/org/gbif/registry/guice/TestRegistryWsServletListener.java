@@ -26,6 +26,7 @@ import org.gbif.registry.ws.guice.StringTrimInterceptor;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
+import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.filter.AppIdentityFilter;
@@ -41,6 +42,7 @@ import javax.servlet.ServletContextEvent;
 import com.google.common.collect.Lists;
 import com.google.inject.Module;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
+import com.sun.jersey.spi.container.ContainerResponseFilter;
 import org.apache.bval.guice.ValidationModule;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.APPLICATION_PROPERTIES;
@@ -59,19 +61,23 @@ public class TestRegistryWsServletListener extends GbifServletListener {
   private static final String SOLR_HOME_PROPERTY = "solr.dataset.home";
 
   @SuppressWarnings("unchecked")
-  public final static List<Class<? extends ContainerRequestFilter>> requestFilters =
+  public static final List<Class<? extends ContainerRequestFilter>> requestFilters =
           Lists.newArrayList(
                   LegacyAuthorizationFilter.class,
                   EditorAuthorizationFilter.class,
                   AppIdentityFilter.class,
                   JwtRequestFilter.class);
 
+  public static final List<Class<? extends ContainerResponseFilter>> responseFilters =
+    Lists.newArrayList(JwtResponseFilter.class);
+
   public TestRegistryWsServletListener() throws IOException {
     super(renameSolrHome(PropertiesUtil.loadProperties(APPLICATION_PROPERTIES)),
             new WsJerseyModuleConfiguration()
                     .resourcePackages("org.gbif.registry.ws, org.gbif.registry.ws.provider, org.gbif.registry.oaipmh")
                     .useAuthenticationFilter(IdentityFilter.class)
-                    .requestFilters(requestFilters));
+                    .requestFilters(requestFilters)
+                    .responseFilters(responseFilters));
   }
 
   /**
