@@ -32,7 +32,6 @@ public class JwtAuthenticatorTest {
 
   @BeforeClass
   public static void setup() {
-    Injector inj = RegistryTestModules.webservice();
     identityService = Mockito.mock(IdentityService.class);
     user = new GbifUser();
     user.setUserName(USER_TEST);
