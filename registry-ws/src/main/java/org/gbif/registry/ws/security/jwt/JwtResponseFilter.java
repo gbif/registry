@@ -26,6 +26,8 @@ public class JwtResponseFilter implements ContainerResponseFilter {
     if (token != null) {
       LOG.debug("Adding jwt token to the response");
       response.getHttpHeaders().putSingle(TOKEN_HEADER_RESPONSE, token);
+      // if not set, clients cannot read the header
+      response.getHttpHeaders().putSingle("Access-Control-Expose-Headers", TOKEN_HEADER_RESPONSE);
     }
 
     return response;
