@@ -77,7 +77,7 @@ import static org.gbif.ws.server.filter.AppIdentityFilter.APPKEYS_WHITELIST;
  * - Application itself (APP_ROLE). All applications with a valid appKey that is also present in the appKey whitelist.
  * See {@link org.gbif.ws.server.filter.AppIdentityFilter}.
  */
-@Path("admin/user")
+@Path("admin/identity")
 @Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
 @Consumes(MediaType.APPLICATION_JSON)
 @Singleton
@@ -116,7 +116,7 @@ public class UserManagementResource {
    */
   @GET
   @RolesAllowed({ADMIN_ROLE, APP_ROLE})
-  @Path("/{username}")
+  @Path("user/{username}")
   public UserAdminView getUser(@PathParam("username") String username, @Context SecurityContext securityContext,
                                @Context HttpServletRequest request) {
 
@@ -153,7 +153,7 @@ public class UserManagementResource {
    */
   @POST
   @RolesAllowed(APP_ROLE)
-  @Path("/")
+  @Path("user")
   public Response create(@Context SecurityContext securityContext, @Context HttpServletRequest request, UserCreation user) {
 
     int returnStatusCode = Response.Status.CREATED.getStatusCode();
@@ -182,7 +182,7 @@ public class UserManagementResource {
    */
   @PUT
   @RolesAllowed({ADMIN_ROLE, APP_ROLE})
-  @Path("/{username}")
+  @Path("user/{username}")
   public Response update(@PathParam("username") String username, UserUpdate userUpdate,
                          @Context SecurityContext securityContext, @Context HttpServletRequest request) {
 
@@ -244,7 +244,7 @@ public class UserManagementResource {
   @DELETE
   @RolesAllowed(ADMIN_ROLE)
   @Consumes(MediaType.WILDCARD)
-  @Path("/{userKey}")
+  @Path("user/{userKey}")
   public Response delete(@PathParam("userKey") int userKey) {
     identityService.delete(userKey);
     return Response.noContent().build();
