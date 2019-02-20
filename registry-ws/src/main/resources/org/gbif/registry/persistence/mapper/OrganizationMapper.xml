@@ -159,7 +159,7 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="ORGANIZATION_MAP">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
+    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
@@ -178,7 +178,7 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
+    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>

@@ -174,7 +174,7 @@ public class InstitutionMapperTest {
     inst1.setModifiedBy("test");
 
     Address address = new Address();
-    address.setAddress("dummy address");
+    address.setAddress("dummy address foo");
     addressMapper.create(address);
 
     inst1.setAddress(address);
@@ -205,7 +205,7 @@ public class InstitutionMapperTest {
     cols = institutionMapper.list("n1", null, pageable);
     assertEquals(2, cols.size());
 
-    cols = institutionMapper.list("dummy address", null, pageable);
+    cols = institutionMapper.list("dummy address fo", null, pageable);
     assertEquals(1, cols.size());
   }
 
