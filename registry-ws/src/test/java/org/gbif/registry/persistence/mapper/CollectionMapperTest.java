@@ -174,7 +174,7 @@ public class CollectionMapperTest {
     col1.setModifiedBy("test");
 
     Address address = new Address();
-    address.setAddress("dummy address");
+    address.setAddress("dummy address foo");
     addressMapper.create(address);
 
     col1.setAddress(address);
@@ -205,7 +205,7 @@ public class CollectionMapperTest {
     cols = collectionMapper.list(null,null,"n1", pageable);
     assertEquals(2, cols.size());
 
-    cols = collectionMapper.list(null,null,"dummy address", pageable);
+    cols = collectionMapper.list(null,null,"dummy address fo", pageable);
     assertEquals(1, cols.size());
   }
 

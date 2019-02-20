@@ -137,7 +137,7 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="NETWORK_MAP">
     SELECT <include refid="NETWORK_FIELDS"/>
-    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
+    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
@@ -150,7 +150,7 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;')||':*') AS query</if>
+    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>

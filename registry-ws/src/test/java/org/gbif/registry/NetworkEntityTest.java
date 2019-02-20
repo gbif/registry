@@ -320,13 +320,13 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   @Test
   public void testSimpleSearch() {
     T n1 = create(newEntity(), 1);
-    n1.setTitle("New title");
+    n1.setTitle("New title foo");
     service.update(n1);
 
     assertEquals("Search should return a hit", Long.valueOf(1), service.search("New", null).getCount());
     assertEquals("Search should return a hit", Long.valueOf(1), service.search("TITLE", null).getCount());
     assertEquals("Search should return no hits", Long.valueOf(0), service.search("NO", null).getCount());
-    assertEquals("Search should return a hit", Long.valueOf(1), service.search("tit", null).getCount());
+    assertEquals("Search should return a hit", Long.valueOf(1), service.search("new tit fo", null).getCount());
 
     // Updates should be reflected in search
     n1.setTitle("BINGO");
