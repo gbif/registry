@@ -205,7 +205,7 @@ public class InstitutionMapperTest {
     cols = institutionMapper.list("n1", null, pageable);
     assertEquals(2, cols.size());
 
-    cols = institutionMapper.list("dummy address fo", null, pageable);
+    cols = institutionMapper.list("dummy address fo ", null, pageable);
     assertEquals(1, cols.size());
   }
 

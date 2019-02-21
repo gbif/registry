@@ -175,7 +175,7 @@ public class PersonMapperTest {
     persons = personMapper.list(null, null,"12345", pageable);
     assertEquals(2, persons.size());
 
-    persons = personMapper.list(null, null,"dummy address f", pageable);
+    persons = personMapper.list(null, null,"dummy address f ", pageable);
     assertEquals(1, persons.size());
   }
 }

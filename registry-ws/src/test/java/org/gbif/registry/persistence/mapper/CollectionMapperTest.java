@@ -205,7 +205,7 @@ public class CollectionMapperTest {
     cols = collectionMapper.list(null,null,"n1", pageable);
     assertEquals(2, cols.size());
 
-    cols = collectionMapper.list(null,null,"dummy address fo", pageable);
+    cols = collectionMapper.list(null,null,"dummy address fo ", pageable);
     assertEquals(1, cols.size());
   }
 
