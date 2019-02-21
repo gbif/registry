@@ -326,7 +326,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     assertEquals("Search should return a hit", Long.valueOf(1), service.search("New", null).getCount());
     assertEquals("Search should return a hit", Long.valueOf(1), service.search("TITLE", null).getCount());
     assertEquals("Search should return no hits", Long.valueOf(0), service.search("NO", null).getCount());
-    assertEquals("Search should return a hit", Long.valueOf(1), service.search("new tit fo", null).getCount());
+    assertEquals("Search should return a hit", Long.valueOf(1), service.search(" new tit fo", null).getCount());
 
     // Updates should be reflected in search
     n1.setTitle("BINGO");
@@ -335,7 +335,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     assertEquals("Search should return a hit", Long.valueOf(1), service.search("BINGO", null).getCount());
     assertEquals("Search should return no hits", Long.valueOf(0), service.search("New", null).getCount());
     assertEquals("Search should return no hits", Long.valueOf(0), service.search("TITILE", null).getCount());
-    assertEquals("Search should return a hit", Long.valueOf(1), service.search("bi", null).getCount());
+    assertEquals("Search should return a hit", Long.valueOf(1), service.search("bi ", null).getCount());
   }
 
   /**
