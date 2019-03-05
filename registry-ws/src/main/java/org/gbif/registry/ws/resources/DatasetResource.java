@@ -13,6 +13,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.exception.ServiceUnavailableException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -649,7 +650,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * @return
    */
   private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null && dataset.getPublishingOrganizationKey() != null) {
+    if (dataset != null && dataset.getPublishingOrganizationKey() != null
+                        // for CoL constituents we want to show the verbatim citation and no GBIF generated one:
+                        // https://github.com/gbif/portal-feedback/issues/1819
+                        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+      
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
       Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
