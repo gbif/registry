@@ -372,6 +372,7 @@ public class UserManagementResource {
    */
   @POST
   @RolesAllowed({ADMIN_ROLE})
+  @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   @Path("/{username}/editorRight")
   public Response addEditorRight(@PathParam("username") String username, UUID key,
                              @Context SecurityContext securityContext, @Context HttpServletRequest request) {
