@@ -651,8 +651,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   private void setGeneratedCitation(Dataset dataset) {
     if (dataset != null && dataset.getPublishingOrganizationKey() != null
-                        // for CoL constituents we want to show the verbatim citation and no GBIF generated one:
+                        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated one:
                         // https://github.com/gbif/portal-feedback/issues/1819
+                        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
                         && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
       
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
