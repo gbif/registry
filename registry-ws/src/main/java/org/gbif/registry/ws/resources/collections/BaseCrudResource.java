@@ -26,6 +26,8 @@ import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -46,7 +48,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Trim
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@NotNull T entity, @Context SecurityContext security) {
     entity.setCreatedBy(security.getUserPrincipal().getName());
     entity.setModifiedBy(security.getUserPrincipal().getName());
@@ -57,7 +59,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathParam("key") @NotNull UUID key, @Context SecurityContext security) {
     T entityToDelete = get(key);
     entityToDelete.setModifiedBy(security.getUserPrincipal().getName());
@@ -89,7 +91,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(
       @PathParam("key") @NotNull UUID key,
       @NotNull @Trim T entity,
