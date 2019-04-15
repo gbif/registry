@@ -47,6 +47,8 @@ for dataset_file in *.@(zip|eml) ; do
 		# Make a JSON object representing the minimum metadata necessary to register a dataset.  The rest of the metadata will
 		# be added when GBIF.org retrieves the dataset for indexing.
 
+		# The license isn't essential, but is very helpful to us if you can provide it (correctly) in the initial registration.
+
 		# If using your own DOIs, add "doi": "10.xxxx/xxxx" to this JSON object.
 
 		cat > $dataset_file.registration_json <<-EOF
@@ -56,7 +58,8 @@ for dataset_file in *.@(zip|eml) ; do
 		  "type": "$dataset_type",
 		  "title": "Example dataset registration",
 		  "description": "The dataset is registered with minimal metadata, which is overwritten once GBIF can access the file.",
-		  "language": "eng"
+		  "language": "eng",
+		  "license": "http://creativecommons.org/publicdomain/zero/1.0/legalcode"
 		}
 		EOF
 
