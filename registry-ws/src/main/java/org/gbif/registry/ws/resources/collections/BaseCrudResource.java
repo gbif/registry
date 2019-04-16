@@ -11,12 +11,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
@@ -24,8 +19,6 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
@@ -48,7 +41,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Trim
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@NotNull T entity, @Context SecurityContext security) {
     entity.setCreatedBy(security.getUserPrincipal().getName());
     entity.setModifiedBy(security.getUserPrincipal().getName());
@@ -59,7 +52,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathParam("key") @NotNull UUID key, @Context SecurityContext security) {
     T entityToDelete = get(key);
     entityToDelete.setModifiedBy(security.getUserPrincipal().getName());
@@ -91,7 +84,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(
       @PathParam("key") @NotNull UUID key,
       @NotNull @Trim T entity,

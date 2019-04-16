@@ -4,11 +4,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.TagService;
@@ -32,14 +28,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -49,8 +38,6 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
@@ -186,7 +173,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/contact")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   @Override
   public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -205,10 +192,11 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/contact/{personKey}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void removeContact(
-      @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey) {
+    @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey
+  ) {
     contactableMapper.removeContact(entityKey, personKey);
     eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
@@ -225,9 +213,10 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @POST
   @Path("{key}/identifier")
   @Trim
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public int addIdentifier(@PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier,
-                           @Context SecurityContext security) {
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public int addIdentifier(
+    @PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier, @Context SecurityContext security
+  ) {
     identifier.setCreatedBy(security.getUserPrincipal().getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -242,10 +231,13 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @DELETE
   @Path("{key}/identifier/{identifierKey}")
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
-  public void deleteIdentifier(@PathParam("key") @NotNull UUID entityKey, @PathParam("identifierKey") int identifierKey) {
+  public void deleteIdentifier(
+    @PathParam("key") @NotNull UUID entityKey,
+    @PathParam("identifierKey") int identifierKey
+  ) {
     WithMyBatis.deleteIdentifier(identifiableMapper, entityKey, identifierKey);
     eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
@@ -262,7 +254,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @POST
   @Path("{key}/tag")
   @Trim
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addTag(@PathParam("key") @NotNull UUID entityKey, @NotNull Tag tag, @Context SecurityContext security) {
     tag.setCreatedBy(security.getUserPrincipal().getName());
     return addTag(entityKey, tag);
@@ -285,7 +277,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @DELETE
   @Path("{key}/tag/{tagKey}")
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void deleteTag(@PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
