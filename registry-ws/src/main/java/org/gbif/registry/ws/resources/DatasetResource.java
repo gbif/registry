@@ -655,7 +655,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                         // https://github.com/gbif/portal-feedback/issues/1819
                         && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
                         && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
-      
+
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
       Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
@@ -678,9 +678,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
-    // assign CC-BY 4.0 (default license) when license not specified yet
+    // Assign CC-BY 4.0 (default license) when license not specified yet
+    // See https://github.com/gbif/registry/issues/71#issuecomment-438280021 for background on possibly changing this.
     if (dataset.getLicense() == null) {
-      LOG.warn("Dataset created with the V1 API does not specify a license, defaulting to CC_BY_4_0");
+      LOG.warn("Dataset created by {} {} with the V1 API does not specify a license, defaulting to CC_BY_4_0",
+        dataset.getPublishingOrganizationKey(), dataset.getCreatedBy());
       dataset.setLicense(License.CC_BY_4_0);
     }
 
