@@ -6,6 +6,7 @@ import org.gbif.registry.database.LiquibaseModules;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.grizzly.RegistryServerWithIdentity;
 import org.gbif.registry.guice.RegistryTestModules;
+import org.gbif.registry.ws.fixtures.TestConstants;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -70,7 +71,7 @@ public class JwtIT {
 
   @Test
   public void validTokenTest() throws IOException {
-    String token = login(JwtDatabaseInitializer.ADMIN_USER);
+    String token = login(JwtDatabaseInitializer.GRSCICOLL_ADMIN);
 
     WebResource personResource = getPersonResource();
 
@@ -140,7 +141,7 @@ public class JwtIT {
   @Test
   public void noJwtWithBasicAuthTest() {
     ClientResponse personResponse =
-      getPersonResource().header(HttpHeaders.AUTHORIZATION, BASIC_AUTH_HEADER.apply(JwtDatabaseInitializer.ADMIN_USER))
+      getPersonResource().header(HttpHeaders.AUTHORIZATION, BASIC_AUTH_HEADER.apply(JwtDatabaseInitializer.GRSCICOLL_ADMIN))
         .type(MediaType.APPLICATION_JSON)
         .post(ClientResponse.class, createPerson());
 

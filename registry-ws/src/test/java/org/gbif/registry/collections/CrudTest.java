@@ -62,7 +62,7 @@ public abstract class CrudTest<T extends CollectionEntity> {
   @Before
   public void setup() {
     if (pp != null) {
-      pp.setPrincipal(TestConstants.TEST_ADMIN);
+      pp.setPrincipal(TestConstants.TEST_GRSCICOLL_ADMIN);
     }
   }
 
