@@ -29,6 +29,7 @@ public class TestConstants {
   public static final String TEST_ADMIN = "admin";
   public static final String TEST_EDITOR = "editor";
   public static final String TEST_USER = "user";
+  public static final String TEST_GRSCICOLL_ADMIN = "grscicollAdmin";
 
 
   public static final Map<String, UserRole> TEST_USERS_ROLE = Maps.newHashMap();
@@ -36,6 +37,7 @@ public class TestConstants {
     TEST_USERS_ROLE.put(TEST_ADMIN, UserRole.REGISTRY_ADMIN);
     TEST_USERS_ROLE.put(TEST_EDITOR, UserRole.REGISTRY_EDITOR );
     TEST_USERS_ROLE.put(TEST_USER, UserRole.USER);
+    TEST_USERS_ROLE.put(TEST_GRSCICOLL_ADMIN, UserRole.GRSCICOLL_ADMIN);
   }
 
   public static String getRegistryServerURL(int port) {
