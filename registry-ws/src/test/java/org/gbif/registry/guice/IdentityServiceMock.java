@@ -31,6 +31,8 @@ public class IdentityServiceMock implements IdentityService {
             TestConstants.getTestUserRole(TestConstants.TEST_EDITOR)));
     USERS.put(TestConstants.TEST_USER, mockUser(3, TestConstants.TEST_USER,
             TestConstants.getTestUserRole(TestConstants.TEST_USER)));
+    USERS.put(TestConstants.TEST_GRSCICOLL_ADMIN, mockUser(4, TestConstants.TEST_GRSCICOLL_ADMIN,
+                                                TestConstants.getTestUserRole(TestConstants.TEST_GRSCICOLL_ADMIN)));
   }
 
   private static final String EMAIL_AT_GIBF = "%s@gbif.test.org";
