@@ -39,7 +39,7 @@ import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -173,7 +173,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/contact")
   @Validate
   @Transactional
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   @Override
   public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -192,7 +192,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Path("{key}/contact/{personKey}")
   @Validate
   @Transactional
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
   public void removeContact(
     @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey
@@ -213,7 +213,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @POST
   @Path("{key}/identifier")
   @Trim
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public int addIdentifier(
     @PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier, @Context SecurityContext security
   ) {
@@ -231,7 +231,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @DELETE
   @Path("{key}/identifier/{identifierKey}")
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Transactional
   @Override
   public void deleteIdentifier(
@@ -254,7 +254,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @POST
   @Path("{key}/tag")
   @Trim
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public int addTag(@PathParam("key") @NotNull UUID entityKey, @NotNull Tag tag, @Context SecurityContext security) {
     tag.setCreatedBy(security.getUserPrincipal().getName());
     return addTag(entityKey, tag);
@@ -277,7 +277,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
 
   @DELETE
   @Path("{key}/tag/{tagKey}")
-  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Transactional
   @Override
   public void deleteTag(@PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
