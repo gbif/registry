@@ -90,7 +90,7 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
   </sql>
 
   <insert id="create" parameterType="Institution">
