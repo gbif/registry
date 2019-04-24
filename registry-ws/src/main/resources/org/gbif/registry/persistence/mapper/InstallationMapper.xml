@@ -109,7 +109,7 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="INSTALLATION_MAP">
     SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
+    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
@@ -122,7 +122,7 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(unaccent(trim(#{query})),'\s+',':*&amp;','g')||':*') AS query</if>
+    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
     WHERE deleted IS NULL
     <if test="query != null" >
       <include refid="SIMPLE_SEARCH"/>
