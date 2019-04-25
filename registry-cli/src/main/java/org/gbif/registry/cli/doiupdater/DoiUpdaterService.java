@@ -32,7 +32,7 @@ public class DoiUpdaterService extends AbstractIdleService {
 
     listener = new MessageListener(config.messaging.getConnectionParameters());
     listener.listen(config.queueName, 1,
-      new DoiUpdateListener(CommonBuilder.createDataCiteService(config.datacite), inj.getInstance(DoiMapper.class), config.timeToRetryInMs));
+      new DoiUpdateListener(CommonBuilder.createRestJsonApiDataCiteService(config.datacite), inj.getInstance(DoiMapper.class), config.timeToRetryInMs));
   }
 
   @Override
