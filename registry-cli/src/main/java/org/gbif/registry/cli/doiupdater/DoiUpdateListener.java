@@ -43,8 +43,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
   @Override
   public void handleMessage(ChangeDoiMessage msg) {
-    LOG.debug("Handling change DOI to {} message for {}. Metadata is {}, target is {}",
-      msg.getStatus(), msg.getDoi(), msg.getMetadata(), msg.getTarget());
+    LOG.debug("Handling change DOI to {} message for {}", msg.getStatus(), msg.getDoi());
     final DoiData currState = doiMapper.get(msg.getDoi());
     if (currState == null) {
       // this is bad, we should have an entry for the DOI in our registry table!
