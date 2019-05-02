@@ -7,9 +7,10 @@
     <version>37</version>
   </parent>
 
+
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-motherpom</artifactId>
-  <version>2.110</version>
+  <version>2.110.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>GBIF Registry</name>
@@ -92,7 +93,7 @@
     <gbif-common-ws.version>0.45</gbif-common-ws.version>
     <gbif-common.version>0.40</gbif-common.version>
     <gbif-doi.version>1.9</gbif-doi.version>
-    <gbif-download-query-tools.version>1.21</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.22</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-microservice.version>0.7</gbif-microservice.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
