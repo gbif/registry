@@ -257,6 +257,12 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-doi</artifactId>
         <version>${gbif-doi.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
