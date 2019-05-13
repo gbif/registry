@@ -57,9 +57,9 @@ public class CustomDownloadDataCiteConverter {
         .withSubjects().addSubject().withValue("GBIF").withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("biodiversity")
         .withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("species occurrences").withLang(
         DataCiteConverter.ENGLISH).end().end()
-        .withCreators().addCreator().withCreatorName(creatorName)
+        .withCreators().addCreator().withCreatorName().withValue(creatorName).end()
         .withNameIdentifier(DataCiteConverter.userIdToCreatorNameIdentifier(creatorUserId)).end().end()
-        .withPublisher(DataCiteConverter.GBIF_PUBLISHER)
+        .withPublisher().withValue(DataCiteConverter.GBIF_PUBLISHER).end()
         .withPublicationYear(String.valueOf(created.get(Calendar.YEAR)))
         .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
         .withDates()
