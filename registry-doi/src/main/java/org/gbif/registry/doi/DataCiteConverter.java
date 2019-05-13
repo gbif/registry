@@ -113,7 +113,7 @@ public class DataCiteConverter {
     // always add required metadata
     DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder()
             .withTitles().withTitle(DataCiteMetadata.Titles.Title.builder().withValue(d.getTitle()).build()).end()
-            .withPublisher(publisher.getTitle())
+            .withPublisher().withValue(publisher.getTitle()).end()
             // default to this year, e.g. when creating new datasets. This field is required!
             .withPublicationYear(getYear(new Date()))
             .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).withValue(d.getType().name()).end()
@@ -220,7 +220,7 @@ public class DataCiteConverter {
     }
     for (GeospatialCoverage gc : d.getGeographicCoverages()) {
       if (gc.getBoundingBox() != null) {
-        b.withGeoLocations().addGeoLocation().addGeoLocationBox(
+        b.withGeoLocations().addGeoLocation().withGeoLocationPlaceOrGeoLocationPointOrGeoLocationBox(
                 gc.getBoundingBox().getMinLatitude(),
                 gc.getBoundingBox().getMinLongitude(),
                 gc.getBoundingBox().getMaxLatitude(),
@@ -297,9 +297,10 @@ public class DataCiteConverter {
             .addSubject().withValue("biodiversity").withLang(ENGLISH).end()
             .addSubject().withValue("species occurrences").withLang(ENGLISH).end()
             .end()
-            .withCreators().addCreator().withCreatorName(creator.getName()).end()
+            .withCreators().addCreator().withCreatorName().withValue(creator.getName()).end().end()
             .end()
-            .withPublisher(GBIF_PUBLISHER).withPublicationYear(getYear(d.getCreated()))
+            .withPublisher().withValue(GBIF_PUBLISHER).end()
+            .withPublicationYear(getYear(d.getCreated()))
             .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
             .withAlternateIdentifiers()
             .addAlternateIdentifier().withAlternateIdentifierType("GBIF").withValue(d.getKey()).end()
@@ -345,10 +346,12 @@ public class DataCiteConverter {
    */
   private static DataCiteMetadata.Creators.Creator toDataCiteCreator(Contact contact){
     DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
-    creator.setCreatorName(ContactAdapter.formatContactName(contact));
+    DataCiteMetadata.Creators.Creator.CreatorName name = FACTORY.createDataCiteMetadataCreatorsCreatorCreatorName();
+    name.setValue(ContactAdapter.formatContactName(contact));
+    creator.setCreatorName(name);
 
     //CreatorName is mandatory
-    if(Strings.isNullOrEmpty(creator.getCreatorName())){
+    if(Strings.isNullOrEmpty(creator.getCreatorName().getValue())){
       return null;
     }
 
@@ -360,7 +363,7 @@ public class DataCiteConverter {
     for(String userId : contact.getUserId()){
       DataCiteMetadata.Creators.Creator.NameIdentifier nId = userIdToCreatorNameIdentifier(userId);
       if(nId != null){
-        creator.setNameIdentifier(nId);
+        creator.getNameIdentifier().add(nId);
         //we take the first we can support
         break;
       }
@@ -375,13 +378,15 @@ public class DataCiteConverter {
    */
   private static DataCiteMetadata.Creators.Creator getDefaultGBIFDataCiteCreator(String fullname){
     DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
-    creator.setCreatorName(fullname);
+    DataCiteMetadata.Creators.Creator.CreatorName name = FACTORY.createDataCiteMetadataCreatorsCreatorCreatorName();
+    name.setValue(fullname);
+    creator.setCreatorName(name);
     DataCiteMetadata.Creators.Creator.NameIdentifier nid =
             FACTORY.createDataCiteMetadataCreatorsCreatorNameIdentifier();
     nid.setValue(fullname);
     nid.setSchemeURI("gbif.org");
     nid.setNameIdentifierScheme("GBIF");
-    creator.setNameIdentifier(nid);
+    creator.getNameIdentifier().add(nid);
     return creator;
   }
 
@@ -393,10 +398,12 @@ public class DataCiteConverter {
    */
   private static DataCiteMetadata.Contributors.Contributor toDataCiteContributor(Contact contact){
     DataCiteMetadata.Contributors.Contributor contributor = FACTORY.createDataCiteMetadataContributorsContributor();
-    contributor.setContributorName(ContactAdapter.formatContactName(contact));
+    DataCiteMetadata.Contributors.Contributor.ContributorName name = FACTORY.createDataCiteMetadataContributorsContributorContributorName();
+    name.setValue(ContactAdapter.formatContactName(contact));
+    contributor.setContributorName(name);
 
     //CreatorName is mandatory
-    if(Strings.isNullOrEmpty(contributor.getContributorName())){
+    if(Strings.isNullOrEmpty(contributor.getContributorName().getValue())){
       return null;
     }
 
@@ -406,7 +413,7 @@ public class DataCiteConverter {
     for(String userId : contact.getUserId()){
       DataCiteMetadata.Contributors.Contributor.NameIdentifier nId = userIdToContributorNameIdentifier(userId);
       if(nId != null){
-        contributor.setNameIdentifier(nId);
+        contributor.getNameIdentifier().add(nId);
         //we take the first we can support
         break;
       }
