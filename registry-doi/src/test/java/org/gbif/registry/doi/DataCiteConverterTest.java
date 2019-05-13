@@ -88,7 +88,7 @@ public class DataCiteConverterTest {
 
     DataCiteMetadata m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
-    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName());
+    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName().getValue());
     assertEquals(doi.getDoiName(), m.getIdentifier().getValue());
 
     d.setDoi(doi);
@@ -101,10 +101,10 @@ public class DataCiteConverterTest {
 
     m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
-    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName());
-    assertEquals("Hubert Reeves", m.getContributors().getContributor().get(0).getContributorName());
+    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName().getValue());
+    assertEquals("Hubert Reeves", m.getContributors().getContributor().get(0).getContributorName().getValue());
     assertEquals("10.1234/5678", m.getIdentifier().getValue());
-    assertEquals(Lists.<Double>newArrayList(1d, 3d, 2d, 4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationBox());
+    assertEquals(Lists.<Double>newArrayList(1d, 3d, 2d, 4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationPlaceOrGeoLocationPointOrGeoLocationBox());
     assertEquals(d.getDescription(), m.getDescriptions().getDescription().get(0).getContent().get(0));
     assertEquals(License.CC0_1_0.getLicenseUrl(), m.getRightsList().getRights().get(0).getRightsURI());
 
@@ -214,7 +214,7 @@ public class DataCiteConverterTest {
     assertTrue(xml2.contains("for full list of all constituents"));
     assertFalse(xml2.contains("University of Ghent"));
     assertTrue(xml2.contains("10.15468/siye1z"));
-    assertEquals(3648, xml2.length());
+    assertEquals(3690, xml2.length());
   }
 
   @Test
@@ -226,6 +226,6 @@ public class DataCiteConverterTest {
     assertTrue(xml2.contains("for full list of all constituents"));
     assertFalse(xml2.contains("University of Ghent"));
     assertFalse(xml2.contains("10.15468/siye1z"));
-    assertEquals(2310, xml2.length());
+    assertEquals(2352, xml2.length());
   }
 }
