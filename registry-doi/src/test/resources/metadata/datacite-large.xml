@@ -1,14 +1,14 @@
-<resource xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd" xmlns="http://datacite.org/schema/kernel-3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://datacite.org/schema/kernel-4" xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4.0/metadata.xsd">
   <identifier identifierType="DOI">10.15468/dl.v8zc57</identifier>
   <creators>
     <creator>
-      <creatorName>occdownload gbif.org</creatorName>
+      <creatorName xml:lang="en">occdownload gbif.org</creatorName>
     </creator>
   </creators>
   <titles>
-    <title>GBIF Occurrence Download</title>
+    <title xml:lang="en">GBIF Occurrence Download</title>
   </titles>
-  <publisher>The Global Biodiversity Information Facility</publisher>
+  <publisher xml:lang="en">The Global Biodiversity Information Facility</publisher>
   <publicationYear>2015</publicationYear>
   <subjects>
     <subject xml:lang="eng">GBIF</subject>
