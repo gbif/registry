@@ -2,20 +2,23 @@
 #
 # This is an outline Bash script to show updating a set of datasets registered with GBIF.org.
 #
-# The script isn't recommended for production use; it shows the steps involved, but does not have enough error checking.
+# The script isn't recommended for production use; it shows the steps involved, but does not have any error checking.
 #
-# Using a process like this, you should make sure you store the UUID GBIF assigns to your dataset, so you don't accidentally re-register
-# existing datasets as new ones.
+# Using a process like this, you should make sure you store the UUID GBIF assigns to your dataset, so you don't accidentally
+# re-register existing datasets as new ones.
 
 # Starting point:
 # - One or more datasets as DarwinCore Archives or EML files in the current directory.
+#   - This directory has an EML file, which is sufficient for a metadata-only dataset.
 # - A web server exposing these files
+#   - We can use the GitHub view of this directory for that:
 ACCESS_ENDPOINT=https://raw.githubusercontent.com/gbif/registry/master/registry-examples/src/test/scripts
 # - An organization registered in GBIF
-ORGANIZATION=0a16da09-7719-40de-8d4f-56a15ed52fb6
 # - An installation registered in GBIF (represents the server this script runs on)
-INSTALLATION=92d76df5-3de1-4c89-be03-7a17abad962a
 # - A GBIF.org user account with publishing rights for the registered organization.
+#   - These are the test values available for use on GBIF-UAT.org
+ORGANIZATION=0a16da09-7719-40de-8d4f-56a15ed52fb6
+INSTALLATION=92d76df5-3de1-4c89-be03-7a17abad962a
 GBIF_USER=ws_client_demo
 GBIF_PASSWORD=Demo123
 
@@ -24,7 +27,7 @@ GBIF_PASSWORD=Demo123
 shopt -s extglob
 for dataset_file in *.@(zip|eml) ; do
 
-	# Guess dataset type (script doesn't handle checklists)
+	# Guess dataset type (script doesn't handle checklists or sampling event datasets)
 	case $dataset_file in
 		*.eml)
 			dataset_type=METADATA
@@ -36,7 +39,7 @@ for dataset_file in *.@(zip|eml) ; do
 			;;
 	esac
 
-	# Check if the dataset is already registered.
+	# Check if the dataset is already registered -- we have a local file recording the UUID if that is the case.
 	if [[ -e $dataset_file.registration ]]; then
 		dataset=$(cat $dataset_file.registration)
 		echo "Dataset $dataset_file is already registered at $dataset"
@@ -64,7 +67,7 @@ for dataset_file in *.@(zip|eml) ; do
 		EOF
 
 		# Send the request by HTTP:
-		curl -Ss --user $GBIF_USER:$GBIF_PASSWORD -H "Content-Type: application/json" -X POST --data @$dataset_file.registration_json https://api.gbif-uat.org/v1/dataset | tr -d '"' > $dataset_file.registration
+		curl -Ssf --user $GBIF_USER:$GBIF_PASSWORD -H "Content-Type: application/json" -X POST --data @$dataset_file.registration_json https://api.gbif-uat.org/v1/dataset | tr -d '"' > $dataset_file.registration
 		dataset=$(cat $dataset_file.registration)
 	fi
 
@@ -72,7 +75,7 @@ for dataset_file in *.@(zip|eml) ; do
 		echo "	Endpoint is already set"
 	else
 
-		# Add an endpoint, the location GBIF.org will retrieve the archive file from:
+		# Add an endpoint, the location GBIF.org will retrieve the archive (or EML) file from:
 		cat > $dataset_file.endpoint_json <<-EOF
 		{
 			"type": "$endpoint_type",
@@ -80,7 +83,7 @@ for dataset_file in *.@(zip|eml) ; do
 		}
 		EOF
 
-		curl -Ss --user $GBIF_USER:$GBIF_PASSWORD -H "Content-Type: application/json" -X POST --data @$dataset_file.endpoint_json https://api.gbif-uat.org/v1/dataset/$dataset/endpoint > $dataset_file.endpoint
+		curl -Ssf --user $GBIF_USER:$GBIF_PASSWORD -H "Content-Type: application/json" -X POST --data @$dataset_file.endpoint_json https://api.gbif-uat.org/v1/dataset/$dataset/endpoint > $dataset_file.endpoint
 
 		echo "Dataset registered, see https://www.gbif-uat.org/dataset/$dataset or https://api.gbif-uat.org/v1/dataset/$dataset"
 	fi
