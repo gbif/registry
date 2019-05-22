@@ -22,6 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -39,7 +40,6 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
-  private final EventBus eventBus;
 
   @Inject
   public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper,
@@ -47,7 +47,6 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper,
           eventBus, Institution.class);
     this.institutionMapper = institutionMapper;
-    this.eventBus = eventBus;
   }
 
   @GET
@@ -55,7 +54,7 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
                                           @Nullable @QueryParam("contact") UUID contactKey,
                                           @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    query = Strings.emptyToNull(query);
+    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = institutionMapper.count(query, contactKey);
     return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
   }

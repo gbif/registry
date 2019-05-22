@@ -22,6 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -39,7 +40,6 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
-  private final EventBus eventBus;
 
   @Inject
   public CollectionResource(CollectionMapper collectionMapper, AddressMapper addressMapper,
@@ -47,7 +47,6 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
     super(collectionMapper, addressMapper, collectionMapper, tagMapper, collectionMapper, identifierMapper, collectionMapper,
           eventBus, Collection.class);
     this.collectionMapper = collectionMapper;
-    this.eventBus = eventBus;
   }
 
   @GET
@@ -56,7 +55,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
                                          @Nullable @QueryParam("contact") UUID contactKey,
                                          @Nullable @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    query = Strings.emptyToNull(query);
+    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = collectionMapper.count(institutionKey, contactKey, query);
     return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
   }
