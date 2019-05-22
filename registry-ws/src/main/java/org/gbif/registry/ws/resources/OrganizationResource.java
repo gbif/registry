@@ -12,6 +12,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.Lists;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -241,6 +242,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query, country and endorsement.
+    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = organizationMapper.count(query, country, isEndorsed);
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
