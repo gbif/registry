@@ -16,6 +16,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.ObjectFactory;
+import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.database.DatabaseInitializer;
@@ -129,7 +130,9 @@ public class DoiRegistrationServiceIT {
 
       DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
       DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
-      creator.setCreatorName(TEST_ADMIN_USER);
+      DataCiteMetadata.Creators.Creator.CreatorName name = of.createDataCiteMetadataCreatorsCreatorCreatorName();
+      name.setValue(TEST_ADMIN_USER);
+      creator.setCreatorName(name);
       creators.getCreator().add(creator);
       res.setCreators(creators);
 
@@ -140,7 +143,12 @@ public class DoiRegistrationServiceIT {
       res.setTitles(titles);
 
       res.setPublicationYear("2017");
-      res.setPublisher(TEST_ADMIN_USER);
+      DataCiteMetadata.Publisher publisher = of.createDataCiteMetadataPublisher();
+      publisher.setValue(TEST_ADMIN_USER);
+      res.setPublisher(publisher);
+      DataCiteMetadata.ResourceType resourceType = of.createDataCiteMetadataResourceType();
+      resourceType.setResourceTypeGeneral(ResourceType.DATASET);
+      res.setResourceType(resourceType);
       return DataCiteValidator.toXml(new DOI(DOI.TEST_PREFIX, "1"), res);
     } catch (InvalidMetadataException ex) {
       throw new RuntimeException(ex);
