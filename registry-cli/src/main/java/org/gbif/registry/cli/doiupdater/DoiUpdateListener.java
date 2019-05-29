@@ -145,9 +145,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
           doiMapper.update(doi, newState, null);
           LOG.info("Marked registered doi {} as deleted", doi);
         }
-      } catch (DoiHttpException e) {
+      } catch (Exception e) {
         // in case of a 404 swallow
-        if (HttpStatus.SC_NOT_FOUND == e.getStatus()) {
+        if (e.getMessage().contains("404")) {
           LOG.warn(DOI_SMTP, "Trying to delete DOI {} failed because it doesn't exist in DataCite; deleting locally",
                   doi, e);
           doiMapper.delete(doi);
