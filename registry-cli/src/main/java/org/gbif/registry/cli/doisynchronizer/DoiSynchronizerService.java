@@ -10,7 +10,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.service.DoiException;
-import org.gbif.doi.service.datacite.DataCiteService;
+import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.SingleColumnFileReader;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
@@ -53,7 +53,7 @@ public class DoiSynchronizerService {
   private final DatasetMapper datasetMapper;
   private final OccurrenceDownloadMapper downloadMapper;
   private final IdentityAccessService identityAccessService;
-  private final DataCiteService dataCiteService;
+  private final DoiService dataCiteService;
 
   private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
 
@@ -69,7 +69,7 @@ public class DoiSynchronizerService {
     downloadMapper = injector.getInstance(OccurrenceDownloadMapper.class);
     identityAccessService = injector.getInstance(IdentityAccessService.class);
 
-    dataCiteService = CommonBuilder.createDataCiteService(config.datacite);
+    dataCiteService = CommonBuilder.createRestJsonApiDataCiteService(config.datacite);
   }
 
   /**
