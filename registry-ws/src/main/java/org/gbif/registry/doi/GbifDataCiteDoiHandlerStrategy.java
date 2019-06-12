@@ -2,7 +2,6 @@ package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
