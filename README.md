@@ -34,8 +34,13 @@ As a distributed network, the registry serves a central coordination mechanism, 
       <registry-it.db.username>registry</registry-it.db.username>
       <registry-it.db.password/>
       <appkeys.testfile>/home/mblissett/Workspace/appkeys-it.properties</appkeys.testfile>
+        
+      <datacite.api.base.url>https://api.test.datacite.org/</datacite.api.base.url>
+      <datacite.user>GBIF.GBIF</datacite.user>
+      <datacite.password/>
    </properties>
   </profile>
 ````
+datacite.password can be found in configs.
 
-6. Run `mvn clean install`.
+5. Run `mvn clean install`.
