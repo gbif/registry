@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import static org.gbif.registry.ws.security.jwt.JwtConfiguration.TOKEN_FIELD_RESPONSE;
 import static org.gbif.registry.ws.security.jwt.JwtConfiguration.TOKEN_HEADER_RESPONSE;
+import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -168,7 +169,7 @@ public class JwtIT {
   }
 
   private WebResource getPersonResource() {
-    return client.resource("http://localhost:" + RegistryServer.getPort() + "/grscicoll/person");
+    return client.resource("http://localhost:" + RegistryServer.getPort() + "/" + GRSCICOLL_PATH + "/person");
   }
 
   private Person createPerson() {
