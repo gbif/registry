@@ -39,7 +39,7 @@ public class IdentifierResolverResource {
 
   @GET
   @Path("{env: .*}{identifier: (grbio.org|biocol.org)/.+}")
-  public Response resolveGrbioBiocolUris(@PathParam("identifier") String identifier) {
+  public Response resolveGrbioBiocolUris(@PathParam("identifier") @NotNull String identifier) {
     return processIdentifier(identifier);
   }
 
