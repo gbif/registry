@@ -81,6 +81,9 @@ public class RegistrySearchModule extends PrivateModule {
     bindString("mail.cc","ccEmail");
     // from email address?
     bindString("mail.from","fromEmail");
+
+    // grscicoll properties
+    bindString("grscicoll.portal.url", "grscicollPortalUrl");
   }
 
   /**
