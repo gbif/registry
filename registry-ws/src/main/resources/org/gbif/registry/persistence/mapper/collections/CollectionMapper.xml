@@ -233,6 +233,13 @@
     collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
+  <select id="findByIdentifier" resultType="java.util.UUID">
+    SELECT ci.collection_key
+    FROM collection_identifier ci
+    INNER JOIN identifier i ON i."key" = ci.identifier_key
+    WHERE regexp_replace(i.identifier, 'http://', '') = #{identifier,jdbcType=VARCHAR};
+  </select>
+
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
     SELECT key,code,name FROM (
