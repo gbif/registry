@@ -33,6 +33,9 @@ import static org.junit.Assert.assertTrue;
 /** Tests the {@link org.gbif.registry.ws.resources.collections.IdentifierResolverResource}. */
 public class IdentifierResolverIT {
 
+  private static final String IDENTIFIER1 = "http://grbio.org/cool/g9da-xpan";
+  private static final String IDENTIFIER2 = "urn:lsid:biocol.org:col:35158";
+
   @ClassRule
   public static final LiquibaseInitializer liquibaseRule =
       new LiquibaseInitializer(LiquibaseModules.database());
@@ -67,11 +70,11 @@ public class IdentifierResolverIT {
 
     // add identifier to collection
     collectionService.addIdentifier(
-        collectionKey, new Identifier(IdentifierType.GRBIO_URI, "http://grbio.org/cool/g9da-xpan"));
+        collectionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER1));
 
     // there could be duplicates since we don't check it
     collectionService.addIdentifier(
-        collectionKey, new Identifier(IdentifierType.GRBIO_URI, "http://grbio.org/cool/g9da-xpan"));
+        collectionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER1));
 
     // create institution
     Institution institution = new Institution();
@@ -81,7 +84,7 @@ public class IdentifierResolverIT {
 
     // add identifier to institution
     institutionService.addIdentifier(
-        institutionKey, new Identifier(IdentifierType.LSID, "urn:lsid:biocol.org:col:35158"));
+        institutionKey, new Identifier(IdentifierType.LSID, IDENTIFIER2));
   }
 
   @Test
@@ -90,7 +93,8 @@ public class IdentifierResolverIT {
         client.resource(
             "http://localhost:"
                 + RegistryServer.getPort()
-                + "/grscicoll/resolve/dev.grbio.org/cool/g9da-xpan");
+                + "/grscicoll/resolve/"
+                + IDENTIFIER1.replace("http://:", "dev."));
 
     ClientResponse response = webResourceResolve.get(ClientResponse.class);
 
@@ -102,9 +106,7 @@ public class IdentifierResolverIT {
   public void findInstitutionByLsid() {
     WebResource webResourceResolve =
         client.resource(
-            "http://localhost:"
-                + RegistryServer.getPort()
-                + "/grscicoll/resolve/urn:lsid:biocol.org:col:35158");
+            "http://localhost:" + RegistryServer.getPort() + "/grscicoll/resolve/" + IDENTIFIER2);
 
     ClientResponse response = webResourceResolve.get(ClientResponse.class);
 
