@@ -44,7 +44,7 @@ public class IdentifierResolverResource {
   }
 
   @GET
-  @Path("{env: .*}{identifier: (grscicoll.org|grbio.org|biocol.org)/.+}")
+  @Path("{env: .*}{identifier: (grscicoll.org|usfsc.grscicoll.org|grbio.org|biocol.org)/.+}")
   public Response resolveGrbioBiocolUris(
       @PathParam("identifier") @NotNull @Trim String identifier) {
     return processIdentifier(identifier);
