@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.ws.guice.Trim;
 
 import java.net.URI;
 import java.util.List;
@@ -19,6 +20,11 @@ import com.google.inject.name.Named;
 
 import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
+/**
+ * Resolves the grscicoll identifiers to the corresponding entity ({@link
+ * org.gbif.api.model.collections.Collection} or {@link
+ * org.gbif.api.model.collections.Institution}).
+ */
 @Singleton
 @Path(GRSCICOLL_PATH + "/resolve")
 public class IdentifierResolverResource {
@@ -39,13 +45,14 @@ public class IdentifierResolverResource {
 
   @GET
   @Path("{env: .*}{identifier: (grbio.org|biocol.org)/.+}")
-  public Response resolveGrbioBiocolUris(@PathParam("identifier") @NotNull String identifier) {
+  public Response resolveGrbioBiocolUris(
+      @PathParam("identifier") @NotNull @Trim String identifier) {
     return processIdentifier(identifier);
   }
 
   @GET
   @Path("{identifier}")
-  public Response resolve(@PathParam("identifier") @NotNull String identifier) {
+  public Response resolve(@PathParam("identifier") @NotNull @Trim String identifier) {
     return processIdentifier(identifier);
   }
 
