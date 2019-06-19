@@ -247,7 +247,7 @@
     SELECT ii.institution_key
     FROM institution_identifier ii
     INNER JOIN identifier i ON i."key" = ii.identifier_key
-    WHERE regexp_replace(i.identifier, 'http://', '') = #{identifier,jdbcType=VARCHAR};
+    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
 
   <!-- Simple suggest -->

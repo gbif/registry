@@ -35,6 +35,8 @@ public class IdentifierResolverIT {
 
   private static final String IDENTIFIER1 = "http://grbio.org/cool/g9da-xpan";
   private static final String IDENTIFIER2 = "urn:lsid:biocol.org:col:35158";
+  private static final String IDENTIFIER3 = "http://grscicoll.org/cool/kx98-stkb";
+  private static final String IDENTIFIER4 = "http://usfsc.grscicoll.org/cool/i6ah-3d5y";
 
   @ClassRule
   public static final LiquibaseInitializer liquibaseRule =
@@ -82,13 +84,17 @@ public class IdentifierResolverIT {
     institution.setName("inst1");
     institutionKey = institutionService.create(institution);
 
-    // add identifier to institution
+    // add identifiers to institution
     institutionService.addIdentifier(
         institutionKey, new Identifier(IdentifierType.LSID, IDENTIFIER2));
+    institutionService.addIdentifier(
+        institutionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER3));
+    institutionService.addIdentifier(
+        institutionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER4));
   }
 
   @Test
-  public void findCollectionByCoolUri() {
+  public void findCollectionByCoolUriAndEnv() {
     WebResource webResourceResolve =
         client.resource(
             "http://localhost:"
@@ -103,10 +109,52 @@ public class IdentifierResolverIT {
   }
 
   @Test
+  public void findCollectionByCoolUriWithoutEnv() {
+    WebResource webResourceResolve =
+        client.resource(
+            "http://localhost:" + RegistryServer.getPort() + "/grscicoll/resolve/" + IDENTIFIER1);
+
+    ClientResponse response = webResourceResolve.get(ClientResponse.class);
+
+    assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+    assertTrue(response.getLocation().toString().endsWith("/collection/" + collectionKey));
+  }
+
+  @Test
   public void findInstitutionByLsid() {
     WebResource webResourceResolve =
         client.resource(
             "http://localhost:" + RegistryServer.getPort() + "/grscicoll/resolve/" + IDENTIFIER2);
+
+    ClientResponse response = webResourceResolve.get(ClientResponse.class);
+
+    assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+    assertTrue(response.getLocation().toString().endsWith("/institution/" + institutionKey));
+  }
+
+  @Test
+  public void findInstitutionByGrscicollUri() {
+    WebResource webResourceResolve =
+        client.resource(
+            "http://localhost:"
+                + RegistryServer.getPort()
+                + "/grscicoll/resolve/"
+                + IDENTIFIER3.replace("http://:", "dev."));
+
+    ClientResponse response = webResourceResolve.get(ClientResponse.class);
+
+    assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+    assertTrue(response.getLocation().toString().endsWith("/institution/" + institutionKey));
+  }
+
+  @Test
+  public void findInstitutionByUsfscUri() {
+    WebResource webResourceResolve =
+        client.resource(
+            "http://localhost:"
+                + RegistryServer.getPort()
+                + "/grscicoll/resolve/"
+                + IDENTIFIER4.replace("http://:", ""));
 
     ClientResponse response = webResourceResolve.get(ClientResponse.class);
 
