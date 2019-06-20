@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>pom</packaging>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.1.5.RELEASE</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>org.gbif.registry</groupId>
+  <artifactId>registry-spring-boot-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>GBIF Registry</name>
+  <description>Demo registry using Spring Boot</description>
+
+  <repositories>
+    <repository>
+      <id>gbif-all</id>
+      <url>http://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+    <repository>
+      <id>gbif-thirdparty</id>
+      <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
+    </repository>
+    <repository>
+      <id>cloudera-release</id>
+      <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <modules>
+    <module>registry-spring-boot-ws</module>
+    <module>registry-spring-boot-doi</module>
+    <module>registry-spring-boot-cli</module>
+    <module>registry-spring-boot-metadata</module>
+    <module>registry-spring-boot-persistence</module>
+  </modules>
+
+  <properties>
+    <java.version>1.8</java.version>
+    <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
+    <gbif-doi.version>2.4</gbif-doi.version>
+    <jsr311-api.version>1.1.1</jsr311-api.version>
+    <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
+    <gbif-postal-service.version>0.34-SNAPSHOT</gbif-postal-service.version>
+    <download-query-tools.version>1.24</download-query-tools.version>
+    <gbif-api.version>0.81</gbif-api.version>
+    <hibernate-validator.version>5.4.1.Final</hibernate-validator.version>
+
+    <datacite.api.base.url/>
+    <datacite.user/>
+    <datacite.password/>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.mybatis.spring.boot</groupId>
+        <artifactId>mybatis-spring-boot-starter</artifactId>
+        <version>${mybatis-spring-boot-starter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-doi</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-persistence</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-api</artifactId>
+        <version>${gbif-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-doi</artifactId>
+        <version>${gbif-doi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>download-query-tools</artifactId>
+        <version>${download-query-tools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-mybatis</artifactId>
+        <version>${gbif-common-mybatis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.common</groupId>
+        <artifactId>gbif-postal-service</artifactId>
+        <version>${gbif-postal-service.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator</artifactId>
+        <version>${hibernate-validator.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>

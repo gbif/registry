@@ -1,0 +1,20 @@
+{
+  "properties": [
+    {
+      "name": "datacite.username",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "datacite.password",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "datacite.timeout",
+      "type": "java.lang.Integer"
+    },
+    {
+      "name": "datacite.api",
+      "type": "java.lang.String"
+    }
+  ]
+}
