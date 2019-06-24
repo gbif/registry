@@ -34,6 +34,8 @@ import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
+import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -43,7 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("grscicoll/person")
+@Path(GRSCICOLL_PATH + "/person")
 public class PersonResource extends BaseCrudResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
