@@ -37,4 +37,11 @@ public interface InstitutionMapper extends CrudMapper<Institution>, ContactableM
    * @return the count of the institutions marked as deleted.
    */
   long countDeleted();
+
+  /**
+   * Finds an institution by any of its identifiers.
+   *
+   * @return the keys of the institutions
+   */
+  List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
 }

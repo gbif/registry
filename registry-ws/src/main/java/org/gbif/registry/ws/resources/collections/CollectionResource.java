@@ -28,6 +28,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
+
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
  * implementation of {@link CollectionService}.
@@ -35,7 +37,7 @@ import com.google.inject.Singleton;
 @Singleton
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Path("grscicoll/collection")
+@Path(GRSCICOLL_PATH + "/collection")
 public class CollectionResource extends BaseExtendableCollectionResource<Collection>
     implements CollectionService {
 
