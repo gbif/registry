@@ -41,4 +41,11 @@ public interface CollectionMapper
    * @return the count of the collections marked as deleted.
    */
   long countDeleted();
+
+  /**
+   * Finds a collection by any of its identifiers.
+   *
+   * @return the keys of the collections
+   */
+  List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
 }
