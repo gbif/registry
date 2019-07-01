@@ -15,6 +15,30 @@
     {
       "name": "datacite.api",
       "type": "java.lang.String"
+    },
+    {
+      "name": "mail.devemail.enabled",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "name": "mail.smtp.host",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.smtp.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "name": "mail.devemail",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.cc",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.from",
+      "type": "java.lang.String"
     }
   ]
 }

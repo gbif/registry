@@ -1,0 +1,39 @@
+# application.yml
+
+# todo find proper solution
+#mail:
+#  cc: @mail.cc@
+#  from: username
+#  smtp:
+#    host: localhost
+#    port: 2525
+#  devemail:
+#    enabled: @mail.devemail.enabled@
+#    address: gbifregistry@malinator.com
+
+mail:
+  cc: cc3
+  bcc: cc4
+
+spring:
+  datasource:
+    url: @registry-it.db.url@
+    username: @registry-it.db.username@
+    password: @registry-it.db.password@
+  liquibase:
+    change-log: classpath:liquibase/master.xml
+  mail:
+    default-encoding: UTF-8
+    host: localhost
+    username: username
+    password:
+    port: 2525
+    properties:
+      mail:
+        debug: false
+        smtp:
+          debug: false
+          auth: true
+          starttls: true
+    protocol: smtp
+    test-connection: false

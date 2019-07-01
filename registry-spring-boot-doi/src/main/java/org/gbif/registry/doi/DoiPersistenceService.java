@@ -5,10 +5,11 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 
+// TODO: 2019-06-28 unify approach
 /**
  * DOI data access object.
  */

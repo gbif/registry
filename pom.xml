@@ -40,6 +40,9 @@
     <module>registry-spring-boot-cli</module>
     <module>registry-spring-boot-metadata</module>
     <module>registry-spring-boot-persistence</module>
+    <module>registry-spring-boot-surety</module>
+    <module>registry-spring-boot-identity</module>
+    <module>registry-spring-boot-integration-tests</module>
   </modules>
 
   <properties>
@@ -50,8 +53,7 @@
     <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
     <gbif-postal-service.version>0.34-SNAPSHOT</gbif-postal-service.version>
     <download-query-tools.version>1.24</download-query-tools.version>
-    <gbif-api.version>0.81</gbif-api.version>
-    <hibernate-validator.version>5.4.1.Final</hibernate-validator.version>
+    <gbif-api.version>0.82-SNAPSHOT</gbif-api.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -69,6 +71,12 @@
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-doi</artifactId>
         <version>${project.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
@@ -83,6 +91,16 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-persistence</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-surety</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-identity</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -104,16 +122,25 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-mybatis</artifactId>
         <version>${gbif-common-mybatis.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.common</groupId>
         <artifactId>gbif-postal-service</artifactId>
         <version>${gbif-postal-service.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-validator</artifactId>
-        <version>${hibernate-validator.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

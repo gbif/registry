@@ -53,7 +53,14 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-persistence</artifactId>
-      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-surety</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-identity</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
@@ -70,12 +77,25 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>org.gbif.registry.GbifRegistryApplication</mainClass>
+          <mainClass>org.gbif.registry.RegistryWsApplication</mainClass>
           <addResources>false</addResources>
           <folders>conf/</folders>
         </configuration>

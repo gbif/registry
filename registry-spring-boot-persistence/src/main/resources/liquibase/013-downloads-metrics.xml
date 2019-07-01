@@ -1,0 +1,39 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Tables for maintaining information related to occurrence download and usages of datasets in occurrence downloads. 
+  -->
+  <changeSet id="13" author="fede">
+    <sql>
+    -- 
+	--  download
+	-- 
+	CREATE TYPE enum_downlad_status AS ENUM ('PREPARING', 'RUNNING', 'SUCCEEDED', 'KILLED', 'FAILED', 'SUSPENDED');	
+	CREATE TABLE occurrence_download
+	(
+	  key varchar(255) NOT NULL PRIMARY KEY,
+	  filter text,
+	  status enum_downlad_status NOT NULL,
+	  download_link text NOT NULL,
+	  notification_addresses text,
+	  created_by varchar(255) NOT NULL CHECK (assert_min_length(created_by, 3)),
+	  created timestamp with time zone NOT NULL DEFAULT now(),	  
+  	  modified timestamp with time zone NOT NULL DEFAULT now()
+	);
+	
+	-- 
+	--  download metrics
+	-- 
+	CREATE TABLE dataset_occurrence_download
+	(
+	  download_key varchar(255) NOT NULL  REFERENCES occurrence_download(key) ON DELETE CASCADE,
+	  dataset_key uuid NOT NULL REFERENCES dataset(key) ON DELETE CASCADE,
+	  number_records integer NOT NULL,
+	  PRIMARY KEY (download_key,dataset_key)
+	);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

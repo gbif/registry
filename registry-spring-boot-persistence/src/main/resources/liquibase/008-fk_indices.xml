@@ -1,0 +1,17 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+	
+  <!--  
+    Add indices for the most important foreign keys on organization and dataset tables.
+  -->
+  <changeSet id="8" author="markus">
+    <sql>
+      <!-- explain analyze shows 7.834 ms -> 0.559ms -->
+      CREATE INDEX dataset_num_datasets_idx ON dataset (owning_organization_key) WHERE deleted IS NULL;
+      CREATE INDEX organization_endorsing_node_key_idx ON organization (endorsing_node_key);
+      CREATE INDEX dataset_installation_key_idx ON dataset (installation_key);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

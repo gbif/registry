@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @MapperScan("org.gbif.registry.persistence.mapper")
-public class GbifRegistryApplication {
+public class RegistryWsApplication {
   public static void main(String[] args) {
-    SpringApplication.run(GbifRegistryApplication.class, args);
+    SpringApplication.run(RegistryWsApplication.class, args);
   }
 }
