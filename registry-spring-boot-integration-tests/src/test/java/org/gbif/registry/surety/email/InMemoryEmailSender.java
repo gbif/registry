@@ -1,5 +1,7 @@
 package org.gbif.registry.surety.email;
 
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +11,7 @@ import java.util.Map;
  * - 1 {@link BaseEmailModel} is stored per email address
  * - no automatic cleanup
  */
+@Service
 public class InMemoryEmailSender implements EmailSender {
 
   private final Map<String, BaseEmailModel> emails = new HashMap<>();

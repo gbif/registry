@@ -24,7 +24,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private static final Logger LOG = LoggerFactory.getLogger(UserSuretyDelegateImpl.class);
 
   private final ChallengeCodeManager<Integer> challengeCodeManager;
-  private final EmailSender emailSender;
+  private EmailSender emailSender;
   private final IdentityEmailManager identityEmailManager;
 
   public UserSuretyDelegateImpl(EmailSender emailSender,

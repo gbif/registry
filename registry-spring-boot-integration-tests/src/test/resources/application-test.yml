@@ -15,6 +15,14 @@ mail:
   cc: cc3
   bcc: cc4
 
+  # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
+identity:
+  surety:
+    mail:
+      urlTemplate:
+        confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
+        resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
+
 spring:
   datasource:
     url: @registry-it.db.url@

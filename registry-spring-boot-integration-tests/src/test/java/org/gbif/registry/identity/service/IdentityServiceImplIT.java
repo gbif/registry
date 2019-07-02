@@ -1,21 +1,31 @@
 package org.gbif.registry.identity.service;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
+import org.gbif.registry.identity.surety.IdentityEmailManager;
 import org.gbif.registry.persistence.mapper.ChallengeCodeMapper;
-import org.gbif.registry.persistence.mapper.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.UserMapper;
+import org.gbif.registry.surety.ChallengeCodeManager;
+import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.email.InMemoryEmailSender;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,32 +35,57 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+// TODO: 2019-07-02 add appKeyWhiteList
 @SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class IdentityServiceImplIT {
-
-  // TODO: 2019-06-28 run liquibase on startup
-  // TODO: 2019-06-28 run table truncate each time launch the test?
 
   private static final String TEST_PASSWORD = "[password]";
   private static final String TEST_PASSWORD2 = "]password[";
   private static final AtomicInteger index = new AtomicInteger(0);
 
   @Autowired
-  private IdentityService identityService;
+  private DataSource dataSource;
+
+  @Autowired
+  @Qualifier("inMemoryEmailSender")
+  private EmailSender inMemoryEmailSender;
 
   @Autowired
   private ChallengeCodeMapper challengeCodeMapper;
 
-  // TODO: 2019-06-28 should be userMapper?
-  // TODO: 2019-06-28 rename?
   @Autowired
-//  private UserMapper challengeCodeSupportMapper;
-  private ChallengeCodeSupportMapper<Integer> challengeCodeSupportMapper;
+  private UserMapper userMapper;
 
   @Autowired
-  private InMemoryEmailSender inMemoryEmailSender;
+  private ChallengeCodeManager<Integer> challengeCodeManager;
+
+  @Autowired
+  private IdentityEmailManager identityEmailManager;
+
+  private IdentityService identityService;
+
+  // TODO: 2019-07-02 replace with configuration or stuff
+  @Before
+  public void setUp() {
+    UserSuretyDelegate userSuretyDelegate = new UserSuretyDelegateImpl(inMemoryEmailSender, challengeCodeManager, identityEmailManager);
+    identityService = new IdentityServiceImpl(userMapper, userSuretyDelegate);
+
+    cleanDb();
+  }
+
+  // TODO: 2019-07-02 before each run?
+  private void cleanDb() {
+      try (Connection connection = dataSource.getConnection();
+           PreparedStatement deleteUsers = connection.prepareStatement("TRUNCATE public.user");
+           PreparedStatement deleteRight = connection.prepareStatement("TRUNCATE editor_rights")) {
+        deleteUsers.execute();
+        deleteRight.execute();
+      } catch (SQLException e) {
+        Throwables.propagate(e);
+      }
+  }
 
   /**
    * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
@@ -155,6 +190,7 @@ public class IdentityServiceImplIT {
     assertNull("Can NOT get the user using wrong systemSettings", newUser);
   }
 
+  // TODO: 2019-07-02 floating behaviour (fails if run all tests)
   @Test
   public void testCreateUserChallengeCodeSequence() {
     GbifUser user = createConfirmedUser(identityService, inMemoryEmailSender);
@@ -179,6 +215,7 @@ public class IdentityServiceImplIT {
     assertNotNull("Can login after the challenge code is confirmed", identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
   }
 
+  // TODO: 2019-07-02 floating behaviour
   @Test
   public void testCrudEditorRights() {
     GbifUser u1 = generateUser();
@@ -202,6 +239,7 @@ public class IdentityServiceImplIT {
   /**
    * Generates a different user on each call.
    * Thread-Safe
+   *
    * @return
    */
   public static GbifUser generateUser() {
@@ -221,16 +259,17 @@ public class IdentityServiceImplIT {
   /**
    * Creates a new user and confirms its challenge code.
    * No assertion performed.
+   *
    * @return
    */
-  public GbifUser createConfirmedUser(IdentityService identityService, InMemoryEmailSender inMemoryEmailManager) {
+  public GbifUser createConfirmedUser(IdentityService identityService, EmailSender inMemoryEmailManager) {
     GbifUser u1 = generateUser();
     // create the user
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     //ensure we got an email
-    assertNotNull("The user got an email with the challenge code", inMemoryEmailManager.getEmail(u1.getEmail()));
+    assertNotNull("The user got an email with the challenge code", ((InMemoryEmailSender) inMemoryEmailManager).getEmail(u1.getEmail()));
 
     //ensure we can not login
     assertNull("Can not login until the challenge code is confirmed", identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
@@ -248,6 +287,6 @@ public class IdentityServiceImplIT {
   }
 
   private UUID getChallengeCode(Integer entityKey) {
-    return challengeCodeMapper.getChallengeCode(challengeCodeSupportMapper.getChallengeCodeKey(entityKey));
+    return challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(entityKey));
   }
 }

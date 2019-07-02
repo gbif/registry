@@ -7,30 +7,37 @@ import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.BaseTemplateDataModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.email.EmailType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
- * Manager responsible to generate {@link BaseEmailModel} for each {@link IdentityEmailConfiguration.EmailType}.
+ * Manager responsible to generate {@link BaseEmailModel}.
  */
 @Service
 public class IdentityEmailManager {
 
-  // TODO: 2019-07-01 replace these fields with beans
-  private final IdentityEmailConfiguration identityEmailConfiguration;
+  @Value("${identity.surety.mail.urlTemplate.confirmUser}")
+  private String confirmUserUrlTemplate;
+
+  @Value("${identity.surety.mail.urlTemplate.resetPassword}")
+  private String resetPasswordUrlTemplate;
+
   private final EmailTemplateProcessor emailTemplateProcessor;
 
-  public IdentityEmailManager(IdentityEmailConfiguration identityEmailConfiguration, EmailTemplateProcessor emailTemplateProcessor) {
-    this.identityEmailConfiguration = identityEmailConfiguration;
+  public IdentityEmailManager(EmailTemplateProcessor emailTemplateProcessor) {
     this.emailTemplateProcessor = emailTemplateProcessor;
   }
 
   public BaseEmailModel generateNewUserEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
-      return generateConfirmationEmailModel(user, identityEmailConfiguration.generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
+      return generateConfirmationEmailModel(user, generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
           IdentityEmailType.NEW_USER);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -39,7 +46,7 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateResetPasswordEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
-      return generateConfirmationEmailModel(user, identityEmailConfiguration.generateResetPasswordUrl(user.getUserName(), challengeCode.getCode()),
+      return generateConfirmationEmailModel(user, generateResetPasswordUrl(user.getUserName(), challengeCode.getCode()),
           IdentityEmailType.RESET_PASSWORD);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -63,5 +70,13 @@ public class IdentityEmailManager {
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, Locale.ENGLISH);
+  }
+
+  private URL generateConfirmUserUrl(String userName, UUID confirmationKey) throws MalformedURLException {
+    return new URL(MessageFormat.format(confirmUserUrlTemplate, userName, confirmationKey.toString()));
+  }
+
+  private URL generateResetPasswordUrl(String userName, UUID confirmationKey) throws MalformedURLException {
+    return new URL(MessageFormat.format(resetPasswordUrlTemplate, userName, confirmationKey.toString()));
   }
 }

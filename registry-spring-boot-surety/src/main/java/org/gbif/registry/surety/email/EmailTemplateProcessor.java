@@ -17,14 +17,12 @@ import static freemarker.template.Configuration.VERSION_2_3_25;
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
  */
-// TODO: 2019-06-27 make it a valid spring bean
-// TODO: 2019-06-27 subjectProvider & templateFileProvider convert to classes (spring beans)
-  @Service
+@Service
 public class EmailTemplateProcessor {
 
   private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
-  //shared config among all instances
+  // shared config among all instances
   private static final Configuration FREEMARKER_CONFIG = new Configuration(VERSION_2_3_25);
 
   static {
@@ -53,7 +51,7 @@ public class EmailTemplateProcessor {
   /**
    * Build a {@link BaseEmailModel} from
    *
-   * @param emailType template type (new user, reset password or welcome)
+   * @param emailType         template type (new user, reset password or welcome)
    * @param emailAddress
    * @param templateDataModel
    * @param locale            if null is provided {@link #DEFAULT_LOCALE} will be used
@@ -76,5 +74,4 @@ public class EmailTemplateProcessor {
     FREEMARKER_CONFIG.getTemplate(emailDataProvider.getTemplate(emailLocale, emailType)).process(templateDataModel, contentBuffer);
     return new BaseEmailModel(emailAddress, emailDataProvider.getSubject(emailLocale, emailType), contentBuffer.toString(), ccAddresses);
   }
-
 }

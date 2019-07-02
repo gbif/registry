@@ -25,6 +25,11 @@
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-persistence</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+      <version>0.40</version>
+    </dependency>
 
 
     <!-- todo check for starters -->
