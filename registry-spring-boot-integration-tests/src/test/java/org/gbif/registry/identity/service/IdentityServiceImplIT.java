@@ -7,12 +7,11 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
-import org.gbif.registry.identity.surety.IdentityEmailManager;
 import org.gbif.registry.persistence.mapper.ChallengeCodeMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
-import org.gbif.registry.surety.ChallengeCodeManager;
 import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.email.InMemoryEmailSender;
+import org.gbif.registry.ws.TestEmailConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +35,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 // TODO: 2019-07-02 add appKeyWhiteList
-@SpringBootTest
+@SpringBootTest(classes = {TestEmailConfiguration.class})
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class IdentityServiceImplIT {
@@ -59,19 +58,10 @@ public class IdentityServiceImplIT {
   private UserMapper userMapper;
 
   @Autowired
-  private ChallengeCodeManager<Integer> challengeCodeManager;
-
-  @Autowired
-  private IdentityEmailManager identityEmailManager;
-
   private IdentityService identityService;
 
-  // TODO: 2019-07-02 replace with configuration or stuff
   @Before
   public void setUp() {
-    UserSuretyDelegate userSuretyDelegate = new UserSuretyDelegateImpl(inMemoryEmailSender, challengeCodeManager, identityEmailManager);
-    identityService = new IdentityServiceImpl(userMapper, userSuretyDelegate);
-
     cleanDb();
   }
 
@@ -286,7 +276,8 @@ public class IdentityServiceImplIT {
     return user;
   }
 
+  // TODO: 2019-07-10 string
   private UUID getChallengeCode(Integer entityKey) {
-    return challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(entityKey));
+    return UUID.fromString(challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(entityKey)));
   }
 }

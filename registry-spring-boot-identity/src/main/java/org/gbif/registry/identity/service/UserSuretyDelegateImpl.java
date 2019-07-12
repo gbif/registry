@@ -9,6 +9,7 @@ import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private EmailSender emailSender;
   private final IdentityEmailManager identityEmailManager;
 
-  public UserSuretyDelegateImpl(EmailSender emailSender,
+  public UserSuretyDelegateImpl(@Qualifier("emailSender") EmailSender emailSender,
                          ChallengeCodeManager<Integer> challengeCodeManager,
                          IdentityEmailManager identityEmailManager) {
     this.emailSender = emailSender;

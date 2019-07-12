@@ -58,6 +58,11 @@
     <datacite.api.base.url/>
     <datacite.user/>
     <datacite.password/>
+
+    <mail.host/>
+    <mail.username/>
+    <mail.password/>
+    <mail.port/>
   </properties>
 
   <dependencyManagement>
@@ -117,6 +122,12 @@
         <groupId>org.gbif.occurrence</groupId>
         <artifactId>download-query-tools</artifactId>
         <version>${download-query-tools.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

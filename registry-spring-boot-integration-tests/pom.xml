@@ -28,6 +28,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+      <version>5.1.5.RELEASE</version>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-ws</artifactId>
       <scope>test</scope>

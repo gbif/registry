@@ -7,14 +7,14 @@ import org.junit.runners.Parameterized.Parameters;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(value = Parameterized.class)
-public class PasswordEncoderTest {
+@RunWith(Parameterized.class)
+public class RegistryPasswordEncoderTest {
 
-  private PasswordEncoder encoder = new PasswordEncoder();
+  private RegistryPasswordEncoder encoder = new RegistryPasswordEncoder();
   private String password;
   private String hash;
 
-  public PasswordEncoderTest(String password, String hash) {
+  public RegistryPasswordEncoderTest(String password, String hash) {
     this.password = password;
     this.hash = hash;
   }

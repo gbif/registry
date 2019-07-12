@@ -2,6 +2,7 @@ package org.gbif.registry.identity.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,20 +26,20 @@ import java.security.SecureRandom;
  *
  * Mostly this code is copied from http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
  */
-public class PasswordEncoder {
+public class RegistryPasswordEncoder implements PasswordEncoder {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PasswordEncoder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RegistryPasswordEncoder.class);
   private static final String ALGORITHM = "SHA-512";
   private static final SecureRandom RANDOM = new SecureRandom();
   private static final String PASSWORD_ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
   private final int encodedHashLength;
 
-  public PasswordEncoder() {
+  public RegistryPasswordEncoder() {
     encodedHashLength = 55;
   }
 
-  public PasswordEncoder(int hashLength) {
+  public RegistryPasswordEncoder(int hashLength) {
     encodedHashLength = hashLength;
   }
 
@@ -72,9 +73,15 @@ public class PasswordEncoder {
    * @param password to encode
    * @return the encoded password which will have a random salt
    */
-  public String encode(String password) {
+  @Override
+  public String encode(CharSequence password) {
     String settingsHash = randomSalt();
-    return encode(password, settingsHash);
+    return encode(password.toString(), settingsHash);
+  }
+
+  @Override
+  public boolean matches(CharSequence rawPassword, String encodedPassword) {
+    return encode(rawPassword.toString(), encodedPassword).equalsIgnoreCase(encodedPassword);
   }
 
   /**
@@ -125,7 +132,7 @@ public class PasswordEncoder {
   /**
    * Encodes the input using some smarts.
    * Understanding those smarts is an exercise left to the reader.
-   * @see http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
+   * @see <a href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords"/>
    */
   private static String base64Encode(byte[] input, int count) {
 

@@ -2,8 +2,8 @@ package org.gbif.registry.surety.email;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ import static org.gbif.registry.surety.email.RegistryEmailUtils.toAddress;
  * Allows to send {@link BaseEmailModel}
  */
 @Service
-@Primary
+@Qualifier("emailSender")
 class EmailSenderImpl implements EmailSender {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailSenderImpl.class);
@@ -55,7 +55,7 @@ class EmailSenderImpl implements EmailSender {
               final MimeMessage msg = mailSender.createMimeMessage();
               //from will be set with the value from the {@link Session} object.
               msg.setFrom();
-              // TODO: 2019-06-27 ask why cc and bcc squashed
+              // TODO: 2019-06-27 why cc and bcc squashed
               msg.setRecipient(Message.RecipientType.TO, emailAddress);
 //              msg.setRecipient(Message.RecipientType.CC, emailModel);
               msg.setRecipients(Message.RecipientType.BCC, getUnitedBccArray(getProcessedBccAddresses(), emailModel));

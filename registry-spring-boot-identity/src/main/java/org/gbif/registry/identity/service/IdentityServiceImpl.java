@@ -14,7 +14,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.PropertyConstants;
 import org.gbif.registry.identity.model.UserModelMutationResult;
-import org.gbif.registry.identity.util.PasswordEncoder;
+import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,8 +38,8 @@ import static org.gbif.registry.identity.model.UserModelMutationResult.withSingl
 /**
  * Main implementation of {@link IdentityService} on top of mybatis.
  * Notes:
- *  - usernames are case insensitive but the constraint in the db only allows lowercase at the moment (could be removed)
- *  - emails are stored as provided (the case is preserved) but are queried in lowercase
+ * - usernames are case insensitive but the constraint in the db only allows lowercase at the moment (could be removed)
+ * - emails are stored as provided (the case is preserved) but are queried in lowercase
  */
 @Service
 class IdentityServiceImpl implements IdentityService {
@@ -59,7 +59,7 @@ class IdentityServiceImpl implements IdentityService {
       .map(String::trim)
       .orElse(null);
 
-  private static final PasswordEncoder PASSWORD_ENCODER = new PasswordEncoder();
+  private static final RegistryPasswordEncoder PASSWORD_ENCODER = new RegistryPasswordEncoder();
 
   @Autowired
   public IdentityServiceImpl(UserMapper userMapper, UserSuretyDelegate userSuretyDelegate) {
@@ -67,7 +67,6 @@ class IdentityServiceImpl implements IdentityService {
     this.userSuretyDelegate = userSuretyDelegate;
   }
 
-  // TODO: 2019-06-28 make sure it's really transactional
   @Override
   @Transactional
   public UserModelMutationResult create(GbifUser rawUser, String password) {
@@ -77,14 +76,14 @@ class IdentityServiceImpl implements IdentityService {
       return withError(ModelMutationError.USER_ALREADY_EXIST);
     }
 
-    if(StringUtils.isBlank(password) || !PASSWORD_LENGTH_RANGE.contains(password.length())) {
+    if (StringUtils.isBlank(password) || !PASSWORD_LENGTH_RANGE.contains(password.length())) {
       return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
     }
 
     user.setPasswordHash(PASSWORD_ENCODER.encode(password));
 
     Optional<UserModelMutationResult> beanValidation = validateBean(user, PrePersist.class);
-    if(beanValidation.isPresent()){
+    if (beanValidation.isPresent()) {
       return beanValidation.get();
     }
     userMapper.create(user);
@@ -111,7 +110,7 @@ class IdentityServiceImpl implements IdentityService {
           }
 
           Optional<UserModelMutationResult> beanValidation = validateBean(user, PostPersist.class);
-          if(beanValidation.isPresent()){
+          if (beanValidation.isPresent()) {
             return beanValidation.get();
           }
 
@@ -123,6 +122,7 @@ class IdentityServiceImpl implements IdentityService {
 
   /**
    * Runs a Java bean validation on the provided {@link GbifUser} and a scope (e.g. PostPersist.class)
+   *
    * @param gbifUser
    * @param scope
    * @return
@@ -150,6 +150,7 @@ class IdentityServiceImpl implements IdentityService {
   /**
    * Get a {@link GbifUser} using its identifier (username or email).
    * The username is case insensitive.
+   *
    * @param identifier
    * @return {@link GbifUser} or null
    */
@@ -166,6 +167,7 @@ class IdentityServiceImpl implements IdentityService {
   /**
    * Get a {@link GbifUser} using its email.
    * The email is case insensitive.
+   *
    * @param email
    * @return {@link GbifUser} or null
    */
@@ -187,9 +189,9 @@ class IdentityServiceImpl implements IdentityService {
 
   /**
    * Authenticate a user
+   *
    * @param username username or email address
    * @param password clear text password
-   *
    * @return
    */
   @Override
@@ -212,7 +214,7 @@ class IdentityServiceImpl implements IdentityService {
   }
 
   @Override
-  public void updateLastLogin(int userKey){
+  public void updateLastLogin(int userKey) {
     userMapper.updateLastLogin(userKey);
   }
 
@@ -251,7 +253,7 @@ class IdentityServiceImpl implements IdentityService {
   public UserModelMutationResult updatePassword(int userKey, String newPassword) {
     return Optional.ofNullable(userMapper.getByKey(userKey))
         .map(user -> {
-          if(StringUtils.isBlank(newPassword) || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
+          if (StringUtils.isBlank(newPassword) || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
             return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
           }
           user.setPasswordHash(PASSWORD_ENCODER.encode(newPassword));
@@ -264,12 +266,13 @@ class IdentityServiceImpl implements IdentityService {
   /**
    * The main purpose of this method is to normalize the content of some fields from a {@link GbifUser}.
    * The goal is to ensure we can query this object in the same way we handle inserts/updates.
-   *  - trim() on username
-   *  - trim() + toLowerCase() on emails
+   * - trim() on username
+   * - trim() + toLowerCase() on emails
+   *
    * @param gbifUser
    * @return
    */
-  private static GbifUser normalize(GbifUser gbifUser){
+  private static GbifUser normalize(GbifUser gbifUser) {
     gbifUser.setUserName(NORMALIZE_USERNAME_FCT.apply(gbifUser.getUserName()));
     gbifUser.setEmail(NORMALIZE_EMAIL_FCT.apply(gbifUser.getEmail()));
     return gbifUser;

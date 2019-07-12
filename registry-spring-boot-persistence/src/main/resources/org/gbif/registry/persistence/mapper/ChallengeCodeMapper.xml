@@ -20,7 +20,7 @@
     VALUES(<include refid="WRITABLE_FIELD_TYPES"/>)
   </insert>
 
-  <select id="getChallengeCode" resultType="java.util.UUID">
+  <select id="getChallengeCode" resultType="String" >
     SELECT challenge_code FROM challenge_code WHERE key = #{key}
   </select>
 

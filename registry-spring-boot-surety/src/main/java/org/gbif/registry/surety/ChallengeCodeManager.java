@@ -39,8 +39,9 @@ public class ChallengeCodeManager<K> {
     if (key == null || challengeCode == null) {
       return false;
     }
+    // TODO: 2019-07-10 use string for now
     Integer ccKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
-    return ccKey != null && challengeCode.equals(challengeCodeMapper.getChallengeCode(ccKey));
+    return ccKey != null && challengeCode.equals(UUID.fromString(challengeCodeMapper.getChallengeCode(ccKey)));
   }
 
   /**

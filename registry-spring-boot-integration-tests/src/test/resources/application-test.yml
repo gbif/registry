@@ -28,20 +28,24 @@ spring:
     url: @registry-it.db.url@
     username: @registry-it.db.username@
     password: @registry-it.db.password@
+    initialization-mode: always
+    continue-on-error: false
   liquibase:
     change-log: classpath:liquibase/master.xml
   mail:
     default-encoding: UTF-8
-    host: localhost
-    username: username
-    password:
-    port: 2525
+    host: @mail.host@
+    username: @mail.username@
+    password: @mail.password@
+    port: @mail.port@
     properties:
       mail:
         debug: false
+        transport:
+          protocol: smtp
         smtp:
-          debug: false
           auth: true
-          starttls: true
+          starttls:
+            enable: true
     protocol: smtp
     test-connection: false
