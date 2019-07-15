@@ -82,9 +82,7 @@
     index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     logo_url = #{logoUrl,jdbcType=VARCHAR},
     cites_permit_number = #{citesPermitNumber,jdbcType=VARCHAR},
-    created_by = #{createdBy,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
-    created = now(), <!-- created -->
     modified = now(), <!-- modified -->
     deleted = null <!-- if we're updating it can't be deleted -->
   </sql>

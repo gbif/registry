@@ -28,6 +28,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
@@ -317,6 +318,7 @@ public class PersonIT extends CrudTest<Person> {
     assertEquals(POSITION_UPDATED, person.getPosition());
     assertEquals(PHONE_UPDATED, person.getPhone());
     assertEquals(EMAIL, person.getEmail());
+    assertNotEquals(person.getCreated(), person.getModified());
   }
 
   @Override
