@@ -26,6 +26,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
 
@@ -211,11 +212,12 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
   }
 
   @Override
-  protected void assertUpdatedEntity(Institution entity) {
-    assertEquals(CODE_UPDATED, entity.getCode());
-    assertEquals(NAME_UPDATED, entity.getName());
-    assertEquals(DESCRIPTION_UPDATED, entity.getDescription());
-    assertEquals(1, entity.getAdditionalNames().size());
+  protected void assertUpdatedEntity(Institution institution) {
+    assertEquals(CODE_UPDATED, institution.getCode());
+    assertEquals(NAME_UPDATED, institution.getName());
+    assertEquals(DESCRIPTION_UPDATED, institution.getDescription());
+    assertEquals(1, institution.getAdditionalNames().size());
+    assertNotEquals(institution.getCreated(), institution.getModified());
   }
 
   @Override

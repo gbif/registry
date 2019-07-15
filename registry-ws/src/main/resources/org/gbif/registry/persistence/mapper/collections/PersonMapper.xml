@@ -51,9 +51,7 @@
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
     primary_institution_key = #{primaryInstitutionKey,jdbcType=OTHER},
     primary_collection_key = #{primaryCollectionKey,jdbcType=OTHER},
-    created_by = #{createdBy,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
-    created = now(), <!-- created -->
     modified = now(), <!-- modified -->
     deleted = null <!-- if we're updating it can't be deleted -->
   </sql>
