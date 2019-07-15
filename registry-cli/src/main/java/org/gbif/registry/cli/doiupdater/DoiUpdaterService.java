@@ -30,7 +30,7 @@ public class DoiUpdaterService extends AbstractIdleService {
     Injector inj = Guice.createInjector(
       new RegistryMyBatisModule(config.registry.toRegistryProperties()));
 
-    listener = new MessageListener(config.messaging.getConnectionParameters());
+    listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     listener.listen(config.queueName, 1,
       new DoiUpdateListener(CommonBuilder.createRestJsonApiDataCiteService(config.datacite), inj.getInstance(DoiMapper.class), config.timeToRetryInMs));
   }
