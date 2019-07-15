@@ -28,6 +28,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
@@ -72,11 +73,8 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
 
   @Test
   public void listWithoutParametersTest() {
-    Collection collection1 = newEntity();
-    UUID key1 = collectionService.create(collection1);
-
-    Collection collection2 = newEntity();
-    UUID key2 = collectionService.create(collection2);
+    collectionService.create(newEntity());
+    collectionService.create(newEntity());
 
     Collection collection3 = newEntity();
     UUID key3 = collectionService.create(collection3);
@@ -286,6 +284,7 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
     assertEquals(NAME_UPDATED, collection.getName());
     assertEquals(DESCRIPTION_UPDATED, collection.getDescription());
     assertEquals(ACCESSION_STATUS_UPDATED, collection.getAccessionStatus());
+    assertNotEquals(collection.getCreated(), collection.getModified());
   }
 
   @Override
