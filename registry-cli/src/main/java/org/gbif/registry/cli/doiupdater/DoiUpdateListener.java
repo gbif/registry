@@ -177,10 +177,14 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * @param doi Digital Object Identifier
    * @param target target URL
    * @param xml XML metadata
-   * @param currState current state of the DOI in the database
+   * @param currState current state of the DOI in the database (may not match a real DataCite status)
    */
   private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
-    final DoiStatus doiStatus = currState.getStatus();
+    DoiStatus doiStatus = currState.getStatus();
+    final DoiData dataciteDoiData = doiService.resolve(doi);
+    if (doiStatus == DoiStatus.REGISTERED && dataciteDoiData.getStatus() != DoiStatus.REGISTERED) {
+      doiStatus = DoiStatus.NEW;
+    }
     boolean registered = true;
     LOG.info("registerOrUpdate DOI {} with state {}", doi, currState.getStatus());
     switch (doiStatus) {
