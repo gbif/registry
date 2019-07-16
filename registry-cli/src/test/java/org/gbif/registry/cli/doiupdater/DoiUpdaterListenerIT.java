@@ -109,6 +109,25 @@ public class DoiUpdaterListenerIT {
     }
   }
 
+  // DB status REGISTERED, but missing at DataCite
+  @Test
+  public void handleMessageDoiWrongDefinedAsRegisteredAndMessageStatusRegisteredShouldCreateAndRegisterDoi() throws Exception {
+    // given
+    final DOI doi = newDoi();
+    // prepare a DOI which is wrongly defined in DB as registered
+    ChangeDoiMessage msg = prepareMessage(doi, "REGISTERED");
+    doiMapper.create(doi, DoiType.DOWNLOAD);
+    doiMapper.update(doi, new DoiData(REGISTERED, msg.getTarget()), msg.getMetadata());
+    assertEquals(new DoiData(REGISTERED, msg.getTarget()), getActualInDb(doi));
+
+    // when
+    doiUpdateListener.handleMessage(msg);
+
+    // then
+    assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDb(doi));
+    assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDataCite(doi));
+  }
+
   @Test
   public void handleMessageNewDoiAndMessageStatusRegisteredShouldCreateAndRegisterDoi() throws Exception {
     // given
