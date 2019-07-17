@@ -16,10 +16,12 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
+import org.gbif.doi.metadata.datacite.Affiliation;
 import org.gbif.doi.metadata.datacite.ContributorType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
+import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.metadata.datacite.ObjectFactory;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
@@ -356,11 +358,13 @@ public class DataCiteConverter {
 
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
-      creator.getAffiliation().add(contact.getOrganization());
+      final Affiliation affiliation = FACTORY.createAffiliation();
+      affiliation.setValue(contact.getOrganization());
+      creator.getAffiliation().add(affiliation);
     }
 
     for (String userId : contact.getUserId()) {
-      DataCiteMetadata.Creators.Creator.NameIdentifier nId = userIdToCreatorNameIdentifier(userId);
+      NameIdentifier nId = userIdToCreatorNameIdentifier(userId);
       if (nId != null) {
         creator.getNameIdentifier().add(nId);
         //we take the first we can support
@@ -381,8 +385,7 @@ public class DataCiteConverter {
     DataCiteMetadata.Creators.Creator.CreatorName name = FACTORY.createDataCiteMetadataCreatorsCreatorCreatorName();
     name.setValue(fullname);
     creator.setCreatorName(name);
-    DataCiteMetadata.Creators.Creator.NameIdentifier nid =
-      FACTORY.createDataCiteMetadataCreatorsCreatorNameIdentifier();
+    NameIdentifier nid = FACTORY.createNameIdentifier();
     nid.setValue(fullname);
     nid.setSchemeURI("gbif.org");
     nid.setNameIdentifierScheme("GBIF");
@@ -411,7 +414,7 @@ public class DataCiteConverter {
     contributor.setContributorType(contributorType);
 
     for (String userId : contact.getUserId()) {
-      DataCiteMetadata.Contributors.Contributor.NameIdentifier nId = userIdToContributorNameIdentifier(userId);
+      NameIdentifier nId = userIdToContributorNameIdentifier(userId);
       if (nId != null) {
         contributor.getNameIdentifier().add(nId);
         //we take the first we can support
@@ -428,7 +431,7 @@ public class DataCiteConverter {
    * @return a Creator.NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
    */
   @VisibleForTesting
-  protected static DataCiteMetadata.Creators.Creator.NameIdentifier userIdToCreatorNameIdentifier(String userId) {
+  protected static NameIdentifier userIdToCreatorNameIdentifier(String userId) {
     if (Strings.isNullOrEmpty(userId)) {
       return null;
     }
@@ -436,8 +439,7 @@ public class DataCiteConverter {
     for (Map.Entry<Pattern, String> scheme : SUPPORTED_SCHEMES.entrySet()) {
       Matcher matcher = scheme.getKey().matcher(userId);
       if (matcher.matches()) {
-        DataCiteMetadata.Creators.Creator.NameIdentifier nid =
-          FACTORY.createDataCiteMetadataCreatorsCreatorNameIdentifier();
+        NameIdentifier nid = FACTORY.createNameIdentifier();
         // group 0 = the entire string
         nid.setSchemeURI(matcher.group(1));
         nid.setValue(matcher.group(2));
@@ -454,7 +456,7 @@ public class DataCiteConverter {
    * @param userId
    * @return a Contributor.NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
    */
-  protected static DataCiteMetadata.Contributors.Contributor.NameIdentifier userIdToContributorNameIdentifier(String userId) {
+  protected static NameIdentifier userIdToContributorNameIdentifier(String userId) {
     if (Strings.isNullOrEmpty(userId)) {
       return null;
     }
@@ -462,8 +464,7 @@ public class DataCiteConverter {
     for (Map.Entry<Pattern, String> scheme : SUPPORTED_SCHEMES.entrySet()) {
       Matcher matcher = scheme.getKey().matcher(userId);
       if (matcher.matches()) {
-        DataCiteMetadata.Contributors.Contributor.NameIdentifier nid =
-          FACTORY.createDataCiteMetadataContributorsContributorNameIdentifier();
+        NameIdentifier nid = FACTORY.createNameIdentifier();
         // group 0 = the entire string
         nid.setSchemeURI(matcher.group(1));
         nid.setValue(matcher.group(2));
