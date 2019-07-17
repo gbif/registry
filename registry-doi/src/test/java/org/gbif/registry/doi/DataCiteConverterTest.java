@@ -30,6 +30,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
@@ -193,12 +194,12 @@ public class DataCiteConverterTest {
 
   @Test
   public void testUserIdToNameIdentifier() throws Exception {
-    DataCiteMetadata.Creators.Creator.NameIdentifier creatorNid =
+    NameIdentifier creatorNid =
             DataCiteConverter.userIdToCreatorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
     assertEquals("http://orcid.org/", creatorNid.getSchemeURI());
     assertEquals("0000-0000-0000-0001", creatorNid.getValue());
 
-    DataCiteMetadata.Contributors.Contributor.NameIdentifier contributorNid =
+    NameIdentifier contributorNid =
             DataCiteConverter.userIdToContributorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
     assertEquals("http://orcid.org/", contributorNid.getSchemeURI());
     assertEquals("0000-0000-0000-0001", contributorNid.getValue());
