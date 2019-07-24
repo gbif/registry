@@ -36,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserManagementIT {
 
   @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
   private UserMapper userMapper;
 
   @Autowired
@@ -60,7 +63,6 @@ public class UserManagementIT {
   public void testCreateUser() throws Exception {
     final UserCreation user = UserTestFixture.generateUser(ALTERNATE_USERNAME);
 
-    final ObjectMapper objectMapper = new ObjectMapper();
     final String userJsonString = objectMapper.writeValueAsString(user);
 
     // perform user creation and check response

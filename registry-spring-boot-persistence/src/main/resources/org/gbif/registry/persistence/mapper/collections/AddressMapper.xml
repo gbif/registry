@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.AddressMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="ADDRESS_MAP" type="org.gbif.api.model.collections.Address" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
+  <sql id="ADDRESS_WRITE_FIELDS">
+    address, city, province, postal_code, country
+  </sql>
+
+  <sql id="ADDRESS_READ_FIELDS">
+    key, address, city, province, postal_code, country
+  </sql>
+
+  <sql id="ADDRESS_PARAMS_CREATE">
+    #{address,jdbcType=VARCHAR},
+    #{city,jdbcType=VARCHAR},
+    #{province,jdbcType=VARCHAR},
+    #{postalCode,jdbcType=VARCHAR},
+    #{country,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="ADDRESS_PARAMS_UPDATE">
+    address = #{address,jdbcType=VARCHAR},
+    city = #{city,jdbcType=VARCHAR},
+    province = #{province,jdbcType=VARCHAR},
+    postal_code = #{postalCode,jdbcType=VARCHAR},
+    country = #{country,jdbcType=VARCHAR}
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.api.model.collections.Address" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO address(<include refid="ADDRESS_WRITE_FIELDS"/>)
+    VALUES(<include refid="ADDRESS_PARAMS_CREATE"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.collections.Address">
+    UPDATE address
+    SET <include refid="ADDRESS_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=INTEGER}
+  </update>
+
+  <delete id="delete">
+    DELETE from address WHERE key = #{key,jdbcType=INTEGER}
+  </delete>
+
+</mapper>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.PersonMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="COLLECTION_PERSON_MAP" type="org.gbif.api.model.collections.Person" autoMapping="true">
+    <id property="key" column="key" typeHandler="org.gbif.registry.persistence.mapper.handler.UUIDTypeHandler"/>
+    <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
+  </resultMap>
+
+  <sql id="PERSON_WRITE_FIELDS">
+    key, first_name, last_name, position, area_responsibility, research_pursuits, phone, fax, email,
+    mailing_address_key, primary_institution_key, primary_collection_key, created_by, modified_by,
+    created, modified
+  </sql>
+
+  <sql id="PERSON_READ_FIELDS">
+    p.key, p.first_name, p.last_name, p.position, p.area_responsibility, p.research_pursuits, p.phone, p.fax, p.email,
+    p.mailing_address_key, p.primary_institution_key, p.primary_collection_key, p.created_by, p.modified_by,
+    p.created, p.modified, p.deleted
+  </sql>
+
+  <sql id="PERSON_PARAMS_CREATE">
+    #{key,jdbcType=OTHER},
+    #{firstName,jdbcType=VARCHAR},
+    #{lastName,jdbcType=VARCHAR},
+    #{position,jdbcType=VARCHAR},
+    #{areaResponsibility,jdbcType=VARCHAR},
+    #{researchPursuits,jdbcType=VARCHAR},
+    #{phone,jdbcType=VARCHAR},
+    #{fax,jdbcType=VARCHAR},
+    #{email,jdbcType=VARCHAR},
+    #{mailingAddress.key,jdbcType=INTEGER},
+    #{primaryInstitutionKey,jdbcType=OTHER},
+    #{primaryCollectionKey,jdbcType=OTHER},
+    #{createdBy,jdbcType=VARCHAR},
+    #{modifiedBy,jdbcType=VARCHAR},
+    now(), <!-- created -->
+    now() <!-- modified -->
+  </sql>
+
+  <sql id="PERSON_PARAMS_UPDATE">
+    first_name = #{firstName,jdbcType=VARCHAR},
+    last_name = #{lastName,jdbcType=VARCHAR},
+    position = #{position,jdbcType=VARCHAR},
+    area_responsibility = #{areaResponsibility,jdbcType=VARCHAR},
+    research_pursuits = #{researchPursuits,jdbcType=VARCHAR},
+    phone = #{phone,jdbcType=VARCHAR},
+    fax = #{fax,jdbcType=VARCHAR},
+    email = #{email,jdbcType=VARCHAR},
+    mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
+    primary_institution_key = #{primaryInstitutionKey,jdbcType=OTHER},
+    primary_collection_key = #{primaryCollectionKey,jdbcType=OTHER},
+    modified_by = #{modifiedBy,jdbcType=VARCHAR},
+    modified = now(), <!-- modified -->
+    deleted = null <!-- if we're updating it can't be deleted -->
+  </sql>
+
+  <sql id="FULLTEXT_SEARCH">
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.api.model.collections.Person">
+    INSERT INTO collection_person(<include refid="PERSON_WRITE_FIELDS"/>)
+    VALUES(<include refid="PERSON_PARAMS_CREATE"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.collections.Person">
+    UPDATE collection_person
+    SET <include refid="PERSON_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE collection_person
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="COLLECTION_PERSON_MAP">
+    SELECT <include refid="PERSON_READ_FIELDS"/>
+    FROM collection_person p
+    WHERE p.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_READ_FIELDS"/>
+    FROM address
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="list" resultType="org.gbif.api.model.collections.Person" resultMap="COLLECTION_PERSON_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="PERSON_READ_FIELDS"/>
+    FROM collection_person p
+    <if test="query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
+    WHERE p.deleted IS NULL
+    <if test="institutionKey != null" >
+      AND p.primary_institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
+    <if test="collectionKey != null" >
+      AND p.primary_collection_key = #{collectionKey,jdbcType=OTHER}
+    </if>
+    ORDER BY <if test="query != null" >ts_rank_cd(p.fulltext_search, query) DESC, </if>p.created DESC, p.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Long">
+    SELECT COUNT(*)
+    FROM collection_person p
+    <if test="query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
+    WHERE p.deleted IS NULL
+    <if test="institutionKey != null" >
+      AND p.primary_institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
+    <if test="collectionKey != null" >
+      AND p.primary_collection_key = #{collectionKey,jdbcType=OTHER}
+    </if>
+  </select>
+
+  <select id="deleted" resultType="org.gbif.api.model.collections.Person"  resultMap="COLLECTION_PERSON_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="PERSON_READ_FIELDS"/>
+    FROM collection_person p
+    WHERE p.deleted IS NOT NULL
+    ORDER BY p.created DESC, p.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDeleted" resultType="Long">
+    SELECT count(*)
+    FROM collection_person
+    WHERE deleted IS NOT NULL
+  </select>
+
+  <!-- Simple suggest -->
+  <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.PersonSuggestResult">
+    SELECT key,first_name,last_name,email FROM (
+                                                 (SELECT key,first_name,last_name,email
+                                                  FROM collection_person
+                                                  WHERE unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' ORDER BY first_name,last_name LIMIT 20)
+                                                 UNION ALL
+                                                 (SELECT key,first_name,last_name,email
+                                                  FROM collection_person
+                                                  WHERE unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' ORDER BY last_name LIMIT 20)
+                                                 UNION ALL
+                                                 (SELECT key,first_name,last_name,email
+                                                  FROM collection_person
+                                                  WHERE unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike '%'||unaccent(#{q})||'%'
+                                                    AND NOT unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%'
+                                                    AND NOT unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%'
+                                                  ORDER BY first_name,last_name LIMIT 20)
+                                               ) t1 LIMIT 20
+  </select>
+
+</mapper>
