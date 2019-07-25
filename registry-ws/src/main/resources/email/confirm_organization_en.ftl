@@ -5,6 +5,12 @@
 
 <p>A new organization is requesting to be endorsed by <b>${endorsingNode.title}.</b><p>
 
+<p><b>${organization.title!}</b></p>
+
+<p>To help you decide whether to endorse this organization, consult our <a href="https://www.gbif.org/endorsement-guidelines">endorsement guidelines</a> and the information included below.  If you are ready to endorse, you can go straight ahead, using the link at the bottom of this email.  If the process takes longer, if you cannot take it on at this time, or if you decide against endorsing the organization, please notify us by email to helpdesk@gbif.org.</p>
+
+<p>Please remember our commitment to prospective publishers, and respond to this endorsement request as soon as possible, and within a maximum of 30 days.</p>
+
 <p>
     <b>${organization.title!}</b>
     <ul style="list-style: none;">
@@ -67,12 +73,9 @@ Additional information:
 </#if>
 
 <#if hasReachableNodeManager()>
-  <p>If you wish to endorse <b>${organization.title!}</b> please click the following link: <a href="${url}">Endorse ${organization.title!}</a></p>
-  <p>If you do not want to endorse <b>${organization.title!}</b> please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
+  <p>Click this link to endorse <b>${organization.title!}</b>: <a href="${url}">ENDORSE</a>.</p>
+  <p>If you do NOT want to endorse this organization, please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
 </#if>
-
-<p>If you have any questions start by consulting our <a href="https://www.gbif.org/endorsement-guidelines">endorsement guidelines</a>.</p>
 
 <p>Kind regards,</p>
 <p>The GBIF Secretariat</p>
-
