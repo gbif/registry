@@ -47,7 +47,7 @@ public class DownloadSecurityUtils {
    * Remove data that shouldn't be publicly exposed.
    */
   public static void clearSensitiveData(SecurityContext securityContext, Download download) {
-    if (download.getRequest() != null
+    if (download != null && download.getRequest() != null
       && !isUserAuthorizedInContext(securityContext, download.getRequest().getCreator())) {
       download.getRequest().setNotificationAddresses(null);
       download.getRequest().setCreator(null);

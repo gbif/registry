@@ -31,6 +31,10 @@ public interface DatasetOccurrenceDownloadMapper {
 
   int countByDataset(@Param("datasetKey") UUID datasetKey);
 
+  /**
+   * Note that the Download objects within the DatasetOccurrenceDownloadUsage are not retrieved, to avoid massive
+   * repetition, and high memory use for complex queries.
+   */
   List<DatasetOccurrenceDownloadUsage> listByDownload(@Param("downloadKey") String downloadKey,
                                                      @Nullable @Param("page") Pageable page);
   
