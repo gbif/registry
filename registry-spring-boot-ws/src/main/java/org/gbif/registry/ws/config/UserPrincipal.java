@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 // TODO: 2019-07-10 mb rename (may confuse with spring's Principal)
+// TODO: 2019-07-26 analogue of org.gbif.api.model.common.GbifUserPrincipal
 public class UserPrincipal implements UserDetails {
 
   private GbifUser user;

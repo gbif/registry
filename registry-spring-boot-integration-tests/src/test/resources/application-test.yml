@@ -29,6 +29,10 @@ jwt:
   expiryTimeInMs: 10000
   issuer: GBIF-REGISTRY
 
+# file with all application keys & secrets
+appkeys:
+  file:@appkeys.testfile@
+
 spring:
   datasource:
     url: @registry-it.db.url@

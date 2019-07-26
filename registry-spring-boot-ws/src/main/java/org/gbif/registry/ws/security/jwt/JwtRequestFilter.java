@@ -4,8 +4,13 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.ws.server.filter.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -27,11 +32,15 @@ public class JwtRequestFilter extends GenericFilterBean {
   //Patterns that catches case insensitive versions of word 'bearer'
   private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer");
 
+  private final UserDetailsService userDetailsService;
   private final JwtAuthenticator jwtAuthenticator;
-
   private final JwtService jwtService;
 
-  public JwtRequestFilter(JwtAuthenticator jwtAuthenticator, JwtService jwtService) {
+  public JwtRequestFilter(
+      @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
+      JwtAuthenticator jwtAuthenticator,
+      JwtService jwtService) {
+    this.userDetailsService = userDetailsService;
     this.jwtAuthenticator = jwtAuthenticator;
     this.jwtService = jwtService;
   }
@@ -50,8 +59,11 @@ public class JwtRequestFilter extends GenericFilterBean {
 
         LOG.debug("JWT successfully validated for user {}", gbifUser.getUserName());
 
-        // TODO: 2019-07-15 set the user to the security context
-        // ??
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
+
+        // TODO: 2019-07-26 should it use RegistryAuthentication instead? This one does not keep auth scheme
+        final UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
         // TODO: 2019-07-15 refresh the token and add it to the headers
         ((HttpServletResponse) response).setHeader("token", jwtService.generateJwt(gbifUser.getUserName()));

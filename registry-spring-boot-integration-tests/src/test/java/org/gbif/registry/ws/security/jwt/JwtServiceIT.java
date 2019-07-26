@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.junit.Before;
@@ -9,15 +10,17 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -54,11 +57,14 @@ public class JwtServiceIT {
     mvc
         .perform(
             post("/grscicoll/person")
+                .content(asJsonString(createPerson()))
+                .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .characterEncoding("utf-8"))
+//                .characterEncoding("utf-8")
+                )
         .andDo(print())
-        .andExpect(status().isOk());
-
+        .andExpect(status().isCreated());
+// TODO: 2019-07-25 assert token is not null and doesn't match previous one
   }
 
   // TODO: 2019-07-15 rename
@@ -66,13 +72,17 @@ public class JwtServiceIT {
   public void invalidHeaderTest() throws Exception {
     final String token = login();
 
+    SecurityContextHolder.clearContext();
+
     mvc
         .perform(
             post("/grscicoll/person")
                 .header(HttpHeaders.AUTHORIZATION, "beare " + token)
+                .content(asJsonString(createPerson()))
+                .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("utf-8"))
         .andDo(print())
-        .andExpect(status().isOk());
+        .andExpect(status().isForbidden());
   }
 
   // TODO: 2019-07-15 rename
@@ -105,12 +115,28 @@ public class JwtServiceIT {
 
   }
 
+  public String asJsonString(final Object obj) {
+    try {
+      return objectMapper.writeValueAsString(obj);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Person createPerson() {
+    Person newPerson = new Person();
+    newPerson.setFirstName("first name");
+    newPerson.setCreatedBy("Test");
+    newPerson.setModifiedBy("Test");
+    return newPerson;
+  }
+
   private String login() throws Exception {
     // login first (see UserManagementIT)
     ResultActions resultActions = mvc
         .perform(
             post("/user/login")
-                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("justadmin:welcome".getBytes()))
+                .with(httpBasic("justadmin", "welcome"))
                 .characterEncoding("utf-8"))
         .andDo(print())
         .andExpect(status().isOk())

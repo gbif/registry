@@ -1,9 +1,8 @@
 package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
-import org.gbif.registry.ws.security.jwt.JwtAuthenticator;
+import org.gbif.registry.ws.security.IdentityFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
-import org.gbif.registry.ws.security.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -13,9 +12,10 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -46,10 +46,16 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     http
         .httpBasic().and()
-        .addFilterAfter(new JwtRequestFilter(context.getBean(JwtAuthenticator.class), context.getBean(JwtService.class)), BasicAuthenticationFilter.class)
-        .csrf().disable().authorizeRequests()
-        .antMatchers("/user/login").authenticated()
-        .antMatchers("/**").permitAll();
+        // must be after this otherwise it would load the context from the previous call
+        .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
+        .addFilterAfter(context.getBean(JwtRequestFilter.class), IdentityFilter.class)
+        .csrf().disable()
+        .authorizeRequests()
+        .anyRequest().authenticated();
+
+    http
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
   @Bean
