@@ -18,7 +18,7 @@ mail:
   # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
   appkeys:
-    whitelist:
+    whitelist: gbif.registry-ws-client-it
   surety:
     mail:
       urlTemplate:

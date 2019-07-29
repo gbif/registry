@@ -25,7 +25,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME;
+import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
 import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_TYPE;
 import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
@@ -155,7 +155,7 @@ public class GbifAuthService {
   public boolean isValidRequest(final HttpServletRequest request) {
     // parse auth header
     final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-    if (Strings.isNullOrEmpty(authHeader) || !authHeader.startsWith(GBIF_SCHEME + " ")) {
+    if (Strings.isNullOrEmpty(authHeader) || !authHeader.startsWith(GBIF_SCHEME_PREFIX)) {
       LOG.info("{} header is no GBIF scheme", HttpHeaders.AUTHORIZATION);
       return false;
     }
