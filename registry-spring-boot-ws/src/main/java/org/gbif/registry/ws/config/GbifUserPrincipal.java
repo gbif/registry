@@ -5,16 +5,19 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-// TODO: 2019-07-10 mb rename (may confuse with spring's Principal)
 // TODO: 2019-07-26 analogue of org.gbif.api.model.common.GbifUserPrincipal
-public class UserPrincipal implements UserDetails {
+public class GbifUserPrincipal implements UserDetails {
 
-  private GbifUser user;
+  @NotNull
+  private final GbifUser user;
 
-  public UserPrincipal(GbifUser user) {
+  public GbifUserPrincipal(GbifUser user) {
+    Objects.requireNonNull(user, "user shall be provided");
     this.user = user;
   }
 
@@ -37,7 +40,7 @@ public class UserPrincipal implements UserDetails {
     return user.getUserName();
   }
 
-  // TODO: 2019-07-09 implement methods below
+  // TODO: 2019-07-09 implement 4 methods below
   @Override
   public boolean isAccountNonExpired() {
     return true;

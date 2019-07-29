@@ -3,9 +3,8 @@ package org.gbif.registry.ws.security;
 import com.google.common.base.Strings;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
+import org.gbif.registry.ws.config.GbifUserPrincipal;
 import org.gbif.registry.ws.config.RegistryAuthentication;
-import org.gbif.registry.ws.config.UserPrincipal;
-import org.gbif.ws.server.filter.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +27,12 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.gbif.registry.ws.security.SecurityConstants.BASIC_AUTH;
+import static org.gbif.registry.ws.security.SecurityConstants.BASIC_SCHEME_PREFIX;
+import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME;
+import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
+import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
+
 // TODO: 2019-07-26 comment, revise existing comments
 // TODO: 2019-07-26 test
 @Component
@@ -36,9 +41,8 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
   private static final Logger LOG = LoggerFactory.getLogger(RegistryAuthenticationManager.class);
 
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
-  private static final String BASIC_AUTH = "BASIC";
-  private static final String GBIF_SCHEME_PREFIX = GbifAuthService.GBIF_SCHEME + " ";
-  private static final String BASIC_SCHEME_PREFIX = "Basic ";
+
+
 
   private final IdentityAccessService identityAccessService;
   private final GbifAuthService authService;
@@ -107,9 +111,9 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
   }
 
   private RegistryAuthentication gbifAuthentication(final HttpServletRequest request) {
-    String username = request.getHeader(GbifAuthService.HEADER_GBIF_USER);
+    String username = request.getHeader(HEADER_GBIF_USER);
     if (Strings.isNullOrEmpty(username)) {
-      LOG.warn("Missing gbif username header {}", GbifAuthService.HEADER_GBIF_USER);
+      LOG.warn("Missing gbif username header {}", HEADER_GBIF_USER);
       throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     }
     if (authService == null) {
@@ -121,7 +125,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
 
-    LOG.debug("Authenticating user {} via scheme {}", username, GbifAuthService.GBIF_SCHEME);
+    LOG.debug("Authenticating user {} via scheme {}", username, GBIF_SCHEME);
     if (identityAccessService == null) {
       LOG.debug("No identityService configured! No roles assigned, using anonymous user instead.");
       return getAnonymous(request);
@@ -132,7 +136,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     //Note: using an Anonymous Authorizer is probably not the best thing to do here
     //we should consider simply return null to let another filter handle it
     return user == null ? getAnonymous(request)
-        : getAuthenticated(user, GbifAuthService.GBIF_SCHEME, request);
+        : getAuthenticated(user, GBIF_SCHEME, request);
   }
 
   /**
@@ -150,6 +154,6 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
         .collect(Collectors.toList());
 
     // TODO: 2019-07-26 set credentials?
-    return new RegistryAuthentication(new UserPrincipal(user), null, authorities, authenticationScheme, request);
+    return new RegistryAuthentication(new GbifUserPrincipal(user), null, authorities, authenticationScheme, request);
   }
 }

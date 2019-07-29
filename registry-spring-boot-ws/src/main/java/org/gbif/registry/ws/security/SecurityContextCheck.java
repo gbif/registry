@@ -3,8 +3,6 @@ package org.gbif.registry.ws.security;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.registry.ws.config.RegistryAuthentication;
 import org.gbif.ws.security.GbifAuthService;
-import org.gbif.ws.server.filter.GbifAuthUtils;
-import org.gbif.ws.server.filter.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

@@ -4,7 +4,7 @@ import org.apache.http.HttpStatus;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUserWithToken;
-import org.gbif.registry.ws.config.UserPrincipal;
+import org.gbif.registry.ws.config.GbifUserPrincipal;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,7 +30,7 @@ public class UserResource {
     // the user shall be authenticated using basic auth. scheme only.
 //    ensureNotGbifScheme(securityContext);
 //    ensureUserSetInSecurityContext(securityContext);
-    return login(((UserPrincipal) authentication.getPrincipal()).getUsername());
+    return login(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
   }
 
   // only to use in login since it updates the last login

@@ -38,7 +38,7 @@ public class IdentityFilter extends BasicAuthenticationFilter {
   @Override
   public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
     // authenticates the HTTP method, but ignores legacy UUID user names
-    Authentication authentication = getAuthenticationManager().authenticate(new RegistryAuthentication(null, null, null, request));
+    final Authentication authentication = getAuthenticationManager().authenticate(new RegistryAuthentication(null, null, null, request));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     filterChain.doFilter(request, response);
   }

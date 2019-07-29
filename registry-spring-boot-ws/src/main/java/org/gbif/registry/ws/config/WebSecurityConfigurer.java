@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
+import org.gbif.registry.ws.security.AppIdentityFilter;
 import org.gbif.registry.ws.security.IdentityFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
@@ -49,7 +50,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .httpBasic().and()
         // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
         .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
-        .addFilterAfter(context.getBean(JwtRequestFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class) // TODO: 2019-07-29 find a proper place for it
+        .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
         .addFilterAfter(context.getBean(JwtResponseFilter.class), JwtRequestFilter.class)
         .csrf().disable()
         .authorizeRequests()

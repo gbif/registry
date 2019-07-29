@@ -28,6 +28,6 @@ public class RegistryUserDetailsService implements UserDetailsService {
       throw new UsernameNotFoundException(username);
     }
 
-    return new UserPrincipal(user);
+    return new GbifUserPrincipal(user);
   }
 }

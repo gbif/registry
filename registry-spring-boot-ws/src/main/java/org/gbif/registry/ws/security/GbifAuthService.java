@@ -25,6 +25,12 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME;
+import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_MD5;
+import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_TYPE;
+import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
+import static org.gbif.registry.ws.security.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
+
 // TODO: 2019-07-26 it's a copy of common-ws' one
 // TODO: 2019-07-26 should have an interface
 
@@ -64,12 +70,6 @@ public class GbifAuthService {
   private static final Logger LOG = LoggerFactory.getLogger(GbifAuthService.class);
 
   private static final String ALGORITHM = "HmacSHA1";
-  public static final String HEADER_AUTHORIZATION = "Authorization";
-  public static final String HEADER_CONTENT_TYPE = "Content-Type";
-  public static final String HEADER_CONTENT_MD5 = "Content-MD5";
-  public static final String GBIF_SCHEME = "GBIF";
-  public static final String HEADER_GBIF_USER = "x-gbif-user";
-  public static final String HEADER_ORIGINAL_REQUEST_URL = "x-url";
   private static final char NEWLINE = '\n';
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
 
@@ -154,9 +154,9 @@ public class GbifAuthService {
 
   public boolean isValidRequest(final HttpServletRequest request) {
     // parse auth header
-    final String authHeader = request.getHeader(HEADER_AUTHORIZATION);
+    final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
     if (Strings.isNullOrEmpty(authHeader) || !authHeader.startsWith(GBIF_SCHEME + " ")) {
-      LOG.info("{} header is no GBIF scheme", HEADER_AUTHORIZATION);
+      LOG.info("{} header is no GBIF scheme", HttpHeaders.AUTHORIZATION);
       return false;
     }
 

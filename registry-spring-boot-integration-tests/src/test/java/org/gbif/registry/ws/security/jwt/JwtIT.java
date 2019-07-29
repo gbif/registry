@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.gbif.registry.ws.security.SecurityConstants.BEARER_SCHEME_PREFIX;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
@@ -64,7 +65,7 @@ public class JwtIT {
     final MvcResult mvcResult = mvc
         .perform(
             post("/test")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
         .andDo(print())
         .andExpect(status().isCreated())
         .andReturn();
@@ -84,6 +85,7 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
+  // TODO: 2019-07-29 there are problems with mocks
   // TODO: 2019-07-29 figure out why is not working
   @Test
   public void performTestWithWrongSigningKeyShouldReturnStatusForbidden() throws Exception {
@@ -96,7 +98,7 @@ public class JwtIT {
     mvc
         .perform(
             post("/test")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
         .andDo(print())
         .andExpect(status().isForbidden());
   }
@@ -108,7 +110,7 @@ public class JwtIT {
     mvc
         .perform(
             post("/test")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
         .andDo(print())
         .andExpect(status().isForbidden());
   }
@@ -121,7 +123,7 @@ public class JwtIT {
     mvc
         .perform(
             post("/test")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
         .andDo(print())
         .andExpect(status().isForbidden());
   }

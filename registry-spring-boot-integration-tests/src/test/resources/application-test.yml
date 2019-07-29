@@ -17,6 +17,8 @@ mail:
 
   # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
+  appkeys:
+    whitelist:
   surety:
     mail:
       urlTemplate:

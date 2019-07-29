@@ -6,10 +6,11 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
-import org.gbif.registry.ws.config.UserPrincipal;
+import org.gbif.registry.ws.config.GbifUserPrincipal;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
+import org.gbif.registry.ws.security.AppIdentityFilter;
 import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.response.GbifResponseStatus;
@@ -61,7 +62,7 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
  * - HTTP Basic authentication
  * - User impersonation using appKey. ALL applications with a valid appKey can impersonate a user.
  * - Application itself (APP_ROLE). All applications with a valid appKey that is also present in the appKey whitelist.
- * See {@link org.gbif.ws.server.filter.AppIdentityFilter}.
+ * See {@link AppIdentityFilter}.
  */
 // TODO: 2019-07-03 where 'Response' is expected what will happen if it gets 'ResponseEntity' instead? (especially in case of exception)
 // TODO: 2019-07-03 do not forget ResponseBody\RequestBody
@@ -149,7 +150,7 @@ public class UserManagementResource {
       response = ResponseEntity.badRequest().build();
     } else {
       GbifUser updateInitiator = authentication == null ? null
-          : identityService.get(((UserPrincipal) authentication.getPrincipal()).getUsername());
+          : identityService.get(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
 
       UserModelMutationResult result = identityService.update(
           UserUpdateRulesManager.applyUpdate(
