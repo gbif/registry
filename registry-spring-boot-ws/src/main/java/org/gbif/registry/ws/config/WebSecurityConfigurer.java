@@ -3,6 +3,7 @@ package org.gbif.registry.ws.config;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.ws.security.IdentityFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
+import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -46,9 +47,10 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     http
         .httpBasic().and()
-        // must be after this otherwise it would load the context from the previous call
+        // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
         .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean(JwtResponseFilter.class), JwtRequestFilter.class)
         .csrf().disable()
         .authorizeRequests()
         .anyRequest().authenticated();
