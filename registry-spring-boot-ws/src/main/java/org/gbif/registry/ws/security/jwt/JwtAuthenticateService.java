@@ -14,17 +14,18 @@ import java.util.Optional;
  * Class that handle all the authentication coming from JWT tokens.
  */
 @Service
-public class JwtAuthenticator {
+public class JwtAuthenticateService {
 
-  @Value("${jwt.issuer}")
-  private String issuer;
-
-  @Value("${jwt.signingKey}")
-  private String signingKey;
-
+  private final String issuer;
+  private final String signingKey;
   private final IdentityService identityService;
 
-  public JwtAuthenticator(IdentityService identityService) {
+  public JwtAuthenticateService(
+      @Value("${jwt.issuer}") String issuer,
+      @Value("${jwt.signingKey}") String signingKey,
+      IdentityService identityService) {
+    this.issuer = issuer;
+    this.signingKey = signingKey;
     this.identityService = identityService;
   }
 
@@ -54,5 +55,4 @@ public class JwtAuthenticator {
     return Optional.ofNullable(identityService.get(username))
         .orElseThrow(() -> new GbifJwtException(GbifJwtException.JwtErrorCode.INVALID_USERNAME));
   }
-
 }

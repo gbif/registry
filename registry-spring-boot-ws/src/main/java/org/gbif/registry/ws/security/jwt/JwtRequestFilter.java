@@ -29,6 +29,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+/**
+ * Filter to validate the JWT tokens.
+ * <p>
+ * If the token is not present this validation is skipped.
+ */
 @Component
 public class JwtRequestFilter extends GenericFilterBean {
 
@@ -38,16 +43,16 @@ public class JwtRequestFilter extends GenericFilterBean {
   private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer");
 
   private final UserDetailsService userDetailsService;
-  private final JwtAuthenticator jwtAuthenticator;
-  private final JwtService jwtService;
+  private final JwtAuthenticateService jwtAuthenticateService;
+  private final JwtIssuanceService jwtIssuanceService;
 
   public JwtRequestFilter(
       @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
-      JwtAuthenticator jwtAuthenticator,
-      JwtService jwtService) {
+      JwtAuthenticateService jwtAuthenticateService,
+      JwtIssuanceService jwtIssuanceService) {
     this.userDetailsService = userDetailsService;
-    this.jwtAuthenticator = jwtAuthenticator;
-    this.jwtService = jwtService;
+    this.jwtAuthenticateService = jwtAuthenticateService;
+    this.jwtIssuanceService = jwtIssuanceService;
   }
 
   @Override
@@ -61,7 +66,7 @@ public class JwtRequestFilter extends GenericFilterBean {
       filterChain.doFilter(request, response);
     } else {
       try {
-        final GbifUser gbifUser = jwtAuthenticator.authenticate(token.get());
+        final GbifUser gbifUser = jwtAuthenticateService.authenticate(token.get());
 
         LOG.debug("JWT successfully validated for user {}", gbifUser.getUserName());
 
@@ -72,7 +77,7 @@ public class JwtRequestFilter extends GenericFilterBean {
         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
         // refresh the token and add it to the headers
-        requestWrapper.addHeader("token", jwtService.generateJwt(gbifUser.getUserName()));
+        requestWrapper.addHeader("token", jwtIssuanceService.generateJwt(gbifUser.getUserName()));
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
         throw new WebApplicationException(HttpStatus.UNAUTHORIZED);

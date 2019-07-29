@@ -7,14 +7,17 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+/**
+ * Class that handle JWT token issuance.
+ */
 @Service
-public class JwtService {
+public class JwtIssuanceService {
 
   private long expiryTimeInMs;
   private String issuer;
   private String signingKey;
 
-  public JwtService(
+  public JwtIssuanceService(
       @Value("${jwt.expiryTimeInMs}") long expiryTimeInMs,
       @Value("${jwt.issuer}") String issuer,
       @Value("${jwt.signingKey}") String signingKey) {

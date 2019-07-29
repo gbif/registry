@@ -43,8 +43,8 @@ public class JwtIT {
   private WebApplicationContext context;
 
   @Autowired
-  @Qualifier("jwtServiceSpy")
-  private JwtService jwtService;
+  @Qualifier("jwtIssuanceService")
+  private JwtIssuanceService jwtIssuanceService;
 
   @Before
   public void setUp() {
@@ -87,9 +87,9 @@ public class JwtIT {
   // TODO: 2019-07-29 figure out why is not working
   @Test
   public void performTestWithWrongSigningKeyShouldReturnStatusForbidden() throws Exception {
-    final JwtService jwtServiceWithWrongConfig = new JwtService(10000, "GBIF", "fake");
-    when(jwtService.generateJwt("justadmin"))
-        .then(p -> jwtServiceWithWrongConfig.generateJwt("justadmin"));
+    final JwtIssuanceService jwtIssuanceServiceWithWrongConfig = new JwtIssuanceService(10000, "GBIF", "fake");
+    when(jwtIssuanceService.generateJwt("justadmin"))
+        .then(p -> jwtIssuanceServiceWithWrongConfig.generateJwt("justadmin"));
 
     final String token = login("justadmin", "welcome");
 
@@ -116,7 +116,7 @@ public class JwtIT {
   // TODO: 2019-07-29 implement a mapper for WebApplicationException
   @Test
   public void performTestWithTokenIssuedForFakeUserShouldReturnStatusForbidden() throws Exception {
-    final String token = jwtService.generateJwt("fake");
+    final String token = jwtIssuanceService.generateJwt("fake");
 
     mvc
         .perform(

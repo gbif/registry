@@ -5,7 +5,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.ws.config.UserPrincipal;
-import org.gbif.registry.ws.security.jwt.JwtService;
+import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserResource {
 
   private final IdentityService identityService;
-  private final JwtService jwtService;
+  private final JwtIssuanceService jwtIssuanceService;
 
-  public UserResource(IdentityService identityService, JwtService jwtService) {
+  public UserResource(IdentityService identityService, JwtIssuanceService jwtIssuanceService) {
     this.identityService = identityService;
-    this.jwtService = jwtService;
+    this.jwtIssuanceService = jwtIssuanceService;
   }
 
   @PostMapping("/login")
@@ -47,7 +47,7 @@ public class UserResource {
     // build response
     LoggedUserWithToken response = LoggedUserWithToken.from(
         user,
-        jwtService.generateJwt(user.getUserName()),
+        jwtIssuanceService.generateJwt(user.getUserName()),
         identityService.listEditorRights(user.getUserName()));
     // add jwt token
 

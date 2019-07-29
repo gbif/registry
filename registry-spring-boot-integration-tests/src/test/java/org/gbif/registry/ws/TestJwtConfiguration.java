@@ -1,6 +1,6 @@
 package org.gbif.registry.ws;
 
-import org.gbif.registry.ws.security.jwt.JwtService;
+import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +11,8 @@ import static org.mockito.Mockito.spy;
 public class TestJwtConfiguration {
 
   @Bean
-  @Qualifier("jwtServiceSpy")
-  public JwtService jwtServiceSpy(JwtService jwtService) {
-    return spy(jwtService);
+  @Qualifier("jwtIssuanceServiceSpy")
+  public JwtIssuanceService jwtServiceSpy(JwtIssuanceService jwtIssuanceService) {
+    return spy(jwtIssuanceService);
   }
 }
