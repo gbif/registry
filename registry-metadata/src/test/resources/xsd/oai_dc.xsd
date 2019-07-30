@@ -13,8 +13,10 @@
   </documentation>
 </annotation>
 
-<import namespace="http://purl.org/dc/elements/1.1/" 
-        schemaLocation="http://dublincore.org/schemas/xmls/simpledc20021212.xsd"/>
+<!-- The schemaLocation is changed from http://dublincore.org/schemas/xmls/simpledc20021212.xsd, which redirects
+     to the below.  The validator doesn't follow the redirect. -->
+<import namespace="http://purl.org/dc/elements/1.1/"
+        schemaLocation="https://www.dublincore.org/schemas/xmls/simpledc20021212.xsd"/>
 	
 <element name="dc" type="oai_dc:oai_dcType"/>
 

@@ -35,8 +35,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class DublinCoreWriterTest {
 
-  //take if from the test/resources folder since the live one was down for days in April 2016
-  //http://www.openarchives.org/OAI/2.0/oai_dc.xsd
+  // Take it from the test/resources folder since the live one was down for days in April 2016
+  // http://www.openarchives.org/OAI/2.0/oai_dc.xsd
+  // Within the schema, a schemaLocation is changed from http://dublincore.org/schemas/xmls/simpledc20021212.xsd,
+  // which redirects to HTTPS.  The validator doesn't follow the redirect.
   private static final String OAI_2_0_DC_SCHEMA = "xsd/oai_dc.xsd";
 
   @Test
