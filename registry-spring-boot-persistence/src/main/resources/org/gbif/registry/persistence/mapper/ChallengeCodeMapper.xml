@@ -7,7 +7,7 @@
   </sql>
 
   <sql id="WRITABLE_FIELD_TYPES">
-    #{code, jdbcType=OTHER},
+    #{code,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UUIDTypeHandler},
     now() <!-- created -->
   </sql>
 
@@ -20,7 +20,7 @@
     VALUES(<include refid="WRITABLE_FIELD_TYPES"/>)
   </insert>
 
-  <select id="getChallengeCode" resultType="String" >
+  <select id="getChallengeCode" resultType="java.util.UUID" >
     SELECT challenge_code FROM challenge_code WHERE key = #{key}
   </select>
 

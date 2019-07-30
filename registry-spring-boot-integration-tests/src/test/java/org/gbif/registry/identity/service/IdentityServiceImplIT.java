@@ -276,8 +276,7 @@ public class IdentityServiceImplIT {
     return user;
   }
 
-  // TODO: 2019-07-10 string
   private UUID getChallengeCode(Integer entityKey) {
-    return UUID.fromString(challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(entityKey)));
+    return challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(entityKey));
   }
 }

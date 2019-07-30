@@ -61,8 +61,7 @@ public class UserTestFixture {
     assertNoErrorAfterMutation(userCreated);
 
     Integer key = identityService.get(newTestUser.getUserName()).getKey();
-    // TODO: 2019-07-10 string
-    UUID challengeCode = UUID.fromString(challengeCodeMapper.getChallengeCode(challengeCodeSupportMapper.getChallengeCodeKey(key)));
+    UUID challengeCode = challengeCodeMapper.getChallengeCode(challengeCodeSupportMapper.getChallengeCodeKey(key));
     assertTrue("Shall confirm challengeCode " + challengeCode,
         identityService.confirmUser(key, challengeCode));
 

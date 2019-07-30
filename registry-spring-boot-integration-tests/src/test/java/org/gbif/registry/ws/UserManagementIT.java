@@ -84,8 +84,8 @@ public class UserManagementIT {
     // TODO: 2019-07-12 try login -> must fail (implement UserResource first)
 
     final GbifUser newUser = userMapper.get(user.getUserName());
-    final String challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
-    final ConfirmationKeyParameter confirmation = new ConfirmationKeyParameter(UUID.fromString(challengeCodeString));
+    final UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
+    final ConfirmationKeyParameter confirmation = new ConfirmationKeyParameter(challengeCodeString);
     final String confirmationJsonString = objectMapper.writeValueAsString(confirmation);
 
     // perform request and check response
