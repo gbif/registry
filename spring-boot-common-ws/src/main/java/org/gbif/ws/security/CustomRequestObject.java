@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.security;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMethod;

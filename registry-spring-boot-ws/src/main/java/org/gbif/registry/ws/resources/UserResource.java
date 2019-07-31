@@ -5,10 +5,10 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.identity.model.UserModelMutationResult;
-import org.gbif.registry.ws.config.GbifUserPrincipal;
-import org.gbif.registry.ws.config.RegistryAuthentication;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
+import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,8 +92,8 @@ public class UserResource {
     ensureUserSetInSecurityContext(authentication);
 
     // get the user
-    final RegistryAuthentication registryAuthentication = (RegistryAuthentication) authentication;
-    final GbifUser user = identityService.get(registryAuthentication.getPrincipal().getUsername());
+    final GbifAuthentication gbifAuthentication = (GbifAuthentication) authentication;
+    final GbifUser user = identityService.get(gbifAuthentication.getPrincipal().getUsername());
 
     if (user == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -115,7 +115,7 @@ public class UserResource {
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
-    final String identifier = ((RegistryAuthentication) authentication).getPrincipal().getUsername();
+    final String identifier = ((GbifAuthentication) authentication).getPrincipal().getUsername();
     final GbifUser user = identityService.get(identifier);
     if (user != null) {
       UserModelMutationResult updatePasswordMutationResult =

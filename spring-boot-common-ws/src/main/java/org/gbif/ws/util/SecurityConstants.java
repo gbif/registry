@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.util;
 
 public final class SecurityConstants {
 
@@ -12,7 +12,6 @@ public final class SecurityConstants {
   public static final String BASIC_AUTH = "BASIC";
 
   public static final String HEADER_GBIF_USER = "x-gbif-user";
-  public static final String HEADER_CONTENT_TYPE = "Content-Type";
   public static final String HEADER_CONTENT_MD5 = "Content-MD5";
   public static final String HEADER_ORIGINAL_REQUEST_URL = "x-url";
 }

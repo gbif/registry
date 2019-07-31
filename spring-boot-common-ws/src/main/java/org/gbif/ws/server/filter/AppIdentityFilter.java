@@ -1,9 +1,13 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.server.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.AppRole;
-import org.gbif.registry.ws.config.AppPrincipal;
-import org.gbif.registry.ws.config.RegistryAuthentication;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.security.AppPrincipal;
+import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.security.GbifAuthUtils;
+import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,10 +31,6 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME;
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
 
 // TODO: 2019-07-29 test
 // TODO: 2019-07-29 it's not working because of WebApplicationException at IdentityFilter
@@ -75,20 +75,20 @@ public class AppIdentityFilter extends GenericFilterBean {
     // Only try if no user principal is already there
     if (authentication == null || authentication.getPrincipal() == null) {
       String authorization = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
-      if (StringUtils.startsWith(authorization, GBIF_SCHEME_PREFIX)) {
+      if (StringUtils.startsWith(authorization, SecurityConstants.GBIF_SCHEME_PREFIX)) {
         if (!authService.isValidRequest(httpRequest)) {
           LOG.warn("Invalid GBIF authenticated request");
           throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
         }
 
-        String username = httpRequest.getHeader(HEADER_GBIF_USER);
+        String username = httpRequest.getHeader(SecurityConstants.HEADER_GBIF_USER);
         String appKey = GbifAuthUtils.getAppKeyFromRequest(authorization);
 
         // check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
         if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
           final AppPrincipal principal = new AppPrincipal(appKey, AppRole.APP.name());
           final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
-          final Authentication updatedAuth = new RegistryAuthentication(principal, null, authorities, GBIF_SCHEME, httpRequest);
+          final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME, httpRequest);
 
           SecurityContextHolder.getContext().setAuthentication(updatedAuth);
         }

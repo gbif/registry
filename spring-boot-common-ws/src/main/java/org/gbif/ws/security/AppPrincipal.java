@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.config;
+package org.gbif.ws.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

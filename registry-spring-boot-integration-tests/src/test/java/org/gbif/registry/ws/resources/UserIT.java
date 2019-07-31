@@ -11,9 +11,9 @@ import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.TestJwtConfiguration;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
-import org.gbif.registry.ws.security.CustomRequestObject;
-import org.gbif.registry.ws.security.GbifAuthService;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
+import org.gbif.ws.security.CustomRequestObject;
+import org.gbif.ws.security.GbifAuthService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,6 +72,8 @@ public class UserIT {
 
   private UserTestFixture userTestFixture;
 
+  private GbifUser user;
+
   @Before
   public void setUp() {
     mvc = MockMvcBuilders
@@ -80,9 +82,11 @@ public class UserIT {
         .build();
 
     userTestFixture = new UserTestFixture(identityService, challengeCodeMapper, challengeCodeSupportMapper);
+    if (user == null) {
+      userTestFixture.prepareUser();
+    }
   }
 
-  // TODO: 2019-07-29 users should be in the DB before tests! (use prepareUser ?)
   // TODO: 2019-07-30 revise test names
 
   @Test
@@ -104,7 +108,6 @@ public class UserIT {
 
   @Test
   public void testLoginGet() throws Exception {
-    final GbifUser user = userTestFixture.prepareUser();
     final MvcResult mvcResult = mvc
         .perform(
             get("/user/login")
@@ -134,7 +137,6 @@ public class UserIT {
   // TODO: 2019-07-30 gets 200 instead of expected 201
   @Test
   public void testLoginPost() throws Exception {
-    final GbifUser user = userTestFixture.prepareUser();
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/login")
@@ -162,8 +164,6 @@ public class UserIT {
 
   @Test
   public void testChangePassword() throws Exception {
-    final GbifUser user = userTestFixture.prepareUser();
-
     final String newPassword = "123456";
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(newPassword);
@@ -205,8 +205,6 @@ public class UserIT {
    */
   @Test
   public void testLoginWithAppKeys() throws Exception {
-    GbifUser user = userTestFixture.prepareUser();
-
     final HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
@@ -223,9 +221,6 @@ public class UserIT {
 
   @Test
   public void testWhoAmI() throws Exception {
-    // create test user
-    GbifUser user = userTestFixture.prepareUser();
-
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/whoami")

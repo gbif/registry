@@ -2,6 +2,7 @@ package org.gbif.registry.ws.config;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.persistence.mapper.UserMapper;
+import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

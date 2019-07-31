@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.config;
+package org.gbif.ws.security;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * Extends Spring's {@link UsernamePasswordAuthenticationToken}.
  */
-public class RegistryAuthentication extends UsernamePasswordAuthenticationToken {
+public class GbifAuthentication extends UsernamePasswordAuthenticationToken {
 
   /**
    * User information (can be either {@link GbifUserPrincipal} or {@link AppPrincipal}).
@@ -29,7 +29,7 @@ public class RegistryAuthentication extends UsernamePasswordAuthenticationToken 
   private HttpServletRequest request;
 
   // Take into account that a create object would have 'authenticate' false because of the constructor of the superclass.
-  public RegistryAuthentication(
+  public GbifAuthentication(
       UserDetails principal,
       Object credentials,
       String authenticationScheme,
@@ -40,7 +40,7 @@ public class RegistryAuthentication extends UsernamePasswordAuthenticationToken 
     this.request = request;
   }
 
-  public RegistryAuthentication(
+  public GbifAuthentication(
       UserDetails principal,
       Object credentials,
       Collection<? extends GrantedAuthority> authorities,

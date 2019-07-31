@@ -1,8 +1,8 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.server.filter;
 
 import org.gbif.api.service.common.IdentityAccessService;
-import org.gbif.registry.ws.config.RegistryAuthentication;
-import org.gbif.ws.server.filter.AuthFilter;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.security.GbifAuthentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +18,7 @@ import java.io.IOException;
 /**
  * Override a built-in spring filter because of legacy behaviour.
  * <p>
- * Replacement for {@link AuthFilter}.
+ * Replacement for AuthFilter (legacy gbif-common-ws).
  * <p>
  * Server filter that looks for a http BasicAuthentication with user accounts based on a {@link IdentityAccessService}
  * or GBIF trusted application schema to impersonate a user and populates the security context.
@@ -38,7 +38,7 @@ public class IdentityFilter extends BasicAuthenticationFilter {
   public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
     // authenticates the HTTP method, but ignores legacy UUID user names
     try {
-      final Authentication authentication = getAuthenticationManager().authenticate(new RegistryAuthentication(null, null, null, request));
+      final Authentication authentication = getAuthenticationManager().authenticate(new GbifAuthentication(null, null, null, request));
       SecurityContextHolder.getContext().setAuthentication(authentication);
     } catch (WebApplicationException e) {
       response.setStatus(e.getResponse().getStatusCode().value());

@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.gbif.registry.ws.security.SecurityConstants.BEARER_SCHEME_PREFIX;
+import static org.gbif.ws.util.SecurityConstants.BEARER_SCHEME_PREFIX;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;

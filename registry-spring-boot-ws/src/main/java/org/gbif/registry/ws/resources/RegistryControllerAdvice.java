@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.resources;
 
-import org.gbif.registry.ws.security.WebApplicationException;
+import org.gbif.ws.WebApplicationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

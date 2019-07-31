@@ -6,14 +6,13 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
-import org.gbif.registry.ws.config.GbifUserPrincipal;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
-import org.gbif.registry.ws.security.AppIdentityFilter;
 import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
-import org.gbif.ws.response.GbifResponseStatus;
+import org.gbif.ws.security.GbifUserPrincipal;
+import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -116,7 +115,7 @@ public class UserManagementResource {
     UserModelMutationResult result = identityService.create(
         UserUpdateRulesManager.applyCreate(user), user.getPassword());
     if (result.containsError()) {
-      returnStatusCode = GbifResponseStatus.UNPROCESSABLE_ENTITY.getStatus();
+      returnStatusCode = HttpStatus.UNPROCESSABLE_ENTITY.value();
     }
     return ResponseEntity.status(returnStatusCode).body(result);
   }

@@ -43,6 +43,7 @@
     <module>registry-spring-boot-surety</module>
     <module>registry-spring-boot-identity</module>
     <module>registry-spring-boot-integration-tests</module>
+    <module>spring-boot-common-ws</module>
   </modules>
 
   <properties>
@@ -109,6 +110,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>spring-boot-common-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
@@ -126,6 +132,10 @@
           <exclusion>
             <groupId>javax.ws.rs</groupId>
             <artifactId>jsr311-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-common-ws</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

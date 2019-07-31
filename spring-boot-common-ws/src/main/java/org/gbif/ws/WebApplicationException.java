@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

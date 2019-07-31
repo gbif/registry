@@ -1,8 +1,10 @@
 package org.gbif.registry.ws.security;
 
 import org.apache.commons.lang3.StringUtils;
-import org.gbif.registry.ws.config.RegistryAuthentication;
-import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.security.GbifAuthUtils;
+import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 
 /**
  * Utility methods to check conditions on {@link Authentication}
@@ -52,7 +56,7 @@ public class SecurityContextCheck {
   }
 
   /**
-   * Ensure a {@link Authentication} was obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication scheme.
+   * Ensure a {@link Authentication} was obtained using the {@link SecurityConstants#GBIF_SCHEME} authentication scheme.
    * If the {@link Authentication} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
    *
    * @param authentication
@@ -61,14 +65,14 @@ public class SecurityContextCheck {
    */
   public static void ensureGbifScheme(final Authentication authentication) {
     if (authentication != null
-        && GbifAuthService.GBIF_SCHEME.equals(((RegistryAuthentication) authentication).getAuthenticationScheme())) {
+        && GBIF_SCHEME.equals(((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException(HttpStatus.FORBIDDEN);
   }
 
   /**
-   * Ensure a {@link Authentication} was not obtained using the {@link GbifAuthService#GBIF_SCHEME} authentication
+   * Ensure a {@link Authentication} was not obtained using the {@link SecurityConstants#GBIF_SCHEME} authentication
    * scheme.
    * If the {@link Authentication} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
    *
@@ -78,7 +82,7 @@ public class SecurityContextCheck {
    */
   public static void ensureNotGbifScheme(final Authentication authentication) {
     if (authentication != null
-        && !GbifAuthService.GBIF_SCHEME.equals(((RegistryAuthentication) authentication).getAuthenticationScheme())) {
+        && !GBIF_SCHEME.equals(((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException(HttpStatus.FORBIDDEN);

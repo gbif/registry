@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -30,13 +29,11 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_MD5;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_CONTENT_TYPE;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
+import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME_PREFIX;
+import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
+import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
+import static org.gbif.ws.util.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
 
-// TODO: 2019-07-26 it's a copy of common-ws' one
 // TODO: 2019-07-26 should have an interface
 
 /**
@@ -117,14 +114,13 @@ public class GbifAuthService {
       sb.append(getCanonicalizedPath(request.getRequestURI()));
     }
 
-    appendHeader(sb, httpHeaders, HEADER_CONTENT_TYPE, false);
+    appendHeader(sb, httpHeaders, HttpHeaders.CONTENT_TYPE, false);
     appendHeader(sb, httpHeaders, HEADER_CONTENT_MD5, true);
     appendHeader(sb, httpHeaders, HEADER_GBIF_USER, true);
 
     return sb.toString();
   }
 
-  // TODO: 2019-07-31 there are two original methods: with ContainerRequest param and ClientRequest
   private String buildStringToSign(final CustomRequestObject request) {
     StringBuilder sb = new StringBuilder();
 
@@ -140,7 +136,7 @@ public class GbifAuthService {
       sb.append(getCanonicalizedPath(request.getRequestUri()));
     }
 
-    appendHeader(sb, httpHeaders, HEADER_CONTENT_TYPE, false);
+    appendHeader(sb, httpHeaders, HttpHeaders.CONTENT_TYPE, false);
     appendHeader(sb, httpHeaders, HEADER_CONTENT_MD5, true);
     appendHeader(sb, httpHeaders, HEADER_GBIF_USER, true);
 
@@ -245,7 +241,6 @@ public class GbifAuthService {
     return keyStore.get(applicationKey);
   }
 
-  // TODO: 2019-07-31 find a way how to use it (or not?)
   /**
    * Signs a request by adding a Content-MD5 and Authorization header.
    * For PUT/POST requests that contain a body entity the Content-MD5 header is created using the same
@@ -253,40 +248,6 @@ public class GbifAuthService {
    *
    * Other format than JSON are not supported currently !!!
    */
-  public void signRequest(final String username, final HeaderMapRequestWrapper request) {
-    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
-    // first add custom GBIF headers so we can use them to build the string to sign
-
-    // the proxied username
-    request.addHeader(HEADER_GBIF_USER, username);
-
-    // the canonical path header
-    request.addHeader(HEADER_ORIGINAL_REQUEST_URL, getCanonicalizedPath(request.getRequestURI()));
-
-    // adds content md5
-    if (request.getContentLength() > 0) {
-      request.addHeader(HEADER_CONTENT_MD5, buildContentMD5(getRequestBody(request)));
-    }
-
-    // build the unique string to sign
-    final String stringToSign = buildStringToSign(request);
-    // find private key for this app
-    final String appKey = keyStore.keySet().iterator().next();
-    final String secretKey = getPrivateKey(appKey);
-    if (secretKey == null) {
-      LOG.warn("Skip signing request with unknown application key: {}", appKey);
-      return;
-    }
-    // sign
-    String signature = buildSignature(stringToSign, secretKey);
-
-    // build authorization header string
-    String header = buildAuthHeader(appKey, signature);
-    // add authorization header
-    LOG.debug("Adding authentication header to request {} for proxied user {} : {}", request.getRequestURI(), username, header);
-    request.addHeader(HttpHeaders.AUTHORIZATION, header);
-  }
-
   public CustomRequestObject signRequest(final String username, final CustomRequestObject request) {
     Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
     // first add custom GBIF headers so we can use them to build the string to sign
@@ -321,22 +282,6 @@ public class GbifAuthService {
     request.addHeader(HttpHeaders.AUTHORIZATION, header);
 
     return request;
-  }
-
-  private String getRequestBody(final HttpServletRequest request) {
-    final StringBuilder builder = new StringBuilder();
-    try (final BufferedReader reader = request.getReader()) {
-      if (reader == null) {
-        return null;
-      }
-      String line;
-      while ((line = reader.readLine()) != null) {
-        builder.append(line);
-      }
-      return builder.toString();
-    } catch (final Exception e) {
-      return null;
-    }
   }
 
   /**

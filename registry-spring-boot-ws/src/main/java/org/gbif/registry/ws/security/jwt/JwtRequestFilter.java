@@ -2,7 +2,7 @@ package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.ws.security.HeaderMapRequestWrapper;
-import org.gbif.registry.ws.security.WebApplicationException;
+import org.gbif.ws.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;

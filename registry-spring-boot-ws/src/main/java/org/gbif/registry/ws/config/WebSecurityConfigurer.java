@@ -1,10 +1,10 @@
 package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
-import org.gbif.registry.ws.security.AppIdentityFilter;
-import org.gbif.registry.ws.security.IdentityFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
+import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.gbif.ws.server.filter.IdentityFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;

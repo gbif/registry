@@ -1,10 +1,10 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.security;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Pattern;
 
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
+import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME_PREFIX;
 
 // analogue of GbifAuthService from gbif-common-ws
 public final class GbifAuthUtils {

@@ -3,8 +3,10 @@ package org.gbif.registry.ws.security;
 import com.google.common.base.Strings;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
-import org.gbif.registry.ws.config.GbifUserPrincipal;
-import org.gbif.registry.ws.config.RegistryAuthentication;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.security.GbifUserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -27,11 +29,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.gbif.registry.ws.security.SecurityConstants.BASIC_AUTH;
-import static org.gbif.registry.ws.security.SecurityConstants.BASIC_SCHEME_PREFIX;
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME;
-import static org.gbif.registry.ws.security.SecurityConstants.GBIF_SCHEME_PREFIX;
-import static org.gbif.registry.ws.security.SecurityConstants.HEADER_GBIF_USER;
+import static org.gbif.ws.util.SecurityConstants.BASIC_AUTH;
+import static org.gbif.ws.util.SecurityConstants.BASIC_SCHEME_PREFIX;
+import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
+import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME_PREFIX;
+import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 
 // TODO: 2019-07-26 comment, revise existing comments
 // TODO: 2019-07-26 test
@@ -59,10 +61,10 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
 
   @Override
   public Authentication authenticate(final Authentication authentication) {
-    return authenticate(((RegistryAuthentication) authentication).getRequest());
+    return authenticate(((GbifAuthentication) authentication).getRequest());
   }
 
-  private RegistryAuthentication authenticate(final HttpServletRequest request) {
+  private GbifAuthentication authenticate(final HttpServletRequest request) {
     // Extract authentication credentials
     final String authentication = request.getHeader(HttpHeaders.AUTHORIZATION);
 
@@ -76,7 +78,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     return getAnonymous(request);
   }
 
-  private RegistryAuthentication basicAuthentication(final String authentication, final HttpServletRequest request) {
+  private GbifAuthentication basicAuthentication(final String authentication, final HttpServletRequest request) {
     // As specified in RFC 7617, the auth header (if not ASCII) is in UTF-8.
     byte[] decodedAuthentication = Base64.getDecoder().decode(authentication);
     String[] values = COLON_PATTERN.split(new String(decodedAuthentication, StandardCharsets.UTF_8), 2);
@@ -110,7 +112,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     return getAuthenticated(user, BASIC_AUTH, request);
   }
 
-  private RegistryAuthentication gbifAuthentication(final HttpServletRequest request) {
+  private GbifAuthentication gbifAuthentication(final HttpServletRequest request) {
     String username = request.getHeader(HEADER_GBIF_USER);
     if (Strings.isNullOrEmpty(username)) {
       LOG.warn("Missing gbif username header {}", HEADER_GBIF_USER);
@@ -143,17 +145,17 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
    * Get an anonymous.
    * Anonymous users do not have {@link Principal}.
    */
-  private RegistryAuthentication getAnonymous(final HttpServletRequest request) {
-    return new RegistryAuthentication(null, null, Collections.emptyList(), "", request);
+  private GbifAuthentication getAnonymous(final HttpServletRequest request) {
+    return new GbifAuthentication(null, null, Collections.emptyList(), "", request);
   }
 
-  private RegistryAuthentication getAuthenticated(final GbifUser user, final String authenticationScheme, final HttpServletRequest request) {
+  private GbifAuthentication getAuthenticated(final GbifUser user, final String authenticationScheme, final HttpServletRequest request) {
     final List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
         .map(Enum::name)
         .map(SimpleGrantedAuthority::new)
         .collect(Collectors.toList());
 
     // TODO: 2019-07-26 set credentials?
-    return new RegistryAuthentication(new GbifUserPrincipal(user), null, authorities, authenticationScheme, request);
+    return new GbifAuthentication(new GbifUserPrincipal(user), null, authorities, authenticationScheme, request);
   }
 }
