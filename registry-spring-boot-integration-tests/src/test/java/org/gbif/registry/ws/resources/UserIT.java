@@ -11,14 +11,12 @@ import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.TestJwtConfiguration;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
-import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.gbif.ws.security.CustomRequestObject;
 import org.gbif.ws.security.GbifAuthService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,6 +28,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.gbif.registry.ws.fixtures.UserTestFixture.generateUser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -55,10 +54,6 @@ public class UserIT {
   private WebApplicationContext context;
 
   @Autowired
-  @Qualifier("jwtIssuanceService")
-  private JwtIssuanceService jwtIssuanceService;
-
-  @Autowired
   private IdentityService identityService;
 
   @Autowired
@@ -70,9 +65,8 @@ public class UserIT {
   @Autowired
   private GbifAuthService gbifAuthService;
 
-  private UserTestFixture userTestFixture;
-
-  private GbifUser user;
+  private static GbifUser user;
+  private static GbifUser userForChangingPassword;
 
   @Before
   public void setUp() {
@@ -81,9 +75,12 @@ public class UserIT {
         .apply(springSecurity())
         .build();
 
-    userTestFixture = new UserTestFixture(identityService, challengeCodeMapper, challengeCodeSupportMapper);
+    UserTestFixture userTestFixture = new UserTestFixture(identityService, challengeCodeMapper, challengeCodeSupportMapper);
     if (user == null) {
-      userTestFixture.prepareUser();
+      user = userTestFixture.prepareUser();
+    }
+    if (userForChangingPassword == null) {
+      userForChangingPassword = userTestFixture.prepareUser(generateUser("user_13"));
     }
   }
 
@@ -168,22 +165,21 @@ public class UserIT {
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(newPassword);
 
-    final MvcResult mvcResult = mvc
+    mvc
         .perform(
             put("/user/changePassword")
                 .content(objectMapper.writeValueAsString(params))
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("utf-8")
-                .with(httpBasic(user.getUserName(), "welcome")))
+                .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
         .andDo(print())
-        .andExpect(status().isNoContent())
-        .andReturn();
+        .andExpect(status().isNoContent());
 
     // try to login using the previous password
     mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(user.getUserName(), "welcome")))
+                .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
         .andDo(print())
         .andExpect(status().isUnauthorized())
         .andReturn();
@@ -192,7 +188,7 @@ public class UserIT {
     mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(user.getUserName(), "123456")))
+                .with(httpBasic(userForChangingPassword.getUserName(), "123456")))
         .andDo(print())
         .andExpect(status().isOk())
         .andReturn();
