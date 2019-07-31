@@ -15,7 +15,7 @@ mail:
   cc: cc3
   bcc: cc4
 
-  # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
+# urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
   appkeys:
     whitelist: gbif.registry-ws-client-it
@@ -24,6 +24,10 @@ identity:
       urlTemplate:
         confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
         resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
+
+application:
+  key: gbif.app.it
+  secret: a
 
 # JWT
 jwt:

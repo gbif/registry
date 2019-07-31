@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-// TODO: 2019-07-26 test
 /**
  * Override a built-in spring filter because of legacy behaviour.
  * <p>
@@ -38,8 +37,12 @@ public class IdentityFilter extends BasicAuthenticationFilter {
   @Override
   public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
     // authenticates the HTTP method, but ignores legacy UUID user names
-    final Authentication authentication = getAuthenticationManager().authenticate(new RegistryAuthentication(null, null, null, request));
-    SecurityContextHolder.getContext().setAuthentication(authentication);
+    try {
+      final Authentication authentication = getAuthenticationManager().authenticate(new RegistryAuthentication(null, null, null, request));
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+    } catch (WebApplicationException e) {
+      response.setStatus(e.getResponse().getStatusCode().value());
+    }
     filterChain.doFilter(request, response);
   }
 }

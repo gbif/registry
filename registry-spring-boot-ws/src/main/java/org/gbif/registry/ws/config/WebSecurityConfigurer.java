@@ -50,7 +50,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .httpBasic().and()
         // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
         .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
-        .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class) // TODO: 2019-07-29 find a proper place for it
+        .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
         .addFilterAfter(context.getBean(JwtResponseFilter.class), JwtRequestFilter.class)
         .csrf().disable()

@@ -1,8 +1,5 @@
 package org.gbif.registry.ws.security;
 
-// TODO: 2019-07-10 useful?
-// TODO: 2019-07-10 revise comments
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 

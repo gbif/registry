@@ -59,7 +59,6 @@ public class AppIdentityFilter extends GenericFilterBean {
   private final GbifAuthService authService;
   private final List<String> appKeyWhitelist;
 
-  // TODO: 2019-07-29 white list can be nullable
   public AppIdentityFilter(
       @NotNull GbifAuthService authService,
       @Nullable @Value("${identity.appkeys.whitelist}") List<String> appKeyWhitelist) {
@@ -87,7 +86,6 @@ public class AppIdentityFilter extends GenericFilterBean {
 
         // check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
         if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
-
           final AppPrincipal principal = new AppPrincipal(appKey, AppRole.APP.name());
           final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
           final Authentication updatedAuth = new RegistryAuthentication(principal, null, authorities, GBIF_SCHEME, httpRequest);

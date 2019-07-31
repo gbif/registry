@@ -3,9 +3,10 @@ package org.gbif.api.service.common;
 import com.google.common.collect.Maps;
 import org.gbif.api.model.common.GbifUser;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,8 +18,8 @@ public class LoggedUserWithToken {
   private String email;
   private final Map<String, String> settings = Maps.newHashMap();
   private String token;
-  private Set<String> roles = Collections.emptySet();
-  private Set<String> editorRoleScopes = Collections.emptySet();
+  private Set<String> roles = new HashSet<>();
+  private Set<String> editorRoleScopes = new HashSet<>();
 
   /**
    * Only used for json deserialization
@@ -33,9 +34,8 @@ public class LoggedUserWithToken {
     this.email = user.getEmail();
     this.settings.putAll(user.getSettings());
     this.token = token;
-    // TODO: 2019-07-15 set directly? implement
-//    Optional.ofNullable(user.getRoles()).ifPresent(userRoles -> userRoles.forEach(role -> this.roles.add(role.name())));
-//    Optional.ofNullable(editorRights).ifPresent(rights -> rights.forEach(v -> this.editorRoleScopes.add(v.toString())));
+    Optional.ofNullable(user.getRoles()).ifPresent(userRoles -> userRoles.forEach(role -> this.roles.add(role.name())));
+    Optional.ofNullable(editorRights).ifPresent(rights -> rights.forEach(v -> this.editorRoleScopes.add(v.toString())));
   }
 
   public static LoggedUserWithToken from(GbifUser user, String token, List<UUID> editorRights) {

@@ -1,8 +1,12 @@
 package org.gbif.registry.ws.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -73,6 +78,8 @@ public class GbifAuthService {
   private static final char NEWLINE = '\n';
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
 
+  // TODO: 2019-07-31 it should be JacksonJsonContextResolver
+  private final ObjectMapper mapper = new ObjectMapper();
   private final ImmutableMap<String, String> keyStore;
 
   public GbifAuthService(@Value("${appkeys.file}") String appKeyStoreFilePath) {
@@ -85,10 +92,6 @@ public class GbifAuthService {
     }
     LOG.info("Initialised appkey store with {} keys", keyStore.size());
   }
-
-  // TODO: 2019-07-26 implement multiKeyAuthService
-  // TODO: 2019-07-26 implement singleKeyAuthService
-  // TODO: 2019-07-26 implement signRequest
 
   /**
    * Extracts the information to be encrypted from a request and concatenates them into a single String.
@@ -112,6 +115,29 @@ public class GbifAuthService {
       sb.append(httpHeaders.getFirst(HEADER_ORIGINAL_REQUEST_URL));
     } else {
       sb.append(getCanonicalizedPath(request.getRequestURI()));
+    }
+
+    appendHeader(sb, httpHeaders, HEADER_CONTENT_TYPE, false);
+    appendHeader(sb, httpHeaders, HEADER_CONTENT_MD5, true);
+    appendHeader(sb, httpHeaders, HEADER_GBIF_USER, true);
+
+    return sb.toString();
+  }
+
+  // TODO: 2019-07-31 there are two original methods: with ContainerRequest param and ClientRequest
+  private String buildStringToSign(final CustomRequestObject request) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(request.getMethod());
+    sb.append(NEWLINE);
+    // custom header set by varnish overrides real URI
+    // see http://dev.gbif.org/issues/browse/GBIFCOM-137
+    final HttpHeaders httpHeaders = request.getHeaders();
+
+    if (httpHeaders.containsKey(HEADER_ORIGINAL_REQUEST_URL)) {
+      sb.append(httpHeaders.getFirst(HEADER_ORIGINAL_REQUEST_URL));
+    } else {
+      sb.append(getCanonicalizedPath(request.getRequestUri()));
     }
 
     appendHeader(sb, httpHeaders, HEADER_CONTENT_TYPE, false);
@@ -219,4 +245,118 @@ public class GbifAuthService {
     return keyStore.get(applicationKey);
   }
 
+  // TODO: 2019-07-31 find a way how to use it (or not?)
+  /**
+   * Signs a request by adding a Content-MD5 and Authorization header.
+   * For PUT/POST requests that contain a body entity the Content-MD5 header is created using the same
+   * JSON mapper for serialization as the clients use.
+   *
+   * Other format than JSON are not supported currently !!!
+   */
+  public void signRequest(final String username, final HeaderMapRequestWrapper request) {
+    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
+    // first add custom GBIF headers so we can use them to build the string to sign
+
+    // the proxied username
+    request.addHeader(HEADER_GBIF_USER, username);
+
+    // the canonical path header
+    request.addHeader(HEADER_ORIGINAL_REQUEST_URL, getCanonicalizedPath(request.getRequestURI()));
+
+    // adds content md5
+    if (request.getContentLength() > 0) {
+      request.addHeader(HEADER_CONTENT_MD5, buildContentMD5(getRequestBody(request)));
+    }
+
+    // build the unique string to sign
+    final String stringToSign = buildStringToSign(request);
+    // find private key for this app
+    final String appKey = keyStore.keySet().iterator().next();
+    final String secretKey = getPrivateKey(appKey);
+    if (secretKey == null) {
+      LOG.warn("Skip signing request with unknown application key: {}", appKey);
+      return;
+    }
+    // sign
+    String signature = buildSignature(stringToSign, secretKey);
+
+    // build authorization header string
+    String header = buildAuthHeader(appKey, signature);
+    // add authorization header
+    LOG.debug("Adding authentication header to request {} for proxied user {} : {}", request.getRequestURI(), username, header);
+    request.addHeader(HttpHeaders.AUTHORIZATION, header);
+  }
+
+  public CustomRequestObject signRequest(final String username, final CustomRequestObject request) {
+    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
+    // first add custom GBIF headers so we can use them to build the string to sign
+
+    // the proxied username
+    request.addHeader(HEADER_GBIF_USER, username);
+
+    // the canonical path header
+    request.addHeader(HEADER_ORIGINAL_REQUEST_URL, getCanonicalizedPath(request.getRequestUri()));
+
+    // adds content md5
+    if (!Strings.isNullOrEmpty(request.getContent())) {
+      request.addHeader(HEADER_CONTENT_MD5, buildContentMD5(request.getContent()));
+    }
+
+    // build the unique string to sign
+    final String stringToSign = buildStringToSign(request);
+    // find private key for this app
+    final String appKey = keyStore.keySet().iterator().next();
+    final String secretKey = getPrivateKey(appKey);
+    if (secretKey == null) {
+      LOG.warn("Skip signing request with unknown application key: {}", appKey);
+      return request;
+    }
+    // sign
+    final String signature = buildSignature(stringToSign, secretKey);
+
+    // build authorization header string
+    final String header = buildAuthHeader(appKey, signature);
+    // add authorization header
+    LOG.debug("Adding authentication header to request {} for proxied user {} : {}", request.getRequestUri(), username, header);
+    request.addHeader(HttpHeaders.AUTHORIZATION, header);
+
+    return request;
+  }
+
+  private String getRequestBody(final HttpServletRequest request) {
+    final StringBuilder builder = new StringBuilder();
+    try (final BufferedReader reader = request.getReader()) {
+      if (reader == null) {
+        return null;
+      }
+      String line;
+      while ((line = reader.readLine()) != null) {
+        builder.append(line);
+      }
+      return builder.toString();
+    } catch (final Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Generates the Base64 encoded 128 bit MD5 digest of the entire content string suitable for the
+   * Content-MD5 header value.
+   * See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
+   */
+  private String buildContentMD5(Object entity) {
+    try {
+      byte[] content = mapper.writeValueAsBytes(entity);
+
+      // TODO: 2019-07-31 char encoding should be ASCII
+      return Base64.getEncoder().encodeToString(DigestUtils.md5(content));
+    } catch (IOException e) {
+      LOG.error("Failed to serialize http entity [{}]", entity);
+      throw Throwables.propagate(e);
+    }
+  }
+
+  private static String buildAuthHeader(String applicationKey, String signature) {
+    return GBIF_SCHEME_PREFIX + applicationKey + ':' + signature;
+  }
 }
