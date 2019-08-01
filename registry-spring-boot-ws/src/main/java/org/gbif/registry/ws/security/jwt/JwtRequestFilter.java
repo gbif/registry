@@ -3,12 +3,12 @@ package org.gbif.registry.ws.security.jwt;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.ws.security.HeaderMapRequestWrapper;
 import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.security.GbifAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.regex.Pattern;
+
+import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
 
 /**
  * Filter to validate the JWT tokens.
@@ -67,12 +69,13 @@ public class JwtRequestFilter extends GenericFilterBean {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
 
-        // TODO: 2019-07-26 should it use RegistryAuthentication instead? This one does not keep auth scheme
-        final UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+        final GbifAuthentication gbifAuthentication =
+            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "", ((HttpServletRequest) request));
+        SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers
-        requestWrapper.addHeader("token", jwtIssuanceService.generateJwt(gbifUser.getUserName()));
+        final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
+        requestWrapper.addHeader(HEADER_TOKEN, newToken);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
         throw new WebApplicationException(HttpStatus.UNAUTHORIZED);

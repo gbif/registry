@@ -11,6 +11,16 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+/**
+ * Filter that updates http headers when a new resource is successfully created via a POST request unless
+ * the response returns 204 No Content.
+ *
+ * The following headers are added or replaced if they existed:
+ * <ul>
+ *   <li>Http response code 201</li>
+ *   <li>Location header is set accordingly based on returned key</li>
+ * </ul>
+ */
 @ControllerAdvice
 public class CreatedResponseFilter implements ResponseBodyAdvice<Object> {
 

@@ -56,12 +56,12 @@ public class JwtIT {
         .build();
   }
 
-  // TODO: 2019-07-29 users should be in the DB before tests!
-
-  // TODO: 2019-07-29 unstable
   @Test
   public void performTestWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
     final String token = login("justadmin", "welcome");
+
+    // otherwise the service may issue the same token because of the same time (seconds)
+    Thread.sleep(1000);
 
     final MvcResult mvcResult = mvc
         .perform(
@@ -156,7 +156,7 @@ public class JwtIT {
                 .with(httpBasic(user, password))
                 .characterEncoding("utf-8"))
         .andDo(print())
-        .andExpect(status().isOk())
+        .andExpect(status().isCreated())
         .andExpect(jsonPath("$.token").isNotEmpty());
 
     final MvcResult result = resultActions.andReturn();

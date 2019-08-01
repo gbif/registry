@@ -2,7 +2,6 @@ package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
-import org.gbif.registry.ws.security.jwt.JwtResponseFilter;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -53,7 +52,6 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .addFilterAfter(context.getBean(IdentityFilter.class), BasicAuthenticationFilter.class)
         .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
-        .addFilterAfter(context.getBean(JwtResponseFilter.class), JwtRequestFilter.class)
         .csrf().disable()
         .authorizeRequests()
         .anyRequest().authenticated();

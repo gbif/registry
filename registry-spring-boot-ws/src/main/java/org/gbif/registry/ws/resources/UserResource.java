@@ -73,10 +73,10 @@ public class UserResource {
 
     identityService.updateLastLogin(user.getKey());
 
+    final String token = jwtIssuanceService.generateJwt(user.getUserName());
+
     // build response
-    LoggedUserWithToken response = LoggedUserWithToken.from(
-        user,
-        jwtIssuanceService.generateJwt(user.getUserName()), // add jwt token
+    LoggedUserWithToken response = LoggedUserWithToken.from(user, token,
         identityService.listEditorRights(user.getUserName()));
 
     return ResponseEntity.ok()
