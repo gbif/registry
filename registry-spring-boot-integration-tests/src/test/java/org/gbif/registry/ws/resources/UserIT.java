@@ -125,14 +125,13 @@ public class UserIT {
         .andReturn();
   }
 
-  // TODO: 2019-07-30 gets 200 instead of expected 201
   @Test
   public void testLoginPost() throws Exception {
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/login")
                 .with(httpBasic(user.getUserName(), "welcome")))
-        .andExpect(status().isCreated())
+         .andExpect(status().isCreated())
         .andReturn();
 
     // check jwt token
@@ -207,7 +206,7 @@ public class UserIT {
         .perform(
             post("/user/whoami")
                 .with(httpBasic(user.getUserName(), "welcome")))
-        .andExpect(status().isOk()) // TODO: 2019-07-31 should be 'created' instead
+        .andExpect(status().isCreated())
         .andReturn();
 
     final String contentAsString = mvcResult.getResponse().getContentAsString();

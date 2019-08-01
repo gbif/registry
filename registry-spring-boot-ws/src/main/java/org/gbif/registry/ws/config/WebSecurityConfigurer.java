@@ -17,7 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -49,7 +49,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     http
         .httpBasic().and()
         // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
-        .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
+//        .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
+        .addFilterAfter(context.getBean(IdentityFilter.class), BasicAuthenticationFilter.class)
         .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
         .addFilterAfter(context.getBean(JwtResponseFilter.class), JwtRequestFilter.class)
