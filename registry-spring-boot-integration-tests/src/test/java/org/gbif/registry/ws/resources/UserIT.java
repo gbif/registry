@@ -36,7 +36,6 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, TestJwtConfiguration.class},
@@ -92,14 +91,12 @@ public class UserIT {
     mvc
         .perform(
             get("/user/login"))
-        .andDo(print())
         .andExpect(status().isUnauthorized());
 
     // POST login
     mvc
         .perform(
             post("/user/login"))
-        .andDo(print())
         .andExpect(status().isUnauthorized());
   }
 
@@ -109,7 +106,6 @@ public class UserIT {
         .perform(
             get("/user/login")
                 .with(httpBasic(user.getUserName(), "welcome")))
-        .andDo(print())
         .andExpect(status().isOk())
         .andReturn();
 
@@ -120,13 +116,11 @@ public class UserIT {
     assertUserLogged(loggedUserWithToken, user);
     assertFalse(Strings.isNullOrEmpty(loggedUserWithToken.getToken()));
 
-    // TODO: 2019-07-30 it's not working (401). check why
     // try to login using the email instead of the username
     mvc
         .perform(
             get("/user/login")
                 .with(httpBasic(user.getEmail(), "welcome")))
-        .andDo(print())
         .andExpect(status().isOk())
         .andReturn();
   }
@@ -138,7 +132,6 @@ public class UserIT {
         .perform(
             post("/user/login")
                 .with(httpBasic(user.getUserName(), "welcome")))
-        .andDo(print())
         .andExpect(status().isCreated())
         .andReturn();
 
@@ -154,9 +147,7 @@ public class UserIT {
         .perform(
             post("/user/login")
                 .with(httpBasic(user.getEmail(), "welcome")))
-        .andDo(print())
-        .andExpect(status().isCreated())
-        .andReturn();
+        .andExpect(status().isCreated());
   }
 
   @Test
@@ -172,7 +163,6 @@ public class UserIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("utf-8")
                 .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
-        .andDo(print())
         .andExpect(status().isNoContent());
 
     // try to login using the previous password
@@ -180,7 +170,6 @@ public class UserIT {
         .perform(
             get("/user/login")
                 .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
-        .andDo(print())
         .andExpect(status().isUnauthorized())
         .andReturn();
 
@@ -189,7 +178,6 @@ public class UserIT {
         .perform(
             get("/user/login")
                 .with(httpBasic(userForChangingPassword.getUserName(), "123456")))
-        .andDo(print())
         .andExpect(status().isOk())
         .andReturn();
   }
@@ -206,13 +194,11 @@ public class UserIT {
 
     final CustomRequestObject customRequestObject = gbifAuthService.signRequest(user.getUserName(), new CustomRequestObject(RequestMethod.GET, "/user/login", null, httpHeaders));
 
-    final MvcResult mvcResult = mvc
+    mvc
         .perform(
             get("/user/login")
                 .headers(customRequestObject.getHeaders()))
-        .andDo(print())
-        .andExpect(status().isForbidden())
-        .andReturn();
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -221,7 +207,6 @@ public class UserIT {
         .perform(
             post("/user/whoami")
                 .with(httpBasic(user.getUserName(), "welcome")))
-        .andDo(print())
         .andExpect(status().isOk()) // TODO: 2019-07-31 should be 'created' instead
         .andReturn();
 

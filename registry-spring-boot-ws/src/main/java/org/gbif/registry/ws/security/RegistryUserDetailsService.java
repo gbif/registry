@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.config;
+package org.gbif.registry.ws.security;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.persistence.mapper.UserMapper;
@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-// TODO: 2019-07-09 move to another place\package\whatever?
 @Service
 @Qualifier("registryUserDetailsService")
 public class RegistryUserDetailsService implements UserDetailsService {
@@ -22,8 +21,10 @@ public class RegistryUserDetailsService implements UserDetailsService {
   }
 
   @Override
-  public UserDetails loadUserByUsername(String username) {
-    final GbifUser user = userMapper.get(username);
+  public UserDetails loadUserByUsername(final String username) {
+    final GbifUser user = username.contains("@") ?
+        userMapper.getByEmail(username) :
+        userMapper.get(username);
 
     if (user == null) {
       throw new UsernameNotFoundException(username);
