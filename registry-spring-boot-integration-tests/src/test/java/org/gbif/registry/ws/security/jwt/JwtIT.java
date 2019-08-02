@@ -3,12 +3,10 @@ package org.gbif.registry.ws.security.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.ws.TestEmailConfiguration;
-import org.gbif.registry.ws.TestJwtConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,7 +20,6 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.gbif.ws.util.SecurityConstants.BEARER_SCHEME_PREFIX;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, TestJwtConfiguration.class},
+@SpringBootTest(classes = {TestEmailConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -45,7 +42,6 @@ public class JwtIT {
   private WebApplicationContext context;
 
   @Autowired
-  @Qualifier("jwtIssuanceService")
   private JwtIssuanceService jwtIssuanceService;
 
   @Before
@@ -56,8 +52,10 @@ public class JwtIT {
         .build();
   }
 
+  // Tty to login with valid credentials then extract a token from the response.
+  // Then try with that token. It should be CREATED and the token should be updated.
   @Test
-  public void performTestWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
+  public void testWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
     final String token = login("justadmin", "welcome");
 
     // otherwise the service may issue the same token because of the same time (seconds)
@@ -76,8 +74,9 @@ public class JwtIT {
     assertNotEquals(token, responseToken);
   }
 
+  // Try with a wrong header name ('beare' instead of 'Bearer'). It should be FORBIDDEN.
   @Test
-  public void performTestWithWrongHeaderNameShouldReturnStatusForbidden() throws Exception {
+  public void testWithWrongHeaderNameShouldReturnStatusForbidden() throws Exception {
     mvc
         .perform(
             post("/test")
@@ -86,15 +85,16 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
-  // TODO: 2019-07-29 there are problems with mocks
-  // TODO: 2019-07-29 figure out why is not working
+  // Try with a wrong signing key. It should be FORBIDDEN.
   @Test
-  public void performTestWithWrongSigningKeyShouldReturnStatusForbidden() throws Exception {
-    final JwtIssuanceService jwtIssuanceServiceWithWrongConfig = new JwtIssuanceService(10000, "GBIF", "fake");
-    when(jwtIssuanceService.generateJwt("justadmin"))
-        .then(p -> jwtIssuanceServiceWithWrongConfig.generateJwt("justadmin"));
+  public void testWithWrongSigningKeyShouldReturnStatusForbidden() throws Exception {
+    final JwtConfiguration jwtConfiguration = new JwtConfiguration();
+    jwtConfiguration.setExpiryTimeInMs(600000);
+    jwtConfiguration.setIssuer("GBIF-REGISTRY");
+    jwtConfiguration.setSigningKey("fake");
 
-    final String token = login("justadmin", "welcome");
+    final JwtIssuanceServiceImpl jwtIssuanceServiceWithWrongConfig = new JwtIssuanceServiceImpl(jwtConfiguration);
+    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("justadmin");
 
     mvc
         .perform(
@@ -104,8 +104,9 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
+  // Service expects the ADMIN role. If try with the USER role it should return FORBIDDEN.
   @Test
-  public void performTestWithUserRoleShouldReturnStatusForbidden() throws Exception {
+  public void testWithInsufficientUserRoleShouldReturnStatusForbidden() throws Exception {
     final String token = login("justuser", "welcome");
 
     mvc
@@ -116,9 +117,9 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
-  // TODO: 2019-07-29 implement a mapper for WebApplicationException
+  // Service expects the valid token. If the token was issued for the unknown user it should return FORBIDDEN.
   @Test
-  public void performTestWithTokenIssuedForFakeUserShouldReturnStatusForbidden() throws Exception {
+  public void testWithTokenIssuedForFakeUserShouldReturnStatusForbidden() throws Exception {
     final String token = jwtIssuanceService.generateJwt("fake");
 
     mvc
@@ -129,8 +130,9 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
+  // Service expects either Basic auth or JWT. Otherwise it returns FORBIDDEN.
   @Test
-  public void performTestWithNoBasicAndNoJwtShouldReturnStatusForbidden() throws Exception {
+  public void testWithNoBasicAndNoJwtShouldReturnStatusForbidden() throws Exception {
     mvc
         .perform(
             post("/test"))
@@ -138,8 +140,9 @@ public class JwtIT {
         .andExpect(status().isForbidden());
   }
 
+  // Try with valid Basic auth. It should be CREATED.
   @Test
-  public void performTestWithBasicAndNoJwtShouldReturnStatusCreated() throws Exception {
+  public void testWithBasicAndNoJwtShouldReturnStatusCreated() throws Exception {
     mvc
         .perform(
             post("/test")

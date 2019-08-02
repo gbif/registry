@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.security;
 
 import org.gbif.registry.ws.TestEmailConfiguration;
-import org.gbif.registry.ws.TestJwtConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, TestJwtConfiguration.class},
+@SpringBootTest(classes = {TestEmailConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)

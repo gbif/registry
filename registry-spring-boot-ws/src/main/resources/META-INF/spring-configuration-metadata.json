@@ -39,6 +39,18 @@
     {
       "name": "mail.from",
       "type": "java.lang.String"
+    },
+    {
+      "name": "jwt.signingKey",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "jwt.expiryTimeInMs",
+      "type": "java.lang.Long"
+    },
+    {
+      "name": "jwt.issuer",
+      "type": "java.lang.String"
     }
   ]
 }

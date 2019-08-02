@@ -25,6 +25,7 @@ import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifSc
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 
+// TODO: 2019-08-02 move logic to the service?
 @RequestMapping("/user")
 @RestController
 public class UserResource {

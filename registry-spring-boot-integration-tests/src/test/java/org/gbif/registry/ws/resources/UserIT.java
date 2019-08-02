@@ -2,17 +2,12 @@ package org.gbif.registry.ws.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.util.Strings;
-import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUserWithToken;
-import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
-import org.gbif.registry.persistence.mapper.ChallengeCodeMapper;
 import org.gbif.registry.ws.TestEmailConfiguration;
-import org.gbif.registry.ws.TestJwtConfiguration;
-import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
-import org.gbif.ws.security.CustomRequestObject;
 import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.server.RequestObject;
+import org.gbif.ws.util.SecurityConstants;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +23,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.gbif.registry.ws.fixtures.UserTestFixture.generateUser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -38,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, TestJwtConfiguration.class},
+@SpringBootTest(classes = {TestEmailConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -53,19 +47,11 @@ public class UserIT {
   private WebApplicationContext context;
 
   @Autowired
-  private IdentityService identityService;
-
-  @Autowired
-  private ChallengeCodeMapper challengeCodeMapper;
-
-  @Autowired
-  private ChallengeCodeSupportMapper<Integer> challengeCodeSupportMapper;
-
-  @Autowired
   private GbifAuthService gbifAuthService;
 
-  private static GbifUser user;
-  private static GbifUser userForChangingPassword;
+  private static final String USERNAME = "user_12";
+  private static final String EMAIL = "user_12@gbif.org";
+  private static final String USERNAME_FOR_CHANGING_PASSWORD = "user_13";
 
   @Before
   public void setUp() {
@@ -73,14 +59,6 @@ public class UserIT {
         .webAppContextSetup(context)
         .apply(springSecurity())
         .build();
-
-    UserTestFixture userTestFixture = new UserTestFixture(identityService, challengeCodeMapper, challengeCodeSupportMapper);
-    if (user == null) {
-      user = userTestFixture.prepareUser();
-    }
-    if (userForChangingPassword == null) {
-      userForChangingPassword = userTestFixture.prepareUser(generateUser("user_13"));
-    }
   }
 
   // TODO: 2019-07-30 revise test names
@@ -105,7 +83,7 @@ public class UserIT {
     final MvcResult mvcResult = mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(user.getUserName(), "welcome")))
+                .with(httpBasic(USERNAME, "welcome")))
         .andExpect(status().isOk())
         .andReturn();
 
@@ -113,14 +91,14 @@ public class UserIT {
     final String contentAsString = mvcResult.getResponse().getContentAsString();
     final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
-    assertUserLogged(loggedUserWithToken, user);
+    assertUserLogged(loggedUserWithToken, USERNAME);
     assertFalse(Strings.isNullOrEmpty(loggedUserWithToken.getToken()));
 
     // try to login using the email instead of the username
     mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(user.getEmail(), "welcome")))
+                .with(httpBasic(EMAIL, "welcome")))
         .andExpect(status().isOk())
         .andReturn();
   }
@@ -130,7 +108,7 @@ public class UserIT {
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/login")
-                .with(httpBasic(user.getUserName(), "welcome")))
+                .with(httpBasic(USERNAME, "welcome")))
          .andExpect(status().isCreated())
         .andReturn();
 
@@ -138,14 +116,14 @@ public class UserIT {
     final String contentAsString = mvcResult.getResponse().getContentAsString();
     final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
-    assertUserLogged(loggedUserWithToken, user);
+    assertUserLogged(loggedUserWithToken, USERNAME);
     assertFalse(Strings.isNullOrEmpty(loggedUserWithToken.getToken()));
 
     // try to login using the email instead of the username
     mvc
         .perform(
             post("/user/login")
-                .with(httpBasic(user.getEmail(), "welcome")))
+                .with(httpBasic(EMAIL, "welcome")))
         .andExpect(status().isCreated());
   }
 
@@ -161,14 +139,14 @@ public class UserIT {
                 .content(objectMapper.writeValueAsString(params))
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("utf-8")
-                .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
+                .with(httpBasic(USERNAME_FOR_CHANGING_PASSWORD, "welcome")))
         .andExpect(status().isNoContent());
 
     // try to login using the previous password
     mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(userForChangingPassword.getUserName(), "welcome")))
+                .with(httpBasic(USERNAME_FOR_CHANGING_PASSWORD, "welcome")))
         .andExpect(status().isUnauthorized())
         .andReturn();
 
@@ -176,28 +154,55 @@ public class UserIT {
     mvc
         .perform(
             get("/user/login")
-                .with(httpBasic(userForChangingPassword.getUserName(), "123456")))
+                .with(httpBasic(USERNAME_FOR_CHANGING_PASSWORD, "123456")))
         .andExpect(status().isOk())
         .andReturn();
   }
 
-  // TODO: 2019-07-31 we need a test opposite this
+  // TODO: 2019-08-02 fix
+  @Test
+  public void testLoginWithAppKeysFail() throws Exception {
+    final HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    httpHeaders.add(SecurityConstants.HEADER_GBIF_USER, "fake");
+
+    final RequestObject requestObject =
+        gbifAuthService.signRequest("fake", new RequestObject(RequestMethod.GET, "/test/app", null, httpHeaders));
+
+    mvc
+        .perform(
+            post("/test/app")
+                .headers(requestObject.getHeaders()))
+        .andExpect(status().isForbidden());
+  }
+
+  // TODO: 2019-08-02 fix
   /**
    * The login endpoint only accepts HTTP Basic request.
    * Application that uses appkeys are trusted.
    */
   @Test
-  public void testLoginWithAppKeys() throws Exception {
+  public void testLoginWithAppKeysSuccess() throws Exception {
     final HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    httpHeaders.add(SecurityConstants.HEADER_GBIF_USER, "gbif.registry-ws-client-it");
 
-    final CustomRequestObject customRequestObject = gbifAuthService.signRequest(user.getUserName(), new CustomRequestObject(RequestMethod.GET, "/user/login", null, httpHeaders));
+    final TestResource.TestRequest testRequest = new TestResource.TestRequest("test");
+    final String content = objectMapper.writeValueAsString(testRequest);
+
+    final TestResource.TestRequest testRequest1 = new TestResource.TestRequest("test1");
+    final String content1 = objectMapper.writeValueAsString(testRequest1);
+
+    final RequestObject requestObject =
+        gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(RequestMethod.POST, "/test/app2", content1, httpHeaders));
 
     mvc
         .perform(
-            get("/user/login")
-                .headers(customRequestObject.getHeaders()))
-        .andExpect(status().isForbidden());
+            post("/test/app2")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON)
+                .headers(requestObject.getHeaders()))
+        .andExpect(status().isCreated());
   }
 
   @Test
@@ -205,20 +210,20 @@ public class UserIT {
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/whoami")
-                .with(httpBasic(user.getUserName(), "welcome")))
+                .with(httpBasic(USERNAME, "welcome")))
         .andExpect(status().isCreated())
         .andReturn();
 
     final String contentAsString = mvcResult.getResponse().getContentAsString();
     final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
-    assertUserLogged(loggedUserWithToken, user);
+    assertUserLogged(loggedUserWithToken, USERNAME);
   }
 
-  private void assertUserLogged(LoggedUserWithToken loggedUserWithToken, GbifUser user) {
-    assertEquals(user.getUserName(), loggedUserWithToken.getUserName());
-    assertEquals(user.getEmail(), loggedUserWithToken.getEmail());
-    assertEquals(user.getFirstName(), loggedUserWithToken.getFirstName());
-    assertEquals(user.getRoles().size(), loggedUserWithToken.getRoles().size());
+  private void assertUserLogged(LoggedUserWithToken loggedUserWithToken, String username) {
+    assertEquals(username, loggedUserWithToken.getUserName());
+    assertEquals(username + "@gbif.org", loggedUserWithToken.getEmail());
+    assertEquals("Tim", loggedUserWithToken.getFirstName());
+    assertEquals(1, loggedUserWithToken.getRoles().size());
   }
 }

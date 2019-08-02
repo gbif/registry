@@ -2,7 +2,6 @@ package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.ws.security.HeaderMapRequestWrapper;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.GbifAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -54,8 +54,10 @@ public class JwtRequestFilter extends GenericFilterBean {
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    final Optional<String> token = findTokenInRequest(((HttpServletRequest) request));
-    final HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(((HttpServletRequest) request));
+    final HttpServletRequest httpRequest = (HttpServletRequest) request;
+    final HttpServletResponse httpResponse = (HttpServletResponse) response;
+    final Optional<String> token = findTokenInRequest(httpRequest);
+    final HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(httpRequest);
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
@@ -70,7 +72,7 @@ public class JwtRequestFilter extends GenericFilterBean {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
 
         final GbifAuthentication gbifAuthentication =
-            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "", ((HttpServletRequest) request));
+            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "", httpRequest);
         SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers
@@ -78,10 +80,10 @@ public class JwtRequestFilter extends GenericFilterBean {
         requestWrapper.addHeader(HEADER_TOKEN, newToken);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
-        throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
       }
 
-      filterChain.doFilter(requestWrapper, response);
+      filterChain.doFilter(requestWrapper, httpResponse);
     }
   }
 

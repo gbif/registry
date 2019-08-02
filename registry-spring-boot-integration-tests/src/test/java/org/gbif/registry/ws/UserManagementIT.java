@@ -5,7 +5,6 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.registry.persistence.mapper.ChallengeCodeMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
-import org.gbif.registry.ws.fixtures.UserTestFixture;
 import org.gbif.registry.ws.model.UserCreation;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.UUID;
 
-import static org.gbif.registry.ws.fixtures.UserTestFixture.ALTERNATE_USERNAME;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -58,10 +56,9 @@ public class UserManagementIT {
   }
 
   // TODO: 2019-07-03 rename
-//  @WithMockUser("spring")
   @Test
   public void testCreateUser() throws Exception {
-    final UserCreation user = UserTestFixture.generateUser(ALTERNATE_USERNAME);
+    final UserCreation user = prepareUser();
 
     final String userJsonString = objectMapper.writeValueAsString(user);
 
@@ -110,5 +107,17 @@ public class UserManagementIT {
     // try to update user info
     // change/reset password
     // delete
+  }
+
+  private UserCreation prepareUser() {
+    UserCreation user = new UserCreation();
+    user.setUserName("user_14");
+    user.setFirstName("Tim");
+    user.setLastName("Robertson");
+    user.setPassword("welcome");
+    user.getSettings().put("language", "en");
+    user.getSettings().put("country", "dk");
+    user.setEmail("user_14@gbif.org");
+    return user;
   }
 }

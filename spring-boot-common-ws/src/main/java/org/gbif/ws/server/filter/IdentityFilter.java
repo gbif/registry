@@ -40,7 +40,7 @@ public class IdentityFilter extends BasicAuthenticationFilter {
     try {
       final Authentication authentication = getAuthenticationManager().authenticate(new GbifAuthentication(null, null, null, request));
       SecurityContextHolder.getContext().setAuthentication(authentication);
-    } catch (WebApplicationException e) {
+    } catch (final WebApplicationException e) {
       response.setStatus(e.getResponse().getStatusCode().value());
     }
     filterChain.doFilter(request, response);

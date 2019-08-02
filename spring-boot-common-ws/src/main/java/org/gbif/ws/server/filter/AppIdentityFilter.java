@@ -2,7 +2,6 @@ package org.gbif.ws.server.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.AppRole;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.AppPrincipal;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthUtils;
@@ -25,6 +24,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.security.Principal;
@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// TODO: 2019-07-29 test
-// TODO: 2019-07-29 it's not working because of WebApplicationException at IdentityFilter
 /**
  * A filter that allows an application to identify itself as an application (as opposed to an application
  * impersonating a user).
@@ -70,6 +68,7 @@ public class AppIdentityFilter extends GenericFilterBean {
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
+    final HttpServletResponse httpResponse = (HttpServletResponse) response;
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     // Only try if no user principal is already there
@@ -78,23 +77,23 @@ public class AppIdentityFilter extends GenericFilterBean {
       if (StringUtils.startsWith(authorization, SecurityConstants.GBIF_SCHEME_PREFIX)) {
         if (!authService.isValidRequest(httpRequest)) {
           LOG.warn("Invalid GBIF authenticated request");
-          throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
-        }
+          httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+        } else {
+          String username = httpRequest.getHeader(SecurityConstants.HEADER_GBIF_USER);
+          String appKey = GbifAuthUtils.getAppKeyFromRequest(authorization);
 
-        String username = httpRequest.getHeader(SecurityConstants.HEADER_GBIF_USER);
-        String appKey = GbifAuthUtils.getAppKeyFromRequest(authorization);
+          // check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
+          if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
+            final AppPrincipal principal = new AppPrincipal(appKey, AppRole.APP.name());
+            final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
+            final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME, httpRequest);
 
-        // check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
-        if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
-          final AppPrincipal principal = new AppPrincipal(appKey, AppRole.APP.name());
-          final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
-          final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME, httpRequest);
-
-          SecurityContextHolder.getContext().setAuthentication(updatedAuth);
+            SecurityContextHolder.getContext().setAuthentication(updatedAuth);
+          }
         }
       }
     }
 
-    filterChain.doFilter(request, response);
+    filterChain.doFilter(request, httpResponse);
   }
 }

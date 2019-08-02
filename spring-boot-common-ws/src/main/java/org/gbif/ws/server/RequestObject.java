@@ -1,4 +1,4 @@
-package org.gbif.ws.security;
+package org.gbif.ws.server;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -6,8 +6,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
-// TODO: 2019-07-31 rename and move
-public class CustomRequestObject {
+public class RequestObject {
 
   /**
    * RequestMethod (e.g. GET, POST, PUT).
@@ -33,7 +32,15 @@ public class CustomRequestObject {
   @NotNull
   private final HttpHeaders headers;
 
-  public CustomRequestObject(RequestMethod method, String requestUri, @Nullable String content, HttpHeaders headers) {
+  public RequestObject(final RequestObject another, final HttpHeaders additionalHeaders) {
+    this.method = another.getMethod();
+    this.requestUri = another.getRequestUri();
+    this.content = another.getContent();
+    this.headers = another.getHeaders();
+    this.headers.addAll(additionalHeaders);
+  }
+
+  public RequestObject(RequestMethod method, String requestUri, @Nullable String content, HttpHeaders headers) {
     this.method = method;
     this.requestUri = requestUri;
     this.content = content;
@@ -59,9 +66,5 @@ public class CustomRequestObject {
 
   public HttpHeaders getHeaders() {
     return headers;
-  }
-
-  public void addHeader(String name, String value) {
-    headers.add(name, value);
   }
 }

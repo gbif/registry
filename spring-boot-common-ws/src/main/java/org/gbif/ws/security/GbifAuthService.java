@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
+import org.gbif.ws.server.RequestObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -121,7 +122,7 @@ public class GbifAuthService {
     return sb.toString();
   }
 
-  private String buildStringToSign(final CustomRequestObject request) {
+  private String buildStringToSign(final RequestObject request) {
     StringBuilder sb = new StringBuilder();
 
     sb.append(request.getMethod());
@@ -248,29 +249,31 @@ public class GbifAuthService {
    *
    * Other format than JSON are not supported currently !!!
    */
-  public CustomRequestObject signRequest(final String username, final CustomRequestObject request) {
+  public RequestObject signRequest(final String username, final RequestObject request) {
     Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
     // first add custom GBIF headers so we can use them to build the string to sign
 
+    final HttpHeaders httpHeaders = new HttpHeaders();
+
     // the proxied username
-    request.addHeader(HEADER_GBIF_USER, username);
+    httpHeaders.add(HEADER_GBIF_USER, username);
 
     // the canonical path header
-    request.addHeader(HEADER_ORIGINAL_REQUEST_URL, getCanonicalizedPath(request.getRequestUri()));
+    httpHeaders.add(HEADER_ORIGINAL_REQUEST_URL, getCanonicalizedPath(request.getRequestUri()));
 
     // adds content md5
     if (!Strings.isNullOrEmpty(request.getContent())) {
-      request.addHeader(HEADER_CONTENT_MD5, buildContentMD5(request.getContent()));
+      httpHeaders.add(HEADER_CONTENT_MD5, buildContentMD5(request.getContent()));
     }
 
     // build the unique string to sign
-    final String stringToSign = buildStringToSign(request);
+    final String stringToSign = buildStringToSign(new RequestObject(request, httpHeaders));
     // find private key for this app
     final String appKey = keyStore.keySet().iterator().next();
     final String secretKey = getPrivateKey(appKey);
     if (secretKey == null) {
       LOG.warn("Skip signing request with unknown application key: {}", appKey);
-      return request;
+      return new RequestObject(request, httpHeaders);
     }
     // sign
     final String signature = buildSignature(stringToSign, secretKey);
@@ -279,9 +282,9 @@ public class GbifAuthService {
     final String header = buildAuthHeader(appKey, signature);
     // add authorization header
     LOG.debug("Adding authentication header to request {} for proxied user {} : {}", request.getRequestUri(), username, header);
-    request.addHeader(HttpHeaders.AUTHORIZATION, header);
+    httpHeaders.add(HttpHeaders.AUTHORIZATION, header);
 
-    return request;
+    return new RequestObject(request, httpHeaders);
   }
 
   /**
