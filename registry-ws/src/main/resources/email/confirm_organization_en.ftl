@@ -72,10 +72,8 @@ Additional information:
 </p>
 </#if>
 
-<#if hasReachableNodeManager()>
-  <p>Click this link to endorse <b>${organization.title!}</b>: <a href="${url}">ENDORSE</a>.</p>
-  <p>If you do NOT want to endorse this organization, please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
-</#if>
+<p>Click this link to endorse <b>${organization.title!}</b>: <a href="${url}">ENDORSE</a>.</p>
+<p>If you do NOT want to endorse this organization, please send an email to <a href="mailto:helpdesk@gbif.org">helpdesk@gbif.org</a> including a copy of this message and a short explanation.</p>
 
 <p>Kind regards,</p>
 <p>The GBIF Secretariat</p>
