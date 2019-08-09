@@ -85,7 +85,7 @@
     <freemarker.version>2.3.25-incubating</freemarker.version>
     <gbif-api.version>0.85</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
-    <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
+    <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>
     <gbif-common-service.version>0.16</gbif-common-service.version>
     <gbif-common-test.version>0.7</gbif-common-test.version>
