@@ -6,6 +6,7 @@ import org.gbif.ws.security.AppPrincipal;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthUtils;
 import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +58,7 @@ public class AppIdentityFilter extends GenericFilterBean {
   private final GbifAuthService authService;
   private final List<String> appKeyWhitelist;
 
+  // TODO: 2019-08-13 get rid of @Value
   public AppIdentityFilter(
       @NotNull GbifAuthService authService,
       @Nullable @Value("${identity.appkeys.whitelist}") List<String> appKeyWhitelist) {
@@ -75,7 +77,7 @@ public class AppIdentityFilter extends GenericFilterBean {
     if (authentication == null || authentication.getPrincipal() == null) {
       String authorization = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
       if (StringUtils.startsWith(authorization, SecurityConstants.GBIF_SCHEME_PREFIX)) {
-        if (!authService.isValidRequest(httpRequest)) {
+        if (!authService.isValidRequest(new RequestObject(httpRequest))) {
           LOG.warn("Invalid GBIF authenticated request");
           httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         } else {

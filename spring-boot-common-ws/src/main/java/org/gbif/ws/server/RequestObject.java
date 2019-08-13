@@ -1,70 +1,69 @@
 package org.gbif.ws.server;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
 
-public class RequestObject {
+public class RequestObject extends HttpServletRequestWrapper {
 
-  /**
-   * RequestMethod (e.g. GET, POST, PUT).
-   */
-  @NotNull
-  private final RequestMethod method;
+  private String content;
 
-  /**
-   * Request URI (e.g. /user/login).
-   */
-  @NotNull
-  private final String requestUri;
+  private HttpHeaders httpHeaders;
 
-  /**
-   * Request content.
-   */
-  @Nullable
-  private final String content;
+  public RequestObject(HttpServletRequest request) {
+    super(request);
 
-  /**
-   * Request HTTP headers.
-   */
-  @NotNull
-  private final HttpHeaders headers;
+    try {
+      if (request.getInputStream() != null) {
+        content = IOUtils.toString(request.getInputStream(), request.getCharacterEncoding());
+      } else {
+        content = null;
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Stream can't be read", e);
+    }
 
-  public RequestObject(final RequestObject another, final HttpHeaders additionalHeaders) {
-    this.method = another.getMethod();
-    this.requestUri = another.getRequestUri();
-    this.content = another.getContent();
-    this.headers = another.getHeaders();
-    this.headers.addAll(additionalHeaders);
+    httpHeaders = getHttpHeaders(request);
   }
 
-  public RequestObject(RequestMethod method, String requestUri, @Nullable String content, HttpHeaders headers) {
-    this.method = method;
-    this.requestUri = requestUri;
-    this.content = content;
-    this.headers = headers;
+  @Override
+  public ServletInputStream getInputStream() {
+    final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getBytes());
+    return new DelegatingServletInputStream(byteArrayInputStream);
   }
 
-  public RequestMethod getMethod() {
-    return method;
+  @Override
+  public BufferedReader getReader() {
+    return new BufferedReader(new InputStreamReader(this.getInputStream()));
   }
 
-  public String getMethodValue() {
-    return method.name();
+  private HttpHeaders getHttpHeaders(HttpServletRequest request) {
+    final HttpHeaders requestHeaders = new HttpHeaders();
+    Enumeration<String> headerNames = request.getHeaderNames();
+
+    if (headerNames != null) {
+      while (headerNames.hasMoreElements()) {
+        String currentHeaderName = headerNames.nextElement();
+        requestHeaders.add(currentHeaderName, request.getHeader(currentHeaderName));
+      }
+    }
+
+    return requestHeaders;
   }
 
-  public String getRequestUri() {
-    return requestUri;
-  }
-
-  @Nullable
   public String getContent() {
     return content;
   }
 
-  public HttpHeaders getHeaders() {
-    return headers;
+  public HttpHeaders getHttpHeaders() {
+    return httpHeaders;
   }
 }

@@ -7,6 +7,7 @@ import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthentication;
 import org.gbif.ws.security.GbifUserPrincipal;
+import org.gbif.ws.server.RequestObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -122,7 +123,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
       LOG.warn("No GbifAuthService defined.");
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
-    if (!authService.isValidRequest(request)) {
+    if (!authService.isValidRequest(new RequestObject(request))) {
       LOG.warn("Invalid GBIF authenticated request");
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }

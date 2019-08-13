@@ -1,16 +1,5 @@
 # application.yml
 
-# todo find proper solution
-#mail:
-#  cc: @mail.cc@
-#  from: username
-#  smtp:
-#    host: localhost
-#    port: 2525
-#  devemail:
-#    enabled: @mail.devemail.enabled@
-#    address: gbifregistry@malinator.com
-
 mail:
   cc: cc3
   bcc: cc4

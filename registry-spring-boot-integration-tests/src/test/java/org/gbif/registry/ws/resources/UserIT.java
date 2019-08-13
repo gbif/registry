@@ -1,11 +1,11 @@
 package org.gbif.registry.ws.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assertj.core.util.Strings;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
-import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.security.GbifAuthServiceImpl;
+import org.gbif.ws.server.DelegatingServletInputStream;
 import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.junit.Before;
@@ -23,8 +23,17 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayInputStream;
+import java.util.Enumeration;
+import java.util.StringTokenizer;
+
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +56,7 @@ public class UserIT {
   private WebApplicationContext context;
 
   @Autowired
-  private GbifAuthService gbifAuthService;
+  private GbifAuthServiceImpl gbifAuthService;
 
   private static final String USERNAME = "user_12";
   private static final String EMAIL = "user_12@gbif.org";
@@ -61,8 +70,9 @@ public class UserIT {
         .build();
   }
 
-  // TODO: 2019-07-30 revise test names
-
+  /**
+   * Try to login with no credentials provided (POST\GET). 401 is expected.
+   */
   @Test
   public void testLoginNoCredentials() throws Exception {
     // GET login
@@ -78,6 +88,12 @@ public class UserIT {
         .andExpect(status().isUnauthorized());
   }
 
+  /**
+   * GET method
+   * Try to login with valid credentials (Basic auth).
+   * Check that the response is 200 and the JWT is present it the response.
+   * Try to login by email. Should be 200 as well.
+   */
   @Test
   public void testLoginGet() throws Exception {
     final MvcResult mvcResult = mvc
@@ -92,7 +108,7 @@ public class UserIT {
     final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
     assertUserLogged(loggedUserWithToken, USERNAME);
-    assertFalse(Strings.isNullOrEmpty(loggedUserWithToken.getToken()));
+    assertThat(loggedUserWithToken.getToken(), not(isEmptyOrNullString()));
 
     // try to login using the email instead of the username
     mvc
@@ -103,13 +119,19 @@ public class UserIT {
         .andReturn();
   }
 
+  /**
+   * POST method
+   * Try to login with valid credentials (Basic auth).
+   * Check that the response is 200 and the JWT is present it the response.
+   * Try to login by email. Should be 200 as well.
+   */
   @Test
   public void testLoginPost() throws Exception {
     final MvcResult mvcResult = mvc
         .perform(
             post("/user/login")
                 .with(httpBasic(USERNAME, "welcome")))
-         .andExpect(status().isCreated())
+        .andExpect(status().isCreated())
         .andReturn();
 
     // check jwt token
@@ -117,7 +139,7 @@ public class UserIT {
     final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
     assertUserLogged(loggedUserWithToken, USERNAME);
-    assertFalse(Strings.isNullOrEmpty(loggedUserWithToken.getToken()));
+    assertThat(loggedUserWithToken.getToken(), not(isEmptyOrNullString()));
 
     // try to login using the email instead of the username
     mvc
@@ -127,6 +149,10 @@ public class UserIT {
         .andExpect(status().isCreated());
   }
 
+  /**
+   * Try to change the password.
+   * Then check that the previous password is invalid (401) and the current one is OK (200).
+   */
   @Test
   public void testChangePassword() throws Exception {
     final String newPassword = "123456";
@@ -138,7 +164,6 @@ public class UserIT {
             put("/user/changePassword")
                 .content(objectMapper.writeValueAsString(params))
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("utf-8")
                 .with(httpBasic(USERNAME_FOR_CHANGING_PASSWORD, "welcome")))
         .andExpect(status().isNoContent());
 
@@ -159,52 +184,67 @@ public class UserIT {
         .andReturn();
   }
 
-  // TODO: 2019-08-02 fix
+  /**
+   * Try to login with APP role. Use invalid credentials (appKey).
+   * No request body.
+   * Mock HttpServletRequest and sign it. (The sign service should return 'Authorization' header).
+   * Check the response is 403.
+   */
   @Test
   public void testLoginWithAppKeysFail() throws Exception {
-    final HttpHeaders httpHeaders = new HttpHeaders();
-    httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-    httpHeaders.add(SecurityConstants.HEADER_GBIF_USER, "fake");
+    HttpServletRequest rawRequestMock = mock(HttpServletRequest.class);
+    when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
+    when(rawRequestMock.getRequestURI()).thenReturn("/test/app");
+    final Enumeration enumeration = new StringTokenizer("Content-Type x-gbif-user");
+    when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
+    when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
+    when(rawRequestMock.getHeader(SecurityConstants.HEADER_GBIF_USER)).thenReturn("fake");
 
-    final RequestObject requestObject =
-        gbifAuthService.signRequest("fake", new RequestObject(RequestMethod.GET, "/test/app", null, httpHeaders));
+    RequestObject request = new RequestObject(rawRequestMock);
 
     mvc
         .perform(
             post("/test/app")
-                .headers(requestObject.getHeaders()))
+                .headers(request.getHttpHeaders()))
         .andExpect(status().isForbidden());
   }
 
-  // TODO: 2019-08-02 fix
   /**
-   * The login endpoint only accepts HTTP Basic request.
-   * Application that uses appkeys are trusted.
+   * Try to login with APP role. Use valid credentials (appKey).
+   * There should be a secretKey for this appKey in the storage.
+   * Request body is present.
+   * Mock HttpServletRequest and sign it. (The sign service should return 'Authorization' header).
+   * Check the response is 201.
    */
   @Test
   public void testLoginWithAppKeysSuccess() throws Exception {
-    final HttpHeaders httpHeaders = new HttpHeaders();
-    httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-    httpHeaders.add(SecurityConstants.HEADER_GBIF_USER, "gbif.registry-ws-client-it");
+    final TestResource.TestRequest requestToSign = new TestResource.TestRequest("test");
+    final byte[] contentToSign = objectMapper.writeValueAsBytes(requestToSign);
 
-    final TestResource.TestRequest testRequest = new TestResource.TestRequest("test");
-    final String content = objectMapper.writeValueAsString(testRequest);
+    HttpServletRequest rawRequestMock = mock(HttpServletRequest.class);
+    when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
+    when(rawRequestMock.getRequestURI()).thenReturn("/test/app2");
+    when(rawRequestMock.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(contentToSign)));
+    final Enumeration enumeration = new StringTokenizer("Content-Type");
+    when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
+    when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
 
-    final TestResource.TestRequest testRequest1 = new TestResource.TestRequest("test1");
-    final String content1 = objectMapper.writeValueAsString(testRequest1);
+    RequestObject requestMock = new RequestObject(rawRequestMock);
 
-    final RequestObject requestObject =
-        gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(RequestMethod.POST, "/test/app2", content1, httpHeaders));
+    final RequestObject signedRequest = gbifAuthService.signRequest("gbif.registry-ws-client-it", requestMock);
 
     mvc
         .perform(
             post("/test/app2")
-                .content(content)
+                .content(signedRequest.getContent())
                 .contentType(MediaType.APPLICATION_JSON)
-                .headers(requestObject.getHeaders()))
+                .headers(signedRequest.getHttpHeaders()))
         .andExpect(status().isCreated());
   }
 
+  /**
+   * Call whoami and check that the user is valid.
+   */
   @Test
   public void testWhoAmI() throws Exception {
     final MvcResult mvcResult = mvc

@@ -12,32 +12,32 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 
-// for security testing
+// for testing
 @RestController
 @RequestMapping("/test")
 public class TestResource {
 
   @RequestMapping(method = RequestMethod.GET)
   @Secured(ADMIN_ROLE)
-  public ResponseEntity<Void> testGet() {
+  public ResponseEntity<Void> getWithAdminRoleOnlyAndEmptyRequestResponse() {
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
   @RequestMapping(method = RequestMethod.POST)
   @Secured(ADMIN_ROLE)
-  public ResponseEntity<Void> testPost() {
+  public ResponseEntity<Void> postWithAdminRoleOnlyAndEmptyRequestResponse() {
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
   @PostMapping("/app")
   @Secured(APP_ROLE)
-  public ResponseEntity<Void> testApp() {
+  public ResponseEntity<Void> postWithAppRoleOnlyAndEmptyRequestResponse() {
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
 
   @PostMapping("/app2")
   @Secured(APP_ROLE)
-  public ResponseEntity<String> testApp2(@RequestBody final TestRequest testRequest) {
+  public ResponseEntity<String> postWithAppRoleOnlyAndRequestBodyAndResponse(@RequestBody final TestRequest testRequest) {
     return ResponseEntity.status(HttpStatus.CREATED).body(testRequest.getValue());
   }
 

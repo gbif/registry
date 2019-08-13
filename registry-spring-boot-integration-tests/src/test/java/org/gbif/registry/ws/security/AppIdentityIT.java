@@ -39,6 +39,7 @@ public class AppIdentityIT {
         .build();
   }
 
+  // TODO: 2019-08-12 remove?
   @Test
   public void performTestWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
     mvc
