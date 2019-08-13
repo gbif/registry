@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.ws.security.HeaderMapRequestWrapper;
 import org.gbif.ws.security.GbifAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,6 @@ public class JwtRequestFilter extends GenericFilterBean {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
     final HttpServletResponse httpResponse = (HttpServletResponse) response;
     final Optional<String> token = findTokenInRequest(httpRequest);
-    final HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(httpRequest);
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
@@ -77,13 +75,13 @@ public class JwtRequestFilter extends GenericFilterBean {
 
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
-        requestWrapper.addHeader(HEADER_TOKEN, newToken);
+        httpResponse.addHeader(HEADER_TOKEN, newToken);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
         httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
       }
 
-      filterChain.doFilter(requestWrapper, httpResponse);
+      filterChain.doFilter(httpRequest, httpResponse);
     }
   }
 
