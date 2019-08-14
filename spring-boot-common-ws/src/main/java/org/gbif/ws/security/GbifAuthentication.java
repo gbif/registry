@@ -7,7 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 
-// TODO: 2019-07-29 mb implement Authentication interface instead?
 /**
  * Extends Spring's {@link UsernamePasswordAuthenticationToken}.
  */

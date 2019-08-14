@@ -1,12 +1,9 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.security;
 
 import com.google.common.base.Strings;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.ws.WebApplicationException;
-import org.gbif.ws.security.GbifAuthService;
-import org.gbif.ws.security.GbifAuthentication;
-import org.gbif.ws.security.GbifUserPrincipal;
 import org.gbif.ws.server.RequestObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,16 +33,12 @@ import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME_PREFIX;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 
-// TODO: 2019-07-26 comment, revise existing comments
-// TODO: 2019-07-26 test
 @Component
-public class RegistryAuthenticationManager implements AuthenticationManager {
+public class GbifAuthenticationManager implements AuthenticationManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RegistryAuthenticationManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GbifAuthenticationManager.class);
 
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
-
-
 
   private final IdentityAccessService identityAccessService;
   private final GbifAuthService authService;
@@ -54,7 +47,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
    * In case {@link GbifAuthService} is not provided, this class will reject all authentications
    * on the GBIF scheme prefix.
    */
-  public RegistryAuthenticationManager(@NotNull IdentityAccessService identityAccessService, @Nullable GbifAuthService authService) {
+  public GbifAuthenticationManager(@NotNull IdentityAccessService identityAccessService, @Nullable GbifAuthService authService) {
     Objects.requireNonNull(identityAccessService, "identityAccessService shall be provided");
     this.identityAccessService = identityAccessService;
     this.authService = authService;
@@ -65,6 +58,10 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     return authenticate(((GbifAuthentication) authentication).getRequest());
   }
 
+  /**
+   * Authenticate a provided request.
+   * There are two authentication types here: GBIF and Basic.
+   */
   private GbifAuthentication authenticate(final HttpServletRequest request) {
     // Extract authentication credentials
     final String authentication = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -79,6 +76,9 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     return getAnonymous(request);
   }
 
+  /**
+   * Basic authentication (when the Authorization header scheme is 'BASIC').
+   */
   private GbifAuthentication basicAuthentication(final String authentication, final HttpServletRequest request) {
     // As specified in RFC 7617, the auth header (if not ASCII) is in UTF-8.
     byte[] decodedAuthentication = Base64.getDecoder().decode(authentication);
@@ -95,7 +95,7 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
       throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     }
 
-    // TODO: 2019-07-26 it's not a good approach to check UUID
+    // it's not a good approach to check UUID
     // ignore usernames which are UUIDs - these are registry legacy IPT calls and handled by a special security filter
     try {
       UUID.fromString(username);
@@ -113,6 +113,9 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     return getAuthenticated(user, BASIC_AUTH, request);
   }
 
+  /**
+   * GBIF authentication (when the Authorization header scheme is 'GBIF').
+   */
   private GbifAuthentication gbifAuthentication(final HttpServletRequest request) {
     String username = request.getHeader(HEADER_GBIF_USER);
     if (Strings.isNullOrEmpty(username)) {
@@ -129,10 +132,6 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
     }
 
     LOG.debug("Authenticating user {} via scheme {}", username, GBIF_SCHEME);
-    if (identityAccessService == null) {
-      LOG.debug("No identityService configured! No roles assigned, using anonymous user instead.");
-      return getAnonymous(request);
-    }
 
     //check if we have a request that impersonates a user
     GbifUser user = identityAccessService.get(username);
@@ -145,18 +144,28 @@ public class RegistryAuthenticationManager implements AuthenticationManager {
   /**
    * Get an anonymous.
    * Anonymous users do not have {@link Principal}.
+   *
+   * @param request source request
+   * @return  authentication object for the anonymous user
    */
   private GbifAuthentication getAnonymous(final HttpServletRequest request) {
     return new GbifAuthentication(null, null, Collections.emptyList(), "", request);
   }
 
+  /**
+   * Construct GbifAuthentication by parameter.
+   *
+   * @param user user which has to be authenticated
+   * @param authenticationScheme authentication scheme (BASIC, GBIF etc.)
+   * @param request source request
+   * @return authentication object for this user
+   */
   private GbifAuthentication getAuthenticated(final GbifUser user, final String authenticationScheme, final HttpServletRequest request) {
     final List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
         .map(Enum::name)
         .map(SimpleGrantedAuthority::new)
         .collect(Collectors.toList());
 
-    // TODO: 2019-07-26 set credentials?
     return new GbifAuthentication(new GbifUserPrincipal(user), null, authorities, authenticationScheme, request);
   }
 }
