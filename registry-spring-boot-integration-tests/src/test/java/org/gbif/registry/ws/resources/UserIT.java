@@ -32,7 +32,9 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -193,8 +195,7 @@ public class UserIT {
   @Test
   public void testLoginWithAppKeysFail() throws Exception {
     HttpServletRequest rawRequestMock = mock(HttpServletRequest.class);
-    when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
-    when(rawRequestMock.getRequestURI()).thenReturn("/test/app");
+
     final Enumeration enumeration = new StringTokenizer("Content-Type x-gbif-user");
     when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
     when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
@@ -207,6 +208,10 @@ public class UserIT {
             post("/test/app")
                 .headers(request.getHttpHeaders()))
         .andExpect(status().isForbidden());
+
+    verify(rawRequestMock).getHeaderNames();
+    verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
+    verify(rawRequestMock).getHeader(SecurityConstants.HEADER_GBIF_USER);
   }
 
   /**
@@ -240,6 +245,11 @@ public class UserIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(signedRequest.getHttpHeaders()))
         .andExpect(status().isCreated());
+
+    verify(rawRequestMock).getMethod();
+    verify(rawRequestMock, atLeastOnce()).getRequestURI();
+    verify(rawRequestMock).getHeaderNames();
+    verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
   }
 
   /**
