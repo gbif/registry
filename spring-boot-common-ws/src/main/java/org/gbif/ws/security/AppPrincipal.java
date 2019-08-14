@@ -5,53 +5,54 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 public class AppPrincipal implements UserDetails {
 
   @NotNull
   private final String appKey;
-  private final String appRole;
 
-  public AppPrincipal(String appKey, String appRole) {
+  private List<? extends GrantedAuthority> authorities;
+
+  public AppPrincipal(String appKey, List<? extends GrantedAuthority> authorities) {
     Objects.requireNonNull(appKey, "appKey shall be provided");
     this.appKey = appKey;
-    this.appRole = appRole;
+    this.authorities = authorities;
   }
 
-  // TODO: 2019-07-29 implement methods below
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return null;
+    return authorities;
   }
 
   @Override
   public String getPassword() {
-    return null;
+    throw new UnsupportedOperationException("There is no password for the AppPrincipal");
   }
 
   @Override
   public String getUsername() {
-    return null;
+    return appKey;
   }
 
   @Override
   public boolean isAccountNonExpired() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isAccountNonLocked() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isCredentialsNonExpired() {
-    return false;
+    return true;
   }
 
   @Override
   public boolean isEnabled() {
-    return false;
+    return true;
   }
 }
