@@ -6,8 +6,6 @@ mail:
 
 # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
-  appkeys:
-    whitelist: gbif.registry-ws-client-it
   surety:
     mail:
       urlTemplate:
@@ -26,7 +24,8 @@ jwt:
 
 # file with all application keys & secrets
 appkeys:
-  file:@appkeys.testfile@
+  file: @appkeys.testfile@
+  whitelist: gbif.registry-ws-client-it
 
 spring:
   datasource:

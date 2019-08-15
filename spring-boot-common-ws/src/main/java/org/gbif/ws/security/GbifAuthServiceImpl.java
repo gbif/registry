@@ -11,7 +11,6 @@ import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.RequestObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -75,14 +74,13 @@ public class GbifAuthServiceImpl implements GbifAuthService {
   private final ObjectMapper mapper = new ObjectMapper();
   private final ImmutableMap<String, String> keyStore;
 
-  // TODO: 2019-08-12 get rid of value annotation
-  public GbifAuthServiceImpl(@Value("${appkeys.file}") String appKeyStoreFilePath) {
+  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration) {
     try {
-      Properties props = PropertiesUtil.loadProperties(appKeyStoreFilePath);
+      Properties props = PropertiesUtil.loadProperties(appkeysConfiguration.getFile());
       keyStore = Maps.fromProperties(props);
     } catch (IOException e) {
       throw new IllegalArgumentException(
-          "Property file path to application keys does not exist: " + appKeyStoreFilePath, e);
+          "Property file path to application keys does not exist: " + appkeysConfiguration.getFile(), e);
     }
     LOG.info("Initialised appkey store with {} keys", keyStore.size());
   }

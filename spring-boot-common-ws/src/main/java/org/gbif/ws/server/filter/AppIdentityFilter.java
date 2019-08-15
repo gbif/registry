@@ -3,6 +3,7 @@ package org.gbif.ws.server.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.AppRole;
 import org.gbif.ws.security.AppPrincipal;
+import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthUtils;
 import org.gbif.ws.security.GbifAuthentication;
@@ -11,7 +12,6 @@ import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -20,7 +20,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.annotation.Nullable;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -60,14 +59,14 @@ public class AppIdentityFilter extends GenericFilterBean {
   private final List<String> appKeyWhitelist;
   private final SecurityContextProvider securityContextProvider;
 
-  // TODO: 2019-08-13 get rid of @Value
   public AppIdentityFilter(
       @NotNull GbifAuthService authService,
-      @Nullable @Value("${identity.appkeys.whitelist}") List<String> appKeyWhitelist,
+      AppkeysConfiguration appkeysConfiguration,
       SecurityContextProvider securityContextProvider) {
     this.authService = authService;
     //defensive copy or creation
-    this.appKeyWhitelist = appKeyWhitelist != null ? new ArrayList<>(appKeyWhitelist) : new ArrayList<>();
+    this.appKeyWhitelist = appkeysConfiguration.getWhitelist() != null
+        ? new ArrayList<>(appkeysConfiguration.getWhitelist()) : new ArrayList<>();
     this.securityContextProvider = securityContextProvider;
   }
 
