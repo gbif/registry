@@ -37,11 +37,13 @@ public class IdentityFilter extends BasicAuthenticationFilter {
   @Override
   public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws IOException, ServletException {
     // authenticates the HTTP method, but ignores legacy UUID user names
+    final GbifAuthentication anonymous = new GbifAuthentication(null, null, null, request);
     try {
-      final Authentication authentication = getAuthenticationManager().authenticate(new GbifAuthentication(null, null, null, request));
+      final Authentication authentication = getAuthenticationManager().authenticate(anonymous);
       SecurityContextHolder.getContext().setAuthentication(authentication);
     } catch (final WebApplicationException e) {
       response.setStatus(e.getResponse().getStatusCode().value());
+      SecurityContextHolder.getContext().setAuthentication(anonymous);
     }
     filterChain.doFilter(request, response);
   }

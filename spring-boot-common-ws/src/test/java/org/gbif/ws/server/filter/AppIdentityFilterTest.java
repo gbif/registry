@@ -1,5 +1,6 @@
 package org.gbif.ws.server.filter;
 
+import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.SecurityContextProvider;
 import org.gbif.ws.server.DelegatingServletInputStream;
@@ -54,8 +55,9 @@ public class AppIdentityFilterTest {
   public void setUp() {
     content = "content";
     context = new SecurityContextImpl();
-    List<String> appKeyWhiteList = Collections.singletonList("appkey");
-    appIdentityFilter = new AppIdentityFilter(authServiceMock, appKeyWhiteList, securityContextProviderMock);
+    AppkeysConfiguration appkeysConfiguration = new AppkeysConfiguration();
+    appkeysConfiguration.setWhitelist(Collections.singletonList("appkey"));
+    appIdentityFilter = new AppIdentityFilter(authServiceMock, appkeysConfiguration, securityContextProviderMock);
 
     when(securityContextProviderMock.getContext()).thenReturn(context);
   }

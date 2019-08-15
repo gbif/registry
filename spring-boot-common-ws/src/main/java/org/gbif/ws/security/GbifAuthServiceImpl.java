@@ -127,7 +127,6 @@ public class GbifAuthServiceImpl implements GbifAuthService {
     }
   }
 
-  // TODO: 2019-07-26 mb get rid of this one?
   /**
    * @return an absolute uri of the resource path alone, excluding host, scheme and query parameters
    */
