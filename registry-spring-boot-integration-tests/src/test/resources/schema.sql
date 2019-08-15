@@ -18,7 +18,7 @@ VALUES (2, 'justuser', 'justuser@email.email', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQ
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)
 VALUES (3, 'justadmin', 'justadmin@email.email', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'Joe',
-        'Doe', '{REGISTRY_ADMIN}', '', '', '2019-07-12 10:02:03.778207', null, null, null);
+        'Doe', '{REGISTRY_ADMIN}', '', 'my.settings.key => 100_tacos=100$', '2019-07-12 10:02:03.778207', null, null, null);
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)

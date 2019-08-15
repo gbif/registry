@@ -31,13 +31,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
@@ -95,6 +98,7 @@ public class UserManagementResource {
    * GET a {@link UserAdminView} of a user.
    * Mostly for admin console and access by authorized appkey (e.g. portal nodejs backend).
    * Returns the identified user account.
+   *
    * @return the {@link UserAdminView} or null
    */
   @Secured({ADMIN_ROLE, APP_ROLE})
@@ -102,13 +106,28 @@ public class UserManagementResource {
   public UserAdminView getUser(@PathVariable("username") String username) {
 
     GbifUser user = identityService.get(username);
-    if(user == null) {
+    if (user == null) {
       return null;
     }
     return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
   }
 
-// TODO: 2019-08-15 implement /find
+  @Secured({ADMIN_ROLE, APP_ROLE})
+  @GetMapping("/find")
+  public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> requestParams) {
+    GbifUser user = null;
+    Iterator<Map.Entry<String, String>> it = requestParams.entrySet().iterator();
+    if (it.hasNext()) {
+      Map.Entry<String, String> paramPair = it.next();
+      user = identityService.getBySystemSetting(paramPair.getKey(), paramPair.getValue());
+      it.remove();
+    }
+
+    if (user == null) {
+      return null;
+    }
+    return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
+  }
 
   /**
    * Creates a new user. (only available to the portal backend).
