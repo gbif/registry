@@ -1,11 +1,10 @@
-package org.gbif.registry.ws.resources;
+package org.gbif.registry.ws.advice;
 
 import org.gbif.ws.WebApplicationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-// TODO: 2019-07-30 rename and move
 @ControllerAdvice
 public class RegistryControllerAdvice {
 
