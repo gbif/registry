@@ -1,12 +1,9 @@
 package org.gbif.ws.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.server.RequestObject;
 import org.slf4j.Logger;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Base64;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -25,7 +21,6 @@ import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.gbif.ws.util.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
 
-// TODO: 2019-08-12 refactor it, reduce total quantity of private methods, use standalone services instead
 /**
  * The GBIF authentication scheme is modelled after the Amazon scheme on how to sign REST HTTP requests
  * using a private key. It uses the standard HTTP Authorization header to transport the following information:
@@ -64,13 +59,13 @@ public class GbifAuthServiceImpl implements GbifAuthService {
   private static final char NEWLINE = '\n';
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
 
-  // TODO: 2019-07-31 it should be JacksonJsonContextResolver
-  private final ObjectMapper mapper = new ObjectMapper();
   private final ImmutableMap<String, String> keyStore;
   private final SigningService signingService;
+  private final Md5EncodeService md5EncodeService;
 
-  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration, SigningService signingService) {
+  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration, SigningService signingService, Md5EncodeService md5EncodeService) {
     this.signingService = signingService;
+    this.md5EncodeService = md5EncodeService;
     try {
       Properties props = PropertiesUtil.loadProperties(appkeysConfiguration.getFile());
       keyStore = Maps.fromProperties(props);
@@ -199,7 +194,7 @@ public class GbifAuthServiceImpl implements GbifAuthService {
 
     // adds content md5
     if (!Strings.isNullOrEmpty(content)) {
-      request.getHttpHeaders().add(HEADER_CONTENT_MD5, buildContentMD5(content));
+      request.getHttpHeaders().add(HEADER_CONTENT_MD5, md5EncodeService.encode(content));
     }
 
     // build the unique string to sign
@@ -221,23 +216,6 @@ public class GbifAuthServiceImpl implements GbifAuthService {
     request.getHttpHeaders().add(HttpHeaders.AUTHORIZATION, header);
 
     return request;
-  }
-
-  /**
-   * Generates the Base64 encoded 128 bit MD5 digest of the entire content string suitable for the
-   * Content-MD5 header value.
-   * See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
-   */
-  private String buildContentMD5(Object entity) {
-    try {
-      byte[] content = mapper.writeValueAsBytes(entity);
-
-      // TODO: 2019-07-31 char encoding should be ASCII
-      return Base64.getEncoder().encodeToString(DigestUtils.md5(content));
-    } catch (IOException e) {
-      LOG.error("Failed to serialize http entity [{}]", entity);
-      throw Throwables.propagate(e);
-    }
   }
 
   private static String buildAuthHeader(String applicationKey, String signature) {
