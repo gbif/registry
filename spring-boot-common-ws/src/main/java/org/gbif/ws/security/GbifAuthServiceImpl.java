@@ -14,13 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -66,15 +61,16 @@ public class GbifAuthServiceImpl implements GbifAuthService {
 
   private static final Logger LOG = LoggerFactory.getLogger(GbifAuthServiceImpl.class);
 
-  private static final String ALGORITHM = "HmacSHA1";
   private static final char NEWLINE = '\n';
   private static final Pattern COLON_PATTERN = Pattern.compile(":");
 
   // TODO: 2019-07-31 it should be JacksonJsonContextResolver
   private final ObjectMapper mapper = new ObjectMapper();
   private final ImmutableMap<String, String> keyStore;
+  private final SigningService signingService;
 
-  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration) {
+  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration, SigningService signingService) {
+    this.signingService = signingService;
     try {
       Properties props = PropertiesUtil.loadProperties(appkeysConfiguration.getFile());
       keyStore = Maps.fromProperties(props);
@@ -164,7 +160,7 @@ public class GbifAuthServiceImpl implements GbifAuthService {
     //
     final String stringToSign = buildStringToSign(request);
     // sign
-    final String signature = buildSignature(stringToSign, secretKey);
+    final String signature = signingService.buildSignature(stringToSign, secretKey);
     // compare signatures
     if (signatureFound.equals(signature)) {
       LOG.debug("Trusted application with matching signatures");
@@ -173,29 +169,6 @@ public class GbifAuthServiceImpl implements GbifAuthService {
     LOG.info("Invalid signature: {}", authHeader);
     LOG.debug("StringToSign: {}", stringToSign);
     return false;
-  }
-
-  /**
-   * Generates a Base64 encoded HMAC-SHA1 signature of the passed in string with the given secret key.
-   * See Message Authentication Code specs http://tools.ietf.org/html/rfc2104
-   *
-   * @param stringToSign the string to be signed
-   * @param secretKey    the secret key to use in the
-   */
-  private String buildSignature(String stringToSign, String secretKey) {
-    try {
-      Mac mac = Mac.getInstance(ALGORITHM);
-      SecretKeySpec secret = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), ALGORITHM);
-      mac.init(secret);
-      byte[] digest = mac.doFinal(stringToSign.getBytes());
-
-      return new String(Base64.getEncoder().encode(digest), StandardCharsets.US_ASCII);
-
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("Cant find " + ALGORITHM + " message digester", e);
-    } catch (InvalidKeyException e) {
-      throw new RuntimeException("Invalid secret key " + secretKey, e);
-    }
   }
 
   private String getPrivateKey(final String applicationKey) {
@@ -239,7 +212,7 @@ public class GbifAuthServiceImpl implements GbifAuthService {
       return new RequestObject(request);
     }
     // sign
-    final String signature = buildSignature(stringToSign, secretKey);
+    final String signature = signingService.buildSignature(stringToSign, secretKey);
 
     // build authorization header string
     final String header = buildAuthHeader(appKey, signature);
