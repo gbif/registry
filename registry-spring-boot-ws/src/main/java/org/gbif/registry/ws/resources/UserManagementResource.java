@@ -13,8 +13,10 @@ import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.security.AppkeysConfiguration;
+import org.gbif.ws.security.GbifAuthentication;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.gbif.ws.server.filter.AppIdentityFilter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -226,6 +228,26 @@ public class UserManagementResource {
     return ResponseEntity.noContent().build();
   }
 
-  // TODO: 2019-08-15 implement: search, resetPassword, updatePassword, confirmationKeyValid,
+  /**
+   * A user requesting his password to be reset.
+   * The username is expected to be present in the security context (authenticated by appkey).
+   * This method will always return 204 No Content.
+   */
+  @Secured(USER_ROLE)
+  @PostMapping("/resetPassword")
+  public ResponseEntity<Void> resetPassword(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
+
+    String identifier = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    GbifUser user = identityService.get(identifier);
+    if (user != null) {
+      // initiate mail, and store the challenge etc.
+      identityService.resetPassword(user.getKey());
+    }
+    return ResponseEntity.noContent().build();
+  }
+
+  // TODO: 2019-08-15 implement: search, updatePassword, confirmationKeyValid,
   // TODO {username}/editorRight (post and get), {username}/editorRight/{key}
 }

@@ -30,3 +30,8 @@ INSERT INTO public."user" (key, username, email, password, first_name, last_name
 VALUES (5, 'user_12', 'user_12@gbif.org', '$S$DhH0xHYrr2f/OSMJcRbD4Vg3tjceFQI798AEWrUofr8fCObUrmEC', 'Tim',
         'Robertson', '{USER}', 'country => dk, language => en', '', '2019-08-02 08:54:42.616587',
         '2019-08-02 08:54:42.667163', null, null);
+INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
+                           created, last_login, deleted, challenge_code_key)
+VALUES (6, 'user_reset_password', 'user_reset_password@gbif.org', '$S$DhH0xHYrr2f/OSMJcRbD4Vg3tjceFQI798AEWrUofr8fCObUrmEC', 'Tim',
+        'Robertson', '{USER}', 'country => dk, language => en', '', '2019-08-02 08:54:42.616587',
+        '2019-08-02 08:54:42.667163', null, null);
