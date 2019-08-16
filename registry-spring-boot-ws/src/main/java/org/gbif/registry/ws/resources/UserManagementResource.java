@@ -6,6 +6,7 @@ import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserAdminView;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.registry.ws.model.UserUpdate;
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
@@ -250,4 +252,28 @@ public class UserManagementResource {
 
   // TODO: 2019-08-15 implement: search, updatePassword, confirmationKeyValid,
   // TODO {username}/editorRight (post and get), {username}/editorRight/{key}
+  /**
+   * Utility to determine if the challengeCode provided is valid for the given user.
+   * The username is expected to be present in the security context (authenticated by appkey).
+   * @param confirmationKey To check
+   */
+  @Secured(USER_ROLE)
+  @GetMapping("/confirmationKeyValid")
+  public ResponseEntity<Void> tokenValidityCheck(
+      Authentication authentication,
+      @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+      @RequestParam("confirmationKey") UUID confirmationKey) {
+
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
+
+    String username = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    GbifUser user = identityService.get(username);
+
+    if(identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+  }
+
 }
