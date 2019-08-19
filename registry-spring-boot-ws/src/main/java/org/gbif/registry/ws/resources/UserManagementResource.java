@@ -16,7 +16,6 @@ import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthentication;
-import org.gbif.ws.security.GbifUserPrincipal;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -172,8 +172,11 @@ public class UserManagementResource {
     if (currentUser == null || !currentUser.getUserName().equals(userUpdate.getUserName())) {
       response = ResponseEntity.badRequest().build();
     } else {
-      GbifUser updateInitiator = authentication == null ? null
-          : identityService.get(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
+      GbifUser updateInitiator = null;
+
+      if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+        updateInitiator = identityService.get(((UserDetails) authentication.getPrincipal()).getUsername());
+      }
 
       UserModelMutationResult result = identityService.update(
           UserUpdateRulesManager.applyUpdate(
@@ -363,8 +366,7 @@ public class UserManagementResource {
    */
   @Secured(ADMIN_ROLE)
   @DeleteMapping("/{username}/editorRight/{key}")
-  public ResponseEntity<Void> deleteEditorRight(@PathVariable("username") String username,
-                                    @PathVariable("key") UUID key) {
+  public ResponseEntity<Void> deleteEditorRight(@PathVariable("username") String username, @PathVariable("key") UUID key) {
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);

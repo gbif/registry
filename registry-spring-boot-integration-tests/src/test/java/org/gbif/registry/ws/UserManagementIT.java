@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -38,12 +39,14 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -100,7 +103,7 @@ public class UserManagementIT {
    */
   @Test
   public void testCreateUser() throws Exception {
-    final UserCreation user = prepareUser();
+    final UserCreation user = prepareUserCreation();
 
     final String userJsonString = objectMapper.writeValueAsString(user);
 
@@ -161,7 +164,7 @@ public class UserManagementIT {
 
   @Test
   public void testCreateUserNonWhiteListAppKey() throws Exception {
-    final UserCreation user = prepareUser();
+    final UserCreation user = prepareUserCreation();
 
     final String userJsonString = objectMapper.writeValueAsString(user);
 
@@ -294,6 +297,64 @@ public class UserManagementIT {
   }
 
   @Test
+  public void testUpdateUser() throws Exception {
+    final GbifUser user = userMapper.get("justadmin");
+    user.setFirstName("Joseph");
+    final String userJsonString = objectMapper.writeValueAsString(user);
+
+    // update user with a new name
+    String contentMd5 = md5EncodeService.encode(userJsonString);
+    String gbifAuthorization = getGbifAuthorization(PUT, "/admin/user/justadmin", APPLICATION_JSON, contentMd5, IT_APP_KEY, IT_APP_KEY, secret);
+    mvc
+        .perform(
+            put("/admin/user/{username}", "justadmin")
+                .content(userJsonString)
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, IT_APP_KEY)
+                .header(AUTHORIZATION, gbifAuthorization))
+        .andExpect(status().isNoContent());
+
+    // load user directly from the database
+    final GbifUser result = userMapper.get("justadmin");
+    assertThat(result.getFirstName(), is("Joseph"));
+
+    // update user using an existing email
+    user.setEmail("justuser@gbif.org"); // should be an existing email
+    final String userJsonString_2 = objectMapper.writeValueAsString(user);
+    String contentMd5_2 = md5EncodeService.encode(userJsonString_2);
+    String gbifAuthorization_2 = getGbifAuthorization(PUT, "/admin/user/justadmin", APPLICATION_JSON, contentMd5_2, IT_APP_KEY, IT_APP_KEY, secret);
+    mvc
+        .perform(
+            put("/admin/user/{username}", "justadmin")
+                .content(userJsonString_2)
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_CONTENT_MD5, contentMd5_2)
+                .header(HEADER_GBIF_USER, IT_APP_KEY)
+                .header(AUTHORIZATION, gbifAuthorization_2))
+        .andDo(print())
+        .andExpect(status().isUnprocessableEntity())
+        .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_IN_USE"));
+
+    // try with ADMIN role
+    user.setFirstName("Joe");
+    user.setEmail("justadmin@gbif.org");
+    final String userJsonString_3 = objectMapper.writeValueAsString(user);
+    mvc
+        .perform(
+            put("/admin/user/{username}", "justadmin")
+                .with(httpBasic("justadmin", "welcome"))
+                .content(userJsonString_3)
+                .contentType(APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isNoContent());
+
+    // load user directly from the database
+    final GbifUser result2 = userMapper.get("justadmin");
+    assertThat(result2.getFirstName(), is("Joe"));
+  }
+
+  @Test
   public void testUserEditorRights() throws Exception {
     final UUID uuid = UUID.randomUUID();
 
@@ -413,7 +474,7 @@ public class UserManagementIT {
     return sb.toString();
   }
 
-  private UserCreation prepareUser() {
+  private UserCreation prepareUserCreation() {
     UserCreation user = new UserCreation();
     user.setUserName("user_14");
     user.setFirstName("Tim");

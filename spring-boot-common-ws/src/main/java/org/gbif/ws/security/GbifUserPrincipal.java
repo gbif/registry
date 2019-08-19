@@ -10,7 +10,9 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-// TODO: 2019-07-26 analogue of org.gbif.api.model.common.GbifUserPrincipal
+/**
+ * @see org.gbif.api.model.common.GbifUserPrincipal
+ */
 public class GbifUserPrincipal implements UserDetails {
 
   @NotNull
@@ -21,7 +23,6 @@ public class GbifUserPrincipal implements UserDetails {
     this.user = user;
   }
 
-  // TODO: 2019-07-09 check
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return user.getRoles()
@@ -40,7 +41,6 @@ public class GbifUserPrincipal implements UserDetails {
     return user.getUserName();
   }
 
-  // TODO: 2019-07-09 implement 4 methods below
   @Override
   public boolean isAccountNonExpired() {
     return true;

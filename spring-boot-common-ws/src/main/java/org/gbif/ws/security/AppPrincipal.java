@@ -8,6 +8,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @see org.gbif.api.model.common.AppPrincipal
+ */
 public class AppPrincipal implements UserDetails {
 
   @NotNull
