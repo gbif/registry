@@ -31,9 +31,11 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -260,6 +262,43 @@ public class UserManagementIT {
                 .with(httpBasic("user_update_password", "newpass")))
         .andExpect(status().isOk())
         .andReturn();
+  }
+
+  @Test
+  public void testUserEditorRights() throws Exception {
+    final UUID uuid = UUID.randomUUID();
+
+    // Admin add a right to the user
+    mvc
+        .perform(
+            post("/admin/user/{username}/editorRight", "justuser")
+                .content(uuid.toString())
+                .contentType(MediaType.TEXT_PLAIN_VALUE)
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isCreated());
+
+    // Admin can see user's rights
+    mvc
+        .perform(
+            get("/admin/user/{username}/editorRight", "justuser")
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[\"" + uuid.toString() + "\"]"));
+
+    // Use can see its own rights
+    mvc
+        .perform(
+            get("/admin/user/{username}/editorRight", "justuser")
+                .with(httpBasic("justuser", "welcome")))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[\"" + uuid.toString() + "\"]"));
+
+    // Admin delete the user's right
+    mvc
+        .perform(
+            delete("/admin/user/{username}/editorRight/{key}", "justuser", uuid.toString())
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isNoContent());
   }
 
   private String getGbifAuthorization(String method, String requestUrl, String contentType, String contentMd5, String user, String authUser) {

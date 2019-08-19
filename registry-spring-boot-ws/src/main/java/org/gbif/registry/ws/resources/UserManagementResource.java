@@ -281,7 +281,6 @@ public class UserManagementResource {
   }
 
   // TODO: 2019-08-15 implement: search
-  // TODO {username}/editorRight (post and get), {username}/editorRight/{key}
 
   /**
    * Utility to determine if the challengeCode provided is valid for the given user.
@@ -308,4 +307,76 @@ public class UserManagementResource {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
   }
 
+  /**
+   * List the editor rights for a user.
+   */
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  @GetMapping("/{username}/editorRight")
+  public ResponseEntity<List<UUID>> editorRights(@PathVariable("username") String username,
+                                                 Authentication authentication) {
+    // Non-admin users can only see their own entry.
+    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
+      String usernameInContext = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+      if (!usernameInContext.equals(username)) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    List<UUID> rights = identityService.listEditorRights(username);
+    return ResponseEntity.ok(rights);
+  }
+
+  /**
+   * Add an entity right for a user.
+   */
+  @Secured({ADMIN_ROLE})
+  @RequestMapping(value = "/{username}/editorRight", method = RequestMethod.POST, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<UUID> addEditorRight(
+      @PathVariable("username") String username,
+      @RequestBody String strKey
+  ) {
+
+    final UUID key = UUID.fromString(strKey);
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (identityService.listEditorRights(username).contains(key)) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    } else {
+      identityService.addEditorRight(username, key);
+      return ResponseEntity.ok(key);
+    }
+  }
+
+  /**
+   * Delete an entity right for a user.
+   */
+  @Secured(ADMIN_ROLE)
+  @DeleteMapping("/{username}/editorRight/{key}")
+  public ResponseEntity<Void> deleteEditorRight(@PathVariable("username") String username,
+                                    @PathVariable("key") UUID key) {
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (!identityService.listEditorRights(username).contains(key)) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } else {
+      identityService.deleteEditorRight(username, key);
+      return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+  }
 }
