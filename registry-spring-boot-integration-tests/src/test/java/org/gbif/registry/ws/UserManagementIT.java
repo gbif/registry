@@ -182,6 +182,18 @@ public class UserManagementIT {
   }
 
   @Test
+  public void getUserFromAdmin() throws Exception {
+    mvc
+        .perform(
+            get("/admin/user/{username}", "justuser")
+                .with(httpBasic("justadmin", "welcome")))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.user.userName").value("justuser"))
+        .andExpect(jsonPath("$.error").doesNotExist());
+  }
+
+  @Test
   public void getUserBySystemSettings() throws Exception {
     // with admin role
     mvc
