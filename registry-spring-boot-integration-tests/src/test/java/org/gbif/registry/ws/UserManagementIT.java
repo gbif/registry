@@ -9,26 +9,30 @@ import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.SigningService;
-import org.gbif.ws.util.SecurityConstants;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
+import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -38,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -45,8 +51,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserManagementIT {
 
   public static final String IT_APP_KEY = "gbif.app.it";
+  public static final String IT_APP_KEY2 = "gbif.app.it2";
 
   private String secret;
+
+  private String secret2;
 
   @Value("${appkeys.file}")
   private String appkeysFile;
@@ -80,6 +89,7 @@ public class UserManagementIT {
 
     Properties props = PropertiesUtil.loadProperties(appkeysFile);
     secret = props.getProperty(IT_APP_KEY);
+    secret2 = props.getProperty(IT_APP_KEY2);
   }
 
   /**
@@ -96,15 +106,15 @@ public class UserManagementIT {
 
     // perform user creation and check response
     String contentMd5 = md5EncodeService.encode(userJsonString);
-    String gbifAuthorization = getGbifAuthorization("POST", "/admin/user", "application/json", contentMd5, IT_APP_KEY, IT_APP_KEY);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, IT_APP_KEY, IT_APP_KEY, secret);
     mvc
         .perform(
             post("/admin/user")
                 .content(userJsonString)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(SecurityConstants.HEADER_CONTENT_MD5, contentMd5)
-                .header(SecurityConstants.HEADER_GBIF_USER, IT_APP_KEY)
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, IT_APP_KEY)
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.username").value("user_14"))
         .andExpect(jsonPath("$.email").value("user_14@gbif.org"))
@@ -127,15 +137,15 @@ public class UserManagementIT {
     // perform request and check response
     // confirmation user and current one must be the same
     contentMd5 = md5EncodeService.encode(confirmationJsonString);
-    gbifAuthorization = getGbifAuthorization("POST", "/admin/user/confirm", "application/json", contentMd5, "user_14", IT_APP_KEY);
+    gbifAuthorization = getGbifAuthorization(POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", IT_APP_KEY, secret);
     mvc
         .perform(
             post("/admin/user/confirm")
                 .content(confirmationJsonString)
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(SecurityConstants.HEADER_CONTENT_MD5, contentMd5)
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_14")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, "user_14")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.userName").value("user_14"))
         .andExpect(jsonPath("$.email").value("user_14@gbif.org"));
@@ -147,6 +157,25 @@ public class UserManagementIT {
                 .with(httpBasic("user_14", "welcome")))
         .andExpect(status().isOk())
         .andReturn();
+  }
+
+  @Test
+  public void testCreateUserNonWhiteListAppKey() throws Exception {
+    final UserCreation user = prepareUser();
+
+    final String userJsonString = objectMapper.writeValueAsString(user);
+
+    String contentMd5 = md5EncodeService.encode(userJsonString);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, IT_APP_KEY2, IT_APP_KEY2, secret2);
+    mvc
+        .perform(
+            post("/admin/user")
+                .content(userJsonString)
+                .contentType(APPLICATION_JSON)
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, IT_APP_KEY2)
+                .header(AUTHORIZATION, gbifAuthorization))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -163,13 +192,13 @@ public class UserManagementIT {
         .andExpect(jsonPath("$.error").doesNotExist());
 
     // with APP role
-    String gbifAuthorization = getGbifAuthorization("GET", "/admin/user/find", null, null, IT_APP_KEY, IT_APP_KEY);
+    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/find", IT_APP_KEY, IT_APP_KEY, secret);
     mvc
         .perform(
             get("/admin/user/find")
                 .param("my.settings.key", "100_tacos=100$")
-                .header(SecurityConstants.HEADER_GBIF_USER, IT_APP_KEY)
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_GBIF_USER, IT_APP_KEY)
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.user.userName").value("justadmin"))
         .andExpect(jsonPath("$.error").doesNotExist());
@@ -178,12 +207,12 @@ public class UserManagementIT {
   @Test
   public void testResetPassword() throws Exception {
     // perform reset password
-    String gbifAuthorization = getGbifAuthorization("POST", "/admin/user/resetPassword", null, null, "user_reset_password", IT_APP_KEY);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/resetPassword", "user_reset_password", IT_APP_KEY, secret);
     mvc
         .perform(
             post("/admin/user/resetPassword")
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_reset_password")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_GBIF_USER, "user_reset_password")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isNoContent());
 
     // check the challengeCode is present now
@@ -205,25 +234,25 @@ public class UserManagementIT {
     // perform update password with a random UUID
     String content = "{\"password\":\"newpass\",\"challengeCode\":\"" + UUID.randomUUID() + "\"}";
     String contentMd5 = md5EncodeService.encode(content);
-    String gbifAuthorization = getGbifAuthorization("POST", "/admin/user/updatePassword", "application/json", contentMd5, "user_update_password", IT_APP_KEY);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/updatePassword", APPLICATION_JSON, contentMd5, "user_update_password", IT_APP_KEY, secret);
 
     mvc
         .perform(
             post("/admin/user/updatePassword")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(content)
-                .header(SecurityConstants.HEADER_CONTENT_MD5, contentMd5)
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_update_password")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, "user_update_password")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isUnauthorized());
 
     // ask to reset password
-    gbifAuthorization = getGbifAuthorization("POST", "/admin/user/resetPassword", null, null, "user_update_password", IT_APP_KEY);
+    gbifAuthorization = getGbifAuthorization(POST, "/admin/user/resetPassword", "user_update_password", IT_APP_KEY, secret);
     mvc
         .perform(
             post("/admin/user/resetPassword")
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_update_password")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_GBIF_USER, "user_update_password")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isNoContent());
 
     // check the challengeCode is present now
@@ -232,27 +261,27 @@ public class UserManagementIT {
     assertThat(confirmationKey, notNullValue());
 
     // ensure we can check if the challengeCode is valid for the user
-    gbifAuthorization = getGbifAuthorization("GET", "/admin/user/confirmationKeyValid", null, null, "user_update_password", IT_APP_KEY);
+    gbifAuthorization = getGbifAuthorization(GET, "/admin/user/confirmationKeyValid", "user_update_password", IT_APP_KEY, secret);
     mvc
         .perform(
             get("/admin/user/confirmationKeyValid")
                 .param("confirmationKey", confirmationKey.toString())
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_update_password")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_GBIF_USER, "user_update_password")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isNoContent());
 
     // change password using that code
     content = "{\"password\":\"newpass\",\"challengeCode\":\"" + confirmationKey + "\"}";
     contentMd5 = md5EncodeService.encode(content);
-    gbifAuthorization = getGbifAuthorization("POST", "/admin/user/updatePassword", "application/json", contentMd5, "user_update_password", IT_APP_KEY);
+    gbifAuthorization = getGbifAuthorization(POST, "/admin/user/updatePassword", APPLICATION_JSON, contentMd5, "user_update_password", IT_APP_KEY, secret);
     mvc
         .perform(
             post("/admin/user/updatePassword")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(content)
-                .header(SecurityConstants.HEADER_CONTENT_MD5, contentMd5)
-                .header(SecurityConstants.HEADER_GBIF_USER, "user_update_password")
-                .header(HttpHeaders.AUTHORIZATION, gbifAuthorization))
+                .header(HEADER_CONTENT_MD5, contentMd5)
+                .header(HEADER_GBIF_USER, "user_update_password")
+                .header(AUTHORIZATION, gbifAuthorization))
         .andExpect(status().isCreated());
 
     // ensure we can login with the new password
@@ -273,7 +302,7 @@ public class UserManagementIT {
         .perform(
             post("/admin/user/{username}/editorRight", "justuser")
                 .content(uuid.toString())
-                .contentType(MediaType.TEXT_PLAIN_VALUE)
+                .contentType(TEXT_PLAIN_VALUE)
                 .with(httpBasic("justadmin", "welcome")))
         .andExpect(status().isCreated());
 
@@ -301,10 +330,63 @@ public class UserManagementIT {
         .andExpect(status().isNoContent());
   }
 
-  private String getGbifAuthorization(String method, String requestUrl, String contentType, String contentMd5, String user, String authUser) {
-    final String stringToSign = buildStringToSign(method, requestUrl, contentType, contentMd5, user);
-    final String sign = signingService.buildSignature(stringToSign, secret);
+  @Test
+  public void testUserEditorRightsErrors() throws Exception {
+    final UUID uuid = UUID.randomUUID();
+
+    // User doesn't exist
+    mvc
+        .perform(
+            post("/admin/user/{username}/editorRight", "notexistinguser")
+                .content(uuid.toString())
+                .contentType(TEXT_PLAIN_VALUE)
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isNotFound());
+
+    // Not an admin user
+    mvc
+        .perform(
+            post("/admin/user/{username}/editorRight", "justuser")
+                .content(uuid.toString())
+                .contentType(TEXT_PLAIN_VALUE)
+                .with(httpBasic("justuser", "welcome")))
+        .andExpect(status().isForbidden());
+
+    // Right already exists
+    mvc
+        .perform(
+            post("/admin/user/{username}/editorRight", "justuser")
+                .content(uuid.toString())
+                .contentType(TEXT_PLAIN_VALUE)
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isCreated());
+
+    mvc
+        .perform(
+            post("/admin/user/{username}/editorRight", "justuser")
+                .content(uuid.toString())
+                .contentType(TEXT_PLAIN_VALUE)
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isConflict());
+
+    // Right doesn't exist
+    mvc
+        .perform(
+            delete("/admin/user/{username}/editorRight/{key}", "justuser", UUID.randomUUID())
+                .with(httpBasic("justadmin", "welcome")))
+        .andExpect(status().isNotFound());
+  }
+
+  // TODO: 2019-08-19 move to the common class 
+  private String getGbifAuthorization(RequestMethod method, String requestUrl, MediaType contentType, String contentMd5, String user, String authUser, String secretKey) {
+    String strContentType = contentType == null ? null : contentType.toString();
+    final String stringToSign = buildStringToSign(method.name(), requestUrl, strContentType, contentMd5, user);
+    final String sign = signingService.buildSignature(stringToSign, secretKey);
     return "GBIF " + authUser + ":" + sign;
+  }
+
+  private String getGbifAuthorization(RequestMethod method, String requestUrl, String user, String authUser, String secretKey) {
+    return getGbifAuthorization(method, requestUrl, null, null, user, authUser, secretKey);
   }
 
   private String buildStringToSign(String method, String requestUrl, String contentType, String contentMd5, String user) {
