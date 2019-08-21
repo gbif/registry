@@ -3,7 +3,7 @@ package org.gbif.registry.identity.service;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.identity.surety.IdentityEmailManager;
-import org.gbif.registry.surety.ChallengeCodeManager;
+import org.gbif.registry.persistence.ChallengeCodeManager;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailSender;

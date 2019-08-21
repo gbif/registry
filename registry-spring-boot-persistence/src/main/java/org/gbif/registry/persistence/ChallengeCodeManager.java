@@ -1,8 +1,8 @@
-package org.gbif.registry.surety;
+package org.gbif.registry.persistence;
 
 import org.gbif.api.model.ChallengeCode;
-import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
-import org.gbif.registry.persistence.mapper.ChallengeCodeMapper;
+import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+import org.gbif.registry.persistence.mapper.surety.ChallengeCodeSupportMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

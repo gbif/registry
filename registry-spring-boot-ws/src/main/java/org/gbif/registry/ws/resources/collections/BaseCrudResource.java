@@ -3,7 +3,7 @@ package org.gbif.registry.ws.resources.collections;
 import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
-import org.gbif.registry.persistence.CrudMapper;
+import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 

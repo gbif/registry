@@ -1,4 +1,4 @@
-package org.gbif.registry.persistence;
+package org.gbif.registry.persistence.mapper.collections;
 
 import java.util.UUID;
 

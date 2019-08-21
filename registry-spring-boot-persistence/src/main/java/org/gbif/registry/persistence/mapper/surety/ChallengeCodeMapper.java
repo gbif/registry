@@ -1,4 +1,4 @@
-package org.gbif.registry.persistence.mapper;
+package org.gbif.registry.persistence.mapper.surety;
 
 import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.ChallengeCode;

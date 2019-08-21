@@ -4,7 +4,6 @@ import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
-import org.gbif.registry.persistence.CrudMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;

@@ -6,7 +6,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.surety.ChallengeCodeSupportMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;

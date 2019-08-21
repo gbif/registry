@@ -3,7 +3,7 @@ package org.gbif.registry.persistence.mapper;
 import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.surety.ChallengeCodeSupportMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;

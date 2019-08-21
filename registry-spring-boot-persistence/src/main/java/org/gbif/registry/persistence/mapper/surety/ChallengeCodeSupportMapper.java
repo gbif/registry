@@ -1,4 +1,4 @@
-package org.gbif.registry.persistence;
+package org.gbif.registry.persistence.mapper.surety;
 
 /**
  * Support for ChallengeCode based surety inside a Mapper. The implementation of this interface allows an entity
