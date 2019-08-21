@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.NodeMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="NODE_MAP" type="org.gbif.api.model.registry.Node" autoMapping="true">
+    <id property="key" column="key"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
+    <collection property="tags" column="key" select="listTags"/>
+    <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="comments" column="key" select="listComments"/>
+    <collection property="endpoints" column="key" select="listEndpoints"/>
+  </resultMap>
+
+  <sql id="NODE_FIELDS">
+    n.key,n.type,n.title,n.participation_status,n.gbif_region,n.continent,n.country,
+    n.created,n.created_by,n.modified,n.modified_by,n.deleted
+  </sql>
+
+  <sql id="WRITABLE_NODE_FIELDS">
+    key,type,title,participation_status,gbif_region,continent,country,
+    created,created_by,modified,modified_by,deleted
+  </sql>
+
+  <!--
+    Simple fulltext search.
+    to_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
+    Uses the default configuration english for the English language.
+   -->
+  <sql id="SIMPLE_SEARCH">
+    AND  query @@ fulltext_search
+  </sql>
+
+  <!--
+    key, created and deleted are never changed
+   -->
+  <sql id="NODE_UPDATE">
+    type = #{type,jdbcType=OTHER},
+    title = #{title,jdbcType=VARCHAR},
+    participation_status = #{participationStatus,jdbcType=OTHER},
+    gbif_region = #{gbifRegion,jdbcType=OTHER},
+    continent = #{continent,jdbcType=OTHER},
+    country = upper(#{country,jdbcType=CHAR}),
+    modified = now(),
+    modified_by = #{modifiedBy},
+    deleted = null <!-- if we're updating it can't be deleted -->
+  </sql>
+
+  <sql id="NODE_FIELD_TYPES">
+    #{key,jdbcType=OTHER},
+    #{type,jdbcType=OTHER},
+    #{title,jdbcType=VARCHAR},
+    #{participationStatus,jdbcType=OTHER},
+    #{gbifRegion,jdbcType=OTHER},
+    #{continent,jdbcType=OTHER},
+    #{country,jdbcType=CHAR},
+    now(), <!-- created -->
+    #{createdBy},
+    now(), <!-- modified -->
+    #{createdBy},
+    NULL <!-- deleted -->
+  </sql>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultType="org.gbif.api.model.registry.Node" resultMap="NODE_MAP">
+    SELECT <include refid="NODE_FIELDS"/>
+    FROM node n
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="title" resultType="String">
+    SELECT title
+    FROM node
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <!-- another taiwan country hack -->
+  <select id="getByCountry" resultType="org.gbif.api.model.registry.Node" resultMap="NODE_MAP">
+    SELECT <include refid="NODE_FIELDS"/>
+    FROM node n
+    WHERE country = #{country,jdbcType=OTHER} AND deleted IS NULL AND (type='COUNTRY' OR country='TW')
+  </select>
+
+  <insert id="create" parameterType="org.gbif.api.model.registry.Node">
+    INSERT INTO node(<include refid="WRITABLE_NODE_FIELDS"/>)
+    VALUES(<include refid="NODE_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.registry.Node">
+    UPDATE node
+    SET <include refid="NODE_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE node
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!-- Append safe ordering, omitting deleted entities -->
+  <select id="list" resultMap="NODE_MAP">
+    SELECT <include refid="NODE_FIELDS"/>
+    FROM node n
+    WHERE deleted IS NULL
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <!-- Basic paging search functionality -->
+  <select id="search" resultMap="NODE_MAP">
+    SELECT <include refid="NODE_FIELDS"/>
+    FROM node n<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    WHERE deleted IS NULL
+    <if test="query != null" >
+      <include refid="SIMPLE_SEARCH"/>
+    </if>
+    ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM node<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    WHERE deleted IS NULL
+    <if test="query != null" >
+      <include refid="SIMPLE_SEARCH"/>
+    </if>
+  </select>
+
+  <!-- TAGS -->
+  <insert id="addTag">
+    INSERT INTO node_tag(node_key,tag_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{tagKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listTags" resultType="org.gbif.api.model.registry.Tag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
+    FROM tag INNER JOIN node_tag ON tag_key = key
+    WHERE node_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
+  <delete id="deleteTag">
+    DELETE FROM tag USING node_tag
+    WHERE
+      tag_key = tag.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- IDENTIFIERS -->
+  <insert id="addIdentifier">
+    INSERT INTO node_identifier(node_key,identifier_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{identifierKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listIdentifiers" resultType="org.gbif.api.model.registry.Identifier">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    FROM identifier INNER JOIN node_identifier ON identifier_key = key
+    WHERE node_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of identifier to trigger cascade delete of the join table -->
+  <delete id="deleteIdentifier">
+    DELETE FROM identifier USING node_identifier
+    WHERE
+      identifier_key = identifier.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- ENDPOINTS -->
+  <insert id="addEndpoint">
+    INSERT INTO node_endpoint(node_key,endpoint_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{endpointKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listEndpoints" resultMap="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_FIELDS"/>
+    FROM endpoint INNER JOIN node_endpoint ON endpoint_key = key
+    WHERE node_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of endpoint to trigger cascade delete of the join table -->
+  <delete id="deleteEndpoint">
+    DELETE FROM endpoint USING node_endpoint
+    WHERE
+      endpoint_key = endpoint.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO node_machine_tag(node_key,machine_tag_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{machineTagKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listMachineTags" resultType="org.gbif.api.model.registry.MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN node_machine_tag ON machine_tag_key = key
+    WHERE node_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING node_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING node_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    node_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="NODE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (n.key) <include refid="NODE_FIELDS"/>
+    FROM node n
+    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY n.key, n.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT n.key)
+    FROM node n
+    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
+    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
+  <!-- COMMENTS -->
+  <insert id="addComment">
+    INSERT INTO node_comment(node_key,comment_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{commentKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listComments" resultType="org.gbif.api.model.registry.Comment">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
+    FROM comment INNER JOIN node_comment ON comment_key = key
+    WHERE node_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
+  <delete id="deleteComment">
+    DELETE FROM comment USING node_comment
+    WHERE
+      comment_key = comment.key AND
+      node_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+  </delete>
+
+  <select id="listNodeCountries" resultType="org.gbif.api.vocabulary.Country">
+    SELECT country
+    FROM node
+    WHERE type='COUNTRY' AND country IS NOT NULL
+    ORDER BY country
+  </select>
+
+  <!--
+   Includes a manual hack to include Taiwan as an active country!
+  -->
+  <select id="listActiveCountries" resultType="org.gbif.api.vocabulary.Country">
+    SELECT 'TW'
+    UNION
+    SELECT country
+    FROM node
+    WHERE type='COUNTRY' AND country IS NOT NULL AND participation_status IN ('VOTING', 'ASSOCIATE')
+    ORDER BY 1
+  </select>
+
+  <select id="listByIdentifier" resultMap="NODE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (n.key) <include refid="NODE_FIELDS"/>
+    FROM node n
+    INNER JOIN node_identifier ON node_key = n.key
+    INNER JOIN identifier ide ON identifier_key = ide.key
+    WHERE identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="type != null" >
+      AND ide.type=#{type,jdbcType=OTHER}
+    </if>
+    ORDER BY n.key, n.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByIdentifier" resultType="Long">
+    SELECT count(DISTINCT n.key)
+    FROM node n
+    INNER JOIN node_identifier ON node_key = n.key
+    INNER JOIN identifier ide ON identifier_key = ide.key
+    WHERE identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="type != null" >
+      AND ide.type=#{type,jdbcType=OTHER}
+    </if>
+  </select>
+
+  <!--
+ Simple suggest
+ -->
+  <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
+    SELECT key,title FROM (
+                            (SELECT key,title FROM node WHERE title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                            UNION ALL
+                            (SELECT key,title FROM node WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                          ) t1 LIMIT 25
+  </select>
+
+</mapper>
