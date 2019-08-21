@@ -12,9 +12,15 @@ import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +41,6 @@ import java.util.stream.Collectors;
  * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
  */
 // TODO: 2019-06-14 add produce ExtraMediaTypes.APPLICATION_JAVASCRIPT
-// TODO: 2019-06-14 analyze (and implement if needed) NullToNotFound
 @RestController
 @RequestMapping("doi")
 public class DoiRegistrationResource implements DoiRegistrationService {
@@ -56,6 +61,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @PostMapping("gen/{type}")
   @Override
   public DOI generate(@NotNull @PathVariable("type") DoiType doiType) {
+    checkIsUserAuthenticated();
     return genDoiByType(doiType);
   }
 
@@ -63,7 +69,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Retrieves the DOI information.
    */
   @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-//  @NullToNotFound
+  @NullToNotFound
   @Override
   public DoiData get(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
     return doiPersistenceService.get(new DOI(prefix, suffix));
@@ -73,7 +79,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Deletes an existent DOI.
    */
   @DeleteMapping("{prefix}/{suffix}")
-//  @NullToNotFound
+  @NullToNotFound
   @Override
   public void delete(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
@@ -84,24 +90,22 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
-//  @NullToNotFound
+  @NullToNotFound
   @Override
   public DOI register(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, doiRegistrationToRegister ->
-            // Persist the DOI
-            Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
-                doi -> {
-                  Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
-                    // if DOI is not NEW throw an exception
-                    if (DoiStatus.NEW != doiData.getStatus()) {
-                      // TODO: 2019-06-14 throw dedicated exception with the response
-//                ResponseEntity.badRequest().body("Doi already exists");
-                      throw new RuntimeException("Doi already exists");
-                    }
-                  });
-                  doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+        // Persist the DOI
+        Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
+            doi -> {
+              Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
+                // if DOI is not NEW throw an exception
+                if (DoiStatus.NEW != doiData.getStatus()) {
+                  throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Doi already exists"));
                 }
-            )
+              });
+              doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+            }
+        )
     );
   }
 
@@ -109,7 +113,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
-//  @NullToNotFound
+  @NullToNotFound
   @Override
   public DOI update(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, existingDoiRegistration ->
@@ -118,9 +122,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                 Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
                   // if DOI is not NEW throw an exception
                   if (DoiStatus.DELETED == doiData.getStatus()) {
-                    // TODO: 2019-06-14 throw dedicated exception with the response?
-//                            ResponseEntity.badRequest().body("DOI does not exist");
-                    throw new RuntimeException("DOI does not exist");
+                    throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
                   }
                   doiPersistenceService.update(doi, doiPersistenceService.get(doi),
                       doiRegistration.getMetadata());
@@ -152,8 +154,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
       LOG.info("Error registering/updating DOI", ex);
-      // TODO: 2019-06-14 throw dedicated exception with the response?
-      throw new RuntimeException("bad request");
+      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -187,5 +188,14 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     } else {
       return doiGenerator.newDatasetDOI();
     }
+  }
+
+  /**
+   * Check that the user is authenticated.
+   */
+  private void checkIsUserAuthenticated() {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || authentication.getPrincipal() == null)
+      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
   }
 }
