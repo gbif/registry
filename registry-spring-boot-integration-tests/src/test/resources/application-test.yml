@@ -12,6 +12,16 @@ identity:
         confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
         resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
 
+organization:
+  surety:
+    helpdessk:
+      email: helpdesk@gbif.org
+    mail:
+      enable: false
+      urlTemplate:
+        organization: https://www.demo.gbif-dev.org/publisher/{0}
+        confirmOrganization: https://demo.gbif-dev.org/organization/confirm?key={0}&code={1}
+
 application:
   key: gbif.app.it
   secret: a
