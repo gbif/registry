@@ -7,7 +7,6 @@ public interface EmailSender {
 
   /**
    * Send an email using the provided {@link BaseEmailModel}.
-   *
    */
   void send(BaseEmailModel baseEmailModel);
 }

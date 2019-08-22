@@ -7,6 +7,7 @@ import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.BaseTemplateDataModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.email.EmailType;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.util.UUID;
 @Service
 public class IdentityEmailManager {
 
+  // TODO: 2019-08-22 move to ConfigurationProperties
   @Value("${identity.surety.mail.urlTemplate.confirmUser}")
   private String confirmUserUrlTemplate;
 
@@ -31,7 +33,7 @@ public class IdentityEmailManager {
 
   private final EmailTemplateProcessor emailTemplateProcessor;
 
-  public IdentityEmailManager(EmailTemplateProcessor emailTemplateProcessor) {
+  public IdentityEmailManager(@Qualifier("identityEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessor) {
     this.emailTemplateProcessor = emailTemplateProcessor;
   }
 
