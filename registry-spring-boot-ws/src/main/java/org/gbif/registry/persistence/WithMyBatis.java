@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO: 2019-08-20 it used to be a class with static util methods
 // TODO: 2019-08-20 should be in the persistence module?
@@ -21,5 +22,23 @@ public class WithMyBatis {
     entity.setKey(UUID.randomUUID());
     mapper.create(entity);
     return entity.getKey();
+  }
+
+  @Transactional
+  public <T extends NetworkEntity> void update(NetworkEntityMapper<T> mapper, T entity) {
+    checkNotNull(entity, "Unable to update an entity when it is not provided");
+    T existing = mapper.get(entity.getKey());
+    checkNotNull(existing, "Unable to update a non existing entity");
+
+    if (existing.getDeleted() != null) {
+      // allow updates ONLY if they are undeleting too
+      checkArgument(entity.getDeleted() == null,
+          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+    } else {
+      // do not allow deletion here (for safety) - we have an explicity deletion service
+      checkArgument(entity.getDeleted() == null, "Cannot delete using the update service.  Use the deletion service");
+    }
+
+    mapper.update(entity);
   }
 }

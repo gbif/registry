@@ -55,6 +55,7 @@
     <gbif-postal-service.version>0.34-SNAPSHOT</gbif-postal-service.version>
     <download-query-tools.version>1.24</download-query-tools.version>
     <gbif-api.version>0.82-SNAPSHOT</gbif-api.version>
+    <gbif-directory.version>0.11</gbif-directory.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -118,6 +119,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.directory</groupId>
+        <artifactId>directory-api</artifactId>
+        <version>${gbif-directory.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
