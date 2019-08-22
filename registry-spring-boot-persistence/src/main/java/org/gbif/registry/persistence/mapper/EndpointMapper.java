@@ -10,7 +10,4 @@ public interface EndpointMapper {
   int createEndpoint(Endpoint endpoint);
 
   void addMachineTag(@Param("endpointKey") int endpointKey, @Param("machineTagKey") int machineTagKey);
-
-  // TODO: 2019-08-20 some methods are not implemented for some reason
-
 }
