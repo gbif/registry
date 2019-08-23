@@ -50,8 +50,9 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public UUID create(@NotNull T entity, Authentication authentication) {
-    entity.setCreatedBy(((UserDetails) authentication.getPrincipal()).getUsername());
-    entity.setModifiedBy(((UserDetails) authentication.getPrincipal()).getUsername());
+    final String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+    entity.setCreatedBy(username);
+    entity.setModifiedBy(username);
     return create(entity);
   }
 

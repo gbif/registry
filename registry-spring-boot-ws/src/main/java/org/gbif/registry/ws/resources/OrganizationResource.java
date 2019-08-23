@@ -97,13 +97,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // randomly calculate the size of the password, between 0 and MAXIMUM_PASSWORD_SIZE
     int size = random.nextInt(MAXIMUM_PASSWORD_SIZE);
     // ensure the size is at least greater than or equal to MINIMUM_PASSWORD_SIZE
-    size = (size < MINIMUM_PASSWORD_SIZE) ? MINIMUM_PASSWORD_SIZE : size;
+    size = Math.max(size, MINIMUM_PASSWORD_SIZE);
 
     // generate the password
     StringBuilder password = new StringBuilder();
     int randomIndex;
     while (size-- > 0) {
-      random = new Random();
       randomIndex = random.nextInt(PASSWORD_ALLOWED_CHARACTERS.length());
       password.append(PASSWORD_ALLOWED_CHARACTERS.charAt(randomIndex));
     }

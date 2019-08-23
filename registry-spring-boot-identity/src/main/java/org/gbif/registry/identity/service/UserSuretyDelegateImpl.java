@@ -3,10 +3,10 @@ package org.gbif.registry.identity.service;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.identity.surety.IdentityEmailManager;
-import org.gbif.registry.persistence.ChallengeCodeManager;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailSender;
+import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,9 +28,10 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private EmailSender emailSender;
   private final IdentityEmailManager identityEmailManager;
 
-  public UserSuretyDelegateImpl(@Qualifier("emailSender") EmailSender emailSender,
-                         ChallengeCodeManager<Integer> challengeCodeManager,
-                         IdentityEmailManager identityEmailManager) {
+  public UserSuretyDelegateImpl(
+      @Qualifier("emailSender") EmailSender emailSender,
+      ChallengeCodeManager<Integer> challengeCodeManager,
+      IdentityEmailManager identityEmailManager) {
     this.emailSender = emailSender;
     this.challengeCodeManager = challengeCodeManager;
     this.identityEmailManager = identityEmailManager;
@@ -66,7 +67,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
         .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
             && challengeCodeManager.remove(keyVal))
         .orElse(Boolean.FALSE);
-    if(confirmationSucceeded){
+    if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);

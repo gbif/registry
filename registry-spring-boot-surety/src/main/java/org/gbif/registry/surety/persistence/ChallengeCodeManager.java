@@ -1,16 +1,19 @@
-package org.gbif.registry.persistence;
+package org.gbif.registry.surety.persistence;
 
 import org.gbif.api.model.ChallengeCode;
+import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.persistence.mapper.surety.ChallengeCodeSupportMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
 
 // TODO: 2019-06-26 check all methods
+
 /**
  * Helper class to manage challengeCode references it.
+ *
  * @param <K> type of the key used by the entity who is pointing to the challengeCode.
  */
 @Service
@@ -19,21 +22,16 @@ public class ChallengeCodeManager<K> {
   private final ChallengeCodeMapper challengeCodeMapper;
   private final ChallengeCodeSupportMapper<K> challengeCodeSupportMapper;
 
-  /**
-   *
-   * @param challengeCodeMapper
-   * @param challengeCodeSupportMapper
-   */
-  public ChallengeCodeManager(ChallengeCodeMapper challengeCodeMapper, ChallengeCodeSupportMapper<K> challengeCodeSupportMapper) {
+  public ChallengeCodeManager(
+      ChallengeCodeMapper challengeCodeMapper,
+      // TODO: 2019-08-23 check if it's really user mapper needed here
+      @Qualifier("userChallengeCodeSupportMapper") ChallengeCodeSupportMapper<K> challengeCodeSupportMapper) {
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
   }
 
   /**
    * Check if the provided challengeCode is valid for a specific entity key.
-   * @param key
-   * @param challengeCode
-   * @return
    */
   public boolean isValidChallengeCode(K key, UUID challengeCode) {
     if (key == null || challengeCode == null) {
@@ -46,8 +44,6 @@ public class ChallengeCodeManager<K> {
 
   /**
    * Check if a given key is associated with a challengeCode.
-   * @param key
-   * @return
    */
   public boolean hasChallengeCode(K key) {
     return Optional.ofNullable(challengeCodeSupportMapper.getChallengeCodeKey(key)).isPresent();
@@ -67,7 +63,7 @@ public class ChallengeCodeManager<K> {
   /**
    * Removes a challengeCode and removes the link between the entity and the challengeCode.
    * Should be called inside a @Transactional method
-   * @param key
+   *
    * @return the challengeCode was removed successfully.
    */
   public boolean remove(K key) {

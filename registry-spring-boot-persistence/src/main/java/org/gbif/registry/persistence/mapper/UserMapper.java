@@ -3,20 +3,17 @@ package org.gbif.registry.persistence.mapper;
 import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.registry.persistence.mapper.surety.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
 
+@Qualifier("userChallengeCodeSupportMapper")
 @Repository
 public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
-
-  // TODO: 2019-06-26 OrganizationMapper, UserMapper
-  Integer getChallengeCodeKey(@Param("key") Integer key);
-
-  boolean updateChallengeCodeKey(@Param("key") Integer key, @Param("challengeCodeKey") Integer challengeCodeKey);
 
   void create(GbifUser user);
 

@@ -14,8 +14,6 @@ import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,16 +51,11 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   // TODO: 2019-08-21 check Context annotation
 
   @Override
-  @RequestMapping(method = RequestMethod.POST)
   @Transactional
 //  @Validate(groups = {PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public UUID create(@Valid @NotNull @RequestBody Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
-
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    person.setCreatedBy(authentication.getName());
-    person.setModifiedBy(authentication.getName());
 
     if (person.getMailingAddress() != null) {
       checkArgument(person.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
@@ -119,10 +111,10 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
   @RequestMapping(method = RequestMethod.GET)
   @Override
-  public PagingResponse<Person> list(@Nullable @RequestParam("q") String query,
-                                     @Nullable @RequestParam("primaryInstitution") UUID institutionKey,
-                                     @Nullable @RequestParam("primaryCollection") UUID collectionKey,
-                                     @Nullable @Context Pageable page) {
+  public PagingResponse<Person> list(@Nullable @RequestParam(value = "q", required = false) String query,
+                                     @Nullable @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
+                                     @Nullable @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
+                                     @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = personMapper.count(institutionKey, collectionKey, query);
@@ -131,14 +123,14 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Person> listDeleted(@Nullable @Context Pageable page) {
+  public PagingResponse<Person> listDeleted(@Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, personMapper.countDeleted(), personMapper.deleted(page));
   }
 
   @GetMapping("suggest")
   @Override
-  public List<PersonSuggestResult> suggest(@Nullable @RequestParam("q") String q) {
+  public List<PersonSuggestResult> suggest(@Nullable @RequestParam(value = "q", required = false) String q) {
     return personMapper.suggest(q);
   }
 }

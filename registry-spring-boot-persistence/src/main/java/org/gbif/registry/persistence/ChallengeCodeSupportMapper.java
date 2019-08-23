@@ -1,4 +1,6 @@
-package org.gbif.registry.persistence.mapper.surety;
+package org.gbif.registry.persistence;
+
+import org.apache.ibatis.annotations.Param;
 
 /**
  * Support for ChallengeCode based surety inside a Mapper. The implementation of this interface allows an entity
@@ -7,7 +9,7 @@ package org.gbif.registry.persistence.mapper.surety;
 // TODO: 2019-07-01 Invalid bound statement (not found), moved to parent package for now
 public interface ChallengeCodeSupportMapper<K> {
 
-  Integer getChallengeCodeKey(K key);
+  Integer getChallengeCodeKey(@Param("key") K key);
 
-  boolean updateChallengeCodeKey(K key, Integer challengeCodeKey);
+  boolean updateChallengeCodeKey(@Param("key") K key, @Param("challengeCodeKey") Integer challengeCodeKey);
 }
