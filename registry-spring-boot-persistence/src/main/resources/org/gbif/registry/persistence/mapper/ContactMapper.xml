@@ -4,12 +4,12 @@
 
   <resultMap id="CONTACT_MAP" type="org.gbif.api.model.registry.Contact" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="userId" column="user_id" typeHandler="StringArrayTypeHandler"/>
-    <result property="position" column="position" typeHandler="StringArrayTypeHandler"/>
-    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
-    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="address" column="address" typeHandler="StringArrayTypeHandler"/>
-    <result property="homepage" column="homepage" typeHandler="UriArrayTypeHandler"/>
+    <result property="userId" column="user_id" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="position" column="position" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="email" column="email" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
   </resultMap>
 
   <sql id="WRITABLE_CONTACT_FIELDS">
@@ -21,16 +21,16 @@
   </sql>
 
   <sql id="WRITABLE_CONTACT_FIELD_TYPES">
-    #{userId, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{userId, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{firstName, jdbcType=VARCHAR},
     #{lastName, jdbcType=VARCHAR},
     #{description, jdbcType=VARCHAR},
-    #{position, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    #{email, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    #{phone, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    #{homepage, jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
+    #{position, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{email, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{phone, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{homepage, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
     #{organization, jdbcType=VARCHAR},
-    #{address, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{address, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{city, jdbcType=VARCHAR},
     #{province, jdbcType=VARCHAR},
     #{country, jdbcType=CHAR},
@@ -42,16 +42,16 @@
   </sql>
 
   <sql id="CONTACT_UPDATE">
-    user_id = #{userId, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    user_id = #{userId, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     first_name = #{firstName, jdbcType=VARCHAR},
     last_name = #{lastName, jdbcType=VARCHAR},
     description = #{description, jdbcType=VARCHAR},
-    position = #{position, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    email = #{email, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    phone = #{phone, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    homepage = #{homepage, jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
+    position = #{position, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    email = #{email, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    phone = #{phone, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    homepage = #{homepage, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
     organization = #{organization, jdbcType=VARCHAR},
-    address = #{address, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    address = #{address, jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     city = #{city, jdbcType=VARCHAR},
     province = #{province, jdbcType=VARCHAR},
     country = upper(#{country, jdbcType=CHAR}),

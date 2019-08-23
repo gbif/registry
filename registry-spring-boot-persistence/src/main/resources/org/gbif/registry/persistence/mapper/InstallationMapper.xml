@@ -293,7 +293,7 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="listByMachineTag" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     INNER JOIN installation_machine_tag im ON im.installation_key = i.key
@@ -348,7 +348,7 @@
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="listInstallationsEndorsedBy" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="listInstallationsEndorsedBy" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
@@ -368,7 +368,7 @@
     WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
   </select>
 
-  <select id="listInstallationsByOrganization" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="listInstallationsByOrganization" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
@@ -386,7 +386,7 @@
     WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
   </select>
 
-  <select id="deleted" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="deleted" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     WHERE i.deleted IS NOT NULL
@@ -401,7 +401,7 @@
     WHERE deleted IS NOT NULL
   </select>
 
-  <select id="nonPublishing" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="nonPublishing" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     LEFT JOIN dataset ds ON ds.installation_key = i.key
@@ -418,7 +418,7 @@
     WHERE ds.key IS NULL
   </select>
 
-  <select id="listByIdentifier" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.registry.">
+  <select id="listByIdentifier" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     INNER JOIN installation_identifier ON installation_key = i.key

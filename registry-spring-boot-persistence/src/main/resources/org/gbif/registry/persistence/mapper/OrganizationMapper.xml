@@ -5,10 +5,10 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="ORGANIZATION_MAP" type="org.gbif.api.model.registry.Organization" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
-    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="address" column="address" typeHandler="StringArrayTypeHandler"/>
-    <result property="homepage" column="homepage" typeHandler="UriArrayTypeHandler"/>
+    <result property="email" column="email" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
     <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
@@ -60,11 +60,11 @@
     abbreviation = #{abbreviation,jdbcType=CHAR},
     description = #{description,jdbcType=VARCHAR},
     language = #{language,jdbcType=CHAR},
-    email = #{email,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    phone = #{phone,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    homepage = #{homepage,jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
+    email = #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    homepage = #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
     logo_url = #{logoUrl,jdbcType=VARCHAR},
-    address = #{address,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    address = #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     city = #{city,jdbcType=VARCHAR},
     province = #{province,jdbcType=VARCHAR},
     country = upper(#{country,jdbcType=CHAR}),
@@ -85,11 +85,11 @@
     #{abbreviation,jdbcType=CHAR},
     #{description,jdbcType=VARCHAR},
     #{language,jdbcType=CHAR},
-    #{email,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    #{phone,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
-    #{homepage,jdbcType=ARRAY, typeHandler=UriArrayTypeHandler},
+    #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
     #{logoUrl,jdbcType=VARCHAR},
-    #{address,jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{city,jdbcType=VARCHAR},
     #{province,jdbcType=VARCHAR},
     #{country,jdbcType=CHAR},
