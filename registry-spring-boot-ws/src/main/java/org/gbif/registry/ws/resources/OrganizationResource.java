@@ -75,24 +75,34 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   private final OrganizationEndorsementService<UUID> organizationEndorsementService;
 
   public OrganizationResource(
-      DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
-      InstallationMapper installationMapper,
-      CommentMapper commentMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
       ContactMapper contactMapper,
       EndpointMapper endpointMapper,
+      MachineTagMapper machineTagMapper,
+      TagMapper tagMapper,
       IdentifierMapper identifierMapper,
-      EventBus eventBus,
-      EditorAuthorizationService editorAuthorizationService,
+      CommentMapper commentMapper,
+      DatasetMapper datasetMapper,
+      InstallationMapper installationMapper,
       OrganizationEndorsementService<UUID> organizationEndorsementService,
+      EventBus eventBus,
+      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
-    super(organizationMapper, commentMapper, machineTagMapper, tagMapper, contactMapper, endpointMapper, identifierMapper, eventBus, editorAuthorizationService, withMyBatis, Organization.class);
+    super(organizationMapper,
+        commentMapper,
+        contactMapper,
+        endpointMapper,
+        identifierMapper,
+        machineTagMapper,
+        tagMapper,
+        Organization.class,
+        eventBus,
+        userAuthService,
+        withMyBatis);
     this.datasetMapper = datasetMapper;
+    this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
     this.organizationEndorsementService = organizationEndorsementService;
-    this.organizationMapper = organizationMapper;
   }
 
   /**

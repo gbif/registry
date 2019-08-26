@@ -92,24 +92,23 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final ContactMapper contactMapper;
   private final EndpointMapper endpointMapper;
   private final IdentifierMapper identifierMapper;
-  // TODO: 2019-08-20 mb wrap it
-  private final EventBus eventBus;
+  private final EventBus eventBus; // TODO: 2019-08-20 mb wrap it
   private final EditorAuthorizationService userAuthService;
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
 
-  public BaseNetworkEntityResource(
+  protected BaseNetworkEntityResource(
       BaseNetworkEntityMapper<T> mapper,
       CommentMapper commentMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
       ContactMapper contactMapper,
       EndpointMapper endpointMapper,
       IdentifierMapper identifierMapper,
+      MachineTagMapper machineTagMapper,
+      TagMapper tagMapper,
+      Class<T> objectClass,
       EventBus eventBus,
       EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis,
-      Class<T> objectClass) {
+      WithMyBatis withMyBatis) {
     this.mapper = mapper;
     this.commentMapper = commentMapper;
     this.machineTagMapper = machineTagMapper;
@@ -117,10 +116,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.contactMapper = contactMapper;
     this.endpointMapper = endpointMapper;
     this.identifierMapper = identifierMapper;
+    this.objectClass = objectClass;
     this.eventBus = eventBus;
     this.userAuthService = userAuthService;
     this.withMyBatis = withMyBatis;
-    this.objectClass = objectClass;
   }
 
   // TODO: 2019-08-26 validation
