@@ -4,15 +4,22 @@ import com.google.common.base.Preconditions;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.CommentableMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.mapper.TaggableMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -101,5 +108,57 @@ public class WithMyBatis {
     commentMapper.createComment(comment);
     commentableMapper.addComment(targetEntityKey, comment.getKey());
     return comment.getKey();
+  }
+
+  public void deleteComment(CommentableMapper commentableMapper, UUID targetEntityKey, int commentKey) {
+    commentableMapper.deleteComment(targetEntityKey, commentKey);
+  }
+
+  public List<Comment> listComments(CommentableMapper commentableMapper, UUID targetEntityKey) {
+    return commentableMapper.listComments(targetEntityKey);
+  }
+
+  public int addMachineTag(
+      MachineTagMapper machineTagMapper,
+      MachineTaggableMapper machineTaggableMapper,
+      UUID targetEntityKey,
+      MachineTag machineTag) {
+    checkArgument(machineTag.getKey() == null, "Unable to create an entity which already has a key");
+    machineTagMapper.createMachineTag(machineTag);
+    machineTaggableMapper.addMachineTag(targetEntityKey, machineTag.getKey());
+    return machineTag.getKey();
+  }
+
+  public void deleteMachineTag(MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey, int machineTagKey) {
+    machineTaggableMapper.deleteMachineTag(targetEntityKey, machineTagKey);
+  }
+
+  public void deleteMachineTags(MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey, String namespace, @Nullable String name) {
+    machineTaggableMapper.deleteMachineTags(targetEntityKey, namespace, name);
+  }
+
+  public List<MachineTag> listMachineTags(MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey) {
+    return machineTaggableMapper.listMachineTags(targetEntityKey);
+  }
+
+  public <T extends NetworkEntity> PagingResponse<T> listByMachineTag(
+      MachineTaggableMapper mapper, String namespace, @Nullable String name, @Nullable String value, @Nullable Pageable page
+  ) {
+    Preconditions.checkNotNull(page, "To list by machine tag you must supply a page");
+    Preconditions.checkNotNull(namespace, "To list by machine tag you must supply a namespace");
+    long total = mapper.countByMachineTag(namespace, name, value);
+    return new PagingResponse<T>(page.getOffset(), page.getLimit(), total, mapper.listByMachineTag(namespace, name, value, page));
+  }
+
+  @Transactional
+  public int addTag(TagMapper tagMapper, TaggableMapper taggableMapper, UUID targetEntityKey, Tag tag) {
+    // Mybatis needs an object to set the key on
+    tagMapper.createTag(tag);
+    taggableMapper.addTag(targetEntityKey, tag.getKey());
+    return tag.getKey();
+  }
+
+  public void deleteTag(TaggableMapper taggableMapper, UUID targetEntityKey, int tagKey) {
+    taggableMapper.deleteTag(targetEntityKey, tagKey);
   }
 }

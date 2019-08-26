@@ -10,6 +10,7 @@ import java.util.UUID;
 /**
  * Stub class used to simplify stuff, e.g. when this class must be bound but isn't actually used.
  */
+// TODO: 2019-08-26 implement a real service
 @Service
 @Qualifier("editorAuthorizationServiceStub")
 public class EditorAuthorizationServiceStub implements EditorAuthorizationService {
