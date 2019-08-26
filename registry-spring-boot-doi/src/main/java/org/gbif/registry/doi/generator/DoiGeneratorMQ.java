@@ -33,7 +33,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private static final Logger LOG = LoggerFactory.getLogger(DoiGeneratorMQ.class);
 
   private final DoiPersistenceService doiPersistenceService;
-  private final MessageSender messageSender;
+  private final RegistryMessagePublisher registryMessagePublisher;
 
   private final URI datasetTarget;
   private final URI downloadTarget;
@@ -47,7 +47,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
       @Value("${portal.url}") URI portal,
       @Value("${doi.prefix}") String prefix,
       DoiPersistenceService doiPersistenceService,
-      MessageSender messageSender) {
+      RegistryMessagePublisher registryMessagePublisher) {
     checkArgument(prefix.startsWith("10."), "DOI prefix must begin with '10.'");
     this.prefix = prefix;
     this.doiPersistenceService = doiPersistenceService;
@@ -57,7 +57,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     datasetTarget = portal.resolve("dataset/");
     downloadTarget = portal.resolve("occurrence/download/");
     dataPackageTarget = portal.resolve("data_package/");
-    this.messageSender = messageSender;
+    this.registryMessagePublisher = registryMessagePublisher;
   }
 
   @Override
@@ -113,13 +113,13 @@ public class DoiGeneratorMQ implements DoiGenerator {
   public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(datasetKey, "Dataset key required");
-    checkNotNull(messageSender, "No message publisher configured to send DoiChangeMessage");
+    checkNotNull(registryMessagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
 
     try {
-      messageSender.send(message);
+      registryMessagePublisher.send(message);
     } catch (IOException e) {
       LOG.error("Failed sending DoiChangeMessage for {} and dataset {}", doi, datasetKey, e);
     }
@@ -129,13 +129,13 @@ public class DoiGeneratorMQ implements DoiGenerator {
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(downloadKey, "Download key required");
-    checkNotNull(messageSender, "No message publisher configured to send DoiChangeMessage");
+    checkNotNull(registryMessagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
 
     try {
-      messageSender.send(message);
+      registryMessagePublisher.send(message);
     } catch (IOException e) {
       LOG.error("Failed sending DoiChangeMessage for {} and download {}", doi, downloadKey, e);
     }
@@ -144,12 +144,12 @@ public class DoiGeneratorMQ implements DoiGenerator {
   @Override
   public void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
-    checkNotNull(messageSender, "No message publisher configured to send DoiChangeMessage");
+    checkNotNull(registryMessagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, dataPackageTarget.resolve(doi.getDoiName()));
     try {
-      messageSender.send(message);
+      registryMessagePublisher.send(message);
     } catch (IOException e) {
       LOG.error("Failed sending DoiChangeMessage for DataPackage {}", doi, e);
     }
@@ -158,12 +158,12 @@ public class DoiGeneratorMQ implements DoiGenerator {
   @Override
   public void delete(DOI doi) {
     checkNotNull(doi, "DOI required");
-    checkNotNull(messageSender, "No message publisher configured to send DoiChangeMessage");
+    checkNotNull(registryMessagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     Message message = new ChangeDoiMessage(DoiStatus.DELETED, doi, null, null);
 
     try {
-      messageSender.send(message);
+      registryMessagePublisher.send(message);
     } catch (IOException e) {
       LOG.error("Failed sending DoiChangeMessage for {}", doi, e);
     }
