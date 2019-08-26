@@ -54,7 +54,7 @@
     <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
     <gbif-postal-service.version>0.34-SNAPSHOT</gbif-postal-service.version>
     <download-query-tools.version>1.24</download-query-tools.version>
-    <gbif-api.version>0.82-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.87</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
 
     <datacite.api.base.url/>
