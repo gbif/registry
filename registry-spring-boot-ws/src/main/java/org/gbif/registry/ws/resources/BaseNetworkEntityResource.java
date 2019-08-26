@@ -257,7 +257,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void update(@PathVariable("key") UUID key, @RequestBody @NotNull @Trim T entity) {
+  public void updateBase(@PathVariable("key") UUID key, @RequestBody @NotNull @Trim T entity) {
     checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
@@ -697,5 +697,19 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   protected List<UUID> owningEntityKeys(@NotNull T entity) {
     return new ArrayList<>();
+  }
+
+  // TODO: 26/08/2019 move from here
+  /**
+   * Null safe builder to construct a paging response.
+   *
+   * @param page page to create response for, can be null
+   */
+  protected <D> PagingResponse<D> pagingResponse(@Nullable Pageable page, Long count, List<D> result) {
+    if (page == null) {
+      // use default request
+      page = new PagingRequest();
+    }
+    return new PagingResponse<>(page, count, result);
   }
 }
