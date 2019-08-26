@@ -4,12 +4,21 @@ import com.google.common.base.Preconditions;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.CommentableMapper;
+import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.registry.persistence.mapper.ContactableMapper;
+import org.gbif.registry.persistence.mapper.EndpointMapper;
+import org.gbif.registry.persistence.mapper.EndpointableMapper;
+import org.gbif.registry.persistence.mapper.IdentifiableMapper;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
@@ -160,5 +169,102 @@ public class WithMyBatis {
 
   public void deleteTag(TaggableMapper taggableMapper, UUID targetEntityKey, int tagKey) {
     taggableMapper.deleteTag(targetEntityKey, tagKey);
+  }
+
+  public List<Tag> listTags(TaggableMapper taggableMapper, UUID targetEntityKey, String owner) {
+    // TODO: support the owner
+    return taggableMapper.listTags(targetEntityKey);
+  }
+
+  @Transactional
+  public int addContact(ContactMapper contactMapper, ContactableMapper contactableMapper, UUID targetEntityKey, Contact contact) {
+    checkArgument(contact.getKey() == null, "Unable to create an entity which already has a key");
+    contactMapper.createContact(contact);
+    // is this a primary contact? We need to make sure it only exists once per type
+    if (contact.isPrimary()) {
+      contactableMapper.updatePrimaryContacts(targetEntityKey, contact.getType());
+    }
+    contactableMapper.addContact(targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
+    return contact.getKey();
+  }
+
+  @Transactional
+  public int updateContact(ContactMapper contactMapper, ContactableMapper contactableMapper,
+                                  UUID targetEntityKey, Contact contact) {
+    checkArgument(contact.getKey() != null, "Unable to update an entity with no key");
+    // null safe checking follows
+    checkArgument(Boolean.TRUE.equals(contactableMapper.areRelated(targetEntityKey, contact.getKey())),
+        "The provided contact is not connected to the given entity");
+    // is this a primary contact? We need to make sure it only exists once per type
+    if (contact.isPrimary()) {
+      contactableMapper.updatePrimaryContacts(targetEntityKey, contact.getType());
+    }
+    contactMapper.updateContact(contact);
+    // update the type and is_primary (is_primary will have been set to false by updatePrimaryContacts above)
+    contactableMapper.updateContact(targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
+    return contact.getKey();
+  }
+
+  public void deleteContact(ContactableMapper contactableMapper, UUID targetEntityKey, int contactKey) {
+    contactableMapper.deleteContact(targetEntityKey, contactKey);
+  }
+
+  public List<Contact> listContacts(ContactableMapper contactableMapper, UUID targetEntityKey) {
+    return contactableMapper.listContacts(targetEntityKey);
+  }
+
+  @Transactional
+  public int addEndpoint(
+      EndpointMapper endpointMapper, EndpointableMapper endpointableMapper, UUID targetEntityKey, Endpoint endpoint,
+      MachineTagMapper machineTagMapper
+  ) {
+    checkArgument(endpoint.getKey() == null, "Unable to create an entity which already has a key");
+    endpointMapper.createEndpoint(endpoint);
+    endpointableMapper.addEndpoint(targetEntityKey, endpoint.getKey());
+
+    for (MachineTag machineTag : endpoint.getMachineTags()) {
+      machineTag.setCreatedBy(endpoint.getCreatedBy());
+      addMachineTag(machineTagMapper, endpointMapper, endpoint.getKey(), machineTag);
+    }
+    return endpoint.getKey();
+  }
+
+  /**
+   * Private scoped to avoid misuse. Endpoints break the general principle and DO persist nested entities, and can
+   * safely do so because they are immutable.
+   */
+  private static void addMachineTag(MachineTagMapper machineTagMapper, EndpointMapper endpointMapper,
+                                    Integer endpointKey,
+                                    MachineTag machineTag) {
+    machineTagMapper.createMachineTag(machineTag);
+    endpointMapper.addMachineTag(endpointKey, machineTag.getKey());
+  }
+
+  public void deleteEndpoint(EndpointableMapper endpointableMapper, UUID targetEntityKey, int endpointKey) {
+    endpointableMapper.deleteEndpoint(targetEntityKey, endpointKey);
+  }
+
+  public List<Endpoint> listEndpoints(EndpointableMapper endpointableMapper, UUID targetEntityKey) {
+    return endpointableMapper.listEndpoints(targetEntityKey);
+  }
+
+  @Transactional
+  public int addIdentifier(
+      IdentifierMapper identifierMapper,
+      IdentifiableMapper identifiableMapper,
+      UUID targetEntityKey,
+      Identifier identifier) {
+    checkArgument(identifier.getKey() == null, "Unable to create an entity which already has a key");
+    identifierMapper.createIdentifier(identifier);
+    identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey());
+    return identifier.getKey();
+  }
+
+  public void deleteIdentifier(IdentifiableMapper identifiableMapper, UUID targetEntityKey, int identifierKey) {
+    identifiableMapper.deleteIdentifier(targetEntityKey, identifierKey);
+  }
+
+  public List<Identifier> listIdentifiers(IdentifiableMapper identifiableMapper, UUID targetEntityKey) {
+    return identifiableMapper.listIdentifiers(targetEntityKey);
   }
 }
