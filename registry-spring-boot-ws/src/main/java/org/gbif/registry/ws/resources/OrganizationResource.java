@@ -12,6 +12,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
@@ -48,11 +49,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   public OrganizationResource(
       OrganizationMapper organizationMapper,
+      CommentMapper commentMapper,
       EventBus eventBus,
       EditorAuthorizationService editorAuthorizationService,
       OrganizationEndorsementService<UUID> organizationEndorsementService,
       WithMyBatis withMyBatis) {
-    super(organizationMapper, eventBus, editorAuthorizationService, withMyBatis, Organization.class);
+    super(organizationMapper, commentMapper, eventBus, editorAuthorizationService, withMyBatis, Organization.class);
     this.organizationEndorsementService = organizationEndorsementService;
     this.organizationMapper = organizationMapper;
   }
