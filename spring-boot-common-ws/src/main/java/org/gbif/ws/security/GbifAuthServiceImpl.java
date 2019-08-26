@@ -1,6 +1,5 @@
 package org.gbif.ws.security;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -179,7 +178,7 @@ public class GbifAuthServiceImpl implements GbifAuthService {
    */
   @Override
   public RequestObject signRequest(final String username, final RequestObject request) {
-    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
+//    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
     // first add custom GBIF headers so we can use them to build the string to sign
     // the proxied username
     request.getHttpHeaders().add(HEADER_GBIF_USER, username);
