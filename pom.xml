@@ -48,6 +48,7 @@
 
   <properties>
     <java.version>1.8</java.version>
+    <commons-digester.version>3.2</commons-digester.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
     <gbif-doi.version>2.4</gbif-doi.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
@@ -56,6 +57,7 @@
     <download-query-tools.version>1.24</download-query-tools.version>
     <gbif-api.version>0.87</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
+    <gbif-parsers.version>0.36</gbif-parsers.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -121,6 +123,11 @@
         <version>${gbif-api.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-parsers</artifactId>
+        <version>${gbif-parsers.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif.directory</groupId>
         <artifactId>directory-api</artifactId>
         <version>${gbif-directory.version}</version>
@@ -168,6 +175,18 @@
         <groupId>org.gbif.common</groupId>
         <artifactId>gbif-postal-service</artifactId>
         <version>${gbif-postal-service.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-digester3</artifactId>
+        <version>${commons-digester.version}</version>
+        <exclusions>
+          <exclusion>
+            <!-- brings in old version 3.3.1 -->
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
