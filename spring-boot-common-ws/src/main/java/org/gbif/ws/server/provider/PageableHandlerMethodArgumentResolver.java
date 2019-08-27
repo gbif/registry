@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.config;
+package org.gbif.ws.server.provider;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;

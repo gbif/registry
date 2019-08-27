@@ -192,7 +192,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @RequestMapping(method = RequestMethod.GET)
   public PagingResponse<Organization> list(
-      @Nullable Country country,// TODO: 26/08/2019 Country is in Context.
+      @Nullable Country country,
       @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       @Nullable @RequestParam(value = "isEndorsed", required = false) Boolean isEndorsed,
