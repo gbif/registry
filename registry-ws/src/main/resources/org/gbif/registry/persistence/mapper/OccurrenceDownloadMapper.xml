@@ -3,7 +3,7 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
   <!-- Maps a occurrence download  and handles the different types of downloads-->
-  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="Download" autoMapping="false">
+  <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download" autoMapping="false">
     <id property="key" column="key"/>
     <result property="doi" column="doi" />
     <result property="license" column="license"/>
@@ -15,25 +15,25 @@
     <result property="modified" column="modified"/>
     <result property="eraseAfter" column="erase_after"/>
 
-    <association property="request" javaType="DownloadRequest">
+    <association property="request" javaType="org.gbif.api.model.occurrence.DownloadRequest">
       <result property="notificationAddressesAsString" column="notification_addresses"/>
       <result property="sendNotification" column="send_notification"/>
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <discriminator javaType="string" column="format">
-        <case value="SQL" resultType="SQLDownloadRequest">
+        <case value="SQL" resultType="org.gbif.api.model.occurrence.SqlDownloadRequest">
           <result property="sql" column="filter" />
         </case>
-        <case value="DWCA" resultType="PredicateDownloadRequest">
+        <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
         </case>
-        <case value="SIMPLE_CSV" resultType="PredicateDownloadRequest">
+        <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
         </case>
-        <case value="SIMPLE_AVRO" resultType="PredicateDownloadRequest">
+        <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
         </case>
-        <case value="SPECIES_LIST" resultType="PredicateDownloadRequest">
+        <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
         </case>
       </discriminator>
@@ -41,7 +41,7 @@
 
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
   </resultMap>
-  
+
   <resultMap id="DOWNLOADS_STATISTICS_COUNT_MAP" type="Count" autoMapping="true">
     <result property="name" column="year_month" />
     <result property="count" column="number_downloads" />
