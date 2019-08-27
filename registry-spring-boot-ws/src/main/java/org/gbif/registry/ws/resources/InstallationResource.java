@@ -3,7 +3,6 @@ package org.gbif.registry.ws.resources;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -17,6 +16,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -33,6 +33,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +45,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
       MetasyncHistoryMapper metasyncHistoryMapper,
-      EventBus eventBus,
+      EventManager eventManager,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher) {
@@ -95,7 +95,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         machineTagMapper,
         tagMapper,
         Installation.class,
-        eventBus,
+        eventManager,
         userAuthService,
         withMyBatis);
     this.datasetMapper = datasetMapper;
@@ -158,7 +158,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * necessary security.
    */
   @PostMapping("{key}/synchronize")
-  @RolesAllowed(ADMIN_ROLE)
+  @Secured(ADMIN_ROLE)
   public void synchronize(@PathVariable("key") UUID installationKey) {
     if (messagePublisher != null) {
       LOG.info("Requesting synchronizing installation[{}]", installationKey);
@@ -226,7 +226,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @PostMapping("{installationKey}/metasync")
   @Trim
   @Transactional
-  @RolesAllowed(ADMIN_ROLE)
+  @Secured(ADMIN_ROLE)
   public void createMetasync(@PathVariable("installationKey") UUID installationKey,
                              @RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     checkArgument(installationKey.equals(metasyncHistory.getInstallationKey()),
@@ -236,7 +236,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
 
   @Trim
   @Transactional
-  @RolesAllowed(ADMIN_ROLE)
+  @Secured(ADMIN_ROLE)
   @Override
   public void createMetasync(@Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     metasyncHistoryMapper.create(metasyncHistory);

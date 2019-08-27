@@ -18,6 +18,7 @@ public class RegistryMessagePublisher implements MessagePublisher {
     this.rabbitTemplate = rabbitTemplate;
   }
 
+  @Override
   public void send(Message message) throws IOException {
     this.rabbitTemplate.convertAndSend(RabbitSenderConfiguration.QUEUE_REGISTRY_DOI, message);
   }

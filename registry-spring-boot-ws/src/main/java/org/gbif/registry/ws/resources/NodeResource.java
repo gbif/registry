@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.resources;
 
 import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
@@ -14,6 +13,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -66,12 +66,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
-      EventBus eventBus,
+      EventManager eventManager,
       Augmenter nodeAugmenter,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(nodeMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-        Node.class, eventBus, userAuthService, withMyBatis);
+        Node.class, eventManager, userAuthService, withMyBatis);
     this.nodeMapper = nodeMapper;
     this.organizationMapper = organizationMapper;
     this.nodeAugmenter = nodeAugmenter;

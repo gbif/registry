@@ -1,13 +1,13 @@
 package org.gbif.registry.ws.resources;
 
 import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -49,7 +49,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
       TagMapper tagMapper,
       CommentMapper commentMapper,
       DatasetMapper datasetMapper,
-      EventBus eventBus,
+      EventManager eventManager,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(networkMapper,
@@ -60,7 +60,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
         machineTagMapper,
         tagMapper,
         Network.class,
-        eventBus,
+        eventManager,
         userAuthService,
         withMyBatis);
     this.datasetMapper = datasetMapper;

@@ -2,13 +2,13 @@ package org.gbif.registry.ws.resources.collections;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
@@ -38,17 +38,19 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
   private final PersonMapper personMapper;
   private final AddressMapper addressMapper;
-  private final EventBus eventBus;
+  private final EventManager eventManager;
 
-  public PersonResource(PersonMapper personMapper, AddressMapper addressMapper, EventBus eventBus) {
-    super(personMapper, eventBus, Person.class);
+  public PersonResource(
+      PersonMapper personMapper,
+      AddressMapper addressMapper,
+      EventManager eventManager) {
+    super(personMapper, eventManager, Person.class);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
-    this.eventBus = eventBus;
+    this.eventManager = eventManager;
   }
 
   // TODO: 2019-08-21 implement validation
-  // TODO: 2019-08-21 check Context annotation
 
   @Override
   @Transactional
@@ -65,7 +67,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
 
-    eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
+    eventManager.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
   }
 
@@ -106,7 +108,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
     // check if we have to delete the address
     Person newPerson = get(person.getKey());
-    eventBus.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
+    eventManager.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
   }
 
   @RequestMapping(method = RequestMethod.GET)

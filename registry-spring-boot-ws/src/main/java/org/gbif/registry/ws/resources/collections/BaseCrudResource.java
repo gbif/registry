@@ -1,8 +1,8 @@
 package org.gbif.registry.ws.resources.collections;
 
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.Trim;
@@ -33,12 +33,15 @@ import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 public abstract class BaseCrudResource<T extends CollectionEntity> implements CrudService<T> {
 
   private final CrudMapper<T> crudMapper;
-  private final EventBus eventBus;
+  private final EventManager eventManager;
   private final Class<T> objectClass;
 
-  protected BaseCrudResource(CrudMapper<T> crudMapper, EventBus eventBus, Class<T> objectClass) {
+  protected BaseCrudResource(
+      CrudMapper<T> crudMapper,
+      EventManager eventManager,
+      Class<T> objectClass) {
     this.crudMapper = crudMapper;
-    this.eventBus = eventBus;
+    this.eventManager = eventManager;
     this.objectClass = objectClass;
   }
 
@@ -74,7 +77,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   public void delete(@NotNull UUID key) {
     T objectToDelete = get(key);
     crudMapper.delete(key);
-    eventBus.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
+    eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
   }
 
   @GetMapping("{key}")

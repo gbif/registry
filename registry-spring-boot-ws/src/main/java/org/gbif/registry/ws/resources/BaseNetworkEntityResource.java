@@ -4,7 +4,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -22,6 +21,7 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.BaseNetworkEntityMapper;
@@ -92,7 +92,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final ContactMapper contactMapper;
   private final EndpointMapper endpointMapper;
   private final IdentifierMapper identifierMapper;
-  private final EventBus eventBus; // TODO: 2019-08-20 mb wrap it
+  private final EventManager eventManager;
   private final EditorAuthorizationService userAuthService;
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
@@ -106,7 +106,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       MachineTagMapper machineTagMapper,
       TagMapper tagMapper,
       Class<T> objectClass,
-      EventBus eventBus,
+      EventManager eventManager,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     this.mapper = mapper;
@@ -117,7 +117,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.endpointMapper = endpointMapper;
     this.identifierMapper = identifierMapper;
     this.objectClass = objectClass;
-    this.eventBus = eventBus;
+    this.eventManager = eventManager;
     this.userAuthService = userAuthService;
     this.withMyBatis = withMyBatis;
   }
@@ -165,7 +165,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public UUID create(@Valid T entity) {
     withMyBatis.create(mapper, entity);
-    eventBus.post(CreateEvent.newInstance(entity, objectClass));
+    eventManager.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
 
@@ -196,7 +196,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void delete(UUID key) {
     T objectToDelete = get(key);
     withMyBatis.delete(mapper, key);
-    eventBus.post(DeleteEvent.newInstance(objectToDelete, objectClass));
+    eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
   //  @Validate(groups = {PostPersist.class, Default.class})
@@ -271,7 +271,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     withMyBatis.update(mapper, entity);
     // get complete entity with components populated, so subscribers of UpdateEvent can compare new and old entities
     T newEntity = get(entity.getKey());
-    eventBus.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
+    eventManager.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
   }
 
   /**
@@ -298,7 +298,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public int addComment(UUID targetEntityKey, @Valid Comment comment) {
     int key = withMyBatis.addComment(commentMapper, mapper, targetEntityKey, comment);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
     return key;
   }
 
@@ -313,7 +313,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
     withMyBatis.deleteComment(mapper, targetEntityKey, commentKey);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
   }
 
   @GetMapping(value = "{key}/comment")
@@ -488,7 +488,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public int addTag(UUID targetEntityKey, @Valid Tag tag) {
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
     return key;
   }
 
@@ -503,7 +503,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable("tagKey") int tagKey) {
     withMyBatis.deleteTag(mapper, targetEntityKey, tagKey);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
 
   @GetMapping(value = "{key}/tag")
@@ -536,7 +536,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public int addContact(UUID targetEntityKey, @Valid Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
   }
 
@@ -567,7 +567,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void updateContact(UUID targetEntityKey, @Valid Contact contact) {
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
 
   /**
@@ -581,7 +581,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
     withMyBatis.deleteContact(mapper, targetEntityKey, contactKey);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
 
   @GetMapping("{key}/contact")
@@ -618,7 +618,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     T newEntity = get(targetEntityKey);
     // posts an UpdateEvent instead of a ChangedComponentEvent, otherwise the crawler would have to start subscribing
     // to ChangedComponentEvent instead just to detect when an endpoint has been added to a Dataset
-    eventBus.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
+    eventManager.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
     return key;
   }
 
@@ -633,7 +633,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey, @PathVariable("endpointKey") int endpointKey) {
     withMyBatis.deleteEndpoint(mapper, targetEntityKey, endpointKey);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
   }
 
   @GetMapping("{key}/endpoint")
@@ -665,7 +665,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public int addIdentifier(UUID targetEntityKey, @Valid Identifier identifier) {
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
     return key;
   }
 
@@ -680,7 +680,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey, @PathVariable("identifierKey") int identifierKey) {
     withMyBatis.deleteIdentifier(mapper, targetEntityKey, identifierKey);
-    eventBus.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
+    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
 
 

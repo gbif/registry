@@ -6,7 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
@@ -43,6 +42,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
@@ -158,7 +158,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                          TagMapper tagMapper,
                          IdentifierMapper identifierMapper,
                          CommentMapper commentMapper,
-                         EventBus eventBus,
+                         EventManager eventManager,
                          @Lazy DatasetSearchService searchService,
                          MetadataMapper metadataMapper,
                          DatasetProcessStatusMapper datasetProcessStatusMapper,
@@ -170,7 +170,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                          WithMyBatis withMyBatis,
                          @Autowired(required = false) MessagePublisher messagePublisher) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-        Dataset.class, eventBus, userAuthService, withMyBatis);
+        Dataset.class, eventManager, userAuthService, withMyBatis);
     this.searchService = searchService;
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
@@ -186,20 +186,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.withMyBatis = withMyBatis;
   }
 
+  // TODO: 27/08/2019 problem with recursion
   // TODO: 27/08/2019 add handler for searchRequest
   @GetMapping("search")
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(DatasetSearchRequest searchRequest) {
-    LOG.debug("Search operation received {}", searchRequest);
     return searchService.search(searchRequest);
   }
 
+  // TODO: 27/08/2019 problem with recursion
   // TODO: 27/08/2019 add handler for searchRequest
   @GetMapping("suggest")
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest suggestRequest) {
-    // TODO: Commented out because DatasetSuggestRequest doesn't have a toString method yet
-    // LOG.debug("Suggest operation received {}", suggestRequest);
     return searchService.suggest(suggestRequest);
   }
 
@@ -215,9 +214,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
     return sanitizeDataset(dataset);
   }
-
-
-  // TODO: 27/08/2019 add handler for country (instead of @Context)
 
   /**
    * All network entities support simple (!) search with "&q=".

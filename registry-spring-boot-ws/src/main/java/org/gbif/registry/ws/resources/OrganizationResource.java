@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -16,6 +15,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -85,7 +85,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
       OrganizationEndorsementService<UUID> organizationEndorsementService,
-      EventBus eventBus,
+      EventManager eventManager,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(organizationMapper,
@@ -96,7 +96,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         machineTagMapper,
         tagMapper,
         Organization.class,
-        eventBus,
+        eventManager,
         userAuthService,
         withMyBatis);
     this.datasetMapper = datasetMapper;
