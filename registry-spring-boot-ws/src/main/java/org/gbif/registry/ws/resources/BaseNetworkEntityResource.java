@@ -62,6 +62,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
@@ -371,9 +372,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete a machine tag.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  // TODO: 2019-08-26 test machineTagKey should be {machineTagKey: [0-9]+}
-  @DeleteMapping(value = "{key}/machineTag/{machineTagKey: [0-9]+} ", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTagBase(@PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
+  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -399,15 +398,28 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag in a namespace.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
+  public void deleteMachineTagsByNamespace(UUID targetEntityKey, String namespace) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
+
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
         && !userAuthService.allowedToModifyNamespace(principal, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
+  }
+
+  /**
+   * It was added because of an ambiguity problem.
+   * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
+   */
+  @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
+  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable String parameter) {
+    if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
+      deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter));
+    } else {
+      deleteMachineTagsByNamespace(targetEntityKey, parameter);
+    }
   }
 
   @Override
