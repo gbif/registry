@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       DoiGenerator doiGenerator,
       OrganizationMapper organizationMapper,
       OccurrenceDownloadService occurrenceDownloadService,
-      TitleLookup titleLookup, // TODO: 27/08/2019 implement TitleLookup (now it is using guice, apache and jersey)
+      @Autowired(required = false) TitleLookup titleLookup, // TODO: 27/08/2019 implement TitleLookup (now it is using guice, apache and jersey)
       @Value("${doi.dataset.parentExcludeList}") List<UUID> parentDatasetExcludeList) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;

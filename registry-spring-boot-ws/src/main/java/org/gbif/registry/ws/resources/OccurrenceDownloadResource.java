@@ -21,6 +21,7 @@ import org.gbif.registry.ws.Trim;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -75,7 +76,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper,
                                     DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
                                     DoiGenerator doiGenerator,
-                                    DataCiteDoiHandlerStrategy doiHandlingStrategy,
+                                    @Lazy DataCiteDoiHandlerStrategy doiHandlingStrategy,
                                     IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;

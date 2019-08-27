@@ -25,16 +25,16 @@
           <result property="sql" column="filter" />
         </case>
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
         <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
         <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
         <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
       </discriminator>
     </association>
