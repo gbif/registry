@@ -180,7 +180,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
-  public void deleteBase(@NotNull @PathVariable("key") UUID key) {
+  public void deleteBase(@NotNull @PathVariable UUID key) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -205,7 +205,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Nullable
   @GetMapping(value = "{key}")
   @Override
-  public T get(@NotNull @PathVariable("key") UUID key) {
+  public T get(@NotNull @PathVariable UUID key) {
     return withMyBatis.get(mapper, key);
   }
 
@@ -312,7 +312,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/comment/{commentKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
+  public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
     withMyBatis.deleteComment(mapper, targetEntityKey, commentKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
   }
@@ -437,8 +437,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace,
-                                    @PathVariable("name") String name) {
+  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
+                                    @PathVariable String name) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -513,7 +513,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/tag/{tagKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable("tagKey") int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
     withMyBatis.deleteTag(mapper, targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
@@ -564,7 +564,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updateContact(@PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey,
+  public void updateContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey,
                             @RequestBody @NotNull @Trim Contact contact) {
     // for safety, and to match a nice RESTful URL structure
     Preconditions.checkArgument(Integer.valueOf(contactKey).equals(contact.getKey()),
@@ -591,7 +591,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
+  public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
     withMyBatis.deleteContact(mapper, targetEntityKey, contactKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
@@ -643,7 +643,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/endpoint/{endpointKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey, @PathVariable("endpointKey") int endpointKey) {
+  public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey, @PathVariable int endpointKey) {
     withMyBatis.deleteEndpoint(mapper, targetEntityKey, endpointKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
   }

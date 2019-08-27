@@ -106,7 +106,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured(ADMIN_ROLE)
   @Override
-  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
+  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
   }
 
@@ -114,7 +114,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured(ADMIN_ROLE)
   @Override
-  public void removeConstituent(@PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
+  public void removeConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
   }
 }

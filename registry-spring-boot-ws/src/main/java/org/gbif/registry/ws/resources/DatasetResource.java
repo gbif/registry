@@ -206,7 +206,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Nullable
   @NullToNotFound
   @Override
-  public Dataset get(@PathVariable("key") UUID key) {
+  public Dataset get(@PathVariable UUID key) {
     Dataset dataset = merge(getPreferredMetadataDataset(key), super.get(key));
     if (dataset == null) {
       return null;
@@ -916,7 +916,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void createDatasetProcessStatus(@PathVariable("datasetKey") UUID datasetKey,
+  public void createDatasetProcessStatus(@PathVariable UUID datasetKey,
                                          @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
         "DatasetProcessStatus must have the same key as the dataset");
@@ -944,7 +944,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void createDatasetProcessStatus(@PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt,
+  public void createDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt,
                                          @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
         "DatasetProcessStatus must have the same key as the url");
@@ -965,8 +965,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Nullable
   @NullToNotFound
   @Override
-  public DatasetProcessStatus getDatasetProcessStatus(@PathVariable("datasetKey") UUID datasetKey,
-                                                      @PathVariable("attempt") int attempt) {
+  public DatasetProcessStatus getDatasetProcessStatus(@PathVariable UUID datasetKey,
+                                                      @PathVariable int attempt) {
     return datasetProcessStatusMapper.get(datasetKey, attempt);
   }
 
@@ -986,7 +986,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @GetMapping("{datasetKey}/process")
   @Override
-  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathVariable("datasetKey") UUID datasetKey, Pageable page) {
+  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathVariable UUID datasetKey, Pageable page) {
     return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
         datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
@@ -999,9 +999,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return keys;
   }
 
-  @GetMapping("doi/{doi : .+}")
+  // TODO: 27/08/2019 test mapping
+  @GetMapping("doi/{doi:.+}")
   @Override
-  public PagingResponse<Dataset> listByDOI(@PathVariable("doi") String doi, Pageable page) {
+  public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {
     return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
   }
 }

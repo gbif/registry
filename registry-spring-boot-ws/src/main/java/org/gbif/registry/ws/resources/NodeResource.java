@@ -83,7 +83,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Nullable
   @NullToNotFound
   @Override
-  public Node get(@PathVariable("key") UUID key) {
+  public Node get(@PathVariable UUID key) {
     return nodeAugmenter.augment(super.get(key));
   }
 
@@ -208,7 +208,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @DeleteMapping("{key}/contact/{contactKey}")
   @Secured(ADMIN_ROLE)
   @Override
-  public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
+  public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 

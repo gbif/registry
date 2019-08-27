@@ -108,7 +108,7 @@ public class UserManagementResource {
    */
   @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/{username}")
-  public UserAdminView getUser(@PathVariable("username") String username) {
+  public UserAdminView getUser(@PathVariable String username) {
 
     GbifUser user = identityService.get(username);
     if (user == null) {
@@ -162,7 +162,7 @@ public class UserManagementResource {
   @Secured({ADMIN_ROLE, APP_ROLE})
   @PutMapping("/{username}")
   public ResponseEntity<UserModelMutationResult> update(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @RequestBody UserUpdate userUpdate,
       Authentication authentication) {
 
@@ -229,7 +229,7 @@ public class UserManagementResource {
    */
   @Secured(ADMIN_ROLE)
   @DeleteMapping(value = "/{userKey}", consumes = MediaType.ALL_VALUE)
-  public ResponseEntity<Void> delete(@PathVariable("userKey") int userKey) {
+  public ResponseEntity<Void> delete(@PathVariable int userKey) {
     identityService.delete(userKey);
     return ResponseEntity.noContent().build();
   }
@@ -315,7 +315,7 @@ public class UserManagementResource {
    */
   @Secured({ADMIN_ROLE, USER_ROLE})
   @GetMapping("/{username}/editorRight")
-  public ResponseEntity<List<UUID>> editorRights(@PathVariable("username") String username,
+  public ResponseEntity<List<UUID>> editorRights(@PathVariable String username,
                                                  Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
@@ -341,7 +341,7 @@ public class UserManagementResource {
   @Secured({ADMIN_ROLE})
   @RequestMapping(value = "/{username}/editorRight", method = RequestMethod.POST, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<UUID> addEditorRight(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @RequestBody String strKey
   ) {
 
@@ -366,7 +366,7 @@ public class UserManagementResource {
    */
   @Secured(ADMIN_ROLE)
   @DeleteMapping("/{username}/editorRight/{key}")
-  public ResponseEntity<Void> deleteEditorRight(@PathVariable("username") String username, @PathVariable("key") UUID key) {
+  public ResponseEntity<Void> deleteEditorRight(@PathVariable String username, @PathVariable UUID key) {
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);

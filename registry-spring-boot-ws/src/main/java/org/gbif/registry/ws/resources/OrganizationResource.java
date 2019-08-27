@@ -162,7 +162,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void updateBase(@PathVariable("key") UUID key, @RequestBody @NotNull @Trim Organization organization) {
+  public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization) {
     checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

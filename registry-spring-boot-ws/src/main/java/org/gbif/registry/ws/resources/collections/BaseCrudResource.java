@@ -63,7 +63,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 //  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public void delete(@PathVariable("key") @NotNull UUID key, Authentication authentication) {
+  public void delete(@PathVariable @NotNull UUID key, Authentication authentication) {
     T entityToDelete = get(key);
     entityToDelete.setModifiedBy(((UserDetails) authentication.getPrincipal()).getUsername());
     update(entityToDelete);
@@ -74,6 +74,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Transactional
 //  @Validate
   @Override
+  // TODO: 27/08/2019 what parameter type?
   public void delete(@NotNull UUID key) {
     T objectToDelete = get(key);
     crudMapper.delete(key);
@@ -85,7 +86,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @NullToNotFound
 //  @Validate(validateReturnedValue = true)
   @Override
-  public T get(@PathVariable("key") @NotNull UUID key) {
+  public T get(@PathVariable @NotNull UUID key) {
     return crudMapper.get(key);
   }
 
@@ -93,7 +94,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 //  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public void update(@PathVariable("key") @NotNull UUID key, @NotNull @Trim T entity) {
+  public void update(@PathVariable @NotNull UUID key, @NotNull @Trim T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");

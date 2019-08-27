@@ -180,8 +180,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * The response holds the distinct organizations running the installations of the specified type.
    */
   // TODO: 26/08/2019 uses a specific JSONObject (org.codehaus.jettison.json)
+  // TODO: 27/08/2019 check PathVariable is working (InstallationType?)
   @GetMapping("location/{type}")
-  public String organizationsAsGeoJSON(@PathVariable("type") InstallationType type) {
+  public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
 
     // to increment the count on duplicates
@@ -227,7 +228,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void createMetasync(@PathVariable("installationKey") UUID installationKey,
+  public void createMetasync(@PathVariable UUID installationKey,
                              @RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     checkArgument(installationKey.equals(metasyncHistory.getInstallationKey()),
         "Metasync must have the same key as the installation");
@@ -252,7 +253,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
 
   @GetMapping("{installationKey}/metasync")
   @Override
-  public PagingResponse<MetasyncHistory> listMetasync(@PathVariable("installationKey") UUID installationKey,
+  public PagingResponse<MetasyncHistory> listMetasync(@PathVariable UUID installationKey,
                                                       Pageable page) {
     return new PagingResponse<>(page, (long) metasyncHistoryMapper.countByInstallation(installationKey),
         metasyncHistoryMapper.listByInstallation(installationKey, page));

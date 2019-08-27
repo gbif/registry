@@ -60,9 +60,9 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PostMapping("gen/{type}")
   @Override
-  public DOI generate(@NotNull @PathVariable("type") DoiType doiType) {
+  public DOI generate(@NotNull @PathVariable DoiType type) {
     checkIsUserAuthenticated();
-    return genDoiByType(doiType);
+    return genDoiByType(type);
   }
 
   /**
@@ -71,7 +71,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   @NullToNotFound
   @Override
-  public DoiData get(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
+  public DoiData get(@PathVariable String prefix, @PathVariable String suffix) {
     return doiPersistenceService.get(new DOI(prefix, suffix));
   }
 
@@ -81,7 +81,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @DeleteMapping("{prefix}/{suffix}")
   @NullToNotFound
   @Override
-  public void delete(@PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
+  public void delete(@PathVariable String prefix, @PathVariable String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
     doiGenerator.delete(new DOI(prefix, suffix));
   }
