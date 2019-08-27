@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// TODO: 2019-08-20 add an interceptor
+// TODO: 2019-08-20 add an interceptor (are there two trims? check)
 /**
  * Indicates that the field is suitable for String trimming.
  * To use this annotate the method with Trim AND the fields intended for trimming.
