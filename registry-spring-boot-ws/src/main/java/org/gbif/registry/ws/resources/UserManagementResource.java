@@ -1,6 +1,11 @@
 package org.gbif.registry.ws.resources;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUser;
@@ -39,12 +44,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -235,6 +242,18 @@ public class UserManagementResource {
   }
 
   /**
+   * For admin console only.
+   * User search, intended for user administration console use only.
+   */
+  @GetMapping("/search")
+  @Secured(ADMIN_ROLE)
+  public PagingResponse<GbifUser> search(@RequestParam("q") String query, @Nullable Pageable page) {
+    page = page == null ? new PagingRequest() : page;
+    String q = Optional.ofNullable(query).map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v))).orElse(null);
+    return identityService.search(q, page);
+  }
+
+  /**
    * A user requesting his password to be reset.
    * The username is expected to be present in the security context (authenticated by appkey).
    * This method will always return 204 No Content.
@@ -282,8 +301,6 @@ public class UserManagementResource {
       return ResponseEntity.ok(LoggedUser.from(user));
     }
   }
-
-  // TODO: 2019-08-15 implement: search
 
   /**
    * Utility to determine if the challengeCode provided is valid for the given user.
