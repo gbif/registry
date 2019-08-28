@@ -181,20 +181,19 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadsByUserCountry")
   @Override
   @NullToNotFound
-  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(@Nullable @RequestParam(value = "fromDate", required = false) @PartialDate Date fromDate,
-                                                                    @Nullable @RequestParam(value = "toDate", required = false) @PartialDate Date toDate,
-                                                                    Country userCountry) {
+  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(@Nullable @PartialDate Date fromDate,
+                                                                    @Nullable @PartialDate Date toDate,
+                                                                    @Nullable Country userCountry) {
     return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
         Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
 
-  // TODO: 27/08/2019 test PartialDate
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
   @NullToNotFound
-  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable @RequestParam(value = "fromDate", required = false) @PartialDate Date fromDate,
-                                                                        @Nullable @RequestParam(value = "toDate", required = false) @PartialDate Date toDate,
-                                                                        Country publishingCountry,
+  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable @PartialDate Date fromDate,
+                                                                        @Nullable @PartialDate Date toDate,
+                                                                        @Nullable Country publishingCountry,
                                                                         @RequestParam("datasetKey") UUID datasetKey) {
     return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
         Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
