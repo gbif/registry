@@ -285,7 +285,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(@RequestParam("q") String label) {
+  public List<KeyTitleResult> suggest(@Nullable @RequestParam(value = "q", required = false) String label) {
     return organizationMapper.suggest(label);
   }
 

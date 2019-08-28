@@ -126,9 +126,9 @@ public class UserManagementResource {
 
   @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/find")
-  public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> requestParams) {
+  public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> systemSettings) {
     GbifUser user = null;
-    Iterator<Map.Entry<String, String>> it = requestParams.entrySet().iterator();
+    Iterator<Map.Entry<String, String>> it = systemSettings.entrySet().iterator();
     if (it.hasNext()) {
       Map.Entry<String, String> paramPair = it.next();
       user = identityService.getBySystemSetting(paramPair.getKey(), paramPair.getValue());
@@ -247,7 +247,7 @@ public class UserManagementResource {
    */
   @GetMapping("/search")
   @Secured(ADMIN_ROLE)
-  public PagingResponse<GbifUser> search(@RequestParam("q") String query, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(@Nullable @RequestParam(value = "q", required = false) String query, @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q = Optional.ofNullable(query).map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v))).orElse(null);
     return identityService.search(q, page);
@@ -313,7 +313,7 @@ public class UserManagementResource {
   public ResponseEntity<Void> tokenValidityCheck(
       Authentication authentication,
       @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
-      @RequestParam("confirmationKey") UUID confirmationKey) {
+      @Nullable @RequestParam(value = "confirmationKey", required = false) UUID confirmationKey) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
@@ -321,7 +321,7 @@ public class UserManagementResource {
     String username = ((GbifAuthentication) authentication).getPrincipal().getUsername();
     GbifUser user = identityService.get(username);
 
-    if (identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
+    if (user == null || identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

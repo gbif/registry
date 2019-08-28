@@ -266,7 +266,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(@RequestParam("q") String q) {
+  public List<KeyTitleResult> suggest(@Nullable @RequestParam(value = "q", required = false) String q) {
     return installationMapper.suggest(q);
   }
 }

@@ -226,7 +226,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(@RequestParam("q") String label) {
+  public List<KeyTitleResult> suggest(@Nullable @RequestParam(value = "q", required = false) String label) {
     return nodeMapper.suggest(label);
   }
 }
