@@ -119,7 +119,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @RequestMapping(method = RequestMethod.GET)
   @Secured(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(Pageable page, @Nullable @RequestParam("status") Set<Download.Status> status) {
+  public PagingResponse<Download> list(Pageable page, @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     if (status == null || status.isEmpty()) {
       return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
@@ -129,7 +129,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @GetMapping("user/{user}")
   @NullToNotFound
-  public PagingResponse<Download> listByUser(@NotNull @PathVariable("user") String user, Pageable page,
+  public PagingResponse<Download> listByUser(@NotNull @PathVariable String user, Pageable page,
                                              @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
