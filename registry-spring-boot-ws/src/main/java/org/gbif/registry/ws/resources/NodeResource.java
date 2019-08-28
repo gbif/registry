@@ -93,7 +93,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
    */
-  @RequestMapping(method = RequestMethod.GET) // TODO: 26/08/2019 mapping?
+  @RequestMapping(method = RequestMethod.GET)
   public PagingResponse<Node> list(
       @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,

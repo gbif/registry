@@ -965,8 +965,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Nullable
   @NullToNotFound
   @Override
-  public DatasetProcessStatus getDatasetProcessStatus(@PathVariable UUID datasetKey,
-                                                      @PathVariable int attempt) {
+  public DatasetProcessStatus getDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt) {
     return datasetProcessStatusMapper.get(datasetKey, attempt);
   }
 

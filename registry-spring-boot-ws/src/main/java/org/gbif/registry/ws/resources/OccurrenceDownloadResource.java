@@ -183,7 +183,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @NullToNotFound
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(@Nullable @RequestParam(value = "fromDate", required = false) @PartialDate Date fromDate,
                                                                     @Nullable @RequestParam(value = "toDate", required = false) @PartialDate Date toDate,
-                                                                    @RequestParam("userCountry") Country userCountry) {
+                                                                    Country userCountry) {
     return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
         Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
@@ -194,7 +194,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @NullToNotFound
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable @RequestParam(value = "fromDate", required = false) @PartialDate Date fromDate,
                                                                         @Nullable @RequestParam(value = "toDate", required = false) @PartialDate Date toDate,
-                                                                        @RequestParam("publishingCountry") Country publishingCountry,
+                                                                        Country publishingCountry,
                                                                         @RequestParam("datasetKey") UUID datasetKey) {
     return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
         Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
