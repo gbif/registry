@@ -209,11 +209,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return withMyBatis.get(mapper, key);
   }
 
-  // TODO: 2019-08-26 test this
   // we do a post not get cause we expect large numbers of keys to be sent
   @PostMapping("titles")
   @Override
-  public Map<UUID, String> getTitles(Collection<UUID> keys) {
+  public Map<UUID, String> getTitles(@RequestBody Collection<UUID> keys) {
     Map<UUID, String> titles = Maps.newHashMap();
     for (UUID key : keys) {
       titles.put(key, mapper.title(key));
@@ -257,7 +256,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updateBase(@PathVariable("key") UUID key, @RequestBody @NotNull @Trim T entity) {
+  public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim T entity) {
     checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();

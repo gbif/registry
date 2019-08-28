@@ -999,7 +999,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return keys;
   }
 
-  // TODO: 27/08/2019 test mapping
   @GetMapping("doi/{doi:.+}")
   @Override
   public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {

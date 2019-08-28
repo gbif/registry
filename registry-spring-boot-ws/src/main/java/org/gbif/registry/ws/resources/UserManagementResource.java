@@ -339,11 +339,8 @@ public class UserManagementResource {
    * Add an entity right for a user.
    */
   @Secured({ADMIN_ROLE})
-  @RequestMapping(value = "/{username}/editorRight", method = RequestMethod.POST, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<UUID> addEditorRight(
-      @PathVariable String username,
-      @RequestBody String strKey
-  ) {
+  @PostMapping(value = "/{username}/editorRight", consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<UUID> addEditorRight(@PathVariable String username, @RequestBody String strKey) {
 
     final UUID key = UUID.fromString(strKey);
 

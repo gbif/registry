@@ -116,7 +116,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @RequestMapping(method = RequestMethod.POST)
-  public UUID createBase(@NotNull @Trim Organization organization) {
+  public UUID createBase(@RequestBody @NotNull @Trim Organization organization) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization);

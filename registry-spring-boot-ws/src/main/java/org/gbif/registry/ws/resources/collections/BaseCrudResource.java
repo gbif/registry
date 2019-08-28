@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -52,7 +53,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 //  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public UUID create(@NotNull T entity, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull T entity, Authentication authentication) {
     final String username = ((UserDetails) authentication.getPrincipal()).getUsername();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
@@ -74,7 +75,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   @Transactional
 //  @Validate
   @Override
-  // TODO: 27/08/2019 what parameter type?
   public void delete(@NotNull UUID key) {
     T objectToDelete = get(key);
     crudMapper.delete(key);
@@ -94,7 +94,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 //  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public void update(@PathVariable @NotNull UUID key, @NotNull @Trim T entity) {
+  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
