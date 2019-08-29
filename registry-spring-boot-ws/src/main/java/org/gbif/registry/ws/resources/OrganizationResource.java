@@ -135,7 +135,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Randomly generates a password for an organization.
+   * Randomly generates a shared token (password) for an organization.
    *
    * @return generated password
    */
@@ -290,13 +290,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * This is an HTTP only method to retrieve the password for an organization.
+   * This is an HTTP only method to retrieve the shared token (password) for an organization.
    *
    * @param organizationKey organization key
    * @return password if set, warning message if not set, or null if organization doesn't exist
    */
   @GetMapping(value = "{key}/password", produces = MediaType.TEXT_PLAIN_VALUE)
-  @Secured(ADMIN_ROLE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public String retrievePassword(@PathVariable("key") UUID organizationKey) {
     Organization o = get(organizationKey);
     if (o == null) {
