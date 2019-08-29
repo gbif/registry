@@ -22,6 +22,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
+import org.gbif.doi.metadata.datacite.NameType;
 import org.gbif.doi.metadata.datacite.ObjectFactory;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
@@ -81,7 +82,7 @@ public class DataCiteConverter {
   public static final Map<Pattern, String> SUPPORTED_SCHEMES = ImmutableMap.of(
     Pattern.compile("^(http[s]?:\\/\\/orcid.org\\/)([\\d\\-]+$)"), ORCID_NAME_IDENTIFIER_SCHEME);
 
-  private static final String DOWNLOAD_TITLE = "GBIF Occurrence Download";
+  private static final String DOWNLOAD_TITLE = "Occurrence Download";
   protected static final String GBIF_PUBLISHER = "The Global Biodiversity Information Facility";
   protected static final License DEFAULT_DOWNLOAD_LICENSE = License.CC_BY_NC_4_0;
   private static final String LICENSE_INFO = "Data from some individual datasets included in this download may be licensed under less restrictive terms.";
@@ -298,7 +299,7 @@ public class DataCiteConverter {
       .addSubject().withValue("biodiversity").withLang(ENGLISH).end()
       .addSubject().withValue("species occurrences").withLang(ENGLISH).end()
       .end()
-      .withCreators().addCreator().withCreatorName().withValue(creator.getName()).end().end()
+      .withCreators().addCreator().withCreatorName().withNameType(NameType.ORGANIZATIONAL).withValue(creator.getName()).end().end()
       .end()
       .withPublisher().withValue(GBIF_PUBLISHER).end()
       .withPublicationYear(getYear(d.getCreated()))
@@ -315,9 +316,9 @@ public class DataCiteConverter {
 
     final DataCiteMetadata.Descriptions.Description.Builder db = b.withDescriptions()
       .addDescription().withDescriptionType(DescriptionType.ABSTRACT).withLang(ENGLISH)
-      .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query: %s.",
+      .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n",
         d.getTotalRecords(), getFilterQuery(d, titleLookup)))
-      .addContent(String.format("The dataset includes %s records from %s constituent datasets:",
+      .addContent(String.format("The dataset includes %s records from %s constituent datasets:\n",
         d.getTotalRecords(), d.getNumberDatasets()));
     if (!usedDatasets.isEmpty()) {
       final DataCiteMetadata.RelatedIdentifiers.Builder<?> relBuilder = b.withRelatedIdentifiers();
@@ -330,9 +331,10 @@ public class DataCiteConverter {
             .end();
         }
         if (!Strings.isNullOrEmpty(du.getDatasetTitle())) {
-          db.addContent("\n " + du.getNumberRecords() + " records from " + du.getDatasetTitle() + ".");
+          db.addContent("  " + du.getNumberRecords() + " records from " + du.getDatasetTitle() + ".\n");
         }
       }
+      db.addContent("\n");
       db.addContent(LICENSE_INFO);
     }
 
