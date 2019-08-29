@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.utils.Installations;
 import org.gbif.registry.utils.Nodes;
 import org.gbif.registry.utils.Organizations;
@@ -146,5 +147,21 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     InstallationService service = (InstallationService) this.getService();
     assertEquals("Should find only The Great installation", 1, service.suggest("Great").size());
     assertEquals("Should find both installations", 2, service.suggest("the").size());
+  }
+
+  @Test
+  public void testListByType() {
+    Installation installation1 = newEntity();
+    installation1.setTitle("The installation");
+    installation1.setType(InstallationType.HTTP_INSTALLATION);
+    UUID key1 = getService().create(installation1);
+
+    Installation installation2 = newEntity();
+    installation2.setTitle("The Great installation");
+    installation2.setType(InstallationType.EARTHCAPE_INSTALLATION);
+    UUID key2 = getService().create(installation2);
+
+    InstallationService service = (InstallationService) this.getService();
+    assertEquals("Should find only The Great installation", 1, service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null));
   }
 }

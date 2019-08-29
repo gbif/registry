@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
+import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 
 import java.util.List;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.gbif.ws.client.QueryParamBuilder;
 
 /**
  * Client-side implementation to the InstallationService.
@@ -82,5 +84,10 @@ public class InstallationWsClient extends BaseNetworkEntityClient<Installation> 
     MultivaluedMap<String, String> queryParams = new MultivaluedMapImpl();
     queryParams.putSingle("q", q);
     return get(GenericTypes.LIST_KEY_TITLE, null, queryParams, null, "suggest");
+  }
+
+  @Override
+  public PagingResponse<Installation> listByType(InstallationType type, @Nullable Pageable page) {
+    return get(GenericTypes.PAGING_INSTALLATION, null, QueryParamBuilder.create("type", type).build(), page);
   }
 }
