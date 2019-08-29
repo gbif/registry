@@ -320,15 +320,15 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * This is an HTTP only method to retrieve the password for an organization.
+   * This is an HTTP only method to retrieve the shared token (password) for an organization.
    *
    * @param organizationKey organization key
    *
-   * @return password if set, warning message if not set, or null if organization doesn't exist
+   * @return shared token if set, warning message if not set, or null if organization doesn't exist
    */
   @Path("{key}/password")
   @GET
-  @RolesAllowed(ADMIN_ROLE)
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   @Produces(MediaType.TEXT_PLAIN)
   public String retrievePassword(@PathParam("key") UUID organizationKey) {
     Organization o = get(organizationKey);
@@ -340,9 +340,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Randomly generates a password for an organization.
+   * Randomly generates a shared token (password) for an organization.
    *
-   * @return generated password
+   * @return generated shared token
    */
   @VisibleForTesting
   protected static String generatePassword() {
