@@ -152,17 +152,17 @@ public class DataCiteConverterTest {
     download.setRequest(downloadRequest);
 
     GbifUser user = new GbifUser();
-    user.setUserName("peta");
-    user.setEmail("aha@music.com");
-    user.setFirstName("Pete");
-    user.setEmail("Doherty");
+    user.setUserName("occdownload.gbif.org");
+    user.setEmail("occdownload@devlist.gbif.org");
+    user.setFirstName(null);
+    user.setLastName("GBIF.org");
 
     // mock title lookup API
     TitleLookup tl = mock(TitleLookup.class);
     when(tl.getDatasetTitle(anyString())).thenReturn("PonTaurus");
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
 
-     DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
+    DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
     String xml = DataCiteValidator.toXml(download.getDoi(), metadata);
     assertTrue(xml.contains(du1.getDatasetDOI().getDoiName()));
     assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
