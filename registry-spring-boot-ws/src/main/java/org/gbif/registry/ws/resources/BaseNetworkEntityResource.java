@@ -323,8 +323,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * Adding machineTags is not restricted to certain roles on the method level, but instead handled
-   * controlled field for createdBy.
+   * Adding most machineTags is restricted based on the namespace.
+   * For some tags, it is restricted based on the editing role as usual.
    *
    * @param targetEntityKey key of target entity to add MachineTag to
    * @param machineTag      MachineTag to add
@@ -337,13 +337,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(principal, machineTag.getNamespace())) {
+    if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+        || userAuthService.allowedToModifyNamespace(principal, machineTag.getNamespace())
+        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
+        && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+        && userAuthService.allowedToModifyDataset(principal, targetEntityKey))
+    ) {
+      machineTag.setCreatedBy(principal.getUsername());
+      return addMachineTag(targetEntityKey, machineTag);
+    } else {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
-
-    machineTag.setCreatedBy(principal.getUsername());
-    return addMachineTag(targetEntityKey, machineTag);
   }
 
   //  @Validate(groups = {PrePersist.class, Default.class})
