@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
@@ -410,11 +411,27 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Consumes(MediaType.WILDCARD)
   public void deleteMachineTag(@PathParam("key") UUID targetEntityKey, @PathParam("machineTagKey") int machineTagKey,
                                @Context SecurityContext security) {
-    if (!security.isUserInRole(UserRoles.ADMIN_ROLE)
-      && !userAuthService.allowedToDeleteMachineTag(security.getUserPrincipal(), machineTagKey)) {
-      throw new WebApplicationException(Response.Status.FORBIDDEN);
+
+    Optional<MachineTag> optMachineTag = WithMyBatis.listMachineTags(mapper, targetEntityKey).stream()
+      .filter(m -> m.getKey() == machineTagKey).findFirst();
+
+    if (optMachineTag.isPresent()) {
+      MachineTag machineTag = optMachineTag.get();
+
+      if (security.isUserInRole(ADMIN_ROLE)
+        || userAuthService.allowedToModifyNamespace(security.getUserPrincipal(), machineTag.getNamespace())
+        || (security.isUserInRole(EDITOR_ROLE)
+            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+            && userAuthService.allowedToModifyDataset(security.getUserPrincipal(), targetEntityKey))
+      ) {
+        deleteMachineTag(targetEntityKey, machineTagKey);
+
+      } else {
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      }
+    } else {
+      throw new WebApplicationException(Response.Status.NOT_FOUND);
     }
-    deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
