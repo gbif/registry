@@ -132,6 +132,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    */
   @GET
   public PagingResponse<Installation> list(
+    @Nullable @QueryParam("type") InstallationType installationType,
     @Nullable @QueryParam("identifierType") IdentifierType identifierType,
     @Nullable @QueryParam("identifier") String identifier,
     @Nullable @QueryParam("machineTagNamespace") String namespace,
@@ -140,7 +141,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     @Nullable @QueryParam("q") String query,
     @Nullable @Context Pageable page) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (identifierType != null && identifier != null) {
+    if (installationType != null) {
+      return listByType(installationType, page);
+    } else if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
@@ -293,5 +296,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Override
   public List<KeyTitleResult> suggest(@QueryParam("q") String q) {
     return installationMapper.suggest(q);
+  }
+
+  @Override
+  public PagingResponse<Installation> listByType(InstallationType type, Pageable page) {
+    long total = installationMapper.countWithFilter(type);
+    return pagingResponse(page, total, installationMapper.listWithFilter(type, page));
   }
 }
