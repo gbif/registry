@@ -73,7 +73,7 @@ public class EnumerationResource {
           Arrays.stream(OccurrenceIssue.values()),
           Arrays.stream(NameUsageIssue.values()))
           .filter(val -> !val.isDeprecated())
-          .map(EnumerationResource::interpretationRemarkToMap) //::interpretationRemarkToMap throws LambdaConversionException
+          .map(val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
           .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as URLs.
