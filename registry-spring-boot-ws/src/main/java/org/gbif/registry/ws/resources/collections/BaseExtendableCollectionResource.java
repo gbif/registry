@@ -88,7 +88,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     this.withMyBatis = withMyBatis;
   }
 
-
   @Transactional
 //  @Validate(groups = {PrePersist.class, Default.class}) // TODO: 29/08/2019  validation
   @Override
