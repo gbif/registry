@@ -461,7 +461,7 @@
     </if>
   </select>
 
-  <select id="listWithFilter" resultMap="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+  <select id="listWithFilter" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     <where>
