@@ -452,4 +452,25 @@
                           ) t1 LIMIT 25
   </select>
 
+  <select id="countWithFilter" resultType="Integer">
+    SELECT COUNT(*)
+    FROM installation i
+    WHERE i.deleted IS NULL
+    <if test="type != null" >
+      AND i.type = #{type,jdbcType=OTHER}
+    </if>
+  </select>
+
+  <select id="listWithFilter" resultMap="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="INSTALLATION_FIELDS"/>
+    FROM installation i
+    <where>
+      i.deleted IS NULL
+      <if test="type != null" > AND i.type = #{type,jdbcType=OTHER}</if>
+    </where>
+    ORDER BY i.created DESC, i.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
 </mapper>

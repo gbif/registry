@@ -112,6 +112,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    */
   @RequestMapping(method = RequestMethod.GET)
   public PagingResponse<Installation> list(
+      @Nullable @RequestParam(value = "type", required = false) InstallationType installationType,
       @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
@@ -120,7 +121,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       @Nullable @RequestParam(value = "q", required = false) String query,
       @Nullable Pageable page) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (identifierType != null && identifier != null) {
+    if (installationType != null) {
+      return listByType(installationType, page);
+    } else if (identifierType != null && identifier != null) {
       return listByIdentifier(identifierType, identifier, page);
     } else if (identifier != null) {
       return listByIdentifier(identifier, page);
@@ -180,7 +183,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * The response holds the distinct organizations running the installations of the specified type.
    */
   // TODO: 26/08/2019 uses a specific JSONObject (org.codehaus.jettison.json)
-  // TODO: 27/08/2019 check PathVariable is working (InstallationType?)
   @GetMapping("location/{type}")
   public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
@@ -268,5 +270,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Override
   public List<KeyTitleResult> suggest(@Nullable @RequestParam(value = "q", required = false) String q) {
     return installationMapper.suggest(q);
+  }
+
+  @Override
+  public PagingResponse<Installation> listByType(InstallationType type, Pageable page) {
+    long total = installationMapper.countWithFilter(type);
+    return pagingResponse(page, total, installationMapper.listWithFilter(type, page));
   }
 }
