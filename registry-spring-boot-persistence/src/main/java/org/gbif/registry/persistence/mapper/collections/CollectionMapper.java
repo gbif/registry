@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 import org.springframework.stereotype.Repository;
