@@ -22,6 +22,8 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.crawler.pipelines.PipelineProcess;
+import org.gbif.api.model.crawler.pipelines.PipelineStep;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
@@ -75,17 +77,14 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.*;
+import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.service.guice.PrivateServiceModule;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -151,6 +150,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       //from registry-surety module
       addMapperClass(ChallengeCodeMapper.class);
 
+      // pipelines
+      addMapperClass(PipelineProcessMapper.class);
+
       // reduce mapper verboseness with aliases
       addAlias("Node").to(Node.class);
       addAlias("Organization").to(Organization.class);
@@ -198,6 +200,11 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("DisciplineArrayTypeHandler").to(DisciplineArrayTypeHandler.class);
       addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
       addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
+
+      // pipelines aliases
+      addAlias("PipelineProcess").to(PipelineProcess.class);
+      addAlias("Step").to(PipelineStep.class);
+      addAlias("MetricInfoTypeHandler").to(MetricInfoTypeHandler.class);
     }
 
     @Override
@@ -209,6 +216,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       handleType(Download.Status.class).with(OccurrenceDownloadStatusTypeHandler.class);
       handleType(DOI.class).with(DOITypeHandler.class);
       handleType(Predicate.class).with(PredicateTypeHandler.class);
+      addTypeHandlerClass(MetricInfoTypeHandler.class);
     }
   }
 
@@ -249,6 +257,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(CollectionMapper.class);
     expose(PersonMapper.class);
     expose(AddressMapper.class);
+    expose(PipelineProcessMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);

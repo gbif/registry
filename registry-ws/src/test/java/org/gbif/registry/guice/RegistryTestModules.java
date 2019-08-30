@@ -20,6 +20,7 @@ import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
+import org.gbif.registry.pipelines.guice.PipelinesModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
 import org.gbif.registry.surety.email.EmptyEmailSender;
@@ -131,7 +132,8 @@ public class RegistryTestModules {
                   new SecurityModule(p),
                   new DoiModule(p),
                   new RabbitMockModule(),
-                  new TitleLookupMockModule());
+                  new TitleLookupMockModule(),
+                  new PipelinesModule(p));
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
