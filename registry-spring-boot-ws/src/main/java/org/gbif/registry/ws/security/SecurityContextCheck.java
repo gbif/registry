@@ -44,7 +44,7 @@ public class SecurityContextCheck {
   public static void ensureUserSetInSecurityContext(final Authentication authentication) {
     if (authentication == null || authentication.getPrincipal() == null ||
         StringUtils.isBlank(((UserDetails) authentication.getPrincipal()).getUsername())) {
-      LOG.warn("The user must be identified by the username.");
+      LOG.debug("Unauthenticated or incomplete request.");
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
   }
