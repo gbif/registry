@@ -110,7 +110,6 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
   }
 
-
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured(ADMIN_ROLE)
   @Override

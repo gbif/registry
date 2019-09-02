@@ -262,7 +262,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return pagingResponse(page, total, datasetMapper.listWithFilter(null, type, page));
   }
 
-
   @Override
   public PagingResponse<Dataset> search(String query, @Nullable Pageable page) {
     return augmentWithMetadata(super.search(query, page));

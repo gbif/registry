@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 /**
  * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
  */
-// TODO: 2019-06-14 add produce ExtraMediaTypes.APPLICATION_JAVASCRIPT
 @RestController
 @RequestMapping("doi")
 public class DoiRegistrationResource implements DoiRegistrationService {

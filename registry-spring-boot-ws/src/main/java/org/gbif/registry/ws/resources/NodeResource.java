@@ -87,7 +87,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     return nodeAugmenter.augment(super.get(key));
   }
 
-
   /**
    * All network entities support simple (!) search with "&q=".
    * This is to support the console user interface, and is in addition to any complex, faceted search that might

@@ -78,7 +78,6 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
  * - Application itself (APP_ROLE). All applications with a valid appKey that is also present in the appKey whitelist.
  * See {@link AppIdentityFilter}.
  */
-// TODO: 2019-06-14 add produce ExtraMediaTypes.APPLICATION_JAVASCRIPT
 @RestController
 @RequestMapping("/admin/user")
 public class UserManagementResource {

@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.toList;
  * Reflection can be used to generate the inventory of enumerations.
  */
 @RestController
-@RequestMapping(value = "enumeration", produces = MediaType.APPLICATION_JSON_VALUE) // TODO: 29/08/2019 add javascript
+@RequestMapping(value = "enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnumerationResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);

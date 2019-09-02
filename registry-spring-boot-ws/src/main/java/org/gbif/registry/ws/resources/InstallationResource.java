@@ -252,7 +252,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         metasyncHistoryMapper.list(page));
   }
 
-
   @GetMapping("{installationKey}/metasync")
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(@PathVariable UUID installationKey,

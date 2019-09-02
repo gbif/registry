@@ -125,7 +125,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   // TODO: 2019-08-26 validation
-  // TODO: 2019-08-26 add APPLICATION_JAVASCRIPT type for all
 
   /**
    * This method ensures that the caller is authorized to perform the action and then adds the server
@@ -713,7 +712,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     withMyBatis.deleteIdentifier(mapper, targetEntityKey, identifierKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
-
 
   @GetMapping("{key}/identifier")
   @Override
