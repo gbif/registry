@@ -4,7 +4,6 @@ CREATE TABLE pipeline_process (
  key bigserial NOT NULL PRIMARY KEY,
  dataset_key uuid NOT NULL REFERENCES dataset (key) ON DELETE CASCADE,
  attempt integer NOT NULL,
- dataset_title text,
  created timestamp with time zone NOT NULL DEFAULT now(),
  created_by text NOT NULL,
  UNIQUE(dataset_key, attempt)

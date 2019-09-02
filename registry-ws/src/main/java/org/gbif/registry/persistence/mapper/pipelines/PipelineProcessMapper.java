@@ -1,8 +1,8 @@
 package org.gbif.registry.persistence.mapper.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.crawler.pipelines.PipelineProcess;
-import org.gbif.api.model.crawler.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
 
 import java.util.List;
 import java.util.Optional;

@@ -15,7 +15,7 @@ import com.google.common.base.Strings;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import static org.gbif.api.model.crawler.pipelines.PipelineStep.MetricInfo;
+import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 
 /** Converts a {@link MetricInfo} to a hstore and viceversa. */
 public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
@@ -25,7 +25,7 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
 
   @Override
   public void setNonNullParameter(
-      PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
+    PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
     String metricsAsString =
         metrics.stream()
             .map(
