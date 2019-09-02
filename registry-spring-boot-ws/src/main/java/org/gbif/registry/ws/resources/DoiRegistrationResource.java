@@ -67,7 +67,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Retrieves the DOI information.
    */
-  @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_VALUE)
   @NullToNotFound
   @Override
   public DoiData get(@PathVariable String prefix, @PathVariable String suffix) {
@@ -88,7 +88,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @NullToNotFound
   @Override
   public DOI register(@RequestBody DoiRegistration doiRegistration) {
@@ -111,7 +111,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
-  @PutMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
+  @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @NullToNotFound
   @Override
   public DOI update(@RequestBody DoiRegistration doiRegistration) {

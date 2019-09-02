@@ -179,7 +179,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     }
   }
 
-  // TODO: 29/08/2019 test text/plain
   @PostMapping(value = "{key}/contact", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
 //  @Validate
   @Transactional
