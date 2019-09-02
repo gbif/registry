@@ -1,4 +1,4 @@
-package org.gbif.ws.server.interceptor;
+package org.gbif.ws.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

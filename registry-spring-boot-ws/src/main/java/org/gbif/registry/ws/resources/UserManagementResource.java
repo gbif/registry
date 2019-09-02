@@ -92,9 +92,6 @@ public class UserManagementResource {
 
   /**
    * {@link UserManagementResource} main constructor.
-   *
-   * @param identityService
-   * @param appkeysConfiguration
    */
   public UserManagementResource(IdentityService identityService, AppkeysConfiguration appkeysConfiguration) {
     this.identityService = identityService;
@@ -115,6 +112,7 @@ public class UserManagementResource {
    */
   @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/{username}")
+//  @NullToNotFound
   public UserAdminView getUser(@PathVariable String username) {
 
     GbifUser user = identityService.get(username);

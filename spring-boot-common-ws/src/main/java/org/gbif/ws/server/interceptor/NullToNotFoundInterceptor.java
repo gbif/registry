@@ -1,6 +1,7 @@
 package org.gbif.ws.server.interceptor;
 
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.annotation.NullToNotFound;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;

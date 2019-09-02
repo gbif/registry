@@ -14,7 +14,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.gbif.ws.annotation.NullToNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;

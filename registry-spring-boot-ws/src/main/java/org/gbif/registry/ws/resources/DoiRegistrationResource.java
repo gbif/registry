@@ -13,7 +13,7 @@ import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.ws.WebApplicationException;
-import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.gbif.ws.annotation.NullToNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
