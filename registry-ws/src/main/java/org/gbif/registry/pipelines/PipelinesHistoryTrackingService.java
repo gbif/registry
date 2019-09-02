@@ -2,10 +2,10 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.crawler.pipelines.PipelineProcess;
-import org.gbif.api.model.crawler.pipelines.PipelineStep;
-import org.gbif.api.model.crawler.pipelines.PipelineWorkflow;
-import org.gbif.api.model.crawler.pipelines.StepType;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineWorkflow;
+import org.gbif.api.model.pipelines.StepType;
 
 import java.util.Set;
 import java.util.UUID;
@@ -87,18 +87,26 @@ public interface PipelinesHistoryTrackingService {
    * @param datasetKey dataset identifier
    * @param attempt attempt identifier
    * @param creator user or process that created the pipeline
-   * @return a new instance of a pipelines process
+   * @return the key of the {@link PipelineProcess} created
    */
-  PipelineProcess create(UUID datasetKey, Integer attempt, String creator);
+  long create(UUID datasetKey, Integer attempt, String creator);
 
   /**
    * Adds/persists the information of a pipeline step.
    * @param pipelineProcessKey sequential identifier of a pipeline process
    * @param pipelineStep step to be added
    * @param creator the user who is adding the step
-   * @return the PipelineStep created
+   * @return the key of the PipelineStep created
    */
-  PipelineStep addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String creator);
+  long addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String creator);
+
+  /**
+   * Gets the PipelineStep of the specified key.
+   *
+   * @param key key of the pipeline step
+   * @return {@link PipelineStep}
+   */
+  PipelineStep getPipelineStep(long key);
 
   /**
    * Updates the status of a pipeline step.

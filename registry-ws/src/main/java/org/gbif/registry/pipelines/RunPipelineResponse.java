@@ -1,6 +1,6 @@
 package org.gbif.registry.pipelines;
 
-import org.gbif.api.model.crawler.pipelines.StepType;
+import org.gbif.api.model.pipelines.StepType;
 
 import java.util.Objects;
 import java.util.Set;
