@@ -3,7 +3,7 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.crawler.pipelines.*;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.DatasetType;
@@ -237,33 +237,43 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(attempt, "Attempt can't be null");
 
-    return mapper.get(datasetKey, attempt);
+    PipelineProcess process = mapper.get(datasetKey, attempt);
+
+    // FIXME: do we need this?
+    process.setDatasetTitle(datasetService.get(datasetKey).getTitle());
+
+    return process;
   }
 
   @Override
-  public PipelineProcess create(UUID datasetKey, Integer attempt, String creator) {
+  public long create(UUID datasetKey, Integer attempt, String creator) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(attempt, "Attempt can't be null");
     Objects.requireNonNull(creator, "Creator can't be null");
 
     PipelineProcess pipelineProcess = new PipelineProcess();
-    LocalDateTime now = LocalDateTime.now();
+    pipelineProcess.setDatasetKey(datasetKey);
     pipelineProcess.setAttempt(attempt);
-    pipelineProcess.setCreated(now);
     pipelineProcess.setCreatedBy(creator);
     mapper.create(pipelineProcess);
-    return pipelineProcess;
+
+    return pipelineProcess.getKey();
   }
 
   @Override
-  public PipelineStep addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String user) {
+  public long addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String user) {
     Objects.requireNonNull(pipelineProcessKey, "PipelineProcessKey can't be null");
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
-    pipelineStep.setModifiedBy(user);
+    pipelineStep.setCreatedBy(user);
     mapper.addPipelineStep(pipelineProcessKey, pipelineStep);
-    return pipelineStep;
+    return pipelineStep.getKey();
+  }
+
+  @Override
+  public PipelineStep getPipelineStep(long key) {
+    return mapper.getPipelineStep(key);
   }
 
   @Override

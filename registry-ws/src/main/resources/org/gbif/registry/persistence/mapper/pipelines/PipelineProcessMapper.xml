@@ -13,17 +13,16 @@
   </resultMap>
 
   <sql id="PIPELINE_PROCESS_FIELDS_CREATE">
-    dataset_key, attempt, dataset_title, created, created_by
+    dataset_key, attempt, created, created_by
   </sql>
 
   <sql id="PIPELINE_PROCESS_FIELDS_SELECT">
-    key, dataset_key, attempt, dataset_title, created, created_by
+    key, dataset_key, attempt, created, created_by
   </sql>
 
   <sql id="PIPELINES_PROCESS_VALUES_CREATE">
     #{datasetKey,jdbcType=OTHER},
     #{attempt,jdbcType=INTEGER},
-    #{datasetTitle,jdbcType=VARCHAR},
     now(), <!-- created -->
     #{createdBy,jdbcType=VARCHAR}
   </sql>

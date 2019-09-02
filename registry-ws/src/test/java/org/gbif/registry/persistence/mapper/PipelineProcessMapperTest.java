@@ -1,10 +1,10 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.crawler.pipelines.PipelineProcess;
-import org.gbif.api.model.crawler.pipelines.PipelineStep;
-import org.gbif.api.model.crawler.pipelines.StepRunner;
-import org.gbif.api.model.crawler.pipelines.StepType;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
@@ -30,8 +30,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.postgresql.util.PSQLException;
 
-import static org.gbif.api.model.crawler.pipelines.PipelineStep.MetricInfo;
-import static org.gbif.api.model.crawler.pipelines.PipelineStep.Status;
+import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
+import static org.gbif.api.model.pipelines.PipelineStep.Status;
 
 import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
@@ -92,7 +92,6 @@ public class PipelineProcessMapperTest {
         new PipelineProcess()
             .setDatasetKey(insertDataset())
             .setAttempt(1)
-            .setDatasetTitle("title")
             .setCreatedBy(TEST_USER);
 
     // insert in the DB
@@ -104,7 +103,6 @@ public class PipelineProcessMapperTest {
         pipelineProcessMapper.get(process.getDatasetKey(), process.getAttempt());
     assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
-    assertEquals(process.getDatasetTitle(), processRetrieved.getDatasetTitle());
     assertTrue(process.getSteps().isEmpty());
   }
 
@@ -274,6 +272,7 @@ public class PipelineProcessMapperTest {
 
     Installation installation = new Installation();
     installation.setKey(UUID.randomUUID());
+    installation.setTitle("title");
     installation.setOrganizationKey(org.getKey());
     installation.setType(InstallationType.BIOCASE_INSTALLATION);
     installation.setCreatedBy("test");
@@ -281,10 +280,10 @@ public class PipelineProcessMapperTest {
 
     Dataset dataset = new Dataset();
     dataset.setKey(UUID.randomUUID());
+    dataset.setTitle("title");
     dataset.setInstallationKey(installation.getKey());
     dataset.setPublishingOrganizationKey(org.getKey());
     dataset.setType(DatasetType.CHECKLIST);
-    dataset.setTitle("dataset");
     dataset.setLanguage(Language.ABKHAZIAN);
     dataset.setLicense(License.CC0_1_0);
     dataset.setCreatedBy("test");
