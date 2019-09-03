@@ -100,19 +100,6 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                               .setStep(steps).build();
   }
 
-  @Override
-  public RunPipelineResponse crawlAll() {
-    return doOnAllDatasets(dataset -> {
-                                         try {
-                                           publisher.send(new StartCrawlMessage(dataset.getKey()));
-                                         } catch (IOException ex) {
-                                           LOG.error("Error crawling all datasets", ex);
-                                           throw new RuntimeException(ex);
-                                         }
-                                       });
-  }
-
-
   /**
    * Search the last step executed of a specific StepType.
    * @param pipelineProcess container of steps
@@ -184,6 +171,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Objects.requireNonNull(attempt, "Attempt can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
+    Objects.requireNonNull(publisher,"No message publisher configured");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
     PipelineProcess status = mapper.get(datasetKey, attempt);
@@ -201,7 +189,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     steps.forEach(stepName ->
         getLatestSuccessfulStep(status, stepName).ifPresent(step -> {
           try {
-            if (stepName == StepType.HIVE_VIEW || stepName == StepType.INTERPRETED_TO_INDEX) {
+            if (stepName == StepType.HDFS_VIEW || stepName == StepType.INTERPRETED_TO_INDEX) {
               responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
               publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class));
             } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
