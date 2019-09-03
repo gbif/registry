@@ -162,9 +162,6 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     UUID key2 = getService().create(installation2);
 
     InstallationService service = (InstallationService) this.getService();
-    assertEquals(
-        "Should find only The Great installation",
-        1,
-        service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null).getCount().longValue());
+    assertEquals("Should find only The Great installation", 1, service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null).getResults().size());
   }
 }
