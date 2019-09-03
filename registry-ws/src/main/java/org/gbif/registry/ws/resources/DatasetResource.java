@@ -16,6 +16,7 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
@@ -44,6 +45,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
 import org.gbif.registry.doi.generator.DoiGenerator;
@@ -79,6 +81,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -99,6 +102,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -913,26 +917,57 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
+   * Utility method to run batch jobs on all dataset elements
+   */
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+    PagingRequest pagingRequest = new PagingRequest(0, 200);
+    PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    try {
+      do {
+        response.getResults().forEach(onDataset);
+        pagingRequest.setOffset(response.getResults().size());
+        response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+      } while (response.isEndOfRecords());
+    } catch (Exception ex) {
+      LOG.error("Error processing all datasets", ex);
+      throw ex;
+    }
+  }
+
+  /**
    * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
    * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
    * necessary security.
    */
   @POST
+  @Path("crawlall")
+  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
+  public void crawlAll(@QueryParam("platform") String platform) {
+    doOnAllOccurrenceDatasets(dataset -> {
+      crawl(dataset.getKey(), platform);
+    });
+  }
+    /**
+     * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
+     * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
+     * necessary security.
+     */
+  @POST
   @Path("{key}/crawl")
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawl(@PathParam("key") UUID datasetKey) {
+  public void crawl(@PathParam("key") UUID datasetKey, @QueryParam("platform") String platform) {
+    Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
       try {
         // we'll bump this to the top of the queue since it is a user initiated
-        messagePublisher.send(new StartCrawlMessage(datasetKey, Priority.CRITICAL));
+        messagePublisher.send(new StartCrawlMessage(datasetKey, Optional.of(Priority.CRITICAL.getPriority()), indexingPlatform));
       } catch (IOException e) {
         LOG.error("Unable to send message requesting crawl", e);
       }
 
     } else {
-      LOG.warn("Registry is configured to run without messaging capabilities.  Unable to crawl dataset[{}]",
-        datasetKey);
+      LOG.warn("Registry is configured to run without messaging capabilities. Unable to crawl dataset[{}]", datasetKey);
     }
   }
 
