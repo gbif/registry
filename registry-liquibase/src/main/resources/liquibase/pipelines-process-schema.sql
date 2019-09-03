@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS hstore;
-
 CREATE TABLE pipeline_process (
  key bigserial NOT NULL PRIMARY KEY,
  dataset_key uuid NOT NULL REFERENCES dataset (key) ON DELETE CASCADE,
