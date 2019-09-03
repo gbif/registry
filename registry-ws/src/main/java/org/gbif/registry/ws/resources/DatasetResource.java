@@ -136,6 +136,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
+  public static final int ALL_DATASETS_LIMIT = 200;
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
   //HTML sanitizer policy for paragraph
@@ -920,7 +921,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * Utility method to run batch jobs on all dataset elements
    */
   private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
-    PagingRequest pagingRequest = new PagingRequest(0, 200);
+    PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
     try {
       do {
