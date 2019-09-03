@@ -52,12 +52,6 @@ public interface PipelinesHistoryTrackingService {
   RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user);
 
   /**
-   * Executes a full crawl for all datasets.
-   * @return the response of the execution request
-   */
-  RunPipelineResponse crawlAll();
-
-  /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
    * @param pageable paging request
    * @return a paged response that contains a list of {@link PipelineProcess}
