@@ -105,7 +105,7 @@ public class PipelinesCoordinatorTrackingServiceTest {
     process.addStep(s4);
 
     PipelineStep s5 = new PipelineStep();
-    s5.setType(StepType.HIVE_VIEW);
+    s5.setType(StepType.HDFS_VIEW);
     s5.setState(Status.COMPLETED);
     s5.setStarted(LocalDateTime.now().minusMinutes(27));
     process.addStep(s5);

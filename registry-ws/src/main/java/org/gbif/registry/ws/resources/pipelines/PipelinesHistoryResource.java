@@ -119,12 +119,6 @@ public class PipelinesHistoryResource {
     return historyTrackingService.getPipelineWorkflow(datasetKey, attempt);
   }
 
-  @GET
-  @Path("crawlall")
-  public Response crawlAll() {
-    return toHttpResponse(historyTrackingService.crawlAll());
-  }
-
   /**
    * Runs the last attempt for all datasets.
    */
