@@ -1,10 +1,7 @@
 package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
@@ -22,6 +19,7 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.security.AccessControlException;
 import java.util.UUID;
 
 import com.google.inject.Injector;
@@ -91,6 +89,12 @@ public class PipelinesHistoryResourceIT {
     assertEquals(TestConstants.TEST_ADMIN, processCreated.getCreatedBy());
   }
 
+  @Test(expected = AccessControlException.class)
+  public void createPipelineProcessWithoutPrivilegesTest() {
+    principalProvider.setPrincipal(TestConstants.TEST_USER);
+    historyWsClient.createPipelineProcess(UUID.randomUUID(), 1);
+  }
+
   @Test
   public void historyTest() {
     final UUID datasetKey1 = createDataset();
@@ -131,17 +135,33 @@ public class PipelinesHistoryResourceIT {
     assertTrue(stepCreated.lenientEquals(step));
   }
 
+  @Test(expected = AccessControlException.class)
+  public void addPipelineStepWithoutPrivilegesTest() {
+    final UUID datasetKey1 = createDataset();
+    long processKey = historyWsClient.createPipelineProcess(datasetKey1, 1);
+    assertTrue(processKey > 0);
+
+    principalProvider.setPrincipal(TestConstants.TEST_USER);
+    PipelineStep step =
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setState(PipelineStep.Status.RUNNING);
+    historyWsClient.addPipelineStep(processKey, step);
+  }
+
   @Test
   public void updatePipelineStepStatusTest() {
     final UUID datasetKey1 = createDataset();
     long processKey = historyWsClient.createPipelineProcess(datasetKey1, 1);
 
     PipelineStep step =
-      new PipelineStep()
-        .setMessage("message")
-        .setRunner(StepRunner.STANDALONE)
-        .setType(StepType.ABCD_TO_VERBATIM)
-        .setState(PipelineStep.Status.RUNNING);
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setState(PipelineStep.Status.RUNNING);
     long stepKey = historyWsClient.addPipelineStep(processKey, step);
 
     historyWsClient.updatePipelineStep(processKey, stepKey, PipelineStep.Status.COMPLETED);
@@ -149,6 +169,51 @@ public class PipelinesHistoryResourceIT {
     PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, stepKey);
     assertEquals(PipelineStep.Status.COMPLETED, stepCreated.getState());
     assertNotNull(stepCreated.getFinished());
+  }
+
+  @Test
+  public void getPipelineWorkflowTest() {
+    // add process
+    final UUID datasetKey1 = createDataset();
+    long processKey = historyWsClient.createPipelineProcess(datasetKey1, 1);
+
+    // add some steps
+    historyWsClient.addPipelineStep(
+        processKey,
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setState(PipelineStep.Status.COMPLETED));
+
+    historyWsClient.addPipelineStep(
+        processKey,
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.INTERPRETED_TO_INDEX)
+            .setState(PipelineStep.Status.FAILED));
+
+    historyWsClient.addPipelineStep(
+        processKey,
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.INTERPRETED_TO_INDEX)
+            .setState(PipelineStep.Status.COMPLETED));
+
+    // get workflow
+    PipelineWorkflow workflow = historyWsClient.getPipelineWorkflow(datasetKey1, 1);
+
+    assertEquals(datasetKey1, workflow.getDatasetKey());
+    assertEquals(1, workflow.getAttempt());
+    assertEquals(1, workflow.getSteps().size());
+    assertEquals(1, workflow.getSteps().get(0).getAllSteps().size());
+    assertEquals(1, workflow.getSteps().get(0).getNextSteps().size());
+    assertEquals(2, workflow.getSteps().get(0).getNextSteps().get(0).getAllSteps().size());
+    assertEquals(
+        PipelineStep.Status.COMPLETED,
+        workflow.getSteps().get(0).getNextSteps().get(0).getLastStep().getState());
   }
 
   private UUID createDataset() {
