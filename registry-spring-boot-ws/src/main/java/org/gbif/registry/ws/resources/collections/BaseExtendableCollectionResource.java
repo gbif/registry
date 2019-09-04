@@ -89,7 +89,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   }
 
   @Transactional
-//  @Validate(groups = {PrePersist.class, Default.class}) // TODO: 29/08/2019  validation
+//  @Validate(groups = {PrePersist.class, Default.class})
   @Override
   public UUID create(@Valid @NotNull T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");

@@ -46,8 +46,6 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     this.objectClass = objectClass;
   }
 
-  // TODO: 2019-08-21 implement validation
-
   @RequestMapping(method = RequestMethod.POST)
   @Trim
 //  @Validate

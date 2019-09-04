@@ -50,8 +50,6 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     this.eventManager = eventManager;
   }
 
-  // TODO: 2019-08-21 implement validation
-
   @Override
   @Transactional
 //  @Validate(groups = {PrePersist.class, Default.class})

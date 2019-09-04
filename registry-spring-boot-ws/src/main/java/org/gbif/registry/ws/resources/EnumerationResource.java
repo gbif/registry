@@ -167,12 +167,8 @@ public class EnumerationResource {
    */
   @GetMapping("basic/{name}")
   @NullToNotFound
-  public Enum<?>[] getEnumeration(@PathVariable("name") @NotNull String name) { // TODO: 29/08/2019 test result type, mb refactor
-    if (PATH_MAPPING.containsKey(name)) {
-      return PATH_MAPPING.get(name);
-    } else {
-      return null;
-    }
+  public Enum<?>[] getEnumeration(@PathVariable("name") @NotNull String name) {
+    return PATH_MAPPING.getOrDefault(name, null);
   }
 
   /**

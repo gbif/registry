@@ -124,8 +124,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.withMyBatis = withMyBatis;
   }
 
-  // TODO: 2019-08-26 validation
-
   /**
    * This method ensures that the caller is authorized to perform the action and then adds the server
    * controlled fields for createdBy and modifiedBy. It then creates the entity.
@@ -727,7 +725,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return new ArrayList<>();
   }
 
-  // TODO: 26/08/2019 move from here
   /**
    * Null safe builder to construct a paging response.
    *

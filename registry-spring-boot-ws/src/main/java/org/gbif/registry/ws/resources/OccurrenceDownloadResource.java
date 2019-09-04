@@ -58,7 +58,6 @@ import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData
 /**
  * Occurrence download resource/web service.
  */
-// TODO: 27/08/2019 implement validation
 @RestController
 @RequestMapping(value = "occurrence/download", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {

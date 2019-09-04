@@ -257,7 +257,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         installationMapper.listInstallationsByOrganization(organizationKey, page));
   }
 
-  // TODO: 26/08/2019 mapping is needed?
   @Override
   public PagingResponse<Organization> listByCountry(Country country, @Nullable Pageable page) {
     return pagingResponse(page, organizationMapper.countOrganizationsByCountry(country),
