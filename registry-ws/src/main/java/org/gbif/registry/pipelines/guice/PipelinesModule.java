@@ -21,9 +21,9 @@ public class PipelinesModule extends PrivateModule {
 
   @Override
   protected void configure() {
-    if (properties.getProperty(MESSAGING_ENABLED_PROPERTY, "false").equals("true")) {
-      install(new PostalServiceModule("registry", properties));
-    }
+//    if (properties.getProperty(MESSAGING_ENABLED_PROPERTY, "false").equals("true")) {
+//      install(new PostalServiceModule("registry", properties));
+//    }
 
     bind(PipelinesHistoryTrackingService.class)
         .to(PipelinesCoordinatorTrackingServiceImpl.class)
