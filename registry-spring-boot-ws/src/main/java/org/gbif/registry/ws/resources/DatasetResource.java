@@ -187,7 +187,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   // TODO: 27/08/2019 problem with recursion
-  // TODO: 27/08/2019 add handler for searchRequest
   @GetMapping("search")
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(DatasetSearchRequest searchRequest) {
