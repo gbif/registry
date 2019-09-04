@@ -30,7 +30,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
-  private static final String ENTITY_KEY = "^%s/([a-fA-F0-9-]+)";
+  private static final String ENTITY_KEY = "^%s/([a-f0-9-]+)";
   private static final Pattern NODE_NETWORK_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "(?:network|node)"));
   private static final Pattern ORGANIZATION_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "organization"));
   private static final Pattern DATASET_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "dataset"));
@@ -55,7 +55,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
     if (user != null
         && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
-        && !request.getMethod().equals("GET")) {
+        && !request.getMethod().equals("GET") && !request.getMethod().equals("OPTIONS")) {
 
       String path = request.getPath().toLowerCase();
 
@@ -64,32 +64,44 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify organization {}", user, m.group(1));
+            LOG.warn("User {} is not allowed to modify organization {}", user.getName(), m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
+          } else {
+            LOG.debug("User {} is allowed to modify organization {}", user.getName(), m.group(1));
+            return request;
           }
         }
 
         m = DATASET_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify dataset {}", user, m.group(1));
+            LOG.warn("User {} is not allowed to modify dataset {}", user.getName(), m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
+          } else {
+            LOG.debug("User {} is allowed to modify dataset {}", user.getName(), m.group(1));
+            return request;
           }
         }
 
         m = INSTALLATION_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify installation {}", user, m.group(1));
+            LOG.warn("User {} is not allowed to modify installation {}", user.getName(), m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
+          } else {
+            LOG.debug("User {} is allowed to modify installation {}", user.getName(), m.group(1));
+            return request;
           }
         }
 
         m = NODE_NETWORK_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify node {}", user, m.group(1));
+            LOG.warn("User {} is not allowed to modify node/network {}", user.getName(), m.group(1));
             throw new WebApplicationException(Response.Status.FORBIDDEN);
+          } else {
+            LOG.debug("User {} is allowed to modify node/network {}", user.getName(), m.group(1));
+            return request;
           }
         }
       } catch (IllegalArgumentException e) {
