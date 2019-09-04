@@ -1,13 +1,19 @@
 package org.gbif.ws.query;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.ws.mixin.LicenseMixin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 public class TitleLookup {
@@ -17,21 +23,40 @@ public class TitleLookup {
   private final String apiRootUrl;
   private final RestTemplate restTemplate;
 
-  public TitleLookup(RestTemplate restTemplate) {
-    this.apiRootUrl = "";// TODO: 03/09/2019 get from a property?
+  public TitleLookup(String apiRootUrl, RestTemplate restTemplate) {
+    this.apiRootUrl = apiRootUrl;
     this.restTemplate = restTemplate;
+
+    final ObjectMapper objectMapper = configureObjectMapper();
+
+    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+    converter.setObjectMapper(objectMapper);
+    this.restTemplate.getMessageConverters().add(0, converter);
   }
 
   public TitleLookup(String apiRootUrl) {
     this.apiRootUrl = apiRootUrl;
     this.restTemplate = new RestTemplate();
+
+    final ObjectMapper objectMapper = configureObjectMapper();
+
+    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+    converter.setObjectMapper(objectMapper);
+    restTemplate.getMessageConverters().add(0, converter);
+  }
+
+  private ObjectMapper configureObjectMapper() {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    objectMapper.addMixIn(Dataset.class, LicenseMixin.class);
+
+    return objectMapper;
   }
 
   public String getDatasetTitle(String datasetKey) {
     try {
-      // TODO: 03/09/2019 add mixins
-      // TODO: 03/09/2019 use special ObjectMapper (gbif-common-ws JacksonJsonContextResolver)
-
       String targetUrl = apiRootUrl + "/dataset/{key}";
       final HttpHeaders headers = new HttpHeaders();
       headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

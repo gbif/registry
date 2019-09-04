@@ -33,7 +33,7 @@ public class TitleLookupTest {
     when(rt.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class), eq(Dataset.class), any(String.class)))
         .thenReturn(ResponseEntity.ok(pontaurus));
 
-    TitleLookup tl = new TitleLookup(rt);
+    TitleLookup tl = new TitleLookup("http://api.gbif.org/v1/", rt);
 
     assertEquals("Abies alba Mill.", tl.getSpeciesName("4231"));
     assertEquals("PonTaurus", tl.getDatasetTitle(UUID.randomUUID().toString()));
