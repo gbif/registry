@@ -25,7 +25,6 @@ import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifSc
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 
-// TODO: 2019-08-02 move logic to the service?
 @RequestMapping("/user")
 @RestController
 public class UserResource {
@@ -81,7 +80,7 @@ public class UserResource {
         identityService.listEditorRights(user.getUserName()));
 
     return ResponseEntity.ok()
-        .cacheControl(createNoCacheHeaders())
+        .cacheControl(CacheControl.noCache().cachePrivate())
         .body(response);
   }
 
@@ -101,7 +100,7 @@ public class UserResource {
     }
 
     return ResponseEntity.ok()
-        .cacheControl(createNoCacheHeaders())
+        .cacheControl(CacheControl.noCache().cachePrivate())
         .body(LoggedUserWithToken.from(user, null, identityService.listEditorRights(user.getUserName())));
   }
 
@@ -126,10 +125,5 @@ public class UserResource {
       }
     }
     return ResponseEntity.noContent().build();
-  }
-
-  // TODO: 2019-07-29 check
-  private static CacheControl createNoCacheHeaders() {
-    return CacheControl.noCache().noStore().cachePrivate();
   }
 }
