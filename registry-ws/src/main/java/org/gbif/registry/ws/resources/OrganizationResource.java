@@ -34,10 +34,8 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.authorization.OrganizationAuthorization;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;
@@ -55,6 +53,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -67,6 +66,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
@@ -84,6 +85,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Path("organization")
 @Singleton
 public class OrganizationResource extends BaseNetworkEntityResource<Organization> implements OrganizationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 
   protected static final int MINIMUM_PASSWORD_SIZE = 12;
   protected static final int MAXIMUM_PASSWORD_SIZE = 15;
@@ -189,9 +192,19 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
 
     Organization previousOrg = super.get(organization.getKey());
-    SecurityContextCheck.ensurePrecondition(
-            OrganizationAuthorization.isUpdateAuthorized(previousOrg, organization, securityContext),
-            Response.Status.FORBIDDEN);
+
+    // If the endorsement is being changed, and the user is only an EDITOR, they must have node permission.
+    // If the node is being changed, and the user is only an EDITOR, they must have node permission on both nodes.
+    boolean endorsementApprovedChanged = previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
+      || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
+    if (endorsementApprovedChanged
+        && !securityContext.isUserInRole(ADMIN_ROLE)
+        && !(userAuthService.allowedToModifyEntity(securityContext.getUserPrincipal(), organization.getEndorsingNodeKey())
+             || userAuthService.allowedToModifyEntity(securityContext.getUserPrincipal(), previousOrg.getEndorsingNodeKey()))) {
+      LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", securityContext.getUserPrincipal(), key);
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
 
     if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
       // here we consider the user has the right to endorse an organization without a key.
