@@ -1,8 +1,12 @@
 package org.gbif.registry.ws.resources;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -48,6 +52,7 @@ import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -182,7 +187,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * GeoJSON. This method exists primarily to produce the content for the "locations of organizations hosting an IPT".
    * The response holds the distinct organizations running the installations of the specified type.
    */
-  // TODO: 26/08/2019 uses a specific JSONObject (org.codehaus.jettison.json)
   @GetMapping("location/{type}")
   public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
@@ -197,33 +201,31 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       }
     }
 
-    // TODO: 26/08/2019 implement
-//    JSONObject featureCollection = new JSONObject();
-//    try {
-//      featureCollection.put("type", "FeatureCollection");
-//
-//      List<JSONObject> features = Lists.newArrayList();
-//      for (Organization o : counts.keySet()) {
-//        JSONObject feature = new JSONObject();
-//        feature.put("type", "Feature");
-//        feature.put("properties", ImmutableMap.<String, Object>of(
-//            "key", o.getKey(),
-//            "title", o.getTitle(),
-//            "count", counts.get(o).get()));
-//        JSONObject geom = new JSONObject();
-//        geom.put("type", "Point");
-//        geom.put("coordinates", ImmutableList.<BigDecimal>of(
-//            o.getLongitude(), o.getLatitude()));
-//        feature.put("geometry", geom);
-//        features.add(feature);
-//      }
-//      featureCollection.put("features", features);
-//    } catch (JSONException e) {
-//      LOG.error("Unable to build GeoJSON", e);
-//    }
-//
-//    return featureCollection.toString();
-    return "";
+    JSONObject featureCollection = new JSONObject();
+    try {
+      featureCollection.put("type", "FeatureCollection");
+
+      List<JSONObject> features = Lists.newArrayList();
+      for (Organization o : counts.keySet()) {
+        JSONObject feature = new JSONObject();
+        feature.put("type", "Feature");
+        feature.put("properties", ImmutableMap.<String, Object>of(
+            "key", o.getKey(),
+            "title", o.getTitle(),
+            "count", counts.get(o).get()));
+        JSONObject geom = new JSONObject();
+        geom.put("type", "Point");
+        geom.put("coordinates", ImmutableList.<BigDecimal>of(
+            o.getLongitude(), o.getLatitude()));
+        feature.put("geometry", geom);
+        features.add(feature);
+      }
+      featureCollection.put("features", features);
+    } catch (JSONException e) {
+      LOG.error("Unable to build GeoJSON", e);
+    }
+
+    return featureCollection.toString();
   }
 
   @PostMapping("{installationKey}/metasync")
