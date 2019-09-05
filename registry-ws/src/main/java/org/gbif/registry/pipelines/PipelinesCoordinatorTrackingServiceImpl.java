@@ -184,6 +184,8 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
              .build();
     }
 
+    // TODO: send messages to the balancer??
+
     //Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
     steps.forEach(stepName ->
