@@ -133,7 +133,7 @@ public class RegistryTestModules {
                   new DoiModule(p),
                   new RabbitMockModule(),
                   new TitleLookupMockModule(),
-                  new PipelinesModule(p));
+                  new PipelinesModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }

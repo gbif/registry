@@ -225,12 +225,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(attempt, "Attempt can't be null");
 
-    PipelineProcess process = mapper.get(datasetKey, attempt);
-
-    // FIXME: do we need this?
-    process.setDatasetTitle(datasetService.get(datasetKey).getTitle());
-
-    return process;
+    return mapper.get(datasetKey, attempt);
   }
 
   @Override
