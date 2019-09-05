@@ -127,7 +127,7 @@ public class TestRegistryWsServletListener extends GbifServletListener {
             getSecurityModule(props),
             new TitleLookupMockModule(),
             new OaipmhMockModule(OaipmhTestConfiguration.buildTestRepositoryConfiguration(props)),
-            new PipelinesModule(props));
+            new PipelinesModule());
   }
 
   /**
