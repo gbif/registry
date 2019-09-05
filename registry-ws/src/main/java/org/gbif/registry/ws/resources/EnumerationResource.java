@@ -12,28 +12,15 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.InterpretationRemark;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NameUsageIssue;
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.gbif.ws.util.ExtraMediaTypes;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
-import javax.swing.plaf.BorderUIResource;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -63,7 +50,7 @@ import static java.util.stream.Collectors.toList;
 @Singleton
 public class EnumerationResource {
 
-  private static Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
 
   // Uses reflection to find the enumerations in the API
   private static final Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
@@ -91,7 +78,7 @@ public class EnumerationResource {
                   Arrays.stream(OccurrenceIssue.values()),
                   Arrays.stream(NameUsageIssue.values()))
                   .filter(val -> !val.isDeprecated())
-                  .map( val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
+                  .map(EnumerationResource::interpretationRemarkToMap) //::interpretationRemarkToMap throws LambdaConversionException
                   .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as URLs.
@@ -120,7 +107,8 @@ public class EnumerationResource {
       // create a list with gbif and collection vocabulary enums
       ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
         .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
-        .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList());
+        .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
+        .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
 
       for (ClassInfo info : infosListBuilder.build()) {
         Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());

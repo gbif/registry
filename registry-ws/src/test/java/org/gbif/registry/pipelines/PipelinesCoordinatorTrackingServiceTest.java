@@ -84,6 +84,7 @@ public class PipelinesCoordinatorTrackingServiceTest {
     s1.setType(StepType.ABCD_TO_VERBATIM);
     s1.setState(Status.FAILED);
     s1.setStarted(LocalDateTime.now().minusMinutes(30));
+    s1.setFinished(LocalDateTime.now());
     process.addStep(s1);
 
     PipelineStep s2 = new PipelineStep();
@@ -107,7 +108,7 @@ public class PipelinesCoordinatorTrackingServiceTest {
     PipelineStep s5 = new PipelineStep();
     s5.setType(StepType.HDFS_VIEW);
     s5.setState(Status.COMPLETED);
-    s5.setStarted(LocalDateTime.now().minusMinutes(27));
+    s5.setStarted(LocalDateTime.now().minusMinutes(26));
     process.addStep(s5);
 
     return process;
