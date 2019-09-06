@@ -11,9 +11,9 @@ import org.gbif.ws.client.BaseWsClient;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
@@ -33,7 +33,6 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
       new GenericType<PipelineStep>() {};
   private static final GenericType<PipelineWorkflow> PIPELINE_WORKFLOW_TYPE =
       new GenericType<PipelineWorkflow>() {};
-  private static final GenericType<Response> RESPONSE_TYPE = new GenericType<Response>() {};
 
   @Inject
   public PipelinesHistoryWsClient(
@@ -82,32 +81,27 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
         PIPELINE_WORKFLOW_TYPE, "workflow", String.valueOf(datasetKey), String.valueOf(attempt));
   }
 
-  public Response crawlAll() {
-    return get(RESPONSE_TYPE, "crawlall");
-  }
-
-  public Response runAll(String steps, String reason) {
+  public ClientResponse runAll(String steps, String reason) {
     return getResource(RUN_PATH)
         .queryParam("steps", steps)
         .queryParam("reason", reason)
         .type("application/json")
-        .post(Response.class);
+        .post(ClientResponse.class);
   }
 
-  public Response runPipelineAttempt(UUID datasetKey, String steps, String reason) {
-    return getResource(RUN_PATH + datasetKey.toString())
+  public ClientResponse runPipelineAttempt(UUID datasetKey, String steps, String reason) {
+    return getResource(RUN_PATH, datasetKey.toString())
         .queryParam("steps", steps)
         .queryParam("reason", reason)
         .type("application/json")
-        .post(Response.class);
+        .post(ClientResponse.class);
   }
 
-  public Response runPipelineAttempt(UUID datasetKey, int attempt, String steps, String reason) {
-
-    return getResource(RUN_PATH + datasetKey.toString(), String.valueOf(attempt))
+  public ClientResponse runPipelineAttempt(UUID datasetKey, int attempt, String steps, String reason) {
+    return getResource(RUN_PATH, datasetKey.toString(), String.valueOf(attempt))
         .queryParam("steps", steps)
         .queryParam("reason", reason)
         .type("application/json")
-        .post(Response.class);
+        .post(ClientResponse.class);
   }
 }
