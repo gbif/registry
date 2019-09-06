@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.gbif.ws.util.CommonWsUtils.getFirst;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_LIMIT;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MINCOUNT;
@@ -100,14 +101,5 @@ public class FacetedSearchRequestProvider<RT extends FacetedSearchRequest<P>, P 
     return null;
   }
 
-  private static String getFirst(Map<String, String[]> params, String param) {
-    final String[] values = params.get(param);
-    String resultValue = null;
 
-    if (values != null && values[0] != null) {
-      resultValue = values[0];
-    }
-
-    return resultValue;
-  }
 }

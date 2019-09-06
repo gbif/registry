@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import static org.gbif.ws.util.CommonWsUtils.getFirst;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_HIGHLIGHT;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_QUERY_STRING;
 import static org.gbif.ws.util.WebserviceParameter.PARAM_SPELLCHECK;
@@ -111,17 +112,6 @@ public class SearchRequestProvider<RT extends SearchRequest<P>, P extends Enum<?
       }
     }
     return cleanParameters;
-  }
-
-  private static String getFirst(Map<String, String[]> params, String param) {
-    final String[] values = params.get(param);
-    String resultValue = null;
-
-    if (values != null && values[0] != null) {
-      resultValue = values[0];
-    }
-
-    return resultValue;
   }
 
   /**

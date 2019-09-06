@@ -13,6 +13,7 @@ import static org.gbif.api.model.common.paging.PagingConstants.DEFAULT_PARAM_LIM
 import static org.gbif.api.model.common.paging.PagingConstants.DEFAULT_PARAM_OFFSET;
 import static org.gbif.api.model.common.paging.PagingConstants.PARAM_LIMIT;
 import static org.gbif.api.model.common.paging.PagingConstants.PARAM_OFFSET;
+import static org.gbif.ws.util.CommonWsUtils.getFirst;
 
 /**
  * Jersey provider class that extracts the page size and offset from the query parameters, or provides the default
@@ -42,7 +43,6 @@ public class PageableProvider implements ContextProvider<Pageable> {
     return getPagingRequest(webRequest);
   }
 
-  // TODO: 05/09/2019 refactor PageableHandlerMethodArgumentResolver
   public static PagingRequest getPagingRequest(WebRequest webRequest) {
     Map<String, String[]> params = webRequest.getParameterMap();
 
@@ -79,17 +79,5 @@ public class PageableProvider implements ContextProvider<Pageable> {
       }
     }
     return new PagingRequest(offset, limit);
-  }
-
-  // TODO: 05/09/2019 should be util? 
-  private static String getFirst(Map<String, String[]> params, String param) {
-    final String[] values = params.get(param);
-    String resultValue = null;
-
-    if (values != null && values[0] != null) {
-      resultValue = values[0];
-    }
-
-    return resultValue;
   }
 }
