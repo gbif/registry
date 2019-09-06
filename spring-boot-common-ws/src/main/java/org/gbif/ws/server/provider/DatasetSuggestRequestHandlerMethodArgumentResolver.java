@@ -1,24 +1,24 @@
 package org.gbif.ws.server.provider;
 
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
-import org.gbif.api.model.registry.search.DatasetSearchRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-public class DatasetSearchRequestHandlerMethodArgumentResolver
-    extends FacetedSearchRequestProvider<DatasetSearchRequest, DatasetSearchParameter>
+public class DatasetSuggestRequestHandlerMethodArgumentResolver
+    extends SearchRequestProvider<DatasetSuggestRequest, DatasetSearchParameter>
     implements HandlerMethodArgumentResolver {
 
-  public DatasetSearchRequestHandlerMethodArgumentResolver() {
-    super(DatasetSearchRequest.class, DatasetSearchParameter.class);
+  public DatasetSuggestRequestHandlerMethodArgumentResolver() {
+    super(DatasetSuggestRequest.class, DatasetSearchParameter.class);
   }
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return DatasetSearchRequest.class.equals(parameter.getParameterType());
+    return DatasetSuggestRequest.class.equals(parameter.getParameterType());
   }
 
   @Override
