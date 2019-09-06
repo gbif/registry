@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
+import org.gbif.registry.ws.security.EditorAuthorizationFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.HttpServletRequestWrapperFilter;
@@ -44,14 +45,15 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return authProvider;
   }
 
+  // TODO: 06/09/2019 add LegacyAuthorizationFilter
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
         .httpBasic().and()
         // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
-//        .addFilterAfter(context.getBean(IdentityFilter.class), SecurityContextPersistenceFilter.class)
         .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), BasicAuthenticationFilter.class)
         .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
+        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
         .csrf().disable()
