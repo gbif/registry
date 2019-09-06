@@ -2,6 +2,7 @@ package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.ws.security.EditorAuthorizationFilter;
+import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
 import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.HttpServletRequestWrapperFilter;
@@ -45,7 +46,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return authProvider;
   }
 
-  // TODO: 06/09/2019 add LegacyAuthorizationFilter
+  // TODO: 06/09/2019 built in stuff work before IdentityFilter. It causes 401 on UUID user names (should ignore them)
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
@@ -53,8 +54,9 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
         .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), BasicAuthenticationFilter.class)
         .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
-        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), IdentityFilter.class)
-        .addFilterAfter(context.getBean(AppIdentityFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), LegacyAuthorizationFilter.class)
+        .addFilterAfter(context.getBean(AppIdentityFilter.class), EditorAuthorizationFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
         .csrf().disable()
         .authorizeRequests()
