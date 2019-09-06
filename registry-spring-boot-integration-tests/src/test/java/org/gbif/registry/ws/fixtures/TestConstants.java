@@ -30,7 +30,6 @@ public class TestConstants {
   public static final String TEST_USER = "user";
   public static final String TEST_GRSCICOLL_ADMIN = "grscicollAdmin";
 
-
   public static final Map<String, UserRole> TEST_USERS_ROLE = Maps.newHashMap();
   static{
     TEST_USERS_ROLE.put(TEST_ADMIN, UserRole.REGISTRY_ADMIN);

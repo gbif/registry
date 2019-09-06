@@ -58,7 +58,6 @@ public final class WebserviceParameter {
 
   public static final String DEFAULT_SEARCH_PARAM_VALUE = "*";
 
-
   private WebserviceParameter() {
     throw new UnsupportedOperationException("Can't initialize utils class");
   }

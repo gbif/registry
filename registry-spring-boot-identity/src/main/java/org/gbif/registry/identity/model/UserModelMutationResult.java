@@ -87,7 +87,6 @@ public class UserModelMutationResult {
     this.constraintViolation = constraintViolation;
   }
 
-
   public UserModelMutationResult(Map<String, String> constraintViolation) {
     this.modelError = CONSTRAINT_VIOLATION;
     this.constraintViolation = constraintViolation;

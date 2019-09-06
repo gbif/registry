@@ -1,14 +1,13 @@
 package org.gbif.registry.doi.registration;
 
-import org.gbif.api.model.common.DOI;
-import org.gbif.registry.doi.DoiType;
-
-import javax.annotation.Nullable;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.gbif.api.model.common.DOI;
+import org.gbif.registry.doi.DoiType;
+
+import javax.annotation.Nullable;
 
 /**
  * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a different behaviour in
@@ -110,7 +109,6 @@ public class DoiRegistration {
   public static Builder builder() {
     return new Builder();
   }
-
 
   @Override
   public String toString() {

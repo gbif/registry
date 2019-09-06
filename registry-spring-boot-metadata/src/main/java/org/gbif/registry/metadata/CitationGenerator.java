@@ -148,7 +148,6 @@ public class CitationGenerator {
         .collect(Collectors.toList());
   }
 
-
   /**
    * This method is used to get the list of "unique" authors.
    * Currently, uniqueness is based on lastName + firstNames.

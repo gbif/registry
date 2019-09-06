@@ -3,7 +3,6 @@ package org.gbif.registry.metadata.parse.converter;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
 
-
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion
  * to and from <b>Country</b> ENUM objects.

@@ -100,6 +100,4 @@ public class FacetedSearchRequestProvider<RT extends FacetedSearchRequest<P>, P 
     }
     return null;
   }
-
-
 }

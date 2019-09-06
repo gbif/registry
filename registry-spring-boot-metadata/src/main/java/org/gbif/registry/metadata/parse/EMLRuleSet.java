@@ -60,7 +60,6 @@ public class EMLRuleSet extends RuleSetBase {
     LanguageTypeConverter langConverter = new LanguageTypeConverter();
     ConvertUtils.register(langConverter, Language.class);
 
-
     // handles the Identifier.type string -> IdentifierType conversion
     IdentifierTypeConverter identifierTypeConverter = new IdentifierTypeConverter(IdentifierType.UNKNOWN);
     ConvertUtils.register(identifierTypeConverter, IdentifierType.class);
@@ -328,7 +327,6 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addSetNext(prefix, parentMethod); // add the GeospatialCoverage to the list in EML
   }
 
-
   /**
    * Add rules to extract a KeywordCollection and add the KeywordCollection as per the method called on parent object
    * which is the previous stack object.
@@ -344,7 +342,6 @@ public class EMLRuleSet extends RuleSetBase {
     digester.addBeanPropertySetter(prefix + "/keywordThesaurus", "thesaurus");
     digester.addSetNext(prefix, parentMethod);
   }
-
 
   /**
    * This is a reusable set of rules to build a Project and add the Project as per the method called on parent object

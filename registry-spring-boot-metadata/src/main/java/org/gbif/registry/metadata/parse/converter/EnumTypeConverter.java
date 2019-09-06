@@ -22,7 +22,6 @@ public class EnumTypeConverter<T extends Enum<?>> extends AbstractConverter {
     this.defaultValue = defaultValue;
   }
 
-
   public void addMappings(Map<String, T> mapping) {
     for (Map.Entry<String, T> entry : mapping.entrySet()) {
       lookup.put(entry.getKey().toLowerCase(), entry.getValue());

@@ -29,7 +29,6 @@ public interface DoiRegistrationService {
    */
   DOI update(DoiRegistration doiRegistration);
 
-
   /**
    * Deletes a DOI.
    */

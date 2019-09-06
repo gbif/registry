@@ -31,7 +31,6 @@ public interface IdentityService extends IdentityAccessService {
   @Nullable
   GbifUser getByKey(int id);
 
-
   /**
    * Get a user by systemSettings (e.g. Orcid login).
    * The key and the value shall match.
@@ -118,7 +117,6 @@ public interface IdentityService extends IdentityAccessService {
    * @return the password was updated or not
    */
   UserModelMutationResult updatePassword(int userKey, String newPassword, UUID confirmationKey);
-
 
   /**
    * Allows to change the password of a user that is already authenticated.

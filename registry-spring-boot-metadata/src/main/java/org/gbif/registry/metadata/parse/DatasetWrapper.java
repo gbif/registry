@@ -71,7 +71,6 @@ public class DatasetWrapper {
   private final Dataset target = new Dataset();
   private ParagraphContainer description = new ParagraphContainer();
 
-
   /**
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year, ignoring whitespace
    *
@@ -423,7 +422,6 @@ public class DatasetWrapper {
     target.setProject(project);
   }
 
-
   /**
    * Concatenates the new paragrpah to an existing one, inserting a new html break line.
    * @param existing
@@ -540,7 +538,6 @@ public class DatasetWrapper {
   public void setType(DatasetType type) {
     target.setType(type);
   }
-
 
   public void postProcess() {
     updateTaxonomicCoverageRanks();

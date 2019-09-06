@@ -34,7 +34,6 @@ import java.util.function.Function;
 import static org.gbif.registry.identity.model.UserModelMutationResult.withError;
 import static org.gbif.registry.identity.model.UserModelMutationResult.withSingleConstraintViolation;
 
-
 /**
  * Main implementation of {@link IdentityService} on top of mybatis.
  * Notes:

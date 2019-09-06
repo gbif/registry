@@ -7,7 +7,6 @@ import org.gbif.api.vocabulary.ContactType;
 import java.util.List;
 import java.util.UUID;
 
-
 public interface ContactableMapper {
 
   int addContact(

@@ -61,7 +61,6 @@ public class ContactAdapter {
     return getFirstPreferredType(ContactType.ORIGINATOR);
   }
 
-
   /**
    * Format the name of the contact as "FirstName LastName".
    *

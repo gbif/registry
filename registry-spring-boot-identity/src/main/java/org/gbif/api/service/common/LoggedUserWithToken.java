@@ -45,7 +45,6 @@ public class LoggedUserWithToken {
     return new LoggedUserWithToken(user, token, editorRights);
   }
 
-
   public String getUserName() {
     return userName;
   }

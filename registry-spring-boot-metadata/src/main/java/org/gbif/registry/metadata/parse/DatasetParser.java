@@ -83,7 +83,6 @@ public class DatasetParser {
     throw new IllegalArgumentException("No parser found for this metadata document. Only EML or DC supported");
   }
 
-
   /**
    * Build from stream on-top of a preexisting Dataset populating its fields from a source metadata that's parsed.
    *

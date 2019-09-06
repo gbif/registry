@@ -1,6 +1,5 @@
 package org.gbif.registry.metadata.parse.converter;
 
-
 import org.apache.commons.beanutils.converters.AbstractConverter;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.ContactType;
@@ -58,5 +57,4 @@ public final class ContactTypeConverter extends AbstractConverter {
     return infer == null ? DEFAULT_CONTACT_TYPE : infer;
   }
 }
-
 

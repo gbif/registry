@@ -63,7 +63,6 @@ public class DirectoryRegistryMapping {
           .put(GbifRegion.NORTH_AMERICA, Continent.NORTH_AMERICA)
           .put(GbifRegion.OCEANIA, Continent.OCEANIA).build();
 
-
   /**
    * Gets the Directory participantID from a Registry Node.
    */
