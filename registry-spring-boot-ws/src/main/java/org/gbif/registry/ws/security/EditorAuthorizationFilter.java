@@ -11,11 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +49,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource methods
     final Authentication authentication = securityContextProvider.getContext().getAuthentication();
@@ -63,8 +61,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
         && SecurityContextCheck.checkUserInRole(authentication, UserRoles.EDITOR_ROLE))
         && !httpRequest.getMethod().equals("GET") && !httpRequest.getMethod().equals("OPTIONS")) {
 
-      // TODO: 06/09/2019 contextPath or getRequestURI?
-      String path = httpRequest.getContextPath().toLowerCase();
+      String path = httpRequest.getRequestURI().toLowerCase();
 
       try {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
