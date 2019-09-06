@@ -59,7 +59,7 @@ public class JwtRequestFilter extends GenericFilterBean {
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
-      LOG.debug("Skipping JWT validation");
+      LOG.debug("No JWT token present.");
       filterChain.doFilter(request, response);
     } else {
       try {

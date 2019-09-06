@@ -26,17 +26,20 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.authorization.OrganizationAuthorization;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.Trim;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,6 +68,8 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 @RequestMapping("organization")
 public class OrganizationResource extends BaseNetworkEntityResource<Organization> implements OrganizationService {
 
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
+
   protected static final int MINIMUM_PASSWORD_SIZE = 12;
   protected static final int MAXIMUM_PASSWORD_SIZE = 15;
   private static final String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -73,6 +78,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
   private final OrganizationEndorsementService<UUID> organizationEndorsementService;
+  private final EditorAuthorizationService userAuthService;
 
   public OrganizationResource(
       OrganizationMapper organizationMapper,
@@ -103,6 +109,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
     this.organizationEndorsementService = organizationEndorsementService;
+    this.userAuthService = userAuthService;
   }
 
   /**
@@ -165,11 +172,21 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization) {
     checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
     Organization previousOrg = super.get(organization.getKey());
-    SecurityContextCheck.ensurePrecondition(
-        OrganizationAuthorization.isUpdateAuthorized(previousOrg, organization, authentication),
-        HttpStatus.FORBIDDEN);
+
+    // If the endorsement is being changed, and the user is only an EDITOR, they must have node permission.
+    // If the node is being changed, and the user is only an EDITOR, they must have node permission on both nodes.
+    boolean endorsementApprovedChanged = previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
+        || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
+    if (endorsementApprovedChanged
+        && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+        && !(userAuthService.allowedToModifyEntity(principal, organization.getEndorsingNodeKey())
+        || userAuthService.allowedToModifyEntity(principal, previousOrg.getEndorsingNodeKey()))) {
+      LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", principal, key);
+      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+    }
 
     if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
       // here we consider the user has the right to endorse an organization without a key.
