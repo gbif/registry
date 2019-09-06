@@ -9,6 +9,8 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @Service
 @Primary
 public class EditorAuthorizationServiceImpl implements EditorAuthorizationService {
+
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationServiceImpl.class);
 
   private UserRightsMapper userRightsMapper;
@@ -25,9 +28,10 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   private InstallationService installationService;
   private OrganizationService organizationService;
 
-  public EditorAuthorizationServiceImpl(DatasetService datasetService,
-                                        InstallationService installationService,
-                                        OrganizationService organizationService,
+  // TODO: 06/09/2019 fix problem with services (circular dependency). Optional lazy dependency for now
+  public EditorAuthorizationServiceImpl(@Lazy @Autowired(required = false) DatasetService datasetService,
+                                        @Lazy @Autowired(required = false) InstallationService installationService,
+                                        @Lazy @Autowired(required = false) OrganizationService organizationService,
                                         UserRightsMapper userRightsMapper) {
     this.datasetService = datasetService;
     this.installationService = installationService;
