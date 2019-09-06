@@ -21,8 +21,10 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
 import java.util.UUID;
+import javax.ws.rs.core.Response;
 
 import com.google.inject.Injector;
+import com.sun.jersey.api.client.ClientResponse;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -94,6 +96,11 @@ public class PipelinesHistoryResourceIT {
   public void createPipelineProcessWithoutPrivilegesTest() {
     principalProvider.setPrincipal(TestConstants.TEST_USER);
     historyWsClient.createPipelineProcess(UUID.randomUUID(), 1);
+  }
+
+  @Test
+  public void getNonExistentPipelineProcessTest() {
+    assertNull(historyWsClient.getPipelineProcess(UUID.randomUUID(), 0));
   }
 
   @Test
@@ -217,6 +224,79 @@ public class PipelinesHistoryResourceIT {
         workflow.getSteps().get(0).getNextSteps().get(0).getLastStep().getState());
   }
 
+  @Test
+  public void getPipelineWorkflowNonExistentProcessTest() {
+    assertNull(historyWsClient.getPipelineProcess(UUID.randomUUID(), 1));
+  }
+
+  @Test
+  public void runPipelineAttemptTest() {
+    // create one process with one step
+    final UUID datasetKey1 = createDataset();
+    final int attempt = 1;
+    long processKey = historyWsClient.createPipelineProcess(datasetKey1, attempt);
+
+    historyWsClient.addPipelineStep(
+        processKey,
+        new PipelineStep()
+            .setMessage(
+                "{\"datasetUuid\":\"418a6571-b6c1-4db0-b90e-8f36bde4c80e\",\"datasetType\":\"SAMPLING_EVENT\",\"source\":"
+                    + "\"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data\",\"attempt\":109,\"validationReport\":"
+                    + "{\"datasetKey\":\"418a6571-b6c1-4db0-b90e-8f36bde4c80e\",\"occurrenceReport\":{\"checkedRecords\":11961,"
+                    + "\"uniqueTriplets\":0,\"allRecordsChecked\":true,\"recordsWithInvalidTriplets\":11961,\"uniqueOccurrenceIds\":11961,"
+                    + "\"recordsMissingOccurrenceId\":0,\"invalidationReason\":null,\"valid\":true},\"genericReport\":{\"checkedRecords\":1630,"
+                    + "\"allRecordsChecked\":true,\"duplicateIds\":[],\"rowNumbersMissingId\":[],\"invalidationReason\":null,\"valid\":true},"
+                    + "\"invalidationReason\":null,\"valid\":true},\"pipelineSteps\":[\"DWCA_TO_VERBATIM\",\"HDFS_VIEW\","
+                    + "\"VERBATIM_TO_INTERPRETED\",\"INTERPRETED_TO_INDEX\"],\"endpointType\":\"DWC_ARCHIVE\",\"platform\":\"ALL\"}")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.DWCA_TO_VERBATIM)
+            .setState(PipelineStep.Status.COMPLETED));
+
+    // run the process
+    final String rerunReason = "test reason";
+    historyWsClient.runPipelineAttempt(
+        datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason);
+
+    // check that the DB was updated
+    PipelineProcess process = historyWsClient.getPipelineProcess(datasetKey1, attempt);
+    assertEquals(rerunReason, process.getSteps().iterator().next().getRerunReason());
+
+    // run the process without attempt now
+    final String rerunReason2 = "test reason 2";
+    historyWsClient.runPipelineAttempt(datasetKey1, StepType.DWCA_TO_VERBATIM.name(), rerunReason2);
+
+    // check that the DB was updated again
+    process = historyWsClient.getPipelineProcess(datasetKey1, attempt);
+    assertEquals(rerunReason2, process.getSteps().iterator().next().getRerunReason());
+  }
+
+  @Test
+  public void runPipelineAttemptInRunningStateTest() {
+    // create one process with one step
+    final UUID datasetKey1 = createDataset();
+    final int attempt = 1;
+    long processKey = historyWsClient.createPipelineProcess(datasetKey1, attempt);
+
+    historyWsClient.addPipelineStep(
+        processKey,
+        new PipelineStep()
+            .setMessage("message")
+            .setRunner(StepRunner.STANDALONE)
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setState(PipelineStep.Status.RUNNING));
+
+    // run process and expect a bad request since the step is in running state
+    ClientResponse response =
+        historyWsClient.runPipelineAttempt(
+            datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test");
+    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+
+    // run process without attempt and expect a bad request since the step is in running state
+    response =
+        historyWsClient.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test");
+    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+  }
+
   private UUID createDataset() {
     Node node = new Node();
     node.setTitle("node");
@@ -246,8 +326,6 @@ public class PipelinesHistoryResourceIT {
     dataset.setLanguage(Language.ABKHAZIAN);
     dataset.setLicense(License.CC0_1_0);
     dataset.setTitle("title");
-    UUID datasetKey = datasetService.create(dataset);
-
-    return datasetKey;
+    return datasetService.create(dataset);
   }
 }
