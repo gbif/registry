@@ -53,7 +53,8 @@
     state = #{step.state,jdbcType=OTHER},
     rerun_reason = #{step.rerunReason,jdbcType=VARCHAR},
     modified = now(),
-    modified_by = #{step.modifiedBy,jdbcType=VARCHAR}
+    modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
   </sql>
 
   <insert id="create" parameterType="PipelineProcess" useGeneratedKeys="true" keyProperty="key">
@@ -72,10 +73,16 @@
     WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
   </select>
 
-  <select id="get" resultMap="PIPELINES_PROCESS_MAP">
+  <select id="getByDatasetAndAttempt" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
     FROM pipeline_process
     WHERE dataset_key = #{datasetKey, jdbcType=OTHER} AND attempt = #{attempt, jdbcType=INTEGER}
+  </select>
+
+  <select id="get" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process
+    WHERE key = #{key,jdbcType=BIGINT}
   </select>
 
   <select id="getLastAttempt" resultType="Integer">

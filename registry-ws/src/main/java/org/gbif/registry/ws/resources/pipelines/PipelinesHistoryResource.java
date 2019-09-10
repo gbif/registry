@@ -94,7 +94,6 @@ public class PipelinesHistoryResource {
   @GET
   @Path(PROCESS_PATH + "{processKey}/step/{stepKey}")
   public PipelineStep getPipelineStep(@PathParam("processKey") long processKey, @PathParam("stepKey") long stepKey) {
-    // TODO: check that the process contains the step
     return historyTrackingService.getPipelineStep(stepKey);
   }
 
@@ -106,11 +105,9 @@ public class PipelinesHistoryResource {
   @Path(PROCESS_PATH + "{processKey}/step/{stepKey}")
   @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public void updatePipelineStepStatus(@PathParam("processKey") long processKey, @PathParam("stepKey") long stepKey,
+  public void updatePipelineStepStatusAndMetrics(@PathParam("processKey") long processKey, @PathParam("stepKey") long stepKey,
                                        PipelineStep.Status status, @Context SecurityContext security) {
-    // TODO: check that the process contains the step
-    historyTrackingService.updatePipelineStepStatus(stepKey, status,
-                                                    security.getUserPrincipal().getName());
+    historyTrackingService.updatePipelineStepStatusAndMetrics(processKey, stepKey, status, security.getUserPrincipal().getName());
   }
 
   @GET

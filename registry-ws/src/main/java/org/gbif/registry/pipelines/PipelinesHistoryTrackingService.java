@@ -36,7 +36,7 @@ public interface PipelinesHistoryTrackingService {
    */
   RunPipelineResponse runPipelineAttempt(
     UUID datasetKey,
-    Integer attempt,
+    int attempt,
     Set<StepType> steps,
     String reason,
     String user
@@ -74,7 +74,7 @@ public interface PipelinesHistoryTrackingService {
    * @param attempt crawl attempt identifier
    * @return a instance of pipelines process if exists
    */
-  PipelineProcess get(UUID datasetKey, Integer attempt);
+  PipelineProcess get(UUID datasetKey, int attempt);
 
   /**
    * Creates/persists a pipelines process of dataset for an attempt identifier.
@@ -83,7 +83,7 @@ public interface PipelinesHistoryTrackingService {
    * @param creator user or process that created the pipeline
    * @return the key of the {@link PipelineProcess} created
    */
-  long create(UUID datasetKey, Integer attempt, String creator);
+  long create(UUID datasetKey, int attempt, String creator);
 
   /**
    * Adds/persists the information of a pipeline step.
@@ -92,7 +92,7 @@ public interface PipelinesHistoryTrackingService {
    * @param creator the user who is adding the step
    * @return the key of the PipelineStep created
    */
-  long addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String creator);
+  long addPipelineStep(long pipelineProcessKey, PipelineStep pipelineStep, String creator);
 
   /**
    * Gets the PipelineStep of the specified key.
@@ -103,12 +103,14 @@ public interface PipelinesHistoryTrackingService {
   PipelineStep getPipelineStep(long key);
 
   /**
-   * Updates the status of a pipeline step.
+   * Updates the status of a pipeline step and retrieves the metrics from ES and inserts them in the DB.
+   *
+   * @param processKey key of the process of the step
    * @param pipelineStepKey sequential identifier of a pipeline process step
    * @param status new status for the pipeline step
    * @param user the user who is updating the status
    */
-  void updatePipelineStepStatus(Long pipelineStepKey, PipelineStep.Status status, String user);
+  void updatePipelineStepStatusAndMetrics(long processKey, long pipelineStepKey, PipelineStep.Status status, String user);
 
   /**
    * Retrieves the workflow of a specific pipeline process.
@@ -117,5 +119,5 @@ public interface PipelinesHistoryTrackingService {
    * @param attempt attempt identifier
    * @return {@link PipelineWorkflow}
    */
-  PipelineWorkflow getPipelineWorkflow(UUID datasetKey, Integer attempt);
+  PipelineWorkflow getPipelineWorkflow(UUID datasetKey, int attempt);
 }

@@ -86,13 +86,26 @@ public class PipelineProcessMapperTest {
   }
 
   @Test
+  public void getPipelinesProcessByKeyTest() {
+    // create process
+    PipelineProcess process =
+      new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+
+    // insert in the DB
+    pipelineProcessMapper.create(process);
+    assertTrue(process.getKey() > 0);
+
+    // get by key
+    PipelineProcess processRetrieved = pipelineProcessMapper.get(process.getKey());
+    assertEquals(process.getAttempt(), processRetrieved.getAttempt());
+    assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
+  }
+
+  @Test
   public void createPipelinesProcessTest() {
     // create process
     PipelineProcess process =
-        new PipelineProcess()
-            .setDatasetKey(insertDataset())
-            .setAttempt(1)
-            .setCreatedBy(TEST_USER);
+        new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
 
     // insert in the DB
     pipelineProcessMapper.create(process);
@@ -100,7 +113,7 @@ public class PipelineProcessMapperTest {
 
     // get process inserted
     PipelineProcess processRetrieved =
-        pipelineProcessMapper.get(process.getDatasetKey(), process.getAttempt());
+        pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
     assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
     assertTrue(process.getSteps().isEmpty());
@@ -148,7 +161,7 @@ public class PipelineProcessMapperTest {
 
     // assert results
     PipelineProcess processRetrieved =
-        pipelineProcessMapper.get(process.getDatasetKey(), process.getAttempt());
+        pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
     assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
     assertEquals(1, processRetrieved.getSteps().size());
@@ -225,6 +238,7 @@ public class PipelineProcessMapperTest {
     step.setState(Status.COMPLETED);
     step.setModifiedBy(UPDATER_USER);
     step.setRerunReason("reason");
+    step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
 
     pipelineProcessMapper.updatePipelineStep(step);
     assertTrue(pipelineProcessMapper.getPipelineStep(step.getKey()).lenientEquals(step));

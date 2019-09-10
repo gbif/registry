@@ -72,7 +72,8 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
         String.valueOf(stepKey));
   }
 
-  public void updatePipelineStep(long processKey, long stepKey, PipelineStep.Status status) {
+  public void updatePipelineStepStatusAndMetrics(
+      long processKey, long stepKey, PipelineStep.Status status) {
     put(status, PROCESS_PATH, String.valueOf(processKey), STEP_PATH, String.valueOf(stepKey));
   }
 
@@ -97,7 +98,8 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
         .post(ClientResponse.class);
   }
 
-  public ClientResponse runPipelineAttempt(UUID datasetKey, int attempt, String steps, String reason) {
+  public ClientResponse runPipelineAttempt(
+      UUID datasetKey, int attempt, String steps, String reason) {
     return getResource(RUN_PATH, datasetKey.toString(), String.valueOf(attempt))
         .queryParam("steps", steps)
         .queryParam("reason", reason)
