@@ -172,7 +172,7 @@ public class PipelinesHistoryResourceIT {
             .setState(PipelineStep.Status.RUNNING);
     long stepKey = historyWsClient.addPipelineStep(processKey, step);
 
-    historyWsClient.updatePipelineStep(processKey, stepKey, PipelineStep.Status.COMPLETED);
+    historyWsClient.updatePipelineStepStatusAndMetrics(processKey, stepKey, PipelineStep.Status.COMPLETED);
 
     PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, stepKey);
     assertEquals(PipelineStep.Status.COMPLETED, stepCreated.getState());

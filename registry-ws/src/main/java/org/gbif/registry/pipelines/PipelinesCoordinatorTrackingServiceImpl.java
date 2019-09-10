@@ -28,23 +28,24 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Service that allows to re-run pipeline steps on an specific attempt.
- */
+/** Service that allows to re-run pipeline steps on an specific attempt. */
 public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistoryTrackingService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PipelinesCoordinatorTrackingServiceImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(PipelinesCoordinatorTrackingServiceImpl.class);
 
-  //Used to iterate over all datasets
+  // Used to iterate over all datasets
   private static final int PAGE_SIZE = 200;
 
-  //Used to read serialized messages stored in the data base as strings.
+  // Used to read serialized messages stored in the data base as strings.
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   static {
     OBJECT_MAPPER.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-    // determines whether encountering of unknown properties (ones that do not map to a property, and there is no
-    // "any setter" or handler that can handle it) should result in a failure (throwing a JsonMappingException) or not.
+    // determines whether encountering of unknown properties (ones that do not map to a property,
+    // and there is no
+    // "any setter" or handler that can handle it) should result in a failure (throwing a
+    // JsonMappingException) or not.
     OBJECT_MAPPER.disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     // Enforce use of ISO-8601 format dates (http://wiki.fasterxml.com/JacksonFAQDateHandling)
@@ -57,86 +58,94 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   @Inject(optional = true)
   private final MessagePublisher publisher = null;
 
-  //MyBatis mapper
+  // MyBatis mapper
   private final PipelineProcessMapper mapper;
-
   private final DatasetService datasetService;
-
+  private final MetricsHandler metricsHandler;
 
   @Inject
-  public PipelinesCoordinatorTrackingServiceImpl(PipelineProcessMapper mapper, DatasetService datasetService) {
+  public PipelinesCoordinatorTrackingServiceImpl(
+      PipelineProcessMapper mapper, DatasetService datasetService, MetricsHandler metricsHandler) {
     this.mapper = mapper;
     this.datasetService = datasetService;
+    this.metricsHandler = metricsHandler;
   }
 
   @Override
-  public RunPipelineResponse runLastAttempt(UUID datasetKey, Set<StepType> steps, String reason, String user) {
+  public RunPipelineResponse runLastAttempt(
+      UUID datasetKey, Set<StepType> steps, String reason, String user) {
     Integer lastAttempt = mapper.getLastAttempt(datasetKey).orElse(null);
     return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user);
   }
 
-  /**
-   * Utility method to run batch jobs on all dataset elements
-   */
+  /** Utility method to run batch jobs on all dataset elements */
   private RunPipelineResponse doOnAllDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
-    PagingResponse<Dataset> response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
-      do {
-        try {
-          response.getResults().forEach(onDataset);
-          pagingRequest.setOffset(response.getResults().size());
-          response = datasetService.list(pagingRequest);
-        } catch (Exception ex) {
-          LOG.error("Error processing dataset while rerunning all datasets", ex);
-        }
-      } while (response.isEndOfRecords());
-    return RunPipelineResponse.builder().setResponseStatus(RunPipelineResponse.ResponseStatus.OK).build();
+    PagingResponse<Dataset> response =
+        datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
+    do {
+      try {
+        response.getResults().forEach(onDataset);
+        pagingRequest.setOffset(response.getResults().size());
+        response = datasetService.list(pagingRequest);
+      } catch (Exception ex) {
+        LOG.error("Error processing dataset while rerunning all datasets", ex);
+      }
+    } while (response.isEndOfRecords());
+    return RunPipelineResponse.builder()
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
+        .build();
   }
 
   @Override
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
-    return RunPipelineResponse.builder(doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user)))
-                              .setStep(steps).build();
+    return RunPipelineResponse.builder(
+            doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user)))
+        .setStep(steps)
+        .build();
   }
 
   /**
    * Search the last step executed of a specific StepType.
+   *
    * @param pipelineProcess container of steps
    * @param step to be searched
    * @return optionally, the las step found
    */
-  private Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
-    return  pipelineProcess.getSteps().stream()
-              .filter(s -> step.equals(s.getType()))
-              .max(Comparator.comparing(PipelineStep::getStarted));
+  private Optional<PipelineStep> getLatestSuccessfulStep(
+      PipelineProcess pipelineProcess, StepType step) {
+    return pipelineProcess.getSteps().stream()
+        .filter(s -> step.equals(s.getType()))
+        .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
   /**
-   * Calculates the general state of a {@link PipelineProcess}.
-   * If one the latest steps of a specific {@link StepType} has a {@link PipelineStep.Status#FAILED}, the process is considered as FAILED.
-   * If all the latest steps of all {@link StepType} have the same {@link PipelineStep.Status}, that status  used for the {@link PipelineProcess}.
-   * If it has step in {@link PipelineStep.Status#RUNNING} it is decided as the process status, otherwise is {@link PipelineStep.Status#COMPLETED}
+   * Calculates the general state of a {@link PipelineProcess}. If one the latest steps of a
+   * specific {@link StepType} has a {@link PipelineStep.Status#FAILED}, the process is considered
+   * as FAILED. If all the latest steps of all {@link StepType} have the same {@link
+   * PipelineStep.Status}, that status used for the {@link PipelineProcess}. If it has step in
+   * {@link PipelineStep.Status#RUNNING} it is decided as the process status, otherwise is {@link
+   * PipelineStep.Status#COMPLETED}
    *
    * @param pipelineProcess that contains all the steps.
    * @return the calculated status of a {@link PipelineProcess}
    */
   private PipelineStep.Status getStatus(PipelineProcess pipelineProcess) {
 
-    //Collects the latest steps per type.
+    // Collects the latest steps per type.
     Set<PipelineStep.Status> statuses = new HashSet<>();
     for (StepType stepType : StepType.values()) {
-      pipelineProcess.getSteps()
-        .stream()
-        .filter(s -> stepType == s.getType())
-        .max(Comparator.comparing(PipelineStep::getStarted))
-        .ifPresent(step -> statuses.add(step.getState()));
+      pipelineProcess.getSteps().stream()
+          .filter(s -> stepType == s.getType())
+          .max(Comparator.comparing(PipelineStep::getStarted))
+          .ifPresent(step -> statuses.add(step.getState()));
     }
 
-    //Only has one states, it could means that all steps have the same status
-    if (statuses.size() == 1 ) {
+    // Only has one states, it could means that all steps have the same status
+    if (statuses.size() == 1) {
       return statuses.iterator().next();
     } else {
-      //Checks the states by priority
+      // Checks the states by priority
       if (statuses.contains(PipelineStep.Status.FAILED)) {
         return PipelineStep.Status.FAILED;
       } else if (statuses.contains(PipelineStep.Status.RUNNING)) {
@@ -164,73 +173,84 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public RunPipelineResponse runPipelineAttempt(UUID datasetKey, Integer attempt, Set<StepType> steps, String reason,
-                                                String user) {
+  public RunPipelineResponse runPipelineAttempt(
+      UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
-    Objects.requireNonNull(attempt, "Attempt can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
-    Objects.requireNonNull(publisher,"No message publisher configured");
+    Objects.requireNonNull(publisher, "No message publisher configured");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
-    PipelineProcess status = mapper.get(datasetKey, attempt);
+    PipelineProcess status = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
-    //Checks that the pipelines is not in RUNNING state
-    if(getStatus(status) == PipelineStep.Status.RUNNING) {
+    // Checks that the pipelines is not in RUNNING state
+    if (getStatus(status) == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
-              .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
-              .setStep(steps)
-             .build();
+          .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
+          .setStep(steps)
+          .build();
     }
 
-    //Performs the messaging and updates the status onces the message has been sent
+    // Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
-    steps.forEach(stepName ->
-        getLatestSuccessfulStep(status, stepName).ifPresent(step -> {
-          try {
-            if (stepName == StepType.HDFS_VIEW || stepName == StepType.INTERPRETED_TO_INDEX) {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-              publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class));
-            } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-              publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesVerbatimMessage.class));
-            } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-              publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesDwcaMessage.class));
-            } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-              publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesAbcdMessage.class));
-            } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-              publisher.send(OBJECT_MAPPER.readValue(step.getMessage(), PipelinesXmlMessage.class));
-            } else {
-              responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
-            }
+    steps.forEach(
+        stepName ->
+            getLatestSuccessfulStep(status, stepName)
+                .ifPresent(
+                    step -> {
+                      try {
+                        if (stepName == StepType.HDFS_VIEW
+                            || stepName == StepType.INTERPRETED_TO_INDEX) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(
+                              OBJECT_MAPPER.readValue(
+                                  step.getMessage(), PipelinesInterpretedMessage.class));
+                        } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(
+                              OBJECT_MAPPER.readValue(
+                                  step.getMessage(), PipelinesVerbatimMessage.class));
+                        } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(
+                              OBJECT_MAPPER.readValue(
+                                  step.getMessage(), PipelinesDwcaMessage.class));
+                        } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(
+                              OBJECT_MAPPER.readValue(
+                                  step.getMessage(), PipelinesAbcdMessage.class));
+                        } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(
+                              OBJECT_MAPPER.readValue(
+                                  step.getMessage(), PipelinesXmlMessage.class));
+                        } else {
+                          responseBuilder.setResponseStatus(
+                              RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
+                        }
 
-            // update rerun reason and modifier user
-            mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
-          } catch (IOException ex) {
-            LOG.error("Error reading message", ex);
-            throw Throwables.propagate(ex);
-          }
-       })
-    );
+                        // update rerun reason and modifier user
+                        mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
+                      } catch (IOException ex) {
+                        LOG.error("Error reading message", ex);
+                        throw Throwables.propagate(ex);
+                      }
+                    }));
 
-    return  responseBuilder.build();
+    return responseBuilder.build();
   }
 
   @Override
-  public PipelineProcess get(UUID datasetKey, Integer attempt) {
+  public PipelineProcess get(UUID datasetKey, int attempt) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
-    Objects.requireNonNull(attempt, "Attempt can't be null");
 
-    return mapper.get(datasetKey, attempt);
+    return mapper.getByDatasetAndAttempt(datasetKey, attempt);
   }
 
   @Override
-  public long create(UUID datasetKey, Integer attempt, String creator) {
+  public long create(UUID datasetKey, int attempt, String creator) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
-    Objects.requireNonNull(attempt, "Attempt can't be null");
     Objects.requireNonNull(creator, "Creator can't be null");
 
     PipelineProcess pipelineProcess = new PipelineProcess();
@@ -243,8 +263,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public long addPipelineStep(Long pipelineProcessKey, PipelineStep pipelineStep, String user) {
-    Objects.requireNonNull(pipelineProcessKey, "PipelineProcessKey can't be null");
+  public long addPipelineStep(long pipelineProcessKey, PipelineStep pipelineStep, String user) {
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
@@ -259,29 +278,41 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public void updatePipelineStepStatus(Long pipelineStepKey, PipelineStep.Status status, String user) {
-    Objects.requireNonNull(pipelineStepKey, "PipelineStepKey can't be null");
+  public void updatePipelineStepStatusAndMetrics(
+      long processKey, long pipelineStepKey, PipelineStep.Status status, String user) {
     Objects.requireNonNull(status, "Status can't be null");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
+    // fetch entities
     PipelineStep step = mapper.getPipelineStep(pipelineStepKey);
-    if (step.getState() != status && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
+    PipelineProcess process = mapper.get(processKey);
+    Preconditions.checkArgument(process.getSteps().contains(step));
+
+    if (step.getState() != status
+        && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
       step.setFinished(LocalDateTime.now());
     }
 
+    // get metrics
+    step.setMetrics(
+        metricsHandler.getMetricInfo(
+            process.getDatasetKey(), process.getAttempt(), step.getType(), step.getStarted()));
+
+    // update status and modifying user
     step.setState(status);
     step.setModifiedBy(user);
+
     mapper.updatePipelineStep(step);
   }
 
   @Override
-  public PipelineWorkflow getPipelineWorkflow(UUID datasetKey, Integer attempt) {
+  public PipelineWorkflow getPipelineWorkflow(UUID datasetKey, int attempt) {
     Objects.requireNonNull(datasetKey, "datasetKey can't be null");
-    Objects.requireNonNull(attempt, "attempt can't be null");
 
-    PipelineProcess process = mapper.get(datasetKey, attempt);
+    PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
-    // group the steps by its execution order in the workflow and then by name. This will create something
+    // group the steps by its execution order in the workflow and then by name. This will create
+    // something
     // like:
     // 1 -> DWCA_TO_AVRO -> List<PipelineStep>
     // 2 -> VERBATIM_TO_INTERPRETED -> List<PipelineStep>

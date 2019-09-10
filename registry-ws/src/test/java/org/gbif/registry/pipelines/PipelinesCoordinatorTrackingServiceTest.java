@@ -27,13 +27,15 @@ public class PipelinesCoordinatorTrackingServiceTest {
   private PipelineProcessMapper pipelineProcessMapper;
   @Mock
   private DatasetService datasetService;
+  @Mock
+  private MetricsHandler metricsHandler;
 
   private PipelinesHistoryTrackingService trackingService;
 
   @Before
   public void setup() throws Exception {
     trackingService =
-        new PipelinesCoordinatorTrackingServiceImpl(pipelineProcessMapper, datasetService);
+        new PipelinesCoordinatorTrackingServiceImpl(pipelineProcessMapper, datasetService, metricsHandler);
   }
 
   @Test
@@ -43,7 +45,7 @@ public class PipelinesCoordinatorTrackingServiceTest {
 
     // mocks
     PipelineProcess mockProcess = createMockProcess(uuid, attempt);
-    when(pipelineProcessMapper.get(uuid, attempt)).thenReturn(mockProcess);
+    when(pipelineProcessMapper.getByDatasetAndAttempt(uuid, attempt)).thenReturn(mockProcess);
 
     // create workflow
     PipelineWorkflow workflow = trackingService.getPipelineWorkflow(uuid, attempt);
