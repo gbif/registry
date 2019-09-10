@@ -134,7 +134,7 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
                               new OccurrenceMetricsModule(getMetricsProperties(properties)),
                               new OaipmhModule(properties),
-                              new PipelinesModule());
+                              new PipelinesModule(properties));
   }
 
   @VisibleForTesting

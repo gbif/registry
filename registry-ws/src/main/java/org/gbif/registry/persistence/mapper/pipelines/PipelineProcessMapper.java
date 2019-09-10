@@ -30,7 +30,16 @@ public interface PipelineProcessMapper {
    * @param attempt
    * @return {@link PipelineProcess}
    */
-  PipelineProcess get(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
+  PipelineProcess getByDatasetAndAttempt(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
+
+
+  /**
+   * Retrieves a {@link PipelineProcess} by key.
+   *
+   * @param key key of the process
+   * @return {@link PipelineProcess}
+   */
+  PipelineProcess get(@Param("key") long key);
 
   Optional<Integer> getLastAttempt(@Param("datasetKey") UUID datasetKey);
 
