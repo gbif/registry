@@ -3,6 +3,7 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.pipelines.StepType;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -101,7 +102,8 @@ public class MetricsHandler {
           + "  }"
           + "}";
 
-  private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+  private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
+  private static final MediaType JSON = MediaType.parse("application/json");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String METRIC_NAME_FILTER = "org_gbif_pipelines_transforms_";
 
@@ -133,7 +135,7 @@ public class MetricsHandler {
         new Request.Builder().url(getIndexUrl(startedDate, finishedTime)).post(body).build();
 
     try {
-      return parseResponse(client.newCall(request).execute().body().bytes());
+      return parseResponse(client.newCall(request).execute().body().string());
     } catch (Exception e) {
       LOG.warn(
           "Couldn't get metrics from ES for dataset {}, attempt {}, step {} and started date {}",
@@ -148,23 +150,25 @@ public class MetricsHandler {
   }
 
   private String getIndexUrl(LocalDateTime startedDate, LocalDateTime finishedTime) {
-    String index = esHost + "/" + env + "-pipeline-metric-" + startedDate.getYear() + ".";
+    StringBuilder url =
+        new StringBuilder(esHost).append("/").append(env).append("-pipeline-metric-");
+    url.append(startedDate.getYear()).append(".");
 
     if (startedDate.getMonthValue() == finishedTime.getMonthValue()) {
-      index += startedDate.getMonthValue() + ".";
-      index +=
+      url.append(DECIMAL_FORMAT.format(startedDate.getMonthValue())).append(".");
+      url.append(
           startedDate.getDayOfMonth() == finishedTime.getDayOfMonth()
-              ? startedDate.getDayOfMonth()
-              : "*";
+              ? DECIMAL_FORMAT.format(startedDate.getDayOfMonth())
+              : "*");
     } else {
-      index += "*";
+      url.append("*");
     }
 
-    return index;
+    return url.append("/_search").toString();
   }
 
   @VisibleForTesting
-  Set<MetricInfo> parseResponse(byte[] bodyResponse) throws IOException {
+  Set<MetricInfo> parseResponse(String bodyResponse) throws IOException {
     if (bodyResponse == null) {
       return Collections.emptySet();
     }
