@@ -140,7 +140,8 @@ public class MetricsHandler {
           datasetKey,
           attempt,
           stepType,
-          startedDate);
+          startedDate,
+          e);
     }
 
     return Collections.emptySet();
