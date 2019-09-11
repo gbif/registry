@@ -296,7 +296,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // get metrics
     step.setMetrics(
         metricsHandler.getMetricInfo(
-            process.getDatasetKey(), process.getAttempt(), step.getType(), step.getStarted()));
+            process.getDatasetKey(),
+            process.getAttempt(),
+            step.getType(),
+            step.getStarted(),
+            step.getFinished()));
 
     // update status and modifying user
     step.setState(status);

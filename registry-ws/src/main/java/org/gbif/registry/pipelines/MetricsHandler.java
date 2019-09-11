@@ -117,7 +117,11 @@ public class MetricsHandler {
   }
 
   public Set<MetricInfo> getMetricInfo(
-      UUID datasetKey, int attempt, StepType stepType, LocalDateTime startedDate) {
+      UUID datasetKey,
+      int attempt,
+      StepType stepType,
+      LocalDateTime startedDate,
+      LocalDateTime finishedTime) {
 
     RequestBody body =
         RequestBody.create(
@@ -126,10 +130,7 @@ public class MetricsHandler {
                 METRIC_QUERY_TEMPLATE, startedDate, datasetKey, attempt, stepType.name()));
 
     Request request =
-        new Request.Builder()
-            .url(esHost + env + "-pipeline-metric-" + startedDate.getYear() + ".*")
-            .post(body)
-            .build();
+        new Request.Builder().url(getIndexUrl(startedDate, finishedTime)).post(body).build();
 
     try {
       return parseResponse(client.newCall(request).execute().body().bytes());
@@ -143,6 +144,22 @@ public class MetricsHandler {
     }
 
     return Collections.emptySet();
+  }
+
+  private String getIndexUrl(LocalDateTime startedDate, LocalDateTime finishedTime) {
+    String index = esHost + env + "-pipeline-metric-" + startedDate.getYear() + ".";
+
+    if (startedDate.getMonthValue() == finishedTime.getMonthValue()) {
+      index += startedDate.getMonthValue() + ".";
+      index +=
+          startedDate.getDayOfMonth() == finishedTime.getDayOfMonth()
+              ? startedDate.getDayOfMonth()
+              : "*";
+    } else {
+      index += "*";
+    }
+
+    return index;
   }
 
   @VisibleForTesting
