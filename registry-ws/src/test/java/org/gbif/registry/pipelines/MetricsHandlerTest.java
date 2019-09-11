@@ -55,7 +55,7 @@ public class MetricsHandlerTest {
   public void getMetricsTest() throws IOException {
     MetricsHandler metricsHandler = new MetricsHandler(null, null);
 
-    Set<MetricInfo> metrics = metricsHandler.parseResponse(METRICS_RESPONSE.getBytes());
+    Set<MetricInfo> metrics = metricsHandler.parseResponse(METRICS_RESPONSE);
 
     assertEquals(2, metrics.size());
 
