@@ -74,7 +74,13 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   @Override
   public RunPipelineResponse runLastAttempt(
       UUID datasetKey, Set<StepType> steps, String reason, String user) {
-    Integer lastAttempt = mapper.getLastAttempt(datasetKey).orElse(null);
+    int lastAttempt =
+        mapper
+            .getLastAttempt(datasetKey)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Couldn't find last attempt for dataset " + datasetKey));
     return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user);
   }
 
