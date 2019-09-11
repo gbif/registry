@@ -25,16 +25,20 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
 
   @Override
   public void setNonNullParameter(
-    PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
-    String metricsAsString =
-        metrics.stream()
-            .map(
-                metricInfo ->
-                    new StringJoiner(METRIC_INFO_DELIMITER)
-                        .add(metricInfo.getName())
-                        .add(metricInfo.getValue())
-                        .toString())
-            .collect(Collectors.joining(LIST_DELIMITER));
+      PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
+
+    String metricsAsString = null;
+    if (metrics != null && !metrics.isEmpty()) {
+      metricsAsString =
+          metrics.stream()
+              .map(
+                  metricInfo ->
+                      new StringJoiner(METRIC_INFO_DELIMITER)
+                          .add(metricInfo.getName())
+                          .add(metricInfo.getValue())
+                          .toString())
+              .collect(Collectors.joining(LIST_DELIMITER));
+    }
 
     ps.setString(i, metricsAsString);
   }
