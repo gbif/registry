@@ -148,7 +148,7 @@ public class MetricsHandler {
   }
 
   private String getIndexUrl(LocalDateTime startedDate, LocalDateTime finishedTime) {
-    String index = esHost + env + "-pipeline-metric-" + startedDate.getYear() + ".";
+    String index = esHost + "/" + env + "-pipeline-metric-" + startedDate.getYear() + ".";
 
     if (startedDate.getMonthValue() == finishedTime.getMonthValue()) {
       index += startedDate.getMonthValue() + ".";
