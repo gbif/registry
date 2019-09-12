@@ -59,6 +59,7 @@
     <gbif-api.version>0.89-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
+    <commons-validator.version>1.5.1</commons-validator.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -193,6 +194,11 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>${jettison.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-validator</groupId>
+        <artifactId>commons-validator</artifactId>
+        <version>${commons-validator.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
