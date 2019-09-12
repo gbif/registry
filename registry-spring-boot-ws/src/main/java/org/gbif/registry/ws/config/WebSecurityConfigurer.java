@@ -19,7 +19,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -46,13 +46,11 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return authProvider;
   }
 
-  // TODO: 06/09/2019 built in stuff work before IdentityFilter. It causes 401 on UUID user names (should ignore them)
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
-        .httpBasic().and()
-        // IdentityFilter must be after SecurityContextPersistenceFilter otherwise it would load the context from the previous call
-        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), BasicAuthenticationFilter.class)
+        .httpBasic().disable()
+        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
         .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
         .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), LegacyAuthorizationFilter.class)
@@ -71,5 +69,4 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
   public PasswordEncoder passwordEncoder() {
     return new RegistryPasswordEncoder();
   }
-
 }

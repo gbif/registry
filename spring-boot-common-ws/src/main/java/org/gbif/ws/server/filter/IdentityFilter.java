@@ -6,8 +6,8 @@ import org.gbif.ws.security.GbifAuthentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,10 +28,12 @@ import java.io.IOException;
  * evaluated.
  */
 @Component
-public class IdentityFilter extends BasicAuthenticationFilter {
+public class IdentityFilter extends OncePerRequestFilter {
+
+  private AuthenticationManager authenticationManager;
 
   public IdentityFilter(AuthenticationManager authenticationManager) {
-    super(authenticationManager);
+    this.authenticationManager = authenticationManager;
   }
 
   @Override
@@ -39,7 +41,7 @@ public class IdentityFilter extends BasicAuthenticationFilter {
     // authenticates the HTTP method, but ignores legacy UUID user names
     final GbifAuthentication anonymous = new GbifAuthentication(null, null, null, request);
     try {
-      final Authentication authentication = getAuthenticationManager().authenticate(anonymous);
+      final Authentication authentication = authenticationManager.authenticate(anonymous);
       SecurityContextHolder.getContext().setAuthentication(authentication);
     } catch (final WebApplicationException e) {
       response.setStatus(e.getResponse().getStatusCode().value());
