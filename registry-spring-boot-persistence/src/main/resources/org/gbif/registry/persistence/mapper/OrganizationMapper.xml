@@ -9,6 +9,7 @@
     <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
+    <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
     <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
@@ -59,7 +60,7 @@
     title = #{title,jdbcType=VARCHAR},
     abbreviation = #{abbreviation,jdbcType=CHAR},
     description = #{description,jdbcType=VARCHAR},
-    language = #{language,jdbcType=CHAR},
+    language = #{language,jdbcType=CHAR,typeHandler=org.gbif.mybatis.type.LanguageTypeHandler},
     email = #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     phone = #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
@@ -84,7 +85,7 @@
     #{title,jdbcType=VARCHAR},
     #{abbreviation,jdbcType=CHAR},
     #{description,jdbcType=VARCHAR},
-    #{language,jdbcType=CHAR},
+    #{language,jdbcType=CHAR,typeHandler=org.gbif.mybatis.type.LanguageTypeHandler},
     #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
