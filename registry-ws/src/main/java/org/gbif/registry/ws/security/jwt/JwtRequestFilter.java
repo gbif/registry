@@ -45,7 +45,7 @@ public class JwtRequestFilter implements ContainerRequestFilter {
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
-      LOG.debug("Skipping JWT validation");
+      LOG.trace("No JWT token present.");
       return containerRequest;
     }
 
