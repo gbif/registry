@@ -16,10 +16,13 @@ import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,16 +53,17 @@ public class LegacyOrganizationResource {
   private final String ccEmail;
   private final String fromEmail;
 
-  // TODO: 13/09/2019 do smth with properties
+  // TODO: 13/09/2019 use configuration instead of Value
+  // TODO: 13/09/2019 revise properties
   public LegacyOrganizationResource(OrganizationService organizationService,
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
-                                    @Named("useDevEmail") boolean useDevEmail,
-                                    @Named("smptHost") String smptHost,
-                                    @Named("smptPort") int smptPort,
-                                    @Named("devEmail") String devEmail,
-                                    @Named("ccEmail") String ccEmail,
-                                    @Named("fromEmail") String fromEmail) {
+                                    @Value("mail.devemail.enabled") boolean useDevEmail,
+                                    @Value("mail.smtp.host") String smptHost,
+                                    @Value("mail.smtp.port") int smptPort,
+                                    @Value("mail.devemail") String devEmail,
+                                    @Value("mail.cc") String ccEmail,
+                                    @Value("mail.from") String fromEmail) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.organizationMapper = organizationMapper;
@@ -120,11 +124,13 @@ public class LegacyOrganizationResource {
           .body(new ErrorResponse("No organisation matches the key provided"));
     }
 
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     if (op != null) {
       // ?op=login
       if (op.equalsIgnoreCase("login")) {
         // are the organization credentials matching with the path?
-        UUID authKey = LegacyResourceUtils.extractOrgKeyFromSecurity(security);
+        UUID authKey = LegacyResourceUtils.extractOrgKeyFromSecurity(authentication);
 
         if (!organisationKey.equals(authKey)) {
           LOG.error("Authorization failed for organization with key={}", organisationKey.toString());
@@ -172,10 +178,9 @@ public class LegacyOrganizationResource {
             LOG.error("Password reminder failed", e);
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Password reminder failed: " + e.getMessage()))
-                .type(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                 .cacheControl(CacheControl.noCache())
-                .build();
+                .body(new ErrorResponse("Password reminder failed: " + e.getMessage()));
           }
           LOG.debug("Password reminder sent to: {}", emailAddress);
           return ResponseEntity

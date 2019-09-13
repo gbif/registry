@@ -61,6 +61,8 @@
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>
+    <commons-email.version>1.3.3</commons-email.version>
+    <jjwt.version>0.9.1</jjwt.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -197,6 +199,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>${jettison.version}</version>
@@ -205,6 +212,11 @@
         <groupId>commons-validator</groupId>
         <artifactId>commons-validator</artifactId>
         <version>${commons-validator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-email</artifactId>
+        <version>${commons-email.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
