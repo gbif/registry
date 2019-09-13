@@ -12,8 +12,11 @@ import java.security.Principal;
 import java.util.UUID;
 
 import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EditorAuthorizationServiceImpl implements EditorAuthorizationService {
+  private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationServiceImpl.class);
 
   private UserRightsMapper userRightsMapper;
   private DatasetService datasetService;
@@ -50,7 +53,9 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     if (user == null) {
       return false;
     }
-    return userRightsMapper.keyExistsForUser(user.getName(), key);
+    boolean allowed = userRightsMapper.keyExistsForUser(user.getName(), key);
+    LOG.debug("User {} {} allowed to edit entity {}", user.getName(), allowed ? "is" : "is not", key);
+    return allowed;
   }
 
   @Override
