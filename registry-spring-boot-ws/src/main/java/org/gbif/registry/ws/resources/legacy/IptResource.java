@@ -61,10 +61,10 @@ public class IptResource {
   /**
    * Register IPT installation, handling incoming request with path /ipt/register. The primary contact and hosting
    * organization key are mandatory. Only after both the installation and primary contact have been persisted is a
-   * Response with Status.CREATED returned.
+   * ResponseEntity with HttpStatus.CREATED returned.
    *
-   * @param installation IptInstallation with HTTP form parameters having been injected from Jersey
-   * @return Response with Status.CREATED if successful
+   * @param installation IptInstallation with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.CREATED if successful
    */
   @PostMapping(value = "register",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -126,11 +126,11 @@ public class IptResource {
   /**
    * Update IPT installation, handling incoming request with path /ipt/update/{key}. The primary contact and hosting
    * organization key are mandatory. Only after both the installation and primary contact have been updated is a
-   * Response with Status.CREATED returned.
+   * ResponseEntity with HttpStatus.CREATED returned.
    *
    * @param installationKey installation key (UUID) coming in as path param
-   * @param installation    IptInstallation with HTTP form parameters having been injected from Jersey
-   * @return Response with Status.NO_CONTENT if successful
+   * @param installation    IptInstallation with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.NO_CONTENT if successful
    */
   @PostMapping(value = "update/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -207,15 +207,15 @@ public class IptResource {
   /**
    * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact and publishing
    * organization key are mandatory. Only after both the dataset and primary contact have been persisted is a
-   * Response with Status.CREATED returned.
+   * ResponseEntity with HttpStatus.CREATED returned.
    * </br>
    * Before being persisted, the dataset is the UNSPECIFIED license.  This will be replaced (if possible) by the
    * publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT EML
    * metadata document always includes a machine readable license.
    * See discussion at https://github.com/gbif/registry/issues/71
    *
-   * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
-   * @return Response with Status.CREATED if successful
+   * @param dataset LegacyDataset with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.CREATED if successful
    */
   @PostMapping(value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -299,8 +299,8 @@ public class IptResource {
    * metadata document always includes a machine readable license.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @param dataset    LegacyDataset with HTTP form parameters having been injected from Jersey
-   * @return with Status.CREATED (201) if successful
+   * @param dataset    LegacyDataset with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
   @PostMapping(value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -400,7 +400,7 @@ public class IptResource {
    * If deletion is successful, returns Response with Status.OK.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return Response with Status.OK if successful
+   * @return ResponseEntity with HttpStatus.OK if successful
    */
   @DeleteMapping(value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8")
@@ -437,7 +437,7 @@ public class IptResource {
    * the dataset. Conversely, if the organization has more or less than 1 installation, no inference can be made, and
    * null is returned instead.
    *
-   * @param dataset LegacyDataset with HTTP form parameters having been injected from Jersey
+   * @param dataset LegacyDataset with HTTP form parameters
    * @return inferred installation key, or null if none inferred
    */
   private UUID inferInstallationKey(LegacyDataset dataset) {

@@ -64,9 +64,9 @@ public class LegacyDatasetResource {
   /**
    * Register GBRDS dataset, handling incoming request with path /resource. The primary contact, publishing organization
    * key, and resource name are mandatory. Only after both the dataset and primary contact have been persisted is a
-   * Response with Status.CREATED (201) returned.
+   * ResponseEntity with HttpStatus.CREATED (201) returned.
    *
-   * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
+   * @param dataset IptDataset with HTTP form parameters
    * @return ResponseEntity
    * @see IptResource#registerDataset(org.gbif.registry.ws.model.LegacyDataset)
    */
@@ -83,10 +83,10 @@ public class LegacyDatasetResource {
    * mandatory (supplied in the credentials not the parameters). The primary contact is not required, but if any
    * of the primary contact parameters were included in the request, it is required. This is the difference between this
    * method and registerDataset. Only after both the dataset and optional primary contact have been updated is a
-   * Response with Status.OK (201) returned.
+   * ResponseEntity with HttpStatus.OK (201) returned.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @param dataset    IptDataset with HTTP form parameters having been injected from Jersey
+   * @param dataset    IptDataset with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
   @PostMapping(value = "{key}",
@@ -181,7 +181,7 @@ public class LegacyDatasetResource {
    * Datasets returned.
    *
    * @param organizationKey organization key (UUID) coming in as query param
-   * @return Response with list of Datasets or empty list with error message if none found
+   * @return ResponseEntity with list of Datasets or empty list with error message if none found
    */
   @RequestMapping(method = RequestMethod.GET,
       consumes = MediaType.TEXT_PLAIN_VALUE,
@@ -206,7 +206,7 @@ public class LegacyDatasetResource {
           page.nextPage();
         } while (!response.isEndOfRecords());
         LOG.debug("Get all Datasets owned by Organization finished");
-        // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
+        // return array, required for serialization otherwise might get an exception
         // writer for Java class java.util.ArrayList
         LegacyDatasetResponse[] array = datasets.toArray(new LegacyDatasetResponse[datasets.size()]);
         return ResponseEntity
@@ -225,7 +225,7 @@ public class LegacyDatasetResource {
    * Read GBRDS Dataset, handling incoming request with path /resource/{key}.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return Response with Status.OK (200) if dataset exists
+   * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
   @GetMapping(value = "{key}",
       consumes = MediaType.TEXT_PLAIN_VALUE,
@@ -253,7 +253,7 @@ public class LegacyDatasetResource {
 
   /**
    * Delete GBRDS Dataset, handling incoming request with path /resource/{key}. Only credentials are mandatory.
-   * If deletion is successful, returns Response with Status.OK.
+   * If deletion is successful, returns ResponseEntity with HttpStatus.OK.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return ResponseEntity with HttpStatus.OK if successful
