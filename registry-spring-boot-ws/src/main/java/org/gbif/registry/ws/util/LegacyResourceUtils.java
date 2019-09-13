@@ -11,10 +11,13 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.gbif.registry.ws.model.LegacyInstallation;
+import org.gbif.registry.ws.security.LegacyRequestAuthorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 /**
  * Class containing utility methods used across legacy resources, in answering legacy web service requests (GBRDS/IPT).
@@ -188,5 +191,13 @@ public class LegacyResourceUtils {
       return false;
     }
     return true;
+  }
+
+  public static UUID extractOrgKeyFromSecurity(Authentication authentication) {
+    if (authentication instanceof LegacyRequestAuthorization) {
+      return ((LegacyRequestAuthorization) authentication).getUserKey();
+    }
+
+    return null;
   }
 }

@@ -13,7 +13,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.registry.ws.model.IptEntityResponse;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyInstallation;
-import org.gbif.registry.ws.security.LegacyRequestAuthorization;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service requests coming from IPT installations, previously handled by the GBRDS.
@@ -456,14 +457,6 @@ public class IptResource {
       }
     }
     LOG.error("The installation key could not be inferred from publishing organization!");
-    return null;
-  }
-
-  private UUID extractOrgKeyFromSecurity(Authentication authentication) {
-    if (authentication instanceof LegacyRequestAuthorization) {
-      return ((LegacyRequestAuthorization) authentication).getUserKey();
-    }
-
     return null;
   }
 }
