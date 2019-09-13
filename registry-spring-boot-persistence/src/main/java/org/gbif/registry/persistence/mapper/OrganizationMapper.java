@@ -7,6 +7,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -83,7 +84,10 @@ public interface OrganizationMapper extends BaseNetworkEntityMapper<Organization
    */
   int countPublishing();
 
-  // TODO: 2019-08-20 add listLegacyOrganizationsBrief
+  /**
+   * @return The list of organizations, with only their key and title populated.
+   */
+  List<LegacyOrganizationBriefResponse> listLegacyOrganizationsBrief();
 
   /**
    * A simple suggest by title service.

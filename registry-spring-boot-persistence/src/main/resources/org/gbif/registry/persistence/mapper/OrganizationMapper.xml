@@ -149,6 +149,14 @@
     </if>
   </select>
 
+  <!-- Append ordering by title, omitting deleted entities. No paging, instead all organizations included in response -->
+  <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.ws.model.LegacyOrganizationBriefResponse">
+    SELECT <include refid="LEGACY_ORGANIZATION_BRIEF_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NULL
+    ORDER BY lower(o.title)
+  </select>
+
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="ORGANIZATION_MAP">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
