@@ -8,5 +8,4 @@ import org.gbif.api.model.common.AbstractGbifUser;
 public class UserUpdate extends AbstractGbifUser {
 
   //empty implementation for now
-
 }

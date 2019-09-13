@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;
@@ -31,6 +30,8 @@ import java.util.UUID;
 @XmlRootElement(name = "service")
 public class LegacyEndpoint extends Endpoint {
 
+  // TODO: 13/09/2019 @FormParam - find what can replace
+
   private static final Logger LOG = LoggerFactory.getLogger(LegacyEndpoint.class);
 
   // injected from HTTP form parameters
@@ -43,7 +44,7 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param resourceKey dataset key as UUID
    */
-  @FormParam(LegacyResourceConstants.RESOURCE_KEY_PARAM)
+//  @FormParam(LegacyResourceConstants.RESOURCE_KEY_PARAM)
   public void setDatasetKey(String resourceKey) {
     try {
       datasetKey = UUID.fromString(Strings.nullToEmpty(resourceKey));
@@ -68,7 +69,7 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param description of the endpoint
    */
-  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
+//  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setEndpointDescription(String description) {
     setDescription(LegacyResourceUtils.validateField(description, 10));
   }
@@ -91,7 +92,7 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param type endpoint type
    */
-  @FormParam(LegacyResourceConstants.TYPE_PARAM)
+//  @FormParam(LegacyResourceConstants.TYPE_PARAM)
   public void setEndpointType(String type) {
     String injected = Strings.nullToEmpty(type);
     EndpointType lookup = EndpointType.fromString(injected);
@@ -128,7 +129,7 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param url of the endpoint
    */
-  @FormParam(LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
+//  @FormParam(LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
   public void setEndpointUrl(String url) {
     if (!Strings.isNullOrEmpty(url)) {
       try {

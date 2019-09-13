@@ -26,5 +26,4 @@ public class UserAdminView {
   public boolean isChallengeCodePresent() {
     return challengeCodePresent;
   }
-
 }

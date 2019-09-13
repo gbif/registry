@@ -22,5 +22,4 @@ public class UserCreation extends AbstractGbifUser {
   public void setPassword(String password) {
     this.password = password;
   }
-
 }

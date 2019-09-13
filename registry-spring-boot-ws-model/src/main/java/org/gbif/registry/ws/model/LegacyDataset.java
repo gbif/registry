@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -110,7 +109,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param organizationKey organization key as UUID
    */
-  @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
+//  @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   public void setOrganizationKey(String organizationKey) {
     try {
       setPublishingOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
@@ -138,7 +137,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param iptKey IPT key as UUID
    */
-  @FormParam(LegacyResourceConstants.IPT_KEY_PARAM)
+//  @FormParam(LegacyResourceConstants.IPT_KEY_PARAM)
   public void setIptKey(String iptKey) {
 
     try {
@@ -154,7 +153,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param doi The DOI
    */
-  @FormParam(LegacyResourceConstants.DOI_PARAM)
+//  @FormParam(LegacyResourceConstants.DOI_PARAM)
   @Nullable
   public void setDoi(String doi) {
     try {
@@ -183,7 +182,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param name title of the dataset
    */
-  @FormParam(LegacyResourceConstants.NAME_PARAM)
+//  @FormParam(LegacyResourceConstants.NAME_PARAM)
   public void setDatasetName(String name) {
     setTitle(LegacyResourceUtils.validateField(name, 2));
   }
@@ -205,7 +204,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param nameLanguage language of the name of the dataset (ISO 639-1 2 letter language code)
    */
-  @FormParam(LegacyResourceConstants.NAME_LANGUAGE_PARAM)
+//  @FormParam(LegacyResourceConstants.NAME_LANGUAGE_PARAM)
   public void setDatasetNameLanguage(String nameLanguage) {
     if (Strings.emptyToNull(nameLanguage) != null) {
       if (nameLanguage.length() == 2) {
@@ -234,7 +233,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param description of the dataset
    */
-  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
+//  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setDatasetDescription(String description) {
     setDescription(LegacyResourceUtils.validateField(description, 10));
   }
@@ -269,7 +268,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param logoUrl logo URL
    */
-  @FormParam(LegacyResourceConstants.LOGO_URL_PARAM)
+//  @FormParam(LegacyResourceConstants.LOGO_URL_PARAM)
   public void setDatasetLogoUrl(String logoUrl) {
     if (!Strings.isNullOrEmpty(logoUrl)) {
       try {
@@ -298,7 +297,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param homepageUrl homepage URL
    */
-  @FormParam(LegacyResourceConstants.HOMEPAGE_URL_PARAM)
+//  @FormParam(LegacyResourceConstants.HOMEPAGE_URL_PARAM)
   public void setDatasetHomepageUrl(String homepageUrl) {
     if (!Strings.isNullOrEmpty(homepageUrl)) {
       try {
@@ -328,7 +327,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactName primary contact name
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
   public void setPrimaryContactName(String primaryContactName) {
     this.primaryContactName = Strings.emptyToNull(primaryContactName);
   }
@@ -352,7 +351,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactEmail primary contact email address
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
   public void setPrimaryContactEmail(String primaryContactEmail) {
     EmailValidator validator = EmailValidator.getInstance();
     if (validator.isValid(Strings.nullToEmpty(primaryContactEmail))) {
@@ -381,7 +380,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactType primary contact type
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
   public void setPrimaryContactType(String primaryContactType) {
     if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
@@ -410,7 +409,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactPhone primary contact type
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM)
   public void setPrimaryContactPhone(String primaryContactPhone) {
     this.primaryContactPhone = Strings.emptyToNull(primaryContactPhone);
   }
@@ -432,7 +431,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactAddress primary contact address
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM)
   public void setPrimaryContactAddress(String primaryContactAddress) {
     this.primaryContactAddress = Strings.emptyToNull(primaryContactAddress);
   }
@@ -454,7 +453,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param primaryContactDescription primary contact type
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM)
   public void setPrimaryContactDescription(String primaryContactDescription) {
     this.primaryContactDescription = Strings.emptyToNull(primaryContactDescription);
   }
@@ -487,7 +486,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param serviceTypes serviceTypes
    */
-  @FormParam(LegacyResourceConstants.SERVICE_TYPES_PARAM)
+//  @FormParam(LegacyResourceConstants.SERVICE_TYPES_PARAM)
   public void setServiceTypes(String serviceTypes) {
     this.serviceTypes = Strings.emptyToNull(serviceTypes);
   }
@@ -508,7 +507,7 @@ public class LegacyDataset extends Dataset {
    *
    * @param serviceUrls serviceUrls
    */
-  @FormParam(LegacyResourceConstants.SERVICE_URLS_PARAM)
+//  @FormParam(LegacyResourceConstants.SERVICE_URLS_PARAM)
   public void setServiceUrls(String serviceUrls) {
     this.serviceUrls = Strings.emptyToNull(serviceUrls);
   }

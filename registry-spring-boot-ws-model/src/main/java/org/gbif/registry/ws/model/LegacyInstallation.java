@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.FormParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -66,7 +65,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param organizationKey organization key as UUID
    */
-  @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
+//  @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   public void setHostingOrganizationKey(String organizationKey) {
     try {
       setOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
@@ -96,7 +95,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param name title of the installation
    */
-  @FormParam(LegacyResourceConstants.NAME_PARAM)
+//  @FormParam(LegacyResourceConstants.NAME_PARAM)
   public void setIptName(String name) {
     setTitle(LegacyResourceUtils.validateField(name, 2));
   }
@@ -122,7 +121,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param description of the installation
    */
-  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
+//  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setIptDescription(String description) {
     setDescription(LegacyResourceUtils.validateField(description, 10));
   }
@@ -155,7 +154,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param endpointType endpoint type
    */
-  @FormParam(LegacyResourceConstants.SERVICE_TYPES_PARAM)
+//  @FormParam(LegacyResourceConstants.SERVICE_TYPES_PARAM)
   public void setEndpointType(String endpointType) {
     this.endpointType =
         endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE) ? EndpointType.FEED : EndpointType.fromString(endpointType);
@@ -177,7 +176,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param endpointUrl endpoint URL
    */
-  @FormParam(LegacyResourceConstants.SERVICE_URLS_PARAM)
+//  @FormParam(LegacyResourceConstants.SERVICE_URLS_PARAM)
   public void setEndpointUrl(String endpointUrl) {
     this.endpointUrl = endpointUrl;
   }
@@ -188,7 +187,7 @@ public class LegacyInstallation extends Installation {
     return getPassword();
   }
 
-  @FormParam(LegacyResourceConstants.WS_PASSWORD_PARAM)
+//  @FormParam(LegacyResourceConstants.WS_PASSWORD_PARAM)
   public void setWsPassword(String wsPassword) {
     setPassword(Strings.nullToEmpty(wsPassword));
   }
@@ -210,7 +209,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactName primary contact name
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
   public void setPrimaryContactName(String primaryContactName) {
     this.primaryContactName = primaryContactName;
   }
@@ -233,7 +232,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactEmail primary contact email address
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
   public void setPrimaryContactEmail(String primaryContactEmail) {
     EmailValidator validator = EmailValidator.getInstance();
     if (validator.isValid(primaryContactEmail)) {
@@ -261,7 +260,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactType primary contact type
    */
-  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
+//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
   public void setPrimaryContactType(String primaryContactType) {
     if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
