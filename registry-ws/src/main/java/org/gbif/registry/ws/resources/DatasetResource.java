@@ -923,15 +923,20 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
-    try {
-      do {
-        response.getResults().forEach(onDataset);
-        pagingRequest.setOffset(response.getResults().size());
-        response = listByType(DatasetType.OCCURRENCE, pagingRequest);
-      } while (response.isEndOfRecords());
-    } catch (Exception ex) {
-      LOG.error("Error processing all datasets", ex);
-    }
+    do {
+      response
+          .getResults()
+          .forEach(
+              d -> {
+                try {
+                  onDataset.accept(d);
+                } catch (Exception ex) {
+                  LOG.error("Error processing dataset {} while crawling all", d, ex);
+                }
+              });
+      pagingRequest.setOffset(response.getResults().size());
+      response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    } while (response.isEndOfRecords());
   }
 
   /**
