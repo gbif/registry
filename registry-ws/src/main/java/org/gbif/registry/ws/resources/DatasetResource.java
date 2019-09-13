@@ -931,7 +931,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       } while (response.isEndOfRecords());
     } catch (Exception ex) {
       LOG.error("Error processing all datasets", ex);
-      throw ex;
     }
   }
 
