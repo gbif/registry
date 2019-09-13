@@ -83,7 +83,7 @@
     <commons-validator.version>1.5.1</commons-validator.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.88</gbif-api.version>
+    <gbif-api.version>0.89-SNAPSHOT</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>
@@ -96,15 +96,15 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-microservice.version>0.7</gbif-microservice.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
-    <gbif-postal-service.version>0.24</gbif-postal-service.version>
+    <gbif-postal-service.version>0.37-SNAPSHOT</gbif-postal-service.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
     <guice.version>4.0</guice.version>
     <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
     <hikaricp.version>2.4.7</hikaricp.version>
-    <httpclient.version>4.3.6</httpclient.version>
-    <httpcore.version>4.3.3</httpcore.version>
+    <httpclient.version>4.5.6</httpclient.version>
+    <httpcore.version>4.4.10</httpcore.version>
     <jackson.version>1.9.11</jackson.version>
     <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
     <jackson2.version>2.5.4</jackson2.version>
@@ -126,7 +126,7 @@
     <metainf-services.version>1.5</metainf-services.version>
     <mockito.version>1.10.8</mockito.version>
     <mybatis-guice.version>3.7.1</mybatis-guice.version>
-    <mybatis.version>3.2.8</mybatis.version>
+    <mybatis.version>3.5.0</mybatis.version>
     <postgresql.version>9.4.1208.jre7</postgresql.version>
     <powermock-mockito.version>1.6.0</powermock-mockito.version>
     <servlet-api.version>3.1.0</servlet-api.version>
@@ -137,6 +137,7 @@
     <yammer.version>2.2.0</yammer.version>
     <dbunit.version>2.4.9</dbunit.version>
     <jjwt.version>0.9.1</jjwt.version>
+    <okhttp.version>4.1.1</okhttp.version>
 
     <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
@@ -800,6 +801,11 @@
         <artifactId>jjwt</artifactId>
         <version>${jjwt.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+    </dependency>
     </dependencies>
   </dependencyManagement>
 

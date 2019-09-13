@@ -27,60 +27,23 @@ import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.mybatis.guice.MyBatisModule;
-import org.gbif.mybatis.type.CountryTypeHandler;
-import org.gbif.mybatis.type.LanguageTypeHandler;
-import org.gbif.mybatis.type.StringArrayTypeHandler;
-import org.gbif.mybatis.type.UriArrayTypeHandler;
-import org.gbif.mybatis.type.UriTypeHandler;
-import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.mybatis.type.*;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
-import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.MetadataMapper;
-import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
-import org.gbif.registry.persistence.mapper.NetworkMapper;
-import org.gbif.registry.persistence.mapper.NodeMapper;
-import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.*;
+import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeMapper;
 import org.gbif.registry.surety.persistence.ChallengeCodeSupportMapper;
 import org.gbif.service.guice.PrivateServiceModule;
@@ -151,6 +114,9 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       //from registry-surety module
       addMapperClass(ChallengeCodeMapper.class);
 
+      // pipelines
+      addMapperClass(PipelineProcessMapper.class);
+
       // reduce mapper verboseness with aliases
       addAlias("Node").to(Node.class);
       addAlias("Organization").to(Organization.class);
@@ -198,6 +164,11 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("DisciplineArrayTypeHandler").to(DisciplineArrayTypeHandler.class);
       addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
       addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
+
+      // pipelines aliases
+      addAlias("PipelineProcess").to(PipelineProcess.class);
+      addAlias("Step").to(PipelineStep.class);
+      addAlias("MetricInfoTypeHandler").to(MetricInfoTypeHandler.class);
     }
 
     @Override
@@ -209,6 +180,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       handleType(Download.Status.class).with(OccurrenceDownloadStatusTypeHandler.class);
       handleType(DOI.class).with(DOITypeHandler.class);
       handleType(Predicate.class).with(PredicateTypeHandler.class);
+      addTypeHandlerClass(MetricInfoTypeHandler.class);
     }
   }
 
@@ -249,6 +221,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
     expose(CollectionMapper.class);
     expose(PersonMapper.class);
     expose(AddressMapper.class);
+    expose(PipelineProcessMapper.class);
 
     // Bind the DoiMapper as DoiPersistenceService
     bind(DoiPersistenceService.class).to(DoiMapper.class).in(Scopes.SINGLETON);
