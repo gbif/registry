@@ -114,7 +114,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final IdentifierMapper identifierMapper;
   private final Class<T> objectClass;
   private final EventBus eventBus;
-  private final EditorAuthorizationService userAuthService;
+  final EditorAuthorizationService userAuthService;
 
   protected BaseNetworkEntityResource(
     BaseNetworkEntityMapper<T> mapper,
