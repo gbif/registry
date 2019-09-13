@@ -90,13 +90,18 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     PagingResponse<Dataset> response =
         datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     do {
-      try {
-        response.getResults().forEach(onDataset);
-        pagingRequest.setOffset(response.getResults().size());
-        response = datasetService.list(pagingRequest);
-      } catch (Exception ex) {
-        LOG.error("Error processing dataset while rerunning all datasets", ex);
-      }
+      response
+          .getResults()
+          .forEach(
+              d -> {
+                try {
+                  onDataset.accept(d);
+                } catch (Exception ex) {
+                  LOG.error("Error processing dataset {} while rerunning all datasets", d, ex);
+                }
+              });
+      pagingRequest.setOffset(response.getResults().size());
+      response = datasetService.list(pagingRequest);
     } while (response.isEndOfRecords());
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
