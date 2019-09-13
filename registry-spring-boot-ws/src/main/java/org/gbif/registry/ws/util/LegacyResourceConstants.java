@@ -1,7 +1,5 @@
 package org.gbif.registry.ws.util;
 
-import javax.ws.rs.core.CacheControl;
-
 /**
  * Class containing constant values used across legacy resources, in answering legacy web service requests (GBRDS/IPT).
  */
@@ -50,8 +48,6 @@ public class LegacyResourceConstants {
   public static final String OCCURRENCE_SERVICE_TYPE_2 = "DWC_ARCHIVE_OCCURRENCE";
   public static final String SAMPLING_EVENT_SERVICE_TYPE = "DWC-ARCHIVE-SAMPLING-EVENT";
 
-  // used to ensure Response is not cached, forcing the IPT to make a new request
-  public static final CacheControl CACHE_CONTROL_DISABLED = CacheControl.valueOf("no-cache");
   // web service paging request size
   public static final int WS_PAGE_SIZE = 100;
 }
