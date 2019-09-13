@@ -39,6 +39,7 @@ import org.gbif.registry.ws.client.OrganizationWsClient;
 import org.gbif.registry.ws.client.collections.CollectionWsClient;
 import org.gbif.registry.ws.client.collections.InstitutionWsClient;
 import org.gbif.registry.ws.client.collections.PersonWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.service.guice.PrivateServiceModule;
 import org.gbif.ws.client.guice.AnonymousAuthModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -70,7 +71,8 @@ import com.sun.jersey.api.client.WebResource;
 public class RegistryWsClientModule extends GbifWsClientModule {
 
   public RegistryWsClientModule(Properties properties) {
-    super(properties, NodeWsClient.class.getPackage(), CollectionWsClient.class.getPackage());
+    super(properties, NodeWsClient.class.getPackage(), CollectionWsClient.class.getPackage(),
+          PipelinesHistoryWsClient.class.getPackage());
   }
 
   @Override
@@ -91,6 +93,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
     expose(InstitutionService.class);
     expose(CollectionService.class);
     expose(PersonService.class);
+    expose(PipelinesHistoryWsClient.class);
   }
 
   @Override
@@ -125,6 +128,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       bind(InstitutionService.class).to(InstitutionWsClient.class).in(Scopes.SINGLETON);
       bind(CollectionService.class).to(CollectionWsClient.class).in(Scopes.SINGLETON);
       bind(PersonService.class).to(PersonWsClient.class).in(Scopes.SINGLETON);
+      bind(PipelinesHistoryWsClient.class).in(Scopes.SINGLETON);
 
       expose(NodeService.class);
       expose(OrganizationService.class);
@@ -140,6 +144,7 @@ public class RegistryWsClientModule extends GbifWsClientModule {
       expose(InstitutionService.class);
       expose(CollectionService.class);
       expose(PersonService.class);
+      expose(PipelinesHistoryWsClient.class);
     }
 
     @Provides

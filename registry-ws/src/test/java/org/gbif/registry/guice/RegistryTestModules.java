@@ -20,20 +20,16 @@ import org.gbif.registry.doi.DoiModule;
 import org.gbif.registry.events.EventModule;
 import org.gbif.registry.grizzly.RegistryServer;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
+import org.gbif.registry.pipelines.PipelinesMockModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.EmailManagerTestModule;
-import org.gbif.registry.surety.email.EmptyEmailSender;
 import org.gbif.registry.surety.email.EmailSender;
+import org.gbif.registry.surety.email.EmptyEmailSender;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.guice.SecurityModule;
 import org.gbif.registry.ws.guice.TestValidateInterceptor;
-import org.gbif.registry.ws.resources.DatasetResource;
-import org.gbif.registry.ws.resources.DoiRegistrationResource;
-import org.gbif.registry.ws.resources.InstallationResource;
-import org.gbif.registry.ws.resources.NetworkResource;
-import org.gbif.registry.ws.resources.NodeResource;
-import org.gbif.registry.ws.resources.OrganizationResource;
+import org.gbif.registry.ws.resources.*;
 import org.gbif.registry.ws.resources.legacy.IptResource;
 import org.gbif.registry.ws.surety.OrganizationSuretyModule;
 import org.gbif.ws.client.guice.GbifApplicationAuthModule;
@@ -131,7 +127,8 @@ public class RegistryTestModules {
                   new SecurityModule(p),
                   new DoiModule(p),
                   new RabbitMockModule(),
-                  new TitleLookupMockModule());
+                  new TitleLookupMockModule(),
+                  new PipelinesMockModule());
       } catch (IOException e) {
         throw Throwables.propagate(e);
       }
