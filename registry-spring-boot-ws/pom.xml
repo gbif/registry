@@ -48,6 +48,10 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-ws-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-doi</artifactId>
     </dependency>
     <dependency>

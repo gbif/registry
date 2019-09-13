@@ -44,6 +44,7 @@
     <module>registry-spring-boot-identity</module>
     <module>registry-spring-boot-integration-tests</module>
     <module>spring-boot-common-ws</module>
+    <module>registry-spring-boot-ws-model</module>
   </modules>
 
   <properties>
@@ -92,6 +93,11 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-ws-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
