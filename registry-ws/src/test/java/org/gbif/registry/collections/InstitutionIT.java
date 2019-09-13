@@ -13,6 +13,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -28,6 +29,7 @@ import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
@@ -190,6 +192,7 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     institution.setName(NAME);
     institution.setDescription(DESCRIPTION);
     institution.setHomepage(HOMEPAGE);
+    institution.setAdditionalNames(Collections.emptyList());
     return institution;
   }
 
@@ -199,7 +202,7 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     assertEquals(NAME, institution.getName());
     assertEquals(DESCRIPTION, institution.getDescription());
     assertEquals(HOMEPAGE, institution.getHomepage());
-    assertNull(institution.getAdditionalNames());
+    assertTrue(institution.getAdditionalNames().isEmpty());
   }
 
   @Override

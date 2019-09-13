@@ -21,6 +21,7 @@ import org.gbif.registry.events.VarnishPurgeModule;
 import org.gbif.registry.metrics.guice.OccurrenceMetricsModule;
 import org.gbif.registry.oaipmh.guice.OaipmhModule;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
+import org.gbif.registry.pipelines.guice.PipelinesModule;
 import org.gbif.registry.search.guice.RegistrySearchModule;
 import org.gbif.registry.surety.email.EmailManagerModule;
 import org.gbif.registry.ws.filter.AuthResponseCodeOverwriteFilter;
@@ -39,6 +40,7 @@ import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
+import java.nio.channels.Pipe;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -131,7 +133,8 @@ public class RegistryWsServletListener extends GbifServletListener {
                               new VarnishPurgeModule(properties),
                               new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
                               new OccurrenceMetricsModule(getMetricsProperties(properties)),
-                              new OaipmhModule(properties));
+                              new OaipmhModule(properties),
+                              new PipelinesModule(properties));
   }
 
   @VisibleForTesting
