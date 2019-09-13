@@ -54,16 +54,15 @@ public class LegacyOrganizationResource {
   private final String fromEmail;
 
   // TODO: 13/09/2019 use configuration instead of Value
-  // TODO: 13/09/2019 revise properties
   public LegacyOrganizationResource(OrganizationService organizationService,
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
-                                    @Value("mail.devemail.enabled") boolean useDevEmail,
-                                    @Value("mail.smtp.host") String smptHost,
-                                    @Value("mail.smtp.port") int smptPort,
-                                    @Value("mail.devemail") String devEmail,
-                                    @Value("mail.cc") String ccEmail,
-                                    @Value("mail.from") String fromEmail) {
+                                    @Value("${mail.devemail.enabled}") boolean useDevEmail,
+                                    @Value("${spring.mail.host}") String smptHost,
+                                    @Value("${spring.mail.port}") int smptPort,
+                                    @Value("${spring.mail.username}") String devEmail,
+                                    @Value("${mail.cc}") String ccEmail,
+                                    @Value("${mail.from}") String fromEmail) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.organizationMapper = organizationMapper;
