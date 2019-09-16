@@ -73,7 +73,7 @@ public class LegacyDatasetResource {
   @RequestMapping(method = RequestMethod.POST,
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(LegacyDataset dataset) {
+  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
     // reuse existing subresource
     return iptResource.registerDataset(dataset);
   }
@@ -92,7 +92,7 @@ public class LegacyDatasetResource {
   @PostMapping(value = "{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, LegacyDataset dataset) {
+  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
     if (dataset != null) {

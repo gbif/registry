@@ -55,7 +55,7 @@ public class LegacyEndpointResource {
   @RequestMapping(method = RequestMethod.POST,
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerEndpoint(LegacyEndpoint endpoint) {
+  public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
