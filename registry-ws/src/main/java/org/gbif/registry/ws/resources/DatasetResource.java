@@ -929,6 +929,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
           .forEach(
               d -> {
                 try {
+                  LOG.info("trying to crawl dataset {}", d);
                   onDataset.accept(d);
                 } catch (Exception ex) {
                   LOG.error("Error processing dataset {} while crawling all", d, ex);
