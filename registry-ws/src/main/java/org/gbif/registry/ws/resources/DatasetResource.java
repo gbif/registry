@@ -949,9 +949,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("crawlall")
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@QueryParam("platform") String platform) {
-    doOnAllOccurrenceDatasets(dataset -> {
-      crawl(dataset.getKey(), platform);
-    });
+    doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform));
   }
     /**
      * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
