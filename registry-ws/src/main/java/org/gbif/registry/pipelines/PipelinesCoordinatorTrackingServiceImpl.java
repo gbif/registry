@@ -298,7 +298,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // fetch entities
     PipelineStep step = mapper.getPipelineStep(pipelineStepKey);
     PipelineProcess process = mapper.get(processKey);
-    Preconditions.checkArgument(process.getSteps().contains(step));
+    Preconditions.checkArgument(process.getSteps().contains(step), "The process doesn't contain the step.");
 
     if (step.getState() != status
         && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
