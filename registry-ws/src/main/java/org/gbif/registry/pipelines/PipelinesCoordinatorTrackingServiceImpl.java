@@ -95,6 +95,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
           .forEach(
               d -> {
                 try {
+                  LOG.info("trying to rerun dataset {}", d);
                   onDataset.accept(d);
                 } catch (Exception ex) {
                   LOG.error("Error processing dataset {} while rerunning all datasets", d, ex);
