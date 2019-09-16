@@ -26,6 +26,7 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
   private RequestMappingHandlerAdapter requestMappingHandlerAdapter;
 
   private static final Map<Class<?>, Map<String, String>> PARAM_MAPPINGS_CACHE = new ConcurrentHashMap<>(256);
+  private static final Map<Class<?>, Map<String, FieldMappingModel>> METHODS_MAPPINGS_CACHE = new ConcurrentHashMap<>(256);
 
   public ParamNameProcessor() {
     super(false);
@@ -45,8 +46,9 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
   protected void bindRequestParameters(WebDataBinder binder, NativeWebRequest nativeWebRequest) {
     Object target = binder.getTarget();
     Map<String, String> paramMappings = this.getParamMappings(target.getClass());
-    ParamNameDataBinder paramNameDataBinder = new ParamNameDataBinder(target, binder.getObjectName(), paramMappings);
-    requestMappingHandlerAdapter.getWebBindingInitializer().initBinder(paramNameDataBinder, nativeWebRequest);
+    Map<String, FieldMappingModel> methodMappings = this.getMethodMappings(target.getClass());
+    ParamNameDataBinder paramNameDataBinder = new ParamNameDataBinder(target, binder.getObjectName(), paramMappings, methodMappings);
+    requestMappingHandlerAdapter.getWebBindingInitializer().initBinder(paramNameDataBinder);
     super.bindRequestParameters(paramNameDataBinder, nativeWebRequest);
   }
 
@@ -62,9 +64,10 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
       return PARAM_MAPPINGS_CACHE.get(targetClass);
     }
 
+    Map<String, String> paramMappings = new HashMap<>(32);
+
     // process fields
     Field[] fields = targetClass.getDeclaredFields();
-    Map<String, String> paramMappings = new HashMap<>(32);
     for (Field field : fields) {
       ParamName paramName = field.getAnnotation(ParamName.class);
       if (paramName != null && !paramName.value().isEmpty()) {
@@ -72,21 +75,30 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
       }
     }
 
+    // put them to cache
+    PARAM_MAPPINGS_CACHE.put(targetClass, paramMappings);
+    return paramMappings;
+  }
+
+  private Map<String, FieldMappingModel> getMethodMappings(Class<?> targetClass) {
+    // first check cache
+    if (METHODS_MAPPINGS_CACHE.containsKey(targetClass)) {
+      return METHODS_MAPPINGS_CACHE.get(targetClass);
+    }
+
+    Map<String, FieldMappingModel> methodMappings = new HashMap<>(32);
+
     // process methods
     final Method[] methods = targetClass.getDeclaredMethods();
     for (Method method : methods) {
       final ParamName paramName = method.getAnnotation(ParamName.class);
       if (paramName != null && !paramName.value().isEmpty()) {
-        final String s = paramName.fieldName();
-        if (s.isEmpty()) {
-          throw new IllegalStateException("Field name should be specified (only for setter annotation)");
-        }
-        paramMappings.put(paramName.value(), paramName.fieldName());
+        methodMappings.put(paramName.value(), new FieldMappingModel(method.getName(), paramName.fieldName()));
       }
     }
 
     // put them to cache
-    PARAM_MAPPINGS_CACHE.put(targetClass, paramMappings);
-    return paramMappings;
+    METHODS_MAPPINGS_CACHE.put(targetClass, methodMappings);
+    return methodMappings;
   }
 }

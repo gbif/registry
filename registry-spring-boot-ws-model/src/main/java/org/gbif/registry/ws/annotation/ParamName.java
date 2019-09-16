@@ -20,8 +20,8 @@ public @interface ParamName {
   String value();
 
   /**
-   * For methods in order to know exactly what field should be used.
-   * Required only for setter annotation.
+   * For methods in order to know exactly what target field should be used.
+   * IMPORTANT: only methods with one String argument is allowed
    */
   String fieldName() default "";
 }

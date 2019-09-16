@@ -1,10 +1,13 @@
 package org.gbif.registry.processor;
 
 import org.gbif.registry.ws.annotation.ParamName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.web.servlet.mvc.method.annotation.ExtendedServletRequestDataBinder;
 
 import javax.servlet.ServletRequest;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -12,11 +15,16 @@ import java.util.Map;
  */
 public class ParamNameDataBinder extends ExtendedServletRequestDataBinder {
 
-  private final Map<String, String> paramMappings;
+  private static final Logger LOG = LoggerFactory.getLogger(ParamNameDataBinder.class);
 
-  public ParamNameDataBinder(Object target, String objectName, Map<String, String> paramMappings) {
+  private final Map<String, String> paramMappings;
+  private final Map<String, FieldMappingModel> methodMappings;
+
+  public ParamNameDataBinder(Object target, String objectName, Map<String, String> paramMappings,
+                             Map<String, FieldMappingModel> methodMappings) {
     super(target, objectName);
     this.paramMappings = paramMappings;
+    this.methodMappings = methodMappings;
   }
 
   /**
@@ -30,6 +38,21 @@ public class ParamNameDataBinder extends ExtendedServletRequestDataBinder {
       String fieldName = entry.getValue();
       if (mutablePropertyValues.contains(paramName)) {
         mutablePropertyValues.add(fieldName, mutablePropertyValues.getPropertyValue(paramName).getValue());
+      }
+    }
+
+    for (Map.Entry<String, FieldMappingModel> entry : methodMappings.entrySet()) {
+      String paramName = entry.getKey();
+      String methodName = entry.getValue().getMethodName();
+      if (mutablePropertyValues.contains(paramName)) {
+        try {
+          final Method declaredMethod = getTarget().getClass().getDeclaredMethod(methodName, String.class);
+          final String result = (String) declaredMethod
+              .invoke(getTarget(), mutablePropertyValues.getPropertyValue(paramName).getValue());
+          mutablePropertyValues.add(entry.getValue().getFieldName(), result);
+        } catch (Exception e) {
+          LOG.error("There was a problem to invoke a method {}", methodName);
+        }
       }
     }
   }
