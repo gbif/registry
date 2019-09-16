@@ -9,6 +9,7 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ import java.util.UUID;
  * Class used to create or update an Installation for legacy (GBRDS/IPT) API. A set of HTTP Form parameters coming from
  * a POST request are injected.
  * </br>
- * Its fields are injected using the @FormParam. It is assumed the following parameters exist in the HTTP request:
+ * Its fields are injected using the @ParamName. It is assumed the following parameters exist in the HTTP request:
  * 'organisationKey', 'name', 'description', 'primaryContactName', 'primaryContactEmail', 'primaryContactType',
  * 'serviceTypes', 'serviceURLs', and 'wsPassword'.
  * </br>
@@ -65,7 +66,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param organizationKey organization key as UUID
    */
-//  @FormParam(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
+  @ParamName(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   public void setHostingOrganizationKey(String organizationKey) {
     try {
       setOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
@@ -95,7 +96,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param name title of the installation
    */
-//  @FormParam(LegacyResourceConstants.NAME_PARAM)
+  @ParamName(LegacyResourceConstants.NAME_PARAM)
   public void setIptName(String name) {
     setTitle(LegacyResourceUtils.validateField(name, 2));
   }
@@ -121,7 +122,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param description of the installation
    */
-//  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
+  @ParamName(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setIptDescription(String description) {
     setDescription(LegacyResourceUtils.validateField(description, 10));
   }
@@ -154,7 +155,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param endpointType endpoint type
    */
-//  @FormParam(LegacyResourceConstants.SERVICE_TYPES_PARAM)
+  @ParamName(LegacyResourceConstants.SERVICE_TYPES_PARAM)
   public void setEndpointType(String endpointType) {
     this.endpointType =
         endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE) ? EndpointType.FEED : EndpointType.fromString(endpointType);
@@ -176,7 +177,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param endpointUrl endpoint URL
    */
-//  @FormParam(LegacyResourceConstants.SERVICE_URLS_PARAM)
+  @ParamName(LegacyResourceConstants.SERVICE_URLS_PARAM)
   public void setEndpointUrl(String endpointUrl) {
     this.endpointUrl = endpointUrl;
   }
@@ -187,7 +188,7 @@ public class LegacyInstallation extends Installation {
     return getPassword();
   }
 
-//  @FormParam(LegacyResourceConstants.WS_PASSWORD_PARAM)
+  @ParamName(LegacyResourceConstants.WS_PASSWORD_PARAM)
   public void setWsPassword(String wsPassword) {
     setPassword(Strings.nullToEmpty(wsPassword));
   }
@@ -209,7 +210,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactName primary contact name
    */
-//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
   public void setPrimaryContactName(String primaryContactName) {
     this.primaryContactName = primaryContactName;
   }
@@ -232,7 +233,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactEmail primary contact email address
    */
-//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
   public void setPrimaryContactEmail(String primaryContactEmail) {
     EmailValidator validator = EmailValidator.getInstance();
     if (validator.isValid(primaryContactEmail)) {
@@ -260,7 +261,7 @@ public class LegacyInstallation extends Installation {
    *
    * @param primaryContactType primary contact type
    */
-//  @FormParam(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
   public void setPrimaryContactType(String primaryContactType) {
     if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
