@@ -3,6 +3,7 @@ package org.gbif.registry.ws.model;
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.UUID;
  * Class used to create or update an Endpoint for legacy (GBRDS/IPT) API. Previously known as a Service in the GBRDS.
  * A set of HTTP Form parameters coming from a POST request are injected.
  * </br>
- * Its fields are injected using the @FormParam. It is assumed the following parameters exist in the HTTP request:
+ * Its fields are injected using the @ParamName. It is assumed the following parameters exist in the HTTP request:
  * 'resourceKey', 'description', 'descriptionLanguage', 'type', 'accessPointURL'.
  * </br>
  * JAXB annotations allow the class to be converted into an XML document, that gets included in the Response following
@@ -29,8 +30,6 @@ import java.util.UUID;
  */
 @XmlRootElement(name = "service")
 public class LegacyEndpoint extends Endpoint {
-
-  // TODO: 13/09/2019 @FormParam - find what can replace
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyEndpoint.class);
 
@@ -44,7 +43,7 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param resourceKey dataset key as UUID
    */
-//  @FormParam(LegacyResourceConstants.RESOURCE_KEY_PARAM)
+  @ParamName(value = LegacyResourceConstants.RESOURCE_KEY_PARAM)
   public void setDatasetKey(String resourceKey) {
     try {
       datasetKey = UUID.fromString(Strings.nullToEmpty(resourceKey));
@@ -69,9 +68,10 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param description of the endpoint
    */
-//  @FormParam(LegacyResourceConstants.DESCRIPTION_PARAM)
-  public void setEndpointDescription(String description) {
-    setDescription(LegacyResourceUtils.validateField(description, 10));
+  @ParamName(value = LegacyResourceConstants.DESCRIPTION_PARAM)
+  @Override
+  public void setDescription(String description) {
+    super.setDescription(LegacyResourceUtils.validateField(description, 10));
   }
 
   /**
@@ -92,8 +92,8 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param type endpoint type
    */
-//  @FormParam(LegacyResourceConstants.TYPE_PARAM)
-  public void setEndpointType(String type) {
+  @ParamName(value = LegacyResourceConstants.TYPE_PARAM)
+  public void setType(String type) {
     String injected = Strings.nullToEmpty(type);
     EndpointType lookup = EndpointType.fromString(injected);
     if (lookup == null) {
@@ -129,8 +129,8 @@ public class LegacyEndpoint extends Endpoint {
    *
    * @param url of the endpoint
    */
-//  @FormParam(LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
-  public void setEndpointUrl(String url) {
+  @ParamName(value = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
+  public void setUrl(String url) {
     if (!Strings.isNullOrEmpty(url)) {
       try {
         URI uri = new URI(url);
