@@ -26,7 +26,7 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
   private RequestMappingHandlerAdapter requestMappingHandlerAdapter;
 
   private static final Map<Class<?>, Map<String, String>> PARAM_MAPPINGS_CACHE = new ConcurrentHashMap<>(256);
-  private static final Map<Class<?>, Map<String, FieldMappingModel>> METHODS_MAPPINGS_CACHE = new ConcurrentHashMap<>(256);
+  private static final Map<Class<?>, Map<String, String>> METHODS_MAPPINGS_CACHE = new ConcurrentHashMap<>(256);
 
   public ParamNameProcessor() {
     super(false);
@@ -46,7 +46,7 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
   protected void bindRequestParameters(WebDataBinder binder, NativeWebRequest nativeWebRequest) {
     Object target = binder.getTarget();
     Map<String, String> paramMappings = this.getParamMappings(target.getClass());
-    Map<String, FieldMappingModel> methodMappings = this.getMethodMappings(target.getClass());
+    Map<String, String> methodMappings = this.getMethodMappings(target.getClass());
     ParamNameDataBinder paramNameDataBinder = new ParamNameDataBinder(target, binder.getObjectName(), paramMappings, methodMappings);
     requestMappingHandlerAdapter.getWebBindingInitializer().initBinder(paramNameDataBinder);
     super.bindRequestParameters(paramNameDataBinder, nativeWebRequest);
@@ -55,8 +55,6 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
   /**
    * Get param mappings. It creates a simple mapping: parameter name -> field name.
    * Cache param mappings in memory.
-   *
-   * @return {@link Map}
    */
   private Map<String, String> getParamMappings(Class<?> targetClass) {
     // first check cache
@@ -80,20 +78,24 @@ public class ParamNameProcessor extends ServletModelAttributeMethodProcessor {
     return paramMappings;
   }
 
-  private Map<String, FieldMappingModel> getMethodMappings(Class<?> targetClass) {
+  /**
+   * Get param mappings. It creates a simple mapping: parameter name -> method name.
+   * Cache param mappings in memory.
+   */
+  private Map<String, String> getMethodMappings(Class<?> targetClass) {
     // first check cache
     if (METHODS_MAPPINGS_CACHE.containsKey(targetClass)) {
       return METHODS_MAPPINGS_CACHE.get(targetClass);
     }
 
-    Map<String, FieldMappingModel> methodMappings = new HashMap<>(32);
+    Map<String, String> methodMappings = new HashMap<>(32);
 
     // process methods
     final Method[] methods = targetClass.getDeclaredMethods();
     for (Method method : methods) {
       final ParamName paramName = method.getAnnotation(ParamName.class);
       if (paramName != null && !paramName.value().isEmpty()) {
-        methodMappings.put(paramName.value(), new FieldMappingModel(method.getName(), paramName.fieldName()));
+        methodMappings.put(paramName.value(), method.getName());
       }
     }
 

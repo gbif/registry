@@ -18,10 +18,10 @@ public class ParamNameDataBinder extends ExtendedServletRequestDataBinder {
   private static final Logger LOG = LoggerFactory.getLogger(ParamNameDataBinder.class);
 
   private final Map<String, String> paramMappings;
-  private final Map<String, FieldMappingModel> methodMappings;
+  private final Map<String, String> methodMappings;
 
   public ParamNameDataBinder(Object target, String objectName, Map<String, String> paramMappings,
-                             Map<String, FieldMappingModel> methodMappings) {
+                             Map<String, String> methodMappings) {
     super(target, objectName);
     this.paramMappings = paramMappings;
     this.methodMappings = methodMappings;
@@ -41,15 +41,13 @@ public class ParamNameDataBinder extends ExtendedServletRequestDataBinder {
       }
     }
 
-    for (Map.Entry<String, FieldMappingModel> entry : methodMappings.entrySet()) {
+    for (Map.Entry<String, String> entry : methodMappings.entrySet()) {
       String paramName = entry.getKey();
-      String methodName = entry.getValue().getMethodName();
+      String methodName = entry.getValue();
       if (mutablePropertyValues.contains(paramName)) {
         try {
           final Method declaredMethod = getTarget().getClass().getDeclaredMethod(methodName, String.class);
-          final String result = (String) declaredMethod
-              .invoke(getTarget(), mutablePropertyValues.getPropertyValue(paramName).getValue());
-          mutablePropertyValues.add(entry.getValue().getFieldName(), result);
+          declaredMethod.invoke(getTarget(), mutablePropertyValues.getPropertyValue(paramName).getValue());
         } catch (Exception e) {
           LOG.error("There was a problem to invoke a method {}", methodName);
         }

@@ -18,10 +18,4 @@ public @interface ParamName {
    * The name of the request parameter to bind to.
    */
   String value();
-
-  /**
-   * For methods in order to know exactly what target field should be used.
-   * IMPORTANT: only methods with one String argument is allowed
-   */
-  String fieldName() default "";
 }
