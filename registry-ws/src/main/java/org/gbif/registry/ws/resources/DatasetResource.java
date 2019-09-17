@@ -937,7 +937,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
               });
       pagingRequest.setOffset(response.getResults().size());
       response = listByType(DatasetType.OCCURRENCE, pagingRequest);
-    } while (response.isEndOfRecords());
+    } while (!response.isEndOfRecords());
   }
 
   /**
