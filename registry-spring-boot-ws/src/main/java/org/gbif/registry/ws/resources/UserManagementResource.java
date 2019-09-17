@@ -111,7 +111,6 @@ public class UserManagementResource {
    */
   @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/{username}")
-//  @NullToNotFound
   public UserAdminView getUser(@PathVariable String username) {
 
     GbifUser user = identityService.get(username);
