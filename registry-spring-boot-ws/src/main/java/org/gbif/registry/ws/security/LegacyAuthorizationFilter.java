@@ -101,6 +101,7 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
       }
     }
     // otherwise just do nothing (request unchanged)
+    chain.doFilter(request, response);
   }
 
   /**
