@@ -1,11 +1,11 @@
 package org.gbif.registry.ws.security;
 
 import org.gbif.ws.WebApplicationException;
-import org.gbif.ws.security.SecurityContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -41,19 +41,17 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
   private static final Pattern INSTALLATION_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "installation"));
 
   private final EditorAuthorizationService userAuthService;
-  private final SecurityContextProvider securityContextProvider;
 
-  public EditorAuthorizationFilter(EditorAuthorizationService userAuthService,
-                                   SecurityContextProvider securityContextProvider) {
+  public EditorAuthorizationFilter(EditorAuthorizationService userAuthService) {
     this.userAuthService = userAuthService;
-    this.securityContextProvider = securityContextProvider;
   }
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource methods
-    final Authentication authentication = securityContextProvider.getContext().getAuthentication();
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     final String name = authentication.getName();
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
@@ -68,7 +66,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
         if (m.find()) {
           final String organization = m.group(1);
-          if (!userAuthService.allowedToModifyOrganization(authentication.getName(), UUID.fromString(organization))) {
+          if (!userAuthService.allowedToModifyOrganization(name, UUID.fromString(organization))) {
             LOG.warn("User {} is not allowed to modify organization {}", name, organization);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {
@@ -79,7 +77,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
         m = DATASET_PATTERN.matcher(path);
         if (m.find()) {
           final String dataset = m.group(1);
-          if (!userAuthService.allowedToModifyDataset(authentication.getName(), UUID.fromString(dataset))) {
+          if (!userAuthService.allowedToModifyDataset(name, UUID.fromString(dataset))) {
             LOG.warn("User {} is not allowed to modify dataset {}", name, dataset);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {

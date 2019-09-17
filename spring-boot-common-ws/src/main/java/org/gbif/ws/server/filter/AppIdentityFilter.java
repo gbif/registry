@@ -7,7 +7,6 @@ import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthUtils;
 import org.gbif.ws.security.GbifAuthentication;
-import org.gbif.ws.security.SecurityContextProvider;
 import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
@@ -16,7 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -57,17 +56,14 @@ public class AppIdentityFilter extends GenericFilterBean {
 
   private final GbifAuthService authService;
   private final List<String> appKeyWhitelist;
-  private final SecurityContextProvider securityContextProvider;
 
   public AppIdentityFilter(
       @NotNull GbifAuthService authService,
-      AppkeysConfiguration appkeysConfiguration,
-      SecurityContextProvider securityContextProvider) {
+      AppkeysConfiguration appkeysConfiguration) {
     this.authService = authService;
     //defensive copy or creation
     this.appKeyWhitelist = appkeysConfiguration.getWhitelist() != null
         ? new ArrayList<>(appkeysConfiguration.getWhitelist()) : new ArrayList<>();
-    this.securityContextProvider = securityContextProvider;
   }
 
   @Override
@@ -75,8 +71,7 @@ public class AppIdentityFilter extends GenericFilterBean {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
     final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-    final SecurityContext context = securityContextProvider.getContext();
-    final Authentication authentication = context.getAuthentication();
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     // Only try if no user principal is already there
     if (authentication == null || authentication.getPrincipal() == null) {
@@ -92,7 +87,7 @@ public class AppIdentityFilter extends GenericFilterBean {
             final AppPrincipal principal = new AppPrincipal(appKey, authorities);
             final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME, httpRequest);
 
-            context.setAuthentication(updatedAuth);
+            SecurityContextHolder.getContext().setAuthentication(updatedAuth);
           }
         } else {
           LOG.warn("Invalid GBIF authenticated request");
