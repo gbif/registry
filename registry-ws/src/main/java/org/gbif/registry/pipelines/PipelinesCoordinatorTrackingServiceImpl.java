@@ -102,7 +102,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                 }
               });
       pagingRequest.setOffset(response.getResults().size());
-      response = datasetService.list(pagingRequest);
+      response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (response.isEndOfRecords());
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
