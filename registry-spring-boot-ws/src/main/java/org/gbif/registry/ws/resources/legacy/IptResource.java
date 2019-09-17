@@ -22,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,8 +55,6 @@ public class IptResource {
     this.datasetService = datasetService;
   }
 
-  // TODO: 12/09/2019 use authentication.getName instead of principal.getUsername
-
   /**
    * Register IPT installation, handling incoming request with path /ipt/register. The primary contact and hosting
    * organization key are mandatory. Only after both the installation and primary contact have been persisted is a
@@ -71,11 +68,10 @@ public class IptResource {
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerIpt(LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    if (installation != null && principal != null) {
+    if (installation != null) {
       // set required fields
-      String user = principal.getUsername();
+      String user = authentication.getName();
       installation.setCreatedBy(user);
       installation.setModifiedBy(user);
       // add contact and endpoint to installation
@@ -136,11 +132,10 @@ public class IptResource {
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey, LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    if (installation != null && installationKey != null && principal != null) {
+    if (installation != null && installationKey != null) {
       // set required fields
-      String user = principal.getUsername();
+      String user = authentication.getName();
       installation.setCreatedBy(user);
       installation.setModifiedBy(user);
       // set key from path parameter
@@ -222,11 +217,10 @@ public class IptResource {
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerDataset(LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    if (dataset != null && principal != null) {
+    if (dataset != null) {
       // set required fields
-      String user = principal.getUsername();
+      String user = authentication.getName();
       dataset.setCreatedBy(user);
       dataset.setModifiedBy(user);
       // if the installation key was missing, try to infer it from publishing organization's installations
@@ -306,11 +300,10 @@ public class IptResource {
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    if (dataset != null && principal != null) {
+    if (dataset != null) {
       // set required fields
-      String user = principal.getUsername();
+      String user = authentication.getName();
       dataset.setCreatedBy(user);
       dataset.setModifiedBy(user);
       dataset.setKey(datasetKey);

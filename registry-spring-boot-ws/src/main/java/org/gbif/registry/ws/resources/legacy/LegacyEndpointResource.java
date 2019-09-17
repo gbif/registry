@@ -19,7 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,13 +56,11 @@ public class LegacyEndpointResource {
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
     if (endpoint != null) {
       // set required fields
-      String user = principal.getUsername();
-      endpoint.setCreatedBy(user);
-      endpoint.setModifiedBy(user);
+      endpoint.setCreatedBy(authentication.getName());
+      endpoint.setModifiedBy(authentication.getName());
 
       // required fields present, and corresponding dataset exists?
       if (LegacyResourceUtils.isValid(endpoint, datasetService)) {

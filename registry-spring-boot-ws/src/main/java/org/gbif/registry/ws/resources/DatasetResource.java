@@ -73,7 +73,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -401,9 +400,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, HttpServletRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
     try {
-      return insertMetadata(datasetKey, request.getInputStream(), principal.getUsername());
+      return insertMetadata(datasetKey, request.getInputStream(), authentication.getName());
     } catch (IOException e) {
       return null;
     }

@@ -22,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,10 +93,9 @@ public class LegacyDatasetResource {
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
     if (dataset != null) {
       // set required fields
-      String user = principal.getUsername();
+      String user = authentication.getName();
       dataset.setCreatedBy(user);
       dataset.setModifiedBy(user);
       dataset.setKey(datasetKey);

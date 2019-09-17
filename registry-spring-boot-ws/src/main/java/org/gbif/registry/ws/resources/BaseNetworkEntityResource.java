@@ -42,7 +42,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -137,7 +136,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public UUID createBase(@RequestBody @NotNull @Trim T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
       boolean allowed = false;
@@ -145,7 +144,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         if (entityKeyToBeAssessed == null) {
           throw new WebApplicationException(HttpStatus.FORBIDDEN);
         }
-        if (userAuthService.allowedToModifyEntity(principal, entityKeyToBeAssessed)) {
+        if (userAuthService.allowedToModifyEntity(nameFromContext, entityKeyToBeAssessed)) {
           allowed = true;
           break;
         }
@@ -154,8 +153,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         throw new WebApplicationException(HttpStatus.FORBIDDEN);
       }
     }
-    entity.setCreatedBy(principal.getUsername());
-    entity.setModifiedBy(principal.getUsername());
+    entity.setCreatedBy(nameFromContext);
+    entity.setModifiedBy(nameFromContext);
 
     return create(entity);
   }
@@ -180,12 +179,11 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Transactional
   public void deleteBase(@NotNull @PathVariable UUID key) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
 
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
-    objectToDelete.setModifiedBy(principal.getUsername());
+    objectToDelete.setModifiedBy(authentication.getName());
     withMyBatis.update(mapper, objectToDelete);
 
     delete(key);
@@ -257,8 +255,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim T entity) {
     checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    entity.setModifiedBy(principal.getUsername());
+    entity.setModifiedBy(authentication.getName());
     update(entity);
   }
 
@@ -286,9 +283,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addCommentBase(@NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Comment comment) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    comment.setCreatedBy(principal.getUsername());
-    comment.setModifiedBy(principal.getUsername());
+    comment.setCreatedBy(authentication.getName());
+    comment.setModifiedBy(authentication.getName());
     return addComment(targetEntityKey, comment);
   }
 
@@ -333,15 +329,15 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Transactional
   public int addMachineTagBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim MachineTag machineTag) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || userAuthService.allowedToModifyNamespace(principal, machineTag.getNamespace())
+        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
         || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
         && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-        && userAuthService.allowedToModifyDataset(principal, targetEntityKey))
+        && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
     ) {
-      machineTag.setCreatedBy(principal.getUsername());
+      machineTag.setCreatedBy(authentication.getName());
       return addMachineTag(targetEntityKey, machineTag);
     } else {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
@@ -375,7 +371,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Optional<MachineTag> optMachineTag = withMyBatis.listMachineTags(mapper, targetEntityKey).stream()
         .filter(m -> m.getKey() == machineTagKey).findFirst();
@@ -384,10 +380,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       MachineTag machineTag = optMachineTag.get();
 
       if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-          || userAuthService.allowedToModifyNamespace(principal, machineTag.getNamespace())
+          || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
           || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
           && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-          && userAuthService.allowedToModifyDataset(principal, targetEntityKey))
+          && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
       ) {
         deleteMachineTag(targetEntityKey, machineTagKey);
 
@@ -416,10 +412,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   public void deleteMachineTagsByNamespace(UUID targetEntityKey, String namespace) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(principal, namespace)) {
+        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
@@ -456,10 +452,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
                                     @PathVariable String name) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(principal, namespace)) {
+        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace, name);
@@ -500,8 +496,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addTagBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull Tag tag) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    tag.setCreatedBy(principal.getUsername());
+    tag.setCreatedBy(authentication.getName());
     return addTag(targetEntityKey, tag);
   }
 
@@ -554,9 +549,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addContactBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    contact.setCreatedBy(principal.getUsername());
-    contact.setModifiedBy(principal.getUsername());
+    contact.setCreatedBy(authentication.getName());
+    contact.setModifiedBy(authentication.getName());
     return addContact(targetEntityKey, contact);
   }
 
@@ -586,8 +580,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     Preconditions.checkArgument(Integer.valueOf(contactKey).equals(contact.getKey()),
         "Provided contact (key) does not match the path provided");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    contact.setModifiedBy(principal.getUsername());
+    contact.setModifiedBy(authentication.getName());
     updateContact(targetEntityKey, contact);
   }
 
@@ -632,9 +625,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addEndpointBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Endpoint endpoint) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    endpoint.setCreatedBy(principal.getUsername());
-    endpoint.setModifiedBy(principal.getUsername());
+    endpoint.setCreatedBy(authentication.getName());
+    endpoint.setModifiedBy(authentication.getName());
     return addEndpoint(targetEntityKey, endpoint);
   }
 
@@ -684,8 +676,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addIdentifierBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Identifier identifier) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
-    identifier.setCreatedBy(principal.getUsername());
+    identifier.setCreatedBy(authentication.getName());
     return addIdentifier(targetEntityKey, identifier);
   }
 

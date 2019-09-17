@@ -29,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -177,8 +176,8 @@ public class UserManagementResource {
     } else {
       GbifUser updateInitiator = null;
 
-      if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-        updateInitiator = identityService.get(((UserDetails) authentication.getPrincipal()).getUsername());
+      if (authentication != null) {
+        updateInitiator = identityService.get(authentication.getName());
       }
 
       UserModelMutationResult result = identityService.update(

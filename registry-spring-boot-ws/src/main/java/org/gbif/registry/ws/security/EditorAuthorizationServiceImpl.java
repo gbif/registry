@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 @Service
@@ -40,71 +40,71 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyNamespace(UserDetails user, String ns) {
-    if (user == null) {
+  public boolean allowedToModifyNamespace(@Nullable String name, String ns) {
+    if (name == null) {
       return false;
     }
-    return userRightsMapper.namespaceExistsForUser(user.getUsername(), ns);
+    return userRightsMapper.namespaceExistsForUser(name, ns);
   }
 
   @Override
-  public boolean allowedToDeleteMachineTag(UserDetails user, int machineTagKey) {
-    if (user == null) {
+  public boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey) {
+    if (name == null) {
       return false;
     }
-    return userRightsMapper.allowedToDeleteMachineTag(user.getUsername(), machineTagKey);
+    return userRightsMapper.allowedToDeleteMachineTag(name, machineTagKey);
   }
 
   @Override
-  public boolean allowedToModifyEntity(UserDetails user, UUID key) {
-    if (user == null) {
+  public boolean allowedToModifyEntity(@Nullable String name, UUID key) {
+    if (name == null) {
       return false;
     }
-    boolean allowed = userRightsMapper.keyExistsForUser(user.getUsername(), key);
-    LOG.debug("User {} {} allowed to edit entity {}", user.getUsername(), allowed ? "is" : "is not", key);
+    boolean allowed = userRightsMapper.keyExistsForUser(name, key);
+    LOG.debug("User {} {} allowed to edit entity {}", name, allowed ? "is" : "is not", key);
     return allowed;
   }
 
   @Override
-  public boolean allowedToModifyDataset(UserDetails user, UUID datasetKey) {
-    if (user == null) {
+  public boolean allowedToModifyDataset(@Nullable String name, UUID datasetKey) {
+    if (name == null) {
       return false;
     }
-    if (allowedToModifyEntity(user, datasetKey)) {
+    if (allowedToModifyEntity(name, datasetKey)) {
       return true;
     }
     Dataset d = datasetService.get(datasetKey);
     // try installation rights
-    if (allowedToModifyInstallation(user, d.getInstallationKey())) {
+    if (d != null && allowedToModifyInstallation(name, d.getInstallationKey())) {
       return true;
     }
     // try higher organization or node rights
-    return d == null ? false : allowedToModifyOrganization(user, d.getPublishingOrganizationKey());
+    return d != null && allowedToModifyOrganization(name, d.getPublishingOrganizationKey());
   }
 
   @Override
-  public boolean allowedToModifyOrganization(UserDetails user, UUID orgKey) {
-    if (user == null) {
+  public boolean allowedToModifyOrganization(@Nullable String name, UUID orgKey) {
+    if (name == null) {
       return false;
     }
-    if (allowedToModifyEntity(user, orgKey)) {
+    if (allowedToModifyEntity(name, orgKey)) {
       return true;
     }
     // try endorsing node
     Organization o = organizationService.get(orgKey);
-    return o == null ? false : allowedToModifyEntity(user, o.getEndorsingNodeKey());
+    return o != null && allowedToModifyEntity(name, o.getEndorsingNodeKey());
   }
 
   @Override
-  public boolean allowedToModifyInstallation(UserDetails user, UUID installationKey) {
-    if (user == null) {
+  public boolean allowedToModifyInstallation(@Nullable String name, UUID installationKey) {
+    if (name == null) {
       return false;
     }
-    if (allowedToModifyEntity(user, installationKey)) {
+    if (allowedToModifyEntity(name, installationKey)) {
       return true;
     }
     // try higher organization or node rights
     Installation inst = installationService.get(installationKey);
-    return inst == null ? false : allowedToModifyOrganization(user, inst.getOrganizationKey());
+    return inst != null && allowedToModifyOrganization(name, inst.getOrganizationKey());
   }
 }

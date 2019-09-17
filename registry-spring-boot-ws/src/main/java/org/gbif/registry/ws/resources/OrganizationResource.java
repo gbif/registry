@@ -39,7 +39,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -172,7 +171,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization) {
     checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Organization previousOrg = super.get(organization.getKey());
 
@@ -182,9 +181,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
     if (endorsementApprovedChanged
         && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !(userAuthService.allowedToModifyEntity(principal, organization.getEndorsingNodeKey())
-        || userAuthService.allowedToModifyEntity(principal, previousOrg.getEndorsingNodeKey()))) {
-      LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", principal, key);
+        && !(userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())
+        || userAuthService.allowedToModifyEntity(nameFromContext, previousOrg.getEndorsingNodeKey()))) {
+      LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
 

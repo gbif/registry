@@ -26,7 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -143,9 +142,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final UserDetails principal = (UserDetails) authentication.getPrincipal();
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), authentication);
-    GbifUser user = identityService.get(principal.getUsername());
+    GbifUser user = identityService.get(authentication.getName());
     doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
