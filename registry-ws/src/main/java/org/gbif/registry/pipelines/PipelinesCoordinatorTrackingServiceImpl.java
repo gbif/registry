@@ -14,6 +14,7 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -85,7 +86,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   /** Utility method to run batch jobs on all dataset elements */
-  private RunPipelineResponse doOnAllDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
     PagingResponse<Dataset> response =
         datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
@@ -98,21 +99,21 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                   LOG.info("trying to rerun dataset {}", d);
                   onDataset.accept(d);
                 } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while rerunning all datasets", d, ex);
+                  LOG.error("Error processing dataset {} while rerunning all datasets: {}", d, ex.getMessage());
                 }
               });
       pagingRequest.setOffset(response.getResults().size());
       response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
-    return RunPipelineResponse.builder()
-        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
-        .build();
   }
 
   @Override
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
-    return RunPipelineResponse.builder(
-            doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user)))
+    CompletableFuture.runAsync(
+        () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user)));
+
+    return RunPipelineResponse.builder()
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
         .setStep(steps)
         .build();
   }

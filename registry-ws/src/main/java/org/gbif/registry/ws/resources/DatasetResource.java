@@ -80,6 +80,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -932,7 +933,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                   LOG.info("trying to crawl dataset {}", d);
                   onDataset.accept(d);
                 } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while crawling all", d, ex);
+                  LOG.error("Error processing dataset {} while crawling all: {}", d, ex.getMessage());
                 }
               });
       pagingRequest.setOffset(response.getResults().size());
@@ -949,7 +950,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Path("crawlall")
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@QueryParam("platform") String platform) {
-    doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform));
+    CompletableFuture.runAsync(
+        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
   }
     /**
      * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
