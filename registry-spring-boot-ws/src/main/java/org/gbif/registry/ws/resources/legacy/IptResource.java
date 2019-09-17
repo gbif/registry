@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -66,7 +67,7 @@ public class IptResource {
   @PostMapping(value = "register",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerIpt(LegacyInstallation installation) {
+  public ResponseEntity registerIpt(@RequestParam LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (installation != null) {
@@ -130,7 +131,7 @@ public class IptResource {
    */
   @PostMapping(value = "update/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey, LegacyInstallation installation) {
+  public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey, @RequestParam LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (installation != null && installationKey != null) {
@@ -215,7 +216,7 @@ public class IptResource {
   @PostMapping(value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(LegacyDataset dataset) {
+  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (dataset != null) {
@@ -298,7 +299,7 @@ public class IptResource {
    */
   @PostMapping(value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, LegacyDataset dataset) {
+  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (dataset != null) {
