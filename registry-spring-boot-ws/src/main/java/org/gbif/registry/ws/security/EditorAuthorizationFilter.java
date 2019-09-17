@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -55,10 +54,10 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource methods
     final Authentication authentication = securityContextProvider.getContext().getAuthentication();
-    UserDetails user = ((UserDetails) authentication.getPrincipal());
+    final String name = authentication.getName();
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-    if (user != null
+    if (name != null
         && (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
         && SecurityContextCheck.checkUserInRole(authentication, UserRoles.EDITOR_ROLE))
         && !httpRequest.getMethod().equals("GET") && !httpRequest.getMethod().equals("OPTIONS")) {
@@ -69,44 +68,44 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
         if (m.find()) {
           final String organization = m.group(1);
-          if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(organization))) {
-            LOG.warn("User {} is not allowed to modify organization {}", user.getUsername(), organization);
+          if (!userAuthService.allowedToModifyOrganization(authentication.getName(), UUID.fromString(organization))) {
+            LOG.warn("User {} is not allowed to modify organization {}", name, organization);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {
-            LOG.debug("User {} is allowed to modify organization {}", user.getUsername(), organization);
+            LOG.debug("User {} is allowed to modify organization {}", name, organization);
           }
         }
 
         m = DATASET_PATTERN.matcher(path);
         if (m.find()) {
           final String dataset = m.group(1);
-          if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(dataset))) {
-            LOG.warn("User {} is not allowed to modify dataset {}", user.getUsername(), dataset);
+          if (!userAuthService.allowedToModifyDataset(authentication.getName(), UUID.fromString(dataset))) {
+            LOG.warn("User {} is not allowed to modify dataset {}", name, dataset);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {
-            LOG.debug("User {} is allowed to modify dataset {}", user.getUsername(), dataset);
+            LOG.debug("User {} is allowed to modify dataset {}", name, dataset);
           }
         }
 
         m = INSTALLATION_PATTERN.matcher(path);
         if (m.find()) {
           final String installation = m.group(1);
-          if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(installation))) {
-            LOG.warn("User {} is not allowed to modify installation {}", user.getUsername(), installation);
+          if (!userAuthService.allowedToModifyInstallation(name, UUID.fromString(installation))) {
+            LOG.warn("User {} is not allowed to modify installation {}", name, installation);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {
-            LOG.debug("User {} is allowed to modify installation {}", user.getUsername(), installation);
+            LOG.debug("User {} is allowed to modify installation {}", name, installation);
           }
         }
 
         m = NODE_NETWORK_PATTERN.matcher(path);
         if (m.find()) {
           final String nodeOrNetwork = m.group(1);
-          if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(nodeOrNetwork))) {
-            LOG.warn("User {} is not allowed to modify node/network {}", user.getUsername(), nodeOrNetwork);
+          if (!userAuthService.allowedToModifyEntity(name, UUID.fromString(nodeOrNetwork))) {
+            LOG.warn("User {} is not allowed to modify node/network {}", name, nodeOrNetwork);
             throw new WebApplicationException(HttpStatus.FORBIDDEN);
           } else {
-            LOG.debug("User {} is allowed to modify node/network {}", user.getUsername(), nodeOrNetwork);
+            LOG.debug("User {} is allowed to modify node/network {}", name, nodeOrNetwork);
           }
         }
       } catch (IllegalArgumentException e) {

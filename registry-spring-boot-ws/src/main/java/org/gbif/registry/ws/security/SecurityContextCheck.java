@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +41,7 @@ public class SecurityContextCheck {
    * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link Authentication}
    */
   public static void ensureUserSetInSecurityContext(final Authentication authentication) {
-    if (authentication == null || authentication.getPrincipal() == null ||
-        StringUtils.isBlank(((UserDetails) authentication.getPrincipal()).getUsername())) {
+    if (authentication == null || StringUtils.isBlank(authentication.getName())) {
       LOG.debug("Unauthenticated or incomplete request.");
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }

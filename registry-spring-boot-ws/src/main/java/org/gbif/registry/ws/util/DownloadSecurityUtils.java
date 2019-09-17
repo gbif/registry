@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
@@ -41,7 +40,7 @@ public class DownloadSecurityUtils {
    */
   public static boolean isUserAuthorizedInContext(Authentication authentication, String user) {
     return (authentication == null || SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || (authentication.getPrincipal() != null && ((UserDetails) authentication.getPrincipal()).getUsername().equals(user)));
+        || (authentication.getPrincipal() != null && authentication.getName().equals(user)));
   }
 
   /**
