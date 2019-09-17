@@ -43,10 +43,9 @@ public class IdentityFilter extends OncePerRequestFilter {
     try {
       final Authentication authentication = authenticationManager.authenticate(anonymous);
       SecurityContextHolder.getContext().setAuthentication(authentication);
+      filterChain.doFilter(request, response);
     } catch (final WebApplicationException e) {
       response.setStatus(e.getResponse().getStatusCode().value());
-      SecurityContextHolder.getContext().setAuthentication(anonymous);
     }
-    filterChain.doFilter(request, response);
   }
 }
