@@ -1,60 +1,33 @@
-package org.gbif.ws.query;
+package org.gbif.query;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.ws.mixin.LicenseMixin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-public class TitleLookup {
+@Service
+public class TitleLookupServiceImpl implements TitleLookupService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TitleLookup.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TitleLookupServiceImpl.class);
 
   private final String apiRootUrl;
   private final RestTemplate restTemplate;
 
-  public TitleLookup(String apiRootUrl, RestTemplate restTemplate) {
+  public TitleLookupServiceImpl(@Value("${api.root.url}") String apiRootUrl,
+                                @Qualifier("titleLookupRestTemplate") RestTemplate restTemplate) {
     this.apiRootUrl = apiRootUrl;
     this.restTemplate = restTemplate;
-
-    final ObjectMapper objectMapper = configureObjectMapper();
-
-    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-    converter.setObjectMapper(objectMapper);
-    this.restTemplate.getMessageConverters().add(0, converter);
   }
 
-  public TitleLookup(String apiRootUrl) {
-    this.apiRootUrl = apiRootUrl;
-    this.restTemplate = new RestTemplate();
-
-    final ObjectMapper objectMapper = configureObjectMapper();
-
-    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-    converter.setObjectMapper(objectMapper);
-    restTemplate.getMessageConverters().add(0, converter);
-  }
-
-  private ObjectMapper configureObjectMapper() {
-    final ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    objectMapper.addMixIn(Dataset.class, LicenseMixin.class);
-
-    return objectMapper;
-  }
-
+  @Override
   public String getDatasetTitle(String datasetKey) {
     try {
       String targetUrl = apiRootUrl + "/dataset/{key}";
@@ -70,6 +43,7 @@ public class TitleLookup {
     }
   }
 
+  @Override
   public String getSpeciesName(String usageKey) {
     try {
       String targetUrl = apiRootUrl + "/species/{key}";
