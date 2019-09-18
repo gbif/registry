@@ -1,9 +1,15 @@
 package org.gbif.registry.ws.config;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
+import org.gbif.ws.mixin.LicenseMixin;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
@@ -13,6 +19,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
@@ -72,5 +80,26 @@ public class WebMvcConfig implements WebMvcConfigurer {
         return bean;
       }
     };
+  }
+
+  @Bean
+  public ObjectMapper titleLookupObjectMapper() {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    objectMapper.addMixIn(Dataset.class, LicenseMixin.class);
+
+    return objectMapper;
+  }
+
+  @Bean
+  public RestTemplate titleLookupRestTemplate() {
+    final RestTemplate restTemplate = new RestTemplate();
+    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+    converter.setObjectMapper(titleLookupObjectMapper());
+    restTemplate.getMessageConverters().add(0, converter);
+
+    return restTemplate;
   }
 }

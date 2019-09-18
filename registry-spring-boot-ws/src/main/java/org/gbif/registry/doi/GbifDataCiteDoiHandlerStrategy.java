@@ -14,7 +14,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
-import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.query.TitleLookupService;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +49,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   private final DoiGenerator doiGenerator;
   private final OrganizationMapper organizationMapper;
   private final OccurrenceDownloadService occurrenceDownloadService;
-  private final TitleLookup titleLookup;
+  private final TitleLookupService titleLookupService;
 
   // Used to exclude constituents of selected datasets (e.g. GBIF Backbone Taxonomy)
   private final List<UUID> parentDatasetExcludeList;
@@ -59,12 +58,12 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       DoiGenerator doiGenerator,
       OrganizationMapper organizationMapper,
       OccurrenceDownloadService occurrenceDownloadService,
-      @Autowired(required = false) TitleLookup titleLookup, // TODO: 27/08/2019 implement TitleLookup (now it is using guice, apache and jersey)
+      TitleLookupService titleLookupService,
       @Value("${doi.dataset.parentExcludeList}") List<UUID> parentDatasetExcludeList) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
-    this.titleLookup = titleLookup;
+    this.titleLookupService = titleLookupService;
     this.parentDatasetExcludeList = parentDatasetExcludeList;
   }
 
@@ -85,7 +84,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       pagingRequest.nextPage();
     }
 
-    return DataCiteConverter.convert(download, user, usages, titleLookup);
+    return DataCiteConverter.convert(download, user, usages, titleLookupService);
   }
 
   @Override

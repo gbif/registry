@@ -36,8 +36,8 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.occurrence.query.HumanPredicateBuilder;
-import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.query.HumanPredicateBuilder;
+import org.gbif.query.TitleLookupService;
 import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import javax.xml.bind.JAXBException;
@@ -278,7 +278,7 @@ public class DataCiteConverter {
    * Convert a download and its dataset usages into a datacite metadata instance.
    */
   public static DataCiteMetadata convert(Download d, GbifUser creator, List<DatasetOccurrenceDownloadUsage> usedDatasets,
-                                         TitleLookup titleLookup) {
+                                         TitleLookupService titleLookup) {
     Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
     Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");
     Preconditions.checkNotNull(creator, "Download creator required to build valid DOI metadata");
@@ -478,7 +478,7 @@ public class DataCiteConverter {
   /**
    * Tries to get the human readable version of the download query, if fails returns the raw query.
    */
-  private static String getFilterQuery(Download d, TitleLookup titleLookup) {
+  private static String getFilterQuery(Download d, TitleLookupService titleLookup) {
     try {
       return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest) d.getRequest()).getSql()
           : new HumanPredicateBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());

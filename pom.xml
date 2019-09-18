@@ -43,8 +43,10 @@
     <module>registry-spring-boot-surety</module>
     <module>registry-spring-boot-identity</module>
     <module>registry-spring-boot-integration-tests</module>
-    <module>spring-boot-common-ws</module>
     <module>registry-spring-boot-ws-model</module>
+
+    <module>spring-boot-common-ws</module>
+    <module>spring-boot-download-query-tools</module>
   </modules>
 
   <properties>
@@ -56,7 +58,6 @@
     <jettison.version>1.3.7</jettison.version>
     <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
     <gbif-postal-service.version>0.34-SNAPSHOT</gbif-postal-service.version>
-    <download-query-tools.version>1.24</download-query-tools.version>
     <gbif-api.version>0.89-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
@@ -128,6 +129,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>spring-boot-download-query-tools</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
@@ -146,21 +152,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-doi</artifactId>
         <version>${gbif-doi.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.occurrence</groupId>
-        <artifactId>download-query-tools</artifactId>
-        <version>${download-query-tools.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.gbif</groupId>
-            <artifactId>gbif-common-ws</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

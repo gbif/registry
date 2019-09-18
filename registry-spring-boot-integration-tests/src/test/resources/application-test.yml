@@ -1,5 +1,9 @@
 # application.yml
 
+api:
+  root:
+    url: http://api.gbif.org/v1/
+
 mail:
   cc: cc3
   bcc: cc4
