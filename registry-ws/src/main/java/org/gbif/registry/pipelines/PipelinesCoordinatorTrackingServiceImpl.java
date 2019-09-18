@@ -96,10 +96,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
           .forEach(
               d -> {
                 try {
-                  LOG.info("trying to rerun dataset {}", d);
+                  LOG.info("trying to rerun dataset {}", d.getKey());
                   onDataset.accept(d);
                 } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while rerunning all datasets: {}", d, ex.getMessage());
+                  LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
                 }
               });
       pagingRequest.setOffset(response.getResults().size());
