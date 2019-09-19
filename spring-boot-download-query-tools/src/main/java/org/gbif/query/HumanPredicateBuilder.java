@@ -54,7 +54,7 @@ public class HumanPredicateBuilder {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private static final Logger LOG = LoggerFactory.getLogger(HumanPredicateBuilder.class);
-  private static final String DEFAULT_BUNDLE = "org/gbif/occurrence/query/filter";
+  private static final String DEFAULT_BUNDLE = "org/gbif/query/filter";
 
   private static final String EQUALS_OPERATOR = "is ";
   private static final String IN_OPERATOR = "is one of ";
