@@ -60,6 +60,7 @@
   <insert id="create" parameterType="PipelineProcess" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO pipeline_process(<include refid="PIPELINE_PROCESS_FIELDS_CREATE"/>)
     VALUES (<include refid="PIPELINES_PROCESS_VALUES_CREATE"/>)
+    ON CONFLICT(dataset_key, attempt) DO UPDATE SET dataset_key = EXCLUDED.dataset_key
   </insert>
 
   <insert id="addPipelineStep" useGeneratedKeys="true" keyProperty="step.key">

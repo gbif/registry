@@ -89,7 +89,7 @@ public class PipelineProcessMapperTest {
   public void getPipelinesProcessByKeyTest() {
     // create process
     PipelineProcess process =
-      new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+        new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
 
     // insert in the DB
     pipelineProcessMapper.create(process);
@@ -121,21 +121,25 @@ public class PipelineProcessMapperTest {
 
   @Test
   public void duplicatePipelinesProcessTest() {
-    expectedException.expect(PersistenceException.class);
-    expectedException.expectCause(isA(PSQLException.class));
-
     // insert one process
+    final UUID datasetKey = insertDataset();
+    final int attempt = 1;
+
     PipelineProcess process =
-        new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+        new PipelineProcess().setDatasetKey(datasetKey).setAttempt(attempt).setCreatedBy(TEST_USER);
     pipelineProcessMapper.create(process);
 
     // insert another process with the same datasetKey and attempt
     PipelineProcess duplicate =
         new PipelineProcess()
-            .setDatasetKey(process.getDatasetKey())
-            .setAttempt(process.getAttempt())
+            .setDatasetKey(datasetKey)
+            .setAttempt(attempt)
             .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.create(duplicate);
+
+    assertEquals(process.getKey(), duplicate.getKey());
+    assertEquals(datasetKey, duplicate.getDatasetKey());
+    assertEquals(attempt, duplicate.getAttempt());
   }
 
   @Test
