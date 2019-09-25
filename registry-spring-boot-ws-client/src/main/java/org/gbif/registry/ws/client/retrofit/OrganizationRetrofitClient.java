@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -24,6 +25,14 @@ public interface OrganizationRetrofitClient extends BaseNetworkEntityRetrofitCli
   @POST("organization")
   @Override
   Call<UUID> create(@Body Organization organization);
+
+  @GET("organization/{key}")
+  @Override
+  Call<Organization> get(@Path("key") UUID key);
+
+  @DELETE("organization/{key}")
+  @Override
+  Call<Void> delete(@Path("key") UUID key);
 
   @POST("organization/{key}/endorsement")
   Call<Void> confirmEndorsement(@Path("key") UUID organizationKey, @Body ConfirmationKeyParameter confirmationKeyParameter);

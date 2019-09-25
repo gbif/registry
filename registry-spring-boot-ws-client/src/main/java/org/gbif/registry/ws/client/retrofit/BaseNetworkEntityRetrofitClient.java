@@ -16,57 +16,109 @@ import java.util.UUID;
 
 public interface BaseNetworkEntityRetrofitClient<T extends NetworkEntity> {
 
-  Call<UUID> create(T entity);
+  default Call<UUID> create(T entity) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> delete(UUID key);
+  default Call<Void> delete(UUID key) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<T> get(UUID key);
+  default Call<T> get(UUID key) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Map<UUID, String>> getTitles(Collection<UUID> collection);
+  default Call<Map<UUID, String>> getTitles(Collection<UUID> collection) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> update(UUID key, T entity);
+  default Call<Void> update(UUID key, T entity) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addComment(UUID targetEntityKey, Comment comment);
+  default Call<Integer> addComment(UUID targetEntityKey, Comment comment) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteComment(UUID targetEntityKey, int commentKey);
+  default Call<Void> deleteComment(UUID targetEntityKey, int commentKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<Comment>> listComments(UUID targetEntityKey);
+  default Call<List<Comment>> listComments(UUID targetEntityKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addMachineTag(UUID targetEntityKey, MachineTag machineTag);
+  default Call<Integer> addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteMachineTag(UUID targetEntityKey, int machineTagKey);
+  default Call<Void> deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteMachineTags(UUID targetEntityKey, String namespace);
+  default Call<Void> deleteMachineTags(UUID targetEntityKey, String namespace) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteMachineTags(UUID targetEntityKey,
-                               String namespace,
-                               String name);
+  default Call<Void> deleteMachineTags(UUID targetEntityKey,
+                                       String namespace,
+                                       String name) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<MachineTag>> listMachineTags(UUID targetEntityKey);
+  default Call<List<MachineTag>> listMachineTags(UUID targetEntityKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addTag(UUID targetEntityKey, Tag tag);
+  default Call<Integer> addTag(UUID targetEntityKey, Tag tag) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteTag(UUID taggedEntityKey, int tagKey);
+  default Call<Void> deleteTag(UUID taggedEntityKey, int tagKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<Tag>> listTags(UUID taggedEntityKey, String owner);
+  default Call<List<Tag>> listTags(UUID taggedEntityKey, String owner) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addContact(UUID targetEntityKey, Contact contact);
+  default Call<Integer> addContact(UUID targetEntityKey, Contact contact) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> updateContact(UUID targetEntityKey, int contactKey, Contact contact);
+  default Call<Void> updateContact(UUID targetEntityKey, int contactKey, Contact contact) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteContact(UUID targetEntityKey, int contactKey);
+  default Call<Void> deleteContact(UUID targetEntityKey, int contactKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<Contact>> listContacts(UUID targetEntityKey);
+  default Call<List<Contact>> listContacts(UUID targetEntityKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addEndpoint(UUID targetEntityKey, Endpoint endpoint);
+  default Call<Integer> addEndpoint(UUID targetEntityKey, Endpoint endpoint) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteEndpoint(UUID targetEntityKey, int endpointKey);
+  default Call<Void> deleteEndpoint(UUID targetEntityKey, int endpointKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<Endpoint>> listEndpoints(UUID targetEntityKey);
+  default Call<List<Endpoint>> listEndpoints(UUID targetEntityKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Integer> addIdentifier(UUID targetEntityKey, Identifier identifier);
+  default Call<Integer> addIdentifier(UUID targetEntityKey, Identifier identifier) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<Void> deleteIdentifier(UUID targetEntityKey, int identifierKey);
+  default Call<Void> deleteIdentifier(UUID targetEntityKey, int identifierKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 
-  Call<List<Identifier>> listIdentifiers(UUID targetEntityKey);
+  default Call<List<Identifier>> listIdentifiers(UUID targetEntityKey) {
+    throw new UnsupportedOperationException("not implemented");
+  }
 }

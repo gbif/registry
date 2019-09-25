@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gbif.registry.ws.client.SyncCall.syncCallWithResponse;
+
 // TODO: 25/09/2019 implements these methods (see registry's BaseNetworkEntityClient)
 public class BaseNetworkEntityClient<T extends NetworkEntity> implements NetworkEntityService<T> {
 
@@ -34,17 +36,19 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> implements Network
 
   @Override
   public UUID create(@NotNull T t) {
-    throw new UnsupportedOperationException("not implemented");
+    final Response<UUID> response = syncCallWithResponse(client.create(t));
+    return response.body();
   }
 
   @Override
   public void delete(@NotNull UUID uuid) {
-    throw new UnsupportedOperationException("not implemented");
+    syncCallWithResponse(client.delete(uuid));
   }
 
   @Override
   public T get(@NotNull UUID uuid) {
-    throw new UnsupportedOperationException("not implemented");
+    final Response<T> response = syncCallWithResponse(client.get(uuid));
+    return response.body();
   }
 
   @Override
