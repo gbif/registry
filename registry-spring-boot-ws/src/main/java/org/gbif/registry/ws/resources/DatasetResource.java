@@ -937,7 +937,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void createDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt,
+  public void updateDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt,
                                          @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
         "DatasetProcessStatus must have the same key as the url");

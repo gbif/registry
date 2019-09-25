@@ -88,7 +88,7 @@ public class BaseNetworkEntityClient<T extends NetworkEntity> implements Network
 
   @Override
   public int addComment(@NotNull UUID uuid, @NotNull Comment comment) {
-    final Response<Integer> response = SyncCall.syncCallWithResponse(client.addComment(uuid, comment));
+    final Response<Integer> response = syncCallWithResponse(client.addComment(uuid, comment));
     return response.body();
   }
 
