@@ -24,6 +24,7 @@ import static org.gbif.registry.ws.client.SyncCall.syncCallWithResponse;
 
 // TODO: 25/09/2019 implement BaseNetworkEntityWsClient and its sub clients (Network and so on)
 // TODO: 25/09/2019 test all the clients (elastic part should be done first?). There are possible deser problems
+// TODO: 25/09/2019 check response first, not just return response.body()
 public class OccurrenceDownloadWsClient
     implements OccurrenceDownloadService {
 

@@ -5,6 +5,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
 import retrofit2.Call;
 
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public interface BaseNetworkEntityRetrofitClient<T> {
+public interface BaseNetworkEntityRetrofitClient<T extends NetworkEntity> {
 
   Call<UUID> create(T entity);
 
