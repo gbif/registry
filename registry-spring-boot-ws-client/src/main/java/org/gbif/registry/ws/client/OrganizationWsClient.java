@@ -29,6 +29,7 @@ public class OrganizationWsClient extends BaseNetworkEntityClient<Organization>
   private final OrganizationRetrofitClient client;
 
   public OrganizationWsClient(OrganizationRetrofitClient client) {
+    super(client);
     this.client = client;
   }
 
