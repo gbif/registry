@@ -47,12 +47,12 @@ public interface OccurrenceDownloadRetrofitClient {
 
   @GET("occurrence/download/statistics/downloadsByUserCountry")
   Call<Map<Integer, Map<Integer, Long>>> getDownloadsByUserCountry(@Query("fromDate") String fromDate,
-                                                                    @Query("toDate") String toDate,
-                                                                    @Query("userCountry") String userCountry);
+                                                                   @Query("toDate") String toDate,
+                                                                   @Query("userCountry") String userCountry);
 
   @GET("occurrence/download/statistics/downloadedRecordsByDataset")
   Call<Map<Integer, Map<Integer, Long>>> getDownloadedRecordsByDataset(@Query("fromDate") String fromDate,
-                                                                        @Query("toDate") String toDate,
-                                                                        @Query("publishingCountry") String publishingCountry,
-                                                                        @Query("datasetKey") UUID datasetKey);
+                                                                       @Query("toDate") String toDate,
+                                                                       @Query("publishingCountry") String publishingCountry,
+                                                                       @Query("datasetKey") UUID datasetKey);
 }
