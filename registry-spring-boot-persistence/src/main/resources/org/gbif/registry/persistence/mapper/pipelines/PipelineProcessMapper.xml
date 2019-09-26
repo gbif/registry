@@ -7,7 +7,7 @@
     <collection property="steps" column="key" select="listSteps"/>
   </resultMap>
 
-  <resultMap id="STEP_MAP" type="Step" autoMapping="true">
+  <resultMap id="STEP_MAP" type="org.gbif.api.model.pipelines.PipelineStep" autoMapping="true">
     <id property="key" column="key"/>
     <result property="metrics" column="metrics" typeHandler="org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler"/>
   </resultMap>
