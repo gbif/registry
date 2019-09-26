@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper">
+
+  <resultMap id="PIPELINES_PROCESS_MAP" type="org.gbif.api.model.pipelines.PipelineProcess" autoMapping="true">
+    <id property="key" column="key"/>
+    <collection property="steps" column="key" select="listSteps"/>
+  </resultMap>
+
+  <resultMap id="STEP_MAP" type="Step" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="metrics" column="metrics" typeHandler="org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler"/>
+  </resultMap>
+
+  <sql id="PIPELINE_PROCESS_FIELDS_CREATE">
+    dataset_key, attempt, created, created_by
+  </sql>
+
+  <sql id="PIPELINE_PROCESS_FIELDS_SELECT">
+    key, dataset_key, attempt, created, created_by
+  </sql>
+
+  <sql id="PIPELINES_PROCESS_VALUES_CREATE">
+    #{datasetKey,jdbcType=OTHER},
+    #{attempt,jdbcType=INTEGER},
+    now(), <!-- created -->
+    #{createdBy,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="STEP_FIELDS_CREATE">
+    type, runner, started, finished, state, message, metrics, rerun_reason, created_by, pipeline_process_key
+  </sql>
+
+  <sql id="STEP_FIELDS_SELECT">
+    key, type, runner, started, finished, state, message, metrics, rerun_reason, created_by, modified, modified_by, pipeline_process_key
+  </sql>
+
+  <sql id="STEP_VALUES_CREATE">
+    #{step.type,jdbcType=OTHER},
+    #{step.runner,jdbcType=OTHER},
+    now(), <!-- started -->
+    #{step.finished,jdbcType=OTHER},
+    #{step.state,jdbcType=OTHER},
+    #{step.message,jdbcType=VARCHAR},
+    #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
+    #{step.rerunReason,jdbcType=VARCHAR},
+    #{step.createdBy,jdbcType=VARCHAR},
+    #{pipelinesProcessKey,jdbcType=BIGINT}
+  </sql>
+
+  <sql id="STEP_UPDATE">
+    finished = #{step.finished,jdbcType=OTHER},
+    state = #{step.state,jdbcType=OTHER},
+    rerun_reason = #{step.rerunReason,jdbcType=VARCHAR},
+    modified = now(),
+    modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.api.model.pipelines.PipelineProcess" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO pipeline_process(<include refid="PIPELINE_PROCESS_FIELDS_CREATE"/>)
+    VALUES (<include refid="PIPELINES_PROCESS_VALUES_CREATE"/>)
+    ON CONFLICT(dataset_key, attempt) DO UPDATE SET dataset_key = EXCLUDED.dataset_key
+  </insert>
+
+  <insert id="addPipelineStep" useGeneratedKeys="true" keyProperty="step.key">
+    INSERT INTO pipeline_step(<include refid="STEP_FIELDS_CREATE"/>)
+    VALUES (<include refid="STEP_VALUES_CREATE"/>)
+  </insert>
+
+  <select id="listSteps" resultMap="STEP_MAP">
+    SELECT <include refid="STEP_FIELDS_SELECT"/>
+    FROM pipeline_step
+    WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
+  </select>
+
+  <select id="getByDatasetAndAttempt" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process
+    WHERE dataset_key = #{datasetKey, jdbcType=OTHER} AND attempt = #{attempt, jdbcType=INTEGER}
+  </select>
+
+  <select id="get" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process
+    WHERE key = #{key,jdbcType=BIGINT}
+  </select>
+
+  <select id="getLastAttempt" resultType="Integer">
+    SELECT p.attempt
+    FROM pipeline_process p
+    WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER}
+    ORDER BY p.attempt DESC
+    LIMIT 1
+  </select>
+
+  <select id="list" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process
+    <where>
+      <if test="datasetKey != null">
+        dataset_key = #{datasetKey, jdbcType=OTHER}
+      </if>
+      <if test="attempt != null">
+        AND attempt = #{attempt, jdbcType=INTEGER}
+      </if>
+    </where>
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Long">
+    SELECT COUNT(*)
+    FROM pipeline_process
+    <where>
+      <if test="datasetKey != null">
+        dataset_key = #{datasetKey, jdbcType=OTHER}
+      </if>
+      <if test="attempt != null">
+        AND attempt = #{attempt, jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+
+  <select id="getPipelineStep" resultMap="STEP_MAP">
+    SELECT <include refid="STEP_FIELDS_SELECT"/>
+    FROM pipeline_step
+    WHERE key = #{key,jdbcType=BIGINT}
+  </select>
+
+  <update id="updatePipelineStep">
+    UPDATE pipeline_step
+    SET <include refid="STEP_UPDATE"/>
+    WHERE key = #{step.key,jdbcType=BIGINT}
+  </update>
+
+</mapper>
