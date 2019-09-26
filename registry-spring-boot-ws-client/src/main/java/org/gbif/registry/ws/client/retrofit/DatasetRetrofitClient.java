@@ -76,8 +76,9 @@ public interface DatasetRetrofitClient extends BaseNetworkEntityRetrofitClient<D
   @GET("dataset/withNoEndpoint")
   Call<PagingResponse<Dataset>> listDatasetsWithNoEndpoint(@Query("limit") int limit, @Query("offset") long offset);
 
-  @GET("dataset/doi/{doi}")
-  Call<PagingResponse<Dataset>> listByDOI(@Path("doi") String doi,
+  @GET("dataset/doi/{doiPrefix}/{doiSuffix}")
+  Call<PagingResponse<Dataset>> listByDOI(@Path("doiPrefix") String doiPrefix,
+                                          @Path("doiSuffix") String doiSuffix,
                                           @Query("limit") int limit,
                                           @Query("offset") long offset);
 

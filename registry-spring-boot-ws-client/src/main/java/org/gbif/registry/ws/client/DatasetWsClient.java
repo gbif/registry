@@ -214,10 +214,15 @@ public class DatasetWsClient extends BaseNetworkEntityClient<Dataset>
 
   @Override
   public PagingResponse<Dataset> listByDOI(String doi, Pageable page) {
+    Preconditions.checkState(doi.contains("/"), "DOI must contain one slash");
     final int limit = page != null ? page.getLimit() : 20;
     final long offset = page != null ? page.getOffset() : 0;
 
-    final Response<PagingResponse<Dataset>> response = syncCallWithResponse(client.listByDOI(doi, limit, offset));
+    final String[] splitDoi = doi.split("/");
+    final String doiPrefix = splitDoi[0];
+    final String doiSuffix = splitDoi[1];
+
+    final Response<PagingResponse<Dataset>> response = syncCallWithResponse(client.listByDOI(doiPrefix, doiSuffix, limit, offset));
     return response.body();
   }
 
