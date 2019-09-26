@@ -13,6 +13,7 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
@@ -39,6 +40,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
@@ -101,6 +103,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -113,6 +116,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
+
+  public static final int ALL_DATASETS_LIMIT = 200;
 
   //HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
@@ -883,25 +888,53 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
+   * Utility method to run batch jobs on all dataset elements
+   */
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+    PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
+    PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    try {
+      do {
+        response.getResults().forEach(onDataset);
+        pagingRequest.setOffset(response.getResults().size());
+        response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+      } while (response.isEndOfRecords());
+    } catch (Exception ex) {
+      LOG.error("Error processing all datasets", ex);
+      throw ex;
+    }
+  }
+
+  /**
+   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
+   * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
+   * necessary security.
+   */
+  @PostMapping("crawlall")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  public void crawlAll(@RequestParam("platform") String platform) {
+    doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform));
+  }
+
+  /**
    * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
    * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
    * necessary security.
    */
   @PostMapping("{key}/crawl")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawl(@PathVariable("key") UUID datasetKey) {
+  public void crawl(@PathVariable("key") UUID datasetKey, @RequestParam("platform") String platform) {
+    Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
       try {
         // we'll bump this to the top of the queue since it is a user initiated
-        messagePublisher.send(new StartCrawlMessage(datasetKey, StartCrawlMessage.Priority.CRITICAL));
+        messagePublisher.send(new StartCrawlMessage(datasetKey, StartCrawlMessage.Priority.CRITICAL.getPriority(), indexingPlatform));
       } catch (IOException e) {
         LOG.error("Unable to send message requesting crawl", e);
       }
-
     } else {
-      LOG.warn("Registry is configured to run without messaging capabilities.  Unable to crawl dataset[{}]",
-          datasetKey);
+      LOG.warn("Registry is configured to run without messaging capabilities. Unable to crawl dataset[{}]", datasetKey);
     }
   }
 
