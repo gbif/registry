@@ -12,6 +12,20 @@
  */
 package org.gbif.registry.ws.resources;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
+import com.google.common.io.Closeables;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.sun.jersey.api.NotFoundException;
+import org.apache.bval.guice.Validate;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
@@ -69,20 +83,12 @@ import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.mybatis.guice.transactional.Transactional;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -101,33 +107,24 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Closeables;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.sun.jersey.api.NotFoundException;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
  * A MyBATIS implementation of the service.
@@ -835,7 +832,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * as we cannot access any http request. The real server method does this correctly but has more parameters.
    */
   @Override
-  public Metadata insertMetadata(@PathParam("key") UUID datasetKey, InputStream document) {
+  public Metadata insertMetadata(UUID datasetKey, InputStream document) {
     // this method should never be called but from tests
     return insertMetadata(datasetKey, document, "UNKNOWN USER");
   }
@@ -967,7 +964,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
       try {
         // we'll bump this to the top of the queue since it is a user initiated
-        messagePublisher.send(new StartCrawlMessage(datasetKey, Optional.of(Priority.CRITICAL.getPriority()), indexingPlatform));
+        messagePublisher.send(new StartCrawlMessage(datasetKey, Priority.CRITICAL.getPriority(), indexingPlatform));
       } catch (IOException e) {
         LOG.error("Unable to send message requesting crawl", e);
       }
@@ -1064,7 +1061,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   protected List<UUID> owningEntityKeys(@NotNull Dataset entity) {
-    List<UUID> keys = new ArrayList();
+    List<UUID> keys = new ArrayList<>();
     keys.add(entity.getPublishingOrganizationKey());
     keys.add(ORGANIZATION_CACHE.getUnchecked(entity.getPublishingOrganizationKey()).getEndorsingNodeKey());
     return keys;
