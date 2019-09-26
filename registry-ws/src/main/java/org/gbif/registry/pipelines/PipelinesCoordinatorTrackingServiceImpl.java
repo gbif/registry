@@ -5,8 +5,12 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.util.comparators.EndpointCreatedComparator;
+import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.*;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -21,6 +25,8 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -52,6 +58,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // Enforce use of ISO-8601 format dates (http://wiki.fasterxml.com/JacksonFAQDateHandling)
     OBJECT_MAPPER.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
   }
+
+  private static final Comparator<Endpoint> ENDPOINT_COMPARATOR = Ordering.compound(Lists.newArrayList(
+    Collections.reverseOrder(new EndpointPriorityComparator()),
+    EndpointCreatedComparator.INSTANCE
+  ));
 
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
@@ -105,6 +116,23 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
       pagingRequest.setOffset(response.getResults().size());
       response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
+  }
+
+  private Set<StepType> handleVerbatimSteps(Set<StepType> steps, Dataset dataset) {
+    Set<StepType> newSteps = new HashSet<>(steps);
+    if (newSteps.contains(StepType.TO_VERBATIM)) {
+      newSteps.remove(StepType.TO_VERBATIM);
+      getEndpointToCrawl(dataset).ifPresent(endpoint -> {
+        if (EndpointType.DWC_ARCHIVE == endpoint.getType()) {
+          newSteps.add(StepType.DWCA_TO_VERBATIM);
+        } else if (EndpointType.BIOCASE_XML_ARCHIVE == endpoint.getType()) {
+          newSteps.add(StepType.ABCD_TO_VERBATIM);
+        } else {
+          newSteps.add(StepType.XML_TO_VERBATIM);
+        }
+      });
+    }
+    return newSteps;
   }
 
   @Override
@@ -206,7 +234,9 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
     // Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
-    steps.forEach(
+    Dataset dataset = datasetService.get(datasetKey);
+    Set<StepType> withVerbatimSteps = handleVerbatimSteps(steps, dataset);
+    handleVerbatimSteps(withVerbatimSteps, dataset).forEach(
         stepName ->
             getLatestSuccessfulStep(status, stepName)
                 .ifPresent(
@@ -218,22 +248,22 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                           publisher.send(
                               OBJECT_MAPPER.readValue(
                                   step.getMessage(), PipelinesInterpretedMessage.class));
-                        } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
+                        } else if (withVerbatimSteps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
                           responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
                           publisher.send(
                               OBJECT_MAPPER.readValue(
                                   step.getMessage(), PipelinesVerbatimMessage.class));
-                        } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
+                        } else if (withVerbatimSteps.contains(StepType.DWCA_TO_VERBATIM)) {
                           responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
                           publisher.send(
                               OBJECT_MAPPER.readValue(
                                   step.getMessage(), PipelinesDwcaMessage.class));
-                        } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
+                        } else if (withVerbatimSteps.contains(StepType.ABCD_TO_VERBATIM)) {
                           responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
                           publisher.send(
                               OBJECT_MAPPER.readValue(
                                   step.getMessage(), PipelinesAbcdMessage.class));
-                        } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
+                        } else if (withVerbatimSteps.contains(StepType.XML_TO_VERBATIM)) {
                           responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
                           publisher.send(
                               OBJECT_MAPPER.readValue(
@@ -381,5 +411,45 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     workflow.setSteps(stepsPreviousIteration);
 
     return workflow;
+  }
+
+
+  //Copied from CrawlerCoordinatorServiceImpl
+  /**
+   * Gets the endpoint that we want to crawl from the passed in dataset.
+   * <p/>
+   * We take into account a list of supported and prioritized endpoint types and verify that the declared dataset type
+   * matches a supported endpoint type.
+   *
+   * @param dataset to get the endpoint for
+   *
+   * @return will be present if we found an eligible endpoint
+   *
+   * @see EndpointPriorityComparator
+   */
+  private Optional<Endpoint> getEndpointToCrawl(Dataset dataset) {
+    // Are any of the endpoints eligible to be crawled
+    List<Endpoint> sortedEndpoints = prioritySortEndpoints(dataset.getEndpoints());
+    if (sortedEndpoints.isEmpty()) {
+      return Optional.empty();
+    }
+    Endpoint ep = sortedEndpoints.get(0);
+    return Optional.ofNullable(ep);
+  }
+
+  //Copied from CrawlerCoordinatorServiceImpl
+  private List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+
+    // Filter out all Endpoints that we can't crawl
+    List<Endpoint> result = Lists.newArrayList();
+    for (Endpoint endpoint : endpoints) {
+      if (EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType())) {
+        result.add(endpoint);
+      }
+    }
+
+    // Sort the remaining ones
+    result.sort(ENDPOINT_COMPARATOR);
+    return result;
   }
 }
