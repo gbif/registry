@@ -41,6 +41,11 @@ jwt:
   expiryTimeInMs: 600000
   issuer: GBIF-REGISTRY
 
+  # Pipelines properties
+pipelines:
+  envPrefix: test
+  esHost: https://test.com
+
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.testfile@
