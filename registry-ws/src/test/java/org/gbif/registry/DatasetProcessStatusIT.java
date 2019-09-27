@@ -12,6 +12,8 @@
  */
 package org.gbif.registry;
 
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Injector;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.CrawlJob;
@@ -40,14 +42,6 @@ import org.gbif.registry.ws.resources.InstallationResource;
 import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.net.URI;
-import java.util.Date;
-import java.util.UUID;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Injector;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -56,10 +50,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import java.net.URI;
+import java.util.Date;
+import java.util.UUID;
+
 import static org.gbif.registry.guice.RegistryTestModules.webservice;
 import static org.gbif.registry.guice.RegistryTestModules.webserviceClient;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Runs tests for the {@link DatasetProcessStatusService} implementations.
@@ -96,11 +94,11 @@ public class DatasetProcessStatusIT {
     Injector client = webserviceClient();
     return ImmutableList.<Object[]>of(
       // WS
-      new Object[] {webservice.getInstance(DatasetResource.class), webservice.getInstance(DatasetResource.class),
+      new Object[]{webservice.getInstance(DatasetResource.class), webservice.getInstance(DatasetResource.class),
         webservice.getInstance(OrganizationResource.class), webservice.getInstance(NodeResource.class),
         webservice.getInstance(InstallationResource.class), null},
       // WS-client
-      new Object[] {client.getInstance(DatasetProcessStatusService.class), client.getInstance(DatasetService.class),
+      new Object[]{client.getInstance(DatasetProcessStatusService.class), client.getInstance(DatasetService.class),
         client.getInstance(OrganizationService.class), client.getInstance(NodeService.class),
         client.getInstance(InstallationService.class), client.getInstance(SimplePrincipalProvider.class)});
   }
@@ -133,12 +131,15 @@ public class DatasetProcessStatusIT {
    */
   @Test
   public void testCreateAndGet() {
-    DatasetProcessStatus datasetProcessStatus = buildProcessStatus(createTestDataset(), 1);
-    datasetProcessStatusService.createDatasetProcessStatus(datasetProcessStatus);
-    DatasetProcessStatus datasetProcessStatus2 = datasetProcessStatusService.getDatasetProcessStatus(
-      datasetProcessStatus.getDatasetKey(),
-      datasetProcessStatus.getCrawlJob().getAttempt());
-    Assert.assertNotNull(datasetProcessStatus2);
+    DatasetProcessStatus expected = buildProcessStatus(createTestDataset(), 1);
+    datasetProcessStatusService.createDatasetProcessStatus(expected);
+    DatasetProcessStatus actual = datasetProcessStatusService.getDatasetProcessStatus(
+      expected.getDatasetKey(),
+      expected.getCrawlJob().getAttempt());
+    assertNotNull(actual);
+    // TODO: 27/09/2019 assert all the fields
+    assertEquals(expected.getFinishedCrawling(), actual.getFinishedCrawling());
+    assertEquals(expected.getStartedCrawling(), actual.getStartedCrawling());
   }
 
   /**
