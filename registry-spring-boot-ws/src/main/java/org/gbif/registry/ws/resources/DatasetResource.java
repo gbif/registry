@@ -102,6 +102,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -893,16 +894,21 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
-    try {
-      do {
-        response.getResults().forEach(onDataset);
-        pagingRequest.setOffset(response.getResults().size());
-        response = listByType(DatasetType.OCCURRENCE, pagingRequest);
-      } while (response.isEndOfRecords());
-    } catch (Exception ex) {
-      LOG.error("Error processing all datasets", ex);
-      throw ex;
-    }
+    do {
+      response
+          .getResults()
+          .forEach(
+              d -> {
+                try {
+                  LOG.info("trying to crawl dataset {}", d.getKey());
+                  onDataset.accept(d);
+                } catch (Exception ex) {
+                  LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
+                }
+              });
+      pagingRequest.setOffset(response.getResults().size());
+      response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    } while (!response.isEndOfRecords());
   }
 
   /**
@@ -913,7 +919,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @PostMapping("crawlall")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@RequestParam("platform") String platform) {
-    doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform));
+    CompletableFuture.runAsync(
+        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
   }
 
   /**
