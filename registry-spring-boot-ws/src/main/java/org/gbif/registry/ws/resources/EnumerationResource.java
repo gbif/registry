@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Extension;
@@ -101,7 +102,8 @@ public class EnumerationResource {
       // create a list with gbif and collection vocabulary enums
       ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
           .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
-          .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList());
+          .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
+          .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
 
       for (ClassInfo info : infosListBuilder.build()) {
         Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());
