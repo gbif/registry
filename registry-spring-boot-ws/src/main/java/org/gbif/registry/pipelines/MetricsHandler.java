@@ -11,6 +11,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 
+@Component
 public class MetricsHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetricsHandler.class);

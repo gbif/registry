@@ -34,6 +34,8 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -55,6 +57,7 @@ import java.util.stream.Collectors;
 /**
  * Service that allows to re-run pipeline steps on an specific attempt.
  */
+@Service
 public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistoryTrackingService {
 
   private static final Logger LOG =
@@ -97,7 +100,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PipelinesCoordinatorTrackingServiceImpl(
       @Autowired(required = false) MessagePublisher publisher,
       PipelineProcessMapper mapper,
-      DatasetService datasetService,
+      @Qualifier("datasetServiceStub") DatasetService datasetService,
       MetricsHandler metricsHandler) {
     this.publisher = publisher;
     this.mapper = mapper;
