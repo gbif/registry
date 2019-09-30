@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import okhttp3.MediaType;
@@ -169,11 +170,15 @@ public class MetricsHandler {
 
   @VisibleForTesting
   Set<MetricInfo> parseResponse(String bodyResponse) throws IOException {
-    if (bodyResponse == null) {
+    if (Strings.isNullOrEmpty(bodyResponse)) {
       return Collections.emptySet();
     }
 
     JsonNode jsonResponse = OBJECT_MAPPER.readTree(bodyResponse);
+
+    if (jsonResponse == null || jsonResponse.get("aggregations") == null) {
+      return Collections.emptySet();
+    }
 
     JsonNode buckets = jsonResponse.get("aggregations").get(UNIQUE_NAME_AGG).get("buckets");
 
