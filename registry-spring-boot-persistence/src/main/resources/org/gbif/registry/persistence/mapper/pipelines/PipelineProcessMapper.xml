@@ -42,7 +42,7 @@
     #{step.finished,jdbcType=OTHER},
     #{step.state,jdbcType=OTHER},
     #{step.message,jdbcType=VARCHAR},
-    #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
+    #{step.metrics,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler}::hstore,
     #{step.rerunReason,jdbcType=VARCHAR},
     #{step.createdBy,jdbcType=VARCHAR},
     #{pipelinesProcessKey,jdbcType=BIGINT}
@@ -54,7 +54,7 @@
     rerun_reason = #{step.rerunReason,jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
-    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler}::hstore
   </sql>
 
   <insert id="create" parameterType="org.gbif.api.model.pipelines.PipelineProcess" useGeneratedKeys="true" keyProperty="key">
