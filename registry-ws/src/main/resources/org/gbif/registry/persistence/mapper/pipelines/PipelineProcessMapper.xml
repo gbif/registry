@@ -72,6 +72,7 @@
     SELECT <include refid="STEP_FIELDS_SELECT"/>
     FROM pipeline_step
     WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
+    ORDER BY started DESC
   </select>
 
   <select id="getByDatasetAndAttempt" resultMap="PIPELINES_PROCESS_MAP">
