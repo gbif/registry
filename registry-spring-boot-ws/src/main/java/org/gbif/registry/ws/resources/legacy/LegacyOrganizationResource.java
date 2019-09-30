@@ -16,6 +16,7 @@ import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -54,7 +55,7 @@ public class LegacyOrganizationResource {
   private final String fromEmail;
 
   // TODO: 13/09/2019 use configuration instead of Value
-  public LegacyOrganizationResource(OrganizationService organizationService,
+  public LegacyOrganizationResource(@Qualifier("organizationServiceStub") OrganizationService organizationService,
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
                                     @Value("${mail.devemail.enabled}") boolean useDevEmail,

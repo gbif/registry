@@ -13,6 +13,7 @@ import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,7 +40,7 @@ public class LegacyEndpointResource {
 
   private final DatasetService datasetService;
 
-  public LegacyEndpointResource(DatasetService datasetService) {
+  public LegacyEndpointResource(@Qualifier("datasetServiceStub") DatasetService datasetService) {
     this.datasetService = datasetService;
   }
 

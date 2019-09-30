@@ -16,6 +16,7 @@ import org.gbif.registry.ws.model.LegacyInstallation;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,9 +49,9 @@ public class IptResource {
   private final DatasetService datasetService;
   private static Long ONE = 1L;
 
-  public IptResource(InstallationService installationService,
-                     OrganizationService organizationService,
-                     DatasetService datasetService) {
+  public IptResource(@Qualifier("installationServiceStub") InstallationService installationService,
+                     @Qualifier("organizationServiceStub") OrganizationService organizationService,
+                     @Qualifier("datasetServiceStub") DatasetService datasetService) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;

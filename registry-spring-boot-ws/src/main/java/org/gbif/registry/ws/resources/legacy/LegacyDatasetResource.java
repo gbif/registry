@@ -16,6 +16,7 @@ import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,10 +51,10 @@ public class LegacyDatasetResource {
   private final InstallationService installationService;
   private final IptResource iptResource;
 
-  public LegacyDatasetResource(OrganizationService organizationService,
-                               DatasetService datasetService,
+  public LegacyDatasetResource(@Qualifier("organizationServiceStub") OrganizationService organizationService,
+                               @Qualifier("datasetServiceStub") DatasetService datasetService,
                                IptResource iptResource,
-                               InstallationService installationService) {
+                               @Qualifier("installationServiceStub") InstallationService installationService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
