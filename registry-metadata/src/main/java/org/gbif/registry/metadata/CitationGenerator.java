@@ -91,7 +91,7 @@ public class CitationGenerator {
 
     // add DOI as the identifier.
     if (dataset.getDoi() != null) {
-      joiner.add(dataset.getDoi().getUrl().toString());
+      joiner.add(dataset.getDoi().getUrl().getPath());
     } else {
       //??
     }
