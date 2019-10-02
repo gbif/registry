@@ -16,6 +16,26 @@ import org.gbif.doi.metadata.datacite.Affiliation;
 import org.gbif.doi.metadata.datacite.Box;
 import org.gbif.doi.metadata.datacite.ContributorType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Contributors;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Contributors.Contributor;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Contributors.Contributor.ContributorName;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Dates;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions.Description;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.GeoLocations;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.GeoLocations.GeoLocation;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList.Rights;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Subjects;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
@@ -53,7 +73,7 @@ public final class DatasetConverter {
       build();
 
   // Patterns must return 2 groups: scheme and id
-  public static final Map<Pattern, String> SUPPORTED_SCHEMES = ImmutableMap.of(
+  private static final Map<Pattern, String> SUPPORTED_SCHEMES = ImmutableMap.of(
     Pattern.compile("^(http[s]?://orcid.org/)([\\d\\-]+$)"), ORCID_NAME_IDENTIFIER_SCHEME);
 
   private DatasetConverter() {
@@ -73,22 +93,22 @@ public final class DatasetConverter {
    * As the publicationYear property is often not available from newly created datasets, this converter uses the
    * current year as the default in case no created timestamp or pubdate exists.
    */
-  // TODO: 01/10/2019 method is too complex
   public static DataCiteMetadata convert(Dataset d, Organization publisher) {
+    final DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder();
+
     // always add required metadata
-    DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder()
-      // build titles
-      .withTitles(
-        DataCiteMetadata.Titles.builder()
-          .addTitle(
-            DataCiteMetadata.Titles.Title.builder()
-              .withValue(d.getTitle())
-              .build())
-          .build());
+    // build titles
+    b.withTitles(
+      Titles.builder()
+        .withTitle(
+          Title.builder()
+            .withValue(d.getTitle())
+            .build())
+        .build());
 
     // build publisher
     b.withPublisher(
-      DataCiteMetadata.Publisher.builder()
+      Publisher.builder()
         .withValue(publisher.getTitle())
         .build());
 
@@ -107,13 +127,13 @@ public final class DatasetConverter {
     // empty list of RelatedIdentifiers is expected but callers
     b.withRelatedIdentifiers().end();
 
-    final DataCiteMetadata.Dates.Builder<Void> datesBuilder = DataCiteMetadata.Dates.builder();
+    final Dates.Builder<Void> datesBuilder = Dates.builder();
     if (d.getCreated() != null) {
       // build dates
       b.withDates(
         datesBuilder
           .addDate(
-            DataCiteMetadata.Dates.Date.builder()
+            Dates.Date.builder()
               .withDateType(DateType.CREATED)
               .withValue(fdate(d.getCreated()))
               .build())
@@ -128,7 +148,7 @@ public final class DatasetConverter {
       b.withDates(
         datesBuilder
           .addDate(
-            DataCiteMetadata.Dates.Date.builder()
+            Dates.Date.builder()
               .withDateType(DateType.UPDATED)
               .withValue(fdate(d.getModified()))
               .build())
@@ -142,9 +162,9 @@ public final class DatasetConverter {
 
       // handle Creators
       List<Contact> resourceCreators = contactAdapter.getCreators();
-      final DataCiteMetadata.Creators.Builder<Void> creatorsBuilder = DataCiteMetadata.Creators.builder();
+      final Creators.Builder<Void> creatorsBuilder = Creators.builder();
       for (Contact resourceCreator : resourceCreators) {
-        final Optional<DataCiteMetadata.Creators.Creator> creatorWrapper = toDataCiteCreator(resourceCreator);
+        final Optional<Creator> creatorWrapper = toDataCiteCreator(resourceCreator);
         creatorFound = creatorFound ? creatorFound : creatorWrapper.isPresent();
         creatorWrapper
           // build creators
@@ -160,7 +180,7 @@ public final class DatasetConverter {
       List<Contact> contributors = Lists.newArrayList(d.getContacts());
       contributors.removeAll(resourceCreators);
 
-      final DataCiteMetadata.Contributors.Builder<Void> contributorsBuilder = DataCiteMetadata.Contributors.builder();
+      final Contributors.Builder<Void> contributorsBuilder = Contributors.builder();
       if (!contributors.isEmpty()) {
         for (Contact contact : contributors) {
           toDataCiteContributor(contact)
@@ -178,7 +198,7 @@ public final class DatasetConverter {
     if (!creatorFound) {
       // creator is mandatory, build a default one
       b.withCreators(
-        DataCiteMetadata.Creators.builder()
+        Creators.builder()
           .addCreator(getDefaultGBIFDataCiteCreator(d.getCreatedBy()))
           .build());
     }
@@ -192,7 +212,7 @@ public final class DatasetConverter {
     if (d.getDoi() != null) {
       // build identifiers
       b.withIdentifier(
-        DataCiteMetadata.Identifier.builder()
+        Identifier.builder()
           .withIdentifierType(IdentifierType.DOI.name())
           .withValue(d.getDoi().getDoiName())
           .build());
@@ -200,9 +220,9 @@ public final class DatasetConverter {
       if (d.getKey() != null) {
         // build alternate identifiers
         b.withAlternateIdentifiers(
-          DataCiteMetadata.AlternateIdentifiers.builder()
+          AlternateIdentifiers.builder()
             .addAlternateIdentifier(
-              DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier.builder()
+              AlternateIdentifier.builder()
                 .withAlternateIdentifierType("UUID")
                 .withValue(d.getKey().toString())
                 .build())
@@ -211,7 +231,7 @@ public final class DatasetConverter {
     } else if (d.getKey() != null) {
       // build identifier
       b.withIdentifier(
-        DataCiteMetadata.Identifier.builder()
+        Identifier.builder()
           .withIdentifierType(IdentifierType.UUID.name())
           .withValue(d.getKey().toString())
           .build());
@@ -220,9 +240,9 @@ public final class DatasetConverter {
     if (!Strings.isNullOrEmpty(d.getDescription())) {
       // build description
       b.withDescriptions(
-        DataCiteMetadata.Descriptions.builder()
+        Descriptions.builder()
           .addDescription(
-            DataCiteMetadata.Descriptions.Description.builder()
+            Description.builder()
               .withContent(d.getDescription())
               .withDescriptionType(DescriptionType.ABSTRACT)
               .build())
@@ -237,9 +257,9 @@ public final class DatasetConverter {
     // build rights list
     if (d.getLicense() != null && d.getLicense().isConcrete()) {
       b.withRightsList(
-        DataCiteMetadata.RightsList.builder()
-          .addRights(
-            DataCiteMetadata.RightsList.Rights.builder()
+        RightsList.builder()
+          .withRights(
+            Rights.builder()
               .withRightsURI(d.getLicense().getLicenseUrl())
               .withValue(d.getLicense().getLicenseTitle())
               .build())
@@ -248,9 +268,9 @@ public final class DatasetConverter {
       // this is still require for metadata only resource
       if (!Strings.isNullOrEmpty(d.getRights())) {
         b.withRightsList(
-          DataCiteMetadata.RightsList.builder()
-            .addRights(
-              DataCiteMetadata.RightsList.Rights.builder()
+          RightsList.builder()
+            .withRights(
+              Rights.builder()
                 .withValue(d.getRights())
                 .build())
             .build());
@@ -258,11 +278,11 @@ public final class DatasetConverter {
     }
 
     // build subjects
-    final DataCiteMetadata.Subjects.Builder<Void> subjectsBuilder = DataCiteMetadata.Subjects.builder();
+    final Subjects.Builder<Void> subjectsBuilder = Subjects.builder();
     for (KeywordCollection kCol : d.getKeywordCollections()) {
       for (String k : kCol.getKeywords()) {
         if (!Strings.isNullOrEmpty(k)) {
-          DataCiteMetadata.Subjects.Subject s = DataCiteMetadata.Subjects.Subject.builder().withValue(k).build();
+          Subjects.Subject s = Subjects.Subject.builder().withValue(k).build();
           if (!Strings.isNullOrEmpty(kCol.getThesaurus())) {
             s.setSubjectScheme(kCol.getThesaurus());
           }
@@ -273,12 +293,12 @@ public final class DatasetConverter {
       }
     }
 
-    final DataCiteMetadata.GeoLocations.Builder<Void> geoLocationsBuilder = DataCiteMetadata.GeoLocations.builder();
+    final GeoLocations.Builder<Void> geoLocationsBuilder = GeoLocations.builder();
     for (GeospatialCoverage gc : d.getGeographicCoverages()) {
       if (gc.getBoundingBox() != null) {
         // build geo locations
         b.withGeoLocations(geoLocationsBuilder
-          .addGeoLocation(DataCiteMetadata.GeoLocations.GeoLocation.builder()
+          .addGeoLocation(GeoLocation.builder()
             .addGeoLocationPlace(gc.getDescription())
             .addGeoLocationBox(Box.builder()
               .withEastBoundLongitude((float) gc.getBoundingBox().getMaxLongitude())
@@ -298,7 +318,7 @@ public final class DatasetConverter {
    *
    * @return Creator instance or null if it is not possible to build one
    */
-  private static Optional<DataCiteMetadata.Creators.Creator> toDataCiteCreator(Contact contact) {
+  private static Optional<Creator> toDataCiteCreator(Contact contact) {
     final String creatorNameValue = ContactAdapter.formatContactName(contact);
 
     // CreatorName is mandatory
@@ -306,11 +326,11 @@ public final class DatasetConverter {
       return Optional.empty();
     }
 
-    final DataCiteMetadata.Creators.Creator.Builder<Void> creatorBuilder = DataCiteMetadata.Creators.Creator.builder();
+    final Creator.Builder<Void> creatorBuilder = Creator.builder();
 
     creatorBuilder
       .withCreatorName(
-        DataCiteMetadata.Creators.Creator.CreatorName.builder()
+        CreatorName.builder()
           .withValue(creatorNameValue)
           .build());
 
@@ -334,10 +354,10 @@ public final class DatasetConverter {
   /**
    * Transforms a Contact into a DataCite Creator.
    */
-  private static DataCiteMetadata.Creators.Creator getDefaultGBIFDataCiteCreator(String fullname) {
-    return DataCiteMetadata.Creators.Creator.builder()
+  private static Creator getDefaultGBIFDataCiteCreator(String fullname) {
+    return Creator.builder()
       .withCreatorName(
-        DataCiteMetadata.Creators.Creator.CreatorName.builder()
+        CreatorName.builder()
           .withValue(fullname)
           .build())
       .withNameIdentifier(
@@ -354,7 +374,7 @@ public final class DatasetConverter {
    *
    * @return Contributor instance or null if it is not possible to build one
    */
-  private static Optional<DataCiteMetadata.Contributors.Contributor> toDataCiteContributor(Contact contact) {
+  private static Optional<Contributor> toDataCiteContributor(Contact contact) {
     final String nameValue = ContactAdapter.formatContactName(contact);
 
     // CreatorName is mandatory
@@ -362,15 +382,13 @@ public final class DatasetConverter {
       return Optional.empty();
     }
 
-    final DataCiteMetadata.Contributors.Contributor.Builder<Void> contributorBuilder = DataCiteMetadata.Contributors.Contributor.builder();
+    final Contributor.Builder<Void> contributorBuilder = Contributor.builder();
     contributorBuilder
       .withContributorName(
-        DataCiteMetadata.Contributors.Contributor.ContributorName.builder()
+        ContributorName.builder()
           .withValue(nameValue)
           .build())
-      .withContributorType(
-        REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON)
-      );
+      .withContributorType(REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON));
 
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
