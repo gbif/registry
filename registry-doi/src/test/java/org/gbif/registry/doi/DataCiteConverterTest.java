@@ -38,6 +38,7 @@ import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.utils.file.FileUtils;
 import org.junit.Test;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
@@ -128,11 +129,6 @@ public class DataCiteConverterTest {
     contact4.setOrganization("DataCite");
     d.getContacts().add(contact4);
 
-    DataCiteMetadata m = convertAndValidate(doi, d, publisher);
-    assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
-    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName().getValue());
-    assertEquals(doi.getDoiName(), m.getIdentifier().getValue());
-
     d.setDoi(doi);
     d.setDescription("some description");
     List<GeospatialCoverage> geos = Lists.newArrayList();
@@ -146,20 +142,13 @@ public class DataCiteConverterTest {
     g2.setDescription("geo description 2");
     g2.setBoundingBox(new BoundingBox(5, 6, 7, 8));
 
-    m = convertAndValidate(doi, d, publisher);
-    assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
-    assertEquals("Markus", m.getCreators().getCreator().get(0).getCreatorName().getValue());
-    assertEquals("Hubert Reeves", m.getContributors().getContributor().get(0).getContributorName().getValue());
-    assertEquals("10.1234/5678", m.getIdentifier().getValue());
-    assertEquals(Lists.<Double>newArrayList(1d, 3d, 2d, 4d), m.getGeoLocations().getGeoLocation().get(0).getGeoLocationPlaceOrGeoLocationPointOrGeoLocationBox());
-    assertEquals(d.getDescription(), m.getDescriptions().getDescription().get(0).getContent().get(0));
-    assertEquals(License.CC0_1_0.getLicenseUrl(), m.getRightsList().getRights().get(0).getRightsURI());
+    final DataCiteMetadata expectedMetadata = DataCiteValidator.fromXml(FileUtils.classpathStream("metadata/metadata-dataset.xml"));
+    final String expected = DataCiteValidator.toXml(expectedMetadata, true);
 
-    // -2 is to subtract those with no name (they should be ignored)
-    assertEquals(d.getContacts().size() -2, m.getCreators().getCreator().size() +
-            m.getContributors().getContributor().size());
+    final String actual = convertToXml(doi, d, publisher);
 
-    assertNotNull("RelatedIdentifiers is expected to be not null", m.getRelatedIdentifiers());
+    assertEquals(expected, actual);
+    assertThat(actual, CompareMatcher.isIdenticalTo(expected).ignoreWhitespace().normalizeWhitespace());
   }
 
   private DataCiteMetadata convertAndValidate(DOI doi, Dataset d, Organization publisher) throws InvalidMetadataException {
@@ -215,10 +204,11 @@ public class DataCiteConverterTest {
 
     DataCiteMetadata metadata = DataCiteConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
     String xml = DataCiteValidator.toXml(download.getDoi(), metadata);
-    assertTrue(xml.contains(du1.getDatasetDOI().getDoiName()));
-    assertTrue(xml.contains(du2.getDatasetDOI().getDoiName()));
-    assertTrue(xml.contains(String.valueOf(du1.getNumberRecords())));
-    assertTrue(xml.contains(String.valueOf(du2.getNumberRecords())));
+
+    final DataCiteMetadata expectedMetadata = DataCiteValidator.fromXml(FileUtils.classpathStream("metadata/metadata-download.xml"));
+    final String expected = DataCiteValidator.toXml(expectedMetadata, true);
+
+    assertThat(xml, CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
   }
 
   @Test
