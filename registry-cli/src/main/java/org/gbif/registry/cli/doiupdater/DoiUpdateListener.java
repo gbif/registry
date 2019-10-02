@@ -1,5 +1,6 @@
 package org.gbif.registry.cli.doiupdater;
 
+import org.apache.http.HttpStatus;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
@@ -10,16 +11,14 @@ import org.gbif.doi.service.DoiExistsException;
 import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.InvalidMetadataException;
+import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.registry.doi.DataCiteConverter;
-
-import java.net.URI;
-
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+
+import java.net.URI;
 
 /**
  * Message callback implementation to take DOI updates and send them to DataCite.
@@ -92,10 +91,10 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
             String truncatedXml;
             if (descriptionTruncated) {
               LOG.warn("Truncating all constituent relations as last resort from metadata for DOI {}", msg.getDoi());
-              truncatedXml = DataCiteConverter.truncateConstituents(msg.getDoi(), msg.getMetadata(), msg.getTarget());
+              truncatedXml = DownloadConverter.truncateConstituents(msg.getDoi(), msg.getMetadata(), msg.getTarget());
             } else {
               LOG.debug("Original metadata for DOI {}:\n\n{}", msg.getDoi(), msg.getMetadata());
-              truncatedXml = DataCiteConverter.truncateDescription(msg.getDoi(), msg.getMetadata(), msg.getTarget());
+              truncatedXml = DownloadConverter.truncateDescription(msg.getDoi(), msg.getMetadata(), msg.getTarget());
               descriptionTruncated = true;
             }
             msg = new ChangeDoiMessage(msg.getStatus(), msg.getDoi(), truncatedXml, msg.getTarget());
