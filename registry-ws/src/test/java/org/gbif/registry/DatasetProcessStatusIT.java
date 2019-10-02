@@ -137,9 +137,29 @@ public class DatasetProcessStatusIT {
       expected.getDatasetKey(),
       expected.getCrawlJob().getAttempt());
     assertNotNull(actual);
-    // TODO: 27/09/2019 assert all the fields
     assertEquals(expected.getFinishedCrawling(), actual.getFinishedCrawling());
     assertEquals(expected.getStartedCrawling(), actual.getStartedCrawling());
+    assertEquals(expected.getDatasetKey(), actual.getDatasetKey());
+    assertEquals(expected.getCrawlJob(), actual.getCrawlJob());
+    assertEquals(expected.getDeclaredCount(), actual.getDeclaredCount());
+    assertEquals(expected.getFinishReason(), actual.getFinishReason());
+    assertEquals(expected.getFragmentsEmitted(), actual.getFragmentsEmitted());
+    assertEquals(expected.getFragmentsProcessed(), actual.getFragmentsProcessed());
+    assertEquals(expected.getFragmentsReceived(), actual.getFragmentsReceived());
+    assertEquals(expected.getInterpretedOccurrencesPersistedError(), actual.getInterpretedOccurrencesPersistedError());
+    assertEquals(expected.getInterpretedOccurrencesPersistedSuccessful(), actual.getInterpretedOccurrencesPersistedSuccessful());
+    assertEquals(expected.getPagesCrawled(), expected.getPagesCrawled());
+    assertEquals(expected.getProcessStateChecklist(), actual.getProcessStateChecklist());
+    assertEquals(expected.getProcessStateOccurrence(), actual.getProcessStateOccurrence());
+    assertEquals(expected.getProcessStateSample(), actual.getProcessStateSample());
+    assertEquals(expected.getVerbatimOccurrencesPersistedSuccessful(), actual.getVerbatimOccurrencesPersistedSuccessful());
+    assertEquals(expected.getVerbatimOccurrencesPersistedError(), actual.getVerbatimOccurrencesPersistedError());
+    assertEquals(expected.getRawOccurrencesPersistedError(), actual.getRawOccurrencesPersistedError());
+    assertEquals(expected.getRawOccurrencesPersistedNew(), actual.getRawOccurrencesPersistedNew());
+    assertEquals(expected.getRawOccurrencesPersistedUnchanged(), actual.getRawOccurrencesPersistedUnchanged());
+    assertEquals(expected.getRawOccurrencesPersistedUpdated(), actual.getRawOccurrencesPersistedUpdated());
+    assertEquals(expected.getPagesFragmentedSuccessful(), actual.getPagesFragmentedSuccessful());
+    assertEquals(expected.getPagesFragmentedError(), actual.getPagesFragmentedError());
   }
 
   /**
