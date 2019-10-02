@@ -1,4 +1,4 @@
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.converter;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
