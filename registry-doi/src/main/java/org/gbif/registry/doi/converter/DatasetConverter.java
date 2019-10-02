@@ -84,8 +84,8 @@ public final class DatasetConverter {
    * DataCite requires at least the following properties:
    * <ul>
    * <li>Identifier</li>
-   * <li>Creator</li>
-   * <li>Title</li>
+   * <li>Creators</li>
+   * <li>Titles</li>
    * <li>Publisher</li>
    * <li>PublicationYear</li>
    * <li>ResourceType</li>
@@ -93,211 +93,37 @@ public final class DatasetConverter {
    * As the publicationYear property is often not available from newly created datasets, this converter uses the
    * current year as the default in case no created timestamp or pubdate exists.
    */
-  public static DataCiteMetadata convert(Dataset d, Organization publisher) {
-    final DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder();
+  public static DataCiteMetadata convert(Dataset dataset, Organization publisher) {
+    final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
-    // always add required metadata
-    // build titles
-    b.withTitles(
-      Titles.builder()
-        .withTitle(
-          Title.builder()
-            .withValue(d.getTitle())
-            .build())
-        .build());
+    // Required fields
+    convertIdentifier(builder, dataset);
+    convertCreators(builder, dataset);
+    convertTitles(builder, dataset);
+    convertPublisher(builder, publisher);
+    convertPublicationYear(builder, dataset);
+    convertResourceType(builder, dataset);
 
-    // build publisher
-    b.withPublisher(
-      Publisher.builder()
-        .withValue(publisher.getTitle())
-        .build());
+    // Optional and recommended fields
+    convertDates(builder, dataset);
+    convertDescriptions(builder, dataset);
+    convertLanguage(builder, dataset);
+    convertContributors(builder, dataset);
+    convertAlternateIdentifiers(builder, dataset);
+    convertRelatedIdentifiers(builder, dataset);
+    convertRightsList(builder, dataset);
+    convertSubjects(builder, dataset);
+    convertGeoLocations(builder, dataset);
 
-    // build publication year
-    // default to this year, e.g. when creating new datasets. This field is required!
-    b.withPublicationYear(getYear(new Date()));
+    return builder.build();
+  }
 
-    // build resource type
-    b.withResourceType(
-      DataCiteMetadata.ResourceType.builder()
-        .withResourceTypeGeneral(ResourceType.DATASET)
-        .withValue(d.getType().name())
-        .build());
-
-    // build related identifiers
-    // empty list of RelatedIdentifiers is expected but callers
-    b.withRelatedIdentifiers().end();
-
-    final Dates.Builder<Void> datesBuilder = Dates.builder();
-    if (d.getCreated() != null) {
-      // build dates
-      b.withDates(
-        datesBuilder
-          .addDate(
-            Dates.Date.builder()
-              .withDateType(DateType.CREATED)
-              .withValue(fdate(d.getCreated()))
-              .build())
-          .build());
-    }
-
-    if (d.getModified() != null) {
-      // build publication year
-      b.withPublicationYear(getYear(d.getModified()));
-
-      // build dates
-      b.withDates(
-        datesBuilder
-          .addDate(
-            Dates.Date.builder()
-              .withDateType(DateType.UPDATED)
-              .withValue(fdate(d.getModified()))
-              .build())
-          .build());
-    }
-
-    // handle contacts
-    boolean creatorFound = false;
-    if (d.getContacts() != null && !d.getContacts().isEmpty()) {
-      ContactAdapter contactAdapter = new ContactAdapter(d.getContacts());
-
-      // handle Creators
-      List<Contact> resourceCreators = contactAdapter.getCreators();
-      final Creators.Builder<Void> creatorsBuilder = Creators.builder();
-      for (Contact resourceCreator : resourceCreators) {
-        final Optional<Creator> creatorWrapper = toDataCiteCreator(resourceCreator);
-        creatorFound = creatorFound ? creatorFound : creatorWrapper.isPresent();
-        creatorWrapper
-          // build creators
-          .ifPresent(creator -> b.withCreators(
-            creatorsBuilder
-              .addCreator(creator)
-              .build()
-            )
-          );
-      }
-
-      // handle Contributors
-      List<Contact> contributors = Lists.newArrayList(d.getContacts());
-      contributors.removeAll(resourceCreators);
-
-      final Contributors.Builder<Void> contributorsBuilder = Contributors.builder();
-      if (!contributors.isEmpty()) {
-        for (Contact contact : contributors) {
-          toDataCiteContributor(contact)
-            // build contributors
-            .ifPresent(contributor -> b.withContributors(
-              contributorsBuilder
-                .addContributor(contributor)
-                .build()
-              )
-            );
-        }
-      }
-    }
-
-    if (!creatorFound) {
-      // creator is mandatory, build a default one
-      b.withCreators(
-        Creators.builder()
-          .addCreator(getDefaultGBIFDataCiteCreator(d.getCreatedBy()))
-          .build());
-    }
-
-    if (d.getPubDate() != null) {
-      // build publication year
-      // use pub date for publication year if it exists
-      b.withPublicationYear(getYear(d.getPubDate()));
-    }
-
-    if (d.getDoi() != null) {
-      // build identifiers
-      b.withIdentifier(
-        Identifier.builder()
-          .withIdentifierType(IdentifierType.DOI.name())
-          .withValue(d.getDoi().getDoiName())
-          .build());
-
-      if (d.getKey() != null) {
-        // build alternate identifiers
-        b.withAlternateIdentifiers(
-          AlternateIdentifiers.builder()
-            .addAlternateIdentifier(
-              AlternateIdentifier.builder()
-                .withAlternateIdentifierType("UUID")
-                .withValue(d.getKey().toString())
-                .build())
-            .build());
-      }
-    } else if (d.getKey() != null) {
-      // build identifier
-      b.withIdentifier(
-        Identifier.builder()
-          .withIdentifierType(IdentifierType.UUID.name())
-          .withValue(d.getKey().toString())
-          .build());
-    }
-
-    if (!Strings.isNullOrEmpty(d.getDescription())) {
-      // build description
-      b.withDescriptions(
-        Descriptions.builder()
-          .addDescription(
-            Description.builder()
-              .withContent(d.getDescription())
-              .withDescriptionType(DescriptionType.ABSTRACT)
-              .build())
-          .build());
-    }
-
-    if (d.getDataLanguage() != null) {
-      // build language
-      b.withLanguage(d.getDataLanguage().getIso3LetterCode());
-    }
-
-    // build rights list
-    if (d.getLicense() != null && d.getLicense().isConcrete()) {
-      b.withRightsList(
-        RightsList.builder()
-          .withRights(
-            Rights.builder()
-              .withRightsURI(d.getLicense().getLicenseUrl())
-              .withValue(d.getLicense().getLicenseTitle())
-              .build())
-          .build());
-    } else {
-      // this is still require for metadata only resource
-      if (!Strings.isNullOrEmpty(d.getRights())) {
-        b.withRightsList(
-          RightsList.builder()
-            .withRights(
-              Rights.builder()
-                .withValue(d.getRights())
-                .build())
-            .build());
-      }
-    }
-
-    // build subjects
-    final Subjects.Builder<Void> subjectsBuilder = Subjects.builder();
-    for (KeywordCollection kCol : d.getKeywordCollections()) {
-      for (String k : kCol.getKeywords()) {
-        if (!Strings.isNullOrEmpty(k)) {
-          Subjects.Subject s = Subjects.Subject.builder().withValue(k).build();
-          if (!Strings.isNullOrEmpty(kCol.getThesaurus())) {
-            s.setSubjectScheme(kCol.getThesaurus());
-          }
-          b.withSubjects(subjectsBuilder
-            .addSubject(s)
-            .build());
-        }
-      }
-    }
-
+  private static void convertGeoLocations(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
     final GeoLocations.Builder<Void> geoLocationsBuilder = GeoLocations.builder();
-    for (GeospatialCoverage gc : d.getGeographicCoverages()) {
+    for (GeospatialCoverage gc : dataset.getGeographicCoverages()) {
       if (gc.getBoundingBox() != null) {
         // build geo locations
-        b.withGeoLocations(geoLocationsBuilder
+        builder.withGeoLocations(geoLocationsBuilder
           .addGeoLocation(GeoLocation.builder()
             .addGeoLocationPlace(gc.getDescription())
             .addGeoLocationBox(Box.builder()
@@ -310,7 +136,210 @@ public final class DatasetConverter {
           .build());
       }
     }
-    return b.build();
+  }
+
+  private static void convertSubjects(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    final Subjects.Builder<Void> subjectsBuilder = Subjects.builder();
+    for (KeywordCollection kCol : dataset.getKeywordCollections()) {
+      for (String k : kCol.getKeywords()) {
+        if (!Strings.isNullOrEmpty(k)) {
+          Subjects.Subject s = Subjects.Subject.builder().withValue(k).build();
+          if (!Strings.isNullOrEmpty(kCol.getThesaurus())) {
+            s.setSubjectScheme(kCol.getThesaurus());
+          }
+          builder.withSubjects(subjectsBuilder
+            .addSubject(s)
+            .build());
+        }
+      }
+    }
+  }
+
+  private static void convertRightsList(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getLicense() != null && dataset.getLicense().isConcrete()) {
+      builder.withRightsList(
+        RightsList.builder()
+          .withRights(
+            Rights.builder()
+              .withRightsURI(dataset.getLicense().getLicenseUrl())
+              .withValue(dataset.getLicense().getLicenseTitle())
+              .build())
+          .build());
+    } else {
+      // this is still require for metadata only resource
+      if (!Strings.isNullOrEmpty(dataset.getRights())) {
+        builder.withRightsList(
+          RightsList.builder()
+            .withRights(
+              Rights.builder()
+                .withValue(dataset.getRights())
+                .build())
+            .build());
+      }
+    }
+  }
+
+  private static void convertRelatedIdentifiers(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    // empty list of RelatedIdentifiers is expected but callers
+    builder.withRelatedIdentifiers().end();
+  }
+
+  private static void convertLanguage(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getDataLanguage() != null) {
+      builder.withLanguage(dataset.getDataLanguage().getIso3LetterCode());
+    }
+  }
+
+  private static void convertDescriptions(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (!Strings.isNullOrEmpty(dataset.getDescription())) {
+      builder.withDescriptions(
+        Descriptions.builder()
+          .addDescription(
+            Description.builder()
+              .withContent(dataset.getDescription())
+              .withDescriptionType(DescriptionType.ABSTRACT)
+              .build())
+          .build());
+    }
+  }
+
+  private static void convertDates(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    final Dates.Builder<Void> datesBuilder = Dates.builder();
+    if (dataset.getCreated() != null) {
+      builder.withDates(
+        datesBuilder
+          .addDate(
+            Dates.Date.builder()
+              .withDateType(DateType.CREATED)
+              .withValue(fdate(dataset.getCreated()))
+              .build())
+          .build());
+    }
+
+    if (dataset.getModified() != null) {
+      builder.withDates(
+        datesBuilder
+          .addDate(
+            Dates.Date.builder()
+              .withDateType(DateType.UPDATED)
+              .withValue(fdate(dataset.getModified()))
+              .build())
+          .build());
+    }
+  }
+
+  private static void convertAlternateIdentifiers(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getDoi() != null && dataset.getKey() != null) {
+      builder.withAlternateIdentifiers(
+        AlternateIdentifiers.builder()
+          .addAlternateIdentifier(
+            AlternateIdentifier.builder()
+              .withAlternateIdentifierType("UUID")
+              .withValue(dataset.getKey().toString())
+              .build())
+          .build());
+    }
+  }
+
+  private static void convertIdentifier(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getDoi() != null) {
+      builder.withIdentifier(
+        Identifier.builder()
+          .withIdentifierType(IdentifierType.DOI.name())
+          .withValue(dataset.getDoi().getDoiName())
+          .build());
+    } else if (dataset.getKey() != null) {
+      builder.withIdentifier(
+        Identifier.builder()
+          .withIdentifierType(IdentifierType.UUID.name())
+          .withValue(dataset.getKey().toString())
+          .build());
+    }
+  }
+
+  private static void convertContributors(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getContacts() != null && !dataset.getContacts().isEmpty()) {
+      ContactAdapter contactAdapter = new ContactAdapter(dataset.getContacts());
+
+      List<Contact> resourceCreators = contactAdapter.getCreators();
+      List<Contact> contributors = Lists.newArrayList(dataset.getContacts());
+      contributors.removeAll(resourceCreators);
+
+      final Contributors.Builder<Void> contributorsBuilder = Contributors.builder();
+      if (!contributors.isEmpty()) {
+        for (Contact contact : contributors) {
+          toDataCiteContributor(contact)
+            .ifPresent(contributor -> builder.withContributors(
+              contributorsBuilder
+                .addContributor(contributor)
+                .build()));
+        }
+      }
+    }
+  }
+
+  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    boolean creatorFound = false;
+    if (dataset.getContacts() != null && !dataset.getContacts().isEmpty()) {
+      ContactAdapter contactAdapter = new ContactAdapter(dataset.getContacts());
+
+      List<Contact> resourceCreators = contactAdapter.getCreators();
+      final Creators.Builder<Void> creatorsBuilder = Creators.builder();
+      for (Contact resourceCreator : resourceCreators) {
+        final Optional<Creator> creatorWrapper = toDataCiteCreator(resourceCreator);
+        creatorFound = creatorFound ? creatorFound : creatorWrapper.isPresent();
+        creatorWrapper
+          .ifPresent(creator -> builder.withCreators(
+            creatorsBuilder
+              .addCreator(creator)
+              .build()));
+      }
+    }
+
+    if (!creatorFound) {
+      // creator is mandatory, build a default one
+      builder.withCreators(
+        Creators.builder()
+          .addCreator(getDefaultGBIFDataCiteCreator(dataset.getCreatedBy()))
+          .build());
+    }
+  }
+
+  private static void convertResourceType(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    builder.withResourceType(
+      DataCiteMetadata.ResourceType.builder()
+        .withResourceTypeGeneral(ResourceType.DATASET)
+        .withValue(dataset.getType().name())
+        .build());
+  }
+
+  private static void convertPublicationYear(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    if (dataset.getPubDate() != null) {
+      // use pub date for publication year if it exists
+      builder.withPublicationYear(getYear(dataset.getPubDate()));
+    } else if (dataset.getModified() != null) {
+      builder.withPublicationYear(getYear(dataset.getModified()));
+    } else {
+      // default to this year, e.g. when creating new datasets. This field is required!
+      builder.withPublicationYear(getYear(new Date()));
+    }
+  }
+
+  private static void convertPublisher(DataCiteMetadata.Builder<Void> builder, Organization publisher) {
+    builder.withPublisher(
+      Publisher.builder()
+        .withValue(publisher.getTitle())
+        .build());
+  }
+
+  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+    builder.withTitles(
+      Titles.builder()
+        .withTitle(
+          Title.builder()
+            .withValue(dataset.getTitle())
+            .build())
+        .build());
   }
 
   /**
