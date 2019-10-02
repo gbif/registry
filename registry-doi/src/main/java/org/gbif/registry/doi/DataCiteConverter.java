@@ -23,7 +23,6 @@ import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.metadata.datacite.NameType;
-import org.gbif.doi.metadata.datacite.ObjectFactory;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
@@ -55,8 +54,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 public class DataCiteConverter {
-
-  private static final ObjectFactory FACTORY = new ObjectFactory();
 
   public static final String ORCID_NAME_IDENTIFIER_SCHEME = "ORCID";
   public static final String RESEARCHERID_NAME_IDENTIFIER_SCHEME = "ResearcherID";
@@ -93,10 +90,6 @@ public class DataCiteConverter {
     //DO nothing
   }
 
-  private static String fdate(Date date) {
-    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
-  }
-
   /**
    * Convert a dataset and publisher object into a datacite metadata instance.
    * DataCite requires at least the following properties:
@@ -106,10 +99,10 @@ public class DataCiteConverter {
    * <li>Title</li>
    * <li>Publisher</li>
    * <li>PublicationYear</li>
+   * <li>ResourceType</li>
    * </ul>
    * As the publicationYear property is often not available from newly created datasets, this converter uses the
-   * current
-   * year as the default in case no created timestamp or pubdate exists.
+   * current year as the default in case no created timestamp or pubdate exists.
    */
   public static DataCiteMetadata convert(Dataset d, Organization publisher) {
     // always add required metadata
@@ -128,6 +121,21 @@ public class DataCiteConverter {
         .addDate().withDateType(DateType.CREATED).withValue(fdate(d.getCreated())).end()
         .addDate().withDateType(DateType.UPDATED).withValue(fdate(d.getModified())).end()
         .end();
+    }
+
+    if (d.getModified() != null) {
+      // build publication year
+      b.withPublicationYear(getYear(d.getModified()));
+
+      // build dates
+      b.withDates(
+        datesBuilder
+          .addDate(
+            Dates.Date.builder()
+              .withDateType(DateType.UPDATED)
+              .withValue(fdate(d.getModified()))
+              .build())
+          .build());
     }
 
     // handle contacts
@@ -152,6 +160,7 @@ public class DataCiteConverter {
       List<Contact> contributors = Lists.newArrayList(d.getContacts());
       contributors.removeAll(resourceCreators);
 
+      final Contributors.Builder<Void> contributorsBuilder = Contributors.builder();
       if (!contributors.isEmpty()) {
         DataCiteMetadata.Contributors.Builder contributorsBuilder = b.withContributors();
         DataCiteMetadata.Contributors.Contributor contributor;
@@ -198,6 +207,7 @@ public class DataCiteConverter {
       b.withLanguage(d.getDataLanguage().getIso3LetterCode());
     }
 
+    // build rights list
     if (d.getLicense() != null && d.getLicense().isConcrete()) {
       b.withRightsList().addRights()
         .withRightsURI(d.getLicense().getLicenseUrl()).withValue(d.getLicense().getLicenseTitle());
@@ -208,15 +218,18 @@ public class DataCiteConverter {
       }
     }
 
-    Set<DataCiteMetadata.Subjects.Subject> subjects = Sets.newHashSet();
-    for (KeywordCollection kcol : d.getKeywordCollections()) {
-      for (String k : kcol.getKeywords()) {
+    // build subjects
+    final Subjects.Builder<Void> subjectsBuilder = Subjects.builder();
+    for (KeywordCollection kCol : d.getKeywordCollections()) {
+      for (String k : kCol.getKeywords()) {
         if (!Strings.isNullOrEmpty(k)) {
           DataCiteMetadata.Subjects.Subject s = DataCiteMetadata.Subjects.Subject.builder().withValue(k).build();
           if (!Strings.isNullOrEmpty(kcol.getThesaurus())) {
             s.setSubjectScheme(kcol.getThesaurus());
           }
-          subjects.add(s);
+          b.withSubjects(subjectsBuilder
+            .addSubject(s)
+            .build());
         }
       }
     }
@@ -265,16 +278,6 @@ public class DataCiteConverter {
     // also remove constituent relations
     dm.setRelatedIdentifiers(null);
     return DataCiteValidator.toXml(doi, dm);
-  }
-
-  @VisibleForTesting
-  protected static String getYear(Date date) {
-    if (date == null) {
-      return null;
-    }
-    Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    return String.valueOf(cal.get(Calendar.YEAR));
   }
 
   /**
@@ -344,137 +347,144 @@ public class DataCiteConverter {
   /**
    * Transforms a Contact into a Datacite Creator.
    *
-   * @param contact
    * @return Creator instance or null if it is not possible to build one
    */
-  private static DataCiteMetadata.Creators.Creator toDataCiteCreator(Contact contact) {
-    DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
-    DataCiteMetadata.Creators.Creator.CreatorName name = FACTORY.createDataCiteMetadataCreatorsCreatorCreatorName();
-    name.setValue(ContactAdapter.formatContactName(contact));
-    creator.setCreatorName(name);
+  private static Optional<Creator> toDataCiteCreator(Contact contact) {
+    final String creatorNameValue = ContactAdapter.formatContactName(contact);
 
-    //CreatorName is mandatory
-    if (Strings.isNullOrEmpty(creator.getCreatorName().getValue())) {
-      return null;
+    // CreatorName is mandatory
+    if (Strings.isNullOrEmpty(creatorNameValue)) {
+      return Optional.empty();
     }
+
+    final Creator.Builder<Void> creatorBuilder = Creator.builder();
+
+    creatorBuilder
+      .withCreatorName(
+        CreatorName.builder()
+          .withValue(creatorNameValue)
+          .build());
 
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
-      final Affiliation affiliation = FACTORY.createAffiliation();
-      affiliation.setValue(contact.getOrganization());
-      creator.getAffiliation().add(affiliation);
+      creatorBuilder
+        .withAffiliation(
+          Affiliation.builder()
+            .withValue(contact.getOrganization())
+            .build());
     }
 
-    for (String userId : contact.getUserId()) {
-      NameIdentifier nId = userIdToCreatorNameIdentifier(userId);
-      if (nId != null) {
-        creator.getNameIdentifier().add(nId);
-        //we take the first we can support
-        break;
-      }
+    NameIdentifier nId = userIdToNameIdentifier(contact.getUserId());
+    if (nId != null) {
+      creatorBuilder.withNameIdentifier(nId);
     }
-    return creator;
+
+    return Optional.of(creatorBuilder.build());
   }
 
   /**
-   * Transforms a Contact into a Datacite Creator.
-   *
-   * @param fullname
-   * @return
+   * Transforms a Contact into a DataCite Creator.
    */
-  private static DataCiteMetadata.Creators.Creator getDefaultGBIFDataCiteCreator(String fullname) {
-    DataCiteMetadata.Creators.Creator creator = FACTORY.createDataCiteMetadataCreatorsCreator();
-    DataCiteMetadata.Creators.Creator.CreatorName name = FACTORY.createDataCiteMetadataCreatorsCreatorCreatorName();
-    name.setValue(fullname);
-    creator.setCreatorName(name);
-    NameIdentifier nid = FACTORY.createNameIdentifier();
-    nid.setValue(fullname);
-    nid.setSchemeURI("gbif.org");
-    nid.setNameIdentifierScheme("GBIF");
-    creator.getNameIdentifier().add(nid);
-    return creator;
+  private static Creator getDefaultGBIFDataCiteCreator(String fullname) {
+    return Creator.builder()
+      .withCreatorName(
+        CreatorName.builder()
+          .withValue(fullname)
+          .build())
+      .withNameIdentifier(
+        NameIdentifier.builder()
+          .withValue(fullname)
+          .withSchemeURI("gbif.org")
+          .withNameIdentifierScheme("GBIF")
+          .build())
+      .build();
   }
 
   /**
    * Transforms a Contact into a Datacite Contributor.
    *
-   * @param contact
    * @return Contributor instance or null if it is not possible to build one
    */
-  private static DataCiteMetadata.Contributors.Contributor toDataCiteContributor(Contact contact) {
-    DataCiteMetadata.Contributors.Contributor contributor = FACTORY.createDataCiteMetadataContributorsContributor();
-    DataCiteMetadata.Contributors.Contributor.ContributorName name = FACTORY.createDataCiteMetadataContributorsContributorContributorName();
-    name.setValue(ContactAdapter.formatContactName(contact));
-    contributor.setContributorName(name);
+  private static Optional<Contributor> toDataCiteContributor(Contact contact) {
+    final String nameValue = ContactAdapter.formatContactName(contact);
 
-    //CreatorName is mandatory
-    if (Strings.isNullOrEmpty(contributor.getContributorName().getValue())) {
-      return null;
+    // CreatorName is mandatory
+    if (Strings.isNullOrEmpty(nameValue)) {
+      return Optional.empty();
     }
 
-    ContributorType contributorType = REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON);
-    contributor.setContributorType(contributorType);
+    final Contributor.Builder<Void> contributorBuilder = Contributor.builder();
+    contributorBuilder
+      .withContributorName(
+        Contributor.ContributorName.builder()
+          .withValue(nameValue)
+          .build())
+      .withContributorType(
+        REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON)
+      );
 
-    for (String userId : contact.getUserId()) {
-      NameIdentifier nId = userIdToContributorNameIdentifier(userId);
-      if (nId != null) {
-        contributor.getNameIdentifier().add(nId);
-        //we take the first we can support
-        break;
-      }
+    // affiliation is optional
+    if (!Strings.isNullOrEmpty(contact.getOrganization())) {
+      contributorBuilder
+        .withAffiliation(
+          Affiliation.builder()
+            .withValue(contact.getOrganization())
+            .build());
     }
-    return contributor;
+
+    NameIdentifier nId = userIdToNameIdentifier(contact.getUserId());
+    if (nId != null) {
+      contributorBuilder.withNameIdentifier(nId);
+    }
+
+    return Optional.of(contributorBuilder.build());
   }
 
   /**
-   * Transforms an userId in the form of https://orcid.org/0000-0000-0000-00001 into a Datacite NameIdentifier object.
+   * Get the first userId from the list and
+   * transforms an userId in the form of https://orcid.org/0000-0000-0000-00001 into a DataCite NameIdentifier object.
    *
-   * @param userId
-   * @return a Creator.NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
+   * @return a NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
    */
+  public static NameIdentifier userIdToNameIdentifier(List<String> userIds) {
+    if (userIds == null || userIds.isEmpty()) {
+      return null;
+    }
+
+    for (String userId : userIds) {
+      if (Strings.isNullOrEmpty(userId)) {
+        // try the next one
+        continue;
+      }
+
+      for (Map.Entry<Pattern, String> scheme : SUPPORTED_SCHEMES.entrySet()) {
+        Matcher matcher = scheme.getKey().matcher(userId);
+        if (matcher.matches()) {
+          // group 0 = the entire string
+          // we take the first we can support
+          return NameIdentifier.builder()
+            .withSchemeURI(matcher.group(1))
+            .withValue(matcher.group(2))
+            .withNameIdentifierScheme(scheme.getValue())
+            .build();
+        }
+      }
+    }
+    return null;
+  }
+
+  private static String fdate(Date date) {
+    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
+  }
+
   @VisibleForTesting
-  protected static NameIdentifier userIdToCreatorNameIdentifier(String userId) {
-    if (Strings.isNullOrEmpty(userId)) {
+  protected static String getYear(Date date) {
+    if (date == null) {
       return null;
     }
-
-    for (Map.Entry<Pattern, String> scheme : SUPPORTED_SCHEMES.entrySet()) {
-      Matcher matcher = scheme.getKey().matcher(userId);
-      if (matcher.matches()) {
-        NameIdentifier nid = FACTORY.createNameIdentifier();
-        // group 0 = the entire string
-        nid.setSchemeURI(matcher.group(1));
-        nid.setValue(matcher.group(2));
-        nid.setNameIdentifierScheme(scheme.getValue());
-        return nid;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Transforms an userId in the form of https://orcid.org/0000-0000-0000-00001 into a Datacite NameIdentifier object.
-   *
-   * @param userId
-   * @return a Contributor.NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
-   */
-  protected static NameIdentifier userIdToContributorNameIdentifier(String userId) {
-    if (Strings.isNullOrEmpty(userId)) {
-      return null;
-    }
-
-    for (Map.Entry<Pattern, String> scheme : SUPPORTED_SCHEMES.entrySet()) {
-      Matcher matcher = scheme.getKey().matcher(userId);
-      if (matcher.matches()) {
-        NameIdentifier nid = FACTORY.createNameIdentifier();
-        // group 0 = the entire string
-        nid.setSchemeURI(matcher.group(1));
-        nid.setValue(matcher.group(2));
-        nid.setNameIdentifierScheme(scheme.getValue());
-        return nid;
-      }
-    }
-    return null;
+    Calendar cal = new GregorianCalendar();
+    cal.setTime(date);
+    return String.valueOf(cal.get(Calendar.YEAR));
   }
 
   /**

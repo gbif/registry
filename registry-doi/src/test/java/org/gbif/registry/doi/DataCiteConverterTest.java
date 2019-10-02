@@ -2,15 +2,18 @@ package org.gbif.registry.doi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
@@ -23,6 +26,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.ContactType;
@@ -38,15 +42,17 @@ import org.junit.Test;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import org.xmlunit.matchers.CompareMatcher;
 
 public class DataCiteConverterTest {
 
   @Test
   public void testGetYear() throws Exception {
-    Date d = new Date(1418340702253l);
+    Date d = new Date(1418340702253L);
     assertEquals("2014", DataCiteConverter.getYear(d));
     assertNull(DataCiteConverter.getYear(null));
   }
+  // TODO: 02/10/2019 check coverage, test all the cases
 
   @Test
   public void testConvertDataset() throws Exception {
@@ -54,38 +60,73 @@ public class DataCiteConverterTest {
     publisher.setTitle("X-Publisher");
     publisher.setKey(UUID.randomUUID());
 
-    final DOI doi = new DOI("10.1234/5678");
+    final DOI doi = new DOI("10.1234/21373");
     Dataset d = new Dataset();
-    d.setKey(UUID.randomUUID());
+    d.setKey(UUID.fromString("4b3c4936-24fc-4cbd-886d-3f874a44e31f"));
     d.setType(DatasetType.OCCURRENCE);
     d.setTitle("my title");
-    d.setCreated(new Date());
-    d.setModified(new Date());
+    d.setCreated(new Date(1569967363000L));
+    d.setModified(new Date(1570053763000L));
     d.setCreatedBy("Markus GBIF User");
     d.setLanguage(Language.NORWEGIAN);
     d.setDataLanguage(Language.NORWEGIAN);
     d.setLicense(License.CC0_1_0);
 
-    Contact contact = new Contact();
-    contact.setFirstName("Markus");
-    contact.setType(ContactType.ORIGINATOR);
-    d.getContacts().add(contact);
+    KeywordCollection kc1 = new KeywordCollection();
+    Set<String> keywords1 = new HashSet<>();
+    keywords1.add("Specimen");
+    kc1.setThesaurus("GBIF Dataset Subtype Vocabulary");
+    kc1.setKeywords(keywords1);
+    d.getKeywordCollections().add(kc1);
 
-    contact = new Contact();
-    contact.setFirstName("Hubert");
-    contact.setLastName("Reeves");
-    contact.setType(ContactType.METADATA_AUTHOR);
-    d.getContacts().add(contact);
+    KeywordCollection kc2 = new KeywordCollection();
+    Set<String> keywords2 = new HashSet<>();
+    keywords2.add("Occurrence");
+    keywords2.add("Human observation");
+    kc2.setThesaurus("GBIF Dataset Subtype Vocabulary");
+    kc2.setKeywords(keywords2);
+    d.getKeywordCollections().add(kc2);
 
-    //add an author with no name
-    contact = new Contact();
-    contact.setType(ContactType.ORIGINATOR);
-    d.getContacts().add(contact);
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Markus");
+    contact1.setType(ContactType.ORIGINATOR);
+    contact1.setOrganization("GBIF");
+    // TODO: 02/10/2019 try more than one
+    contact1.setUserId(Collections.singletonList("https://orcid.org/0000-0000-0000-0001"));
+    d.getContacts().add(contact1);
 
-    //add a contributor with no name
-    contact = new Contact();
-    contact.setType(ContactType.METADATA_AUTHOR);
-    d.getContacts().add(contact);
+    Contact contact11 = new Contact();
+    contact11.setFirstName("John");
+    contact11.setType(ContactType.ORIGINATOR);
+    contact11.setOrganization("GBIF");
+    d.getContacts().add(contact11);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("Hubert");
+    contact2.setLastName("Reeves");
+    contact2.setType(ContactType.METADATA_AUTHOR);
+    contact2.setOrganization("DataCite");
+    contact2.setUserId(Collections.singletonList("http://orcid.org/0000-0000-0000-0002"));
+    d.getContacts().add(contact2);
+
+    Contact contact22 = new Contact();
+    contact22.setFirstName("Joe");
+    contact22.setLastName("Smith");
+    contact22.setOrganization("DataCite");
+    contact22.setType(ContactType.METADATA_AUTHOR);
+    d.getContacts().add(contact22);
+
+    // add an author with no name
+    Contact contact3 = new Contact();
+    contact3.setType(ContactType.ORIGINATOR);
+    contact3.setOrganization("GBIF");
+    d.getContacts().add(contact3);
+
+    // add a contributor with no name
+    Contact contact4 = new Contact();
+    contact4.setType(ContactType.METADATA_AUTHOR);
+    contact4.setOrganization("DataCite");
+    d.getContacts().add(contact4);
 
     DataCiteMetadata m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
@@ -93,12 +134,17 @@ public class DataCiteConverterTest {
     assertEquals(doi.getDoiName(), m.getIdentifier().getValue());
 
     d.setDoi(doi);
-    d.setDescription("bla bla bla bla bla bla bla bla - I talk too much");
+    d.setDescription("some description");
     List<GeospatialCoverage> geos = Lists.newArrayList();
     d.setGeographicCoverages(geos);
-    GeospatialCoverage g = new GeospatialCoverage();
-    geos.add(g);
-    g.setBoundingBox(new BoundingBox(1, 2, 3, 4));
+    GeospatialCoverage g1 = new GeospatialCoverage();
+    geos.add(g1);
+    g1.setDescription("geo description");
+    g1.setBoundingBox(new BoundingBox(1, 2, 3, 4));
+    GeospatialCoverage g2 = new GeospatialCoverage();
+    geos.add(g2);
+    g2.setDescription("geo description 2");
+    g2.setBoundingBox(new BoundingBox(5, 6, 7, 8));
 
     m = convertAndValidate(doi, d, publisher);
     assertEquals("my title", m.getTitles().getTitle().get(0).getValue());
@@ -122,6 +168,11 @@ public class DataCiteConverterTest {
     return m;
   }
 
+  private String convertToXml(DOI doi, Dataset d, Organization publisher) throws InvalidMetadataException {
+    DataCiteMetadata m = DataCiteConverter.convert(d, publisher);
+    return DataCiteValidator.toXml(doi, m);
+  }
+
   @Test
   public void testConvertDownload() throws Exception {
     DatasetOccurrenceDownloadUsage du1 = new DatasetOccurrenceDownloadUsage();
@@ -141,7 +192,7 @@ public class DataCiteConverterTest {
     download.setDoi(new DOI("10.1234/5678"));
     download.setKey("1");
     download.setModified(new Date());
-    download.setNumberDatasets(1l);
+    download.setNumberDatasets(1L);
     download.setSize(100);
     download.setStatus(Download.Status.SUCCEEDED);
     download.setTotalRecords(10);
@@ -193,16 +244,11 @@ public class DataCiteConverterTest {
   }
 
   @Test
-  public void testUserIdToNameIdentifier() throws Exception {
+  public void testUserIdToNameIdentifier() {
     NameIdentifier creatorNid =
-            DataCiteConverter.userIdToCreatorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
+            DataCiteConverter.userIdToNameIdentifier(Collections.singletonList("http://orcid.org/0000-0000-0000-0001"));
     assertEquals("http://orcid.org/", creatorNid.getSchemeURI());
     assertEquals("0000-0000-0000-0001", creatorNid.getValue());
-
-    NameIdentifier contributorNid =
-            DataCiteConverter.userIdToContributorNameIdentifier("http://orcid.org/0000-0000-0000-0001");
-    assertEquals("http://orcid.org/", contributorNid.getSchemeURI());
-    assertEquals("0000-0000-0000-0001", contributorNid.getValue());
   }
 
   @Test

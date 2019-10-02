@@ -120,6 +120,7 @@
     <jsr250.version>1.0</jsr250.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <junit.version>4.12</junit.version>
+    <xmlunit.version>2.6.3</xmlunit.version>
     <liquibase.version>3.5.3</liquibase.version>
     <logback.version>1.1.3</logback.version>
     <logstash-encoder.version>4.6</logstash-encoder.version>
@@ -469,6 +470,18 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-core</artifactId>
+        <version>${xmlunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-matchers</artifactId>
+        <version>${xmlunit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

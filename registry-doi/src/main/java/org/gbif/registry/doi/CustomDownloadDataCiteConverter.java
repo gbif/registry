@@ -11,6 +11,7 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,6 +40,7 @@ public class CustomDownloadDataCiteConverter {
    *
    * @return DataCiteMetadata for a custom download
    */
+  // TODO: 02/10/2019 refactor
   @VisibleForTesting
   public static DataCiteMetadata convert(DOI doi, String size, String numberRecords, String creatorName,
     String creatorUserId, Calendar created, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
@@ -58,7 +60,7 @@ public class CustomDownloadDataCiteConverter {
         .withLang(DataCiteConverter.ENGLISH).end().addSubject().withValue("species occurrences").withLang(
         DataCiteConverter.ENGLISH).end().end()
         .withCreators().addCreator().withCreatorName().withValue(creatorName).end()
-        .withNameIdentifier(DataCiteConverter.userIdToCreatorNameIdentifier(creatorUserId)).end().end()
+        .withNameIdentifier(DataCiteConverter.userIdToNameIdentifier(Collections.singletonList(creatorUserId))).end().end()
         .withPublisher().withValue(DataCiteConverter.GBIF_PUBLISHER).end()
         .withPublicationYear(String.valueOf(created.get(Calendar.YEAR)))
         .withResourceType().withResourceTypeGeneral(ResourceType.DATASET).end()
