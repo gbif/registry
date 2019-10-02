@@ -1,10 +1,8 @@
 package org.gbif.registry.doi.converter;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -42,9 +40,7 @@ import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.registry.metadata.contact.ContactAdapter;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +48,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.gbif.registry.doi.DataCiteConstants.ORCID_NAME_IDENTIFIER_SCHEME;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DatasetConverter {
 
@@ -110,7 +108,7 @@ public final class DatasetConverter {
     convertLanguage(builder, dataset);
     convertContributors(builder, dataset);
     convertAlternateIdentifiers(builder, dataset);
-    convertRelatedIdentifiers(builder, dataset);
+    convertRelatedIdentifiers(builder);
     convertRightsList(builder, dataset);
     convertSubjects(builder, dataset);
     convertGeoLocations(builder, dataset);
@@ -179,7 +177,7 @@ public final class DatasetConverter {
     }
   }
 
-  private static void convertRelatedIdentifiers(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+  private static void convertRelatedIdentifiers(DataCiteMetadata.Builder<Void> builder) {
     // empty list of RelatedIdentifiers is expected but callers
     builder.withRelatedIdentifiers().end();
   }
@@ -234,7 +232,7 @@ public final class DatasetConverter {
         AlternateIdentifiers.builder()
           .addAlternateIdentifier(
             AlternateIdentifier.builder()
-              .withAlternateIdentifierType("UUID")
+              .withAlternateIdentifierType(IdentifierType.UUID.name())
               .withValue(dataset.getKey().toString())
               .build())
           .build());
@@ -467,19 +465,5 @@ public final class DatasetConverter {
       }
     }
     return null;
-  }
-
-  private static String fdate(Date date) {
-    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
-  }
-
-  @VisibleForTesting
-  protected static String getYear(Date date) {
-    if (date == null) {
-      return null;
-    }
-    Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    return String.valueOf(cal.get(Calendar.YEAR));
   }
 }
