@@ -25,9 +25,12 @@ public class RunPipelineResponse {
 
   private final Set<StepType> steps;
 
-  public RunPipelineResponse(ResponseStatus responseStatus, Set<StepType> steps) {
+  private final String message;
+
+  public RunPipelineResponse(ResponseStatus responseStatus, Set<StepType> steps, String message) {
     this.responseStatus = responseStatus;
     this.steps = steps;
+    this.message = message;
   }
 
   /**
@@ -44,17 +47,21 @@ public class RunPipelineResponse {
     return steps;
   }
 
+  public String getMessage() {
+    return message;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     RunPipelineResponse that = (RunPipelineResponse) o;
-    return responseStatus == that.responseStatus && steps.equals(that.steps);
+    return responseStatus == that.responseStatus && steps.equals(that.steps) && message.equals(that.message);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(responseStatus, steps);
+    return Objects.hash(responseStatus, steps, message);
   }
 
   /**
@@ -80,6 +87,7 @@ public class RunPipelineResponse {
 
     private ResponseStatus responseStatus;
     private Set<StepType> step;
+    private String message;
 
     public Builder setResponseStatus(ResponseStatus responseStatus) {
       this.responseStatus = responseStatus;
@@ -91,8 +99,13 @@ public class RunPipelineResponse {
       return this;
     }
 
+    public Builder setMessage(String message) {
+      this.message = message;
+      return this;
+    }
+
     public RunPipelineResponse build() {
-      return new RunPipelineResponse(responseStatus, step);
+      return new RunPipelineResponse(responseStatus, step, message);
     }
   }
 }
