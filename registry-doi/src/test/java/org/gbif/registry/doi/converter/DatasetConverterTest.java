@@ -18,7 +18,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.doi.converter.DatasetConverter;
+import org.gbif.utils.file.FileUtils;
 import org.junit.Test;
 import org.xmlunit.matchers.CompareMatcher;
 
@@ -122,9 +122,8 @@ public class DatasetConverterTest {
     g2.setDescription("geo description 2");
     g2.setBoundingBox(new BoundingBox(5, 6, 7, 8));
 
-//    final DataCiteMetadata expectedMetadata = DataCiteValidator.fromXml(FileUtils.classpathStream("metadata/metadata-dataset.xml"));
-//    final String expected = DataCiteValidator.toXml(expectedMetadata, true);
-    String expected = Resources.toString(Resources.getResource("metadata/metadata-dataset.xml"), Charsets.UTF_8);
+    final DataCiteMetadata expectedMetadata = DataCiteValidator.fromXml(FileUtils.classpathStream("metadata/metadata-dataset.xml"));
+    final String expected = DataCiteValidator.toXml(expectedMetadata, true);
 
     final String actual = convertToXml(doi, d, publisher);
 

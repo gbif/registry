@@ -16,6 +16,10 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions.Description;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameType;
@@ -44,41 +48,6 @@ import static org.gbif.registry.doi.DataCiteConstants.LICENSE_INFO;
 public final class DownloadConverter {
 
   private DownloadConverter() {
-  }
-
-  private static DataCiteMetadata truncateDescriptionDCM(DOI doi, String xml, URI target) throws InvalidMetadataException {
-    try {
-      DataCiteMetadata dm = DataCiteValidator.fromXml(xml);
-      String description = Joiner.on("\n").join(dm.getDescriptions().getDescription().get(0).getContent());
-
-      DataCiteMetadata.Descriptions.builder()
-        .addDescription(DataCiteMetadata.Descriptions.Description.builder()
-          .withDescriptionType(DescriptionType.ABSTRACT)
-          .withLang(ENGLISH)
-          .addContent(
-            StringUtils.substringBefore(description, "constituent datasets:") +
-              String.format("constituent datasets:\nPlease see %s for full list of all constituents.", target))
-          .build())
-        .build();
-      return dm;
-    } catch (JAXBException e) {
-      throw new InvalidMetadataException("Failed to deserialize datacite xml for DOI " + doi, e);
-    }
-  }
-
-  public static String truncateDescription(DOI doi, String xml, URI target) throws InvalidMetadataException {
-    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
-    return DataCiteValidator.toXml(doi, dm);
-  }
-
-  /**
-   * Removes all constituent relations and description entries from the metadata.
-   */
-  public static String truncateConstituents(DOI doi, String xml, URI target) throws InvalidMetadataException {
-    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
-    // also remove constituent relations
-    dm.setRelatedIdentifiers(null);
-    return DataCiteValidator.toXml(doi, dm);
   }
 
   /**
@@ -193,9 +162,9 @@ public final class DownloadConverter {
 
     // build descriptions
     b.withDescriptions(
-      DataCiteMetadata.Descriptions.builder()
+      Descriptions.builder()
         .addDescription(
-          DataCiteMetadata.Descriptions.Description.builder()
+          Description.builder()
             .withDescriptionType(DescriptionType.ABSTRACT)
             .withLang(ENGLISH)
             .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n",
@@ -210,6 +179,45 @@ public final class DownloadConverter {
     b.withRelatedIdentifiers(getRelatedIdentifiersDatasetOccurrenceDownloadUsage(usedDatasets));
 
     return b.build();
+  }
+
+  private static DataCiteMetadata truncateDescriptionDCM(DOI doi, String xml, URI target) throws InvalidMetadataException {
+    try {
+      final DataCiteMetadata dm = DataCiteValidator.fromXml(xml);
+      final String description = Joiner.on("\n").join(dm.getDescriptions().getDescription().get(0).getContent());
+      final String truncatedDescriptionContent = StringUtils.substringBefore(description, "constituent datasets:") +
+        String.format("constituent datasets:\nPlease see %s for full list of all constituents.", target);
+
+      final Descriptions truncatedDescription = Descriptions.builder()
+        .withDescription(
+          Description.builder()
+            .withDescriptionType(DescriptionType.ABSTRACT)
+            .withLang(ENGLISH)
+            .withContent(truncatedDescriptionContent)
+            .build())
+        .build();
+
+      dm.setDescriptions(truncatedDescription);
+
+      return dm;
+    } catch (JAXBException e) {
+      throw new InvalidMetadataException("Failed to deserialize datacite xml for DOI " + doi, e);
+    }
+  }
+
+  public static String truncateDescription(DOI doi, String xml, URI target) throws InvalidMetadataException {
+    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
+    return DataCiteValidator.toXml(doi, dm);
+  }
+
+  /**
+   * Removes all constituent relations and description entries from the metadata.
+   */
+  public static String truncateConstituents(DOI doi, String xml, URI target) throws InvalidMetadataException {
+    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
+    // also remove constituent relations
+    dm.setRelatedIdentifiers(null);
+    return DataCiteValidator.toXml(doi, dm);
   }
 
   private static String getDescriptionDatasetOccurrenceDownloadUsage(
@@ -233,14 +241,14 @@ public final class DownloadConverter {
     return result.toString();
   }
 
-  private static DataCiteMetadata.RelatedIdentifiers getRelatedIdentifiersDatasetOccurrenceDownloadUsage(
+  private static RelatedIdentifiers getRelatedIdentifiersDatasetOccurrenceDownloadUsage(
     List<DatasetOccurrenceDownloadUsage> usedDatasets) {
-    final DataCiteMetadata.RelatedIdentifiers.Builder relatedIdentifiersBuilder = DataCiteMetadata.RelatedIdentifiers.builder();
+    final RelatedIdentifiers.Builder relatedIdentifiersBuilder = RelatedIdentifiers.builder();
     if (!usedDatasets.isEmpty()) {
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
         if (du.getDatasetDOI() != null) {
           relatedIdentifiersBuilder.addRelatedIdentifier(
-            DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+            RelatedIdentifier.builder()
               .withRelationType(RelationType.REFERENCES)
               .withValue(du.getDatasetDOI().getDoiName())
               .withRelatedIdentifierType(RelatedIdentifierType.DOI)

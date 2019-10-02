@@ -48,10 +48,10 @@ public class DownloadConverterTest {
     du2.setNumberRecords(2002);
 
     Download download = new Download();
-    download.setCreated(new Date());
+    download.setCreated(new Date(1569967363000L));
+    download.setModified(new Date(1570053763000L));
     download.setDoi(new DOI("10.1234/5678"));
     download.setKey("1");
-    download.setModified(new Date());
     download.setNumberDatasets(1L);
     download.setSize(100);
     download.setStatus(Download.Status.SUCCEEDED);
