@@ -1,5 +1,9 @@
 package org.gbif.registry.doi;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -13,24 +17,20 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookup;
+import org.gbif.registry.doi.converter.DatasetConverter;
+import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-
-import java.util.EnumSet;
-import java.util.List;
-import java.util.UUID;
-import javax.annotation.Nullable;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import javax.annotation.Nullable;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * GBIF Business logic for DOI handling with DataCite in the Registry.
@@ -84,7 +84,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       pagingRequest.nextPage();
     }
 
-    return DataCiteConverter.convert(download, user, usages, titleLookup);
+    return DownloadConverter.convert(download, user, usages, titleLookup);
   }
 
   @Override
@@ -95,7 +95,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   @Override
   public DataCiteMetadata buildMetadata(Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType) {
     Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());
-    DataCiteMetadata m = DataCiteConverter.convert(dataset, publisher);
+    DataCiteMetadata m = DatasetConverter.convert(dataset, publisher);
     // add previous relationship
     if (related != null) {
       m.getRelatedIdentifiers().getRelatedIdentifier()
