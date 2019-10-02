@@ -1,11 +1,9 @@
 package org.gbif.registry.doi.converter;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
@@ -33,9 +31,6 @@ import org.gbif.occurrence.query.TitleLookup;
 
 import javax.xml.bind.JAXBException;
 import java.net.URI;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.gbif.registry.doi.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
@@ -44,6 +39,8 @@ import static org.gbif.registry.doi.DataCiteConstants.DWCA_FORMAT;
 import static org.gbif.registry.doi.DataCiteConstants.ENGLISH;
 import static org.gbif.registry.doi.DataCiteConstants.GBIF_PUBLISHER;
 import static org.gbif.registry.doi.DataCiteConstants.LICENSE_INFO;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DownloadConverter {
 
@@ -259,20 +256,6 @@ public final class DownloadConverter {
     }
 
     return relatedIdentifiersBuilder.build();
-  }
-
-  private static String fdate(Date date) {
-    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
-  }
-
-  @VisibleForTesting
-  protected static String getYear(Date date) {
-    if (date == null) {
-      return null;
-    }
-    Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    return String.valueOf(cal.get(Calendar.YEAR));
   }
 
   /**
