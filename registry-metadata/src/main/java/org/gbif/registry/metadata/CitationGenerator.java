@@ -5,6 +5,8 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -91,7 +93,11 @@ public class CitationGenerator {
 
     // add DOI as the identifier.
     if (dataset.getDoi() != null) {
-      joiner.add(dataset.getDoi().getUrl().toString());
+      try {
+        joiner.add(URLDecoder.decode(dataset.getDoi().getUrl().toString(), "UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new IllegalArgumentException("Couldn't decode DOI URL", e);
+      }
     } else {
       //??
     }
