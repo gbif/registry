@@ -14,8 +14,8 @@ import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
-import org.gbif.registry.doi.DataCiteConverter;
 import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.persistence.guice.RegistryMyBatisModule;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.utils.file.FileUtils;
@@ -290,9 +290,9 @@ public class DoiUpdaterListenerIT {
     ChangeDoiMessage msg = prepareMessage(doi, "REGISTERED");
     String fullXmlMetadata = msg.getMetadata();
     String truncateXmlMetadataWithoutDescription =
-      DataCiteConverter.truncateDescription(doi, msg.getMetadata(), msg.getTarget());
+      DownloadConverter.truncateDescription(doi, msg.getMetadata(), msg.getTarget());
     String truncatedXmlMetadataWithoutDescriptionAndRelatedIdentifiers =
-      DataCiteConverter.truncateConstituents(doi, msg.getMetadata(), msg.getTarget());
+      DownloadConverter.truncateConstituents(doi, msg.getMetadata(), msg.getTarget());
     prepareNewDoi(doi);
 
     // first attempt - fail, pretending the response too long, then truncate 'descriptions'
