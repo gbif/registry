@@ -6,7 +6,6 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.utils.file.FileUtils;
 import org.junit.Test;
 import org.xmlunit.matchers.CompareMatcher;
 
@@ -14,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -68,10 +68,5 @@ public class DatasetConverterTest {
     publisher.setKey(UUID.randomUUID());
 
     return publisher;
-  }
-
-  private String getXmlMetadataFromFile(String fileName) throws Exception {
-    DataCiteMetadata metadata = DataCiteValidator.fromXml(FileUtils.classpathStream(fileName));
-    return DataCiteValidator.toXml(metadata, true);
   }
 }

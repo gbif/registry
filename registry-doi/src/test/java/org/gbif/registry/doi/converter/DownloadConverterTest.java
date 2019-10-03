@@ -16,6 +16,7 @@ import org.xmlunit.matchers.CompareMatcher;
 
 import java.net.URI;
 
+import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage1;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage2;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDownload;
@@ -42,9 +43,7 @@ public class DownloadConverterTest {
     // mock title lookup API
     TitleLookup tl = mock(TitleLookup.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
-    final DataCiteMetadata expectedMetadata = DataCiteValidator
-      .fromXml(FileUtils.classpathStream("metadata/metadata-download.xml"));
-    final String expected = DataCiteValidator.toXml(expectedMetadata, true);
+    final String expected = getXmlMetadataFromFile("metadata/metadata-download.xml");
 
     // when
     DataCiteMetadata metadata = DownloadConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
