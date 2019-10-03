@@ -15,7 +15,9 @@ public class RegistryDoiUtilsTest {
   @Test
   public void testGetYear() {
     // given
-    Date date = new Date(1418340702253L);
+    Instant instant = LocalDateTime.of(2014, 12, 12, 0, 0)
+      .toInstant(ZoneOffset.UTC);
+    Date date = Date.from(instant);
 
     // when
     String actualNonNull = RegistryDoiUtils.getYear(date);

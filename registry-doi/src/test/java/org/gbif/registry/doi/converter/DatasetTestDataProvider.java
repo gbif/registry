@@ -4,7 +4,6 @@ import com.beust.jcommander.internal.Lists;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
@@ -13,6 +12,8 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -28,8 +29,10 @@ public class DatasetTestDataProvider {
     dataset.setKey(UUID.fromString("4b3c4936-24fc-4cbd-886d-3f874a44e31f"));
     dataset.setType(DatasetType.OCCURRENCE);
     dataset.setTitle("my title");
-    dataset.setCreated(new Date(1569967363000L));
-    dataset.setModified(new Date(1570053763000L));
+    dataset.setCreated(Date.from(
+      LocalDateTime.of(2019, 10, 2, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setModified(Date.from(
+      LocalDateTime.of(2019, 10, 3, 0, 0).toInstant(ZoneOffset.UTC)));
     dataset.setCreatedBy("Markus GBIF User");
     dataset.setLanguage(Language.NORWEGIAN);
     dataset.setDataLanguage(Language.NORWEGIAN);
