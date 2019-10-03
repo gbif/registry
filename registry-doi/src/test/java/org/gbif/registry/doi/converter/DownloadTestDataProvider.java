@@ -9,6 +9,8 @@ import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,8 +18,10 @@ public class DownloadTestDataProvider {
 
   static Download prepareDownload() {
     Download download = new Download();
-    download.setCreated(new Date(1569967363000L));
-    download.setModified(new Date(1570053763000L));
+    download.setCreated(Date.from(
+      LocalDateTime.of(2019, 10, 2, 0, 0).toInstant(ZoneOffset.UTC)));
+    download.setModified(Date.from(
+      LocalDateTime.of(2019, 10, 3, 0, 0).toInstant(ZoneOffset.UTC)));
     download.setDoi(new DOI("10.1234/5678"));
     download.setKey("1");
     download.setNumberDatasets(1L);
