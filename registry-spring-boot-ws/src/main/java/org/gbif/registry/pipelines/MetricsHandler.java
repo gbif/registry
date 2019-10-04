@@ -1,6 +1,7 @@
 package org.gbif.registry.pipelines;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -168,11 +169,15 @@ public class MetricsHandler {
 
   @VisibleForTesting
   Set<MetricInfo> parseResponse(String bodyResponse) throws IOException {
-    if (bodyResponse == null) {
+    if (Strings.isNullOrEmpty(bodyResponse)) {
       return Collections.emptySet();
     }
 
     JsonNode jsonResponse = OBJECT_MAPPER.readTree(bodyResponse);
+
+    if (jsonResponse == null || jsonResponse.get("aggregations") == null) {
+      return Collections.emptySet();
+    }
 
     JsonNode buckets = jsonResponse.get("aggregations").get(UNIQUE_NAME_AGG).get("buckets");
 
