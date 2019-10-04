@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.pipelines;
 
+import com.google.common.base.Strings;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineProcess;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -125,8 +126,13 @@ public class PipelinesHistoryResource {
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runAll(@RequestParam("steps") String steps,
                                                     @RequestParam("reason") String reason) {
+    Set<StepType> stepTypes = parseSteps(steps);
+    if (stepTypes == null || stepTypes.isEmpty()) {
+      return createNoStepResponse();
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return toHttpResponse(historyTrackingService.runLastAttempt(parseSteps(steps), reason,
+    return toHttpResponse(historyTrackingService.runLastAttempt(stepTypes, reason,
         authentication.getName()));
   }
 
@@ -138,8 +144,13 @@ public class PipelinesHistoryResource {
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
                                                                 @RequestParam("steps") String steps,
                                                                 @RequestParam("reason") String reason) {
+    Set<StepType> stepTypes = parseSteps(steps);
+    if (stepTypes == null || stepTypes.isEmpty()) {
+      return createNoStepResponse();
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return toHttpResponse(historyTrackingService.runLastAttempt(datasetKey, parseSteps(steps), reason,
+    return toHttpResponse(historyTrackingService.runLastAttempt(datasetKey, stepTypes, reason,
         authentication.getName()));
   }
 
@@ -152,8 +163,13 @@ public class PipelinesHistoryResource {
                                                                 @PathVariable("attempt") int attempt,
                                                                 @RequestParam("steps") String steps,
                                                                 @RequestParam("reason") String reason) {
+    Set<StepType> stepTypes = parseSteps(steps);
+    if (stepTypes == null || stepTypes.isEmpty()) {
+      return createNoStepResponse();
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return toHttpResponse(historyTrackingService.runPipelineAttempt(datasetKey, attempt, parseSteps(steps), reason,
+    return toHttpResponse(historyTrackingService.runPipelineAttempt(datasetKey, attempt, stepTypes, reason,
         authentication.getName()));
   }
 
@@ -172,11 +188,20 @@ public class PipelinesHistoryResource {
     return ResponseEntity.ok(runPipelineResponse);
   }
 
+  private ResponseEntity<RunPipelineResponse> createNoStepResponse() {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(RunPipelineResponse.builder()
+            .setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP).build());
+  }
+
   /**
    * Parse steps argument.
    */
   private Set<StepType> parseSteps(String steps) {
-    Objects.requireNonNull(steps, "Steps can't be null");
+    if (Strings.isNullOrEmpty(steps)) {
+      return Collections.emptySet();
+    }
+
     return Arrays.stream(steps.split(","))
         .map(s -> StepType.valueOf(s.toUpperCase()))
         .collect(Collectors.toSet());
