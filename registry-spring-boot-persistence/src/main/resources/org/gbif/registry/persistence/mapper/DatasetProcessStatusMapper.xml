@@ -13,9 +13,6 @@
 
   <!-- Partial auto-mapping -->
   <resultMap id="DATASET_PROCESS_STATUS_MAP" type="org.gbif.api.model.crawler.DatasetProcessStatus" autoMapping="true">
-    <!-- Default of DATE only gives day precision and we need second precision -->
-    <result property="startedCrawling" column="startedCrawling" jdbcType="TIMESTAMP"/>
-    <result property="finishedCrawling" column="finishedCrawling" jdbcType="TIMESTAMP"/>
     <association property="crawlJob" resultMap="CRAWL_JOB_MAP"/>
   </resultMap>
 

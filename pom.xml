@@ -69,6 +69,8 @@
     <retrofit.version>2.5.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
+    <mybatis.version>3.5.0</mybatis.version>
+    <postgresql.version>42.2.8</postgresql.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -249,6 +251,18 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>${mybatis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
         <scope>runtime</scope>
       </dependency>
     </dependencies>
