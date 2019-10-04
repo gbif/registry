@@ -60,7 +60,7 @@
     <gbif-common-mybatis.version>0.29</gbif-common-mybatis.version>
     <gbif-postal-service.version>0.39-jackson2-SNAPSHOT</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
-    <gbif-api.version>0.93-jackson2-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.93.1-jackson2</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>
@@ -69,8 +69,8 @@
     <retrofit.version>2.5.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
-    <mybatis.version>3.5.0</mybatis.version>
-    <postgresql.version>42.2.8</postgresql.version>
+<!--    <mybatis.version>3.5.0</mybatis.version>-->
+<!--    <postgresql.version>42.2.8</postgresql.version>-->
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -251,18 +251,6 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis</artifactId>
-        <version>${mybatis.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${postgresql.version}</version>
         <scope>runtime</scope>
       </dependency>
     </dependencies>

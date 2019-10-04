@@ -1,6 +1,5 @@
 package org.gbif.registry.cli.doiupdater;
 
-import org.apache.http.HttpStatus;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
@@ -86,7 +85,8 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
 
       } catch (DoiHttpException e) {
         writeFailedStatus(msg.getDoi(), msg.getTarget(), msg.getMetadata());
-        if (HttpStatus.SC_REQUEST_TOO_LONG == e.getStatus()) {
+        // 413 Request Entity Too Large
+        if (e.getStatus() == 413) {
           LOG.warn(DOI_SMTP, "Metadata of length {} is exceeding max datacite limit in attempt #{} "
                   + "while updating {} to {} with target {}. "
                   + "Trying again {}",
