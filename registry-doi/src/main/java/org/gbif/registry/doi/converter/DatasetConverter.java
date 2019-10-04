@@ -185,6 +185,8 @@ public final class DatasetConverter {
   private static void convertLanguage(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
     if (dataset.getDataLanguage() != null) {
       builder.withLanguage(dataset.getDataLanguage().getIso3LetterCode());
+    } else {
+      builder.withLanguage(dataset.getLanguage().getIso3LetterCode());
     }
   }
 
