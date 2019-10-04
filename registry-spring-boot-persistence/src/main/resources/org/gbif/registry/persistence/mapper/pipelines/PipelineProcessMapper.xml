@@ -105,6 +105,7 @@
         AND attempt = #{attempt, jdbcType=INTEGER}
       </if>
     </where>
+    ORDER BY created DESC
     <if test="page != null">
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
