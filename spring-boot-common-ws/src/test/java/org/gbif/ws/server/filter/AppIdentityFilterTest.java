@@ -13,6 +13,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 
 import javax.servlet.FilterChain;
@@ -51,6 +52,7 @@ public class AppIdentityFilterTest {
   public void setUp() {
     content = "content";
     context = new SecurityContextImpl();
+    SecurityContextHolder.setContext(context);
     AppkeysConfiguration appkeysConfiguration = new AppkeysConfiguration();
     appkeysConfiguration.setWhitelist(Collections.singletonList("appkey"));
     appIdentityFilter = new AppIdentityFilter(authServiceMock, appkeysConfiguration);
