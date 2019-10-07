@@ -60,7 +60,7 @@ public class LegacyOrganizationResource {
                                     OrganizationMapper organizationMapper,
                                     @Value("${mail.devemail.enabled}") boolean useDevEmail,
                                     @Value("${spring.mail.host}") String smptHost,
-                                    @Value("${spring.mail.port}") int smptPort,
+                                    @Value("${spring.mail.port}") String smptPort,
                                     @Value("${spring.mail.username}") String devEmail,
                                     @Value("${mail.cc}") String ccEmail,
                                     @Value("${mail.from}") String fromEmail) {
@@ -69,7 +69,7 @@ public class LegacyOrganizationResource {
     this.organizationMapper = organizationMapper;
     this.useDevEmail = useDevEmail;
     this.smtpHost = smptHost;
-    this.smptPort = smptPort;
+    this.smptPort = 25; // TODO: 07/10/2019 use a real port (there is no this property in registry)
     this.devEmail = devEmail;
     this.ccEmail = ccEmail;
     this.fromEmail = fromEmail;
