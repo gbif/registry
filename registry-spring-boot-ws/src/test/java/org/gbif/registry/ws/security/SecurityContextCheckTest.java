@@ -9,16 +9,16 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 @RunWith(MockitoJUnitRunner.class)
 public class SecurityContextCheckTest {
 
@@ -51,6 +51,7 @@ public class SecurityContextCheckTest {
   public void testEnsureGbifScheme() {
     when(mockAuth.getAuthenticationScheme()).thenReturn("GBIF");
     SecurityContextCheck.ensureGbifScheme(mockAuth);
+    verify(mockAuth).getAuthenticationScheme();
 
   }
 
@@ -58,12 +59,14 @@ public class SecurityContextCheckTest {
   public void testEnsureGbifSchemeFail() {
     when(mockAuth.getAuthenticationScheme()).thenReturn("Basic");
     SecurityContextCheck.ensureGbifScheme(mockAuth);
+    verify(mockAuth).getAuthenticationScheme();
   }
 
   @Test
   public void testEnsureNotGbifScheme() {
     when(mockAuth.getAuthenticationScheme()).thenReturn("Basic");
     SecurityContextCheck.ensureNotGbifScheme(mockAuth);
+    verify(mockAuth).getAuthenticationScheme();
 
   }
 
@@ -71,14 +74,14 @@ public class SecurityContextCheckTest {
   public void testEnsureNotGbifSchemeFail() {
     when(mockAuth.getAuthenticationScheme()).thenReturn("GBIF");
     SecurityContextCheck.ensureNotGbifScheme(mockAuth);
+    verify(mockAuth).getAuthenticationScheme();
   }
 
   @Test
   public void testEnsureUserSetInSecurityContext() {
-    UserDetails mockUser = mock(UserDetails.class);
-    when(mockUser.getUsername()).thenReturn("anonymous");
-    when(mockAuth.getPrincipal()).thenReturn(mockUser);
+    when(mockAuth.getName()).thenReturn("anonymous");
     SecurityContextCheck.ensureUserSetInSecurityContext(mockAuth);
+    verify(mockAuth).getName();
   }
 
   @Test(expected = WebApplicationException.class)
@@ -92,42 +95,38 @@ public class SecurityContextCheckTest {
   }
 
   @Test(expected = WebApplicationException.class)
-  public void testEnsureUserSetInSecurityContextFailNullUsername() {
-    UserDetails mockUser = mock(UserDetails.class);
-    when(mockAuth.getPrincipal()).thenReturn(mockUser);
+  public void testEnsureUserSetInSecurityContextFailNullName() {
     SecurityContextCheck.ensureUserSetInSecurityContext(mockAuth);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testEnsureAuthorizedUserImpersonationNotGbifScheme() {
-    UserDetails mockUser = mock(UserDetails.class);
-    when(mockUser.getUsername()).thenReturn("anonymous");
-    when(mockAuth.getPrincipal()).thenReturn(mockUser);
+    when(mockAuth.getName()).thenReturn("anonymous");
     SecurityContextCheck.ensureAuthorizedUserImpersonation(mockAuth, "Basic xxx", Arrays.asList("xx", "xxx"));
+    verify(mockAuth).getName();
   }
 
   @Test(expected = WebApplicationException.class)
   public void testEnsureAuthorizedUserImpersonationNoUserInContext() {
-    when(mockAuth.getAuthenticationScheme()).thenReturn("GBIF");
     SecurityContextCheck.ensureAuthorizedUserImpersonation(mockAuth, "GBIF xxx:zzz", Arrays.asList("xx", "xxx"));
   }
 
   @Test(expected = WebApplicationException.class)
   public void testEnsureAuthorizedUserImpersonationNoSuchAppKeyInWhiteList() {
-    UserDetails mockUser = mock(UserDetails.class);
-    when(mockUser.getUsername()).thenReturn("anonymous");
-    when(mockAuth.getPrincipal()).thenReturn(mockUser);
+    when(mockAuth.getName()).thenReturn("anonymous");
     when(mockAuth.getAuthenticationScheme()).thenReturn("GBIF");
     SecurityContextCheck.ensureAuthorizedUserImpersonation(mockAuth, "GBIF yyy:zzz", Arrays.asList("xx", "xxx"));
+    verify(mockAuth).getName();
+    verify(mockAuth).getAuthenticationScheme();
   }
 
   @Test
   public void testEnsureAuthorizedUserImpersonation() {
-    UserDetails mockUser = mock(UserDetails.class);
-    when(mockUser.getUsername()).thenReturn("anonymous");
-    when(mockAuth.getPrincipal()).thenReturn(mockUser);
+    when(mockAuth.getName()).thenReturn("anonymous");
     when(mockAuth.getAuthenticationScheme()).thenReturn("GBIF");
     SecurityContextCheck.ensureAuthorizedUserImpersonation(mockAuth, "GBIF xxx:zzz", Arrays.asList("xx", "xxx"));
+    verify(mockAuth).getName();
+    verify(mockAuth).getAuthenticationScheme();
   }
 
   @Test
