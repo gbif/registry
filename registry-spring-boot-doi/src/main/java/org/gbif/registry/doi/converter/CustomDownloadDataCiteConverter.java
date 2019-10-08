@@ -32,11 +32,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-import static org.gbif.registry.doi.DataCiteConstants.CUSTOM_DOWNLOAD_TITLE;
-import static org.gbif.registry.doi.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
-import static org.gbif.registry.doi.DataCiteConstants.DOWNLOAD_FORMAT;
-import static org.gbif.registry.doi.DataCiteConstants.ENGLISH;
-import static org.gbif.registry.doi.DataCiteConstants.GBIF_PUBLISHER;
+import static org.gbif.registry.doi.util.DataCiteConstants.CUSTOM_DOWNLOAD_TITLE;
+import static org.gbif.registry.doi.util.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
+import static org.gbif.registry.doi.util.DataCiteConstants.DOWNLOAD_FORMAT;
+import static org.gbif.registry.doi.util.DataCiteConstants.ENGLISH;
+import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
 
 /**
  * Class that enables creation of a DataCite metadata instance for a custom download.

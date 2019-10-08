@@ -1,4 +1,4 @@
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;

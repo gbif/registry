@@ -1,4 +1,4 @@
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.util;
 
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;

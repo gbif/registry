@@ -72,6 +72,7 @@
     <okio.version>2.0.0</okio.version>
 <!--    <mybatis.version>3.5.0</mybatis.version>-->
 <!--    <postgresql.version>42.2.8</postgresql.version>-->
+    <xmlunit.version>2.6.3</xmlunit.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -258,6 +259,19 @@
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
         <scope>runtime</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-core</artifactId>
+        <version>${xmlunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-matchers</artifactId>
+        <version>${xmlunit.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

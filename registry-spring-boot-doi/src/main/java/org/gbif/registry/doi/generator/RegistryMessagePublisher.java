@@ -2,7 +2,7 @@ package org.gbif.registry.doi.generator;
 
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.registry.doi.RabbitSenderConfiguration;
+import org.gbif.registry.doi.config.RabbitSenderConfiguration;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 

@@ -46,12 +46,12 @@ import javax.xml.bind.JAXBException;
 import java.net.URI;
 import java.util.List;
 
-import static org.gbif.registry.doi.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
-import static org.gbif.registry.doi.DataCiteConstants.DOWNLOAD_TITLE;
-import static org.gbif.registry.doi.DataCiteConstants.DWCA_FORMAT;
-import static org.gbif.registry.doi.DataCiteConstants.ENGLISH;
-import static org.gbif.registry.doi.DataCiteConstants.GBIF_PUBLISHER;
-import static org.gbif.registry.doi.DataCiteConstants.LICENSE_INFO;
+import static org.gbif.registry.doi.util.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
+import static org.gbif.registry.doi.util.DataCiteConstants.DOWNLOAD_TITLE;
+import static org.gbif.registry.doi.util.DataCiteConstants.DWCA_FORMAT;
+import static org.gbif.registry.doi.util.DataCiteConstants.ENGLISH;
+import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
+import static org.gbif.registry.doi.util.DataCiteConstants.LICENSE_INFO;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 

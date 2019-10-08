@@ -47,7 +47,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.gbif.registry.doi.DataCiteConstants.ORCID_NAME_IDENTIFIER_SCHEME;
+import static org.gbif.registry.doi.util.DataCiteConstants.ORCID_NAME_IDENTIFIER_SCHEME;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
