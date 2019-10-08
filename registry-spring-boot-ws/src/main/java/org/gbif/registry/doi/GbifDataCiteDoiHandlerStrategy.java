@@ -15,6 +15,8 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.query.TitleLookupService;
+import org.gbif.registry.doi.converter.DatasetConverter;
+import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -84,7 +86,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       pagingRequest.nextPage();
     }
 
-    return DataCiteConverter.convert(download, user, usages, titleLookupService);
+    return DownloadConverter.convert(download, user, usages, titleLookupService);
   }
 
   @Override
@@ -95,7 +97,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   @Override
   public DataCiteMetadata buildMetadata(Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType) {
     Organization publisher = organizationMapper.get(dataset.getPublishingOrganizationKey());
-    DataCiteMetadata m = DataCiteConverter.convert(dataset, publisher);
+    DataCiteMetadata m = DatasetConverter.convert(dataset, publisher);
     // add previous relationship
     if (related != null) {
       m.getRelatedIdentifiers().getRelatedIdentifier()
