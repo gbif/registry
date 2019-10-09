@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static org.gbif.registry.identity.model.UserModelMutationResult.withError;
 import static org.gbif.registry.identity.model.UserModelMutationResult.withSingleConstraintViolation;
@@ -53,8 +53,8 @@ class IdentityServiceImpl implements IdentityService {
       .buildValidatorFactory()
       .getValidator();
 
-  private static final Function<String, String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
-  private static final Function<String, String> NORMALIZE_EMAIL_FCT = email -> Optional.ofNullable(email)
+  private static final UnaryOperator<String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
+  private static final UnaryOperator<String> NORMALIZE_EMAIL_FCT = email -> Optional.ofNullable(email)
       .map(String::trim)
       .orElse(null);
 
