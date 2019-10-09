@@ -9,6 +9,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
@@ -27,6 +28,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,8 +40,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -85,10 +87,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @RequestMapping(method = RequestMethod.POST)
   @Trim
   @Transactional
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Secured(ADMIN_ROLE)
   @Override
-  public void create(@RequestBody @Valid @NotNull @Trim Download occurrenceDownload) {
+  public void create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) Download occurrenceDownload) {
     occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
     occurrenceDownload.setLicense(License.UNSPECIFIED);
     occurrenceDownloadMapper.create(occurrenceDownload);
@@ -165,11 +166,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @PostMapping("{key}/datasets")
   @Transactional
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Secured(ADMIN_ROLE)
   @Override
   public void createUsages(@NotNull @PathVariable("key") String downloadKey,
-                           @RequestBody @Valid @NotNull Map<UUID, Long> datasetCitations) {
+                           @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
         .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }

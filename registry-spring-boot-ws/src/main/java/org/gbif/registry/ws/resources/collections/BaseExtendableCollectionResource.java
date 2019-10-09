@@ -6,6 +6,7 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
@@ -32,6 +33,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +42,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,9 +90,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   }
 
   @Transactional
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public UUID create(@Valid @NotNull T entity) {
+  public UUID create(@Validated({PrePersist.class, Default.class}) @NotNull T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
     if (entity.getAddress() != null) {
@@ -129,9 +130,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   }
 
   @Transactional
-//  @Validate
   @Override
-  public void update(@Valid @NotNull T entity) {
+  public void update(@Validated @NotNull T entity) {
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
 
@@ -179,7 +179,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   }
 
   @PostMapping(value = "{key}/contact", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-//  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
@@ -196,7 +195,6 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
-//  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
@@ -205,6 +203,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
+  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/contact")
   @Nullable
 //  @Validate(validateReturnedValue = true)
@@ -222,9 +221,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     return addIdentifier(entityKey, identifier);
   }
 
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(@NotNull UUID entityKey, @Valid @NotNull Identifier identifier) {
+  public int addIdentifier(@NotNull UUID entityKey, @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
     int identifierKey = withMyBatis.addIdentifier(identifierMapper, identifiableMapper, entityKey, identifier);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
     return identifierKey;
@@ -239,6 +237,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
 
+  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/identifier")
   @Nullable
 //  @Validate(validateReturnedValue = true)
@@ -263,9 +262,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     return addTag(key, tag);
   }
 
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addTag(@NotNull UUID entityKey, @Valid @NotNull Tag tag) {
+  public int addTag(@NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
     int tagKey = withMyBatis.addTag(tagMapper, taggableMapper, entityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
     return tagKey;
@@ -280,6 +278,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
+  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/tag")
   @Nullable
 //  @Validate(validateReturnedValue = true)

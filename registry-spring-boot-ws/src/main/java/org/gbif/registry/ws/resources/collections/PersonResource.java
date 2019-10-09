@@ -6,6 +6,7 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.events.EventManager;
@@ -15,6 +16,7 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,9 +54,8 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
   @Override
   @Transactional
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public UUID create(@Valid @NotNull @RequestBody Person person) {
+  public UUID create(@NotNull @Validated({PrePersist.class, Default.class}) @RequestBody Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {
@@ -70,9 +71,8 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   }
 
   @Transactional
-//  @Validate
   @Override
-  public void update(@Valid @NotNull Person person) {
+  public void update(@NotNull @Validated Person person) {
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
 

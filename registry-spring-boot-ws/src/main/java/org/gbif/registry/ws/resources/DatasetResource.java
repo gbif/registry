@@ -25,6 +25,8 @@ import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
@@ -76,6 +78,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -91,6 +94,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -659,9 +663,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * 1. assigns it a {@link DOI} as per <a href="http://dev.gbif.org/issues/browse/POR-2554">GBIF DOI business rules</a>
    * 2. ensures it has a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License business rules</a>
    */
-//  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public UUID create(@Valid Dataset dataset) {
+  public UUID create(@Validated({PrePersist.class, Default.class}) Dataset dataset) {
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
@@ -681,8 +684,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @Override
-//  @Validate(groups = {PostPersist.class, Default.class})
-  public void update(@Valid Dataset dataset) {
+  public void update(@Validated({PostPersist.class, Default.class}) Dataset dataset) {
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
