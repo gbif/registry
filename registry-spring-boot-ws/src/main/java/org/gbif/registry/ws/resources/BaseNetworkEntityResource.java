@@ -13,6 +13,8 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -43,6 +45,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,8 +57,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -159,9 +162,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return create(entity);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public UUID create(@Valid T entity) {
+  public UUID create(@Validated({PrePersist.class, Default.class}) T entity) {
     withMyBatis.create(mapper, entity);
     eventManager.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
@@ -201,6 +203,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Nullable
   @GetMapping(value = "{key}")
   @Override
+  // TODO: 09/10/2019 return value validation?
   public T get(@NotNull @PathVariable UUID key) {
     return withMyBatis.get(mapper, key);
   }
@@ -259,9 +262,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     update(entity);
   }
 
-  //  @Validate(groups = {PostPersist.class, Default.class})
   @Override
-  public void update(@Valid T entity) {
+  public void update(@Validated({PostPersist.class, Default.class}) T entity) {
     T oldEntity = get(entity.getKey());
     withMyBatis.update(mapper, entity);
     // get complete entity with components populated, so subscribers of UpdateEvent can compare new and old entities
@@ -288,9 +290,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addComment(targetEntityKey, comment);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addComment(UUID targetEntityKey, @Valid Comment comment) {
+  public int addComment(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Comment comment) {
     int key = withMyBatis.addComment(commentMapper, mapper, targetEntityKey, comment);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
     return key;
@@ -344,9 +345,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addMachineTag(UUID targetEntityKey, @Valid MachineTag machineTag) {
+  public int addMachineTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
@@ -507,9 +507,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addTag(targetEntityKey, tag);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addTag(UUID targetEntityKey, @Valid Tag tag) {
+  public int addTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Tag tag) {
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
     return key;
@@ -554,9 +553,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addContact(targetEntityKey, contact);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addContact(UUID targetEntityKey, @Valid Contact contact) {
+  public int addContact(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
@@ -584,9 +582,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     updateContact(targetEntityKey, contact);
   }
 
-  //  @Validate(groups = {PostPersist.class, Default.class})
   @Override
-  public void updateContact(UUID targetEntityKey, @Valid Contact contact) {
+  public void updateContact(UUID targetEntityKey, @Validated({PostPersist.class, Default.class}) Contact contact) {
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
@@ -630,9 +627,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addEndpoint(targetEntityKey, endpoint);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addEndpoint(UUID targetEntityKey, @Valid Endpoint endpoint) {
+  public int addEndpoint(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
     T oldEntity = get(targetEntityKey);
     int key = withMyBatis.addEndpoint(endpointMapper, mapper, targetEntityKey, endpoint, machineTagMapper);
     T newEntity = get(targetEntityKey);
@@ -680,9 +676,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addIdentifier(targetEntityKey, identifier);
   }
 
-  //  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(UUID targetEntityKey, @Valid Identifier identifier) {
+  public int addIdentifier(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Identifier identifier) {
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
     return key;

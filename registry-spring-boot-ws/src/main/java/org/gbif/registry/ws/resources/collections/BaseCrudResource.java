@@ -11,6 +11,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,16 +48,16 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
 
   @RequestMapping(method = RequestMethod.POST)
   @Trim
-//  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public UUID create(@RequestBody @NotNull T entity, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull @Validated T entity, Authentication authentication) {
     final String username = authentication.getName();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
     return create(entity);
   }
 
+  // TODO: 09/10/2019 what should be validated here
   @DeleteMapping("{key}")
 //  @Validate
   @Transactional
@@ -69,6 +70,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     delete(key);
   }
 
+  // TODO: 09/10/2019 what should be validated here
   @Transactional
 //  @Validate
   @Override
@@ -78,6 +80,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
   }
 
+  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}")
   @Nullable
   @NullToNotFound
@@ -88,10 +91,9 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   }
 
   @PutMapping("{key}")
-//  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim T entity) {
+  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
