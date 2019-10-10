@@ -12,6 +12,7 @@
   <artifactId>spring-boot-download-query-tools</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -21,21 +22,21 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>spring-boot-common-ws</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
     </dependency>
 
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
     </dependency>
   </dependencies>
-
 
 </project>

@@ -12,6 +12,7 @@
   <artifactId>registry-spring-boot-identity</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -21,6 +22,7 @@
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-surety</artifactId>
@@ -34,11 +36,13 @@
       <artifactId>gbif-common</artifactId>
     </dependency>
 
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
     </dependency>
 
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

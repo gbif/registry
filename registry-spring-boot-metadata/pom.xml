@@ -12,10 +12,13 @@
   <artifactId>registry-spring-boot-metadata</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
@@ -24,6 +27,8 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
     </dependency>
+
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-digester3</artifactId>

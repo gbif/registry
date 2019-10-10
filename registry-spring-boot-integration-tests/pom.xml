@@ -12,6 +12,7 @@
   <artifactId>registry-spring-boot-integration-tests</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -21,8 +22,9 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
-      <version>5.1.5.RELEASE</version>
     </dependency>
+
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-ws</artifactId>
@@ -43,10 +45,11 @@
       <artifactId>registry-spring-boot-persistence</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>com.icegreen</groupId>
       <artifactId>greenmail</artifactId>
-      <version>1.5.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

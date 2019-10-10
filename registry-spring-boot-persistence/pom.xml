@@ -12,25 +12,17 @@
   <artifactId>registry-spring-boot-persistence</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-jdbc</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.tomcat</groupId>
-          <artifactId>tomcat-jdbc</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
       <artifactId>mybatis-spring-boot-starter</artifactId>
     </dependency>
+
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-doi</artifactId>
@@ -48,6 +40,7 @@
       <artifactId>gbif-api</artifactId>
     </dependency>
 
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
@@ -57,6 +50,7 @@
       <artifactId>liquibase-core</artifactId>
     </dependency>
 
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

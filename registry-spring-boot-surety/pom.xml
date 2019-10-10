@@ -11,22 +11,8 @@
 
   <artifactId>registry-spring-boot-surety</artifactId>
 
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-    <testResources>
-      <testResource>
-        <directory>src/test/resources</directory>
-        <filtering>true</filtering>
-      </testResource>
-    </testResources>
-  </build>
-
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -40,7 +26,7 @@
       <artifactId>spring-boot-starter-freemarker</artifactId>
     </dependency>
 
-    <!-- GBIF libraries -->
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-persistence</artifactId>
@@ -58,7 +44,21 @@
       <version>1.5.5</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+  </build>
 
 </project>

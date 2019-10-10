@@ -11,10 +11,6 @@
   <name>registry-spring-boot-ws</name>
   <description>Web services</description>
 
-  <properties>
-    <java.version>1.8</java.version>
-  </properties>
-
   <dependencies>
     <!-- Spring dependencies -->
     <dependency>

@@ -14,6 +14,7 @@
   <description>Utilities for Web service projects</description>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -27,15 +28,16 @@
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
     </dependency>
 
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
-      <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -50,6 +52,7 @@
       <artifactId>commons-validator</artifactId>
     </dependency>
 
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
