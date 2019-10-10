@@ -1,7 +1,6 @@
 package org.gbif.registry.identity.service;
 
 import com.google.common.base.Strings;
-import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.GbifUser;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
 import java.util.List;
@@ -45,13 +43,9 @@ class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
   private final UserSuretyDelegate userSuretyDelegate;
+  private final Validator validator;
 
   private static final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
-
-  private static final Validator BEAN_VALIDATOR = Validation.byProvider(ApacheValidationProvider.class)
-      .configure()
-      .buildValidatorFactory()
-      .getValidator();
 
   private static final UnaryOperator<String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
   private static final UnaryOperator<String> NORMALIZE_EMAIL_FCT = email -> Optional.ofNullable(email)
@@ -61,9 +55,10 @@ class IdentityServiceImpl implements IdentityService {
   private static final RegistryPasswordEncoder PASSWORD_ENCODER = new RegistryPasswordEncoder();
 
   @Autowired
-  public IdentityServiceImpl(UserMapper userMapper, UserSuretyDelegate userSuretyDelegate) {
+  public IdentityServiceImpl(UserMapper userMapper, UserSuretyDelegate userSuretyDelegate, Validator validator) {
     this.userMapper = userMapper;
     this.userSuretyDelegate = userSuretyDelegate;
+    this.validator = validator;
   }
 
   @Override
@@ -126,8 +121,8 @@ class IdentityServiceImpl implements IdentityService {
    * @param scope
    * @return
    */
-  private static Optional<UserModelMutationResult> validateBean(GbifUser gbifUser, Class<?> scope) {
-    Set<ConstraintViolation<GbifUser>> violations = BEAN_VALIDATOR.validate(gbifUser, scope, Default.class);
+  private Optional<UserModelMutationResult> validateBean(GbifUser gbifUser, Class<?> scope) {
+    Set<ConstraintViolation<GbifUser>> violations = validator.validate(gbifUser, scope, Default.class);
     return violations.isEmpty() ? Optional.empty() : Optional.of(withError(violations));
   }
 
