@@ -24,6 +24,7 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
+import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.Trim;
 import org.springframework.http.HttpStatus;
@@ -203,10 +204,9 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
-  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/contact")
   @Nullable
-//  @Validate(validateReturnedValue = true)
+  @ValidateReturnedValue
   @Override
   public List<Person> listContacts(@PathVariable @NotNull UUID key) {
     return contactableMapper.listContacts(key);
@@ -237,10 +237,9 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
 
-  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/identifier")
   @Nullable
-//  @Validate(validateReturnedValue = true)
+  @ValidateReturnedValue
   @Override
   public List<Identifier> listIdentifiers(@PathVariable @NotNull UUID key) {
     return withMyBatis.listIdentifiers(identifiableMapper, key);
@@ -278,10 +277,9 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
-  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}/tag")
   @Nullable
-//  @Validate(validateReturnedValue = true)
+  @ValidateReturnedValue
   @Override
   public List<Tag> listTags(@PathVariable("key") @NotNull UUID key, @RequestParam(value = "owner", required = false) @Nullable String owner) {
     return withMyBatis.listTags(taggableMapper, key, owner);

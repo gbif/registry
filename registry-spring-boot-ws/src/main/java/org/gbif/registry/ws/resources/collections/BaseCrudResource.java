@@ -5,6 +5,7 @@ import org.gbif.api.service.collections.CrudService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.CrudMapper;
+import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
 import org.springframework.security.access.annotation.Secured;
@@ -57,9 +58,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     return create(entity);
   }
 
-  // TODO: 09/10/2019 what should be validated here
   @DeleteMapping("{key}")
-//  @Validate
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public void delete(@PathVariable @NotNull UUID key, Authentication authentication) {
@@ -70,9 +69,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     delete(key);
   }
 
-  // TODO: 09/10/2019 what should be validated here
   @Transactional
-//  @Validate
   @Override
   public void delete(@NotNull UUID key) {
     T objectToDelete = get(key);
@@ -80,11 +77,10 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
   }
 
-  // TODO: 09/10/2019 return value validation
   @GetMapping("{key}")
   @Nullable
   @NullToNotFound
-//  @Validate(validateReturnedValue = true)
+  @ValidateReturnedValue
   @Override
   public T get(@PathVariable @NotNull UUID key) {
     return crudMapper.get(key);
