@@ -1,11 +1,9 @@
 package org.gbif.registry.doi.converter;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
@@ -16,10 +14,23 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions.Description;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Formats;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList.Rights;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Sizes;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameType;
@@ -33,9 +44,6 @@ import org.gbif.occurrence.query.TitleLookup;
 
 import javax.xml.bind.JAXBException;
 import java.net.URI;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.gbif.registry.doi.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
@@ -44,6 +52,8 @@ import static org.gbif.registry.doi.DataCiteConstants.DWCA_FORMAT;
 import static org.gbif.registry.doi.DataCiteConstants.ENGLISH;
 import static org.gbif.registry.doi.DataCiteConstants.GBIF_PUBLISHER;
 import static org.gbif.registry.doi.DataCiteConstants.LICENSE_INFO;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DownloadConverter {
 
@@ -53,33 +63,81 @@ public final class DownloadConverter {
   /**
    * Convert a download and its dataset usages into a datacite metadata instance.
    */
-  public static DataCiteMetadata convert(Download d,
-                                         GbifUser creator,
-                                         List<DatasetOccurrenceDownloadUsage> usedDatasets,
-                                         TitleLookup titleLookup) {
-    Preconditions.checkNotNull(d.getDoi(), "Download DOI required to build valid DOI metadata");
-    Preconditions.checkNotNull(d.getCreated(), "Download created date required to build valid DOI metadata");
+  public static DataCiteMetadata convert(Download download, GbifUser creator,
+                                         List<DatasetOccurrenceDownloadUsage> usedDatasets, TitleLookup titleLookup) {
+    Preconditions.checkNotNull(download.getDoi(), "Download DOI required to build valid DOI metadata");
+    Preconditions.checkNotNull(download.getCreated(), "Download created date required to build valid DOI metadata");
     Preconditions.checkNotNull(creator, "Download creator required to build valid DOI metadata");
-    Preconditions.checkNotNull(d.getRequest(), "Download request required to build valid DOI metadata");
+    Preconditions.checkNotNull(download.getRequest(), "Download request required to build valid DOI metadata");
 
-    // always add required metadata
-    DataCiteMetadata.Builder<Void> b = DataCiteMetadata.builder();
+    DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
-    // build identifier
-    b.withIdentifier(DataCiteMetadata.Identifier.builder()
-      .withIdentifierType(IdentifierType.DOI.name())
-      .withValue(d.getDoi().getDoiName())
-      .build());
+    // Required fields
+    convertIdentifier(builder, download);
+    convertCreators(builder, creator);
+    convertTitles(builder);
+    convertPublisher(builder);
+    convertPublicationYear(builder, download);
+    convertResourceType(builder);
 
-    // build titles
-    b.withTitles(DataCiteMetadata.Titles.builder()
-      .withTitle(DataCiteMetadata.Titles.Title.builder()
-        .withValue(DOWNLOAD_TITLE)
+    // Optional and recommended fields
+    convertDates(builder, download);
+    convertDescriptions(builder, download, usedDatasets, titleLookup);
+    convertAlternateIdentifiers(builder, download);
+    convertRelatedIdentifiers(builder, usedDatasets);
+    convertRightsList(builder, download);
+    convertSubjects(builder);
+    convertFormats(builder);
+    convertSizes(builder, download);
+
+    return builder.build();
+  }
+
+  private static void convertSizes(DataCiteMetadata.Builder<Void> builder, Download download) {
+    builder.withSizes(
+      Sizes.builder()
+        .addSize(Long.toString(download.getSize()))
+        .build());
+  }
+
+  private static void convertFormats(DataCiteMetadata.Builder<Void> builder) {
+    builder.withFormats(
+      Formats.builder()
+        .withFormat(DWCA_FORMAT)
+        .build());
+  }
+
+  private static void convertRightsList(DataCiteMetadata.Builder<Void> builder, Download download) {
+    License downloadLicense = download.getLicense() != null && download.getLicense().isConcrete() ?
+      download.getLicense() : DEFAULT_DOWNLOAD_LICENSE;
+
+    builder.withRightsList(
+      RightsList.builder()
+        .addRights(
+          Rights.builder()
+            .withRightsURI(downloadLicense.getLicenseUrl())
+            .withValue(downloadLicense.getLicenseTitle())
+            .build())
+        .build());
+  }
+
+  private static void convertRelatedIdentifiers(DataCiteMetadata.Builder<Void> builder,
+                                                List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+    builder.withRelatedIdentifiers(getRelatedIdentifiersDatasetOccurrenceDownloadUsage(usedDatasets));
+
+  }
+
+  private static void convertAlternateIdentifiers(DataCiteMetadata.Builder<Void> builder, Download download) {
+    builder.withAlternateIdentifiers(AlternateIdentifiers.builder()
+      .addAlternateIdentifier(AlternateIdentifier.builder()
+        .withAlternateIdentifierType("GBIF")
+        .withValue(download.getKey())
         .build())
       .build());
+  }
 
-    // build subjects
-    b.withSubjects(DataCiteMetadata.Subjects.builder()
+  private static void convertSubjects(DataCiteMetadata.Builder<Void> builder) {
+    builder.withSubjects(DataCiteMetadata.Subjects.builder()
       .addSubject(DataCiteMetadata.Subjects.Subject.builder()
         .withValue("GBIF")
         .withLang(ENGLISH)
@@ -93,92 +151,78 @@ public final class DownloadConverter {
         .withLang(ENGLISH)
         .build())
       .build());
+  }
 
-    // build creators
-    b.withCreators(DataCiteMetadata.Creators.builder()
-      .addCreator(DataCiteMetadata.Creators.Creator.builder()
-        .withCreatorName(DataCiteMetadata.Creators.Creator.CreatorName.builder()
-          .withNameType(NameType.ORGANIZATIONAL)
-          .withValue(creator.getName())
-          .build())
-        .build())
-      .build());
-
-    // build publisher
-    b.withPublisher(DataCiteMetadata.Publisher.builder()
-      .withValue(GBIF_PUBLISHER)
-      .build());
-
-    // build publication year
-    b.withPublicationYear(getYear(d.getCreated()));
-
-    // build resource type
-    b.withResourceType(DataCiteMetadata.ResourceType.builder()
-      .withResourceTypeGeneral(ResourceType.DATASET)
-      .build());
-
-    // build alternate identifiers
-    b.withAlternateIdentifiers(DataCiteMetadata.AlternateIdentifiers.builder()
-      .addAlternateIdentifier(DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier.builder()
-        .withAlternateIdentifierType("GBIF")
-        .withValue(d.getKey())
-        .build())
-      .build());
-
-    // build dates
-    b.withDates(DataCiteMetadata.Dates.builder()
-      .addDate(DataCiteMetadata.Dates.Date.builder()
-        .withDateType(DateType.CREATED)
-        .withValue(fdate(d.getCreated()))
-        .build())
-      .addDate(DataCiteMetadata.Dates.Date.builder()
-        .withDateType(DateType.UPDATED)
-        .withValue(fdate(d.getModified()))
-        .build())
-      .build());
-
-    // build formats & sizes
-    b.withFormats(
-      DataCiteMetadata.Formats.builder()
-        .withFormat(DWCA_FORMAT)
-        .build());
-    b.withSizes(
-      DataCiteMetadata.Sizes.builder()
-        .addSize(Long.toString(d.getSize()))
-        .build());
-
-    License downloadLicense = d.getLicense() != null && d.getLicense().isConcrete() ?
-      d.getLicense() : DEFAULT_DOWNLOAD_LICENSE;
-
-    // build rights list
-    b.withRightsList(
-      DataCiteMetadata.RightsList.builder()
-        .addRights(
-          DataCiteMetadata.RightsList.Rights.builder()
-            .withRightsURI(downloadLicense.getLicenseUrl())
-            .withValue(downloadLicense.getLicenseTitle())
-            .build())
-        .build());
-
-    // build descriptions
-    b.withDescriptions(
+  private static void convertDescriptions(DataCiteMetadata.Builder<Void> builder, Download download,
+                                          List<DatasetOccurrenceDownloadUsage> usedDatasets, TitleLookup titleLookup) {
+    builder.withDescriptions(
       Descriptions.builder()
         .addDescription(
           Description.builder()
             .withDescriptionType(DescriptionType.ABSTRACT)
             .withLang(ENGLISH)
             .addContent(String.format("A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n",
-              d.getTotalRecords(), getFilterQuery(d, titleLookup)))
+              download.getTotalRecords(), getFilterQuery(download, titleLookup)))
             .addContent(String.format("The dataset includes %s records from %s constituent datasets:\n",
-              d.getTotalRecords(), d.getNumberDatasets()))
+              download.getTotalRecords(), download.getNumberDatasets()))
             .addContent(getDescriptionDatasetOccurrenceDownloadUsage(usedDatasets))
             .build())
         .build());
+  }
 
-    // build related identifiers
-    b.withRelatedIdentifiers(getRelatedIdentifiersDatasetOccurrenceDownloadUsage(usedDatasets));
+  private static void convertDates(DataCiteMetadata.Builder<Void> builder, Download download) {
+    builder.withDates(DataCiteMetadata.Dates.builder()
+      .addDate(DataCiteMetadata.Dates.Date.builder()
+        .withDateType(DateType.CREATED)
+        .withValue(fdate(download.getCreated()))
+        .build())
+      .addDate(DataCiteMetadata.Dates.Date.builder()
+        .withDateType(DateType.UPDATED)
+        .withValue(fdate(download.getModified()))
+        .build())
+      .build());
+  }
 
-    return b.build();
+  private static void convertResourceType(DataCiteMetadata.Builder<Void> builder) {
+    builder.withResourceType(DataCiteMetadata.ResourceType.builder()
+      .withResourceTypeGeneral(ResourceType.DATASET)
+      .build());
+  }
+
+  private static void convertPublicationYear(DataCiteMetadata.Builder<Void> builder, Download download) {
+    builder.withPublicationYear(getYear(download.getCreated()));
+  }
+
+  private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {
+    builder.withPublisher(Publisher.builder()
+      .withValue(GBIF_PUBLISHER)
+      .build());
+  }
+
+  private static void convertTitles(DataCiteMetadata.Builder<Void> builder) {
+    builder.withTitles(Titles.builder()
+      .withTitle(Title.builder()
+        .withValue(DOWNLOAD_TITLE)
+        .build())
+      .build());
+  }
+
+  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, GbifUser creator) {
+    builder.withCreators(Creators.builder()
+      .addCreator(Creator.builder()
+        .withCreatorName(CreatorName.builder()
+          .withNameType(NameType.ORGANIZATIONAL)
+          .withValue(creator.getName())
+          .build())
+        .build())
+      .build());
+  }
+
+  private static void convertIdentifier(DataCiteMetadata.Builder<Void> builder, Download download) {
+    builder.withIdentifier(Identifier.builder()
+      .withIdentifierType(IdentifierType.DOI.name())
+      .withValue(download.getDoi().getDoiName())
+      .build());
   }
 
   private static DataCiteMetadata truncateDescriptionDCM(DOI doi, String xml, URI target) throws InvalidMetadataException {
@@ -259,20 +303,6 @@ public final class DownloadConverter {
     }
 
     return relatedIdentifiersBuilder.build();
-  }
-
-  private static String fdate(Date date) {
-    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
-  }
-
-  @VisibleForTesting
-  protected static String getYear(Date date) {
-    if (date == null) {
-      return null;
-    }
-    Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    return String.valueOf(cal.get(Calendar.YEAR));
   }
 
   /**
