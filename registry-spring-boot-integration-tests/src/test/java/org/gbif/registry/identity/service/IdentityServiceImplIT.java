@@ -34,7 +34,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-// TODO: 2019-07-02 add appKeyWhiteList
 @SpringBootTest(classes = {TestEmailConfiguration.class})
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -81,7 +80,7 @@ public class IdentityServiceImplIT {
    * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
    */
   @Test
-  public void testCRUD() throws Exception {
+  public void testCRUD() {
     GbifUser u1 = generateUser();
 
     // create
@@ -90,6 +89,7 @@ public class IdentityServiceImplIT {
 
     // get
     GbifUser u2 = identityService.get(u1.getUserName());
+    assertNotNull(u2);
     assertEquals(u1.getUserName(), u2.getUserName());
     assertEquals(u1.getFirstName(), u2.getFirstName());
     assertEquals(u1.getLastName(), u2.getLastName());
@@ -106,6 +106,7 @@ public class IdentityServiceImplIT {
     assertFalse("Doesn't contain error like " + mutationResult.getConstraintViolation(), mutationResult.containsError());
 
     GbifUser u3 = identityService.get(u1.getUserName());
+    assertNotNull(u3);
     assertEquals(2, u3.getSettings().size());
     assertEquals("GB", u3.getSettings().get("user.country"));
     assertEquals("-7", u3.getSystemSettings().get("internal.settings"));
@@ -119,7 +120,7 @@ public class IdentityServiceImplIT {
    * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
    */
   @Test
-  public void testCreateError() throws Exception {
+  public void testCreateError() {
     GbifUser u1 = generateUser();
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
@@ -146,7 +147,7 @@ public class IdentityServiceImplIT {
    * Checks that the get(username) is case insensitive.
    */
   @Test
-  public void testGetIsCaseInsensitive() throws Exception {
+  public void testGetIsCaseInsensitive() {
     GbifUser u1 = generateUser();
     u1.setUserName("testuser");
     u1.setEmail("myEmail@b.com");
@@ -166,7 +167,7 @@ public class IdentityServiceImplIT {
   }
 
   @Test
-  public void testGetBySystemSetting() throws Exception {
+  public void testGetBySystemSetting() {
     GbifUser u1 = generateUser();
     u1.setSystemSettings(ImmutableMap.of("my.app.setting", "secret-magic"));
 
@@ -180,7 +181,6 @@ public class IdentityServiceImplIT {
     assertNull("Can NOT get the user using wrong systemSettings", newUser);
   }
 
-  // TODO: 2019-07-02 floating behaviour (fails if run all tests)
   @Test
   public void testCreateUserChallengeCodeSequence() {
     GbifUser user = createConfirmedUser(identityService, inMemoryEmailSender);
@@ -193,19 +193,20 @@ public class IdentityServiceImplIT {
     identityService.resetPassword(user.getKey());
 
     //ensure we can not login
-    assertNull("Can not login until the password is changed", identityService.authenticate(user.getUserName(), TEST_PASSWORD));
+    assertNull("Can not login until the password is changed",
+        identityService.authenticate(user.getUserName(), TEST_PASSWORD));
 
     //confirm challenge code
     UUID challengeCode = getChallengeCode(user.getKey());
     assertNotNull("Got a challenge code for " + user.getEmail(), challengeCode);
-    assertTrue("password can be changed using challengeCode",
-        !identityService.updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode).containsError());
+    assertFalse("password can be changed using challengeCode", identityService.updatePassword(user.getKey(),
+        TEST_PASSWORD2, challengeCode).containsError());
 
     //ensure we can now login
-    assertNotNull("Can login after the challenge code is confirmed", identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
+    assertNotNull("Can login after the challenge code is confirmed",
+        identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
   }
 
-  // TODO: 2019-07-02 floating behaviour
   @Test
   public void testCrudEditorRights() {
     GbifUser u1 = generateUser();
@@ -229,8 +230,6 @@ public class IdentityServiceImplIT {
   /**
    * Generates a different user on each call.
    * Thread-Safe
-   *
-   * @return
    */
   public static GbifUser generateUser() {
     int idx = index.incrementAndGet();
@@ -249,8 +248,6 @@ public class IdentityServiceImplIT {
   /**
    * Creates a new user and confirms its challenge code.
    * No assertion performed.
-   *
-   * @return
    */
   public GbifUser createConfirmedUser(IdentityService identityService, EmailSender inMemoryEmailManager) {
     GbifUser u1 = generateUser();

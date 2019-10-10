@@ -12,6 +12,7 @@
   <artifactId>registry-spring-boot-cli</artifactId>
 
   <dependencies>
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -26,6 +27,7 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-doi</artifactId>
@@ -38,6 +40,8 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-doi</artifactId>
     </dependency>
+
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
@@ -51,6 +55,13 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
 
 </project>
