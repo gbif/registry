@@ -1,14 +1,22 @@
 package org.gbif.registry.doi.converter;
 
+import com.beust.jcommander.internal.Lists;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.template.Configuration;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.utils.file.tabular.TabularDataFileReader;
 import org.gbif.utils.file.tabular.TabularFiles;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmlunit.matchers.CompareMatcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,17 +29,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import com.beust.jcommander.internal.Lists;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class CustomDownloadDataCiteConverterTest {
 
@@ -54,8 +54,7 @@ public class CustomDownloadDataCiteConverterTest {
    * download properties from customDownload.properties and list of used datasets from usedDatasets.txt.
    */
   @Test
-  public void createCustomDownload()
-    throws IOException, InvalidMetadataException, ParseException, TemplateException {
+  public void createCustomDownload() throws Exception {
     // gather custom download properties
     Properties properties = PropertiesUtil.loadProperties("customdownload/download.properties");
     DOI doi = new DOI(properties.getProperty("downloadDoi"));
@@ -75,9 +74,11 @@ public class CustomDownloadDataCiteConverterTest {
     DataCiteMetadata metadata = CustomDownloadDataCiteConverter
       .convert(doi, size, numberRecords, creatorName, creatorUserId, createdDate, usedDatasets);
     String xml = DataCiteValidator.toXml(doi, metadata);
+    String expectedMetadataXml = getXmlMetadataFromFile("customdownload/custom-download-metadata.xml");
+    assertThat(xml, CompareMatcher.isIdenticalTo(expectedMetadataXml).ignoreWhitespace().normalizeWhitespace());
 
     // write it to tmp directory
-    File output = org.gbif.utils.file.FileUtils.createTempDir();
+    File output = FileUtils.createTempDir();
     File xmlFile = new File(output, "custom_download-" + DateFormatUtils.ISO_DATE_FORMAT.format(createdDate) + ".xml");
     Writer xmlFileWriter = FileUtils.startNewUtf8File(xmlFile);
     xmlFileWriter.write(xml);
