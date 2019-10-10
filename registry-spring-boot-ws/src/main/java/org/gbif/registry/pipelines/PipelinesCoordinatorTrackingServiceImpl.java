@@ -140,7 +140,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                   LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
                 }
               });
-      pagingRequest.setOffset(response.getResults().size());
+      pagingRequest.addOffset(response.getResults().size());
       response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
   }
