@@ -145,7 +145,8 @@ public class PipelinesHistoryResource {
                         datasetKey,
                         parseSteps(steps),
                         reason,
-                        security.getUserPrincipal().getName())));
+                        security.getUserPrincipal().getName(),
+                        null)));
   }
 
 
@@ -167,7 +168,8 @@ public class PipelinesHistoryResource {
                         attempt,
                         parseSteps(steps),
                         reason,
-                        security.getUserPrincipal().getName())));
+                        security.getUserPrincipal().getName(),
+                        null)));
   }
 
   /**
