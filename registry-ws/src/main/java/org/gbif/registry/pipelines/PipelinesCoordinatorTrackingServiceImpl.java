@@ -500,26 +500,38 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   private PipelineProcess addNumberRecords(PipelineProcess process) {
     if (process != null) {
       process.getSteps().stream()
-        .filter(s -> s.getType().getExecutionOrder() == 1)
-        .max(Comparator.comparing(PipelineStep::getStarted))
-        .ifPresent(
-          s -> {
-            if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-              try {
-                process.setNumberRecords(
-                  OBJECT_MAPPER
-                    .readValue(s.getMessage(), PipelinesDwcaMessage.class)
-                    .getValidationReport()
-                    .getOccurrenceReport()
-                    .getCheckedRecords());
-              } catch (IOException e) {
-                LOG.warn(
-                  "Couldn't get the number of records for dataset {} and attempt {}",
-                  process.getDatasetKey(),
-                  process.getAttempt());
-              }
-            }
-          });
+          .filter(s -> s.getType().getExecutionOrder() == 1)
+          .max(Comparator.comparing(PipelineStep::getStarted))
+          .ifPresent(
+              s -> {
+                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+                  try {
+                    process.setNumberRecords(
+                        OBJECT_MAPPER
+                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
+                            .getValidationReport()
+                            .getOccurrenceReport()
+                            .getCheckedRecords());
+                  } catch (IOException e) {
+                    LOG.warn(
+                        "Couldn't get the number of records for dataset {} and attempt {}",
+                        process.getDatasetKey(),
+                        process.getAttempt());
+                  }
+                } else if (s.getType() == StepType.XML_TO_VERBATIM) {
+                  try {
+                    process.setNumberRecords(
+                        OBJECT_MAPPER
+                            .readValue(s.getMessage(), PipelinesXmlMessage.class)
+                            .getTotalRecordCount());
+                  } catch (IOException e) {
+                    LOG.warn(
+                        "Couldn't get the number of records for dataset {} and attempt {}",
+                        process.getDatasetKey(),
+                        process.getAttempt());
+                  }
+                } // abcd doesn't have count
+              });
     }
 
     return process;
