@@ -21,9 +21,11 @@ public interface PipelinesHistoryTrackingService {
    * @param steps steps to be executed
    * @param reason textual justification of why it has to be re-executed
    * @param user the user who is running the attempt
+   * @param prefix if triggered for all datasets
+   *
    * @return a response containing the request result
    */
-  RunPipelineResponse runLastAttempt(UUID datasetKey, Set<StepType> steps, String reason, String user);
+  RunPipelineResponse runLastAttempt(UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix);
 
   /**
    * Executes a previously run attempt.
@@ -32,6 +34,8 @@ public interface PipelinesHistoryTrackingService {
    * @param steps steps to be executed
    * @param reason textual justification of why it has to be re-executed
    * @param user the user who is running the attempt
+   * @param prefix if triggered for all datasets
+   *
    * @return the response of the execution request
    */
   RunPipelineResponse runPipelineAttempt(
@@ -39,7 +43,8 @@ public interface PipelinesHistoryTrackingService {
       int attempt,
       Set<StepType> steps,
       String reason,
-      String user
+      String user,
+      String prefix
   );
 
   /**

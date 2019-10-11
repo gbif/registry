@@ -153,7 +153,8 @@ public class PipelinesHistoryResource {
                         datasetKey,
                         parseSteps(steps),
                         reason,
-                        authentication.getName())));
+                        authentication.getName(),
+                        null)));
   }
 
   /**
@@ -175,7 +176,8 @@ public class PipelinesHistoryResource {
                         attempt,
                         parseSteps(steps),
                         reason,
-                        authentication.getName())));
+                        authentication.getName(),
+                        null)));
   }
 
   /**
