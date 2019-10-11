@@ -238,6 +238,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
+    statuses.forEach(this::addNumberRecords);
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -247,6 +248,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
+    statuses.forEach(this::addNumberRecords);
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -330,31 +332,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
     // get number of records
-    if (process != null) {
-      process.getSteps().stream()
-          .filter(s -> s.getType().getExecutionOrder() == 1)
-          .max(Comparator.comparing(PipelineStep::getStarted))
-          .ifPresent(
-              s -> {
-                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-                  try {
-                    process.setNumberRecords(
-                        OBJECT_MAPPER
-                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
-                            .getValidationReport()
-                            .getOccurrenceReport()
-                            .getCheckedRecords());
-                  } catch (IOException e) {
-                    LOG.warn(
-                        "Couldn't get the number of records for dataset {} and attempt {}",
-                        datasetKey,
-                        attempt);
-                  }
-                }
-              });
-    }
-
-    return process;
+    return addNumberRecords(process);
   }
 
   @Override
@@ -517,5 +495,33 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // Sort the remaining ones
     result.sort(ENDPOINT_COMPARATOR);
     return result;
+  }
+
+  private PipelineProcess addNumberRecords(PipelineProcess process) {
+    if (process != null) {
+      process.getSteps().stream()
+        .filter(s -> s.getType().getExecutionOrder() == 1)
+        .max(Comparator.comparing(PipelineStep::getStarted))
+        .ifPresent(
+          s -> {
+            if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+              try {
+                process.setNumberRecords(
+                  OBJECT_MAPPER
+                    .readValue(s.getMessage(), PipelinesDwcaMessage.class)
+                    .getValidationReport()
+                    .getOccurrenceReport()
+                    .getCheckedRecords());
+              } catch (IOException e) {
+                LOG.warn(
+                  "Couldn't get the number of records for dataset {} and attempt {}",
+                  process.getDatasetKey(),
+                  process.getAttempt());
+              }
+            }
+          });
+    }
+
+    return process;
   }
 }
