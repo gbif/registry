@@ -933,7 +933,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                   LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
                 }
               });
-      pagingRequest.setOffset(response.getResults().size());
+      pagingRequest.addOffset(response.getResults().size());
       response = listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
   }

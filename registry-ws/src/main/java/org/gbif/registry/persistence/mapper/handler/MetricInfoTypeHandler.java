@@ -4,10 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -35,7 +32,10 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
                   metricInfo ->
                       new StringJoiner(METRIC_INFO_DELIMITER)
                           .add(metricInfo.getName())
-                          .add(metricInfo.getValue())
+                          .add(
+                              Optional.ofNullable(metricInfo.getValue())
+                                  .filter(s -> !Strings.isNullOrEmpty(s))
+                                  .orElse(null))
                           .toString())
               .collect(Collectors.joining(LIST_DELIMITER));
     }
@@ -67,9 +67,12 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
     // removes the quotes at the beginning and at the end if they exist
     UnaryOperator<String> stringNormalizer =
         s ->
-            s.substring(
-                s.charAt(0) == '"' ? 1 : 0,
-                s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length());
+            Optional.of(
+                    s.substring(
+                        s.charAt(0) == '"' ? 1 : 0,
+                        s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length()))
+                .filter(v -> !v.equalsIgnoreCase("null"))
+                .orElse(null);
 
     return Arrays.stream(hstoreString.split(LIST_DELIMITER))
         .map(s -> s.split(METRIC_INFO_DELIMITER))
