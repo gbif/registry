@@ -22,20 +22,18 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 
 import com.google.inject.Injector;
-import org.apache.ibatis.exceptions.PersistenceException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.postgresql.util.PSQLException;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import static org.gbif.api.model.pipelines.PipelineStep.Status;
 
-import static org.hamcrest.core.Is.isA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PipelineProcessMapperTest {
@@ -170,6 +168,29 @@ public class PipelineProcessMapperTest {
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
     assertEquals(1, processRetrieved.getSteps().size());
     assertTrue(step.lenientEquals(processRetrieved.getSteps().iterator().next()));
+  }
+
+  @Test
+  public void addStepWithEmptyMetricsTest() {
+    // insert one process
+    PipelineProcess process =
+      new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.create(process);
+
+    // add a step
+    PipelineStep step =
+      new PipelineStep()
+        .setType(StepType.ABCD_TO_VERBATIM)
+        .setState(Status.COMPLETED)
+        .setMetrics(Collections.singleton(new MetricInfo("a", "")))
+        .setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineStep(process.getKey(), step);
+    assertTrue(step.getKey() > 0);
+
+    // assert results
+    PipelineProcess processRetrieved =
+      pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
+    assertNull(processRetrieved.getSteps().iterator().next().getMetrics().iterator().next().getValue());
   }
 
   @Test
