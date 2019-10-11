@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,7 +64,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andDo(print())
         .andExpect(status().isCreated())
         .andReturn();
 
@@ -81,7 +79,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .header(HttpHeaders.AUTHORIZATION, "beare " + "token"))
-        .andDo(print())
         .andExpect(status().isForbidden());
   }
 
@@ -100,7 +97,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andDo(print())
         .andExpect(status().isForbidden());
   }
 
@@ -113,7 +109,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andDo(print())
         .andExpect(status().isForbidden());
   }
 
@@ -126,7 +121,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andDo(print())
         .andExpect(status().isForbidden());
   }
 
@@ -136,7 +130,6 @@ public class JwtIT {
     mvc
         .perform(
             post("/test"))
-        .andDo(print())
         .andExpect(status().isForbidden());
   }
 
@@ -147,7 +140,6 @@ public class JwtIT {
         .perform(
             post("/test")
                 .with(httpBasic("justadmin", "welcome")))
-        .andDo(print())
         .andExpect(status().isCreated());
   }
 
@@ -158,7 +150,6 @@ public class JwtIT {
             post("/user/login")
                 .with(httpBasic(user, password))
                 .characterEncoding("utf-8"))
-        .andDo(print())
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.token").isNotEmpty());
 

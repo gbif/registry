@@ -17,7 +17,6 @@ import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME_PREFIX;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class},
@@ -47,7 +46,6 @@ public class AppIdentityIT {
             post("/test/app")
                 .header(HEADER_GBIF_USER, "gbif.registry-ws-client-it")
                 .header(HttpHeaders.AUTHORIZATION, GBIF_SCHEME_PREFIX + "gbif.registry-ws-client-it:ag5xzHiB2yCFNJalo+2W0j7QnK0="))
-        .andDo(print())
         .andExpect(status().isCreated())
         .andReturn();
   }

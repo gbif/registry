@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 @SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-public class IdentityEmailManagerTest {
+public class IdentityEmailManagerIT {
 
   @Autowired
   private IdentityEmailManager identityEmailManager;

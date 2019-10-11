@@ -41,7 +41,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -189,7 +188,6 @@ public class UserManagementIT {
         .perform(
             get("/admin/user/{username}", "justuser")
                 .with(httpBasic("justadmin", "welcome")))
-        .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.user.userName").value("justuser"))
         .andExpect(jsonPath("$.error").doesNotExist());
@@ -203,7 +201,6 @@ public class UserManagementIT {
             get("/admin/user/find")
                 .param("my.settings.key", "100_tacos=100$")
                 .with(httpBasic("justadmin", "welcome")))
-        .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.user.userName").value("justadmin"))
         .andExpect(jsonPath("$.error").doesNotExist());
@@ -346,7 +343,6 @@ public class UserManagementIT {
                 .header(HEADER_CONTENT_MD5, contentMd5_2)
                 .header(HEADER_GBIF_USER, IT_APP_KEY)
                 .header(AUTHORIZATION, gbifAuthorization_2))
-        .andDo(print())
         .andExpect(status().isUnprocessableEntity())
         .andExpect(jsonPath("$.error").value("EMAIL_ALREADY_IN_USE"));
 
@@ -360,7 +356,6 @@ public class UserManagementIT {
                 .with(httpBasic("justadmin", "welcome"))
                 .content(userJsonString_3)
                 .contentType(APPLICATION_JSON))
-        .andDo(print())
         .andExpect(status().isNoContent());
 
     // load user directly from the database
