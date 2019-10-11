@@ -192,6 +192,7 @@ public class UserIT {
    * Mock HttpServletRequest and sign it. (The sign service should return 'Authorization' header).
    * Check the response is 403.
    */
+  @SuppressWarnings("unchecked")
   @Test
   public void testLoginWithAppKeysFail() throws Exception {
     HttpServletRequest rawRequestMock = mock(HttpServletRequest.class);
@@ -221,6 +222,7 @@ public class UserIT {
    * Mock HttpServletRequest and sign it. (The sign service should return 'Authorization' header).
    * Check the response is 201.
    */
+  @SuppressWarnings("unchecked")
   @Test
   public void testLoginWithAppKeysSuccess() throws Exception {
     final TestResource.TestRequest requestToSign = new TestResource.TestRequest("test");
@@ -236,6 +238,7 @@ public class UserIT {
 
     RequestObject requestMock = new RequestObject(rawRequestMock);
 
+    // TODO: 11/10/2019 replace manual sign with a filter
     final RequestObject signedRequest = gbifAuthService.signRequest("gbif.registry-ws-client-it", requestMock);
 
     mvc

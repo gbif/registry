@@ -1,5 +1,6 @@
 package org.gbif.ws.security;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -61,10 +62,15 @@ public class GbifAuthServiceImpl implements GbifAuthService {
   private final ImmutableMap<String, String> keyStore;
   private final SigningService signingService;
   private final Md5EncodeService md5EncodeService;
+  private final AppKeyProvider appKeyProvider;
 
-  public GbifAuthServiceImpl(AppkeysConfiguration appkeysConfiguration, SigningService signingService, Md5EncodeService md5EncodeService) {
+  public GbifAuthServiceImpl(SigningService signingService,
+                             Md5EncodeService md5EncodeService,
+                             AppkeysConfiguration appkeysConfiguration,
+                             AppKeyProvider appKeyProvider) {
     this.signingService = signingService;
     this.md5EncodeService = md5EncodeService;
+    this.appKeyProvider = appKeyProvider;
     try {
       Properties props = PropertiesUtil.loadProperties(appkeysConfiguration.getFile());
       keyStore = Maps.fromProperties(props);
@@ -178,7 +184,8 @@ public class GbifAuthServiceImpl implements GbifAuthService {
    */
   @Override
   public RequestObject signRequest(final String username, final RequestObject request) {
-//    Preconditions.checkState(keyStore.size() == 1, "To sign the request a single application key is required");
+    String appKey = appKeyProvider.get();
+    Preconditions.checkNotNull(appKey, "To sign the request a single application key is required");
     // first add custom GBIF headers so we can use them to build the string to sign
     // the proxied username
     request.getHttpHeaders().add(HEADER_GBIF_USER, username);
@@ -199,7 +206,6 @@ public class GbifAuthServiceImpl implements GbifAuthService {
     // build the unique string to sign
     final String stringToSign = buildStringToSign(request);
     // find private key for this app
-    final String appKey = keyStore.keySet().iterator().next();
     final String secretKey = getPrivateKey(appKey);
     if (secretKey == null) {
       LOG.warn("Skip signing request with unknown application key: {}", appKey);
