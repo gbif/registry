@@ -184,10 +184,14 @@ public class MetricsHandler {
     Set<MetricInfo> metrics = new HashSet<>();
     for (JsonNode bucket : buckets) {
       String key = bucket.get("key").asText();
-      metrics.add(
-          new MetricInfo(
-              key.substring(key.indexOf(METRIC_NAME_FILTER) + METRIC_NAME_FILTER.length()),
-              bucket.get(MAX_VALUE_AGG).get("value").asText()));
+
+      String metricName =
+          key.substring(key.indexOf(METRIC_NAME_FILTER) + METRIC_NAME_FILTER.length());
+      if (Strings.isNullOrEmpty(metricName)) {
+        continue;
+      }
+
+      metrics.add(new MetricInfo(metricName, bucket.get(MAX_VALUE_AGG).get("value").asText()));
     }
 
     return metrics;

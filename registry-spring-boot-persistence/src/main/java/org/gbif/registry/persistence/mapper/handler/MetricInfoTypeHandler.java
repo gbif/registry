@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.UnaryOperator;
@@ -17,7 +18,9 @@ import java.util.stream.Collectors;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 
-/** Converts a {@link MetricInfo} to a hstore and viceversa. */
+/**
+ * Converts a {@link MetricInfo} to a hstore and viceversa.
+ */
 public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
 
   private static final String METRIC_INFO_DELIMITER = "=>";
@@ -35,7 +38,9 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
                   metricInfo ->
                       new StringJoiner(METRIC_INFO_DELIMITER)
                           .add(metricInfo.getName())
-                          .add(metricInfo.getValue())
+                          .add(Optional.ofNullable(metricInfo.getValue())
+                              .filter(s -> !Strings.isNullOrEmpty(s))
+                              .orElse(null))
                           .toString())
               .collect(Collectors.joining(LIST_DELIMITER));
     }
@@ -67,9 +72,12 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
     // removes the quotes at the beginning and at the end if they exist
     UnaryOperator<String> stringNormalizer =
         s ->
-            s.substring(
-                s.charAt(0) == '"' ? 1 : 0,
-                s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length());
+            Optional.of(
+                s.substring(
+                    s.charAt(0) == '"' ? 1 : 0,
+                    s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length()))
+                .filter(v -> !v.equalsIgnoreCase("null"))
+                .orElse(null);
 
     return Arrays.stream(hstoreString.split(LIST_DELIMITER))
         .map(s -> s.split(METRIC_INFO_DELIMITER))
