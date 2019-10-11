@@ -47,6 +47,7 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.hamcrest.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,6 +153,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
           newSteps.add(StepType.XML_TO_VERBATIM);
         }
       });
+    } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
+      newSteps.add(StepType.ABCD_TO_VERBATIM);
+    } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
+      newSteps.add(StepType.XML_TO_VERBATIM);
+    } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
+      newSteps.add(StepType.DWCA_TO_VERBATIM);
     } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
       newSteps.add(StepType.VERBATIM_TO_INTERPRETED);
     } else if (steps.contains(StepType.INTERPRETED_TO_INDEX) || steps.contains(StepType.HDFS_VIEW)) {
@@ -321,7 +328,34 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PipelineProcess get(UUID datasetKey, int attempt) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
 
-    return mapper.getByDatasetAndAttempt(datasetKey, attempt);
+    PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+
+    // get number of records
+    if (process != null) {
+      process.getSteps().stream()
+          .filter(s -> s.getType().getExecutionOrder() == 1)
+          .max(Comparator.comparing(PipelineStep::getStarted))
+          .ifPresent(
+              s -> {
+                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+                  try {
+                    process.setNumberRecords(
+                        OBJECT_MAPPER
+                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
+                            .getValidationReport()
+                            .getOccurrenceReport()
+                            .getCheckedRecords());
+                  } catch (IOException e) {
+                    LOG.warn(
+                        "Couldn't get the number of records for dataset {} and attempt {}",
+                        datasetKey,
+                        attempt);
+                  }
+                }
+              });
+    }
+
+    return process;
   }
 
   @Override
