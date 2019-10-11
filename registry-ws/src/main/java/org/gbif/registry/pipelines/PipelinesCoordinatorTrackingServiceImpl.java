@@ -1,9 +1,32 @@
 package org.gbif.registry.pipelines;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineWorkflow;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.WorkflowStep;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
@@ -11,16 +34,21 @@ import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.*;
+import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -28,12 +56,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistoryTrackingService {
@@ -85,7 +107,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
   @Override
   public RunPipelineResponse runLastAttempt(
-      UUID datasetKey, Set<StepType> steps, String reason, String user) {
+      UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix) {
     int lastAttempt =
         mapper
             .getLastAttempt(datasetKey)
@@ -93,7 +115,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                 () ->
                     new IllegalArgumentException(
                         "Couldn't find last attempt for dataset " + datasetKey));
-    return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user);
+    return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user, prefix);
   }
 
   /** Utility method to run batch jobs on all dataset elements */
@@ -118,10 +140,9 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     } while (!response.isEndOfRecords());
   }
 
-  private Set<StepType> handleVerbatimSteps(Set<StepType> steps, Dataset dataset) {
-    Set<StepType> newSteps = new HashSet<>(steps);
-    if (newSteps.contains(StepType.TO_VERBATIM)) {
-      newSteps.remove(StepType.TO_VERBATIM);
+  private Set<StepType> prioritizeSteps(Set<StepType> steps, Dataset dataset) {
+    Set<StepType> newSteps = new HashSet<>();
+    if (steps.contains(StepType.TO_VERBATIM)) {
       getEndpointToCrawl(dataset).ifPresent(endpoint -> {
         if (EndpointType.DWC_ARCHIVE == endpoint.getType()) {
           newSteps.add(StepType.DWCA_TO_VERBATIM);
@@ -131,14 +152,24 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
           newSteps.add(StepType.XML_TO_VERBATIM);
         }
       });
+    } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
+      newSteps.add(StepType.VERBATIM_TO_INTERPRETED);
+    } else if (steps.contains(StepType.INTERPRETED_TO_INDEX) || steps.contains(StepType.HDFS_VIEW)) {
+      if (steps.contains(StepType.INTERPRETED_TO_INDEX)) {
+        newSteps.add(StepType.INTERPRETED_TO_INDEX);
+      }
+      if (steps.contains(StepType.HDFS_VIEW)) {
+        newSteps.add(StepType.HDFS_VIEW);
+      }
     }
     return newSteps;
   }
 
   @Override
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
+    String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
-        () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user)));
+        () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix)));
 
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
@@ -215,7 +246,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
   @Override
   public RunPipelineResponse runPipelineAttempt(
-      UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user) {
+      UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user, String prefix) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -235,42 +266,44 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
     Dataset dataset = datasetService.get(datasetKey);
-    Set<StepType> withVerbatimSteps = handleVerbatimSteps(steps, dataset);
-    handleVerbatimSteps(withVerbatimSteps, dataset).forEach(
+    prioritizeSteps(steps, dataset).forEach(
         stepName ->
             getLatestSuccessfulStep(status, stepName)
                 .ifPresent(
                     step -> {
                       try {
-                        if (stepName == StepType.HDFS_VIEW
-                            || stepName == StepType.INTERPRETED_TO_INDEX) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(
-                              OBJECT_MAPPER.readValue(
-                                  step.getMessage(), PipelinesInterpretedMessage.class));
-                        } else if (withVerbatimSteps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(
-                              OBJECT_MAPPER.readValue(
-                                  step.getMessage(), PipelinesVerbatimMessage.class));
-                        } else if (withVerbatimSteps.contains(StepType.DWCA_TO_VERBATIM)) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(
-                              OBJECT_MAPPER.readValue(
-                                  step.getMessage(), PipelinesDwcaMessage.class));
-                        } else if (withVerbatimSteps.contains(StepType.ABCD_TO_VERBATIM)) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(
-                              OBJECT_MAPPER.readValue(
-                                  step.getMessage(), PipelinesAbcdMessage.class));
-                        } else if (withVerbatimSteps.contains(StepType.XML_TO_VERBATIM)) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(
-                              OBJECT_MAPPER.readValue(
-                                  step.getMessage(), PipelinesXmlMessage.class));
+                        Message message = null;
+
+                        if (stepName == StepType.INTERPRETED_TO_INDEX) {
+                          PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
+                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                          m.setOnlyForStep(StepType.INTERPRETED_TO_INDEX.name());
+                          m.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+                          message = m;
+                        } else if (stepName == StepType.HDFS_VIEW) {
+                          PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
+                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                          m.setOnlyForStep(StepType.HDFS_VIEW.name());
+                          m.setPipelineSteps(Collections.singleton(StepType.HDFS_VIEW.name()));
+                          message = m;
+                        } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
+                          PipelinesVerbatimMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesVerbatimMessage.class);
+                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                          m.setPipelineSteps(new HashSet<>(Arrays.asList(StepType.VERBATIM_TO_INTERPRETED.name(), StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+                          message = m;
+                        } else if (stepName == StepType.DWCA_TO_VERBATIM) {
+                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesDwcaMessage.class);
+                        } else if (stepName == StepType.ABCD_TO_VERBATIM) {
+                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesAbcdMessage.class);
+                        } else if (stepName == StepType.XML_TO_VERBATIM) {
+                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesXmlMessage.class);
                         } else {
-                          responseBuilder.setResponseStatus(
-                              RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
+                        }
+
+                        if (message != null) {
+                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                          publisher.send(message);
                         }
 
                         // update rerun reason and modifier user
