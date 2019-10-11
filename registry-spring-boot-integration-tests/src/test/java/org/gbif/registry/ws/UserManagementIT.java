@@ -3,6 +3,7 @@ package org.gbif.registry.ws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
+import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.ws.model.UserCreation;
@@ -48,7 +49,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class UserManagementIT {
