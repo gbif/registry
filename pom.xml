@@ -177,6 +177,20 @@
         <groupId>org.gbif.directory</groupId>
         <artifactId>directory-api</artifactId>
         <version>${gbif-directory.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-jsr303</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>org.apache.bval.bundle</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
