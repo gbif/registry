@@ -512,11 +512,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                             .getValidationReport()
                             .getOccurrenceReport()
                             .getCheckedRecords());
-                  } catch (IOException e) {
+                  } catch (IOException ex) {
                     LOG.warn(
                         "Couldn't get the number of records for dataset {} and attempt {}",
                         process.getDatasetKey(),
-                        process.getAttempt());
+                        process.getAttempt(),
+                        ex);
                   }
                 } else if (s.getType() == StepType.XML_TO_VERBATIM) {
                   try {
@@ -524,11 +525,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                         OBJECT_MAPPER
                             .readValue(s.getMessage(), PipelinesXmlMessage.class)
                             .getTotalRecordCount());
-                  } catch (IOException e) {
+                  } catch (IOException ex) {
                     LOG.warn(
                         "Couldn't get the number of records for dataset {} and attempt {}",
                         process.getDatasetKey(),
-                        process.getAttempt());
+                        process.getAttempt(),
+                        ex);
                   }
                 } // abcd doesn't have count
               });
