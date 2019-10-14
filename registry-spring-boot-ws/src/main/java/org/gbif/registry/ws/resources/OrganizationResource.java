@@ -325,7 +325,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * Confirm the endorsement of an organization.
    */
   @PostMapping("{key}/endorsement")
-//  @Validate
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
       @PathVariable("key") UUID organizationKey,
