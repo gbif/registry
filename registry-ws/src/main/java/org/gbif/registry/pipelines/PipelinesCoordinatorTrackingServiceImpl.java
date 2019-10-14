@@ -152,6 +152,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
           newSteps.add(StepType.XML_TO_VERBATIM);
         }
       });
+    } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
+      newSteps.add(StepType.ABCD_TO_VERBATIM);
+    } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
+      newSteps.add(StepType.XML_TO_VERBATIM);
+    } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
+      newSteps.add(StepType.DWCA_TO_VERBATIM);
     } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
       newSteps.add(StepType.VERBATIM_TO_INTERPRETED);
     } else if (steps.contains(StepType.INTERPRETED_TO_INDEX) || steps.contains(StepType.HDFS_VIEW)) {
@@ -232,6 +238,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
+    statuses.forEach(this::addNumberRecords);
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -241,6 +248,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
+    statuses.forEach(this::addNumberRecords);
     return new PagingResponse<>(pageable, count, statuses);
   }
 
@@ -321,7 +329,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PipelineProcess get(UUID datasetKey, int attempt) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
 
-    return mapper.getByDatasetAndAttempt(datasetKey, attempt);
+    PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+
+    // get number of records
+    return addNumberRecords(process);
   }
 
   @Override
@@ -484,5 +495,47 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // Sort the remaining ones
     result.sort(ENDPOINT_COMPARATOR);
     return result;
+  }
+
+  private PipelineProcess addNumberRecords(PipelineProcess process) {
+    if (process != null) {
+      process.getSteps().stream()
+          .filter(s -> s.getType().getExecutionOrder() == 1)
+          .max(Comparator.comparing(PipelineStep::getStarted))
+          .ifPresent(
+              s -> {
+                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+                  try {
+                    process.setNumberRecords(
+                        OBJECT_MAPPER
+                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
+                            .getValidationReport()
+                            .getOccurrenceReport()
+                            .getCheckedRecords());
+                  } catch (IOException ex) {
+                    LOG.warn(
+                        "Couldn't get the number of records for dataset {} and attempt {}",
+                        process.getDatasetKey(),
+                        process.getAttempt(),
+                        ex);
+                  }
+                } else if (s.getType() == StepType.XML_TO_VERBATIM) {
+                  try {
+                    process.setNumberRecords(
+                        OBJECT_MAPPER
+                            .readValue(s.getMessage(), PipelinesXmlMessage.class)
+                            .getTotalRecordCount());
+                  } catch (IOException ex) {
+                    LOG.warn(
+                        "Couldn't get the number of records for dataset {} and attempt {}",
+                        process.getDatasetKey(),
+                        process.getAttempt(),
+                        ex);
+                  }
+                } // abcd doesn't have count
+              });
+    }
+
+    return process;
   }
 }
