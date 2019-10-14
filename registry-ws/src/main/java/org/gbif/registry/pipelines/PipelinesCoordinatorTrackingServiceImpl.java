@@ -498,41 +498,33 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   private PipelineProcess addNumberRecords(PipelineProcess process) {
-    if (process != null) {
+    if (process != null && process.getSteps() != null) {
       process.getSteps().stream()
           .filter(s -> s.getType().getExecutionOrder() == 1)
           .max(Comparator.comparing(PipelineStep::getStarted))
           .ifPresent(
               s -> {
-                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-                  try {
+                try {
+                  if (s.getType() == StepType.DWCA_TO_VERBATIM) {
                     process.setNumberRecords(
                         OBJECT_MAPPER
                             .readValue(s.getMessage(), PipelinesDwcaMessage.class)
                             .getValidationReport()
                             .getOccurrenceReport()
                             .getCheckedRecords());
-                  } catch (IOException ex) {
-                    LOG.warn(
-                        "Couldn't get the number of records for dataset {} and attempt {}",
-                        process.getDatasetKey(),
-                        process.getAttempt(),
-                        ex);
-                  }
-                } else if (s.getType() == StepType.XML_TO_VERBATIM) {
-                  try {
+                  } else if (s.getType() == StepType.XML_TO_VERBATIM) {
                     process.setNumberRecords(
                         OBJECT_MAPPER
                             .readValue(s.getMessage(), PipelinesXmlMessage.class)
                             .getTotalRecordCount());
-                  } catch (IOException ex) {
-                    LOG.warn(
-                        "Couldn't get the number of records for dataset {} and attempt {}",
-                        process.getDatasetKey(),
-                        process.getAttempt(),
-                        ex);
-                  }
-                } // abcd doesn't have count
+                  } // abcd doesn't have count
+                } catch (IOException ex) {
+                  LOG.warn(
+                      "Couldn't get the number of records for dataset {} and attempt {}",
+                      process.getDatasetKey(),
+                      process.getAttempt(),
+                      ex);
+                }
               });
     }
 
