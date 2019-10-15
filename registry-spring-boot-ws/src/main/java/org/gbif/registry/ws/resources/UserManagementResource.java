@@ -242,7 +242,7 @@ public class UserManagementResource {
    */
   @GetMapping("/search")
   @Secured(ADMIN_ROLE)
-  public PagingResponse<GbifUser> search(@Nullable @RequestParam(value = "q", required = false) String query, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(@Nullable @RequestParam(value = "q", required = false) String query, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q = Optional.ofNullable(query).map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v))).orElse(null);
     return identityService.search(q, page);

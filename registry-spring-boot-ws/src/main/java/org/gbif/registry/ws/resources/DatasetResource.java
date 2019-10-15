@@ -235,7 +235,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       @Nullable @RequestParam(value = "machineTagName", required = false) String name,
       @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
       @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable Pageable page
+      Pageable page
   ) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (country == null && datasetType != null) {
@@ -268,12 +268,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @Override
-  public PagingResponse<Dataset> search(String query, @Nullable Pageable page) {
+  public PagingResponse<Dataset> search(String query, Pageable page) {
     return augmentWithMetadata(super.search(query, page));
   }
 
   @Override
-  public PagingResponse<Dataset> list(@Nullable Pageable page) {
+  public PagingResponse<Dataset> list(Pageable page) {
     return augmentWithMetadata(super.list(page));
   }
 

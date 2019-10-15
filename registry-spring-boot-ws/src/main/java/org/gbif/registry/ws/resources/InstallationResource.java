@@ -124,7 +124,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       @Nullable @RequestParam(value = "machineTagName", required = false) String name,
       @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
       @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable Pageable page) {
+      Pageable page) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (installationType != null) {
       return listByType(installationType, page);

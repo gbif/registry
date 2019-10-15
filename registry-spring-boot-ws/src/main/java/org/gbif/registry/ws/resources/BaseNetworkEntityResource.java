@@ -222,13 +222,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> list(@Nullable Pageable page) {
+  public PagingResponse<T> list(Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.list(mapper, page);
   }
 
   @Override
-  public PagingResponse<T> search(String query, @Nullable Pageable page) {
+  public PagingResponse<T> search(String query, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     // trim and handle null from given input
     String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
@@ -236,13 +236,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, @Nullable Pageable page) {
+  public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByIdentifier(mapper, type, identifier, page);
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(String identifier, @Nullable Pageable page) {
+  public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
     return listByIdentifier(null, identifier, page);
   }
 
@@ -481,7 +481,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Override
   public PagingResponse<T> listByMachineTag(String namespace, @Nullable String name, @Nullable String value,
-                                            @Nullable Pageable page) {
+                                            Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(mapper, namespace, name, value, page);
   }
@@ -718,7 +718,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param page page to create response for, can be null
    */
-  protected <D> PagingResponse<D> pagingResponse(@Nullable Pageable page, Long count, List<D> result) {
+  protected <D> PagingResponse<D> pagingResponse(Pageable page, Long count, List<D> result) {
     if (page == null) {
       // use default request
       page = new PagingRequest();

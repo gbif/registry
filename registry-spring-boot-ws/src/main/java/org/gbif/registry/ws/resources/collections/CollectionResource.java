@@ -54,7 +54,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
   public PagingResponse<Collection> list(@Nullable @RequestParam(value = "q", required = false) String query,
                                          @Nullable @RequestParam("institution") UUID institutionKey,
                                          @Nullable @RequestParam("contact") UUID contactKey,
-                                         @Nullable Pageable page) {
+                                         Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = collectionMapper.count(institutionKey, contactKey, query);
@@ -63,7 +63,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
 
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Collection> listDeleted(@Nullable Pageable page) {
+  public PagingResponse<Collection> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
   }

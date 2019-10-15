@@ -100,7 +100,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
       @Nullable @RequestParam(value = "machineTagName", required = false) String name,
       @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
       @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable Pageable page
+      Pageable page
   ) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (identifierType != null && identifier != null) {
@@ -127,22 +127,22 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Override
-  public PagingResponse<Node> search(String query, @Nullable Pageable page) {
+  public PagingResponse<Node> search(String query, Pageable page) {
     return decorateResponse(super.search(query, page));
   }
 
   @Override
-  public PagingResponse<Node> list(@Nullable Pageable page) {
+  public PagingResponse<Node> list(Pageable page) {
     return decorateResponse(super.list(page));
   }
 
   @Override
-  public PagingResponse<Node> listByIdentifier(IdentifierType type, String identifier, @Nullable Pageable page) {
+  public PagingResponse<Node> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
     return decorateResponse(super.listByIdentifier(type, identifier, page));
   }
 
   @Override
-  public PagingResponse<Node> listByIdentifier(String identifier, @Nullable Pageable page) {
+  public PagingResponse<Node> listByIdentifier(String identifier, Pageable page) {
     return decorateResponse(super.listByIdentifier(identifier, page));
   }
 

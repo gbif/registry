@@ -197,7 +197,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Override
-  public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
+  public PagingResponse<Organization> search(String query, Pageable page) {
     return list(null, null, null, null, null, null, null, query, page);
   }
 
@@ -216,7 +216,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       @Nullable @RequestParam(value = "machineTagName", required = false) String name,
       @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
       @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable Pageable page) {
+      Pageable page) {
 
     // Hack: Intercept identifier search
     if (identifierType != null && identifier != null) {
@@ -274,7 +274,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Override
-  public PagingResponse<Organization> listByCountry(Country country, @Nullable Pageable page) {
+  public PagingResponse<Organization> listByCountry(Country country, Pageable page) {
     return pagingResponse(page, organizationMapper.countOrganizationsByCountry(country),
         organizationMapper.organizationsByCountry(country, page));
   }
