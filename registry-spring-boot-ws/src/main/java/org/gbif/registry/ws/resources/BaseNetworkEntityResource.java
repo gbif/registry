@@ -186,10 +186,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
-    objectToDelete.setModifiedBy(authentication.getName());
-    withMyBatis.update(mapper, objectToDelete);
 
-    delete(key);
+    if (objectToDelete != null) {
+      objectToDelete.setModifiedBy(authentication.getName());
+      withMyBatis.update(mapper, objectToDelete);
+      delete(key);
+    }
   }
 
   @Override
@@ -338,7 +340,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
         && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
     ) {
-      machineTag.setCreatedBy(authentication.getName());
+      machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);

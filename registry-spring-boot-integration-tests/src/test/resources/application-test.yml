@@ -57,6 +57,10 @@ doi:
   dataset:
     parentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
+# MyBatis properties
+mybatis:
+  type-handlers-package: org.gbif.registry.persistence.mapper.handler;org.gbif.mybatis.type
+
 spring:
   datasource:
     url: @registry-it.db.url@

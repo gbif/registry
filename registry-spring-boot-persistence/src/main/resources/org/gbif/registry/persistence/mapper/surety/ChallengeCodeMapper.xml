@@ -7,7 +7,7 @@
   </sql>
 
   <sql id="WRITABLE_FIELD_TYPES">
-    #{code,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UUIDTypeHandler},
+    #{code,jdbcType=OTHER},
     now() <!-- created -->
   </sql>
 
