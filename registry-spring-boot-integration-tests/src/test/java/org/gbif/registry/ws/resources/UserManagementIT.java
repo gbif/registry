@@ -1,4 +1,4 @@
-package org.gbif.registry.ws;
+package org.gbif.registry.ws.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gbif.api.model.common.GbifUser;
@@ -6,6 +6,7 @@ import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.Md5EncodeService;
