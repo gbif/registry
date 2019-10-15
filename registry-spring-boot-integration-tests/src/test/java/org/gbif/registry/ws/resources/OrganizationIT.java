@@ -16,12 +16,14 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // TODO: 14/10/2019 add NetworkEntityTest
-@Sql(value = "/scripts/organization/organization_suggest_prepare.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/scripts/organization/organization_suggest_cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+@Sql(value = {"/scripts/organization/organization_cleanup.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = {"/scripts/organization/organization_prepare.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = "/scripts/organization/organization_cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -41,33 +43,79 @@ public class OrganizationIT {
         .build();
   }
 
+  /**
+   * There are several prepared organization in DB (see scripts/organization).
+   * By the query 'BGBM' six should be suggested.
+   */
   @Test
-  public void testSuggest() throws Exception {
-    // Should find both organizations
+  public void testSuggestAllExistedOrganizationsShouldBeReturned() throws Exception {
+    String query = "BGBM";
     mvc
         .perform(
             get("/organization/suggest")
-                .param("q", "Tim"))
+                .param("q", query))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(2));
+        .andExpect(jsonPath("$.length()").value(6));
+  }
 
-    // Should find only The Tim
+  /**
+   * There are several prepared organization in DB (see scripts/organization).
+   * By the query 'ORG' only one organization should be suggested.
+   */
+  @Test
+  public void testSuggestOnlyOneExistedOrganizationShouldBeReturned() throws Exception {
+    // Should find only The ORG
+    String query = "ORG";
     mvc
         .perform(
             get("/organization/suggest")
-                .param("q", "The"))
+                .param("q", query))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$.length()").value(1));
+  }
 
+  /**
+   * There are several prepared organization in DB (see scripts/organization).
+   * By the query 'Stuff' zero organizations should be suggested.
+   */
+  @Test
+  public void testSuggestZeroOrganizationShouldBeReturned() throws Exception {
     // Should find zero
+    String query = "Stuff";
     mvc
         .perform(
             get("/organization/suggest")
-                .param("q", "Stuff"))
+                .param("q", query))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$").isEmpty());
+  }
+
+  @Test
+  public void testByCountryTwoCountriesWithProvidedCode() throws Exception {
+    String countryQuery = "AO";
+    mvc
+        .perform(
+            get("/organization")
+                .param("country", countryQuery))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.count").value(2))
+        .andExpect(jsonPath("$.results.length()").value(2));
+  }
+
+  @Test
+  public void testByCountryZeroCountriesWithProvidedCode() throws Exception {
+    String countryQuery = "AM";
+    mvc
+        .perform(
+            get("/organization")
+                .param("country", countryQuery))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.count").value(0))
+        .andExpect(jsonPath("$.results.length()").value(0));
   }
 }
