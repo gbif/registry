@@ -92,11 +92,12 @@
     <!-- Sonar -->
     <sonar.language>java</sonar.language>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
+    <sonar.host.url>http://localhost:9000</sonar.host.url>
 
     <!-- JaCoCo -->
-    <coverage.dir>${project.build.directory}/coverage</coverage.dir>
-    <coverage.report.it.dir>${project.reporting.outputDirectory}/jacoco-it</coverage.report.it.dir>
-    <coverage.report.ut.dir>${project.reporting.outputDirectory}/jacoco-ut</coverage.report.ut.dir>
+    <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
+    <coverage.report.it.dir>${project.basedir}/../target/site/jacoco-it</coverage.report.it.dir>
+    <coverage.report.ut.dir>${project.basedir}/../target/site/jacoco-ut</coverage.report.ut.dir>
     <jacoco.it.output.file>${coverage.dir}/jacoco-it.exec</jacoco.it.output.file>
     <jacoco.ut.output.file>${coverage.dir}/jacoco-ut.exec</jacoco.ut.output.file>
     <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
@@ -354,13 +355,12 @@
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco-maven-plugin.version}</version>
           <configuration>
-            <excludes>
-              <exclude>org/gbif/datacite/rest/client/model/**/*</exclude>
-              <exclude>org/gbif/datacite/model/json/**/*</exclude>
-              <exclude>**/*Test*</exclude>
-              <exclude>**/*IT*</exclude>
-              <exclude>**/*Exception*</exclude>
-            </excludes>
+            <append>true</append>
+<!--            <excludes>-->
+<!--              <exclude>**/*Test*</exclude>-->
+<!--              <exclude>**/*IT*</exclude>-->
+<!--              <exclude>**/*Exception*</exclude>-->
+<!--            </excludes>-->
           </configuration>
           <executions>
             <execution>
