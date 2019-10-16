@@ -92,6 +92,7 @@
     <!-- Sonar -->
     <sonar.language>java</sonar.language>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
+    <sonar.projectName>GBIF Registry (Spring Boot)</sonar.projectName>
 
     <!-- JaCoCo -->
     <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
