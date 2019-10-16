@@ -33,7 +33,6 @@ import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
@@ -199,7 +198,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
-  @ValidateReturnedValue({PostPersist.class, Default.class})
   @NullToNotFound
   @Nullable
   @GetMapping(value = "{key}")
