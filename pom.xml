@@ -92,7 +92,6 @@
     <!-- Sonar -->
     <sonar.language>java</sonar.language>
     <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
-    <sonar.host.url>http://localhost:9000</sonar.host.url>
 
     <!-- JaCoCo -->
     <coverage.dir>${project.basedir}/../target/coverage</coverage.dir>
