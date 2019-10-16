@@ -35,6 +35,9 @@
   </repositories>
 
   <modules>
+    <module>spring-boot-common-ws</module>
+    <module>spring-boot-download-query-tools</module>
+
     <module>registry-spring-boot-ws</module>
     <module>registry-spring-boot-doi</module>
     <module>registry-spring-boot-cli</module>
@@ -42,12 +45,9 @@
     <module>registry-spring-boot-persistence</module>
     <module>registry-spring-boot-surety</module>
     <module>registry-spring-boot-identity</module>
-    <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-ws-model</module>
     <module>registry-spring-boot-ws-client</module>
-
-    <module>spring-boot-common-ws</module>
-    <module>spring-boot-download-query-tools</module>
+    <module>registry-spring-boot-integration-tests</module>
   </modules>
 
   <properties>
