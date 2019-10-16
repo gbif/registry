@@ -32,7 +32,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -215,8 +214,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @PostMapping("{key}/identifier")
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addIdentifierBase(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Identifier identifier) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Identifier identifier,
+                               Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -248,8 +247,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @PostMapping("{key}/tag")
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addTagBase(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Tag tag) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addTag(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Tag tag,
+                        Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(entityKey, tag);
   }

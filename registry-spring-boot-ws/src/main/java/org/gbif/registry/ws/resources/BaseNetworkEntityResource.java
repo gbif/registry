@@ -138,8 +138,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID createBase(@RequestBody @NotNull @Trim T entity) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public UUID create(@RequestBody @NotNull @Trim T entity, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
@@ -170,6 +169,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return entity.getKey();
   }
 
+  // TODO: 16/10/2019 analyze and maybe merge duplicated methods like delete(key,auth) and delete(key)  
   /**
    * This method ensures that the caller is authorized to perform the action, and then deletes the entity.
    * </br>
@@ -180,9 +180,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
-  public void deleteBase(@NotNull @PathVariable UUID key) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public void delete(@NotNull @PathVariable UUID key, Authentication authentication) {
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
@@ -257,9 +255,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim T entity) {
+  public void update(@PathVariable UUID key, @RequestBody @NotNull @Trim T entity, Authentication authentication) {
     checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     entity.setModifiedBy(authentication.getName());
     update(entity);
   }
@@ -285,8 +282,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addCommentBase(@NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Comment comment) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addComment(@NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Comment comment,
+                            Authentication authentication) {
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
     return addComment(targetEntityKey, comment);
@@ -330,8 +327,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @PostMapping(value = "{key}/machineTag")
   @Trim
   @Transactional
-  public int addMachineTagBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim MachineTag machineTag) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addMachineTag(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim MachineTag machineTag,
+                           Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
@@ -371,8 +368,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete a machine tag.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Optional<MachineTag> optMachineTag = withMyBatis.listMachineTags(mapper, targetEntityKey).stream()
@@ -412,8 +408,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag in a namespace.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  public void deleteMachineTagsByNamespace(UUID targetEntityKey, String namespace) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public void deleteMachineTagsByNamespace(UUID targetEntityKey, String namespace, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
@@ -428,11 +423,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
    */
   @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable String parameter) {
+  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String parameter,
+                                    Authentication authentication) {
     if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
-      deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter));
+      deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
     } else {
-      deleteMachineTagsByNamespace(targetEntityKey, parameter);
+      deleteMachineTagsByNamespace(targetEntityKey, parameter, authentication);
     }
   }
 
@@ -451,9 +447,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTagsBase(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
-                                    @PathVariable String name) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
+                                    @PathVariable String name, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
@@ -496,8 +491,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @PostMapping(value = "{key}/tag")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addTagBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull Tag tag) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addTag(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull Tag tag,
+                    Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(targetEntityKey, tag);
   }
@@ -548,8 +543,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContactBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact,
+                        Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
     return addContact(targetEntityKey, contact);
@@ -622,8 +617,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addEndpointBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Endpoint endpoint) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addEndpoint(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Endpoint endpoint,
+                         Authentication authentication) {
     endpoint.setCreatedBy(authentication.getName());
     endpoint.setModifiedBy(authentication.getName());
     return addEndpoint(targetEntityKey, endpoint);
@@ -672,8 +667,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addIdentifierBase(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Identifier identifier) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addIdentifier(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Identifier identifier,
+                           Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(targetEntityKey, identifier);
   }

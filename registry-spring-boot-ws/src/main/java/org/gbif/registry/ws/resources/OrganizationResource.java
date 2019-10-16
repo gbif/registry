@@ -38,7 +38,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -122,10 +121,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @RequestMapping(method = RequestMethod.POST)
-  public UUID createBase(@RequestBody @NotNull @Trim Organization organization) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public UUID create(@RequestBody @NotNull @Trim Organization organization, Authentication authentication) {
     organization.setPassword(generatePassword());
-    UUID newOrganization = super.create(organization);
+    UUID newOrganization = super.create(organization, authentication);
 
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
@@ -168,9 +166,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void updateBase(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization) {
+  public void update(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization, Authentication authentication) {
     checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Organization previousOrg = super.get(organization.getKey());
@@ -193,7 +190,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     // let the parent class set the modifiedBy
-    super.updateBase(key, organization);
+    super.update(key, organization, authentication);
   }
 
   @Override
