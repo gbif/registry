@@ -430,4 +430,16 @@
     </pluginManagement>
   </build>
 
+  <profiles>
+    <profile>
+      <id>local-sonar</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+      </properties>
+    </profile>
+  </profiles>
+
 </project>
