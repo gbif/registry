@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -55,10 +57,15 @@ public class OrganizationTestSteps extends SpringIT {
 
   @Autowired
   private DataSource ds;
+  
+  private Connection connection;
 
   @Before("@OrganizationPositive")
   public void setUp() throws Exception {
-    ScriptUtils.executeSqlScript(ds.getConnection(),
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
 
     mvc = MockMvcBuilders
@@ -69,19 +76,21 @@ public class OrganizationTestSteps extends SpringIT {
 
   @After("@OrganizationPositive")
   public void tearDown() throws Exception {
-    ScriptUtils.executeSqlScript(ds.getConnection(),
+    ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+    
+    connection.close();
   }
 
   @Given("^node$")
-  public void prepareNode() throws Exception {
-    ScriptUtils.executeSqlScript(ds.getConnection(),
+  public void prepareNode() {
+    ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
   }
 
   @Given("^seven organizations$")
-  public void prepareOrganizations() throws Exception {
-    ScriptUtils.executeSqlScript(ds.getConnection(),
+  public void prepareOrganizations() {
+    ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_prepare.sql"));
   }
 
