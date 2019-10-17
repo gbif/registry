@@ -155,7 +155,7 @@ public class OrganizationTestSteps extends SpringIT {
         RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
 
     // try to get organization by key
-    mvc
+    result = mvc
         .perform(
             get("/organization/{key}", createdOrganizationKey));
 
