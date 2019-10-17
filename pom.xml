@@ -75,6 +75,7 @@
     <!--    <postgresql.version>42.2.8</postgresql.version>-->
     <xmlunit.version>2.6.3</xmlunit.version>
     <greenmail.version>1.5.5</greenmail.version>
+    <cucumber.version>4.2.0</cucumber.version>
 
     <datacite.api.base.url/>
     <datacite.user/>
@@ -321,6 +322,24 @@
         <groupId>com.icegreen</groupId>
         <artifactId>greenmail</artifactId>
         <version>${greenmail.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-java8</artifactId>
+        <version>${cucumber.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-spring</artifactId>
+        <version>${cucumber.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-junit</artifactId>
+        <version>${cucumber.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
