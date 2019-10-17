@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class OrganizationCucumberTestSteps extends SpringIT {
+public class OrganizationTestSteps extends SpringIT {
 
   private static final UUID NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
 
