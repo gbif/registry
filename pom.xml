@@ -71,8 +71,8 @@
     <retrofit.version>2.5.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
-<!--    <mybatis.version>3.5.0</mybatis.version>-->
-<!--    <postgresql.version>42.2.8</postgresql.version>-->
+    <!--    <mybatis.version>3.5.0</mybatis.version>-->
+    <!--    <postgresql.version>42.2.8</postgresql.version>-->
     <xmlunit.version>2.6.3</xmlunit.version>
     <greenmail.version>1.5.5</greenmail.version>
 
@@ -101,7 +101,6 @@
     <jacoco.it.output.file>${coverage.dir}/jacoco-it.exec</jacoco.it.output.file>
     <jacoco.ut.output.file>${coverage.dir}/jacoco-ut.exec</jacoco.ut.output.file>
     <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
-    <jacoco.minimum.coverage>25%</jacoco.minimum.coverage>
   </properties>
 
   <dependencyManagement>
@@ -357,11 +356,11 @@
           <version>${jacoco-maven-plugin.version}</version>
           <configuration>
             <append>true</append>
-<!--            <excludes>-->
-<!--              <exclude>**/*Test*</exclude>-->
-<!--              <exclude>**/*IT*</exclude>-->
-<!--              <exclude>**/*Exception*</exclude>-->
-<!--            </excludes>-->
+            <!--            <excludes>-->
+            <!--              <exclude>**/*Test*</exclude>-->
+            <!--              <exclude>**/*IT*</exclude>-->
+            <!--              <exclude>**/*Exception*</exclude>-->
+            <!--            </excludes>-->
           </configuration>
           <executions>
             <execution>
@@ -423,27 +422,6 @@
                   </fileSet>
                 </fileSets>
                 <destFile>${jacoco.merged.output.file}</destFile>
-              </configuration>
-            </execution>
-            <execution>
-              <id>check-coverage</id>
-              <goals>
-                <goal>check</goal>
-              </goals>
-              <configuration>
-                <dataFile>${jacoco.merged.output.file}</dataFile>
-                <rules>
-                  <rule>
-                    <element>BUNDLE</element>
-                    <limits>
-                      <limit>
-                        <counter>LINE</counter>
-                        <value>COVEREDRATIO</value>
-                        <minimum>${jacoco.minimum.coverage}</minimum>
-                      </limit>
-                    </limits>
-                  </rule>
-                </rules>
               </configuration>
             </execution>
           </executions>
