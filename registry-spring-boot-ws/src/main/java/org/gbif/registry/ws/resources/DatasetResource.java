@@ -86,7 +86,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -225,7 +224,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
    */
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public PagingResponse<Dataset> list(
       @Nullable Country country,
       @Nullable @RequestParam(value = "type", required = false) DatasetType datasetType,

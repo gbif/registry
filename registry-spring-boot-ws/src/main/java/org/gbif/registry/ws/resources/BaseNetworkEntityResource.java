@@ -53,7 +53,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Nullable;
@@ -133,7 +132,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param entity entity that extends NetworkEntity
    * @return key of entity created
    */
-  @RequestMapping(method = RequestMethod.POST)
+  @PostMapping
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -169,6 +168,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   // TODO: 16/10/2019 analyze and maybe merge duplicated methods like delete(key,auth) and delete(key)  
+
   /**
    * This method ensures that the caller is authorized to perform the action, and then deletes the entity.
    * </br>
@@ -281,7 +281,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addComment(@NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Comment comment,
-                            Authentication authentication) {
+                        Authentication authentication) {
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
     return addComment(targetEntityKey, comment);
@@ -422,7 +422,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
   public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String parameter,
-                                    Authentication authentication) {
+                                Authentication authentication) {
     if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
       deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
     } else {
@@ -446,7 +446,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
   public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
-                                    @PathVariable String name, Authentication authentication) {
+                                @PathVariable String name, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)

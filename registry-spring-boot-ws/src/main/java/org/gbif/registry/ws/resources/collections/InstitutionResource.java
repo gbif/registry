@@ -17,7 +17,6 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,7 +50,7 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     this.institutionMapper = institutionMapper;
   }
 
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public PagingResponse<Institution> list(@Nullable @RequestParam(value = "q", required = false) String query,
                                           @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
                                           Pageable page) {

@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -84,7 +83,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     this.identityService = identityService;
   }
 
-  @RequestMapping(method = RequestMethod.POST)
+  @PostMapping
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
@@ -114,7 +113,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   /**
    * Lists all the downloads. This operation can be executed by role ADMIN only.
    */
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   @Secured(ADMIN_ROLE)
   @Override
   public PagingResponse<Download> list(Pageable page, @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {

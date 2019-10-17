@@ -45,7 +45,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -120,7 +119,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
-  @RequestMapping(method = RequestMethod.POST)
+  @PostMapping
   public UUID create(@RequestBody @NotNull @Trim Organization organization, Authentication authentication) {
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization, authentication);
@@ -203,7 +202,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
    */
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public PagingResponse<Organization> list(
       @Nullable Country country,
       @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,

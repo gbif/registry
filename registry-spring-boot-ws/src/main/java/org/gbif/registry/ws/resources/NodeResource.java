@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -92,7 +91,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * This is to support the console user interface, and is in addition to any complex, faceted search that might
    * additionally be supported, such as dataset search.
    */
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public PagingResponse<Node> list(
       @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,

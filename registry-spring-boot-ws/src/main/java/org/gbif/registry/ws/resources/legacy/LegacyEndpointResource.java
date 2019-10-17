@@ -20,8 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,8 +54,7 @@ public class LegacyEndpointResource {
    * @param endpoint LegacyEndpoint with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
-  @RequestMapping(method = RequestMethod.POST,
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+  @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -93,8 +94,7 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return ResponseEntity with HttpStatus.OK if successful
    */
-  @RequestMapping(method = RequestMethod.DELETE,
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  @DeleteMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity deleteAllDatasetEndpoints(@RequestParam("resourceKey") UUID datasetKey) {
     if (datasetKey != null) {
       // retrieve existing dataset
@@ -135,8 +135,7 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return ResponseEntity with list of Endpoints or empty list with error message if none found
    */
-  @RequestMapping(method = RequestMethod.GET,
-      consumes = MediaType.TEXT_PLAIN_VALUE,
+  @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity endpointsForDataset(@RequestParam("resourceKey") UUID datasetKey, @RequestParam("op") String op) {
 
