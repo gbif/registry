@@ -68,6 +68,7 @@ spring:
     password: @registry-it.db.password@
     initialization-mode: always
     continue-on-error: false
+    data: classpath:schema.sql
   liquibase:
     change-log: classpath:liquibase/master.xml
   mail:
