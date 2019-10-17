@@ -1,8 +1,7 @@
-package org.gbif.registry.ws.resources.organization;
+package org.gbif.registry.ws.resources;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
-import org.gbif.registry.ws.resources.SpringIT;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
