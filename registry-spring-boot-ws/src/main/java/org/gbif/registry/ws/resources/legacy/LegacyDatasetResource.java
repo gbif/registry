@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -70,8 +69,7 @@ public class LegacyDatasetResource {
    * @return ResponseEntity
    * @see IptResource#registerDataset(org.gbif.registry.ws.model.LegacyDataset)
    */
-  @RequestMapping(method = RequestMethod.POST,
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+  @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
     // reuse existing subresource
@@ -182,8 +180,7 @@ public class LegacyDatasetResource {
    * @param organizationKey organization key (UUID) coming in as query param
    * @return ResponseEntity with list of Datasets or empty list with error message if none found
    */
-  @RequestMapping(method = RequestMethod.GET,
-      consumes = MediaType.TEXT_PLAIN_VALUE,
+  @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity datasetsForOrganization(@RequestParam("organisationKey") UUID organizationKey) {
     if (organizationKey != null) {
