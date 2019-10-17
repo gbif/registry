@@ -8,13 +8,17 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.utils.RegistryITUtils;
+import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.resources.SpringIT;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -30,6 +34,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class OrganizationTestSteps extends SpringIT {
 
   private static final UUID NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
