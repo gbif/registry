@@ -26,6 +26,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -33,6 +35,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,9 +48,13 @@ public class OrganizationTestSteps extends SpringIT {
   private static final UUID UK_NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
   private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
 
+  private static final Map<String, UUID> NODE_MAP = new HashMap<>();
+
   private ResultActions result;
 
   private Organization organization;
+
+  private String organizationKey;
 
   private MockMvc mvc;
 
@@ -74,6 +81,9 @@ public class OrganizationTestSteps extends SpringIT {
         .webAppContextSetup(context)
         .apply(springSecurity())
         .build();
+
+    NODE_MAP.put("UK Node", UK_NODE_KEY);
+    NODE_MAP.put("UK Node 2", UK_NODE_2_KEY);
   }
 
   @After("@OrganizationPositive")
@@ -117,7 +127,7 @@ public class OrganizationTestSteps extends SpringIT {
         .andExpect(jsonPath("$.length()").value(number));
   }
 
-  @When("call list organizations by country {string}")
+  @When("^call list organizations by country \"([^\"]*)\"$")
   public void callListWithQuery(Country country) throws Exception {
     result = mvc
         .perform(
@@ -132,13 +142,11 @@ public class OrganizationTestSteps extends SpringIT {
         .andExpect(jsonPath("$.results.length()").value(expectedNumber));
   }
 
-  @Given("new not created organization")
-  public void prepareOrganization() throws Exception {
-    organization = Organizations.newInstance(UK_NODE_KEY);
-  }
-
-  @When("try to create that organization")
-  public void createOrganization() throws Exception {
+  @When("create a new organization {string} for {string}")
+  public void createOrganization(String orgName, String nodeName) throws Exception {
+    UUID nodeKey = NODE_MAP.get(nodeName);
+    organization = Organizations.newInstance(nodeKey);
+    organization.setTitle(orgName);
     String organizationJson = objectMapper.writeValueAsString(organization);
 
     result = mvc
@@ -148,20 +156,72 @@ public class OrganizationTestSteps extends SpringIT {
                 .content(organizationJson)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON));
+
+    organizationKey =
+        RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
   }
 
   @When("get organization by id")
   public void getOrganizationById() throws Exception {
     // get an id for the created organization (remove quotes from string)
-    String createdOrganizationKey =
-        RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
+
 
     // try to get organization by key
     result = mvc
         .perform(
-            get("/organization/{key}", createdOrganizationKey));
+            get("/organization/{key}", organizationKey));
 
     // TODO: 16/10/2019 assertLenientEquals and stuff (see registry's NetworkEntityTest)
   }
 
+  // TODO: 18/10/2019 can be generilized?
+  @Given("{int} organization\\(s) endorsed for {string}")
+  public void checkNumberOfEndorsedOrganizationsForNode(int expected, String nodeName) throws Exception {
+    UUID nodeKey = NODE_MAP.get(nodeName);
+    mvc
+        .perform(
+            get("/node/{key}/organization", nodeKey))
+        .andDo(print())
+        .andExpect(jsonPath("$.count").value(expected))
+        .andExpect(jsonPath("$.results.length()").value(expected));
+  }
+
+  @Given("{int} organization\\(s) pending endorsement for {string}")
+  public void checkNumberOfPendingEndorsementOrganizationForNode(int expected, String nodeName) throws Exception {
+    UUID nodeKey = NODE_MAP.get(nodeName);
+    mvc
+        .perform(
+            get("/node/{key}/pendingEndorsement", nodeKey))
+        .andDo(print())
+        .andExpect(jsonPath("$.count").value(expected))
+        .andExpect(jsonPath("$.results.length()").value(expected));
+  }
+
+  @Given("{int} organization\\(s) pending endorsement in total")
+  public void checkNumberOfPendingEndorsementOrganizationTotal(int expected) throws Exception {
+    mvc
+        .perform(
+            get("/node/pendingEndorsement"))
+        .andDo(print())
+        .andExpect(jsonPath("$.count").value(expected))
+        .andExpect(jsonPath("$.results.length()").value(expected));
+    ;
+  }
+
+  @When("endorse organization {string}")
+  public void endorseOrganization(String orgName) throws Exception {
+    organization.setTitle(orgName);
+    organization.setEndorsementApproved(true);
+    organization.setKey(UUID.fromString(organizationKey));
+
+    String organizationJson = objectMapper.writeValueAsString(organization);
+
+    mvc
+        .perform(
+            put("/organization/{key}", organizationKey)
+                .with(httpBasic("justadmin", "welcome"))
+                .content(organizationJson)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON));
+  }
 }

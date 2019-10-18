@@ -28,8 +28,20 @@ Feature: Check Organization Resource positive cases.
 
     # TODO perform full CRUD flow?
   Scenario: Test create an organization
-    Given new not created organization
-    When try to create that organization
+    When create a new organization "New org A" for "UK Node"
     Then response status should be 201
     When get organization by id
     Then response status should be 200
+
+  @Endorsements
+  Scenario: Test endorsements
+    Given 0 organization(s) endorsed for "UK Node 2"
+    And 7 organization(s) pending endorsement in total
+    When create a new organization "New org B" for "UK Node 2"
+    Then 0 organization(s) endorsed for "UK Node 2"
+    And 1 organization(s) pending endorsement for "UK Node 2"
+    And 8 organization(s) pending endorsement in total
+    When endorse organization "New org B"
+    Then 1 organization(s) endorsed for "UK Node 2"
+    And 0 organization(s) pending endorsement for "UK Node 2"
+    And 7 organization(s) pending endorsement in total
