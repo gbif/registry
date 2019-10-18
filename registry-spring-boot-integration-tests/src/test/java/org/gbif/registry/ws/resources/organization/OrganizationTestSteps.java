@@ -33,6 +33,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,7 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 public class OrganizationTestSteps extends SpringIT {
 
-  private static final UUID NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
+  private static final UUID UK_NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
+  private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
 
   private ResultActions result;
 
@@ -57,7 +59,7 @@ public class OrganizationTestSteps extends SpringIT {
 
   @Autowired
   private DataSource ds;
-  
+
   private Connection connection;
 
   @Before("@OrganizationPositive")
@@ -78,23 +80,23 @@ public class OrganizationTestSteps extends SpringIT {
   public void tearDown() throws Exception {
     ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
-    
+
     connection.close();
   }
 
-  @Given("^node$")
+  @Given("node 'UK Node' and node 'UK Node 2'")
   public void prepareNode() {
     ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
   }
 
-  @Given("^seven organizations$")
+  @Given("seven organizations in 'UK Node'")
   public void prepareOrganizations() {
     ScriptUtils.executeSqlScript(connection,
         new ClassPathResource("/scripts/organization/organization_prepare.sql"));
   }
 
-  @When("^call suggest organizations with query \"([^\"]*)\"$")
+  @When("call suggest organizations with query {string}")
   public void callSuggestWithQuery(String query) throws Exception {
     result = mvc
         .perform(
@@ -102,20 +104,20 @@ public class OrganizationTestSteps extends SpringIT {
                 .param("q", query));
   }
 
-  @Then("^response status should be \"([^\"]*)\"$")
+  @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
     result
         .andExpect(status().is(status));
   }
 
-  @Then("^\"([^\"]*)\" organization\\(s\\) should be suggested$")
+  @Then("{int} organization\\(s) should be suggested")
   public void checkSuggestResponse(int number) throws Exception {
     result
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$.length()").value(number));
   }
 
-  @When("^call list organizations by country \"([^\"]*)\"$")
+  @When("call list organizations by country {string}")
   public void callListWithQuery(Country country) throws Exception {
     result = mvc
         .perform(
@@ -123,19 +125,19 @@ public class OrganizationTestSteps extends SpringIT {
                 .param("country", country.getIso2LetterCode()));
   }
 
-  @Then("^\"([^\"]*)\" organization\\(s\\) should be listed$")
+  @Then("{int} organization\\(s) should be listed")
   public void checkListResponse(int expectedNumber) throws Exception {
     result
         .andExpect(jsonPath("$.count").value(expectedNumber))
         .andExpect(jsonPath("$.results.length()").value(expectedNumber));
   }
 
-  @Given("^new not created organization$")
+  @Given("new not created organization")
   public void prepareOrganization() throws Exception {
-    organization = Organizations.newInstance(NODE_KEY);
+    organization = Organizations.newInstance(UK_NODE_KEY);
   }
 
-  @When("^try to create that organization$")
+  @When("try to create that organization")
   public void createOrganization() throws Exception {
     String organizationJson = objectMapper.writeValueAsString(organization);
 
@@ -148,7 +150,7 @@ public class OrganizationTestSteps extends SpringIT {
                 .contentType(MediaType.APPLICATION_JSON));
   }
 
-  @When("^get organization by id$")
+  @When("get organization by id")
   public void getOrganizationById() throws Exception {
     // get an id for the created organization (remove quotes from string)
     String createdOrganizationKey =
