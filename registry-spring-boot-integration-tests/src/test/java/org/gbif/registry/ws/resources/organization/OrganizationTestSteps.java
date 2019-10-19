@@ -1,11 +1,11 @@
 package org.gbif.registry.ws.resources.organization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cucumber.api.java.After;
-import cucumber.api.java.Before;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
