@@ -224,4 +224,22 @@ public class OrganizationTestSteps extends SpringIT {
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON));
   }
+
+  @When("create a new organization for {string} with key")
+  public void createOrganizationWithKey(String nodeName) throws Exception {
+    UUID nodeKey = NODE_MAP.get(nodeName);
+    organization = Organizations.newInstance(nodeKey);
+    organization.setKey(UUID.randomUUID());
+    organization.setLanguage(null);
+    String organizationJson = objectMapper.writeValueAsString(organization);
+
+    result = mvc
+      .perform(
+        post("/organization")
+          .with(httpBasic("justadmin", "welcome"))
+          .content(organizationJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
 }

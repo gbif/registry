@@ -136,7 +136,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Trim T entity, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
