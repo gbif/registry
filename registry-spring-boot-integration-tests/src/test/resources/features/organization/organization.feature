@@ -6,25 +6,29 @@ Feature: Organization functionality
     And seven organizations in 'UK Node'
 #    TODO add organization explicitly with fields to background?
 
-  # TODO convert to tables
-  Scenario: Organization suggest
-    When call suggest organizations with query "The"
+  Scenario Outline: Organization suggest
+    When call suggest organizations with query "<query>"
     Then response status should be 200
-    And 7 organization(s) should be suggested
-    When call suggest organizations with query "ORG"
-    Then response status should be 200
-    And 1 organization(s) should be suggested
-    When call suggest organizations with query "Stuff"
-    Then response status should be 200
-    And 0 organization(s) should be suggested
+    And <number> organization(s) should be suggested
 
-  Scenario: List organizations by country
-    When call list organizations by country "ANGOLA"
+    Scenarios:
+      | query | number |
+      | The   | 7      |
+      | ORG   | 1      |
+      | Stuff | 0      |
+
+  Scenario Outline: List organizations by country
+    When call list organizations by country <country>
     Then response status should be 200
-    And 2 organization(s) should be listed
-    When call list organizations by country "ARMENIA"
-    Then response status should be 200
-    And 0 organization(s) should be listed
+    And <number> organization(s) should be listed
+
+    Scenarios:
+      | country | number |
+      | ANGOLA  | 2      |
+      | ARMENIA | 0      |
+      | DENMARK | 1      |
+      | GERMANY | 1      |
+      | FRANCE  | 2      |
 
     # TODO perform full CRUD flow?
   Scenario: Create an organization
