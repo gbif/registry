@@ -106,7 +106,7 @@ public class OrganizationTestSteps extends SpringIT {
       new ClassPathResource("/scripts/organization/organization_prepare.sql"));
   }
 
-  @When("call suggest organizations with query {string}")
+  @When("^call suggest organizations with query \"([^\"]*)\"$")
   public void callSuggestWithQuery(String query) throws Exception {
     result = mvc
       .perform(
@@ -127,7 +127,7 @@ public class OrganizationTestSteps extends SpringIT {
       .andExpect(jsonPath("$.length()").value(number));
   }
 
-  @When("^call list organizations by country \"([^\"]*)\"$")
+  @When("^call list organizations by country ([^\"]*)$")
   public void callListWithQuery(Country country) throws Exception {
     result = mvc
       .perform(
@@ -136,10 +136,10 @@ public class OrganizationTestSteps extends SpringIT {
   }
 
   @Then("{int} organization\\(s) should be listed")
-  public void checkListResponse(int expectedNumber) throws Exception {
+  public void checkListResponse(int number) throws Exception {
     result
-      .andExpect(jsonPath("$.count").value(expectedNumber))
-      .andExpect(jsonPath("$.results.length()").value(expectedNumber));
+      .andExpect(jsonPath("$.count").value(number))
+      .andExpect(jsonPath("$.results.length()").value(number));
   }
 
   @When("create a new organization {string} for {string}")
