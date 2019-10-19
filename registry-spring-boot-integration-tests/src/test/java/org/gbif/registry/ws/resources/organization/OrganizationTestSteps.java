@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class OrganizationTestSteps extends SpringIT {
 
@@ -75,12 +75,12 @@ public class OrganizationTestSteps extends SpringIT {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-        new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
 
     mvc = MockMvcBuilders
-        .webAppContextSetup(context)
-        .apply(springSecurity())
-        .build();
+      .webAppContextSetup(context)
+      .apply(springSecurity())
+      .build();
 
     NODE_MAP.put("UK Node", UK_NODE_KEY);
     NODE_MAP.put("UK Node 2", UK_NODE_2_KEY);
@@ -89,7 +89,7 @@ public class OrganizationTestSteps extends SpringIT {
   @After("@OrganizationPositive")
   public void tearDown() throws Exception {
     ScriptUtils.executeSqlScript(connection,
-        new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
 
     connection.close();
   }
@@ -97,49 +97,49 @@ public class OrganizationTestSteps extends SpringIT {
   @Given("node 'UK Node' and node 'UK Node 2'")
   public void prepareNode() {
     ScriptUtils.executeSqlScript(connection,
-        new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
+      new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
   }
 
   @Given("seven organizations in 'UK Node'")
   public void prepareOrganizations() {
     ScriptUtils.executeSqlScript(connection,
-        new ClassPathResource("/scripts/organization/organization_prepare.sql"));
+      new ClassPathResource("/scripts/organization/organization_prepare.sql"));
   }
 
   @When("call suggest organizations with query {string}")
   public void callSuggestWithQuery(String query) throws Exception {
     result = mvc
-        .perform(
-            get("/organization/suggest")
-                .param("q", query));
+      .perform(
+        get("/organization/suggest")
+          .param("q", query));
   }
 
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
     result
-        .andExpect(status().is(status));
+      .andExpect(status().is(status));
   }
 
   @Then("{int} organization\\(s) should be suggested")
   public void checkSuggestResponse(int number) throws Exception {
     result
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(number));
+      .andExpect(jsonPath("$").isArray())
+      .andExpect(jsonPath("$.length()").value(number));
   }
 
   @When("^call list organizations by country \"([^\"]*)\"$")
   public void callListWithQuery(Country country) throws Exception {
     result = mvc
-        .perform(
-            get("/organization")
-                .param("country", country.getIso2LetterCode()));
+      .perform(
+        get("/organization")
+          .param("country", country.getIso2LetterCode()));
   }
 
   @Then("{int} organization\\(s) should be listed")
   public void checkListResponse(int expectedNumber) throws Exception {
     result
-        .andExpect(jsonPath("$.count").value(expectedNumber))
-        .andExpect(jsonPath("$.results.length()").value(expectedNumber));
+      .andExpect(jsonPath("$.count").value(expectedNumber))
+      .andExpect(jsonPath("$.results.length()").value(expectedNumber));
   }
 
   @When("create a new organization {string} for {string}")
@@ -150,15 +150,15 @@ public class OrganizationTestSteps extends SpringIT {
     String organizationJson = objectMapper.writeValueAsString(organization);
 
     result = mvc
-        .perform(
-            post("/organization")
-                .with(httpBasic("justadmin", "welcome"))
-                .content(organizationJson)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON));
+      .perform(
+        post("/organization")
+          .with(httpBasic("justadmin", "welcome"))
+          .content(organizationJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
 
     organizationKey =
-        RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
+      RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
   }
 
   @When("get organization by id")
@@ -168,8 +168,8 @@ public class OrganizationTestSteps extends SpringIT {
 
     // try to get organization by key
     result = mvc
-        .perform(
-            get("/organization/{key}", organizationKey));
+      .perform(
+        get("/organization/{key}", organizationKey));
 
     // TODO: 16/10/2019 assertLenientEquals and stuff (see registry's NetworkEntityTest)
   }
@@ -179,32 +179,32 @@ public class OrganizationTestSteps extends SpringIT {
   public void checkNumberOfEndorsedOrganizationsForNode(int expected, String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     mvc
-        .perform(
-            get("/node/{key}/organization", nodeKey))
-        .andDo(print())
-        .andExpect(jsonPath("$.count").value(expected))
-        .andExpect(jsonPath("$.results.length()").value(expected));
+      .perform(
+        get("/node/{key}/organization", nodeKey))
+      .andDo(print())
+      .andExpect(jsonPath("$.count").value(expected))
+      .andExpect(jsonPath("$.results.length()").value(expected));
   }
 
   @Given("{int} organization\\(s) pending endorsement for {string}")
   public void checkNumberOfPendingEndorsementOrganizationForNode(int expected, String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     mvc
-        .perform(
-            get("/node/{key}/pendingEndorsement", nodeKey))
-        .andDo(print())
-        .andExpect(jsonPath("$.count").value(expected))
-        .andExpect(jsonPath("$.results.length()").value(expected));
+      .perform(
+        get("/node/{key}/pendingEndorsement", nodeKey))
+      .andDo(print())
+      .andExpect(jsonPath("$.count").value(expected))
+      .andExpect(jsonPath("$.results.length()").value(expected));
   }
 
   @Given("{int} organization\\(s) pending endorsement in total")
   public void checkNumberOfPendingEndorsementOrganizationTotal(int expected) throws Exception {
     mvc
-        .perform(
-            get("/node/pendingEndorsement"))
-        .andDo(print())
-        .andExpect(jsonPath("$.count").value(expected))
-        .andExpect(jsonPath("$.results.length()").value(expected));
+      .perform(
+        get("/node/pendingEndorsement"))
+      .andDo(print())
+      .andExpect(jsonPath("$.count").value(expected))
+      .andExpect(jsonPath("$.results.length()").value(expected));
     ;
   }
 
@@ -217,12 +217,12 @@ public class OrganizationTestSteps extends SpringIT {
     String organizationJson = objectMapper.writeValueAsString(organization);
 
     mvc
-        .perform(
-            put("/organization/{key}", organizationKey)
-                .with(httpBasic("justadmin", "welcome"))
-                .content(organizationJson)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON));
+      .perform(
+        put("/organization/{key}", organizationKey)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(organizationJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
   }
 
   @When("create a new organization for {string} with key")
