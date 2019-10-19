@@ -11,6 +11,7 @@ import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
@@ -39,6 +40,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -120,7 +123,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @PostMapping
-  public UUID create(@RequestBody @NotNull @Trim Organization organization, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) Organization organization,
+                     Authentication authentication) {
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization, authentication);
 

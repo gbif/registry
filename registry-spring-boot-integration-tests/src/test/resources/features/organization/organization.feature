@@ -45,3 +45,8 @@ Feature: Check Organization Resource positive cases.
     Then 1 organization(s) endorsed for "UK Node 2"
     And 0 organization(s) pending endorsement for "UK Node 2"
     And 7 organization(s) pending endorsement in total
+
+  @CreateOrganizationWithKey
+  Scenario: Test organization can't be created with key present
+    When create a new organization for "UK Node" with key
+    Then response status should be 422
