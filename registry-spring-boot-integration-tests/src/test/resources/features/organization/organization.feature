@@ -1,10 +1,10 @@
-@OrganizationPositive
+@Organization
 Feature: Organization functionality
 
   Background:
+    # see scripts/organization
     Given node 'UK Node' and node 'UK Node 2'
     And seven organizations in 'UK Node'
-#    TODO add organization explicitly with fields to background?
 
   Scenario Outline: Organization suggest
     When call suggest organizations with query "<query>"
