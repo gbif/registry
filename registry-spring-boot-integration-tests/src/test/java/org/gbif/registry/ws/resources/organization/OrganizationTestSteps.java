@@ -68,7 +68,7 @@ public class OrganizationTestSteps {
 
   private Connection connection;
 
-  @Before("@OrganizationPositive")
+  @Before("@Organization")
   public void setUp() throws Exception {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
@@ -85,7 +85,7 @@ public class OrganizationTestSteps {
     NODE_MAP.put("UK Node 2", UK_NODE_2_KEY);
   }
 
-  @After("@OrganizationPositive")
+  @After("@Organization")
   public void tearDown() throws Exception {
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
