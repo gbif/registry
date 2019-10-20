@@ -13,5 +13,5 @@ import org.junit.runner.RunWith;
     glue = "org.gbif.registry.ws.resources.organization",
     plugin = "pretty"
 )
-public class OrganizationIT extends SpringIT {
+public class OrganizationIT {
 }

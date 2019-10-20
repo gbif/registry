@@ -12,7 +12,6 @@ import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.TestEmailConfiguration;
-import org.gbif.registry.ws.resources.SpringIT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -43,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class OrganizationTestSteps extends SpringIT {
+public class OrganizationTestSteps {
 
   private static final UUID UK_NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
   private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
