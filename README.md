@@ -1,4 +1,4 @@
-[![Build Status](https://builds.gbif.org/job/gbif-doi/badge/icon?plastic)](https://builds.gbif.org/job/registry/)
+[![Build Status](https://builds.gbif.org/job/registry/badge/icon?plastic)](https://builds.gbif.org/job/registry/)
 [![Quality Gate Status](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.registry%3Aregistry-motherpom&metric=alert_status)](https://sonar.gbif.org/dashboard?id=org.gbif.registry%3Aregistry-motherpom) 
 [![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.registry%3Aregistry-motherpom&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.registry%3Aregistry-motherpom)
 
