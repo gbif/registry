@@ -209,8 +209,11 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     service.update(n1);
     NetworkEntity n2 = service.get(n1.getKey());
     assertEquals("Persisted does not reflect update", "New title", n2.getTitle());
+    assertNotNull(n1.getModified());
+    assertNotNull(n2.getModified());
+    assertNotNull(n1.getCreated());
     assertTrue("Modification date not changing on update", n2.getModified().after(n1.getModified()));
-    assertTrue("Modification date is not after the creation date", n2.getModified().after(n1.getCreated()));
+    assertTrue("Modification date is after the creation date", n2.getModified().after(n1.getCreated()));
     assertEquals("List service does not reflect the number of created entities",
       1,
       service.list(new PagingRequest()).getResults().size());
