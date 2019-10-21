@@ -54,3 +54,20 @@ Feature: Organization functionality
   Scenario: Organization can't be created with key present
     When create a new organization for "UK Node" with key
     Then response status should be 422
+
+  @OrganizationTitles
+  Scenario: Organization titles
+    When get titles for empty list
+    Then response status should be 201
+    And empty titles map is returned
+    When get titles for organizations
+      | f433944a-ad93-4ea8-bad7-68de7348e65a |
+      | 180bc881-9c8f-445b-89d9-40cd099cbdc3 |
+      | e47e4958-7dee-475b-98c7-07a2d7de8f96 |
+    Then response status should be 201
+    And titles map is returned
+      | f433944a-ad93-4ea8-bad7-68de7348e65a | The ORG  |
+      | 180bc881-9c8f-445b-89d9-40cd099cbdc3 | The BGBM |
+      | e47e4958-7dee-475b-98c7-07a2d7de8f96 | The BGBM |
+
+

@@ -19,17 +19,22 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -240,5 +245,53 @@ public class OrganizationTestSteps {
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON))
       .andDo(print());
+  }
+
+  @When("get titles for empty list")
+  public void getTitlesForEmptyList() throws Exception {
+    Collection<UUID> emptyList = Collections.emptyList();
+
+    String contentJson = objectMapper.writeValueAsString(emptyList);
+
+    result = mvc
+      .perform(
+        post("/organization/titles")
+          .content(contentJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
+
+  @Then("empty titles map is returned")
+  public void checkEmptyTitlesMap() throws Exception {
+    MvcResult mvcResult = result.andReturn();
+
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    Map responseBody = objectMapper.readValue(contentAsString, Map.class);
+
+    assertEquals(Collections.emptyMap(), responseBody);
+  }
+
+  @When("get titles for organizations")
+  public void getTitlesForOrganizations(List<String> keys) throws Exception {
+    String contentJson = objectMapper.writeValueAsString(keys);
+
+    result = mvc
+      .perform(
+        post("/organization/titles")
+          .content(contentJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
+
+  @Then("titles map is returned")
+  public void checkTitlesMap(Map expected) throws Exception {
+    MvcResult mvcResult = result.andReturn();
+
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    Map responseBody = objectMapper.readValue(contentAsString, Map.class);
+
+    assertEquals(expected, responseBody);
   }
 }
