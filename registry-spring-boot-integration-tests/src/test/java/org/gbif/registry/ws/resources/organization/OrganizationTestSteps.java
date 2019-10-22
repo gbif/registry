@@ -309,7 +309,7 @@ public class OrganizationTestSteps {
     assertEquals("Organization's title was to be updated", newTitle, organization.getTitle());
   }
 
-  @Then("modification date was not updated")
+  @Then("modification date was updated")
   public void checkModificationDateWasChangedAfterUpdate() {
     assertNotNull(organization.getModified());
     assertTrue("Modification date was to be changed",

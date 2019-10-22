@@ -42,7 +42,7 @@ Feature: Organization functionality
     When get organization by key
     Then response status should be 200
     And title is new "New Title"
-    And modification date was not updated
+    And modification date was updated
     And modification date is after the creation date
 
   @OrganizationEndorsement
