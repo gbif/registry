@@ -322,4 +322,20 @@ public class OrganizationTestSteps {
     assertTrue("Modification date must be after the creation date",
       organization.getModified().after(creationDateBeforeUpdate));
   }
+
+  @Then("update organization with new invalid too short title {string} for node {string}")
+  public void testUpdateValidationFailing(String orgTitle, String nodeName) throws Exception {
+    getOrganizationById();
+    organization.setTitle(orgTitle); // should fail as it is too short
+
+    String organizationJson = objectMapper.writeValueAsString(organization);
+
+    result = mvc
+      .perform(
+        put("/organization/{key}", organizationKey)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(organizationJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
 }

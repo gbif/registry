@@ -58,9 +58,13 @@ Feature: Organization functionality
     And 0 organization(s) pending endorsement for "UK Node 2"
     And 7 organization(s) pending endorsement in total
 
-  @CreateOrganizationWithKey
+  @OrganizationValidation
   Scenario: Organization can't be created with key present
     When create a new organization for "UK Node" with key
+    Then response status should be 422
+    When create a new organization "New org A" for node "UK Node"
+    Then response status should be 201
+    When update organization with new invalid too short title "A" for node "UK Node"
     Then response status should be 422
 
   @OrganizationTitles
