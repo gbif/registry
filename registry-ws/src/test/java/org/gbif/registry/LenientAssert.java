@@ -13,15 +13,13 @@ public class LenientAssert {
    * Asserts that two objects are leniently equal. If they are not, an {@link AssertionError} is thrown with the given
    * message. If <code>expected</code> and <code>actual</code> are <code>null</code>,
    * they are considered equal.
-   * 
+   *
    * @param message the identifying message for the {@link AssertionError} (<code>null</code> okay)
    * @param expected expected value
    * @param actual actual value
    */
   public static <T, L extends LenientEquals<T>> void assertLenientEquals(String message, L expected, T actual) {
-    if (lenientlyEqualRegardingNull(expected, actual)) {
-      return;
-    } else {
+    if (!lenientlyEqualRegardingNull(expected, actual)) {
       failNotEquals(message, expected, actual);
     }
   }
@@ -34,12 +32,11 @@ public class LenientAssert {
     return expected.lenientEquals(actual);
   }
 
-  static private void failNotEquals(String message, Object expected,
-    Object actual) {
+  static private void failNotEquals(String message, Object expected, Object actual) {
     fail(format(message, expected, actual));
   }
 
-  static String format(String message, Object expected, Object actual) {
+  private static String format(String message, Object expected, Object actual) {
     String formatted = "";
     if (message != null && !message.equals("")) {
       formatted = message + " ";
