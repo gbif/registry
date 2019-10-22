@@ -11,6 +11,7 @@ import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
@@ -60,6 +61,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
@@ -81,30 +83,30 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   private final EditorAuthorizationService userAuthService;
 
   public OrganizationResource(
-      OrganizationMapper organizationMapper,
-      ContactMapper contactMapper,
-      EndpointMapper endpointMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
-      IdentifierMapper identifierMapper,
-      CommentMapper commentMapper,
-      DatasetMapper datasetMapper,
-      InstallationMapper installationMapper,
-      OrganizationEndorsementService<UUID> organizationEndorsementService,
-      EventManager eventManager,
-      EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis) {
+    OrganizationMapper organizationMapper,
+    ContactMapper contactMapper,
+    EndpointMapper endpointMapper,
+    MachineTagMapper machineTagMapper,
+    TagMapper tagMapper,
+    IdentifierMapper identifierMapper,
+    CommentMapper commentMapper,
+    DatasetMapper datasetMapper,
+    InstallationMapper installationMapper,
+    OrganizationEndorsementService<UUID> organizationEndorsementService,
+    EventManager eventManager,
+    EditorAuthorizationService userAuthService,
+    WithMyBatis withMyBatis) {
     super(organizationMapper,
-        commentMapper,
-        contactMapper,
-        endpointMapper,
-        identifierMapper,
-        machineTagMapper,
-        tagMapper,
-        Organization.class,
-        eventManager,
-        userAuthService,
-        withMyBatis);
+      commentMapper,
+      contactMapper,
+      endpointMapper,
+      identifierMapper,
+      machineTagMapper,
+      tagMapper,
+      Organization.class,
+      eventManager,
+      userAuthService,
+      withMyBatis);
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
@@ -131,11 +133,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
       Optional.ofNullable(organization.getContacts())
-          .filter(c -> !c.isEmpty())
-          .ifPresent(contacts -> contacts.forEach(c -> addContact(newOrganization, c)));
+        .filter(c -> !c.isEmpty())
+        .ifPresent(contacts -> contacts.forEach(c -> addContact(newOrganization, c)));
       Optional.ofNullable(organization.getComments())
-          .filter(c -> !c.isEmpty())
-          .ifPresent(comments -> comments.forEach(c -> addComment(newOrganization, c)));
+        .filter(c -> !c.isEmpty())
+        .ifPresent(comments -> comments.forEach(c -> addComment(newOrganization, c)));
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;
@@ -169,20 +171,23 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void update(@PathVariable UUID key, @RequestBody @NotNull @Trim Organization organization, Authentication authentication) {
-    checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
+  public void update(@PathVariable UUID key,
+                     @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class}) Organization organization,
+                     Authentication authentication) {
+    checkArgument(key.equals(organization.getKey()), "Provided organization must have the same key as the resource URL");
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Organization previousOrg = super.get(organization.getKey());
+    checkNotNull(previousOrg, "Organization not found");
 
     // If the endorsement is being changed, and the user is only an EDITOR, they must have node permission.
     // If the node is being changed, and the user is only an EDITOR, they must have node permission on both nodes.
     boolean endorsementApprovedChanged = previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
-        || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
+      || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
     if (endorsementApprovedChanged
-        && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !(userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())
-        || userAuthService.allowedToModifyEntity(nameFromContext, previousOrg.getEndorsingNodeKey()))) {
+      && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+      && !(userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())
+      || userAuthService.allowedToModifyEntity(nameFromContext, previousOrg.getEndorsingNodeKey()))) {
       LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
@@ -208,15 +213,15 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @GetMapping
   public PagingResponse<Organization> list(
-      @Nullable Country country,
-      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      @Nullable @RequestParam(value = "isEndorsed", required = false) Boolean isEndorsed,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String name,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      Pageable page) {
+    @Nullable Country country,
+    @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
+    @Nullable @RequestParam(value = "identifier", required = false) String identifier,
+    @Nullable @RequestParam(value = "isEndorsed", required = false) Boolean isEndorsed,
+    @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
+    @Nullable @RequestParam(value = "machineTagName", required = false) String name,
+    @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
+    @Nullable @RequestParam(value = "q", required = false) String query,
+    Pageable page) {
 
     // Hack: Intercept identifier search
     if (identifierType != null && identifier != null) {
@@ -240,21 +245,21 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     long total = organizationMapper.count(query, country, isEndorsed);
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
-        organizationMapper.search(query, country, isEndorsed, page));
+      organizationMapper.search(query, country, isEndorsed, page));
   }
 
   @GetMapping("{key}/hostedDataset")
   @Override
   public PagingResponse<Dataset> hostedDatasets(@PathVariable("key") UUID organizationKey, Pageable page) {
     return pagingResponse(page, datasetMapper.countDatasetsHostedBy(organizationKey),
-        datasetMapper.listDatasetsHostedBy(organizationKey, page));
+      datasetMapper.listDatasetsHostedBy(organizationKey, page));
   }
 
   @GetMapping("{key}/publishedDataset")
   @Override
   public PagingResponse<Dataset> publishedDatasets(@PathVariable("key") UUID organizationKey, Pageable page) {
     return pagingResponse(page, datasetMapper.countDatasetsPublishedBy(organizationKey),
-        datasetMapper.listDatasetsPublishedBy(organizationKey, page));
+      datasetMapper.listDatasetsPublishedBy(organizationKey, page));
   }
 
   /**
@@ -270,13 +275,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Installation> installations(@PathVariable("key") UUID organizationKey, Pageable page) {
     return pagingResponse(page, installationMapper.countInstallationsByOrganization(organizationKey),
-        installationMapper.listInstallationsByOrganization(organizationKey, page));
+      installationMapper.listInstallationsByOrganization(organizationKey, page));
   }
 
   @Override
   public PagingResponse<Organization> listByCountry(Country country, Pageable page) {
     return pagingResponse(page, organizationMapper.countOrganizationsByCountry(country),
-        organizationMapper.organizationsByCountry(country, page));
+      organizationMapper.organizationsByCountry(country, page));
   }
 
   @GetMapping("deleted")
@@ -289,7 +294,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
     return pagingResponse(page, organizationMapper.countPendingEndorsements(null),
-        organizationMapper.pendingEndorsements(null, page));
+      organizationMapper.pendingEndorsements(null, page));
   }
 
   @GetMapping("nonPublishing")
@@ -327,10 +332,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @PostMapping("{key}/endorsement")
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
-      @PathVariable("key") UUID organizationKey,
-      @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
+    @PathVariable("key") UUID organizationKey,
+    @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
-        ResponseEntity.noContent() : ResponseEntity.status(HttpStatus.BAD_REQUEST)).build();
+      ResponseEntity.noContent() : ResponseEntity.status(HttpStatus.BAD_REQUEST)).build();
   }
 
   @Override

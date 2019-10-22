@@ -101,17 +101,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final Class<T> objectClass;
 
   protected BaseNetworkEntityResource(
-      BaseNetworkEntityMapper<T> mapper,
-      CommentMapper commentMapper,
-      ContactMapper contactMapper,
-      EndpointMapper endpointMapper,
-      IdentifierMapper identifierMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
-      Class<T> objectClass,
-      EventManager eventManager,
-      EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis) {
+    BaseNetworkEntityMapper<T> mapper,
+    CommentMapper commentMapper,
+    ContactMapper contactMapper,
+    EndpointMapper endpointMapper,
+    IdentifierMapper identifierMapper,
+    MachineTagMapper machineTagMapper,
+    TagMapper tagMapper,
+    Class<T> objectClass,
+    EventManager eventManager,
+    EditorAuthorizationService userAuthService,
+    WithMyBatis withMyBatis) {
     this.mapper = mapper;
     this.commentMapper = commentMapper;
     this.machineTagMapper = machineTagMapper;
@@ -167,7 +167,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return entity.getKey();
   }
 
-  // TODO: 16/10/2019 analyze and maybe merge duplicated methods like delete(key,auth) and delete(key)  
+  // TODO: 16/10/2019 analyze and maybe merge duplicated methods like delete(key,auth) and delete(key)
 
   /**
    * This method ensures that the caller is authorized to perform the action, and then deletes the entity.
@@ -253,7 +253,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void update(@PathVariable UUID key, @RequestBody @NotNull @Trim T entity, Authentication authentication) {
+  public void update(@PathVariable UUID key,
+                     @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class}) T entity,
+                     Authentication authentication) {
     checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(authentication.getName());
     update(entity);
@@ -330,10 +332,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-        && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-        && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
+      || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
+      || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
+      && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+      && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
     ) {
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
@@ -370,16 +372,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Optional<MachineTag> optMachineTag = withMyBatis.listMachineTags(mapper, targetEntityKey).stream()
-        .filter(m -> m.getKey() == machineTagKey).findFirst();
+      .filter(m -> m.getKey() == machineTagKey).findFirst();
 
     if (optMachineTag.isPresent()) {
       MachineTag machineTag = optMachineTag.get();
 
       if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-          || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-          || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-          && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-          && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
+        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
+        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
+        && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+        && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
       ) {
         deleteMachineTag(targetEntityKey, machineTagKey);
 
@@ -410,7 +412,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
+      && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
@@ -450,7 +452,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
+      && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace, name);
@@ -571,7 +573,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
                             @RequestBody @NotNull @Trim Contact contact) {
     // for safety, and to match a nice RESTful URL structure
     Preconditions.checkArgument(Integer.valueOf(contactKey).equals(contact.getKey()),
-        "Provided contact (key) does not match the path provided");
+      "Provided contact (key) does not match the path provided");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setModifiedBy(authentication.getName());
     updateContact(targetEntityKey, contact);

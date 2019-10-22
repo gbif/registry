@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,12 +56,13 @@ public class OrganizationTestSteps {
   private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
 
   private static final Map<String, UUID> NODE_MAP = new HashMap<>();
+  private static final Map<String, UUID> ORGANIZATION_MAP = new HashMap<>();
 
   private ResultActions result;
-
   private Organization organization;
-
   private String organizationKey;
+  private Date modificationDateBeforeUpdate;
+  private Date creationDateBeforeUpdate;
 
   private MockMvc mvc;
 
@@ -146,7 +150,7 @@ public class OrganizationTestSteps {
       .andExpect(jsonPath("$.results.length()").value(number));
   }
 
-  @When("create a new organization {string} for {string}")
+  @When("create a new organization {string} for node {string}")
   public void createOrganization(String orgName, String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     organization = Organizations.newInstance(nodeKey);
@@ -165,20 +169,17 @@ public class OrganizationTestSteps {
       RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
   }
 
-  @When("get organization by id")
+  @When("get organization by key")
   public void getOrganizationById() throws Exception {
-    // get an id for the created organization (remove quotes from string)
-
-
-    // try to get organization by key
     result = mvc
       .perform(
         get("/organization/{key}", organizationKey));
 
+    organization = objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), Organization.class);
+
     // TODO: 16/10/2019 assertLenientEquals and stuff (see registry's NetworkEntityTest)
   }
 
-  // TODO: 18/10/2019 can be generilized?
   @Given("{int} organization\\(s) endorsed for {string}")
   public void checkNumberOfEndorsedOrganizationsForNode(int expected, String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
@@ -294,4 +295,41 @@ public class OrganizationTestSteps {
 
     assertEquals(expected, responseBody);
   }
+
+  @When("update organization {string} with new title {string} for node {string}")
+  public void updateOrganization(String orgName, String newTitle, String nodeName) throws Exception {
+    modificationDateBeforeUpdate = organization.getModified();
+    creationDateBeforeUpdate = organization.getCreated();
+    organization.setTitle(newTitle);
+    organization.setEndorsingNodeKey(NODE_MAP.get(nodeName));
+    String organizationJson = objectMapper.writeValueAsString(organization);
+
+    result = mvc
+      .perform(
+        put("/organization/{key}", organizationKey)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(organizationJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @Then("title is new {string}")
+  public void checkUpdatedOrganizationTitle(String newTitle) {
+    assertEquals("Organization's title was to be updated", newTitle, organization.getTitle());
+  }
+
+  @Then("modification date was not updated")
+  public void checkModificationDateWasChangedAfterUpdate() {
+    assertNotNull(organization.getModified());
+    assertTrue("Modification date was to be changed",
+      organization.getModified().after(modificationDateBeforeUpdate));
+  }
+
+  @Then("modification date is after the creation date")
+  public void checkModificationDateIsAfterCreationDate() {
+    assertNotNull(organization.getModified());
+    assertTrue("Modification date must be after the creation date",
+      organization.getModified().after(creationDateBeforeUpdate));
+  }
+
 }
