@@ -43,7 +43,6 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -56,7 +55,6 @@ public class OrganizationTestSteps {
   private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
 
   private static final Map<String, UUID> NODE_MAP = new HashMap<>();
-  private static final Map<String, UUID> ORGANIZATION_MAP = new HashMap<>();
 
   private ResultActions result;
   private Organization organization;
@@ -186,7 +184,6 @@ public class OrganizationTestSteps {
     mvc
       .perform(
         get("/node/{key}/organization", nodeKey))
-      .andDo(print())
       .andExpect(jsonPath("$.count").value(expected))
       .andExpect(jsonPath("$.results.length()").value(expected));
   }
@@ -197,7 +194,6 @@ public class OrganizationTestSteps {
     mvc
       .perform(
         get("/node/{key}/pendingEndorsement", nodeKey))
-      .andDo(print())
       .andExpect(jsonPath("$.count").value(expected))
       .andExpect(jsonPath("$.results.length()").value(expected));
   }
@@ -207,7 +203,6 @@ public class OrganizationTestSteps {
     mvc
       .perform(
         get("/node/pendingEndorsement"))
-      .andDo(print())
       .andExpect(jsonPath("$.count").value(expected))
       .andExpect(jsonPath("$.results.length()").value(expected));
     ;
@@ -215,9 +210,8 @@ public class OrganizationTestSteps {
 
   @When("endorse organization {string}")
   public void endorseOrganization(String orgName) throws Exception {
-    organization.setTitle(orgName);
+    getOrganizationById();
     organization.setEndorsementApproved(true);
-    organization.setKey(UUID.fromString(organizationKey));
 
     String organizationJson = objectMapper.writeValueAsString(organization);
 
@@ -235,7 +229,7 @@ public class OrganizationTestSteps {
     UUID nodeKey = NODE_MAP.get(nodeName);
     organization = Organizations.newInstance(nodeKey);
     organization.setKey(UUID.randomUUID());
-    organization.setLanguage(null);
+
     String organizationJson = objectMapper.writeValueAsString(organization);
 
     result = mvc
@@ -244,8 +238,7 @@ public class OrganizationTestSteps {
           .with(httpBasic("justadmin", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
-          .contentType(MediaType.APPLICATION_JSON))
-      .andDo(print());
+          .contentType(MediaType.APPLICATION_JSON));
   }
 
   @When("get titles for empty list")
@@ -259,8 +252,7 @@ public class OrganizationTestSteps {
         post("/organization/titles")
           .content(contentJson)
           .accept(MediaType.APPLICATION_JSON)
-          .contentType(MediaType.APPLICATION_JSON))
-      .andDo(print());
+          .contentType(MediaType.APPLICATION_JSON));
   }
 
   @Then("empty titles map is returned")
@@ -282,8 +274,7 @@ public class OrganizationTestSteps {
         post("/organization/titles")
           .content(contentJson)
           .accept(MediaType.APPLICATION_JSON)
-          .contentType(MediaType.APPLICATION_JSON))
-      .andDo(print());
+          .contentType(MediaType.APPLICATION_JSON));
   }
 
   @Then("titles map is returned")
@@ -301,7 +292,7 @@ public class OrganizationTestSteps {
     modificationDateBeforeUpdate = organization.getModified();
     creationDateBeforeUpdate = organization.getCreated();
     organization.setTitle(newTitle);
-    organization.setEndorsingNodeKey(NODE_MAP.get(nodeName));
+
     String organizationJson = objectMapper.writeValueAsString(organization);
 
     result = mvc
@@ -331,5 +322,4 @@ public class OrganizationTestSteps {
     assertTrue("Modification date must be after the creation date",
       organization.getModified().after(creationDateBeforeUpdate));
   }
-
 }
