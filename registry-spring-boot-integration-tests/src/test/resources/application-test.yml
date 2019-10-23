@@ -63,7 +63,15 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
+# DataCite properties
+datacite:
+  username: @datacite.user@
+  password: @datacite.password@
+  timeout: 120000
+  api: @datacite.api.base.url@
+
 spring:
+  # DB connection
   datasource:
     url: @registry-it.db.url@
     username: @registry-it.db.username@
@@ -71,8 +79,18 @@ spring:
     initialization-mode: always
     continue-on-error: false
     data: classpath:schema.sql
+  # DOI messaging properties
+  # queue 'registry-doi' should be used
+  rabbitmq:
+    host: @registry.messaging.hostname@
+    port: @registry.messaging.port@
+    username: @registry.messaging.username@
+    password: @registry.messaging.password@
+    virtual-host: @registry.messaging.virtualhost@
+  # Liquibase
   liquibase:
     change-log: classpath:liquibase/master.xml
+  # Mail
   mail:
     default-encoding: UTF-8
     host: @mail.host@
