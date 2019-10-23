@@ -1,7 +1,7 @@
 package org.gbif.registry.utils;
 
 import org.codehaus.jackson.type.TypeReference;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.Network;
 import org.hibernate.validator.HibernateValidator;
 import org.junit.Test;
 
@@ -10,23 +10,20 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 
-public class Organizations extends JsonBackedData<Organization> {
+public class Networks extends JsonBackedData<Network> {
 
-  private static final Organizations INSTANCE = new Organizations();
+  private static final Networks INSTANCE = new Networks();
 
-  public Organizations() {
-    super("data/organization.json", new TypeReference<Organization>() {});
+  public static Network newInstance() {
+    return INSTANCE.newTypedInstance();
   }
 
-  public static Organization newInstance(UUID endorsingNodeKey) {
-    Organization o = INSTANCE.newTypedInstance();
-    o.setEndorsingNodeKey(endorsingNodeKey);
-    o.setPassword("password");
-    return o;
+  public Networks() {
+    super("data/network.json", new TypeReference<Network>() {
+    });
   }
 
   @Test
@@ -34,7 +31,7 @@ public class Organizations extends JsonBackedData<Organization> {
     ValidatorFactory validatorFactory = Validation.byProvider(HibernateValidator.class).configure().buildValidatorFactory();
     Validator validator = validatorFactory.getValidator();
 
-    Set<ConstraintViolation<Organization>> violations = validator.validate(Organizations.newInstance(UUID.randomUUID()));
+    Set<ConstraintViolation<Network>> violations = validator.validate(Networks.newInstance());
     assertTrue(violations.isEmpty());
   }
 }

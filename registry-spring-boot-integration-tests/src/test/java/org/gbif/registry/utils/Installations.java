@@ -1,7 +1,7 @@
 package org.gbif.registry.utils;
 
 import org.codehaus.jackson.type.TypeReference;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.Installation;
 import org.hibernate.validator.HibernateValidator;
 import org.junit.Test;
 
@@ -14,19 +14,18 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 
-public class Organizations extends JsonBackedData<Organization> {
+public class Installations extends JsonBackedData<Installation> {
 
-  private static final Organizations INSTANCE = new Organizations();
+  private static final Installations INSTANCE = new Installations();
 
-  public Organizations() {
-    super("data/organization.json", new TypeReference<Organization>() {});
+  public Installations() {
+    super("data/installation.json", new TypeReference<Installation>() {});
   }
 
-  public static Organization newInstance(UUID endorsingNodeKey) {
-    Organization o = INSTANCE.newTypedInstance();
-    o.setEndorsingNodeKey(endorsingNodeKey);
-    o.setPassword("password");
-    return o;
+  public static Installation newInstance(UUID organizationKey) {
+    Installation i = INSTANCE.newTypedInstance();
+    i.setOrganizationKey(organizationKey);
+    return i;
   }
 
   @Test
@@ -34,7 +33,7 @@ public class Organizations extends JsonBackedData<Organization> {
     ValidatorFactory validatorFactory = Validation.byProvider(HibernateValidator.class).configure().buildValidatorFactory();
     Validator validator = validatorFactory.getValidator();
 
-    Set<ConstraintViolation<Organization>> violations = validator.validate(Organizations.newInstance(UUID.randomUUID()));
+    Set<ConstraintViolation<Installation>> violations = validator.validate(Installations.newInstance(UUID.randomUUID()));
     assertTrue(violations.isEmpty());
   }
 }
