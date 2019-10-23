@@ -29,9 +29,9 @@ public class SecurityContextCheckTest {
   @Before
   public void setUp() {
     Collection mockUserRoles = Arrays.asList(
-        new SimpleGrantedAuthority("A"),
-        new SimpleGrantedAuthority("B"),
-        new SimpleGrantedAuthority("C")
+      new SimpleGrantedAuthority("A"),
+      new SimpleGrantedAuthority("B"),
+      new SimpleGrantedAuthority("C")
     );
     when(mockAuth.getAuthorities()).thenReturn(mockUserRoles);
   }
@@ -130,7 +130,7 @@ public class SecurityContextCheckTest {
   }
 
   @Test
-  public void testEnsurePrecondition() {
+  public void testEnsurePrecondition() throws WebApplicationException {
     SecurityContextCheck.ensurePrecondition(true, HttpStatus.NOT_FOUND);
   }
 
