@@ -5,7 +5,6 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="ORGANIZATION_MAP" type="org.gbif.api.model.registry.Organization" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="endorsingNodeKey" column="endorsing_node_key"/>
     <result property="email" column="email" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>

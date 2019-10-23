@@ -60,6 +60,8 @@ doi:
 # MyBatis properties
 mybatis:
   type-handlers-package: org.gbif.registry.persistence.mapper.handler;org.gbif.mybatis.type
+  configuration:
+    map-underscore-to-camel-case: true
 
 spring:
   datasource:
