@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.security.jwt;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
@@ -28,19 +29,22 @@ public class JwtResponseFilter implements ResponseBodyAdvice<Object> {
   private static final Logger LOG = LoggerFactory.getLogger(JwtResponseFilter.class);
 
   @Override
-  public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+  public boolean supports(@NotNull MethodParameter returnType,
+                          @NotNull Class<? extends HttpMessageConverter<?>> converterType) {
     return true;
   }
 
   @Override
-  public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
-                                Class<? extends HttpMessageConverter<?>> selectedConverterType,
-                                ServerHttpRequest request, ServerHttpResponse response) {
+  public Object beforeBodyWrite(Object body, @NotNull MethodParameter returnType,
+                                @NotNull MediaType selectedContentType,
+                                @NotNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                @NotNull ServerHttpRequest request,
+                                @NotNull ServerHttpResponse response) {
     final HttpServletRequest httpRequest = ((ServletServerHttpRequest) request).getServletRequest();
     final String token = httpRequest.getHeader(HEADER_TOKEN);
 
     if (token != null) {
-      LOG.debug("Adding jwt token to the response {}");
+      LOG.debug("Adding jwt token to the response");
       response.getHeaders().add(HEADER_TOKEN, token);
       response.getHeaders().add(ACCESS_CONTROL_EXPOSE_HEADERS, token);
     }

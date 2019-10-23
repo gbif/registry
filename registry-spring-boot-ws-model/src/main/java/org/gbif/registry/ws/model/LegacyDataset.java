@@ -155,7 +155,6 @@ public class LegacyDataset extends Dataset {
    * @param doi The DOI
    */
   @ParamName(LegacyResourceConstants.DOI_PARAM)
-  @Nullable
   public void setDoi(String doi) {
     try {
       if (doi != null) {
