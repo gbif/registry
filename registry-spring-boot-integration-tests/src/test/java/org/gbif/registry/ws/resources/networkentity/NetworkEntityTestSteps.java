@@ -6,8 +6,6 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.TestEmailConfiguration;
@@ -30,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gbif.registry.ws.resources.networkentity.NetworkEntityProvider.ENTITIES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -48,9 +47,10 @@ public class NetworkEntityTestSteps {
 
   private static final UUID UK_NODE_KEY = UUID.fromString("f698c938-d36a-41ac-8120-c35903e1acb9");
   private static final UUID UK_NODE_2_KEY = UUID.fromString("9996f2f2-f71c-4f40-8e69-031917b314e0");
+  private static final UUID ORGANIZATION_KEY = UUID.fromString("f433944a-ad93-4ea8-bad7-68de7348e65a");
+  private static final UUID INSTALLATION_KEY = UUID.fromString("70d1ffaf-8e8a-4f40-9c5d-00a0ddbefa4c");
 
   private static final Map<String, UUID> NODE_MAP = new HashMap<>();
-  private static final Map<String, Class<? extends NetworkEntity>> ENTITIES = new HashMap<>();
 
   private MockMvc mvc;
   private ResultActions result;
@@ -81,14 +81,14 @@ public class NetworkEntityTestSteps {
       new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/organization/organization_prepare.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/organization/network_installation_prepare.sql"));
 
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
 
-    ENTITIES.put("node", Node.class);
-    ENTITIES.put("organization", Organization.class);
     NODE_MAP.put("UK Node", UK_NODE_KEY);
     NODE_MAP.put("UK Node 2", UK_NODE_2_KEY);
   }
@@ -103,7 +103,7 @@ public class NetworkEntityTestSteps {
 
   @When("create new {word}")
   public void createEntity(String entityType) throws Exception {
-    entity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY);
+    entity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY, ORGANIZATION_KEY, INSTALLATION_KEY);
     entity.setTitle("New entity " + entityType);
     String entityJson = objectMapper.writeValueAsString(entity);
 

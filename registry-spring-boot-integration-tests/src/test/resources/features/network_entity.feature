@@ -18,6 +18,7 @@ Feature: Network entity functionality
     Examples:
       | entity       |
       | installation |
+      | dataset      |
       | network      |
       | node         |
       | organization |
