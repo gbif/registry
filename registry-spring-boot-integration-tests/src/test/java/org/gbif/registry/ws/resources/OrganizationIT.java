@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
     strict = true,
     features = {
-        "classpath:features/organization/organization.feature"
+        "classpath:features/organization.feature"
     },
     glue = "org.gbif.registry.ws.resources.organization",
     plugin = "pretty"
