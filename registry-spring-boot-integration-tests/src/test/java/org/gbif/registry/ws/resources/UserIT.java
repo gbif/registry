@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
   strict = true,
   features = {
-    "classpath:features/user/user.feature"
+    "classpath:features/user.feature"
   },
   glue = "org.gbif.registry.ws.resources.user",
   plugin = "pretty"
