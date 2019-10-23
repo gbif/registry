@@ -17,12 +17,15 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +33,9 @@ import java.util.UUID;
 @Service
 @Qualifier("organizationServiceStub")
 public class OrganizationServiceStub implements OrganizationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DatasetServiceStub.class);
+
   @Override
   public PagingResponse<Dataset> hostedDatasets(@NotNull UUID uuid, @Nullable Pageable pageable) {
     return null;
@@ -67,7 +73,7 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public List<KeyTitleResult> suggest(@Nullable String s) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -82,7 +88,7 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void delete(@NotNull UUID uuid) {
-
+    LOG.info("OrganizationServiceStub#delete");
   }
 
   @Override
@@ -122,7 +128,7 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void update(@NotNull Organization organization) {
-
+    LOG.info("OrganizationServiceStub#update");
   }
 
   @Override
@@ -132,12 +138,12 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteComment(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteComment");
   }
 
   @Override
   public List<Comment> listComments(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -147,17 +153,17 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteContact(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteContact");
   }
 
   @Override
   public List<Contact> listContacts(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public void updateContact(@NotNull UUID uuid, @NotNull Contact contact) {
-
+    LOG.info("OrganizationServiceStub#updateContact");
   }
 
   @Override
@@ -167,12 +173,12 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteEndpoint(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteEndpoint");
   }
 
   @Override
   public List<Endpoint> listEndpoints(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -182,12 +188,12 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteIdentifier(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteIdentifier");
   }
 
   @Override
   public List<Identifier> listIdentifiers(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -207,32 +213,32 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteMachineTag(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteMachineTag");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull TagNamespace tagNamespace) {
-
+    LOG.info("OrganizationServiceStub#deleteMachineTags(UUID, TagNamespace)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull String s) {
-
+    LOG.info("OrganizationServiceStub#deleteMachineTags(UUID, String)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull TagName tagName) {
-
+    LOG.info("OrganizationServiceStub#deleteMachineTags(UUID, TagName)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull String s, @NotNull String s1) {
-
+    LOG.info("OrganizationServiceStub#deleteMachineTag");
   }
 
   @Override
   public List<MachineTag> listMachineTags(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -247,11 +253,11 @@ public class OrganizationServiceStub implements OrganizationService {
 
   @Override
   public void deleteTag(@NotNull UUID uuid, int i) {
-
+    LOG.info("OrganizationServiceStub#deleteTag");
   }
 
   @Override
   public List<Tag> listTags(@NotNull UUID uuid, @Nullable String s) {
-    return null;
+    return Collections.emptyList();
   }
 }

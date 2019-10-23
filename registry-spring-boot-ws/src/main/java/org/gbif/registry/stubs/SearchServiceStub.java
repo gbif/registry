@@ -10,6 +10,7 @@ import org.gbif.api.service.registry.DatasetSearchService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -23,6 +24,6 @@ public class SearchServiceStub implements DatasetSearchService {
 
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
-    return null;
+    return Collections.emptyList();
   }
 }
