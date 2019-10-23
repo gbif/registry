@@ -2,7 +2,7 @@
 Feature: Network entity functionality
 
   @NetworkEntityCRUD
-  Scenario Outline: Create <entity>
+  Scenario Outline: CRUD <entity>
     When create new <entity>
     Then response status should be 201
     When get <entity> by key
@@ -17,5 +17,7 @@ Feature: Network entity functionality
 
     Examples:
       | entity       |
+      | installation |
+      | network      |
       | node         |
       | organization |
