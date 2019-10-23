@@ -16,20 +16,25 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-// TODO: 18/09/2019 implement clients (Installation, Organization, Dataset)
 @Service
 @Qualifier("installationServiceStub")
 public class InstallationServiceStub implements InstallationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(InstallationServiceStub.class);
+
   @Override
   public PagingResponse<Dataset> getHostedDatasets(@NotNull UUID uuid, @Nullable Pageable pageable) {
     return null;
@@ -47,7 +52,7 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public List<KeyTitleResult> suggest(@Nullable String s) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -62,7 +67,7 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void delete(@NotNull UUID uuid) {
-
+    LOG.info("InstallationServiceStub#delete");
   }
 
   @Override
@@ -102,7 +107,7 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void update(@NotNull Installation installation) {
-
+    LOG.info("InstallationServiceStub#update");
   }
 
   @Override
@@ -112,12 +117,12 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteComment(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteComment");
   }
 
   @Override
   public List<Comment> listComments(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -127,17 +132,17 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteContact(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteContact");
   }
 
   @Override
   public List<Contact> listContacts(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
   public void updateContact(@NotNull UUID uuid, @NotNull Contact contact) {
-
+    LOG.info("InstallationServiceStub#updateContact");
   }
 
   @Override
@@ -147,12 +152,12 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteEndpoint(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteEndpoint");
   }
 
   @Override
   public List<Endpoint> listEndpoints(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -162,12 +167,12 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteIdentifier(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteIdentifier");
   }
 
   @Override
   public List<Identifier> listIdentifiers(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -187,32 +192,32 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteMachineTag(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteMachineTag");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull TagNamespace tagNamespace) {
-
+    LOG.info("InstallationServiceStub#deleteMachineTags(UUID, TagNamespace)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull String s) {
-
+    LOG.info("InstallationServiceStub#deleteMachineTags(UUID, String)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull TagName tagName) {
-
+    LOG.info("InstallationServiceStub#deleteMachineTags(UUID, TagName)");
   }
 
   @Override
   public void deleteMachineTags(@NotNull UUID uuid, @NotNull String s, @NotNull String s1) {
-
+    LOG.info("InstallationServiceStub#deleteMachineTags");
   }
 
   @Override
   public List<MachineTag> listMachineTags(@NotNull UUID uuid) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -227,11 +232,11 @@ public class InstallationServiceStub implements InstallationService {
 
   @Override
   public void deleteTag(@NotNull UUID uuid, int i) {
-
+    LOG.info("InstallationServiceStub#deleteTag");
   }
 
   @Override
   public List<Tag> listTags(@NotNull UUID uuid, @Nullable String s) {
-    return null;
+    return Collections.emptyList();
   }
 }
