@@ -103,7 +103,8 @@ public class NetworkEntityTestSteps {
 
   @When("create new {word}")
   public void createEntity(String entityType) throws Exception {
-    entity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY, "New entity " + entityType);
+    entity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY);
+    entity.setTitle("New entity " + entityType);
     String entityJson = objectMapper.writeValueAsString(entity);
 
     result = mvc
