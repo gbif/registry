@@ -28,7 +28,7 @@ Feature: Network entity functionality
     Examples:
       | entity       |
       | installation |
-#      | dataset      |
+      | dataset      |
       | network      |
       | node         |
       | organization |
