@@ -17,6 +17,8 @@ Feature: Network entity functionality
     And title is new "New Title"
     And modification date was updated
     And modification date is after the creation date
+    When delete <entity> by key
+    Then response status should be 200
 
     Examples:
       | entity       |
