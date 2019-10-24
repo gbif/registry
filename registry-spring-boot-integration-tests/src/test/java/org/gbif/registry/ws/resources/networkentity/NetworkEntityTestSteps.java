@@ -37,6 +37,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -192,6 +193,15 @@ public class NetworkEntityTestSteps {
   @SuppressWarnings("unchecked")
   @Then("created {word} reflect the original one")
   public void checkCreatedEntityEqualsOriginalOne(String entityType) {
+    // TODO: 24/10/2019 problem with dataset. some fields do not match: citations, created, modified, createdBy, modifiedBy
     assertLenientEquals("Persisted does not reflect original", ((LenientEquals) resultEntity), originalEntity);
+  }
+
+  @When("delete {word} by key")
+  public void deleteEntityByKey(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        delete("/" + entityType + "/{key}", key)
+          .with(httpBasic("justadmin", "welcome")));
   }
 }
