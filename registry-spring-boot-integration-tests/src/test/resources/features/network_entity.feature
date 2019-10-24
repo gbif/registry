@@ -7,6 +7,9 @@ Feature: Network entity functionality
     Then response status should be 201
     When get <entity> by key
     Then response status should be 200
+    And modification and creation dates are present
+    And <entity> is not marked as deleted
+    And created <entity> reflect the original one
     When update <entity> with new title "New Title"
     Then response status should be 200
     When get <entity> by key
@@ -18,7 +21,7 @@ Feature: Network entity functionality
     Examples:
       | entity       |
       | installation |
-      | dataset      |
+#      | dataset      |
       | network      |
       | node         |
       | organization |
