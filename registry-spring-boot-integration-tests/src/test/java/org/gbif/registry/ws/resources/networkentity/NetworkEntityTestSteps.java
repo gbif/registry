@@ -5,6 +5,7 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
@@ -194,14 +195,20 @@ public class NetworkEntityTestSteps {
   @SuppressWarnings("unchecked")
   @Then("created {word} reflects the original one")
   public void checkCreatedEntityEqualsOriginalOne(String entityType) {
-    // TODO: 24/10/2019 problem with dataset. some fields do not match: citations, created, modified, createdBy, modifiedBy
+    // put processed properties (citation)
+    if (entityType.equals("dataset")) {
+      ((Dataset) expectedEntity).setCitation(((Dataset) actualEntity).getCitation());
+    }
     assertLenientEquals("Persisted does not reflect original", ((LenientEquals) actualEntity), expectedEntity);
   }
 
   @SuppressWarnings("unchecked")
   @Then("deleted {word} reflects the original one")
   public void checkDeletedEntityEqualsOriginalOne(String entityType) {
-    // TODO: 24/10/2019 problem with dataset. some fields do not match: citations, created, modified, createdBy, modifiedBy
+    // put processed properties (citation)
+    if (entityType.equals("dataset")) {
+      ((Dataset) expectedEntity).setCitation(((Dataset) actualEntity).getCitation());
+    }
     expectedEntity.setDeleted(actualEntity.getDeleted());
     assertLenientEquals("Persisted does not reflect original", ((LenientEquals) actualEntity), expectedEntity);
   }
