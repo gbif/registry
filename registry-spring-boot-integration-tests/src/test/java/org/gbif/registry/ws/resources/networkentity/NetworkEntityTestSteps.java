@@ -58,8 +58,8 @@ public class NetworkEntityTestSteps {
 
   private MockMvc mvc;
   private ResultActions result;
-  private NetworkEntity originalEntity;
-  private NetworkEntity resultEntity;
+  private NetworkEntity actualEntity;
+  private NetworkEntity expectedEntity;
   private String key;
   private Date modificationDateBeforeUpdate;
   private Date creationDateBeforeUpdate;
@@ -108,9 +108,9 @@ public class NetworkEntityTestSteps {
 
   @When("create new {word}")
   public void createEntity(String entityType) throws Exception {
-    originalEntity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY, ORGANIZATION_KEY, INSTALLATION_KEY);
-    originalEntity.setTitle("New entity " + entityType);
-    String entityJson = objectMapper.writeValueAsString(originalEntity);
+    expectedEntity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY, ORGANIZATION_KEY, INSTALLATION_KEY);
+    expectedEntity.setTitle("New entity " + entityType);
+    String entityJson = objectMapper.writeValueAsString(expectedEntity);
 
     result = mvc
       .perform(
@@ -123,7 +123,7 @@ public class NetworkEntityTestSteps {
 
     key =
       RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
-    originalEntity.setKey(UUID.fromString(key));
+    expectedEntity.setKey(UUID.fromString(key));
   }
 
   @Then("response status should be {int}")
@@ -138,16 +138,17 @@ public class NetworkEntityTestSteps {
       .perform(
         get("/" + entityType + "/{key}", key));
 
-    resultEntity = objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), ENTITIES.get(entityType));
+    actualEntity = objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), ENTITIES.get(entityType));
   }
 
   @When("update {word} with new title {string}")
   public void updateEntity(String entityType, String newTitle) throws Exception {
-    modificationDateBeforeUpdate = resultEntity.getModified();
-    creationDateBeforeUpdate = resultEntity.getCreated();
-    resultEntity.setTitle(newTitle);
+    modificationDateBeforeUpdate = actualEntity.getModified();
+    creationDateBeforeUpdate = actualEntity.getCreated();
+    actualEntity.setTitle(newTitle);
+    expectedEntity.setTitle(newTitle);
 
-    String entityJson = objectMapper.writeValueAsString(resultEntity);
+    String entityJson = objectMapper.writeValueAsString(actualEntity);
 
     result = mvc
       .perform(
@@ -160,41 +161,49 @@ public class NetworkEntityTestSteps {
 
   @Then("title is new {string}")
   public void checkUpdatedEntityTitle(String newTitle) {
-    assertEquals("Entity's title was to be updated", newTitle, resultEntity.getTitle());
+    assertEquals("Entity's title was to be updated", newTitle, actualEntity.getTitle());
   }
 
   @Then("modification date was updated")
   public void checkModificationDateWasChangedAfterUpdate() {
-    assertNotNull(resultEntity.getModified());
+    assertNotNull(actualEntity.getModified());
     assertTrue("Modification date was to be changed",
-      resultEntity.getModified().after(modificationDateBeforeUpdate));
+      actualEntity.getModified().after(modificationDateBeforeUpdate));
   }
 
   @Then("modification date is after the creation date")
   public void checkModificationDateIsAfterCreationDate() {
-    assertNotNull(resultEntity.getModified());
+    assertNotNull(actualEntity.getModified());
     assertTrue("Modification date must be after the creation date",
-      resultEntity.getModified().after(creationDateBeforeUpdate));
+      actualEntity.getModified().after(creationDateBeforeUpdate));
   }
 
   @Then("modification and creation dates are present")
   public void checkModificationCreationDatesPresent() {
-    assertNotNull(resultEntity.getCreated());
-    assertNotNull(resultEntity.getModified());
-    assertNotNull(resultEntity.getCreatedBy());
-    assertNotNull(resultEntity.getModifiedBy());
+    assertNotNull(actualEntity.getCreated());
+    assertNotNull(actualEntity.getModified());
+    assertNotNull(actualEntity.getCreatedBy());
+    assertNotNull(actualEntity.getModifiedBy());
   }
 
   @Then("{word} is not marked as deleted")
   public void checkEntityIsNotDeleted(String entityType) {
-    assertNull(resultEntity.getDeleted());
+    assertNull(actualEntity.getDeleted());
   }
 
   @SuppressWarnings("unchecked")
-  @Then("created {word} reflect the original one")
+  @Then("created {word} reflects the original one")
   public void checkCreatedEntityEqualsOriginalOne(String entityType) {
     // TODO: 24/10/2019 problem with dataset. some fields do not match: citations, created, modified, createdBy, modifiedBy
-    assertLenientEquals("Persisted does not reflect original", ((LenientEquals) resultEntity), originalEntity);
+    assertLenientEquals("Persisted does not reflect original", ((LenientEquals) actualEntity), expectedEntity);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Then("deleted {word} reflects the original one")
+  public void checkDeletedEntityEqualsOriginalOne(String entityType) {
+    // TODO: 24/10/2019 problem with dataset. some fields do not match: citations, created, modified, createdBy, modifiedBy
+    expectedEntity.setDeleted(actualEntity.getDeleted());
+    assertLenientEquals("Persisted does not reflect original", ((LenientEquals) actualEntity), expectedEntity);
   }
 
   @When("delete {word} by key")
