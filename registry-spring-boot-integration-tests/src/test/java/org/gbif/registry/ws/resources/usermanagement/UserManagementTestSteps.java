@@ -275,6 +275,20 @@ public class UserManagementTestSteps {
           .header(AUTHORIZATION, gbifAuthorization));
   }
 
+  @When("update user {string} with new {word} {string} by admin {string}")
+  public void updateUserByAdmin(String username, String property, String newValue, String performer) throws Exception {
+    GbifUser user = userMapper.get(username);
+    BeanUtils.setProperty(user, property, newValue);
+    String userJsonString = objectMapper.writeValueAsString(user);
+
+    result = mvc
+      .perform(
+        put("/admin/user/{username}", username)
+          .with(httpBasic(performer, credentials.get(performer)))
+          .content(userJsonString)
+          .contentType(APPLICATION_JSON));
+  }
+
   @Then("{word} of user {string} was updated with new value {string}")
   public void checkFieldWasUpdated(String property, String username, String newValue) throws Exception {
     GbifUser gbifUser = userMapper.get(username);
