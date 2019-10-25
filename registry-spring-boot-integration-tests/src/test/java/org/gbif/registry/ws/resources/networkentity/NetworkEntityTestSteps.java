@@ -5,10 +5,12 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.utils.Contacts;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -219,5 +222,43 @@ public class NetworkEntityTestSteps {
       .perform(
         delete("/" + entityType + "/{key}", key)
           .with(httpBasic("justadmin", "welcome")));
+  }
+
+  @When("list {word} contacts")
+  public void listEntityContacts(String entityType) {
+    try {
+      result = mvc
+        .perform(
+          get("/" + entityType + "/{key}/contact", key));
+    } catch (Exception e) {
+      // TODO: 25/10/2019 for 'node' case
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Then("{word} contacts list should be empty")
+  public void checkContactsListEmpty(String entityType) throws Exception {
+    if (entityType.equals("node")) {
+      // TODO: 25/10/2019 node returns 201 instead of 200 for some reason
+    } else {
+      List<Contact> contacts = (List<Contact>) objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), List.class);
+
+      assertNotNull("Contact list should be empty, not null when no contacts exist", contacts);
+      assertTrue("Contact should be empty when none added", contacts.isEmpty());
+    }
+  }
+
+  @When("add contact to {word}")
+  public void addContactToEntity(String entityType) throws Exception {
+    Contact contact = Contacts.newInstance();
+    String entityJson = objectMapper.writeValueAsString(contact);
+
+    result = mvc
+      .perform(
+        post("/" + entityType + "/{key}/contact", key)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(entityJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
   }
 }

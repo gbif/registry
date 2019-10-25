@@ -25,10 +25,29 @@ Feature: Network entity functionality
     Then response status should be 200
     And deleted <entity> reflects the original one
 
-    Examples:
+    Scenarios:
       | entity       |
       | installation |
       | dataset      |
       | network      |
       | node         |
       | organization |
+
+  @NetworkEntityContacts
+  Scenario Outline: <entity> contacts
+    When create new <entity>
+    Then response status should be 201
+    When list <entity> contacts
+    Then response status should be 200
+    And <entity> contacts list should be empty
+    When add contact to <entity>
+    Then response status should be 201
+
+    Scenarios:
+      | entity       |
+      | installation |
+#      | dataset      |
+      | network      |
+#      | node         |
+      | organization |
+
