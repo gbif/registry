@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.commons.beanutils.BeanUtils;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.model.UserCreation;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.Md5EncodeService;
@@ -31,6 +33,7 @@ import java.util.UUID;
 import static org.gbif.registry.utils.Users.prepareUserCreation;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -39,22 +42,22 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class UserManagementTestSteps {
 
-  public static final String IT_APP_KEY = "gbif.app.it";
-  public static final String IT_APP_KEY2 = "gbif.app.it2";
-
   private ResultActions result;
   private UserCreation user;
-  private Properties secretProperties;
+  private Properties secrets;
+  private UUID challengeCode;
 
   @Value("${appkeys.file}")
   private String appkeysFile;
@@ -86,7 +89,7 @@ public class UserManagementTestSteps {
       .apply(springSecurity())
       .build();
 
-    secretProperties = PropertiesUtil.loadProperties(appkeysFile);
+    secrets = PropertiesUtil.loadProperties(appkeysFile);
   }
 
   @When("create a new user {string} with APP role {string}")
@@ -97,7 +100,7 @@ public class UserManagementTestSteps {
 
     // perform user creation and check response
     String contentMd5 = md5EncodeService.encode(userJsonString);
-    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, appRole, appRole, secretProperties.getProperty(appRole));
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, appRole, appRole, secrets.getProperty(appRole));
     result = mvc
       .perform(
         post("/admin/user")
@@ -124,26 +127,26 @@ public class UserManagementTestSteps {
       .andExpect(jsonPath("$.error").doesNotExist());
   }
 
-  @When("login with user {string}")
-  public void loginWithNewUser(String username) throws Exception {
+  @When("login with user {string} and password {string}")
+  public void loginWithNewUser(String username, String password) throws Exception {
     // test we can't login (challengeCode not confirmed)
     result = mvc
       .perform(
         get("/user/login")
-          .with(httpBasic(username, "welcome")));
+          .with(httpBasic(username, password)));
   }
 
   @When("confirm user's challenge code with APP role {string}")
   public void confirmChallengeCode(String appRole) throws Exception {
-    final GbifUser newUser = userMapper.get(user.getUserName());
-    final UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
-    final ConfirmationKeyParameter confirmation = new ConfirmationKeyParameter(challengeCodeString);
-    final String confirmationJsonString = objectMapper.writeValueAsString(confirmation);
+    GbifUser newUser = userMapper.get(user.getUserName());
+    UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
+    ConfirmationKeyParameter confirmation = new ConfirmationKeyParameter(challengeCodeString);
+    String confirmationJsonString = objectMapper.writeValueAsString(confirmation);
 
     // perform request and check response
     // confirmation user and current one must be the same
     String contentMd5 = md5EncodeService.encode(confirmationJsonString);
-    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", appRole, secretProperties.getProperty(appRole));
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", appRole, secrets.getProperty(appRole));
     result = mvc
       .perform(
         post("/admin/user/confirm")
@@ -188,7 +191,7 @@ public class UserManagementTestSteps {
   @When("get user by system settings {string} by APP role {string}")
   public void getUserBySystemSettingsByApp(String param, String appRole) throws Exception {
     // with APP role
-    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/find", appRole, appRole, secretProperties.getProperty(appRole));
+    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/find", appRole, appRole, secrets.getProperty(appRole));
     result = mvc
       .perform(
         get("/admin/user/find")
@@ -199,7 +202,7 @@ public class UserManagementTestSteps {
 
   @When("reset password for user {string} by APP role {string}")
   public void resetPassword(String username, String appRole) throws Exception {
-    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/resetPassword", username, appRole, secretProperties.getProperty(appRole));
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/resetPassword", username, appRole, secrets.getProperty(appRole));
     result = mvc
       .perform(
         post("/admin/user/resetPassword")
@@ -210,15 +213,77 @@ public class UserManagementTestSteps {
 
   @Then("challenge code for user {string} is present now")
   public void checkChallengeCodeAfterPasswordReset(String username) {
-    final GbifUser newUser = userMapper.get(username);
-    final UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
-    assertThat(challengeCodeString, notNullValue());
+    GbifUser newUser = userMapper.get(username);
+    challengeCode = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
+    assertThat(challengeCode, notNullValue());
+  }
+
+  @When("update password to {string} for user {string} by APP role {string} with {word} challenge code")
+  public void updateUserPassword(String newPassword, String username, String appRole, String type) throws Exception {
+    AuthenticationDataParameters request = new AuthenticationDataParameters();
+    request.setPassword(newPassword);
+    request.setChallengeCode(type.equals("valid") ? challengeCode : UUID.randomUUID());
+    String content = objectMapper.writeValueAsString(request);
+    String contentMd5 = md5EncodeService.encode(content);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/updatePassword", APPLICATION_JSON, contentMd5, username, appRole, secrets.getProperty(appRole));
+
+    result = mvc
+      .perform(
+        post("/admin/user/updatePassword")
+          .contentType(APPLICATION_JSON)
+          .content(content)
+          .header(HEADER_CONTENT_MD5, contentMd5)
+          .header(HEADER_GBIF_USER, username)
+          .header(AUTHORIZATION, gbifAuthorization));
+  }
+
+  @Then("challenge code is valid for user {string} by APP role {string}")
+  public void checkChallengeCodeValidity(String username, String appRole) throws Exception {
+    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/confirmationKeyValid", username, appRole, secrets.getProperty(appRole));
+    mvc
+      .perform(
+        get("/admin/user/confirmationKeyValid")
+          .param("confirmationKey", challengeCode.toString())
+          .header(HEADER_GBIF_USER, username)
+          .header(AUTHORIZATION, gbifAuthorization))
+      .andExpect(status().isNoContent());
+  }
+
+  @When("update user {string} with new {word} {string} by APP role {string}")
+  public void updateUser(String username, String property, String newValue, String appRole) throws Exception {
+    GbifUser user = userMapper.get(username);
+    BeanUtils.setProperty(user, property, newValue);
+    String userJsonString = objectMapper.writeValueAsString(user);
+
+    // update user with a new name
+    String contentMd5 = md5EncodeService.encode(userJsonString);
+    String gbifAuthorization = getGbifAuthorization(PUT, "/admin/user/" + username, APPLICATION_JSON, contentMd5, appRole, appRole, secrets.getProperty(appRole));
+    result = mvc
+      .perform(
+        put("/admin/user/{username}", username)
+          .content(userJsonString)
+          .contentType(APPLICATION_JSON)
+          .header(HEADER_CONTENT_MD5, contentMd5)
+          .header(HEADER_GBIF_USER, appRole)
+          .header(AUTHORIZATION, gbifAuthorization));
+  }
+
+  @Then("{word} of user {string} was updated with new value {string}")
+  public void checkFieldWasUpdated(String property, String username, String newValue) throws Exception {
+    GbifUser gbifUser = userMapper.get(username);
+    assertThat(BeanUtils.getProperty(gbifUser, property), is(newValue));
+  }
+
+  @Then("response should be {string}")
+  public void checkUpdateResponse(String errorCode) throws Exception {
+    result
+      .andExpect(jsonPath("$.error").value(errorCode));
   }
 
   private String getGbifAuthorization(RequestMethod method, String requestUrl, MediaType contentType, String contentMd5, String user, String authUser, String secretKey) {
     String strContentType = contentType == null ? null : contentType.toString();
-    final String stringToSign = buildStringToSign(method.name(), requestUrl, strContentType, contentMd5, user);
-    final String sign = signingService.buildSignature(stringToSign, secretKey);
+    String stringToSign = buildStringToSign(method.name(), requestUrl, strContentType, contentMd5, user);
+    String sign = signingService.buildSignature(stringToSign, secretKey);
     return "GBIF " + authUser + ":" + sign;
   }
 
