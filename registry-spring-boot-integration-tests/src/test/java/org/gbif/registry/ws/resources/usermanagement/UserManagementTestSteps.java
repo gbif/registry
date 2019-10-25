@@ -49,10 +49,9 @@ public class UserManagementTestSteps {
   public static final String IT_APP_KEY = "gbif.app.it";
   public static final String IT_APP_KEY2 = "gbif.app.it2";
 
-  private String secret;
-  private String secret2;
   private ResultActions result;
   private UserCreation user;
+  private Properties secretProperties;
 
   @Value("${appkeys.file}")
   private String appkeysFile;
@@ -84,27 +83,25 @@ public class UserManagementTestSteps {
       .apply(springSecurity())
       .build();
 
-    Properties props = PropertiesUtil.loadProperties(appkeysFile);
-    secret = props.getProperty(IT_APP_KEY);
-    secret2 = props.getProperty(IT_APP_KEY2);
+    secretProperties = PropertiesUtil.loadProperties(appkeysFile);
   }
 
-  @When("create a new user")
-  public void createNewUser() throws Exception {
+  @When("create a new user with APP role {string}")
+  public void createNewUser(String appRole) throws Exception {
     user = prepareUserCreation();
 
     String userJsonString = objectMapper.writeValueAsString(user);
 
     // perform user creation and check response
     String contentMd5 = md5EncodeService.encode(userJsonString);
-    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, IT_APP_KEY, IT_APP_KEY, secret);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, appRole, appRole, secretProperties.getProperty(appRole));
     result = mvc
       .perform(
         post("/admin/user")
           .content(userJsonString)
           .contentType(APPLICATION_JSON)
           .header(HEADER_CONTENT_MD5, contentMd5)
-          .header(HEADER_GBIF_USER, IT_APP_KEY)
+          .header(HEADER_GBIF_USER, appRole)
           .header(AUTHORIZATION, gbifAuthorization));
   }
 
@@ -133,8 +130,8 @@ public class UserManagementTestSteps {
           .with(httpBasic("user_14", "welcome")));
   }
 
-  @When("confirm user's challenge code")
-  public void confirmChallengeCode() throws Exception {
+  @When("confirm user's challenge code with APP role {string}")
+  public void confirmChallengeCode(String appRole) throws Exception {
     final GbifUser newUser = userMapper.get(user.getUserName());
     final UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
     final ConfirmationKeyParameter confirmation = new ConfirmationKeyParameter(challengeCodeString);
@@ -143,7 +140,7 @@ public class UserManagementTestSteps {
     // perform request and check response
     // confirmation user and current one must be the same
     String contentMd5 = md5EncodeService.encode(confirmationJsonString);
-    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", IT_APP_KEY, secret);
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", appRole, secretProperties.getProperty(appRole));
     result = mvc
       .perform(
         post("/admin/user/confirm")
