@@ -55,11 +55,51 @@ Feature: User management functionality
     And <property> of user "justadmin" was updated with new value "<newValue>"
 
     Scenarios:
-      | property  | newValue          | status |
-      | firstName | Joseph            | 204    |
-      | lastName  | Smith             | 204    |
+      | property  | newValue | status |
+      | firstName | Joseph   | 204    |
+      | lastName  | Smith    | 204    |
 
   Scenario: Update user with wrong email by APP role
     When update user "justadmin" with new email "justuser@gbif.org" by APP role "gbif.app.it"
     Then response status should be 422
     And response should be "EMAIL_ALREADY_IN_USE"
+
+  Scenario: Editor rights
+    Given user which is admin with credentials "justadmin" and "welcome"
+    And user which is user with credentials "justuser" and "welcome"
+    When "justadmin" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "justuser"
+    Then response status should be 201
+    When "justadmin" gets user "justuser" rights
+    Then response status should be 200
+    And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
+    When "justuser" gets user "justuser" rights
+    Then response status should be 200
+    And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
+    When "justadmin" deletes user "justuser" right "8b207f7a-fd9c-4992-8193-ca56948fa679"
+    Then response status should be 204
+    When "justadmin" gets user "justuser" rights
+    Then response status should be 200
+    And response is ""
+
+  Scenario Outline: Editor rights create errors: <comment>
+    Given user which is <role> with credentials "<performer>" and "<password>"
+    When "<performer>" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "<username>"
+    Then response status should be <status>
+
+    Scenarios:
+      | username        | performer | password | role  | status | comment                                   |
+      | notexistinguser | justadmin | welcome  | admin | 404    | User does not exist                       |
+      | justuser        | justuser  | welcome  | user  | 403    | Not an admin user                         |
+      | justuser        | justadmin | welcome  | admin | 201    | Create one in order to fail the next step |
+      | justuser        | justadmin | welcome  | admin | 409    | Right already exists                      |
+
+  Scenario Outline: Editor rights delete errors: <comment>
+    Given user which is <role> with credentials "<performer>" and "<password>"
+    When "<performer>" deletes user "<username>" right "<right>"
+    Then response status should be <status>
+
+    Scenarios:
+      | username        | right                                | performer | password | role  | status | comment              |
+      | justuser        | e323a550-ad60-408d-88d2-cc1356fc10fb | justadmin | welcome  | admin | 404    | Right does not exist |
+      | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justadmin | welcome  | admin | 404    | User does not exist  |
+      | justuser        | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justuser  | welcome  | user  | 403    | Not an admin user    |

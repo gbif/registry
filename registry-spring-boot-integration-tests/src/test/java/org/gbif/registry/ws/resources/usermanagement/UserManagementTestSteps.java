@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources.usermanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.beanutils.BeanUtils;
@@ -27,6 +28,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -38,11 +41,14 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -58,6 +64,7 @@ public class UserManagementTestSteps {
   private UserCreation user;
   private Properties secrets;
   private UUID challengeCode;
+  private Map<String, String> credentials = new HashMap<>();
 
   @Value("${appkeys.file}")
   private String appkeysFile;
@@ -278,6 +285,44 @@ public class UserManagementTestSteps {
   public void checkUpdateResponse(String errorCode) throws Exception {
     result
       .andExpect(jsonPath("$.error").value(errorCode));
+  }
+
+  @Given("user which is {word} with credentials {string} and {string}")
+  public void putUserToStorage(String role, String username, String password) {
+    credentials.put(username, password);
+  }
+
+  @When("{string} adds a right {string} to the user {string}")
+  public void addRightToUser(String performer, String right, String username) throws Exception {
+    result = mvc
+      .perform(
+        post("/admin/user/{username}/editorRight", username)
+          .content(right)
+          .contentType(TEXT_PLAIN_VALUE)
+          .with(httpBasic(performer, credentials.get(performer))));
+  }
+
+  @When("{string} gets user {string} rights")
+  public void getUserRights(String performer, String username) throws Exception {
+    result = mvc
+      .perform(
+        get("/admin/user/{username}/editorRight", username)
+          .with(httpBasic(performer, credentials.get(performer))));
+  }
+
+  @Then("response is {string}")
+  public void checkGetUserRightsResponse(String right) throws Exception {
+    String content = right.isEmpty() ? right : "\"" + right + "\"";
+    result
+      .andExpect(content().string("[" + content + "]"));
+  }
+
+  @When("{string} deletes user {string} right {string}")
+  public void deleteUserRights(String performer, String username, String right) throws Exception {
+    result = mvc
+      .perform(
+        delete("/admin/user/{username}/editorRight/{key}", username, right)
+          .with(httpBasic(performer, credentials.get(performer))));
   }
 
   private String getGbifAuthorization(RequestMethod method, String requestUrl, MediaType contentType, String contentMd5, String user, String authUser, String secretKey) {
