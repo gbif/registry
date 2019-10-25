@@ -31,6 +31,8 @@ import java.util.UUID;
 import static org.gbif.registry.utils.Users.prepareUserCreation;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -39,6 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
@@ -86,8 +89,8 @@ public class UserManagementTestSteps {
     secretProperties = PropertiesUtil.loadProperties(appkeysFile);
   }
 
-  @When("create a new user with APP role {string}")
-  public void createNewUser(String appRole) throws Exception {
+  @When("create a new user {string} with APP role {string}")
+  public void createNewUser(String username, String appRole) throws Exception {
     user = prepareUserCreation();
 
     String userJsonString = objectMapper.writeValueAsString(user);
@@ -111,23 +114,23 @@ public class UserManagementTestSteps {
       .andExpect(status().is(status));
   }
 
-  @Then("created user reflects the original one")
-  public void assertCreatedUser() throws Exception {
+  @Then("user {string} reflects the original one")
+  public void assertCreatedUser(String username) throws Exception {
     // TODO: 25/10/2019 assert the whole result
     result
-      .andExpect(jsonPath("$.username").value("user_14"))
+      .andExpect(jsonPath("$.username").value(username))
       .andExpect(jsonPath("$.email").value("user_14@gbif.org"))
       .andExpect(jsonPath("$.constraintViolation").doesNotExist())
       .andExpect(jsonPath("$.error").doesNotExist());
   }
 
-  @When("login with new user")
-  public void loginWithNewUser() throws Exception {
+  @When("login with user {string}")
+  public void loginWithNewUser(String username) throws Exception {
     // test we can't login (challengeCode not confirmed)
     result = mvc
       .perform(
         get("/user/login")
-          .with(httpBasic("user_14", "welcome")));
+          .with(httpBasic(username, "welcome")));
   }
 
   @When("confirm user's challenge code with APP role {string}")
@@ -158,11 +161,69 @@ public class UserManagementTestSteps {
       .andExpect(jsonPath("$.email").value("user_14@gbif.org"));
   }
 
+  @When("get user by {string}")
+  public void getUserByUsername(String username) throws Exception {
+    result = mvc
+      .perform(
+        get("/admin/user/{username}", username)
+          .with(httpBasic("justadmin", "welcome")));
+  }
+
+  @Then("returned user {string} is valid")
+  public void checkReturnedUser(String username) throws Exception {
+    result
+      .andExpect(jsonPath("$.user.userName").value(username))
+      .andExpect(jsonPath("$.error").doesNotExist());
+  }
+
+  @When("get user by system settings {string} by admin")
+  public void getUserBySystemSettingsByAdmin(String param) throws Exception {
+    result = mvc
+      .perform(
+        get("/admin/user/find")
+          .param("my.settings.key", param)
+          .with(httpBasic("justadmin", "welcome")));
+  }
+
+  @When("get user by system settings {string} by APP role {string}")
+  public void getUserBySystemSettingsByApp(String param, String appRole) throws Exception {
+    // with APP role
+    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/find", appRole, appRole, secretProperties.getProperty(appRole));
+    result = mvc
+      .perform(
+        get("/admin/user/find")
+          .param("my.settings.key", param)
+          .header(HEADER_GBIF_USER, appRole)
+          .header(AUTHORIZATION, gbifAuthorization));
+  }
+
+  @When("reset password for user {string} by APP role {string}")
+  public void resetPassword(String username, String appRole) throws Exception {
+    String gbifAuthorization = getGbifAuthorization(POST, "/admin/user/resetPassword", username, appRole, secretProperties.getProperty(appRole));
+    result = mvc
+      .perform(
+        post("/admin/user/resetPassword")
+          .header(HEADER_GBIF_USER, username)
+          .header(AUTHORIZATION, gbifAuthorization))
+      .andExpect(status().isNoContent());
+  }
+
+  @Then("challenge code for user {string} is present now")
+  public void checkChallengeCodeAfterPasswordReset(String username) {
+    final GbifUser newUser = userMapper.get(username);
+    final UUID challengeCodeString = challengeCodeMapper.getChallengeCode(userMapper.getChallengeCodeKey(newUser.getKey()));
+    assertThat(challengeCodeString, notNullValue());
+  }
+
   private String getGbifAuthorization(RequestMethod method, String requestUrl, MediaType contentType, String contentMd5, String user, String authUser, String secretKey) {
     String strContentType = contentType == null ? null : contentType.toString();
     final String stringToSign = buildStringToSign(method.name(), requestUrl, strContentType, contentMd5, user);
     final String sign = signingService.buildSignature(stringToSign, secretKey);
     return "GBIF " + authUser + ":" + sign;
+  }
+
+  private String getGbifAuthorization(RequestMethod method, String requestUrl, String user, String authUser, String secretKey) {
+    return getGbifAuthorization(method, requestUrl, null, null, user, authUser, secretKey);
   }
 
   private String buildStringToSign(String method, String requestUrl, String contentType, String contentMd5, String user) {
