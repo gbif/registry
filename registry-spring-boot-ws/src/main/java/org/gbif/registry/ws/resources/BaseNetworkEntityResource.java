@@ -525,7 +525,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
 
-  @GetMapping(value = "{key}/tag")
+  @GetMapping("{key}/tag")
   @Override
   public List<Tag> listTags(@PathVariable("key") UUID targetEntityKey, @RequestParam(value = "owner", required = false) String owner) {
     return withMyBatis.listTags(mapper, targetEntityKey, owner);
@@ -539,19 +539,15 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param contact         Contact to add
    * @return key of Contact created
    */
-  @PostMapping(value = "{key}/contact")
+  @PostMapping("{key}/contact")
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact,
-                        Authentication authentication) {
+  public int addContact(@PathVariable("key") UUID targetEntityKey,
+                        @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) Contact contact) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
-    return addContact(targetEntityKey, contact);
-  }
-
-  @Override
-  public int addContact(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
