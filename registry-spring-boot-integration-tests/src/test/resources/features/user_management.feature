@@ -59,6 +59,17 @@ Feature: User management functionality
       | firstName | Joseph   | 204    |
       | lastName  | Smith    | 204    |
 
+  Scenario Outline: Update user with valid values by admin
+    Given user which is admin with credentials "justadmin" and "welcome"
+    When update user "justadmin" with new <property> "<newValue>" by admin "justadmin"
+    Then response status should be <status>
+    And <property> of user "justadmin" was updated with new value "<newValue>"
+
+    Scenarios:
+      | property  | newValue | status |
+      | firstName | James    | 204    |
+      | lastName  | White    | 204    |
+
   Scenario: Update user with wrong email by APP role
     When update user "justadmin" with new email "justuser@gbif.org" by APP role "gbif.app.it"
     Then response status should be 422
