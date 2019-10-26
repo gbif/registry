@@ -6,15 +6,21 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.utils.Comments;
 import org.gbif.registry.utils.Contacts;
 import org.gbif.registry.utils.Endpoints;
+import org.gbif.registry.utils.MachineTags;
 import org.gbif.registry.utils.RegistryITUtils;
+import org.gbif.registry.utils.Tags;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -77,6 +83,12 @@ public class NetworkEntityTestSteps {
   private Contact expectedContact;
   private List<Endpoint> endpoints;
   private Endpoint expectedEndpoint;
+  private List<Comment> comments;
+  private Comment expectedComment;
+  private List<MachineTag> machineTags;
+  private MachineTag expectedMachineTag;
+  private List<Tag> tags;
+  private Tag expectedTag;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -308,6 +320,96 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/endpoint", key)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(entityJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("list {word} comments")
+  public void listEntityComments(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        get("/" + entityType + "/{key}/comment", key));
+  }
+
+  @Then("{word} comments list should contain {int} comments")
+  public void checkCommentsList(String entityType, int quantity) throws Exception {
+    String jsonString = result.andReturn().getResponse().getContentAsString();
+    comments = objectMapper.readValue(jsonString, new TypeReference<List<Comment>>() {
+    });
+    assertNotNull(comments);
+    assertThat(comments, hasSize(quantity));
+  }
+
+  @When("add {word} comment to {word}")
+  public void addCommentToEntity(String number, String entityType) throws Exception {
+    expectedComment = Comments.newInstance();
+    String entityJson = objectMapper.writeValueAsString(expectedComment);
+
+    result = mvc
+      .perform(
+        post("/" + entityType + "/{key}/comment", key)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(entityJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("list {word} machine tags")
+  public void listEntityMachineTags(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        get("/" + entityType + "/{key}/machineTag", key));
+  }
+
+  @Then("{word} machine tags list should contain {int} machine tags")
+  public void checkMachineTagsList(String entityType, int quantity) throws Exception {
+    String jsonString = result.andReturn().getResponse().getContentAsString();
+    machineTags = objectMapper.readValue(jsonString, new TypeReference<List<MachineTag>>() {
+    });
+    assertNotNull(machineTags);
+    assertThat(machineTags, hasSize(quantity));
+  }
+
+  @When("add {word} machine tag to {word}")
+  public void addMachineTagToEntity(String number, String entityType) throws Exception {
+    expectedMachineTag = MachineTags.newInstance();
+    String entityJson = objectMapper.writeValueAsString(expectedMachineTag);
+
+    result = mvc
+      .perform(
+        post("/" + entityType + "/{key}/machineTag", key)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(entityJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("list {word} tags")
+  public void listEntityTags(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        get("/" + entityType + "/{key}/tag", key));
+  }
+
+  @Then("{word} tags list should contain {int} tags")
+  public void checkTagsList(String entityType, int quantity) throws Exception {
+    String jsonString = result.andReturn().getResponse().getContentAsString();
+    tags = objectMapper.readValue(jsonString, new TypeReference<List<Tag>>() {
+    });
+    assertNotNull(tags);
+    assertThat(tags, hasSize(quantity));
+  }
+
+  @When("add {word} tag to {word}")
+  public void addTagToEntity(String number, String entityType) throws Exception {
+    expectedTag = Tags.newInstance();
+    String entityJson = objectMapper.writeValueAsString(expectedTag);
+
+    result = mvc
+      .perform(
+        post("/" + entityType + "/{key}/tag", key)
           .with(httpBasic("justadmin", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)

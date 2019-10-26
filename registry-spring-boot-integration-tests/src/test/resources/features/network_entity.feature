@@ -88,3 +88,75 @@ Feature: Network entity functionality
       | dataset      |
       | network      |
       | organization |
+
+  @NetworkEntityComments
+  Scenario Outline: <entity> comments
+    When create new <entity>
+    Then response status should be 201
+    When list <entity> comments
+    Then response status should be 200
+    And <entity> comments list should contain 0 comments
+
+    When add first comment to <entity>
+    Then response status should be 201
+    When add second comment to <entity>
+    Then response status should be 201
+    When list <entity> comments
+    Then response status should be 200
+    And <entity> comments list should contain 2 comments
+
+    Scenarios:
+      | entity       |
+      | installation |
+      | node         |
+      | dataset      |
+      | network      |
+      | organization |
+
+  @NetworkEntityMachineTags
+  Scenario Outline: <entity> machine tags
+    When create new <entity>
+    Then response status should be 201
+    When list <entity> machine tags
+    Then response status should be 200
+    And <entity> machine tags list should contain 0 machine tags
+
+    When add first machine tag to <entity>
+    Then response status should be 201
+    When add second machine tag to <entity>
+    Then response status should be 201
+    When list <entity> machine tags
+    Then response status should be 200
+    And <entity> machine tags list should contain 2 machine tags
+
+    Scenarios:
+      | entity       |
+      | installation |
+      | node         |
+      | dataset      |
+      | network      |
+      | organization |
+
+  @NetworkEntityTags
+  Scenario Outline: <entity> tags
+    When create new <entity>
+    Then response status should be 201
+    When list <entity> tags
+    Then response status should be 200
+    And <entity> tags list should contain 0 tags
+
+    When add first tag to <entity>
+    Then response status should be 201
+    When add second tag to <entity>
+    Then response status should be 201
+    When list <entity> tags
+    Then response status should be 200
+    And <entity> tags list should contain 2 tags
+
+    Scenarios:
+      | entity       |
+      | installation |
+      | node         |
+      | dataset      |
+      | network      |
+      | organization |
