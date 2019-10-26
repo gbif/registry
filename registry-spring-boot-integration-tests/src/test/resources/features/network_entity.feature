@@ -60,8 +60,7 @@ Feature: Network entity functionality
     Scenarios:
       | entity       |
       | installation |
-#      | dataset      |
+      | dataset      |
       | network      |
-#      | node         |
       | organization |
 
