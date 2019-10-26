@@ -64,3 +64,27 @@ Feature: Network entity functionality
       | dataset      |
       | network      |
       | organization |
+
+  @NetworkEntityEndpoints
+  Scenario Outline: <entity> endpoints
+    When create new <entity>
+    Then response status should be 201
+    When list <entity> endpoints
+    Then response status should be 200
+    And <entity> endpoints list should contain 0 endpoints
+
+    When add first endpoint to <entity>
+    Then response status should be 201
+    When add second endpoint to <entity>
+    Then response status should be 201
+    When list <entity> endpoints
+    Then response status should be 200
+    And <entity> endpoints list should contain 2 endpoints
+
+    Scenarios:
+      | entity       |
+      | installation |
+      | node         |
+      | dataset      |
+      | network      |
+      | organization |

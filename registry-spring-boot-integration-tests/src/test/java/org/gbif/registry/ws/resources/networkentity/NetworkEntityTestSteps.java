@@ -8,10 +8,12 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Contacts;
+import org.gbif.registry.utils.Endpoints;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +75,8 @@ public class NetworkEntityTestSteps {
   private Date creationDateBeforeUpdate;
   private List<Contact> contacts;
   private Contact expectedContact;
+  private List<Endpoint> endpoints;
+  private Endpoint expectedEndpoint;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -238,7 +242,7 @@ public class NetworkEntityTestSteps {
   }
 
   @Then("{word} contacts list should contain {int} contacts")
-  public void checkContactsListEmpty(String entityType, int quantity) throws Exception {
+  public void checkContactsList(String entityType, int quantity) throws Exception {
     String jsonString = result.andReturn().getResponse().getContentAsString();
     contacts = objectMapper.readValue(jsonString, new TypeReference<List<Contact>>() {
     });
@@ -278,5 +282,35 @@ public class NetworkEntityTestSteps {
   @Then("{word} contact reflects the original one")
   public void checkEntityContact(String entityType) {
     assertLenientEquals("Created contact does not read as expected", expectedContact, contacts.get(0));
+  }
+
+  @When("list {word} endpoints")
+  public void listEntityEndpoints(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        get("/" + entityType + "/{key}/endpoint", key));
+  }
+
+  @Then("{word} endpoints list should contain {int} endpoints")
+  public void checkEndpointsList(String entityType, int quantity) throws Exception {
+    String jsonString = result.andReturn().getResponse().getContentAsString();
+    endpoints = objectMapper.readValue(jsonString, new TypeReference<List<Endpoint>>() {
+    });
+    assertNotNull(endpoints);
+    assertThat(endpoints, hasSize(quantity));
+  }
+
+  @When("add {word} endpoint to {word}")
+  public void addEndpointToEntity(String number, String entityType) throws Exception {
+    expectedEndpoint = Endpoints.newInstance();
+    String entityJson = objectMapper.writeValueAsString(expectedEndpoint);
+
+    result = mvc
+      .perform(
+        post("/" + entityType + "/{key}/endpoint", key)
+          .with(httpBasic("justadmin", "welcome"))
+          .content(entityJson)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
   }
 }
