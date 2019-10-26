@@ -33,6 +33,7 @@ Feature: Network entity functionality
       | node         |
       | organization |
 
+  # nodes do not support this functionality
   @NetworkEntityContacts
   Scenario Outline: <entity> contacts
     When create new <entity>
@@ -63,4 +64,3 @@ Feature: Network entity functionality
       | dataset      |
       | network      |
       | organization |
-
