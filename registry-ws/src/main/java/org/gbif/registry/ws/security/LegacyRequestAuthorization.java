@@ -55,6 +55,7 @@ public class LegacyRequestAuthorization implements SecurityContext {
   /**
    * Evaluates the Basic authentication header and verifies provided password matches with the registered one.
    * Checks both for organizations and installation keys.
+   *
    * @return the registry entity this request has authenticated with
    */
   private UUID authenticateUser(HttpContext httpContext) {
@@ -110,7 +111,6 @@ public class LegacyRequestAuthorization implements SecurityContext {
    * form parameters.
    *
    * @return true if the HTTP request is authorized to modify Organization
-   *
    * @see LegacyRequestAuthorization#isAuthorizedToModifyOrganization(UUID)
    */
   public boolean isAuthorizedToModifyOrganization() {
@@ -162,7 +162,6 @@ public class LegacyRequestAuthorization implements SecurityContext {
    * been supplied.
    *
    * @param datasetKey Dataset key
-   *
    * @return true if the HTTP request is authorized to modify a Dataset belonging to Organization
    */
   public boolean isAuthorizedToModifyOrganizationsDataset(UUID datasetKey) {
@@ -200,7 +199,6 @@ public class LegacyRequestAuthorization implements SecurityContext {
    * Determine if HTTP request is authorized to modify Installation.
    *
    * @param installationKey Installation key
-   *
    * @return true if the HTTP request is authorized to modify Installation
    */
   public boolean isAuthorizedToModifyInstallation(UUID installationKey) {
@@ -231,7 +229,7 @@ public class LegacyRequestAuthorization implements SecurityContext {
   @Override
   public String getAuthenticationScheme() {
     return SecurityContext.BASIC_AUTH;
- }
+  }
 
   public UUID getUserKey() {
     return userKey;

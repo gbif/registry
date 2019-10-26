@@ -40,7 +40,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
 
   @Inject
   public LegacyAuthorizationFilter(InstallationService installationService, OrganizationService organizationService,
-    DatasetService datasetService) {
+                                   DatasetService datasetService) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
@@ -64,8 +64,8 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
       }
       // is it a POST, PUT, DELETE request requiring authorization?
       else if ("POST".equalsIgnoreCase(request.getMethod())
-               || "PUT".equalsIgnoreCase(request.getMethod())
-               || "DELETE".equalsIgnoreCase(request.getMethod())){
+        || "PUT".equalsIgnoreCase(request.getMethod())
+        || "DELETE".equalsIgnoreCase(request.getMethod())) {
         // legacy installation request
         if (path.contains("/ipt")) {
           // register installation?
@@ -121,14 +121,13 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
   private LegacyRequestAuthorization newAuthorization() {
     return new LegacyRequestAuthorization(httpContext, organizationService, datasetService, installationService);
   }
+
   /**
    * Authorize request can make a change to an organization, setting the request security context specifying the
    * principal provider. Called for example, when adding a new dataset.
    *
    * @param request request
-   *
    * @return request
-   *
    * @throws WebApplicationException if request isn't authorized
    */
   private ContainerRequest authorizeOrganizationChange(ContainerRequest request) throws WebApplicationException {
@@ -148,9 +147,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    * principal provider. Called for example, when verifying the credentials are correct for an organization.
    *
    * @param organizationKey organization key
-   *
    * @return request
-   *
    * @throws WebApplicationException if request isn't authorized
    */
   private ContainerRequest authorizeOrganizationChange(UUID organizationKey, ContainerRequest request)
@@ -171,9 +168,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    *
    * @param request    request
    * @param datasetKey dataset key
-   *
    * @return request
-   *
    * @throws WebApplicationException if request isn't authorized
    */
   private ContainerRequest authorizeOrganizationDatasetChange(ContainerRequest request, UUID datasetKey)
@@ -192,10 +187,9 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    * Authorize request can make a change to an installation, setting the request security context specifying the
    * principal provider. Called for example, when adding a new dataset.
    *
-   * @param request request
+   * @param request         request
    * @param installationKey installation key
    * @return request
-   *
    * @throws WebApplicationException if request isn't authorized
    */
   private ContainerRequest authorizeInstallationChange(ContainerRequest request, UUID installationKey) throws WebApplicationException {
@@ -214,9 +208,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    * Ensure any trailing .json for example is removed.
    *
    * @param request request
-   *
    * @return dataset key
-   *
    * @throws WebApplicationException if incoming string key isn't a valid UUID
    */
   private UUID retrieveKeyFromRequestPath(ContainerRequest request) throws WebApplicationException {
@@ -236,9 +228,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    * Retrieve dataset key from form parameters.
    *
    * @param request request
-   *
    * @return dataset key
-   *
    * @throws WebApplicationException if incoming string key isn't a valid UUID
    */
   private UUID retrieveDatasetKeyFromFormParameters(ContainerRequest request) throws WebApplicationException {
@@ -255,9 +245,7 @@ public class LegacyAuthorizationFilter implements ContainerRequestFilter {
    * Retrieve dataset key from query parameters.
    *
    * @param request request
-   *
    * @return dataset key
-   *
    * @throws WebApplicationException if incoming string key isn't a valid UUID
    */
   private UUID retrieveDatasetKeyFromQueryParameters(ContainerRequest request) throws WebApplicationException {

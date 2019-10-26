@@ -6,7 +6,8 @@ package org.gbif.registry.ws.security;
  */
 public class UserRoles {
 
-  private UserRoles(){}
+  private UserRoles() {
+  }
 
   // UserRole.REGISTRY_ADMIN.name();
   public static final String ADMIN_ROLE = "REGISTRY_ADMIN";
