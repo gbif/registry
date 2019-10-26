@@ -13,7 +13,8 @@ import javax.annotation.Nullable;
  */
 public class UserUpdateRulesManager {
 
-  private UserUpdateRulesManager(){}
+  private UserUpdateRulesManager() {
+  }
 
   /**
    * Apply updates contained in {@link UserUpdate} to {@link GbifUser}.
@@ -35,12 +36,12 @@ public class UserUpdateRulesManager {
     user.setEmail(userUpdate.getEmail());
     user.setSettings(userUpdate.getSettings());
 
-    if(isAdmin) {
+    if (isAdmin) {
       user.setRoles(userUpdate.getRoles());
       user.setDeleted(userUpdate.getDeleted());
     }
 
-    if(fromTrustedApp || isAdmin) {
+    if (fromTrustedApp || isAdmin) {
       user.setSystemSettings(userUpdate.getSystemSettings());
     }
     return user;
@@ -48,6 +49,7 @@ public class UserUpdateRulesManager {
 
   /**
    * Create a {@link GbifUser} from a {@link UserCreation}.
+   *
    * @param userCreate
    * @return
    */
