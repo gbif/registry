@@ -1,10 +1,10 @@
 package org.gbif.registry.persistence.mapper.handler;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
-import org.codehaus.jackson.map.DeserializationConfig.Feature;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 
 import java.sql.CallableStatement;
@@ -18,7 +18,8 @@ import java.sql.Types;
  */
 public class PredicateTypeHandler implements TypeHandler<Predicate> {
 
-  private final ObjectMapper objectMapper = new ObjectMapper().configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  private final ObjectMapper objectMapper = new ObjectMapper()
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   @Override
   public Predicate getResult(CallableStatement cs, int columnIndex) throws SQLException {

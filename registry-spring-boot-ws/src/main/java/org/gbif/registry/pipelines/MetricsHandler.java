@@ -1,13 +1,13 @@
 package org.gbif.registry.pipelines;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.StepType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,76 +32,76 @@ public class MetricsHandler {
   private static final String UNIQUE_NAME_AGG = "unique_name";
   private static final String MAX_VALUE_AGG = "max_value";
   private static final String METRIC_QUERY_TEMPLATE =
-      "{"
-          + "  \"size\": 0,"
-          + "  \"query\": {"
-          + "    \"bool\": {"
-          + "      \"must\": ["
-          + "        {"
-          + "          \"range\": {"
-          + "            \"@timestamp\": {"
-          + "              \"gte\": \"%s\""
-          + "            }"
-          + "          }"
-          + "        },"
-          + "        {"
-          + "          \"match\": {"
-          + "            \"datasetId\": {"
-          + "              \"query\": \"%s\""
-          + "            }"
-          + "          }"
-          + "        },"
-          + "        {"
-          + "          \"match\": {"
-          + "            \"attempt\": {"
-          + "              \"query\": \"%s\""
-          + "            }"
-          + "          }"
-          + "        },"
-          + "        {"
-          + "          \"match\": {"
-          + "            \"step\": {"
-          + "              \"query\": \"%s\""
-          + "            }"
-          + "          }"
-          + "        },"
-          + "        {"
-          + "          \"match\": {"
-          + "            \"type\": {"
-          + "              \"query\": \"GAUGE\""
-          + "            }"
-          + "          }"
-          + "        },"
-          + "        {"
-          + "          \"match_phrase_prefix\": {"
-          + "            \"name\": {"
-          + "              \"query\": \"driver.PipelinesOptionsFactory\""
-          + "            }"
-          + "          }"
-          + "        }"
-          + "      ]"
-          + "    }"
-          + "  },"
-          + "  \"aggregations\": {"
-          + "    \""
-          + UNIQUE_NAME_AGG
-          + "\": {"
-          + "      \"terms\": {"
-          + "        \"field\": \"name.keyword\","
-          + "        \"size\": 10"
-          + "      },"
-          + "      \"aggregations\": {"
-          + "        \""
-          + MAX_VALUE_AGG
-          + "\": {"
-          + "          \"max\": {"
-          + "            \"field\": \"value\""
-          + "          }"
-          + "        }"
-          + "      }"
-          + "    }"
-          + "  }"
-          + "}";
+    "{"
+      + "  \"size\": 0,"
+      + "  \"query\": {"
+      + "    \"bool\": {"
+      + "      \"must\": ["
+      + "        {"
+      + "          \"range\": {"
+      + "            \"@timestamp\": {"
+      + "              \"gte\": \"%s\""
+      + "            }"
+      + "          }"
+      + "        },"
+      + "        {"
+      + "          \"match\": {"
+      + "            \"datasetId\": {"
+      + "              \"query\": \"%s\""
+      + "            }"
+      + "          }"
+      + "        },"
+      + "        {"
+      + "          \"match\": {"
+      + "            \"attempt\": {"
+      + "              \"query\": \"%s\""
+      + "            }"
+      + "          }"
+      + "        },"
+      + "        {"
+      + "          \"match\": {"
+      + "            \"step\": {"
+      + "              \"query\": \"%s\""
+      + "            }"
+      + "          }"
+      + "        },"
+      + "        {"
+      + "          \"match\": {"
+      + "            \"type\": {"
+      + "              \"query\": \"GAUGE\""
+      + "            }"
+      + "          }"
+      + "        },"
+      + "        {"
+      + "          \"match_phrase_prefix\": {"
+      + "            \"name\": {"
+      + "              \"query\": \"driver.PipelinesOptionsFactory\""
+      + "            }"
+      + "          }"
+      + "        }"
+      + "      ]"
+      + "    }"
+      + "  },"
+      + "  \"aggregations\": {"
+      + "    \""
+      + UNIQUE_NAME_AGG
+      + "\": {"
+      + "      \"terms\": {"
+      + "        \"field\": \"name.keyword\","
+      + "        \"size\": 10"
+      + "      },"
+      + "      \"aggregations\": {"
+      + "        \""
+      + MAX_VALUE_AGG
+      + "\": {"
+      + "          \"max\": {"
+      + "            \"field\": \"value\""
+      + "          }"
+      + "        }"
+      + "      }"
+      + "    }"
+      + "  }"
+      + "}";
 
   private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("00");
   private static final MediaType JSON = MediaType.parse("application/json");
@@ -119,31 +119,31 @@ public class MetricsHandler {
   }
 
   public Set<MetricInfo> getMetricInfo(
-      UUID datasetKey,
-      int attempt,
-      StepType stepType,
-      LocalDateTime startedDate,
-      LocalDateTime finishedTime) {
+    UUID datasetKey,
+    int attempt,
+    StepType stepType,
+    LocalDateTime startedDate,
+    LocalDateTime finishedTime) {
 
     RequestBody body =
-        RequestBody.create(
-            JSON,
-            String.format(
-                METRIC_QUERY_TEMPLATE, startedDate, datasetKey, attempt, stepType.name()));
+      RequestBody.create(
+        JSON,
+        String.format(
+          METRIC_QUERY_TEMPLATE, startedDate, datasetKey, attempt, stepType.name()));
 
     Request request =
-        new Request.Builder().url(getIndexUrl(startedDate, finishedTime)).post(body).build();
+      new Request.Builder().url(getIndexUrl(startedDate, finishedTime)).post(body).build();
 
     try {
       return parseResponse(client.newCall(request).execute().body().string());
     } catch (Exception e) {
       LOG.warn(
-          "Couldn't get metrics from ES for dataset {}, attempt {}, step {} and started date {}",
-          datasetKey,
-          attempt,
-          stepType,
-          startedDate,
-          e);
+        "Couldn't get metrics from ES for dataset {}, attempt {}, step {} and started date {}",
+        datasetKey,
+        attempt,
+        stepType,
+        startedDate,
+        e);
     }
 
     return Collections.emptySet();
@@ -151,15 +151,15 @@ public class MetricsHandler {
 
   private String getIndexUrl(LocalDateTime startedDate, LocalDateTime finishedTime) {
     StringBuilder url =
-        new StringBuilder(esHost).append("/").append(env).append("-pipeline-metric-");
+      new StringBuilder(esHost).append("/").append(env).append("-pipeline-metric-");
     url.append(startedDate.getYear()).append(".");
 
     if (startedDate.getMonthValue() == finishedTime.getMonthValue()) {
       url.append(DECIMAL_FORMAT.format(startedDate.getMonthValue())).append(".");
       url.append(
-          startedDate.getDayOfMonth() == finishedTime.getDayOfMonth()
-              ? DECIMAL_FORMAT.format(startedDate.getDayOfMonth())
-              : "*");
+        startedDate.getDayOfMonth() == finishedTime.getDayOfMonth()
+          ? DECIMAL_FORMAT.format(startedDate.getDayOfMonth())
+          : "*");
     } else {
       url.append("*");
     }
@@ -186,7 +186,7 @@ public class MetricsHandler {
       String key = bucket.get("key").asText();
 
       String metricName =
-          key.substring(key.indexOf(METRIC_NAME_FILTER) + METRIC_NAME_FILTER.length());
+        key.substring(key.indexOf(METRIC_NAME_FILTER) + METRIC_NAME_FILTER.length());
       if (Strings.isNullOrEmpty(metricName)) {
         continue;
       }

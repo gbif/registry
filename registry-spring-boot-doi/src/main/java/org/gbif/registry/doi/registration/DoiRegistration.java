@@ -1,9 +1,9 @@
 package org.gbif.registry.doi.registration;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.doi.DoiType;
 
@@ -15,8 +15,8 @@ import javax.annotation.Nullable;
  */
 public class DoiRegistration {
 
-  @JsonSerialize(using = DOI.Serializer.class)
-  @JsonDeserialize(using = DOI.Deserializer.class)
+  @JsonSerialize(using = DOI.Jackson2Serializer.class)
+  @JsonDeserialize(using = DOI.Jackson2Deserializer.class)
   @Nullable
   private DOI doi;
 
