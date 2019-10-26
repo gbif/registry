@@ -182,7 +182,7 @@ public class UserManagementTestSteps {
   @Then("returned user {string} is valid")
   public void checkReturnedUser(String username) throws Exception {
     result
-      .andExpect(jsonPath("$.user.userName").value(username))
+      .andExpect(jsonPath("$.userName").value(username))
       .andExpect(jsonPath("$.error").doesNotExist());
   }
 
