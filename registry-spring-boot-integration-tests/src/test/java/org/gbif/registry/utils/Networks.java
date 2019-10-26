@@ -1,6 +1,6 @@
 package org.gbif.registry.utils;
 
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.gbif.api.model.registry.Network;
 import org.hibernate.validator.HibernateValidator;
 import org.junit.Test;
