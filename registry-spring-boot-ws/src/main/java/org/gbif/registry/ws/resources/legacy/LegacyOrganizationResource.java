@@ -1,9 +1,9 @@
 package org.gbif.registry.ws.resources.legacy;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
-import org.codehaus.jackson.map.util.JSONPObject;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -97,10 +97,10 @@ public class LegacyOrganizationResource {
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
   @GetMapping(value = "{key}",
-      consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-          "application/x-javascript", "application/javascript"},
-      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE,
-          "application/x-javascript", "application/javascriptx-javascript"})
+    consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+      "application/x-javascript", "application/javascript"},
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE,
+      "application/x-javascript", "application/javascriptx-javascript"})
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
                                 @RequestParam("callback") String callback,
                                 @RequestParam("op") String op) {
@@ -108,9 +108,9 @@ public class LegacyOrganizationResource {
     // incoming path parameter for organization key required
     if (organisationKey == null) {
       return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
-          .cacheControl(CacheControl.noCache())
-          .build();
+        .status(HttpStatus.BAD_REQUEST)
+        .cacheControl(CacheControl.noCache())
+        .build();
     }
     LOG.info("Get Organization with key={}", organisationKey.toString());
 
@@ -118,9 +118,9 @@ public class LegacyOrganizationResource {
     if (organization == null) {
       // the organization didn't exist, and expected response is "{Error: "No organisation matches the key provided}"
       return ResponseEntity
-          .status(HttpStatus.OK)
-          .cacheControl(CacheControl.noCache())
-          .body(new ErrorResponse("No organisation matches the key provided"));
+        .status(HttpStatus.OK)
+        .cacheControl(CacheControl.noCache())
+        .body(new ErrorResponse("No organisation matches the key provided"));
     }
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -134,14 +134,14 @@ public class LegacyOrganizationResource {
         if (!organisationKey.equals(authKey)) {
           LOG.error("Authorization failed for organization with key={}", organisationKey.toString());
           return ResponseEntity
-              .status(HttpStatus.UNAUTHORIZED)
-              .cacheControl(CacheControl.noCache())
-              .build();
-        }
-        return ResponseEntity
-            .status(HttpStatus.OK)
+            .status(HttpStatus.UNAUTHORIZED)
             .cacheControl(CacheControl.noCache())
             .build();
+        }
+        return ResponseEntity
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .build();
       }
       // ?op=password
       // Email a password reminder to organization's primary contact, and notify requester of success in response
@@ -152,9 +152,9 @@ public class LegacyOrganizationResource {
         if (emailAddress == null) {
           LOG.error("Password reminder failed: organization primary contact has no email address");
           return ResponseEntity
-              .status(HttpStatus.INTERNAL_SERVER_ERROR)
-              .cacheControl(CacheControl.noCache())
-              .body(new ErrorResponse("Password reminder failed: organization primary contact has no email address"));
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .cacheControl(CacheControl.noCache())
+            .body(new ErrorResponse("Password reminder failed: organization primary contact has no email address"));
         } else {
           try {
             Email email = new SimpleEmail();
@@ -176,16 +176,16 @@ public class LegacyOrganizationResource {
           } catch (EmailException e) {
             LOG.error("Password reminder failed", e);
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(MediaType.APPLICATION_JSON)
-                .cacheControl(CacheControl.noCache())
-                .body(new ErrorResponse("Password reminder failed: " + e.getMessage()));
+              .status(HttpStatus.INTERNAL_SERVER_ERROR)
+              .contentType(MediaType.APPLICATION_JSON)
+              .cacheControl(CacheControl.noCache())
+              .body(new ErrorResponse("Password reminder failed: " + e.getMessage()));
           }
           LOG.debug("Password reminder sent to: {}", emailAddress);
           return ResponseEntity
-              .status(HttpStatus.OK)
-              .cacheControl(CacheControl.noCache())
-              .body("<html><body><b>The password reminder was sent successfully to the email: </b>" + emailAddress + "</body></html>");
+            .status(HttpStatus.OK)
+            .cacheControl(CacheControl.noCache())
+            .body("<html><body><b>The password reminder was sent successfully to the email: </b>" + emailAddress + "</body></html>");
         }
       }
     }
@@ -203,9 +203,9 @@ public class LegacyOrganizationResource {
     // simple read?
     else {
       return ResponseEntity
-          .status(HttpStatus.OK)
-          .cacheControl(CacheControl.noCache())
-          .body(org);
+        .status(HttpStatus.OK)
+        .cacheControl(CacheControl.noCache())
+        .body(org);
     }
   }
 
@@ -223,11 +223,11 @@ public class LegacyOrganizationResource {
     // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
     // writer for Java class java.util.ArrayList
     LegacyOrganizationBriefResponse[] array =
-        organizations.toArray(new LegacyOrganizationBriefResponse[organizations.size()]);
+      organizations.toArray(new LegacyOrganizationBriefResponse[organizations.size()]);
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .cacheControl(CacheControl.noCache())
-        .body(array);
+      .status(HttpStatus.OK)
+      .cacheControl(CacheControl.noCache())
+      .body(array);
   }
 
   /**

@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.model;
 
-import org.codehaus.jackson.annotate.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import org.gbif.api.model.common.GbifUser;
 
 /**
