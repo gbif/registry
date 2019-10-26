@@ -231,26 +231,19 @@ public class NetworkEntityTestSteps {
   }
 
   @When("list {word} contacts")
-  public void listEntityContacts(String entityType) {
-    try {
-      result = mvc
-        .perform(
-          get("/" + entityType + "/{key}/contact", key));
-    } catch (Exception e) {
-      // TODO: 25/10/2019 for 'node' case
-    }
+  public void listEntityContacts(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        get("/" + entityType + "/{key}/contact", key));
   }
 
   @Then("{word} contacts list should contain {int} contacts")
   public void checkContactsListEmpty(String entityType, int quantity) throws Exception {
-    if (entityType.equals("node")) {
-      // TODO: 25/10/2019 node returns 201 instead of 200 for some reason
-    } else {
-      String jsonString = result.andReturn().getResponse().getContentAsString();
-      contacts = objectMapper.readValue(jsonString, new TypeReference<List<Contact>>() {});
-      assertNotNull(contacts);
-      assertThat(contacts, hasSize(quantity));
-    }
+    String jsonString = result.andReturn().getResponse().getContentAsString();
+    contacts = objectMapper.readValue(jsonString, new TypeReference<List<Contact>>() {
+    });
+    assertNotNull(contacts);
+    assertThat(contacts, hasSize(quantity));
   }
 
   @Then("only second contact is primary")
@@ -273,6 +266,7 @@ public class NetworkEntityTestSteps {
           .contentType(MediaType.APPLICATION_JSON));
   }
 
+  // TODO: 26/10/2019 add update contact case
   @When("delete {word} contact")
   public void deleteContact(String entityType) throws Exception {
     result = mvc
