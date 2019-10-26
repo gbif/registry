@@ -39,9 +39,23 @@ Feature: Network entity functionality
     Then response status should be 201
     When list <entity> contacts
     Then response status should be 200
-    And <entity> contacts list should be empty
-    When add contact to <entity>
+    And <entity> contacts list should contain 0 contacts
+
+    When add first contact to <entity>
     Then response status should be 201
+    When add second contact to <entity>
+    Then response status should be 201
+    When list <entity> contacts
+    Then response status should be 200
+    And <entity> contacts list should contain 2 contacts
+    And only second contact is primary
+
+    When delete <entity> contact
+    Then response status should be 200
+    When list <entity> contacts
+    Then response status should be 200
+    And <entity> contacts list should contain 1 contacts
+    And <entity> contact reflects the original one
 
     Scenarios:
       | entity       |

@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.networkentity;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -35,9 +36,12 @@ import java.util.UUID;
 
 import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
 import static org.gbif.registry.ws.resources.networkentity.NetworkEntityProvider.ENTITIES;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -67,6 +71,8 @@ public class NetworkEntityTestSteps {
   private String key;
   private Date modificationDateBeforeUpdate;
   private Date creationDateBeforeUpdate;
+  private List<Contact> contacts;
+  private Contact expectedContact;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -235,23 +241,28 @@ public class NetworkEntityTestSteps {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Then("{word} contacts list should be empty")
-  public void checkContactsListEmpty(String entityType) throws Exception {
+  @Then("{word} contacts list should contain {int} contacts")
+  public void checkContactsListEmpty(String entityType, int quantity) throws Exception {
     if (entityType.equals("node")) {
       // TODO: 25/10/2019 node returns 201 instead of 200 for some reason
     } else {
-      List<Contact> contacts = (List<Contact>) objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), List.class);
-
-      assertNotNull("Contact list should be empty, not null when no contacts exist", contacts);
-      assertTrue("Contact should be empty when none added", contacts.isEmpty());
+      String jsonString = result.andReturn().getResponse().getContentAsString();
+      contacts = objectMapper.readValue(jsonString, new TypeReference<List<Contact>>() {});
+      assertNotNull(contacts);
+      assertThat(contacts, hasSize(quantity));
     }
   }
 
-  @When("add contact to {word}")
-  public void addContactToEntity(String entityType) throws Exception {
-    Contact contact = Contacts.newInstance();
-    String entityJson = objectMapper.writeValueAsString(contact);
+  @Then("only second contact is primary")
+  public void checkSecondContactIsPrimary() {
+    assertFalse("Older contact (added first) should not be primary anymore", contacts.get(0).isPrimary());
+    assertTrue("Newer contact (added second) should now be primary", contacts.get(1).isPrimary());
+  }
+
+  @When("add {word} contact to {word}")
+  public void addContactToEntity(String number, String entityType) throws Exception {
+    expectedContact = Contacts.newInstance();
+    String entityJson = objectMapper.writeValueAsString(expectedContact);
 
     result = mvc
       .perform(
@@ -260,5 +271,18 @@ public class NetworkEntityTestSteps {
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("delete {word} contact")
+  public void deleteContact(String entityType) throws Exception {
+    result = mvc
+      .perform(
+        delete("/" + entityType + "/{key}/contact/{contactKey}", key, contacts.get(0).getKey())
+          .with(httpBasic("justadmin", "welcome")));
+  }
+
+  @Then("{word} contact reflects the original one")
+  public void checkEntityContact(String entityType) {
+    assertLenientEquals("Created contact does not read as expected", expectedContact, contacts.get(0));
   }
 }
