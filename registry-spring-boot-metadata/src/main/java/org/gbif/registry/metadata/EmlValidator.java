@@ -50,11 +50,7 @@ public class EmlValidator {
    */
   public void validate(String emlAsString) throws InvalidEmlException {
     StreamSource streamSource = toSourceStream(emlAsString);
-    if (streamSource != null) {
-      validate(streamSource);
-    } else {
-      throw new InvalidEmlException("Can't create StreamSource");
-    }
+    validate(streamSource);
   }
 
   /**
