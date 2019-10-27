@@ -24,10 +24,11 @@ public class PredicateGeometryPointCounterTest {
   /**
    * test all available search parameters and make sure we have a bundle entry for all possible enum values
    */
+  @SuppressWarnings("unchecked")
   @Test
   public void testAllParams() {
 
-    final String date = DateFormatUtils.ISO_DATE_FORMAT.format(new Date());
+    final String date = DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date());
     List<Predicate> ands = Lists.newArrayList();
     for (OccurrenceSearchParameter p : OccurrenceSearchParameter.values()) {
       if (p.type().isEnum()) {
@@ -82,11 +83,11 @@ public class PredicateGeometryPointCounterTest {
   @Test
   public void testPolygons() {
     int c = counter.count(
-        new DisjunctionPredicate(Lists.newArrayList(
-            new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"),
-            new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 30 10))")
-        )
-        ));
+      new DisjunctionPredicate(Lists.newArrayList(
+        new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"),
+        new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 30 10))")
+      )
+      ));
     assertEquals(9, c);
   }
 

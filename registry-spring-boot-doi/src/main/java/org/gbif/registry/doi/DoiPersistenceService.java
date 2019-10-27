@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
-// TODO: 2019-06-28 unify approach
 /**
  * DOI data access object.
  */
