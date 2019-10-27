@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -93,21 +94,21 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
   public String encode(final String password, String preEncoded) {
     // The first 12 characters of an existing hash are its setting string.
     preEncoded = preEncoded.substring(0, 12);
-    int count_log2 = passwordGetCountLog2(preEncoded);
+    int countLog2 = passwordGetCountLog2(preEncoded);
     String salt = preEncoded.substring(4, 12);
     // Hashes must have an 8 character salt.
     if (salt.length() != 8) {
       return null;
     }
 
-    int count = 1 << count_log2;
+    int count = 1 << countLog2;
 
     byte[] hash;
     try {
       hash = sha512(salt.concat(password));
 
       do {
-        hash = sha512(joinBytes(hash, password.getBytes("UTF-8")));
+        hash = sha512(joinBytes(hash, password.getBytes(StandardCharsets.UTF_8)));
       } while (--count > 0);
     } catch (Exception e) {
       LOG.error("Unable to encode the password", e);

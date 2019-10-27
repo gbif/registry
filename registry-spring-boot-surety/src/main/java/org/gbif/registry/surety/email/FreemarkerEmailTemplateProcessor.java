@@ -6,6 +6,7 @@ import freemarker.template.TemplateException;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -24,7 +25,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
   private static final Configuration FREEMARKER_CONFIG = new Configuration(VERSION_2_3_25);
 
   static {
-    FREEMARKER_CONFIG.setDefaultEncoding("UTF-8");
+    FREEMARKER_CONFIG.setDefaultEncoding(StandardCharsets.UTF_8.name());
     FREEMARKER_CONFIG.setLocale(Locale.US);
     FREEMARKER_CONFIG.setNumberFormat("0.####");
     FREEMARKER_CONFIG.setDateFormat("yyyy-mm-dd");
