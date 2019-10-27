@@ -31,9 +31,8 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   private static final Logger LOG = LoggerFactory.getLogger(DoiUpdateListener.class);
   private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
-  // TODO: 2019-06-21 use properties?
   private static final int MAX_RETRY = 4;
-  private final long timeToRetryInMs = 1000;
+  private static final long TIME_TO_RETRY_IN_MS = 1000;
 
   private DoiService doiService;
   private DoiPersistenceService doiMapper;
@@ -88,10 +87,10 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         // 413 Request Entity Too Large
         if (e.getStatus() == 413) {
           LOG.warn(DOI_SMTP, "Metadata of length {} is exceeding max datacite limit in attempt #{} "
-                  + "while updating {} to {} with target {}. "
-                  + "Trying again {}",
-              msg.getMetadata().length(), retry, msg.getDoi(), msg.getStatus(), msg.getTarget(),
-              descriptionTruncated ? "without constituent information" : "with truncated description", e);
+              + "while updating {} to {} with target {}. "
+              + "Trying again {}",
+            msg.getMetadata().length(), retry, msg.getDoi(), msg.getStatus(), msg.getTarget(),
+            descriptionTruncated ? "without constituent information" : "with truncated description", e);
           try {
             String truncatedXml;
             if (descriptionTruncated) {
@@ -108,14 +107,14 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
           }
         } else {
           LOG.warn(DOI_SMTP, "DOI http {} exception updating {} to {} with target {}. Attempt #{}",
-              e.getStatus(), msg.getDoi(), msg.getStatus(), msg.getTarget(), retry, e);
+            e.getStatus(), msg.getDoi(), msg.getStatus(), msg.getTarget(), retry, e);
           sleep();
         }
 
       } catch (DoiException e) {
         writeFailedStatus(msg.getDoi(), msg.getTarget(), msg.getMetadata());
         LOG.warn(DOI_SMTP, "DOI exception updating {} to {} with target {}. Attempt #{}",
-            msg.getDoi(), msg.getStatus(), msg.getTarget(), retry, e);
+          msg.getDoi(), msg.getStatus(), msg.getTarget(), retry, e);
         sleep();
       }
     }
@@ -124,7 +123,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   // sleep for some time
   private void sleep() {
     try {
-      Thread.sleep(timeToRetryInMs);
+      Thread.sleep(TIME_TO_RETRY_IN_MS);
     } catch (InterruptedException e1) {
       LOG.info("Interrupted retries");
     }
@@ -133,9 +132,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   /**
    * Update the DOI in the database with 'failed' status.
    *
-   * @param doi Digital Object Identifier
+   * @param doi    Digital Object Identifier
    * @param target target URL
-   * @param xml XML metadata
+   * @param xml    XML metadata
    */
   private void writeFailedStatus(DOI doi, URI target, String xml) {
     doiMapper.update(doi, new DoiData(DoiStatus.FAILED, target), xml);
@@ -144,8 +143,8 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   /**
    * Reserve the DOI with DOI Service (DataCite).
    *
-   * @param doi Digital Object Identifier
-   * @param xml XML metadata
+   * @param doi       Digital Object Identifier
+   * @param xml       XML metadata
    * @param currState current DOI state in DB
    */
   private void reserve(DOI doi, String xml, DoiData currState) throws DoiException {
@@ -158,7 +157,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   /**
    * Delete the DOI with DOI Service (DataCite).
    *
-   * @param doi Digital Object Identifier
+   * @param doi       Digital Object Identifier
    * @param currState current state of the DOI in the database
    */
   private void delete(DOI doi, DoiData currState) throws DoiException {
@@ -178,9 +177,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
   /**
    * Register or Update the DOI with the DOI Service (DataCite).
    *
-   * @param doi Digital Object Identifier
-   * @param target target URL
-   * @param xml XML metadata
+   * @param doi       Digital Object Identifier
+   * @param target    target URL
+   * @param xml       XML metadata
    * @param currState current state of the DOI in the database
    */
   private void registerOrUpdate(DOI doi, URI target, String xml, DoiData currState) throws DoiException {
@@ -222,10 +221,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * If the DOI already exist it will try an update.
    * If any error occurs it will be logged and the will method with false.
    *
-   * @param doi Digital Object Identifier
+   * @param doi    Digital Object Identifier
    * @param target target URL
-   * @param xml XML metadata
-   *
+   * @param xml    XML metadata
    * @return true if this method is able to retry the registration/update, false otherwise
    */
   private boolean retryRegisterOrUpdate(DOI doi, URI target, String xml) throws DoiException {
