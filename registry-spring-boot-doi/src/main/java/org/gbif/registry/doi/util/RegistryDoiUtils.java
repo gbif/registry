@@ -12,7 +12,7 @@ public final class RegistryDoiUtils {
   }
 
   public static String fdate(Date date) {
-    return DateFormatUtils.ISO_DATE_FORMAT.format(date);
+    return DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(date);
   }
 
   public static String getYear(Date date) {

@@ -63,7 +63,7 @@ public class CustomDownloadDataCiteConverterTest {
     String creatorName = properties.getProperty("creatorName");
     String creatorUserId = properties.getProperty("creatorUserId");
     Calendar createdDate = Calendar.getInstance();
-    createdDate.setTime(DateFormatUtils.ISO_DATE_FORMAT.parse(properties.getProperty("createdIsoDate")));
+    createdDate.setTime(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.parse(properties.getProperty("createdIsoDate")));
 
     // populate list of used Datasets
     List<DatasetOccurrenceDownloadUsage> usedDatasets = getUsedDatasets();
@@ -79,7 +79,7 @@ public class CustomDownloadDataCiteConverterTest {
 
     // write it to tmp directory
     File output = FileUtils.createTempDir();
-    File xmlFile = new File(output, "custom_download-" + DateFormatUtils.ISO_DATE_FORMAT.format(createdDate) + ".xml");
+    File xmlFile = new File(output, "custom_download-" + DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(createdDate) + ".xml");
     Writer xmlFileWriter = FileUtils.startNewUtf8File(xmlFile);
     xmlFileWriter.write(xml);
     xmlFileWriter.close();

@@ -25,10 +25,11 @@ public class PredicateLookupCounterTest {
   /**
    * test all available search parameters and make sure we have a bundle entry for all possible enum values
    */
+  @SuppressWarnings("unchecked")
   @Test
   public void testAllParams() {
 
-    final String date = DateFormatUtils.ISO_DATE_FORMAT.format(new Date());
+    final String date = DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date());
     List<Predicate> ands = Lists.newArrayList();
     for (OccurrenceSearchParameter p : OccurrenceSearchParameter.values()) {
       if (p.type().isEnum()) {

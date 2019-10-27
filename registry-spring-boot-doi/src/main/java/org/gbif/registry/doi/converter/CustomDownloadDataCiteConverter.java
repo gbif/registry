@@ -114,7 +114,7 @@ public final class CustomDownloadDataCiteConverter {
     descriptionBuilder
         .withDescriptionType(DescriptionType.ABSTRACT)
         .withLang(ENGLISH)
-        .withContent(String.format("A custom GBIF download containing %s records derived from %s datasets:\n",
+        .withContent(String.format("A custom GBIF download containing %s records derived from %s datasets:%n",
             numberRecords, usedDatasets.size()))
         .build();
 
@@ -124,7 +124,7 @@ public final class CustomDownloadDataCiteConverter {
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
         if (!Strings.isNullOrEmpty(du.getDatasetTitle())) {
           descriptionBuilder.addContent(
-              String.format("%s records from %s. %s\n",
+              String.format("%s records from %s. %s%n",
                   du.getNumberRecords(), du.getDatasetTitle(), du.getDatasetDOI().getUrl()));
         }
       }
@@ -164,12 +164,12 @@ public final class CustomDownloadDataCiteConverter {
             .addDate(
                 Dates.Date.builder()
                     .withDateType(DateType.CREATED)
-                    .withValue(DateFormatUtils.ISO_DATE_FORMAT.format(created))
+                    .withValue(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(created))
                     .build())
             .addDate(
                 Dates.Date.builder()
                     .withDateType(DateType.UPDATED)
-                    .withValue(DateFormatUtils.ISO_DATE_FORMAT.format(created))
+                    .withValue(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(created))
                     .build())
             .build());
   }
