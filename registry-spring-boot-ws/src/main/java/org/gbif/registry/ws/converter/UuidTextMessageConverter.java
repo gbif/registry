@@ -8,6 +8,7 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class UuidTextMessageConverter extends AbstractHttpMessageConverter<UUID>
    * '\A' matches the beginning of a string (but not an internal line).
    */
   private static String toString(InputStream inputStream) {
-    final Scanner scanner = new Scanner(inputStream, "UTF-8");
+    final Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name());
     return scanner.useDelimiter("\\A").next();
   }
 }
