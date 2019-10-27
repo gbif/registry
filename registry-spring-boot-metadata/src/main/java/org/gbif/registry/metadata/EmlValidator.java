@@ -1,7 +1,5 @@
 package org.gbif.registry.metadata;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -11,7 +9,7 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * GBIF Metadata Profile schema validator utility.
@@ -19,7 +17,6 @@ import java.io.UnsupportedEncodingException;
 @NotThreadSafe
 public class EmlValidator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(EmlValidator.class);
   private static final String SCHEMA_LANG = "http://www.w3.org/2001/XMLSchema";
 
   private final Validator validator;
@@ -85,12 +82,6 @@ public class EmlValidator {
   }
 
   private StreamSource toSourceStream(String xmlAsString) {
-    try {
-      return new StreamSource(new ByteArrayInputStream(xmlAsString.getBytes("UTF-8")));
-    } catch (UnsupportedEncodingException e) {
-      LOG.error("Can't get UTF-8 bytes from String", e);
-    }
-    return null;
+    return new StreamSource(new ByteArrayInputStream(xmlAsString.getBytes(StandardCharsets.UTF_8)));
   }
-
 }

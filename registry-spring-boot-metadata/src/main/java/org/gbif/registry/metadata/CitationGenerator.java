@@ -8,6 +8,7 @@ import org.gbif.api.vocabulary.ContactType;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -30,10 +31,10 @@ public class CitationGenerator {
   private static final ZoneId UTC = ZoneId.of("UTC");
   private static final ContactType MANDATORY_CONTACT_TYPE = ContactType.ORIGINATOR;
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE = EnumSet.of(ContactType.ORIGINATOR,
-      ContactType.METADATA_AUTHOR);
-  private static final Predicate<Contact> IS_NAME_PROVIDED_FCT = (ctc) -> StringUtils.isNotBlank(ctc.getFirstName()) &&
-      StringUtils.isNotBlank(ctc.getLastName());
-  private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE = (ctc) -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType());
+    ContactType.METADATA_AUTHOR);
+  private static final Predicate<Contact> IS_NAME_PROVIDED_FCT = ctc -> StringUtils.isNotBlank(ctc.getFirstName()) &&
+    StringUtils.isNotBlank(ctc.getLastName());
+  private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE = ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType());
 
   /**
    * Utility class
@@ -95,7 +96,7 @@ public class CitationGenerator {
     // add DOI as the identifier.
     if (dataset.getDoi() != null) {
       try {
-        joiner.add(URLDecoder.decode(dataset.getDoi().getUrl().toString(), "UTF-8"));
+        joiner.add(URLDecoder.decode(dataset.getDoi().getUrl().toString(), StandardCharsets.UTF_8.name()));
       } catch (UnsupportedEncodingException e) {
         throw new IllegalArgumentException("Couldn't decode DOI URL", e);
       }
@@ -123,12 +124,12 @@ public class CitationGenerator {
     }
 
     List<Contact> uniqueContacts = getUniqueAuthors(contacts,
-        (ctc) -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
+      (ctc) -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
 
     // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
     Optional<Contact> firstOriginator = uniqueContacts.stream()
-        .filter(ctc -> MANDATORY_CONTACT_TYPE == ctc.getType())
-        .findFirst();
+      .filter(ctc -> MANDATORY_CONTACT_TYPE == ctc.getType())
+      .findFirst();
 
     if (firstOriginator.isPresent()) {
       return uniqueContacts;
@@ -149,9 +150,9 @@ public class CitationGenerator {
     }
 
     return authors.stream()
-        .filter(IS_NAME_PROVIDED_FCT)
-        .map(CitationGenerator::getAuthorName)
-        .collect(Collectors.toList());
+      .filter(IS_NAME_PROVIDED_FCT)
+      .map(CitationGenerator::getAuthorName)
+      .collect(Collectors.toList());
   }
 
   /**
@@ -185,10 +186,10 @@ public class CitationGenerator {
    * @return
    */
   private static boolean isNotAlreadyInList(final Contact ctc, List<Contact> uniqueContact) {
-    return !uniqueContact.stream()
-        .filter(contact -> StringUtils.equalsIgnoreCase(ctc.getLastName(), contact.getLastName())
-            && StringUtils.equalsIgnoreCase(ctc.getFirstName(), contact.getFirstName()))
-        .findFirst().isPresent();
+    return uniqueContact.stream()
+      .noneMatch(contact ->
+        StringUtils.equalsIgnoreCase(ctc.getLastName(), contact.getLastName())
+          && StringUtils.equalsIgnoreCase(ctc.getFirstName(), contact.getFirstName()));
   }
 
   /**
@@ -211,9 +212,9 @@ public class CitationGenerator {
       String[] names = firstNames.split("\\s+");
 
       sb.append(Arrays.stream(names)
-          .filter(str -> !StringUtils.isBlank(str))
-          .map(str -> StringUtils.upperCase(String.valueOf(str.charAt(0))))
-          .collect(Collectors.joining(" ")));
+        .filter(str -> !StringUtils.isBlank(str))
+        .map(str -> StringUtils.upperCase(String.valueOf(str.charAt(0))))
+        .collect(Collectors.joining(" ")));
     } else if (lastName != null) {
       sb.append(lastName);
     } else if (organization != null) {
