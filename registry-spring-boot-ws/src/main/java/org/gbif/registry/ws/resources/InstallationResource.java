@@ -31,7 +31,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.model.InstallationRequest;
+import org.gbif.registry.ws.model.InstallationRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.Trim;
 import org.slf4j.Logger;
@@ -117,7 +117,7 @@ public class InstallationResource
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Installation> list(@Valid InstallationRequest request, Pageable page) {
+  public PagingResponse<Installation> list(@Valid InstallationRequestSearchParams request, Pageable page) {
     if (request.getType() != null) {
       return listByType(request.getType(), page);
     } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {

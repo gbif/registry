@@ -63,7 +63,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
-import org.gbif.registry.ws.model.DatasetRequest;
+import org.gbif.registry.ws.model.DatasetRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.annotation.NullToNotFound;
@@ -227,7 +227,9 @@ public class DatasetResource
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Dataset> list(@Nullable Country country, @Valid DatasetRequest request, Pageable page) {
+  public PagingResponse<Dataset> list(@Nullable Country country,
+                                      @Valid DatasetRequestSearchParams request,
+                                      Pageable page) {
     if (country == null && request.getType() != null) {
       return listByType(request.getType(), page);
     } else if (country != null) {

@@ -25,7 +25,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.model.NodeRequest;
+import org.gbif.registry.ws.model.NodeRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
@@ -94,7 +94,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Node> list(@Valid NodeRequest request, Pageable page) {
+  public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
     } else if (request.getIdentifier() != null) {

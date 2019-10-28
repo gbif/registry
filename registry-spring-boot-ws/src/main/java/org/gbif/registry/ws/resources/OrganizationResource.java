@@ -27,7 +27,7 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.model.OrganizationRequest;
+import org.gbif.registry.ws.model.OrganizationRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
@@ -203,7 +203,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public PagingResponse<Organization> search(String query, Pageable page) {
-    final OrganizationRequest request = new OrganizationRequest();
+    final OrganizationRequestSearchParams request = new OrganizationRequestSearchParams();
     request.setQ(query);
     return list(null, request, page);
   }
@@ -215,7 +215,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @GetMapping
   public PagingResponse<Organization> list(@Nullable Country country,
-                                           @Valid OrganizationRequest request,
+                                           @Valid OrganizationRequestSearchParams request,
                                            Pageable page) {
     // Hack: Intercept identifier search
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {

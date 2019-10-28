@@ -16,7 +16,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.model.NetworkRequest;
+import org.gbif.registry.ws.model.NetworkRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -71,7 +71,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Network> list(@Valid NetworkRequest request, Pageable page) {
+  public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
     } else if (request.getIdentifier() != null) {
