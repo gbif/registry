@@ -16,7 +16,6 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -28,6 +27,7 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.ws.model.OrganizationRequest;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
@@ -203,7 +203,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public PagingResponse<Organization> search(String query, Pageable page) {
-    return list(null, null, null, null, null, null, null, query, page);
+    final OrganizationRequest request = new OrganizationRequest();
+    request.setQ(query);
+    return list(null, request, page);
   }
 
   /**
@@ -212,40 +214,36 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Organization> list(
-    @Nullable Country country,
-    @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
-    @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-    @Nullable @RequestParam(value = "isEndorsed", required = false) Boolean isEndorsed,
-    @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
-    @Nullable @RequestParam(value = "machineTagName", required = false) String name,
-    @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
-    @Nullable @RequestParam(value = "q", required = false) String query,
-    Pageable page) {
-
+  public PagingResponse<Organization> list(@Nullable Country country,
+                                           @Valid OrganizationRequest request,
+                                           Pageable page) {
     // Hack: Intercept identifier search
-    if (identifierType != null && identifier != null) {
-      return listByIdentifier(identifierType, identifier, page);
-    } else if (identifier != null) {
-      return listByIdentifier(identifier, page);
+    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    } else if (request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifier(), page);
     }
 
     // Intercept machine tag search
-    if (!Strings.isNullOrEmpty(namespace) || !Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(value)) {
-      return listByMachineTag(namespace, name, value, page);
+    if (!Strings.isNullOrEmpty(request.getMachineTagNamespace())
+      || !Strings.isNullOrEmpty(request.getMachineTagName())
+      || !Strings.isNullOrEmpty(request.getMachineTagValue())) {
+      return listByMachineTag(request.getMachineTagNamespace(), request.getMachineTagName(),
+        request.getMachineTagValue(), page);
     }
 
     // short circuited list all
-    if (country == null && isEndorsed == null && Strings.isNullOrEmpty(query)) {
+    if (country == null && request.getIsEndorsed() == null && Strings.isNullOrEmpty(request.getQ())) {
       return list(page);
     }
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query, country and endorsement.
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = organizationMapper.count(query, country, isEndorsed);
+    String query = request.getQ() != null ?
+      Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ())) : request.getQ();
+    long total = organizationMapper.count(query, country, request.getIsEndorsed());
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
-      organizationMapper.search(query, country, isEndorsed, page));
+      organizationMapper.search(query, country, request.getIsEndorsed(), page));
   }
 
   @GetMapping("{key}/hostedDataset")
