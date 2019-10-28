@@ -117,28 +117,20 @@ public class InstallationResource
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Installation> list(
-      @Nullable @RequestParam(value = "type", required = false) InstallationType installationType,
-      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String name,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      Pageable page) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (installationType != null) {
-      return listByType(installationType, page);
-    } else if (identifierType != null && identifier != null) {
-      return listByIdentifier(identifierType, identifier, page);
-    } else if (identifier != null) {
-      return listByIdentifier(identifier, page);
-    } else if (namespace != null) {
-      return listByMachineTag(namespace, name, value, page);
-    } else if (Strings.isNullOrEmpty(query)) {
+  public PagingResponse<Installation> list(@Valid InstallationRequest request, Pageable page) {
+    if (request.getType() != null) {
+      return listByType(request.getType(), page);
+    } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    } else if (request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifier(), page);
+    } else if (request.getMachineTagNamespace() != null) {
+      return listByMachineTag(request.getMachineTagNamespace(),
+        request.getMachineTagName(), request.getMachineTagValue(), page);
+    } else if (Strings.isNullOrEmpty(request.getQ())) {
       return list(page);
     } else {
-      return search(query, page);
+      return search(request.getQ(), page);
     }
   }
 
