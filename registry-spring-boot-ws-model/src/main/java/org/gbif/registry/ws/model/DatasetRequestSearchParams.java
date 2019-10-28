@@ -1,12 +1,13 @@
 package org.gbif.registry.ws.model;
 
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 
 import javax.annotation.Nullable;
 
-public class OrganizationRequest {
+public class DatasetRequestSearchParams {
 
-  private Boolean isEndorsed;
+  private DatasetType type; // datasetType
   private IdentifierType identifierType;
   private String identifier;
   private String machineTagNamespace; // namespace
@@ -15,12 +16,12 @@ public class OrganizationRequest {
   private String q; // query
 
   @Nullable
-  public Boolean getIsEndorsed() {
-    return isEndorsed;
+  public DatasetType getType() {
+    return type;
   }
 
-  public void setIsEndorsed(@Nullable Boolean isEndorsed) {
-    this.isEndorsed = isEndorsed;
+  public void setType(@Nullable DatasetType type) {
+    this.type = type;
   }
 
   @Nullable

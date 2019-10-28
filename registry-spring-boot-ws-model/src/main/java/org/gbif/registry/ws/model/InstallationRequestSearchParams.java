@@ -1,17 +1,28 @@
 package org.gbif.registry.ws.model;
 
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.InstallationType;
 
 import javax.annotation.Nullable;
 
-public class NodeRequest {
+public class InstallationRequestSearchParams {
 
+  private InstallationType type; // installationType
   private IdentifierType identifierType;
   private String identifier;
   private String machineTagNamespace; // namespace
   private String machineTagName; // name
   private String machineTagValue; // value
   private String q; // query
+
+  @Nullable
+  public InstallationType getType() {
+    return type;
+  }
+
+  public void setType(@Nullable InstallationType type) {
+    this.type = type;
+  }
 
   @Nullable
   public IdentifierType getIdentifierType() {

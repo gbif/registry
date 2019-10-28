@@ -4,7 +4,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 
 import javax.annotation.Nullable;
 
-public class NetworkRequest {
+public class NodeRequestSearchParams {
 
   private IdentifierType identifierType;
   private String identifier;
