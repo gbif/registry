@@ -15,17 +15,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 
-@RequestMapping("/user")
+@RequestMapping("user")
 @RestController
 public class UserResource {
 
@@ -42,7 +43,7 @@ public class UserResource {
    *
    * @return the user as {@link LoggedUser}
    */
-  @RequestMapping(value = "/login", method = RequestMethod.GET)
+  @GetMapping("login")
   public ResponseEntity<LoggedUserWithToken> loginGet() {
     // the user shall be authenticated using basic auth. scheme only.
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -52,14 +53,9 @@ public class UserResource {
     return login(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
   }
 
-  @RequestMapping(value = "/login", method = RequestMethod.POST)
+  @PostMapping("login")
   public ResponseEntity<LoggedUserWithToken> loginPost() {
-    // the user shall be authenticated using basic auth scheme only.
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    ensureNotGbifScheme(authentication);
-    ensureUserSetInSecurityContext(authentication);
-
-    return login(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
+    return loginGet();
   }
 
   // only to use in login since it updates the last login
@@ -77,14 +73,14 @@ public class UserResource {
 
     // build response
     LoggedUserWithToken response = LoggedUserWithToken.from(user, token,
-        identityService.listEditorRights(user.getUserName()));
+      identityService.listEditorRights(user.getUserName()));
 
     return ResponseEntity.ok()
-        .cacheControl(CacheControl.noCache().cachePrivate())
-        .body(response);
+      .cacheControl(CacheControl.noCache().cachePrivate())
+      .body(response);
   }
 
-  @PostMapping("/whoami")
+  @PostMapping("whoami")
   public ResponseEntity<LoggedUserWithToken> whoAmI() {
     // the user shall be authenticated using basic auth scheme
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -100,15 +96,15 @@ public class UserResource {
     }
 
     return ResponseEntity.ok()
-        .cacheControl(CacheControl.noCache().cachePrivate())
-        .body(LoggedUserWithToken.from(user, null, identityService.listEditorRights(user.getUserName())));
+      .cacheControl(CacheControl.noCache().cachePrivate())
+      .body(LoggedUserWithToken.from(user, null, identityService.listEditorRights(user.getUserName())));
   }
 
   /**
    * Allows a user to change its own password.
    */
   @Secured({USER_ROLE})
-  @RequestMapping(value = "/changePassword", method = RequestMethod.PUT)
+  @PutMapping("changePassword")
   public ResponseEntity changePassword(@RequestBody AuthenticationDataParameters authenticationDataParameters) {
     // the user shall be authenticated using basic auth scheme
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -119,7 +115,7 @@ public class UserResource {
     final GbifUser user = identityService.get(identifier);
     if (user != null) {
       UserModelMutationResult updatePasswordMutationResult =
-          identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
+        identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
       if (updatePasswordMutationResult.containsError()) {
         return ResponseEntity.unprocessableEntity().body(updatePasswordMutationResult);
       }
