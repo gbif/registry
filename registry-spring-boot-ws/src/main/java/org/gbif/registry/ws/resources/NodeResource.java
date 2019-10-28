@@ -25,6 +25,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.ws.model.NodeRequest;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
@@ -56,22 +57,22 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   private final Augmenter nodeAugmenter;
 
   public NodeResource(
-      NodeMapper nodeMapper,
-      IdentifierMapper identifierMapper,
-      CommentMapper commentMapper,
-      ContactMapper contactMapper,
-      EndpointMapper endpointMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
-      OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper,
-      InstallationMapper installationMapper,
-      EventManager eventManager,
-      Augmenter nodeAugmenter,
-      EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis) {
+    NodeMapper nodeMapper,
+    IdentifierMapper identifierMapper,
+    CommentMapper commentMapper,
+    ContactMapper contactMapper,
+    EndpointMapper endpointMapper,
+    MachineTagMapper machineTagMapper,
+    TagMapper tagMapper,
+    OrganizationMapper organizationMapper,
+    DatasetMapper datasetMapper,
+    InstallationMapper installationMapper,
+    EventManager eventManager,
+    Augmenter nodeAugmenter,
+    EditorAuthorizationService userAuthService,
+    WithMyBatis withMyBatis) {
     super(nodeMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-        Node.class, eventManager, userAuthService, withMyBatis);
+      Node.class, eventManager, userAuthService, withMyBatis);
     this.nodeMapper = nodeMapper;
     this.organizationMapper = organizationMapper;
     this.nodeAugmenter = nodeAugmenter;
@@ -93,26 +94,17 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * additionally be supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Node> list(
-      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String name,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      Pageable page
-  ) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (identifierType != null && identifier != null) {
-      return listByIdentifier(identifierType, identifier, page);
-    } else if (identifier != null) {
-      return listByIdentifier(identifier, page);
-    } else if (namespace != null) {
-      return listByMachineTag(namespace, name, value, page);
-    } else if (Strings.isNullOrEmpty(query)) {
+  public PagingResponse<Node> list(@Valid NodeRequest request, Pageable page) {
+    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    } else if (request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifier(), page);
+    } else if (request.getMachineTagNamespace() != null) {
+      return listByMachineTag(request.getMachineTagNamespace(), request.getMachineTagName(), request.getMachineTagValue(), page);
+    } else if (Strings.isNullOrEmpty(request.getQ())) {
       return list(page);
     } else {
-      return search(query, page);
+      return search(request.getQ(), page);
     }
   }
 
@@ -150,21 +142,21 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Override
   public PagingResponse<Organization> endorsedOrganizations(@PathVariable("key") UUID nodeKey, Pageable page) {
     return new PagingResponse<>(page, organizationMapper.countOrganizationsEndorsedBy(nodeKey),
-        organizationMapper.organizationsEndorsedBy(nodeKey, page));
+      organizationMapper.organizationsEndorsedBy(nodeKey, page));
   }
 
   @GetMapping("pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(Pageable page) {
     return new PagingResponse<>(page, organizationMapper.countPendingEndorsements(null),
-        organizationMapper.pendingEndorsements(null, page));
+      organizationMapper.pendingEndorsements(null, page));
   }
 
   @GetMapping("{key}/pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(@PathVariable("key") UUID nodeKey, Pageable page) {
     return new PagingResponse<>(page, organizationMapper.countPendingEndorsements(nodeKey),
-        organizationMapper.pendingEndorsements(nodeKey, page));
+      organizationMapper.pendingEndorsements(nodeKey, page));
   }
 
   @GetMapping("country/{key}")
@@ -195,7 +187,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Override
   public PagingResponse<Dataset> endorsedDatasets(@PathVariable("key") UUID nodeKey, Pageable page) {
     return pagingResponse(page, datasetMapper.countDatasetsEndorsedBy(nodeKey),
-        datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
+      datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
   }
 
   @GetMapping("{key}/contact")
@@ -221,7 +213,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Override
   public PagingResponse<Installation> installations(@PathVariable("key") UUID nodeKey, Pageable page) {
     return pagingResponse(page, installationMapper.countInstallationsEndorsedBy(nodeKey),
-        installationMapper.listInstallationsEndorsedBy(nodeKey, page));
+      installationMapper.listInstallationsEndorsedBy(nodeKey, page));
   }
 
   @GetMapping("suggest")
