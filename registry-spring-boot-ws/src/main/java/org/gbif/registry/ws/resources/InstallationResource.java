@@ -16,7 +16,6 @@ import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
@@ -32,6 +31,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.ws.model.InstallationRequest;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.Trim;
 import org.slf4j.Logger;
@@ -62,46 +62,48 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping("installation")
-public class InstallationResource extends BaseNetworkEntityResource<Installation> implements InstallationService,
-    MetasyncHistoryService {
+public class InstallationResource
+  extends BaseNetworkEntityResource<Installation>
+  implements InstallationService, MetasyncHistoryService {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallationResource.class);
+
   private final DatasetMapper datasetMapper;
   private final InstallationMapper installationMapper;
   private final OrganizationMapper organizationMapper;
   private final MetasyncHistoryMapper metasyncHistoryMapper;
 
   /**
-   * The messagePublisher can be optional, and optional is not supported in constructor injection.
+   * The messagePublisher can be optional.
    */
   private final MessagePublisher messagePublisher;
 
   public InstallationResource(
-      InstallationMapper installationMapper,
-      ContactMapper contactMapper,
-      EndpointMapper endpointMapper,
-      IdentifierMapper identifierMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
-      CommentMapper commentMapper,
-      DatasetMapper datasetMapper,
-      OrganizationMapper organizationMapper,
-      MetasyncHistoryMapper metasyncHistoryMapper,
-      EventManager eventManager,
-      EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+    InstallationMapper installationMapper,
+    ContactMapper contactMapper,
+    EndpointMapper endpointMapper,
+    IdentifierMapper identifierMapper,
+    MachineTagMapper machineTagMapper,
+    TagMapper tagMapper,
+    CommentMapper commentMapper,
+    DatasetMapper datasetMapper,
+    OrganizationMapper organizationMapper,
+    MetasyncHistoryMapper metasyncHistoryMapper,
+    EventManager eventManager,
+    EditorAuthorizationService userAuthService,
+    WithMyBatis withMyBatis,
+    @Autowired(required = false) MessagePublisher messagePublisher) {
     super(installationMapper,
-        commentMapper,
-        contactMapper,
-        endpointMapper,
-        identifierMapper,
-        machineTagMapper,
-        tagMapper,
-        Installation.class,
-        eventManager,
-        userAuthService,
-        withMyBatis);
+      commentMapper,
+      contactMapper,
+      endpointMapper,
+      identifierMapper,
+      machineTagMapper,
+      tagMapper,
+      Installation.class,
+      eventManager,
+      userAuthService,
+      withMyBatis);
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
     this.organizationMapper = organizationMapper;
@@ -144,7 +146,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Override
   public PagingResponse<Dataset> getHostedDatasets(@PathVariable("key") UUID installationKey, Pageable page) {
     return new PagingResponse<>(page, datasetMapper.countDatasetsByInstallation(installationKey),
-        datasetMapper.listDatasetsByInstallation(installationKey, page));
+      datasetMapper.listDatasetsByInstallation(installationKey, page));
   }
 
   @GetMapping("deleted")
@@ -177,7 +179,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
 
     } else {
       LOG.warn("Registry is configured to run without messaging capabilities.  Unable to synchronize installation[{}]",
-          installationKey);
+        installationKey);
     }
   }
 
@@ -209,13 +211,13 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         JSONObject feature = new JSONObject();
         feature.put("type", "Feature");
         feature.put("properties", ImmutableMap.<String, Object>of(
-            "key", o.getKey(),
-            "title", o.getTitle(),
-            "count", counts.get(o).get()));
+          "key", o.getKey(),
+          "title", o.getTitle(),
+          "count", counts.get(o).get()));
         JSONObject geom = new JSONObject();
         geom.put("type", "Point");
         geom.put("coordinates", ImmutableList.<BigDecimal>of(
-            o.getLongitude(), o.getLatitude()));
+          o.getLongitude(), o.getLatitude()));
         feature.put("geometry", geom);
         features.add(feature);
       }
@@ -234,7 +236,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   public void createMetasync(@PathVariable UUID installationKey,
                              @RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     checkArgument(installationKey.equals(metasyncHistory.getInstallationKey()),
-        "Metasync must have the same key as the installation");
+      "Metasync must have the same key as the installation");
     this.createMetasync(metasyncHistory);
   }
 
@@ -250,7 +252,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(Pageable page) {
     return new PagingResponse<>(page, (long) metasyncHistoryMapper.count(),
-        metasyncHistoryMapper.list(page));
+      metasyncHistoryMapper.list(page));
   }
 
   @GetMapping("{installationKey}/metasync")
@@ -258,7 +260,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   public PagingResponse<MetasyncHistory> listMetasync(@PathVariable UUID installationKey,
                                                       Pageable page) {
     return new PagingResponse<>(page, (long) metasyncHistoryMapper.countByInstallation(installationKey),
-        metasyncHistoryMapper.listByInstallation(installationKey, page));
+      metasyncHistoryMapper.listByInstallation(installationKey, page));
   }
 
   @Override

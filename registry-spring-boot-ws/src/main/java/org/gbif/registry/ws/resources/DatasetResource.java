@@ -116,8 +116,9 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 @RestController
 @RequestMapping("dataset")
-public class DatasetResource extends BaseNetworkEntityResource<Dataset>
-    implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
+public class DatasetResource
+  extends BaseNetworkEntityResource<Dataset>
+  implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
@@ -125,12 +126,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   //HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
-      .allowCommonBlockElements() // "p", "div", "h1", ...
-      .allowCommonInlineFormattingElements() // "b", "i" ...
-      .allowElements("a")
-      .allowUrlProtocols("https", "http")
-      .allowAttributes("href").onElements("a")
-      .toFactory();
+    .allowCommonBlockElements() // "p", "div", "h1", ...
+    .allowCommonInlineFormattingElements() // "b", "i" ...
+    .allowElements("a")
+    .allowUrlProtocols("https", "http")
+    .allowAttributes("href").onElements("a")
+    .toFactory();
 
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
@@ -146,16 +147,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final WithMyBatis withMyBatis;
 
   private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
-      .expireAfterWrite(5, TimeUnit.MINUTES)
-      .build(
-          new CacheLoader<UUID, Organization>() {
-            public Organization load(UUID key) {
-              return organizationMapper.get(key);
-            }
-          });
+    .expireAfterWrite(5, TimeUnit.MINUTES)
+    .build(
+      new CacheLoader<UUID, Organization>() {
+        public Organization load(UUID key) {
+          return organizationMapper.get(key);
+        }
+      });
 
   /**
-   * The messagePublisher can be optional, and optional is not supported in constructor injection.
+   * The messagePublisher can be optional.
    */
   private final MessagePublisher messagePublisher;
 
@@ -178,7 +179,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                          WithMyBatis withMyBatis,
                          @Autowired(required = false) MessagePublisher messagePublisher) {
     super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-        Dataset.class, eventManager, userAuthService, withMyBatis);
+      Dataset.class, eventManager, userAuthService, withMyBatis);
     this.searchService = searchService;
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
@@ -226,15 +227,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   @GetMapping
   public PagingResponse<Dataset> list(
-      @Nullable Country country,
-      @Nullable @RequestParam(value = "type", required = false) DatasetType datasetType,
-      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String name,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      Pageable page
+    @Nullable Country country,
+    @Nullable @RequestParam(value = "type", required = false) DatasetType datasetType,
+    @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
+    @Nullable @RequestParam(value = "identifier", required = false) String identifier,
+    @Nullable @RequestParam(value = "machineTagNamespace", required = false) String namespace,
+    @Nullable @RequestParam(value = "machineTagName", required = false) String name,
+    @Nullable @RequestParam(value = "machineTagValue", required = false) String value,
+    @Nullable @RequestParam(value = "q", required = false) String query,
+    Pageable page
   ) {
     // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
     if (country == null && datasetType != null) {
@@ -474,8 +475,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // check if we should update our registered base information
     if (dataset.isLockedForAutoUpdate()) {
       LOG.info(
-          "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
-          datasetKey);
+        "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
+        datasetKey);
 
     } else {
       // we retrieve the preferred document and only update if this new metadata is the preferred one
@@ -513,7 +514,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // keep original license, unless a supported license detected in preferred metadata
     if (!replaceLicense(updatedDataset.getLicense())) {
       LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
-          updatedDataset.getLicense(), existingDataset.getLicense());
+        updatedDataset.getLicense(), existingDataset.getLicense());
       updatedDataset.setLicense(existingDataset.getLicense());
     }
 
@@ -641,16 +642,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   private void setGeneratedCitation(Dataset dataset) {
     if (dataset != null && dataset.getPublishingOrganizationKey() != null
-        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated one:
-        // https://github.com/gbif/portal-feedback/issues/1819
-        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
-        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+      // for CoL and its constituents we want to show the verbatim citation and no GBIF generated one:
+      // https://github.com/gbif/portal-feedback/issues/1819
+      && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
+      && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
 
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
       Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
       citation.setText(CitationGenerator.generateCitation(dataset,
-          ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+        ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
     }
   }
@@ -671,7 +672,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // See https://github.com/gbif/registry/issues/71#issuecomment-438280021 for background on possibly changing this.
     if (dataset.getLicense() == null) {
       LOG.warn("Dataset created by {} {} with the V1 API does not specify a license, defaulting to CC_BY_4_0",
-          dataset.getPublishingOrganizationKey(), dataset.getCreatedBy());
+        dataset.getPublishingOrganizationKey(), dataset.getCreatedBy());
       dataset.setLicense(License.CC_BY_4_0);
     }
 
@@ -691,7 +692,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // replace current license? Only if dataset being updated has a supported license
     if (!replaceLicense(dataset.getLicense())) {
       LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.", dataset.getLicense(),
-          old.getLicense());
+        old.getLicense());
       dataset.setLicense(old.getLicense());
     }
     update(dataset, old.getIdentifiers(), old.getDoi(), dataset.getModifiedBy());
@@ -826,7 +827,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public PagingResponse<Dataset> listConstituents(@PathVariable("key") UUID datasetKey, Pageable page) {
     return pagingResponse(page, (long) datasetMapper.countConstituents(datasetKey),
-        datasetMapper.listConstituents(datasetKey, page));
+      datasetMapper.listConstituents(datasetKey, page));
   }
 
   @GetMapping("{key}/networks")
@@ -897,16 +898,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
     do {
       response
-          .getResults()
-          .forEach(
-              d -> {
-                try {
-                  LOG.info("trying to crawl dataset {}", d.getKey());
-                  onDataset.accept(d);
-                } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
-                }
-              });
+        .getResults()
+        .forEach(
+          d -> {
+            try {
+              LOG.info("trying to crawl dataset {}", d.getKey());
+              onDataset.accept(d);
+            } catch (Exception ex) {
+              LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
+            }
+          });
       pagingRequest.addOffset(response.getResults().size());
       response = listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
@@ -921,7 +922,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@RequestParam("platform") String platform) {
     CompletableFuture.runAsync(
-        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
+      () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
   }
 
   /**
@@ -953,7 +954,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void createDatasetProcessStatus(@PathVariable UUID datasetKey,
                                          @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
-        "DatasetProcessStatus must have the same key as the dataset");
+      "DatasetProcessStatus must have the same key as the dataset");
     createDatasetProcessStatus(datasetProcessStatus);
   }
 
@@ -963,14 +964,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public void createDatasetProcessStatus(@Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkNotNull(datasetProcessStatus.getDatasetKey(),
-        "DatasetProcessStatus must have the dataset key");
+      "DatasetProcessStatus must have the dataset key");
     checkNotNull(datasetProcessStatus.getCrawlJob(),
-        "DatasetProcessStatus must have the crawl job with an attempt number");
+      "DatasetProcessStatus must have the crawl job with an attempt number");
     DatasetProcessStatus existing =
-        datasetProcessStatusMapper.get(datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob()
-            .getAttempt());
+      datasetProcessStatusMapper.get(datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob()
+        .getAttempt());
     checkArgument(existing == null, "Cannot create dataset process status [%s] for attempt[%s] as one already exists",
-        datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob().getAttempt());
+      datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob().getAttempt());
     datasetProcessStatusMapper.create(datasetProcessStatus);
   }
 
@@ -981,9 +982,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void updateDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt,
                                          @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
-        "DatasetProcessStatus must have the same key as the url");
+      "DatasetProcessStatus must have the same key as the url");
     checkArgument(attempt == datasetProcessStatus.getCrawlJob().getAttempt(),
-        "DatasetProcessStatus must have the same attempt as the url");
+      "DatasetProcessStatus must have the same attempt as the url");
     updateDatasetProcessStatus(datasetProcessStatus);
   }
 
@@ -1007,21 +1008,21 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(Pageable page) {
     return new PagingResponse<>(page, (long) datasetProcessStatusMapper.count(),
-        datasetProcessStatusMapper.list(page));
+      datasetProcessStatusMapper.list(page));
   }
 
   @GetMapping("process/aborted")
   @Override
   public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(Pageable page) {
     return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countAborted(),
-        datasetProcessStatusMapper.listAborted(page));
+      datasetProcessStatusMapper.listAborted(page));
   }
 
   @GetMapping("{datasetKey}/process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathVariable UUID datasetKey, Pageable page) {
     return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
-        datasetProcessStatusMapper.listByDataset(datasetKey, page));
+      datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
 
   @Override
