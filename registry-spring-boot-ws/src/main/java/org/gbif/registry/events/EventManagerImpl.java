@@ -16,4 +16,14 @@ public class EventManagerImpl implements EventManager {
   public void post(Object object) {
     eventBus.post(object);
   }
+
+  @Override
+  public void register(Object object) {
+    eventBus.register(object);
+  }
+
+  @Override
+  public void unregister(Object object) {
+    eventBus.unregister(object);
+  }
 }
