@@ -35,7 +35,7 @@ public class MessageSendingEventListener {
 
   public MessageSendingEventListener(MessagePublisher messagePublisher,
                                      EventManager eventManager,
-                                     @Value("${registry.postalservice.embargoSeconds}") Integer durationInSeconds
+                                     @Value("${registry.postalservice.embargoSeconds:#{NULL}}") Integer durationInSeconds
   ) {
     checkNotNull(messagePublisher, "messagePublisher can't be null");
     embargoSeconds = durationInSeconds == null ? 0 : durationInSeconds;
