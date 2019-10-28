@@ -78,7 +78,12 @@
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-httputils</artifactId>
+    </dependency>
 
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt</artifactId>
