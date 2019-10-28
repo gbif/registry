@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This can optionally be configured with an embargo period, which will apply to all messages and result in a delay
  * before sending to the postal service.  This deferral happens in a separate thread pool to ensure it is non blocking.
  */
+@SuppressWarnings("UnstableApiUsage")
 @Service
 public class MessageSendingEventListener {
 
@@ -49,19 +50,16 @@ public class MessageSendingEventListener {
       event.getObjectClass(),
       null,
       event.getNewObject());
-    LOG.debug("Scheduling notification of CreateEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
-    scheduler.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          LOG.debug("Broadcasting to postal service CreateEvent [{}]",
-            event.getObjectClass().getSimpleName(), embargoSeconds);
-
-          messagePublisher.send(message);
-        } catch (IOException e) {
-          LOG.warn("Failed sending RegistryChangeMessage for CreateEvent [{}]",
-            event.getObjectClass().getSimpleName(), e);
-        }
+    LOG.debug("Scheduling notification of CreateEvent [{}] with an embargo durations of {} seconds",
+      event.getObjectClass().getSimpleName(), embargoSeconds);
+    scheduler.schedule(() -> {
+      try {
+        LOG.debug("Broadcasting to postal service CreateEvent [{}]",
+          event.getObjectClass().getSimpleName());
+        messagePublisher.send(message);
+      } catch (IOException e) {
+        LOG.warn("Failed sending RegistryChangeMessage for CreateEvent [{}]",
+          event.getObjectClass().getSimpleName(), e);
       }
     }, embargoSeconds, TimeUnit.SECONDS);
 
@@ -75,17 +73,14 @@ public class MessageSendingEventListener {
       event.getNewObject());
     LOG.debug("Scheduling notification of UpdateEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
 
-    scheduler.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          LOG.debug("Broadcasting to postal service UpdateEvent [{}]",
-            event.getObjectClass().getSimpleName(), embargoSeconds);
-          messagePublisher.send(message);
-        } catch (IOException e) {
-          LOG.warn("Failed sending RegistryChangeMessage for UpdateEvent [{}]",
-            event.getObjectClass().getSimpleName(), e);
-        }
+    scheduler.schedule(() -> {
+      try {
+        LOG.debug("Broadcasting to postal service UpdateEvent [{}]",
+          event.getObjectClass().getSimpleName());
+        messagePublisher.send(message);
+      } catch (IOException e) {
+        LOG.warn("Failed sending RegistryChangeMessage for UpdateEvent [{}]",
+          event.getObjectClass().getSimpleName(), e);
       }
     }, embargoSeconds, TimeUnit.SECONDS);
   }
@@ -98,17 +93,14 @@ public class MessageSendingEventListener {
       null);
     LOG.debug("Scheduling notification of DeleteEvent [{}] with an embargo durations of {} seconds", event.getObjectClass().getSimpleName(), embargoSeconds);
 
-    scheduler.schedule(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          LOG.debug("Broadcasting to postal service DeleteEvent [{}]",
-            event.getObjectClass().getSimpleName(), embargoSeconds);
-          messagePublisher.send(message);
-        } catch (IOException e) {
-          LOG.warn("Failed sending RegistryChangeMessage for DeleteEvent [{}]",
-            event.getObjectClass().getSimpleName(), e);
-        }
+    scheduler.schedule(() -> {
+      try {
+        LOG.debug("Broadcasting to postal service DeleteEvent [{}]",
+          event.getObjectClass().getSimpleName());
+        messagePublisher.send(message);
+      } catch (IOException e) {
+        LOG.warn("Failed sending RegistryChangeMessage for DeleteEvent [{}]",
+          event.getObjectClass().getSimpleName(), e);
       }
     }, embargoSeconds, TimeUnit.SECONDS);
   }
