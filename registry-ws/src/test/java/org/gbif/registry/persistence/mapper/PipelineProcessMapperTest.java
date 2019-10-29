@@ -156,7 +156,7 @@ public class PipelineProcessMapperTest {
             .setStarted(LocalDateTime.now().minusMinutes(1))
             .setFinished(LocalDateTime.now())
             .setMessage("message")
-            .setMetrics(Collections.singleton(new MetricInfo("n", "v")))
+            .setMetrics(Collections.singleton(new MetricInfo("key", "value")))
             .setCreatedBy(TEST_USER);
     pipelineProcessMapper.addPipelineStep(process.getKey(), step);
     assertTrue(step.getKey() > 0);
@@ -190,7 +190,7 @@ public class PipelineProcessMapperTest {
     // assert results
     PipelineProcess processRetrieved =
       pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
-    assertNull(processRetrieved.getSteps().iterator().next().getMetrics().iterator().next().getValue());
+    assertTrue(step.lenientEquals(processRetrieved.getSteps().iterator().next()));
   }
 
   @Test
