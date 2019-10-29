@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
  * First of all any resource method is required to have the role included in the RolesAllowed annotation.
  * Secondly this request filter needs to be passed for POST/PUT/DELETE requests that act on existing and UUID identified
  * main registry entities such as dataset, organization, node, installation and network.
- *
  * In order to do authorization the key of these entities is extracted from the requested path.
  * An exception to this is the create method for those main entities themselves.
  * This is covered by the BaseNetworkEntityResource.create() method directly.
@@ -54,8 +53,8 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
     Principal user = secContext.getUserPrincipal();
 
     if (user != null
-        && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
-        && !request.getMethod().equals("GET") && !request.getMethod().equals("OPTIONS")) {
+      && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
+      && !request.getMethod().equals("GET") && !request.getMethod().equals("OPTIONS")) {
 
       String path = request.getPath().toLowerCase();
 

@@ -10,10 +10,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/**
- *
- */
 package org.gbif.registry;
 
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -158,7 +154,8 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
       ps.close();
       c.close();
 
-    } catch (Exception e) {}
+    } catch (Exception e) {
+    }
 
     // Create as the editor user
     create(anotherEntity, 2);
@@ -174,7 +171,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
     assertEquals(titles, service.getTitles(titles.keySet()));
 
-    for (int i = 1; i<8; i++){
+    for (int i = 1; i < 8; i++) {
       T ent = newEntity();
       ent = create(ent, i);
       titles.put(ent.getKey(), ent.getTitle());
@@ -208,9 +205,12 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     n1.setTitle("New title");
     service.update(n1);
     NetworkEntity n2 = service.get(n1.getKey());
-    assertEquals("Persisted does not reflect update", "New title", n2.getTitle());
-    assertTrue("Modification date not changing on update", n2.getModified().after(n1.getModified()));
-    assertTrue("Modification date is not after the creation date", n2.getModified().after(n1.getCreated()));
+    assertEquals("Organization's title was to be updated", "New title", n2.getTitle());
+    assertNotNull(n1.getModified());
+    assertNotNull(n2.getModified());
+    assertNotNull(n1.getCreated());
+    assertTrue("Modification date was to be changed", n2.getModified().after(n1.getModified()));
+    assertTrue("Modification date must be after the creation date", n2.getModified().after(n1.getCreated()));
     assertEquals("List service does not reflect the number of created entities",
       1,
       service.list(new PagingRequest()).getResults().size());
@@ -258,7 +258,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     }
 
     // the expected number of records returned when paging at different page sizes
-    int[][] expectedPages = new int[][] { {1, 1, 1, 1, 1, 0}, // page size of 1
+    int[][] expectedPages = new int[][]{{1, 1, 1, 1, 1, 0}, // page size of 1
       {2, 2, 1, 0}, // page size of 2
       {3, 2, 0}, // page size of 3
       {4, 1, 0}, // page size of 4
@@ -387,14 +387,14 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   @Test(expected = AccessControlException.class)
 
   public void testMachineTagsNotAllowedToCreateClient() {
-      //only for client tests
-      if (pp != null) {
-          pp.setPrincipal("notExisting");
-          T entity = create(newEntity(), 1);
-          MachineTagTests.testAddDelete(machineTagService, entity);
-      } else {
-          throw new AccessControlException("");
-      }
+    //only for client tests
+    if (pp != null) {
+      pp.setPrincipal("notExisting");
+      T entity = create(newEntity(), 1);
+      MachineTagTests.testAddDelete(machineTagService, entity);
+    } else {
+      throw new AccessControlException("");
+    }
   }
 
   @Test(expected = AccessControlException.class)
@@ -555,10 +555,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
   /**
    * Repeatable entity creation with verification tests + support for processed properties.
    *
-   * @param orig
-   * @param expectedCount
    * @param processedProperties expected values of properties that are processed so they would not match the original
-   * @return
    */
   protected T create(T orig, int expectedCount, Map<String, Object> processedProperties) {
     try {
@@ -572,7 +569,7 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
       assertNotNull(written.getModified());
       assertNull(written.getDeleted());
 
-      if(processedProperties != null) {
+      if (processedProperties != null) {
         String writtenProperty;
         for (String prop : processedProperties.keySet()) {
           writtenProperty = BeanUtils.getProperty(written, prop);
@@ -585,8 +582,8 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
 
       assertLenientEquals("Persisted does not reflect original", entity, written);
       assertEquals("List service does not reflect the number of created entities",
-              expectedCount,
-              service.list(new PagingRequest()).getResults().size());
+        expectedCount,
+        service.list(new PagingRequest()).getResults().size());
       return written;
     } catch (Exception e) {
       throw Throwables.propagate(e);
@@ -602,6 +599,4 @@ public abstract class NetworkEntityTest<T extends NetworkEntity & Contactable & 
     assertNotNull("PagingResponse results are null", results.getResults());
     assertEquals("Unexpected result size for current test state", size, results.getResults().size());
   }
-
-
 }
