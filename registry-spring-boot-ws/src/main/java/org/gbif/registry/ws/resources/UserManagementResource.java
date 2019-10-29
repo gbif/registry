@@ -81,7 +81,7 @@ public class UserManagementResource {
 
   //filters roles that are deprecated
   private static final List<UserRole> USER_ROLES = Arrays.stream(UserRole.values()).filter(r ->
-      !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
+    !AnnotationUtils.isFieldDeprecated(UserRole.class, r.name())).collect(Collectors.toList());
 
   private final IdentityService identityService;
   private final List<String> appKeyWhitelist;
@@ -142,7 +142,7 @@ public class UserManagementResource {
   public ResponseEntity<UserModelMutationResult> create(@RequestBody UserCreation user) {
     int returnStatusCode = HttpStatus.CREATED.value();
     UserModelMutationResult result = identityService.create(
-        UserUpdateRulesManager.applyCreate(user), user.getPassword());
+      UserUpdateRulesManager.applyCreate(user), user.getPassword());
     if (result.containsError()) {
       returnStatusCode = HttpStatus.UNPROCESSABLE_ENTITY.value();
     }
@@ -161,9 +161,9 @@ public class UserManagementResource {
   @Secured({ADMIN_ROLE, APP_ROLE})
   @PutMapping("/{username}")
   public ResponseEntity<UserModelMutationResult> update(
-      @PathVariable String username,
-      @RequestBody UserUpdate userUpdate,
-      Authentication authentication) {
+    @PathVariable String username,
+    @RequestBody UserUpdate userUpdate,
+    Authentication authentication) {
 
     ResponseEntity<UserModelMutationResult> response = ResponseEntity.noContent().build();
     //ensure the key used to access the update is actually the one of the user represented by the UserUpdate
@@ -178,13 +178,13 @@ public class UserManagementResource {
       }
 
       UserModelMutationResult result = identityService.update(
-          UserUpdateRulesManager.applyUpdate(
-              updateInitiator == null ? null : updateInitiator.getRoles(),
-              currentUser,
-              userUpdate,
-              authentication != null &&
-                  authentication.getAuthorities() != null &&
-                  authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_APP"))));
+        UserUpdateRulesManager.applyUpdate(
+          updateInitiator == null ? null : updateInitiator.getRoles(),
+          currentUser,
+          userUpdate,
+          authentication != null &&
+            authentication.getAuthorities() != null &&
+            authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_APP"))));
 
       if (result.containsError()) {
         response = ResponseEntity.unprocessableEntity().body(result);
@@ -204,9 +204,9 @@ public class UserManagementResource {
   @PostMapping("/confirm")
   @Transactional
   public ResponseEntity<LoggedUser> confirmChallengeCode(
-      Authentication authentication,
-      @RequestHeader("Authorization") String authHeader,
-      @NotNull @Valid @RequestBody ConfirmationKeyParameter confirmationKeyParameter) {
+    Authentication authentication,
+    @RequestHeader("Authorization") String authHeader,
+    @NotNull @Valid @RequestBody ConfirmationKeyParameter confirmationKeyParameter) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
@@ -272,9 +272,9 @@ public class UserManagementResource {
   @PostMapping("/updatePassword")
   @Transactional
   public ResponseEntity<LoggedUser> updatePassword(
-      Authentication authentication,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
-      @RequestBody AuthenticationDataParameters authenticationDataParameters) {
+    Authentication authentication,
+    @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+    @RequestBody AuthenticationDataParameters authenticationDataParameters) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
@@ -283,7 +283,7 @@ public class UserManagementResource {
     GbifUser user = identityService.get(username);
 
     UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
-        authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
+      authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
 
     if (updatePasswordMutationResult.containsError()) {
       throw new UpdatePasswordException(updatePasswordMutationResult);
@@ -302,9 +302,9 @@ public class UserManagementResource {
   @Secured(USER_ROLE)
   @GetMapping("/confirmationKeyValid")
   public ResponseEntity<Void> tokenValidityCheck(
-      Authentication authentication,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
-      @Nullable @RequestParam(value = "confirmationKey", required = false) UUID confirmationKey) {
+    Authentication authentication,
+    @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+    @Nullable @RequestParam(value = "confirmationKey", required = false) UUID confirmationKey) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);

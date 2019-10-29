@@ -24,8 +24,8 @@ import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData
  */
 @RestController
 @RequestMapping(value = "occurrence/download/dataset",
-    produces = MediaType.APPLICATION_JSON_VALUE,
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  produces = MediaType.APPLICATION_JSON_VALUE,
+  consumes = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrenceDownloadUsageService {
 
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
