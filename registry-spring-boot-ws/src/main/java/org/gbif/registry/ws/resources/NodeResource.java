@@ -48,7 +48,9 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping("node")
-public class NodeResource extends BaseNetworkEntityResource<Node> implements NodeService {
+public class NodeResource
+  extends BaseNetworkEntityResource<Node>
+  implements NodeService {
 
   private final NodeMapper nodeMapper;
   private final OrganizationMapper organizationMapper;

@@ -16,7 +16,6 @@ import org.gbif.registry.ws.model.LegacyInstallation;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,11 +46,11 @@ public class IptResource {
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
-  private static Long ONE = 1L;
+  private static final Long ONE = 1L;
 
-  public IptResource(@Qualifier("installationServiceStub") InstallationService installationService,
-                     @Qualifier("organizationServiceStub") OrganizationService organizationService,
-                     @Qualifier("datasetServiceStub") DatasetService datasetService) {
+  public IptResource(InstallationService installationService,
+                     OrganizationService organizationService,
+                     DatasetService datasetService) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
@@ -65,9 +64,10 @@ public class IptResource {
    * @param installation IptInstallation with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
+  // TODO: 29/10/2019 add validation annotation
   @PostMapping(value = "register",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_XML_VALUE)
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerIpt(@RequestParam LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -104,9 +104,9 @@ public class IptResource {
           IptEntityResponse entity = new IptEntityResponse(key.toString());
           // return Response
           return ResponseEntity
-              .status(HttpStatus.CREATED)
-              .cacheControl(CacheControl.noCache())
-              .body(entity);
+            .status(HttpStatus.CREATED)
+            .cacheControl(CacheControl.noCache())
+            .body(entity);
         } else {
           LOG.error("IPT installation could not be persisted!");
         }
@@ -116,9 +116,9 @@ public class IptResource {
     }
     LOG.error("IPT installation registration failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -131,7 +131,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.NO_CONTENT if successful
    */
   @PostMapping(value = "update/{key}",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey, @RequestParam LegacyInstallation installation) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -151,7 +151,7 @@ public class IptResource {
       // ensure the hosting organization exists, and primary contact exists
       Contact contact = installation.getPrimaryContact();
       if (contact != null && LegacyResourceUtils
-          .isValidOnUpdate(installation, installationService, organizationService)) {
+        .isValidOnUpdate(installation, installationService, organizationService)) {
         // update only fields that could have changed
         existing.setModifiedBy(user);
         existing.setTitle(installation.getTitle());
@@ -187,18 +187,18 @@ public class IptResource {
 
         LOG.info("IPT installation updated successfully, key={}", installationKey.toString());
         return ResponseEntity
-            .noContent()
-            .cacheControl(CacheControl.noCache())
-            .build();
+          .noContent()
+          .cacheControl(CacheControl.noCache())
+          .build();
       } else {
         LOG.error("Mandatory primary contact and/or hosting organization key missing or incomplete!");
       }
     }
     LOG.error("IPT installation update failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -215,8 +215,8 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
   @PostMapping(value = "resource",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_XML_VALUE)
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -267,9 +267,9 @@ public class IptResource {
           IptEntityResponse entity = new IptEntityResponse(key.toString());
           // return Response
           return ResponseEntity
-              .status(HttpStatus.CREATED)
-              .cacheControl(CacheControl.noCache())
-              .body(entity);
+            .status(HttpStatus.CREATED)
+            .cacheControl(CacheControl.noCache())
+            .body(entity);
         } else {
           LOG.error("Dataset could not be persisted!");
         }
@@ -279,9 +279,9 @@ public class IptResource {
     }
     LOG.error("Dataset registration failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -299,7 +299,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
   @PostMapping(value = "resource/{key}",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -329,7 +329,7 @@ public class IptResource {
       // ensure the publishing organization exists, the installation exists, primary contact exists, etc
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils
-          .isValidOnUpdate(dataset, datasetService, organizationService, installationService)) {
+        .isValidOnUpdate(dataset, datasetService, organizationService, installationService)) {
         // update only fields that could have changed
         existing.setModifiedBy(user);
         existing.setTitle(dataset.getTitle());
@@ -376,18 +376,18 @@ public class IptResource {
 
         LOG.info("Dataset updated successfully, key={}", datasetKey.toString());
         return ResponseEntity
-            .noContent()
-            .cacheControl(CacheControl.noCache())
-            .build();
+          .noContent()
+          .cacheControl(CacheControl.noCache())
+          .build();
       } else {
         LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
       }
     }
     LOG.error("Dataset update failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -398,7 +398,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.OK if successful
    */
   @DeleteMapping(value = "resource/{key}",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8")
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8")
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
 
     if (datasetKey != null) {
@@ -411,9 +411,9 @@ public class IptResource {
 
         LOG.info("Dataset deleted successfully, key={}", datasetKey.toString());
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .build();
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .build();
 
       } else {
         LOG.error("Request invalid. Dataset to be deleted no longer exists!");
@@ -421,9 +421,9 @@ public class IptResource {
     }
     LOG.error("Dataset delete failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
