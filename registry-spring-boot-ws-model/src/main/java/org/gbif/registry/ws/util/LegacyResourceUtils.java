@@ -22,9 +22,12 @@ import java.util.UUID;
 /**
  * Class containing utility methods used across legacy resources, in answering legacy web service requests (GBRDS/IPT).
  */
-public class LegacyResourceUtils {
+public final class LegacyResourceUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyResourceUtils.class);
+
+  private LegacyResourceUtils() {
+  }
 
   /**
    * Checks if a field consists of the minimum number of characters. If it contains fewer characters than required,
@@ -38,10 +41,13 @@ public class LegacyResourceUtils {
   public static String validateField(@Nullable String text, int size) {
     String validated = Strings.emptyToNull(text);
     if (validated != null) {
-      while (validated.length() < size) {
-        validated += " [Field must be at least " + size + " characters long]";
+      StringBuilder sb = new StringBuilder(validated);
+      while (sb.length() < size) {
+        sb.append(" [Field must be at least ");
+        sb.append(size);
+        sb.append(" characters long]");
       }
-      return validated;
+      return sb.toString();
     }
     return text;
   }
