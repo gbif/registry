@@ -141,18 +141,18 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     int i = 0;
     CharSequence itoa64 = PASSWORD_ITOA64;
     do {
-      long value = SignedByteToUnsignedLong(input[i++]);
+      long value = signedByteToUnsignedLong(input[i++]);
 
       output.append(itoa64.charAt((int) value & 0x3f));
       if (i < count) {
-        value |= SignedByteToUnsignedLong(input[i]) << 8;
+        value |= signedByteToUnsignedLong(input[i]) << 8;
       }
       output.append(itoa64.charAt((int) (value >> 6) & 0x3f));
       if (i++ >= count) {
         break;
       }
       if (i < count) {
-        value |= SignedByteToUnsignedLong(input[i]) << 16;
+        value |= signedByteToUnsignedLong(input[i]) << 16;
       }
 
       output.append(itoa64.charAt((int) (value >> 12) & 0x3f));
@@ -168,7 +168,7 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
   /**
    * Clears any sign bit on the given byte.
    */
-  public static long SignedByteToUnsignedLong(byte b) {
+  private static long signedByteToUnsignedLong(byte b) {
     return b & 0xFF;
   }
 
