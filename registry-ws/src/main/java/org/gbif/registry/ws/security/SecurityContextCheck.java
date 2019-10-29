@@ -37,15 +37,14 @@ public class SecurityContextCheck {
    * WebApplicationException UNAUTHORIZED.
    *
    * @param securityContext
-   *
    * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link SecurityContext}
    */
   public static void ensureUserSetInSecurityContext(final SecurityContext securityContext)
-          throws WebApplicationException {
+    throws WebApplicationException {
     if (securityContext == null || securityContext.getUserPrincipal() == null ||
-            StringUtils.isBlank(securityContext.getUserPrincipal().getName())) {
+      StringUtils.isBlank(securityContext.getUserPrincipal().getName())) {
       LOG.debug("Unauthenticated or incomplete request. AuthenticationScheme: {}",
-              securityContext.getAuthenticationScheme());
+        securityContext.getAuthenticationScheme());
       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
     }
   }
@@ -55,7 +54,6 @@ public class SecurityContextCheck {
    * If the {@link SecurityContext} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
    *
    * @param security
-   *
    * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was not obtained using the
    *                                 GBIF
    *                                 authentication scheme.
@@ -73,7 +71,6 @@ public class SecurityContextCheck {
    * If the {@link SecurityContext} is null, this method will throw {@link WebApplicationException} FORBIDDEN.
    *
    * @param security
-   *
    * @throws WebApplicationException FORBIDDEN if the {@link SecurityContext} is null or was obtained using the GBIF
    *                                 authentication scheme.
    */
@@ -86,7 +83,8 @@ public class SecurityContextCheck {
 
   /**
    * Check the precondition unless the {@link SecurityContext} contains a specific role.
-   * @param security if null the precondition will failed
+   *
+   * @param security                   if null the precondition will failed
    * @param role
    * @param precondition
    * @param statusOnPreconditionFailed
@@ -101,6 +99,7 @@ public class SecurityContextCheck {
 
   /**
    * Check a precondition and throw a {@link WebApplicationException} if not met.
+   *
    * @param precondition
    * @param statusOnPreconditionFailed
    */
@@ -136,13 +135,12 @@ public class SecurityContextCheck {
    * authentication scheme and the roles.
    *
    * @param security
-   *
    * @return if the {@link SecurityContext} is using user impersonation or not
    */
   public static boolean isUsingUserImpersonation(final SecurityContext security) {
     return security != null &&
-            GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())
-            && !security.isUserInRole(APP_ROLE);
+      GbifAuthService.GBIF_SCHEME.equals(security.getAuthenticationScheme())
+      && !security.isUserInRole(APP_ROLE);
   }
 
   /**
@@ -152,7 +150,6 @@ public class SecurityContextCheck {
    * @param securityContext
    * @param roles           this methods will return true if the user is at least in one role. If no role is
    *                        provided this method will return false.
-   *
    * @return the user is at least in one of the provided role(s)
    */
   public static boolean checkUserInRole(SecurityContext securityContext, String... roles) {
@@ -162,7 +159,7 @@ public class SecurityContextCheck {
       return false;
     }
     return Arrays.stream(roles)
-            .filter(securityContext::isUserInRole)
-            .findFirst().isPresent();
+      .filter(securityContext::isUserInRole)
+      .findFirst().isPresent();
   }
 }

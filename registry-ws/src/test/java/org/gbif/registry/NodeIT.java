@@ -12,7 +12,8 @@
  */
 package org.gbif.registry;
 
-import org.apache.commons.beanutils.BeanUtils;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -39,18 +40,15 @@ import org.gbif.registry.ws.resources.InstallationResource;
 import org.gbif.registry.ws.resources.NodeResource;
 import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import javax.annotation.Nullable;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -222,12 +220,12 @@ public class NodeIT extends NetworkEntityTest<Node> {
   }
 
   //@Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
-  @Test
   /**
    * A test that requires a configured IMS with real spanish data.
    * Jenkins is configured for this, so we activate this test to make sure IMS connections are working!
    */
-  public void testIms() throws Exception {
+  @Test
+  public void testIms() {
     initVotingCountryNodes();
     Node es = nodeService.getByCountry(Country.SPAIN);
     assertEquals((Integer) 2001, es.getParticipantSince());
@@ -284,12 +282,6 @@ public class NodeIT extends NetworkEntityTest<Node> {
     return Nodes.newInstance();
   }
 
-  /**
-   * Test doesn't make sense for a node.
-   */
-  @Override
-  public void testCreateAsEditor() {}
-
   protected Node duplicateForCreateAsEditorTest(Node entity) throws Exception {
     throw new UnsupportedOperationException();
   }
@@ -312,5 +304,4 @@ public class NodeIT extends NetworkEntityTest<Node> {
     assertEquals("Should find only The Great Node", 1, service.suggest("Great").size());
     assertEquals("Should find both nodes", 2, service.suggest("the").size());
   }
-
 }
