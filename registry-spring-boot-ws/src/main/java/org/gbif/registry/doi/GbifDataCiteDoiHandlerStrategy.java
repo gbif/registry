@@ -40,13 +40,15 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
 
   //DOI logging marker
   private static final Logger LOG = LoggerFactory.getLogger(GbifDataCiteDoiHandlerStrategy.class);
-  private static Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
+  private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   //Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
 
-  private final EnumSet<Download.Status> FAILED_STATES = EnumSet.of(Download.Status.KILLED, Download.Status.CANCELLED,
-      Download.Status.FAILED);
+  private static final EnumSet<Download.Status> FAILED_STATES = EnumSet.of(
+    Download.Status.KILLED,
+    Download.Status.CANCELLED,
+    Download.Status.FAILED);
 
   private final DoiGenerator doiGenerator;
   private final OrganizationMapper organizationMapper;
@@ -57,11 +59,11 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   private final List<UUID> parentDatasetExcludeList;
 
   public GbifDataCiteDoiHandlerStrategy(
-      DoiGenerator doiGenerator,
-      OrganizationMapper organizationMapper,
-      OccurrenceDownloadService occurrenceDownloadService,
-      TitleLookupService titleLookupService,
-      @Value("${doi.dataset.parentExcludeList}") List<UUID> parentDatasetExcludeList) {
+    DoiGenerator doiGenerator,
+    OrganizationMapper organizationMapper,
+    OccurrenceDownloadService occurrenceDownloadService,
+    TitleLookupService titleLookupService,
+    @Value("${doi.dataset.parentExcludeList}") List<UUID> parentDatasetExcludeList) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
@@ -101,12 +103,12 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     // add previous relationship
     if (related != null) {
       m.getRelatedIdentifiers().getRelatedIdentifier()
-          .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-              .withRelationType(relationType)
-              .withValue(related.getDoiName())
-              .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-              .build()
-          );
+        .add(DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+          .withRelationType(relationType)
+          .withValue(related.getDoiName())
+          .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+          .build()
+        );
     }
     return m;
   }
@@ -116,7 +118,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     // When configured, we can skip the DOI logic for some dataset when the getParentDatasetKey is in the
     // parentDatasetExcludeList
     if (dataset.getParentDatasetKey() != null && parentDatasetExcludeList != null &&
-        parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
+      parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
       LOG.info("Dataset {} parentDatasetKey is part of the ignore list: ignoring DOI related action(s). ", dataset.getKey());
       return;
     }
@@ -124,7 +126,7 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     // if the old doi was a GBIF one and the new one is different, update its metadata with a version relationship
     if (previousDoi != null && doiGenerator.isGbif(previousDoi) && !dataset.getDoi().equals(previousDoi)) {
       scheduleDatasetRegistration(previousDoi, buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
-          dataset.getKey());
+        dataset.getKey());
     }
     // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
     if (doiGenerator.isGbif(dataset.getDoi())) {
@@ -150,8 +152,8 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     Preconditions.checkNotNull(download, "download can not be null");
 
     if (download.isAvailable() &&
-        (previousDownload == null ||
-            (previousDownload.getStatus() != Download.Status.SUCCEEDED && previousDownload.getStatus() != Download.Status.FILE_ERASED))
+      (previousDownload == null ||
+        (previousDownload.getStatus() != Download.Status.SUCCEEDED && previousDownload.getStatus() != Download.Status.FILE_ERASED))
     ) {
       try {
         doiGenerator.registerDownload(download.getDoi(), buildMetadata(download, user), download.getKey());

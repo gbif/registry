@@ -13,11 +13,12 @@ import java.util.List;
  * Digester needs public access to this otherwise package scoped class.
  * </br>
  * Note HTML is used to concatenate paragraphs using <p> instead of newline character ("\n"), see POR-3138.
+ *
  * @see <a href="http://dev.gbif.org/issues/browse/POR-3138">POR-3138</a>
  */
 public class ParagraphContainer {
 
-  private static Joiner PARA_JOIN = Joiner.on("\n");
+  private static Joiner paraJoin = Joiner.on("\n");
   private List<String> paragraphs = Lists.newArrayList();
 
   public void appendParagraph(String para) {
@@ -32,16 +33,16 @@ public class ParagraphContainer {
     }
 
     //do not wrap in HTML if we only have one element
-    if(paragraphs.size() == 1) {
+    if (paragraphs.size() == 1) {
       return paragraphs.get(0);
     }
 
     // replace with StringJoiner when we move to Java 8
     List<String> wrappedParagraphs = Lists.newArrayList();
-    for(String para : paragraphs) {
+    for (String para : paragraphs) {
       wrappedParagraphs.add(wrapInHtmlParagraph(para));
     }
-    return PARA_JOIN.join(wrappedParagraphs);
+    return paraJoin.join(wrappedParagraphs);
   }
 
   private String wrapInHtmlParagraph(String para) {

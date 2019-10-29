@@ -22,8 +22,10 @@ public class DatasetOccurrenceDownloadUsageWsClient
 
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(@NotNull UUID uuid, @Nullable Pageable pageable) {
+    int limit = pageable != null ? pageable.getLimit() : 20;
+    long offset = pageable != null ? pageable.getOffset() : 0L;
     final Response<PagingResponse<DatasetOccurrenceDownloadUsage>> response =
-        SyncCall.syncCallWithResponse(client.listByDataset(uuid, pageable.getLimit(), pageable.getOffset()));
+        SyncCall.syncCallWithResponse(client.listByDataset(uuid, limit, offset));
     return response.body();
   }
 }

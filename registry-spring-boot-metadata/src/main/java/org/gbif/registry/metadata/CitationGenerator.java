@@ -124,7 +124,7 @@ public class CitationGenerator {
     }
 
     List<Contact> uniqueContacts = getUniqueAuthors(contacts,
-      (ctc) -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
+      ctc -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
 
     // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
     Optional<Contact> firstOriginator = uniqueContacts.stream()
