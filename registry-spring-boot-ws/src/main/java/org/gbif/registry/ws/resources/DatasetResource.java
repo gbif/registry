@@ -73,6 +73,7 @@ import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -168,7 +169,7 @@ public class DatasetResource
                          IdentifierMapper identifierMapper,
                          CommentMapper commentMapper,
                          EventManager eventManager,
-                         DatasetSearchService searchService,
+                         @Qualifier("datasetSearchServiceStub") DatasetSearchService searchService,
                          MetadataMapper metadataMapper,
                          DatasetProcessStatusMapper datasetProcessStatusMapper,
                          NetworkMapper networkMapper,

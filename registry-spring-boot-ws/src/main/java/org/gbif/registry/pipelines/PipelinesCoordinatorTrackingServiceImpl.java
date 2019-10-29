@@ -35,6 +35,7 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -101,7 +102,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public PipelinesCoordinatorTrackingServiceImpl(
     @Autowired(required = false) MessagePublisher publisher,
     PipelineProcessMapper mapper,
-    DatasetService datasetService,
+    @Lazy DatasetService datasetService,
     MetricsHandler metricsHandler) {
     this.publisher = publisher;
     this.mapper = mapper;
