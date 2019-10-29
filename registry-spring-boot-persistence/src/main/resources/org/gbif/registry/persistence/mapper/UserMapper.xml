@@ -9,8 +9,8 @@
     <result column="last_name" property="lastName" />
     <result column="password" property="passwordHash" />
     <result column="roles" property="roles" typeHandler="org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler"/>
-    <result column="settings" property="settings" typeHandler="org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler"/>
-    <result column="system_settings" property="systemSettings" typeHandler="org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler"/>
+    <result column="settings" property="settings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
+    <result column="system_settings" property="systemSettings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
     <result column="last_login" property="lastLogin" />
     <result column="deleted" property="deleted" />
   </resultMap>
@@ -30,8 +30,8 @@
     #{email,jdbcType=VARCHAR},
     #{passwordHash,jdbcType=VARCHAR},
     #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler},
-    #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler}::hstore,
-    #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler}::hstore,
+    #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     now() <!-- created -->
   </sql>
 
@@ -41,8 +41,8 @@
     email = #{email,jdbcType=VARCHAR},
     password = #{passwordHash,jdbcType=VARCHAR},
     roles = #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler},
-    settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler}::hstore,
-    system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.SettingsTypeHandler}::hstore,
+    settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     deleted = #{deleted}
   </sql>
 
