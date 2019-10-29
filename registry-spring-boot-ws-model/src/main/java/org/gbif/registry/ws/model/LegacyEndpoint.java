@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.model;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
@@ -35,8 +37,6 @@ public class LegacyEndpoint extends Endpoint {
 
   // injected from HTTP form parameters
   private UUID datasetKey;
-
-  private UUID organizationKey;
 
   /**
    * Set the endpoint's dataset key. Mandatory field, injected on both create and update requests.
@@ -99,10 +99,10 @@ public class LegacyEndpoint extends Endpoint {
     if (lookup == null) {
       // try to match some endpoints with their variant name
       if (injected.equalsIgnoreCase(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
-          || injected.equalsIgnoreCase(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)
-          || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
-          || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
-          || injected.equalsIgnoreCase(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
+        || injected.equalsIgnoreCase(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)
+        || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
+        || injected.equalsIgnoreCase(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
+        || injected.equalsIgnoreCase(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         setType(EndpointType.DWC_ARCHIVE);
       } else {
         LOG.error("Endpoint type could not be interpreted: {}", injected);
@@ -153,12 +153,30 @@ public class LegacyEndpoint extends Endpoint {
     return getUrl().toASCIIString();
   }
 
-  /**
-   * Set the publishing organization key of the dataset to which the endpoint is associated.
-   *
-   * @param organizationKey organization key as UUID
-   */
-  public void setOrganizationKey(UUID organizationKey) {
-    this.organizationKey = organizationKey;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    LegacyEndpoint that = (LegacyEndpoint) o;
+    return Objects.equal(datasetKey, that.datasetKey);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), datasetKey);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+      .add("datasetKey", datasetKey)
+      .toString();
   }
 }
