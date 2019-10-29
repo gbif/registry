@@ -16,7 +16,6 @@ import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,10 +49,10 @@ public class LegacyDatasetResource {
   private final InstallationService installationService;
   private final IptResource iptResource;
 
-  public LegacyDatasetResource(@Qualifier("organizationServiceStub") OrganizationService organizationService,
-                               @Qualifier("datasetServiceStub") DatasetService datasetService,
+  public LegacyDatasetResource(OrganizationService organizationService,
+                               DatasetService datasetService,
                                IptResource iptResource,
-                               @Qualifier("installationServiceStub") InstallationService installationService) {
+                               InstallationService installationService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
@@ -70,7 +69,7 @@ public class LegacyDatasetResource {
    * @see IptResource#registerDataset(org.gbif.registry.ws.model.LegacyDataset)
    */
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_XML_VALUE)
+    produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
     // reuse existing subresource
     return iptResource.registerDataset(dataset);
@@ -88,8 +87,8 @@ public class LegacyDatasetResource {
    * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
   @PostMapping(value = "{key}",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_XML_VALUE)
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+    produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (dataset != null) {
@@ -104,8 +103,8 @@ public class LegacyDatasetResource {
       dataset.setContacts(existing.getContacts());
       // if primary contact wasn't supplied, set existing one here so that it doesn't respond BAD_REQUEST
       if (dataset.getPrimaryContactAddress() == null && dataset.getPrimaryContactEmail() == null
-          && dataset.getPrimaryContactType() == null && dataset.getPrimaryContactPhone() == null
-          && dataset.getPrimaryContactName() == null && dataset.getPrimaryContactDescription() == null) {
+        && dataset.getPrimaryContactType() == null && dataset.getPrimaryContactPhone() == null
+        && dataset.getPrimaryContactName() == null && dataset.getPrimaryContactDescription() == null) {
         dataset.setPrimaryContact(LegacyResourceUtils.getPrimaryContact(existing));
       }
       // otherwise, update primary contact and type
@@ -128,7 +127,7 @@ public class LegacyDatasetResource {
       // ensure the publishing organization exists, the installation exists, primary contact exists, etc
       Contact contact = dataset.getPrimaryContact();
       if (contact != null && LegacyResourceUtils.isValidOnUpdate(dataset,
-          datasetService, organizationService, installationService)) {
+        datasetService, organizationService, installationService)) {
         // update only fields that could have changed
         existing.setModifiedBy(user);
         existing.setTitle(dataset.getTitle());
@@ -157,18 +156,18 @@ public class LegacyDatasetResource {
 
         LOG.info("Dataset updated successfully, key={}", datasetKey.toString());
         return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .cacheControl(CacheControl.noCache())
-            .body(dataset);
+          .status(HttpStatus.CREATED)
+          .cacheControl(CacheControl.noCache())
+          .body(dataset);
       } else {
         LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
       }
     }
     LOG.error("Dataset update failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -181,7 +180,7 @@ public class LegacyDatasetResource {
    * @return ResponseEntity with list of Datasets or empty list with error message if none found
    */
   @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
-      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity datasetsForOrganization(@RequestParam("organisationKey") UUID organizationKey) {
     if (organizationKey != null) {
       try {
@@ -206,15 +205,15 @@ public class LegacyDatasetResource {
         // writer for Java class java.util.ArrayList
         LegacyDatasetResponse[] array = datasets.toArray(new LegacyDatasetResponse[datasets.size()]);
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(array);
+          .status(HttpStatus.OK)
+          .body(array);
       } catch (NotFoundException e) {
         LOG.error("The organization with key {} specified by query parameter does not exist", organizationKey);
       }
     }
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(new ErrorResponse("No organisation matches the key provided"));
+      .status(HttpStatus.OK)
+      .body(new ErrorResponse("No organisation matches the key provided"));
   }
 
   /**
@@ -224,8 +223,8 @@ public class LegacyDatasetResource {
    * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
   @GetMapping(value = "{key}",
-      consumes = MediaType.TEXT_PLAIN_VALUE,
-      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    consumes = MediaType.TEXT_PLAIN_VALUE,
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity readDataset(@PathVariable("key") UUID datasetKey) {
     if (datasetKey != null) {
       try {
@@ -234,17 +233,17 @@ public class LegacyDatasetResource {
         Dataset dataset = datasetService.get(datasetKey);
         Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .body(new LegacyDatasetResponse(dataset, contact));
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .body(new LegacyDatasetResponse(dataset, contact));
       } catch (NotFoundException e) {
         LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
       }
     }
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .cacheControl(CacheControl.noCache())
-        .body(new ErrorResponse("No resource matches the key provided"));
+      .status(HttpStatus.OK)
+      .cacheControl(CacheControl.noCache())
+      .body(new ErrorResponse("No resource matches the key provided"));
   }
 
   /**

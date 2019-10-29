@@ -13,7 +13,6 @@ import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,7 +41,7 @@ public class LegacyEndpointResource {
 
   private final DatasetService datasetService;
 
-  public LegacyEndpointResource(@Qualifier("datasetServiceStub") DatasetService datasetService) {
+  public LegacyEndpointResource(DatasetService datasetService) {
     this.datasetService = datasetService;
   }
 
@@ -55,7 +54,7 @@ public class LegacyEndpointResource {
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      produces = MediaType.APPLICATION_XML_VALUE)
+    produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -73,18 +72,18 @@ public class LegacyEndpointResource {
 
         // generate response
         return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .cacheControl(CacheControl.noCache())
-            .body(endpoint);
+          .status(HttpStatus.CREATED)
+          .cacheControl(CacheControl.noCache())
+          .body(endpoint);
       } else {
         LOG.error("Mandatory parameter(s) missing or invalid!");
       }
     }
     LOG.error("Endpoint creation failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -109,9 +108,9 @@ public class LegacyEndpointResource {
 
         LOG.info("Dataset's endpoints deleted successfully, key={}", datasetKey);
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .build();
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .build();
 
       } else {
         LOG.error("Request invalid. Dataset (whose endpoints are to be deleted) no longer exists!");
@@ -119,9 +118,9 @@ public class LegacyEndpointResource {
     }
     LOG.error("Endpoint deletion failed");
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 
   /**
@@ -136,7 +135,7 @@ public class LegacyEndpointResource {
    * @return ResponseEntity with list of Endpoints or empty list with error message if none found
    */
   @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
-      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity endpointsForDataset(@RequestParam("resourceKey") UUID datasetKey, @RequestParam("op") String op) {
 
     // get all service types?
@@ -146,15 +145,15 @@ public class LegacyEndpointResource {
         String content = Resources.toString(Resources.getResource("legacy/service_types.json"), Charsets.UTF_8);
         LOG.debug("Get service types finished");
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .body(content);
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .body(content);
       } catch (IOException e) {
         LOG.error("An error occurred retrieving service types");
         return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .cacheControl(CacheControl.noCache())
-            .build();
+          .status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .cacheControl(CacheControl.noCache())
+          .build();
       }
     } else if (datasetKey != null) {
       try {
@@ -175,21 +174,21 @@ public class LegacyEndpointResource {
         // writer for Java class java.util.ArrayList
         LegacyEndpointResponse[] array = endpoints.toArray(new LegacyEndpointResponse[endpoints.size()]);
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .body(array);
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .body(array);
       } catch (NotFoundException e) {
         LOG.error("The dataset with key {} specified by query parameter does not exist", datasetKey);
         // the dataset didn't exist, and expected response is "{Error: "No services associated to the organisation}"
         return ResponseEntity
-            .status(HttpStatus.OK)
-            .cacheControl(CacheControl.noCache())
-            .body(new ErrorResponse("No dataset matches the key provided"));
+          .status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .body(new ErrorResponse("No dataset matches the key provided"));
       }
     }
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+      .status(HttpStatus.BAD_REQUEST)
+      .cacheControl(CacheControl.noCache())
+      .build();
   }
 }

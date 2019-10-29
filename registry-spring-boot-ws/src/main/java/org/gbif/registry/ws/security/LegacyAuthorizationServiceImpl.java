@@ -13,8 +13,6 @@ import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,10 +38,9 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   private final DatasetService datasetService;
   private final InstallationService installationService;
 
-  // TODO: 06/09/2019 fix problem with services (circular dependency). Optional lazy dependency for now
-  public LegacyAuthorizationServiceImpl(@Lazy @Autowired(required = false) OrganizationService organizationService,
-                                        @Lazy @Autowired(required = false) DatasetService datasetService,
-                                        @Lazy @Autowired(required = false) InstallationService installationService) {
+  public LegacyAuthorizationServiceImpl(OrganizationService organizationService,
+                                        DatasetService datasetService,
+                                        InstallationService installationService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.installationService = installationService;
@@ -164,7 +161,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       }
     }
     LOG.info("Authorization succeeded, can modify dataset with key={} belonging to organization with key={}",
-        datasetKey.toString(), authorization.getUserKey().toString());
+      datasetKey.toString(), authorization.getUserKey().toString());
     return true;
   }
 

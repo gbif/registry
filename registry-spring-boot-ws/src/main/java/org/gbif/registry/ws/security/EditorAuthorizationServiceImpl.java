@@ -9,7 +9,6 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +26,9 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   private InstallationService installationService;
   private OrganizationService organizationService;
 
-  public EditorAuthorizationServiceImpl(@Qualifier("datasetServiceStub") DatasetService datasetService,
-                                        @Qualifier("installationServiceStub") InstallationService installationService,
-                                        @Qualifier("organizationServiceStub") OrganizationService organizationService,
+  public EditorAuthorizationServiceImpl(DatasetService datasetService,
+                                        InstallationService installationService,
+                                        OrganizationService organizationService,
                                         UserRightsMapper userRightsMapper) {
     this.datasetService = datasetService;
     this.installationService = installationService;

@@ -35,7 +35,6 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -64,7 +63,7 @@ import java.util.stream.Collectors;
 public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistoryTrackingService {
 
   private static final Logger LOG =
-      LoggerFactory.getLogger(PipelinesCoordinatorTrackingServiceImpl.class);
+    LoggerFactory.getLogger(PipelinesCoordinatorTrackingServiceImpl.class);
 
   // Used to iterate over all datasets
   private static final int PAGE_SIZE = 200;
@@ -85,8 +84,8 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   private static final Comparator<Endpoint> ENDPOINT_COMPARATOR = Ordering.compound(Lists.newArrayList(
-      Collections.reverseOrder(new EndpointPriorityComparator()),
-      EndpointCreatedComparator.INSTANCE
+    Collections.reverseOrder(new EndpointPriorityComparator()),
+    EndpointCreatedComparator.INSTANCE
   ));
 
   /**
@@ -100,10 +99,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   private final MetricsHandler metricsHandler;
 
   public PipelinesCoordinatorTrackingServiceImpl(
-      @Autowired(required = false) MessagePublisher publisher,
-      PipelineProcessMapper mapper,
-      @Qualifier("datasetServiceStub") DatasetService datasetService,
-      MetricsHandler metricsHandler) {
+    @Autowired(required = false) MessagePublisher publisher,
+    PipelineProcessMapper mapper,
+    DatasetService datasetService,
+    MetricsHandler metricsHandler) {
     this.publisher = publisher;
     this.mapper = mapper;
     this.datasetService = datasetService;
@@ -112,14 +111,14 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
   @Override
   public RunPipelineResponse runLastAttempt(
-      UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix) {
+    UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix) {
     int lastAttempt =
-        mapper
-            .getLastAttempt(datasetKey)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Couldn't find last attempt for dataset " + datasetKey));
+      mapper
+        .getLastAttempt(datasetKey)
+        .orElseThrow(
+          () ->
+            new IllegalArgumentException(
+              "Couldn't find last attempt for dataset " + datasetKey));
     return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user, prefix);
   }
 
@@ -129,19 +128,19 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   private void doOnAllDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
     PagingResponse<Dataset> response =
-        datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
+      datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     do {
       response
-          .getResults()
-          .forEach(
-              d -> {
-                try {
-                  LOG.info("trying to rerun dataset {}", d.getKey());
-                  onDataset.accept(d);
-                } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
-                }
-              });
+        .getResults()
+        .forEach(
+          d -> {
+            try {
+              LOG.info("trying to rerun dataset {}", d.getKey());
+              onDataset.accept(d);
+            } catch (Exception ex) {
+              LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
+            }
+          });
       pagingRequest.setOffset(response.getResults().size());
       response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
     } while (!response.isEndOfRecords());
@@ -182,12 +181,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
-        () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix)));
+      () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix)));
 
     return RunPipelineResponse.builder()
-        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
-        .setStep(steps)
-        .build();
+      .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
+      .setStep(steps)
+      .build();
   }
 
   /**
@@ -198,10 +197,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
    * @return optionally, the las step found
    */
   private Optional<PipelineStep> getLatestSuccessfulStep(
-      PipelineProcess pipelineProcess, StepType step) {
+    PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getSteps().stream()
-        .filter(s -> step.equals(s.getType()))
-        .max(Comparator.comparing(PipelineStep::getStarted));
+      .filter(s -> step.equals(s.getType()))
+      .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
   /**
@@ -221,9 +220,9 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Set<PipelineStep.Status> statuses = new HashSet<>();
     for (StepType stepType : StepType.values()) {
       pipelineProcess.getSteps().stream()
-          .filter(s -> stepType == s.getType())
-          .max(Comparator.comparing(PipelineStep::getStarted))
-          .ifPresent(step -> statuses.add(step.getState()));
+        .filter(s -> stepType == s.getType())
+        .max(Comparator.comparing(PipelineStep::getStarted))
+        .ifPresent(step -> statuses.add(step.getState()));
     }
 
     // Only has one states, it could means that all steps have the same status
@@ -261,7 +260,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
   @Override
   public RunPipelineResponse runPipelineAttempt(
-      UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user, String prefix) {
+    UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user, String prefix) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -273,61 +272,61 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     // Checks that the pipelines is not in RUNNING state
     if (getStatus(status) == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
-          .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
-          .setStep(steps)
-          .build();
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
+        .setStep(steps)
+        .build();
     }
 
     // Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
     Dataset dataset = datasetService.get(datasetKey);
     prioritizeSteps(steps, dataset).forEach(
-        stepName ->
-            getLatestSuccessfulStep(status, stepName)
-                .ifPresent(
-                    step -> {
-                      try {
-                        Message message = null;
+      stepName ->
+        getLatestSuccessfulStep(status, stepName)
+          .ifPresent(
+            step -> {
+              try {
+                Message message = null;
 
-                        if (stepName == StepType.INTERPRETED_TO_INDEX) {
-                          PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
-                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
-                          m.setOnlyForStep(StepType.INTERPRETED_TO_INDEX.name());
-                          m.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
-                          message = m;
-                        } else if (stepName == StepType.HDFS_VIEW) {
-                          PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
-                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
-                          m.setOnlyForStep(StepType.HDFS_VIEW.name());
-                          m.setPipelineSteps(Collections.singleton(StepType.HDFS_VIEW.name()));
-                          message = m;
-                        } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
-                          PipelinesVerbatimMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesVerbatimMessage.class);
-                          Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
-                          m.setPipelineSteps(new HashSet<>(Arrays.asList(StepType.VERBATIM_TO_INTERPRETED.name(), StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
-                          message = m;
-                        } else if (stepName == StepType.DWCA_TO_VERBATIM) {
-                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesDwcaMessage.class);
-                        } else if (stepName == StepType.ABCD_TO_VERBATIM) {
-                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesAbcdMessage.class);
-                        } else if (stepName == StepType.XML_TO_VERBATIM) {
-                          message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesXmlMessage.class);
-                        } else {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
-                        }
+                if (stepName == StepType.INTERPRETED_TO_INDEX) {
+                  PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
+                  Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                  m.setOnlyForStep(StepType.INTERPRETED_TO_INDEX.name());
+                  m.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+                  message = m;
+                } else if (stepName == StepType.HDFS_VIEW) {
+                  PipelinesInterpretedMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesInterpretedMessage.class);
+                  Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                  m.setOnlyForStep(StepType.HDFS_VIEW.name());
+                  m.setPipelineSteps(Collections.singleton(StepType.HDFS_VIEW.name()));
+                  message = m;
+                } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
+                  PipelinesVerbatimMessage m = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesVerbatimMessage.class);
+                  Optional.ofNullable(prefix).ifPresent(m::setResetPrefix);
+                  m.setPipelineSteps(new HashSet<>(Arrays.asList(StepType.VERBATIM_TO_INTERPRETED.name(), StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+                  message = m;
+                } else if (stepName == StepType.DWCA_TO_VERBATIM) {
+                  message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesDwcaMessage.class);
+                } else if (stepName == StepType.ABCD_TO_VERBATIM) {
+                  message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesAbcdMessage.class);
+                } else if (stepName == StepType.XML_TO_VERBATIM) {
+                  message = OBJECT_MAPPER.readValue(step.getMessage(), PipelinesXmlMessage.class);
+                } else {
+                  responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
+                }
 
-                        if (message != null) {
-                          responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
-                          publisher.send(message);
-                        }
+                if (message != null) {
+                  responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+                  publisher.send(message);
+                }
 
-                        // update rerun reason and modifier user
-                        mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
-                      } catch (IOException ex) {
-                        LOG.error("Error reading message", ex);
-                        throw Throwables.propagate(ex);
-                      }
-                    }));
+                // update rerun reason and modifier user
+                mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
+              } catch (IOException ex) {
+                LOG.error("Error reading message", ex);
+                throw Throwables.propagate(ex);
+              }
+            }));
 
     return responseBuilder.build();
   }
@@ -373,7 +372,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
   @Override
   public void updatePipelineStepStatusAndMetrics(
-      long processKey, long pipelineStepKey, PipelineStep.Status status, String user) {
+    long processKey, long pipelineStepKey, PipelineStep.Status status, String user) {
     Objects.requireNonNull(status, "Status can't be null");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
@@ -383,18 +382,18 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Preconditions.checkArgument(process.getSteps().contains(step), "The process doesn't contain the step.");
 
     if (step.getState() != status
-        && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
+      && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
       step.setFinished(LocalDateTime.now());
     }
 
     // get metrics
     step.setMetrics(
-        metricsHandler.getMetricInfo(
-            process.getDatasetKey(),
-            process.getAttempt(),
-            step.getType(),
-            step.getStarted(),
-            step.getFinished()));
+      metricsHandler.getMetricInfo(
+        process.getDatasetKey(),
+        process.getAttempt(),
+        step.getType(),
+        step.getStarted(),
+        step.getFinished()));
 
     // update status and modifying user
     step.setState(status);
@@ -419,24 +418,24 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     //
     // The map is sorted by the step execution order in descending order
     Map<Integer, Map<StepType, List<PipelineStep>>> stepsByOrderAndName =
-        process.getSteps().stream()
-            .collect(
-                Collectors.groupingBy(
-                    s -> s.getType().getExecutionOrder(),
-                    () ->
-                        new TreeMap<Integer, Map<StepType, List<PipelineStep>>>(
-                            Comparator.reverseOrder()),
-                    Collectors.groupingBy(PipelineStep::getType)));
+      process.getSteps().stream()
+        .collect(
+          Collectors.groupingBy(
+            s -> s.getType().getExecutionOrder(),
+            () ->
+              new TreeMap<Integer, Map<StepType, List<PipelineStep>>>(
+                Comparator.reverseOrder()),
+            Collectors.groupingBy(PipelineStep::getType)));
 
     // iterate from steps in the last position to the ones in the first one so that we can create
     // the worfklow hierarchy
     List<WorkflowStep> stepsPreviousIteration = null;
     for (Map.Entry<Integer, Map<StepType, List<PipelineStep>>> stepsByOrder :
-        stepsByOrderAndName.entrySet()) {
+      stepsByOrderAndName.entrySet()) {
 
       List<WorkflowStep> currentSteps = new ArrayList<>();
       for (Map.Entry<StepType, List<PipelineStep>> stepsByType :
-          stepsByOrder.getValue().entrySet()) {
+        stepsByOrder.getValue().entrySet()) {
 
         // create workflow step
         WorkflowStep step = new WorkflowStep();
@@ -506,40 +505,40 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   private PipelineProcess addNumberRecords(PipelineProcess process) {
     if (process != null) {
       process.getSteps().stream()
-          .filter(s -> s.getType().getExecutionOrder() == 1)
-          .max(Comparator.comparing(PipelineStep::getStarted))
-          .ifPresent(
-              s -> {
-                if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-                  try {
-                    process.setNumberRecords(
-                        OBJECT_MAPPER
-                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
-                            .getValidationReport()
-                            .getOccurrenceReport()
-                            .getCheckedRecords());
-                  } catch (IOException ex) {
-                    LOG.warn(
-                        "Couldn't get the number of records for dataset {} and attempt {}",
-                        process.getDatasetKey(),
-                        process.getAttempt(),
-                        ex);
-                  }
-                } else if (s.getType() == StepType.XML_TO_VERBATIM) {
-                  try {
-                    process.setNumberRecords(
-                        OBJECT_MAPPER
-                            .readValue(s.getMessage(), PipelinesXmlMessage.class)
-                            .getTotalRecordCount());
-                  } catch (IOException ex) {
-                    LOG.warn(
-                        "Couldn't get the number of records for dataset {} and attempt {}",
-                        process.getDatasetKey(),
-                        process.getAttempt(),
-                        ex);
-                  }
-                } // abcd doesn't have count
-              });
+        .filter(s -> s.getType().getExecutionOrder() == 1)
+        .max(Comparator.comparing(PipelineStep::getStarted))
+        .ifPresent(
+          s -> {
+            if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+              try {
+                process.setNumberRecords(
+                  OBJECT_MAPPER
+                    .readValue(s.getMessage(), PipelinesDwcaMessage.class)
+                    .getValidationReport()
+                    .getOccurrenceReport()
+                    .getCheckedRecords());
+              } catch (IOException ex) {
+                LOG.warn(
+                  "Couldn't get the number of records for dataset {} and attempt {}",
+                  process.getDatasetKey(),
+                  process.getAttempt(),
+                  ex);
+              }
+            } else if (s.getType() == StepType.XML_TO_VERBATIM) {
+              try {
+                process.setNumberRecords(
+                  OBJECT_MAPPER
+                    .readValue(s.getMessage(), PipelinesXmlMessage.class)
+                    .getTotalRecordCount());
+              } catch (IOException ex) {
+                LOG.warn(
+                  "Couldn't get the number of records for dataset {} and attempt {}",
+                  process.getDatasetKey(),
+                  process.getAttempt(),
+                  ex);
+              }
+            } // abcd doesn't have count
+          });
     }
 
     return process;
