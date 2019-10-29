@@ -4,13 +4,16 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.function.UnaryOperator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
+import org.postgresql.util.HStoreConverter;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 
@@ -24,23 +27,13 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
   public void setNonNullParameter(
       PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
 
-    String metricsAsString = null;
+    Map<String, String> metricsAsMap = new HashMap<>();
     if (metrics != null && !metrics.isEmpty()) {
-      metricsAsString =
-          metrics.stream()
-              .map(
-                  metricInfo ->
-                      new StringJoiner(METRIC_INFO_DELIMITER)
-                          .add(metricInfo.getName())
-                          .add(
-                              Optional.ofNullable(metricInfo.getValue())
-                                  .filter(s -> !Strings.isNullOrEmpty(s))
-                                  .orElse(null))
-                          .toString())
-              .collect(Collectors.joining(LIST_DELIMITER));
+      metricsAsMap =
+          metrics.stream().collect(Collectors.toMap(MetricInfo::getName, MetricInfo::getValue));
     }
 
-    ps.setString(i, metricsAsString);
+    ps.setString(i, HStoreConverter.toString(metricsAsMap));
   }
 
   @Override
@@ -64,22 +57,10 @@ public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
       return new HashSet<>();
     }
 
-    // removes the quotes at the beginning and at the end if they exist
-    UnaryOperator<String> stringNormalizer =
-        s ->
-            Optional.of(
-                    s.substring(
-                        s.charAt(0) == '"' ? 1 : 0,
-                        s.charAt(s.length() - 1) == '"' ? s.length() - 1 : s.length()))
-                .filter(v -> !v.equalsIgnoreCase("null"))
-                .orElse(null);
+    Map<String, String> metricsAsMap = HStoreConverter.fromString(hstoreString);
 
-    return Arrays.stream(hstoreString.split(LIST_DELIMITER))
-        .map(s -> s.split(METRIC_INFO_DELIMITER))
-        .map(
-            pieces ->
-                new MetricInfo(
-                    stringNormalizer.apply(pieces[0]), stringNormalizer.apply(pieces[1])))
+    return metricsAsMap.entrySet().stream()
+        .map(e -> new MetricInfo(e.getKey(), e.getValue()))
         .collect(Collectors.toSet());
   }
 }
