@@ -13,26 +13,26 @@ import javax.validation.constraints.NotNull;
 public class PersonServiceStub implements PersonService {
   @Override
   public Person create(@NotNull Person person) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("PersonService#create not implemented yet (directory-ws needed)");
   }
 
   @Override
   public Person get(@NotNull Integer integer) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("PersonService#get not implemented yet (directory-ws needed)");
   }
 
   @Override
   public void update(@NotNull Person person) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("PersonService#update not implemented yet (directory-ws needed)");
   }
 
   @Override
   public void delete(@NotNull Integer integer) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("PersonService#delete not implemented yet (directory-ws needed)");
   }
 
   @Override
   public PagingResponse<Person> list(@Nullable String s, @Nullable Pageable pageable) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("PersonService#list not implemented yet (directory-ws needed)");
   }
 }

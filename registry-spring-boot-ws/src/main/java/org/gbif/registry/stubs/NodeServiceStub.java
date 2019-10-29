@@ -13,26 +13,26 @@ import javax.validation.constraints.NotNull;
 public class NodeServiceStub implements NodeService {
   @Override
   public Node create(@NotNull Node node) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("NodeService#create not implemented yet (directory-ws needed)");
   }
 
   @Override
   public Node get(@NotNull Integer integer) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("NodeService#get not implemented yet (directory-ws needed)");
   }
 
   @Override
   public void update(@NotNull Node node) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("NodeService#update not implemented yet (directory-ws needed)");
   }
 
   @Override
   public void delete(@NotNull Integer integer) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("NodeService#delete not implemented yet (directory-ws needed)");
   }
 
   @Override
   public PagingResponse<Node> list(@Nullable String s, @Nullable Pageable pageable) {
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("NodeService#list not implemented yet (directory-ws needed)");
   }
 }
