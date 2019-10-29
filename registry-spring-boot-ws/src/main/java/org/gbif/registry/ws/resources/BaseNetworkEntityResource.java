@@ -85,7 +85,9 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
  *
  * @param <T> The type of resource that is under CRUD
  */
-@RequestMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/",
+  consumes = MediaType.APPLICATION_JSON_VALUE,
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
 
   private final BaseNetworkEntityMapper<T> mapper;

@@ -93,18 +93,18 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public DOI register(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, doiRegistrationToRegister ->
-        // Persist the DOI
-        Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
-            doi -> {
-              Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
-                // if DOI is not NEW throw an exception
-                if (DoiStatus.NEW != doiData.getStatus()) {
-                  throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Doi already exists"));
-                }
-              });
-              doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+      // Persist the DOI
+      Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
+        doi -> {
+          Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
+            // if DOI is not NEW throw an exception
+            if (DoiStatus.NEW != doiData.getStatus()) {
+              throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Doi already exists"));
             }
-        )
+          });
+          doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+        }
+      )
     );
   }
 
@@ -116,17 +116,17 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public DOI update(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, existingDoiRegistration ->
-        Optional.ofNullable(existingDoiRegistration.getDoi()).ifPresent(
-            doi ->
-                Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
-                  // if DOI is not NEW throw an exception
-                  if (DoiStatus.DELETED == doiData.getStatus()) {
-                    throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
-                  }
-                  doiPersistenceService.update(doi, doiPersistenceService.get(doi),
-                      doiRegistration.getMetadata());
-                })
-        ));
+      Optional.ofNullable(existingDoiRegistration.getDoi()).ifPresent(
+        doi ->
+          Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
+            // if DOI is not NEW throw an exception
+            if (DoiStatus.DELETED == doiData.getStatus()) {
+              throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
+            }
+            doiPersistenceService.update(doi, doiPersistenceService.get(doi),
+              doiRegistration.getMetadata());
+          })
+      ));
   }
 
   private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
@@ -137,8 +137,8 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       // Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
       DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata)
-          .withAlternateIdentifiers(
-              addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
+        .withAlternateIdentifiers(
+          addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
 
       // handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
@@ -164,15 +164,15 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     AlternateIdentifiers.Builder<Void> builder = AlternateIdentifiers.builder();
     if (alternateIdentifiers != null && alternateIdentifiers.getAlternateIdentifier() != null) {
       builder.addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier().stream()
-          .filter(identifier -> !identifier.getValue().equals(doi.getDoiName())
-              && !identifier.getAlternateIdentifierType()
-              .equalsIgnoreCase("DOI"))
-          .collect(Collectors.toList()));
+        .filter(identifier -> !identifier.getValue().equals(doi.getDoiName())
+          && !identifier.getAlternateIdentifierType()
+          .equalsIgnoreCase("DOI"))
+        .collect(Collectors.toList()));
     }
     builder.addAlternateIdentifier(AlternateIdentifiers.AlternateIdentifier.builder()
-        .withValue(doi.getDoiName())
-        .withAlternateIdentifierType("DOI")
-        .build());
+      .withValue(doi.getDoiName())
+      .withAlternateIdentifierType("DOI")
+      .build());
     return builder.build();
   }
 

@@ -68,7 +68,9 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 @RestController
 @RequestMapping("organization")
-public class OrganizationResource extends BaseNetworkEntityResource<Organization> implements OrganizationService {
+public class OrganizationResource
+  extends BaseNetworkEntityResource<Organization>
+  implements OrganizationService {
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 

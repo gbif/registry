@@ -59,7 +59,9 @@ import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData
  * Occurrence download resource/web service.
  */
 @RestController
-@RequestMapping(value = "occurrence/download", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "occurrence/download",
+  consumes = MediaType.APPLICATION_JSON_VALUE,
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
@@ -131,7 +133,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
     return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user, status),
-        occurrenceDownloadMapper.listByUser(user, page, status));
+      occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
   @PutMapping("{key}")
@@ -170,7 +172,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public void createUsages(@NotNull @PathVariable("key") String downloadKey,
                            @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
-        .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+      .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
@@ -180,7 +182,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                                                                     @Nullable @PartialDate Date toDate,
                                                                     @Nullable Country userCountry) {
     return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
-        Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
+      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
 
   @GetMapping("statistics/downloadedRecordsByDataset")
@@ -191,8 +193,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                                                                         @Nullable Country publishingCountry,
                                                                         @RequestParam("datasetKey") UUID datasetKey) {
     return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
-        Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-        datasetKey));
+      Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
+      datasetKey));
   }
 
   /**

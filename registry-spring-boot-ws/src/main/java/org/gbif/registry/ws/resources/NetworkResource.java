@@ -33,7 +33,9 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping("network")
-public class NetworkResource extends BaseNetworkEntityResource<Network> implements NetworkService {
+public class NetworkResource
+  extends BaseNetworkEntityResource<Network>
+  implements NetworkService {
 
   private final DatasetMapper datasetMapper;
   private final NetworkMapper networkMapper;

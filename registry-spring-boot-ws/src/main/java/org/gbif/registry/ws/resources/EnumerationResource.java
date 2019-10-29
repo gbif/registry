@@ -53,35 +53,35 @@ public class EnumerationResource {
 
   //List of Licenses as String
   private static final List<String> LICENSES =
-      Arrays.stream(License.values())
-          .map(license -> license.isConcrete() ? license.getLicenseUrl() : license.name())
-          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+    Arrays.stream(License.values())
+      .map(license -> license.isConcrete() ? license.getLicenseUrl() : license.name())
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   private static final List<Map<String, String>> COUNTRIES =
-      Arrays.stream(Country.values())
-          .filter(Country::isOfficial)
-          .map(EnumerationResource::countryToMap)
-          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+    Arrays.stream(Country.values())
+      .filter(Country::isOfficial)
+      .map(EnumerationResource::countryToMap)
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   private static final List<Map<String, String>> LANGUAGES =
-      Arrays.stream(Language.values())
-          .map(EnumerationResource::languageToMap)
-          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+    Arrays.stream(Language.values())
+      .map(EnumerationResource::languageToMap)
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   //Only includes InterpretationRemark that are NOT deprecated
   private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
-      Stream.concat(
-          Arrays.stream(OccurrenceIssue.values()),
-          Arrays.stream(NameUsageIssue.values()))
-          .filter(val -> !val.isDeprecated())
-          .map(val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
-          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+    Stream.concat(
+      Arrays.stream(OccurrenceIssue.values()),
+      Arrays.stream(NameUsageIssue.values()))
+      .filter(val -> !val.isDeprecated())
+      .map(val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as URLs.
   private static final List<String> BASIC_EXTENSIONS =
-      Arrays.stream(Extension.values())
-          .map(Extension::name)
-          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+    Arrays.stream(Extension.values())
+      .map(Extension::name)
+      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
    * An inventory of the enumerations supported.
@@ -101,9 +101,9 @@ public class EnumerationResource {
 
       // create a list with gbif and collection vocabulary enums
       ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
-          .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
-          .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
-          .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
+        .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
+        .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
+        .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
 
       for (ClassInfo info : infosListBuilder.build()) {
         Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());
