@@ -539,17 +539,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param targetEntityKey key of target entity to add Contact to
    * @param contact         Contact to add
+   * @param authentication  SecurityContext (security related information)
    * @return key of Contact created
    */
   @PostMapping("{key}/contact")
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContact(@PathVariable("key") UUID targetEntityKey,
-                        @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) Contact contact) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public int addContact(@PathVariable("key") UUID targetEntityKey, @NotNull @Trim Contact contact,
+                        Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
+    return addContact(targetEntityKey, contact);
+  }
+
+  @Override
+  public int addContact(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
