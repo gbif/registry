@@ -112,11 +112,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -918,9 +914,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
-    PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    PagingResponse<Dataset> response = listByType(datasetType, pagingRequest);
     do {
       response
           .getResults()
@@ -934,7 +930,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                 }
               });
       pagingRequest.addOffset(response.getResults().size());
-      response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+      response = listByType(datasetType, pagingRequest);
     } while (!response.isEndOfRecords());
   }
 
@@ -948,7 +944,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@QueryParam("platform") String platform) {
     CompletableFuture.runAsync(
-        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
+        () ->
+            Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+                .forEach(
+                    type ->
+                        doOnAllOccurrenceDatasets(
+                            dataset -> crawl(dataset.getKey(), platform), type)));
   }
     /**
      * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the

@@ -43,6 +43,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
+import com.google.common.collect.ImmutableList;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -119,10 +120,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   /** Utility method to run batch jobs on all dataset elements */
-  private void doOnAllDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
+
     PagingResponse<Dataset> response =
-        datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
+        datasetService.listByType(datasetType, pagingRequest);
     do {
       response
           .getResults()
@@ -136,7 +138,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                 }
               });
       pagingRequest.addOffset(response.getResults().size());
-      response = datasetService.listByType(DatasetType.OCCURRENCE, pagingRequest);
+      response = datasetService.listByType(datasetType, pagingRequest);
     } while (!response.isEndOfRecords());
   }
 
@@ -175,7 +177,14 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
-        () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix)));
+        () ->
+            Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+                .forEach(
+                    type ->
+                        doOnAllDatasets(
+                            dataset ->
+                                runLastAttempt(dataset.getKey(), steps, reason, user, prefix),
+                            type)));
 
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
