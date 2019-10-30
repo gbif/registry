@@ -10,7 +10,7 @@ public class WebApplicationException extends RuntimeException {
 
   private static final long serialVersionUID = 11660101L;
 
-  private ResponseEntity response;
+  private final transient ResponseEntity response;
 
   /**
    * Construct a new instance with a blank message and default HTTP status code of 500
