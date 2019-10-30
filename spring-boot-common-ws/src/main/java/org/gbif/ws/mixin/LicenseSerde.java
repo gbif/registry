@@ -7,16 +7,19 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import org.gbif.api.vocabulary.License;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Jackson {@link JsonSerializer} and Jackson {@link JsonDeserializer} classes for {@link License}.
  */
-public class LicenseSerde {
+public final class LicenseSerde {
+
+  private LicenseSerde() {
+  }
 
   /**
    * Jackson {@link JsonSerializer} for {@link License}.
@@ -60,7 +63,7 @@ public class LicenseSerde {
         }
         //then, try by name
         license = License.fromString(jp.getText());
-        return license.or(License.UNSUPPORTED);
+        return license.orElse(License.UNSUPPORTED);
       }
       throw ctxt.mappingException("Expected String");
     }
