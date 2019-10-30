@@ -64,7 +64,6 @@ public class IptResource {
    * @param installation IptInstallation with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
-  // TODO: 29/10/2019 add validation annotation
   @PostMapping(value = "register",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
@@ -98,7 +97,7 @@ public class IptResource {
             endpoint.setModifiedBy(user);
             installationService.addEndpoint(key, endpoint);
           }
-          LOG.info("IPT installation registered successfully, key={}", key.toString());
+          LOG.info("IPT installation registered successfully, key={}", key);
 
           // construct GenericEntity response object expected by IPT
           IptEntityResponse entity = new IptEntityResponse(key.toString());
