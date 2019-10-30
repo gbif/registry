@@ -185,6 +185,10 @@ public class MetricsHandler {
     for (JsonNode bucket : buckets) {
       String key = bucket.get("key").asText();
 
+      if (!key.contains(METRIC_NAME_FILTER)) {
+        continue;
+      }
+
       String metricName =
         key.substring(key.indexOf(METRIC_NAME_FILTER) + METRIC_NAME_FILTER.length());
       if (Strings.isNullOrEmpty(metricName)) {
