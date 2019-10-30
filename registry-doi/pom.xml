@@ -4,11 +4,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.137-SNAPSHOT</version>
+    <version>2.137</version>
   </parent>
 
   <artifactId>registry-doi</artifactId>
-  <version>2.137-SNAPSHOT</version>
+  <version>2.137</version>
 
   <packaging>jar</packaging>
 
