@@ -546,7 +546,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContact(@PathVariable("key") UUID targetEntityKey, @NotNull @Trim Contact contact,
+  public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact,
                         Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
