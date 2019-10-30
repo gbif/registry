@@ -95,7 +95,7 @@ public class EMLWriter {
     Preconditions.checkNotNull(dataset, "Dataset can't be null");
 
     Map<String, Object> map = ImmutableMap.of("dataset", dataset, "eml", new EmlDatasetWrapper(dataset),
-        "useDoiAsIdentifier", useDoiAsIdentifier, "omitXmlDeclaration", omitXmlDeclaration);
+      "useDoiAsIdentifier", useDoiAsIdentifier, "omitXmlDeclaration", omitXmlDeclaration);
 
     try {
       freemarkerConfig.getTemplate(EML_TEMPLATE).process(map, writer);
@@ -215,19 +215,19 @@ public class EMLWriter {
   }
 
   /**
-   * @param dataset             non null dataset object
-   * @param writer              where the output document will go. The writer is not closed by this method.
-   * @param _useDoiAsIdentifier should the packageId be the dataset.doi? If true, the dataset.doi won't be included in the list of alternate identifiers.
+   * @param dataset            non null dataset object
+   * @param writer             where the output document will go. The writer is not closed by this method.
+   * @param useDoiAsIdentifier should the packageId be the dataset.doi? If true, the dataset.doi won't be included in the list of alternate identifiers.
    * @throws IOException if an error occurs while processing the template
    * @deprecated, please use an instance {@link #newInstance()}
    * <p>
    * Write an EML document from a Dataset object.
    */
   @Deprecated
-  public static void write(Dataset dataset, Writer writer, boolean _useDoiAsIdentifier) throws IOException {
+  public static void write(Dataset dataset, Writer writer, boolean useDoiAsIdentifier) throws IOException {
     Preconditions.checkNotNull(dataset, "Dataset can't be null");
 
-    if (_useDoiAsIdentifier) {
+    if (useDoiAsIdentifier) {
       LEGACY_METHOD_INSTANCE_WITH_DOI.writeTo(dataset, writer);
     } else {
       LEGACY_METHOD_INSTANCE_NO_DOI.writeTo(dataset, writer);

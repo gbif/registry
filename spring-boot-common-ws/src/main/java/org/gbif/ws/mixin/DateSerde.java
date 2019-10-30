@@ -21,8 +21,12 @@ import java.util.TimeZone;
 public class DateSerde {
 
   private static SimpleDateFormat noTimezoneFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
   static {
     noTimezoneFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+  }
+
+  private DateSerde() {
   }
 
   /**
@@ -32,10 +36,8 @@ public class DateSerde {
 
     @Override
     public void serialize(Date value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
-      if (value == null) {
-        // Empty fields aren't included in the JSON.
-        return;
-      } else {
+      // Empty fields aren't included in the JSON.
+      if (value != null) {
         jgen.writeString(noTimezoneFormat.format(value));
       }
     }
@@ -51,7 +53,7 @@ public class DateSerde {
       if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
         String text = jp.getText();
         if (text.length() == 19) {
-          return Date.from(Instant.parse(text+"Z"));
+          return Date.from(Instant.parse(text + "Z"));
         } else {
           return super.deserialize(jp, ctxt);
         }
