@@ -111,7 +111,7 @@ public class UserResource {
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
-    final String identifier = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    final String identifier = authentication.getName();
     final GbifUser user = identityService.get(identifier);
     if (user != null) {
       UserModelMutationResult updatePasswordMutationResult =
