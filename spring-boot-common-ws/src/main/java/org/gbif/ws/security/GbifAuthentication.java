@@ -43,7 +43,7 @@ public class GbifAuthentication extends UsernamePasswordAuthenticationToken {
   }
 
   public static GbifAuthentication anonymous() {
-    return new GbifAuthentication(null, null, Collections.emptyList(), "");
+    return new GbifAuthentication(new AnonymousUserPrincipal(), null, Collections.emptyList(), "");
   }
 
   public String getAuthenticationScheme() {

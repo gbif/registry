@@ -7,14 +7,11 @@ import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
-import org.gbif.ws.security.GbifAuthentication;
-import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,18 +41,17 @@ public class UserResource {
    * @return the user as {@link LoggedUser}
    */
   @GetMapping("login")
-  public ResponseEntity<LoggedUserWithToken> loginGet() {
+  public ResponseEntity<LoggedUserWithToken> loginGet(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
-    return login(((GbifUserPrincipal) authentication.getPrincipal()).getUsername());
+    return login(authentication.getName());
   }
 
   @PostMapping("login")
-  public ResponseEntity<LoggedUserWithToken> loginPost() {
-    return loginGet();
+  public ResponseEntity<LoggedUserWithToken> loginPost(Authentication authentication) {
+    return loginGet(authentication);
   }
 
   // only to use in login since it updates the last login
@@ -81,15 +77,13 @@ public class UserResource {
   }
 
   @PostMapping("whoami")
-  public ResponseEntity<LoggedUserWithToken> whoAmI() {
+  public ResponseEntity<LoggedUserWithToken> whoAmI(Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
     // get the user
-    final GbifAuthentication gbifAuthentication = (GbifAuthentication) authentication;
-    final GbifUser user = identityService.get(gbifAuthentication.getPrincipal().getUsername());
+    final GbifUser user = identityService.get(authentication.getName());
 
     if (user == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -105,9 +99,9 @@ public class UserResource {
    */
   @Secured({USER_ROLE})
   @PutMapping("changePassword")
-  public ResponseEntity changePassword(@RequestBody AuthenticationDataParameters authenticationDataParameters) {
+  public ResponseEntity changePassword(@RequestBody AuthenticationDataParameters authenticationDataParameters,
+                                       Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 

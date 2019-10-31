@@ -2,6 +2,7 @@ package org.gbif.ws.server.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.AppRole;
+import org.gbif.ws.security.AnonymousUserPrincipal;
 import org.gbif.ws.security.AppPrincipal;
 import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthService;
@@ -74,7 +75,9 @@ public class AppIdentityFilter extends GenericFilterBean {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     // Only try if no user principal is already there
-    if (authentication == null || authentication.getPrincipal() == null) {
+    if (authentication == null
+      || authentication.getPrincipal() == null
+      || authentication.getPrincipal() instanceof AnonymousUserPrincipal) {
       String authorization = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
       if (StringUtils.startsWith(authorization, SecurityConstants.GBIF_SCHEME_PREFIX)) {
         if (authService.isValidRequest(new RequestObject(httpRequest))) {
