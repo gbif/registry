@@ -2,6 +2,7 @@ package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.security.GbifAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,7 +71,7 @@ public class JwtRequestFilter extends GenericFilterBean {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
 
         final GbifAuthentication gbifAuthentication =
-            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "");
+          new GbifAuthenticationToken(userDetails, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers

@@ -7,7 +7,7 @@ import org.gbif.ws.security.AppPrincipal;
 import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthUtils;
-import org.gbif.ws.security.GbifAuthentication;
+import org.gbif.ws.security.GbifAuthenticationToken;
 import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.slf4j.Logger;
@@ -59,12 +59,12 @@ public class AppIdentityFilter extends GenericFilterBean {
   private final List<String> appKeyWhitelist;
 
   public AppIdentityFilter(
-      @NotNull GbifAuthService authService,
-      AppkeysConfiguration appkeysConfiguration) {
+    @NotNull GbifAuthService authService,
+    AppkeysConfiguration appkeysConfiguration) {
     this.authService = authService;
     //defensive copy or creation
     this.appKeyWhitelist = appkeysConfiguration.getWhitelist() != null
-        ? new ArrayList<>(appkeysConfiguration.getWhitelist()) : new ArrayList<>();
+      ? new ArrayList<>(appkeysConfiguration.getWhitelist()) : new ArrayList<>();
   }
 
   @Override
@@ -86,11 +86,13 @@ public class AppIdentityFilter extends GenericFilterBean {
 
           // check if it's an app by ensuring the appkey used to sign the request is the one used as x-gbif-user
           if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
-            final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
+            final List<SimpleGrantedAuthority> authorities =
+              Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
             final AppPrincipal principal = new AppPrincipal(appKey, authorities);
-            final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME);
+            final Authentication newAuthentication =
+              new GbifAuthenticationToken(principal, SecurityConstants.GBIF_SCHEME, authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(updatedAuth);
+            SecurityContextHolder.getContext().setAuthentication(newAuthentication);
           }
         } else {
           LOG.warn("Invalid GBIF authenticated request");

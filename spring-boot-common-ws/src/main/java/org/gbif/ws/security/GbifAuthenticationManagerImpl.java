@@ -146,7 +146,7 @@ public class GbifAuthenticationManagerImpl implements GbifAuthenticationManager 
    * @return authentication object for the anonymous user
    */
   private GbifAuthentication getAnonymous() {
-    return GbifAuthentication.anonymous();
+    return GbifAuthenticationToken.anonymous();
   }
 
   /**
@@ -162,6 +162,6 @@ public class GbifAuthenticationManagerImpl implements GbifAuthenticationManager 
       .map(SimpleGrantedAuthority::new)
       .collect(Collectors.toList());
 
-    return new GbifAuthentication(new GbifUserPrincipal(user), null, authorities, authenticationScheme);
+    return new GbifAuthenticationToken(new GbifUserPrincipal(user), authenticationScheme, authorities);
   }
 }
