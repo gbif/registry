@@ -20,7 +20,6 @@ import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.security.AppkeysConfiguration;
-import org.gbif.ws.security.GbifAuthentication;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -255,7 +254,7 @@ public class UserManagementResource {
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
 
-    String identifier = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    String identifier = authentication.getName();
     GbifUser user = identityService.get(identifier);
     if (user != null) {
       // initiate mail, and store the challenge etc.
@@ -279,7 +278,7 @@ public class UserManagementResource {
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
 
-    String username = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    String username = authentication.getName();
     GbifUser user = identityService.get(username);
 
     UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
@@ -309,7 +308,7 @@ public class UserManagementResource {
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
 
-    String username = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+    String username = authentication.getName();
     GbifUser user = identityService.get(username);
 
     if (user == null || identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
@@ -327,7 +326,7 @@ public class UserManagementResource {
                                                  Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
-      String usernameInContext = ((GbifAuthentication) authentication).getPrincipal().getUsername();
+      String usernameInContext = authentication.getName();
       if (!usernameInContext.equals(username)) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
       }
