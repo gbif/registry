@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.security;
 
+import org.gbif.ws.security.LegacyRequestAuthorization;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 

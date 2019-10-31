@@ -11,7 +11,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.gbif.registry.ws.model.LegacyInstallation;
-import org.gbif.registry.ws.security.LegacyRequestAuthorization;
+import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
