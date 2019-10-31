@@ -1,5 +1,7 @@
-package org.gbif.registry.ws.security;
+package org.gbif.ws.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -12,6 +14,9 @@ import java.util.UUID;
  */
 public class LegacyRequestAuthorization implements Authentication {
 
+  private static final Logger LOG = LoggerFactory.getLogger(LegacyRequestAuthorization.class);
+
+  private boolean authenticated = false;
   private final UUID userKey;
   private final UUID organizationKey;
 
@@ -28,7 +33,6 @@ public class LegacyRequestAuthorization implements Authentication {
     return organizationKey;
   }
 
-  // TODO: 06/09/2019 test these implementations are ok
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return Collections.emptyList();
@@ -36,27 +40,29 @@ public class LegacyRequestAuthorization implements Authentication {
 
   @Override
   public Object getCredentials() {
+    LOG.warn("LegacyRequestAuthorization#getCredentials is not used");
     return null;
   }
 
   @Override
   public Object getDetails() {
+    LOG.warn("LegacyRequestAuthorization#getDetails is not used");
     return null;
   }
 
   @Override
   public Object getPrincipal() {
-    return null;
+    return new BasicUserPrincipal(userKey.toString());
   }
 
   @Override
   public boolean isAuthenticated() {
-    return true;
+    return authenticated;
   }
 
   @Override
-  public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
-    throw new UnsupportedOperationException();
+  public void setAuthenticated(boolean isAuthenticated) {
+    this.authenticated = isAuthenticated;
   }
 
   @Override

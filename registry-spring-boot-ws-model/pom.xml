@@ -20,6 +20,10 @@
 
     <!-- GBIF dependencies -->
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>spring-boot-common-ws</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
     </dependency>
