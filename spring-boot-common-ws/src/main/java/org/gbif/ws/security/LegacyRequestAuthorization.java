@@ -23,6 +23,7 @@ public class LegacyRequestAuthorization implements Authentication {
   public LegacyRequestAuthorization(UUID userKey, UUID organizationKey) {
     this.userKey = userKey;
     this.organizationKey = organizationKey;
+    setAuthenticated(true);
   }
 
   public UUID getUserKey() {
