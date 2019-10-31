@@ -70,7 +70,7 @@ public class JwtRequestFilter extends GenericFilterBean {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
 
         final GbifAuthentication gbifAuthentication =
-            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "", httpRequest);
+            new GbifAuthentication(userDetails, null, userDetails.getAuthorities(), "");
         SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers

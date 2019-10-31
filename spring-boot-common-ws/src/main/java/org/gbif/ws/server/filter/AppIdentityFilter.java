@@ -85,7 +85,7 @@ public class AppIdentityFilter extends GenericFilterBean {
           if (StringUtils.equals(appKey, username) && appKeyWhitelist.contains(appKey)) {
             final List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(AppRole.APP.name()));
             final AppPrincipal principal = new AppPrincipal(appKey, authorities);
-            final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME, httpRequest);
+            final Authentication updatedAuth = new GbifAuthentication(principal, null, authorities, SecurityConstants.GBIF_SCHEME);
 
             SecurityContextHolder.getContext().setAuthentication(updatedAuth);
           }
