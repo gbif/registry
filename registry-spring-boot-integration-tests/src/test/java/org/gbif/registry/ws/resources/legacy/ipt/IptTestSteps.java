@@ -107,7 +107,6 @@ public class IptTestSteps {
   public void name(String orgName) throws Exception {
     HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
 
-    // TODO in security context should be BasicUserPrincipal with UUID username (orgKey?). Now when it comes to AppIdentity it doesn't have UserPrincipal
     result = mvc
       .perform(
         post("/registry/ipt/register")
@@ -138,6 +137,4 @@ public class IptTestSteps {
     Installation actual = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
     assertLegacyInstallations(expected, actual);
   }
-
-
 }

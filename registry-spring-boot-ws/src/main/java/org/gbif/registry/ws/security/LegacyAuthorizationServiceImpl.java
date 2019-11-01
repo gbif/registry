@@ -67,7 +67,8 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     try {
       final UUID user = UUID.fromString(iter.next());
       final String password = iter.next();
-      final UUID organizationKey = UUID.fromString(getFirst(httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM));
+      String organizationKeyStr = getFirst(httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
+      final UUID organizationKey = organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
 
       // try to validate organization key first
       try {
@@ -107,6 +108,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
    * @return true if the HTTP request is authorized to modify Organization
    * @see this#isAuthorizedToModifyOrganization(LegacyRequestAuthorization, UUID)
    */
+  @Override
   public boolean isAuthorizedToModifyOrganization(LegacyRequestAuthorization authorization) {
     // retrieve HTTP param for hosting organization key and convert incoming key into UUID
     UUID organizationKey = authorization.getOrganizationKey();
@@ -121,7 +123,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     }
     // validate installation key belongs to an existing installation
     Organization org = organizationService.get(organizationKey);
-    return org != null && org.getKey().equals(authorization.getUserKey());
+    return org != null && org.getKey() != null && org.getKey().equals(authorization.getUserKey());
   }
 
   /**
