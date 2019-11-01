@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,9 +54,7 @@ public class LegacyEndpointResource {
    */
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint, Authentication authentication) {
     if (endpoint != null) {
       // set required fields
       endpoint.setCreatedBy(authentication.getName());

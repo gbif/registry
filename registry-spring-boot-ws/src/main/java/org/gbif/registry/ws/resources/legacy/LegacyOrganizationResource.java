@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -102,7 +101,8 @@ public class LegacyOrganizationResource {
       "application/x-javascript", "application/javascriptx-javascript"})
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
                                 @RequestParam("callback") String callback,
-                                @RequestParam("op") String op) {
+                                @RequestParam("op") String op,
+                                Authentication authentication) {
 
     // incoming path parameter for organization key required
     if (organisationKey == null) {
@@ -121,8 +121,6 @@ public class LegacyOrganizationResource {
         .cacheControl(CacheControl.noCache())
         .body(new ErrorResponse("No organisation matches the key provided"));
     }
-
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (op != null) {
       // ?op=login

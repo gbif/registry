@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,13 +65,13 @@ public class LegacyDatasetResource {
    *
    * @param dataset IptDataset with HTTP form parameters
    * @return ResponseEntity
-   * @see IptResource#registerDataset(org.gbif.registry.ws.model.LegacyDataset)
+   * @see IptResource#registerDataset(LegacyDataset, Authentication)
    */
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
+  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset, Authentication authentication) {
     // reuse existing subresource
-    return iptResource.registerDataset(dataset);
+    return iptResource.registerDataset(dataset, authentication);
   }
 
   /**
@@ -89,8 +88,9 @@ public class LegacyDatasetResource {
   @PostMapping(value = "{key}",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey,
+                                      @RequestParam LegacyDataset dataset,
+                                      Authentication authentication) {
     if (dataset != null) {
       // set required fields
       String user = authentication.getName();
