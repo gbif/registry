@@ -158,7 +158,7 @@ public class LegacyInstallation extends Installation {
   @ParamName(LegacyResourceConstants.SERVICE_TYPES_PARAM)
   public void setEndpointType(String endpointType) {
     this.endpointType =
-        endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE) ? EndpointType.FEED : EndpointType.fromString(endpointType);
+      endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE) ? EndpointType.FEED : EndpointType.fromString(endpointType);
   }
 
   /**
@@ -266,7 +266,7 @@ public class LegacyInstallation extends Installation {
     if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
     } else if (Strings.nullToEmpty(primaryContactType)
-        .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
+      .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.TECHNICAL_POINT_OF_CONTACT;
     } else if (Strings.isNullOrEmpty(primaryContactType)) {
       LOG.error("No primary contact type has ben provided");
@@ -302,7 +302,7 @@ public class LegacyInstallation extends Installation {
   @Nullable
   public Contact getPrimaryContact() {
     return primaryContact != null && primaryContact.getEmail() != null && primaryContact.getType() != null
-        ? primaryContact : null;
+      ? primaryContact : null;
   }
 
   /**
