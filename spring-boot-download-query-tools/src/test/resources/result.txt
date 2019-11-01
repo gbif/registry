@@ -7,7 +7,7 @@
 }
 ---------------------------------------------
 {
-  "and" : [ "TaxonKey is Abies alba Mill.", "Country is Colombia" ]
+  "and" : [ "TaxonKey is Abies alba Mill.", "Continent is South America", "Country is Colombia", "Year is greater than 1990", "Year is less than 1995" ]
 }
 ---------------------------------------------
 {
@@ -25,7 +25,7 @@
 }
 ---------------------------------------------
 {
-  "and" : [ "TaxonKey is Abies alba Mill.", "Country is Peru" ]
+  "and" : [ "TaxonKey is Abies alba Mill.", "ScientificName ~%name" ]
 }
 ---------------------------------------------
 {
@@ -57,7 +57,7 @@
 }
 ---------------------------------------------
 {
-  "and" : [ "TaxonKey is Abies alba Mill.", "Country is Mexico" ]
+  "and" : [ "TaxonKey is Abies alba Mill.", "Country is not null" ]
 }
 ---------------------------------------------
 {

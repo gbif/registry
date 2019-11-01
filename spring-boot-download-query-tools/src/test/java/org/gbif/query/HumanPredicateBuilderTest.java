@@ -49,7 +49,7 @@ public class HumanPredicateBuilderTest {
             }
           }).collect(Collectors.joining("\n---------------------------------------------\n"));
 
-      assertEquals(expected, actual);
+      assertEquals(expected.trim(), actual.trim());
     }
   }
 
