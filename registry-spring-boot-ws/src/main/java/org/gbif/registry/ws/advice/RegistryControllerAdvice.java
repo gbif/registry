@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.advice;
 
+import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,5 +12,10 @@ public class RegistryControllerAdvice {
   @ExceptionHandler(WebApplicationException.class)
   public ResponseEntity<Void> handleWebApplicationException(final WebApplicationException e) {
     return ResponseEntity.status(e.getResponse().getStatusCode()).build();
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Void> handleWebApplicationException(final NotFoundException e) {
+    return ResponseEntity.notFound().build();
   }
 }
