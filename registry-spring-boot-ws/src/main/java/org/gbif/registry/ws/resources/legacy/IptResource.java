@@ -181,7 +181,7 @@ public class IptResource {
           installationService.addEndpoint(installationKey, endpoint);
         }
 
-        LOG.info("IPT installation updated successfully, key={}", installationKey.toString());
+        LOG.info("IPT installation updated successfully, key={}", installationKey);
         return ResponseEntity
           .noContent()
           .cacheControl(CacheControl.noCache())
@@ -256,7 +256,7 @@ public class IptResource {
             archiveEndpoint.setModifiedBy(user);
             datasetService.addEndpoint(key, archiveEndpoint);
           }
-          LOG.info("Dataset registered successfully, key={}", key.toString());
+          LOG.info("Dataset registered successfully, key={}", key);
           // construct response object expected by IPT
           IptEntityResponse entity = new IptEntityResponse(key.toString());
           // return Response
@@ -368,7 +368,7 @@ public class IptResource {
           datasetService.addEndpoint(datasetKey, archiveEndpoint);
         }
 
-        LOG.info("Dataset updated successfully, key={}", datasetKey.toString());
+        LOG.info("Dataset updated successfully, key={}", datasetKey);
         return ResponseEntity
           .noContent()
           .cacheControl(CacheControl.noCache())
@@ -402,7 +402,7 @@ public class IptResource {
         // logically delete dataset. Contacts and endpoints remain, referring to logically deleted dataset
         datasetService.delete(datasetKey);
 
-        LOG.info("Dataset deleted successfully, key={}", datasetKey.toString());
+        LOG.info("Dataset deleted successfully, key={}", datasetKey);
         return ResponseEntity
           .status(HttpStatus.OK)
           .cacheControl(CacheControl.noCache())

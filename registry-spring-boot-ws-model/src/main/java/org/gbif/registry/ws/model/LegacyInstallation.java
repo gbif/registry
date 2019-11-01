@@ -239,7 +239,7 @@ public class LegacyInstallation extends Installation {
     if (validator.isValid(primaryContactEmail)) {
       this.primaryContactEmail = primaryContactEmail;
     } else {
-      LOG.error("No valid primary contact email has been specified: {}", Strings.nullToEmpty(primaryContactEmail));
+      LOG.error("No valid primary contact email has been specified: {}", primaryContactEmail);
     }
   }
 

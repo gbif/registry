@@ -393,7 +393,7 @@ public class DatasetWrapper {
         }
         break;
       default:
-        LOG.debug("A supported machine readable license was detected: {}", license.name());
+        LOG.debug("A supported machine readable license was detected: {}", license);
         target.setLicense(license);
     }
   }
