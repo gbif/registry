@@ -154,7 +154,7 @@ public class LegacyDatasetResource {
 
         // endpoint changes are done through Service API
 
-        LOG.info("Dataset updated successfully, key={}", datasetKey.toString());
+        LOG.info("Dataset updated successfully, key={}", datasetKey);
         return ResponseEntity
           .status(HttpStatus.CREATED)
           .cacheControl(CacheControl.noCache())

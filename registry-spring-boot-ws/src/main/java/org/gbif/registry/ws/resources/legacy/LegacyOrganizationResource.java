@@ -111,7 +111,7 @@ public class LegacyOrganizationResource {
         .cacheControl(CacheControl.noCache())
         .build();
     }
-    LOG.info("Get Organization with key={}", organisationKey.toString());
+    LOG.info("Get Organization with key={}", organisationKey);
 
     Organization organization = organizationService.get(organisationKey);
     if (organization == null) {
@@ -129,7 +129,7 @@ public class LegacyOrganizationResource {
         UUID authKey = LegacyResourceUtils.extractOrgKeyFromSecurity(authentication);
 
         if (!organisationKey.equals(authKey)) {
-          LOG.error("Authorization failed for organization with key={}", organisationKey.toString());
+          LOG.error("Authorization failed for organization with key={}", organisationKey);
           return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
             .cacheControl(CacheControl.noCache())

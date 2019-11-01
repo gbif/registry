@@ -145,7 +145,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     // retrieve dataset to ensure it exists
     Dataset dataset = datasetService.get(datasetKey);
     if (dataset == null) {
-      LOG.error("Dataset with key={} does not exist", datasetKey.toString());
+      LOG.error("Dataset with key={} does not exist", datasetKey);
       return false;
     }
 
@@ -164,7 +164,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       }
     }
     LOG.info("Authorization succeeded, can modify dataset with key={} belonging to organization with key={}",
-      datasetKey.toString(), authorization.getUserKey().toString());
+      datasetKey, authorization.getUserKey());
     return true;
   }
 

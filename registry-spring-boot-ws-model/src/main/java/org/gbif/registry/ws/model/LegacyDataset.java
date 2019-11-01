@@ -357,7 +357,7 @@ public class LegacyDataset extends Dataset {
     if (validator.isValid(Strings.nullToEmpty(primaryContactEmail))) {
       this.primaryContactEmail = primaryContactEmail;
     } else {
-      LOG.error("No valid primary contact email has been specified: {}", Strings.nullToEmpty(primaryContactEmail));
+      LOG.error("No valid primary contact email has been specified: {}", primaryContactEmail);
     }
   }
 
