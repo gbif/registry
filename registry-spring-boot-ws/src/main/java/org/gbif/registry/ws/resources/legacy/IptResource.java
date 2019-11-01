@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,9 +66,7 @@ public class IptResource {
   @PostMapping(value = "register",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerIpt(@RequestParam LegacyInstallation installation) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public ResponseEntity registerIpt(@RequestParam LegacyInstallation installation, Authentication authentication) {
     if (installation != null) {
       // set required fields
       String user = authentication.getName();
@@ -131,9 +128,9 @@ public class IptResource {
    */
   @PostMapping(value = "update/{key}",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey, @RequestParam LegacyInstallation installation) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public ResponseEntity updateIpt(@PathVariable("key") UUID installationKey,
+                                  @RequestParam LegacyInstallation installation,
+                                  Authentication authentication) {
     if (installation != null && installationKey != null) {
       // set required fields
       String user = authentication.getName();
@@ -216,9 +213,7 @@ public class IptResource {
   @PostMapping(value = "resource",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public ResponseEntity registerDataset(@RequestParam LegacyDataset dataset, Authentication authentication) {
     if (dataset != null) {
       // set required fields
       String user = authentication.getName();
@@ -299,9 +294,9 @@ public class IptResource {
    */
   @PostMapping(value = "resource/{key}",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey, @RequestParam LegacyDataset dataset) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+  public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey,
+                                      @RequestParam LegacyDataset dataset,
+                                      Authentication authentication) {
     if (dataset != null) {
       // set required fields
       String user = authentication.getName();
@@ -399,7 +394,6 @@ public class IptResource {
   @DeleteMapping(value = "resource/{key}",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8")
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
-
     if (datasetKey != null) {
       // retrieve existing dataset
       Dataset existing = datasetService.get(datasetKey);
