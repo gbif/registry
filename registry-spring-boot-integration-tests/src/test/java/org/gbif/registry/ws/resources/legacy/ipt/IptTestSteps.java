@@ -52,7 +52,9 @@ public class IptTestSteps {
   private ResultActions result;
 
   private Organization organization;
+  private Installation installation;
   private UUID organizationKey;
+  private UUID installationKey;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -103,8 +105,14 @@ public class IptTestSteps {
     organization = organizationService.get(organizationKey);
   }
 
+  @Given("installation {string} with key {string}")
+  public void prepareInstallation(String instName, String installationKey) {
+    this.installationKey = UUID.fromString(installationKey);
+    installation = installationService.get(this.installationKey);
+  }
+
   @When("register new installation for organization {string}")
-  public void name(String orgName) throws Exception {
+  public void registerIpt(String orgName) throws Exception {
     HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
 
     result = mvc
@@ -114,6 +122,20 @@ public class IptTestSteps {
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(organizationKey.toString(), "welcome")))
+      .andDo(print());
+  }
+
+  @When("update installation {string}")
+  public void updateIpt(String instName) throws Exception {
+    HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
+
+    result = mvc
+      .perform(
+        post("/registry/ipt/update/{key}", installationKey)
+          .params(headers)
+          .contentType(APPLICATION_FORM_URLENCODED)
+          .accept(APPLICATION_XML)
+          .with(httpBasic(installationKey.toString(), "welcome")))
       .andDo(print());
   }
 

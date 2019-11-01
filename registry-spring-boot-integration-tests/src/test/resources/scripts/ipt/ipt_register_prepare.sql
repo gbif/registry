@@ -10,3 +10,10 @@ INSERT INTO public.organization (key, endorsing_node_key, endorsement_approved, 
 VALUES ('36107c15-771c-4810-a298-b7558828b8bd', '710970cf-e3f1-4e74-b09c-d8c86b9819d9', true, 'welcome', 'Org', null,
         null, 'en', null, null, null, null, null, null, null, 'mike', 'mike', '2019-09-12 12:06:01.835000',
         '2019-09-12 12:06:04.366000', null, null, null, null, null, null, null);
+
+INSERT INTO public.installation (key, organization_key, type, title, description, created_by, modified_by, created,
+                                 modified, deleted, fulltext_search, password, disabled)
+VALUES ('2fe63cec-9b23-4974-bab1-9f4118ef7711', '36107c15-771c-4810-a298-b7558828b8bd', 'IPT_INSTALLATION',
+        'Test IPT Registry2', 'Description of Test IPT', '36107c15-771c-4810-a298-b7558828b8bd',
+        '36107c15-771c-4810-a298-b7558828b8bd', '2019-11-01 14:48:02.486307', '2019-11-01 14:48:02.486307', null,
+        null, 'welcome', false);
