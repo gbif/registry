@@ -30,13 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.ResourceBundle;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static org.gbif.api.model.occurrence.search.OccurrenceSearchParameter.DEPTH;
 import static org.gbif.api.model.occurrence.search.OccurrenceSearchParameter.ELEVATION;
@@ -119,10 +114,6 @@ public class HumanPredicateBuilder {
     }
   }
 
-  private Stream<JsonNode> toStream(Iterator<JsonNode> iterator) {
-    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL), false);
-  }
-
   public synchronized String humanFilterString(String predicate) {
     try {
       return humanFilterString(MAPPER.readValue(predicate, Predicate.class));
@@ -197,7 +188,7 @@ public class HumanPredicateBuilder {
     String paramName = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, param.name());
     if (node.isObject()) {
       if (!node.has(paramName)) {
-        ((ObjectNode) node).put(paramName, MAPPER.createArrayNode());
+        ((ObjectNode) node).set(paramName, MAPPER.createArrayNode());
       }
       ((ArrayNode) node.get(paramName)).add(op);
     } else if (node.isArray()) {
@@ -228,10 +219,10 @@ public class HumanPredicateBuilder {
 
   private static void addOrPut(JsonNode node, String fieldName, JsonNode newNode) {
     if (node.isObject()) {
-      ((ObjectNode) node).put(fieldName, newNode);
+      ((ObjectNode) node).set(fieldName, newNode);
     } else if (node.isArray()) {
       ObjectNode andBaseNode = MAPPER.createObjectNode();
-      andBaseNode.put(fieldName, newNode);
+      andBaseNode.set(fieldName, newNode);
       ((ArrayNode) node).add(andBaseNode);
     }
   }
@@ -339,7 +330,4 @@ public class HumanPredicateBuilder {
     }
     addParamValue(lower.getKey(), "", lower.getValue() + "-" + upper.getValue(), node);
   }
-
 }
-
-
