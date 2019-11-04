@@ -916,8 +916,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
-    PagingResponse<Dataset> response = listByType(datasetType, pagingRequest);
+    PagingResponse<Dataset> response;
     do {
+      response = listByType(datasetType, pagingRequest);
       response
           .getResults()
           .forEach(
@@ -930,7 +931,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                 }
               });
       pagingRequest.addOffset(response.getResults().size());
-      response = listByType(datasetType, pagingRequest);
     } while (!response.isEndOfRecords());
   }
 
