@@ -539,7 +539,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   private void setDatasetTitle(PipelineProcess process) {
-    Dataset dataset = datasetService.get(process.getDatasetKey());
-    process.setDatasetTitle(dataset.getTitle());
+    if (process != null && process.getDatasetKey() != null) {
+      Dataset dataset = datasetService.get(process.getDatasetKey());
+      if (dataset != null) {
+        process.setDatasetTitle(dataset.getTitle());
+      }
+    }
   }
 }
