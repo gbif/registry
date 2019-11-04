@@ -917,7 +917,7 @@ public class DatasetResource
   public void crawlAll(@RequestParam("platform") String platform) {
     CompletableFuture.runAsync(
       () ->
-        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
           .forEach(
             type ->
               doOnAllOccurrenceDatasets(

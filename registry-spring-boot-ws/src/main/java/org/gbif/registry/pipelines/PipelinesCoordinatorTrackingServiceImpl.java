@@ -186,7 +186,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
       () ->
-        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
           .forEach(
             type ->
               doOnAllDatasets(
@@ -252,39 +252,35 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public PagingResponse<PipelineProcessView> history(Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
 
-    List<PipelineProcessView> views =
-      statuses.stream()
-        .map(
-          p -> {
-            addNumberRecords(p);
-            return createPipelineProcessView(p);
-          })
-        .collect(Collectors.toList());
+    // add needed fields for the view
+    statuses.forEach(
+      p -> {
+        addNumberRecords(p);
+        setDatasetTitle(p);
+      });
 
-    return new PagingResponse<>(pageable, count, views);
+    return new PagingResponse<>(pageable, count, statuses);
   }
 
   @Override
-  public PagingResponse<PipelineProcessView> history(UUID datasetKey, Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(UUID datasetKey, Pageable pageable) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
 
-    List<PipelineProcessView> views =
-      statuses.stream()
-        .map(
-          p -> {
-            addNumberRecords(p);
-            return createPipelineProcessView(p);
-          })
-        .collect(Collectors.toList());
+    // add needed fields for the view
+    statuses.forEach(
+      p -> {
+        addNumberRecords(p);
+        setDatasetTitle(p);
+      });
 
-    return new PagingResponse<>(pageable, count, views);
+    return new PagingResponse<>(pageable, count, statuses);
   }
 
   @Override
@@ -573,14 +569,8 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     return process;
   }
 
-  private PipelineProcessView createPipelineProcessView(PipelineProcess process) {
-    PipelineProcessView view = new PipelineProcessView();
-
-    view.setProcess(process);
-
+  private void setDatasetTitle(PipelineProcess process) {
     Dataset dataset = datasetService.get(process.getDatasetKey());
-    view.setDatasetTitle(dataset.getTitle());
-
-    return view;
+    process.setDatasetTitle(dataset.getTitle());
   }
 }
