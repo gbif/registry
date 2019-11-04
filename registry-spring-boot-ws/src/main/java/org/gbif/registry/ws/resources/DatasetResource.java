@@ -102,6 +102,7 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -886,9 +887,9 @@ public class DatasetResource
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
-    PagingResponse<Dataset> response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+    PagingResponse<Dataset> response = listByType(datasetType, pagingRequest);
     do {
       response
         .getResults()
@@ -902,7 +903,7 @@ public class DatasetResource
             }
           });
       pagingRequest.addOffset(response.getResults().size());
-      response = listByType(DatasetType.OCCURRENCE, pagingRequest);
+      response = listByType(datasetType, pagingRequest);
     } while (!response.isEndOfRecords());
   }
 
@@ -915,7 +916,12 @@ public class DatasetResource
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@RequestParam("platform") String platform) {
     CompletableFuture.runAsync(
-      () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
+      () ->
+        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+          .forEach(
+            type ->
+              doOnAllOccurrenceDatasets(
+                dataset -> crawl(dataset.getKey(), platform), type)));
   }
 
   /**
