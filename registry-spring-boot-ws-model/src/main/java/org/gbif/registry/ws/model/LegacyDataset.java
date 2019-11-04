@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.model;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -66,11 +68,11 @@ public class LegacyDataset extends Dataset {
   // Dataset constants
   private static final String IPT_EML_SERVICE_TYPE = "EML";
   private static final Set<String> ARCHIVE_ENDPOINT_TYPE_ALTERNATIVES =
-      ImmutableSet.of(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1,
-          LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
-          LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
-          LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
-          LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
+    ImmutableSet.of(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1,
+      LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
+      LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
+      LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
+      LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
 
   /**
    * Default constructor.
@@ -129,7 +131,7 @@ public class LegacyDataset extends Dataset {
   @XmlElement(name = LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
   @NotNull
   public String getOrganizationKey() {
-    return getPublishingOrganizationKey() != null ? getPublishingOrganizationKey().toString() : null;
+    return getPublishingOrganizationKey().toString();
   }
 
   /**
@@ -158,7 +160,7 @@ public class LegacyDataset extends Dataset {
   public void setDoi(String doi) {
     try {
       if (doi != null) {
-        this.datasetDoi =new DOI(doi);
+        this.datasetDoi = new DOI(doi);
       }
     } catch (IllegalArgumentException e) {
       LOG.error("DOI is not valid: {}", Strings.nullToEmpty(doi));
@@ -174,7 +176,7 @@ public class LegacyDataset extends Dataset {
   @XmlTransient
   @Nullable
   public String getIptKey() {
-    return getInstallationKey() != null ? getInstallationKey().toString() : null;
+    return getInstallationKey().toString();
   }
 
   /**
@@ -385,7 +387,7 @@ public class LegacyDataset extends Dataset {
     if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
     } else if (Strings.nullToEmpty(primaryContactType)
-        .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
+      .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.TECHNICAL_POINT_OF_CONTACT;
     } else if (Strings.isNullOrEmpty(primaryContactType)) {
       LOG.error("No primary contact type has ben provided");
@@ -561,7 +563,7 @@ public class LegacyDataset extends Dataset {
   @Nullable
   public Contact getPrimaryContact() {
     return primaryContact != null && primaryContact.getEmail() != null && primaryContact.getType() != null
-        ? primaryContact : null;
+      ? primaryContact : null;
   }
 
   /**
@@ -690,7 +692,6 @@ public class LegacyDataset extends Dataset {
    *
    * @param url  Endpoint URL
    * @param type Endpoint type
-   *
    * @return Endpoint created or updated
    */
   private Endpoint createEndpoint(String url, EndpointType type) {
@@ -725,10 +726,10 @@ public class LegacyDataset extends Dataset {
   public DatasetType resolveType() {
     if (serviceTypes != null) {
       if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1) || serviceTypes.contains(
-          LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
+        LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
         return DatasetType.CHECKLIST;
       } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1) || serviceTypes.contains(
-          LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
+        LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
@@ -758,5 +759,50 @@ public class LegacyDataset extends Dataset {
     dataset.setType(getType());
     dataset.setDoi(datasetDoi);
     return dataset;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    LegacyDataset that = (LegacyDataset) o;
+    return primaryContactType == that.primaryContactType &&
+      Objects.equal(primaryContactEmail, that.primaryContactEmail) &&
+      Objects.equal(primaryContactName, that.primaryContactName) &&
+      Objects.equal(primaryContactPhone, that.primaryContactPhone) &&
+      Objects.equal(primaryContactAddress, that.primaryContactAddress) &&
+      Objects.equal(primaryContactDescription, that.primaryContactDescription) &&
+      Objects.equal(serviceTypes, that.serviceTypes) &&
+      Objects.equal(serviceUrls, that.serviceUrls) &&
+      Objects.equal(datasetDoi, that.datasetDoi) &&
+      Objects.equal(primaryContact, that.primaryContact) &&
+      Objects.equal(emlEndpoint, that.emlEndpoint) &&
+      Objects.equal(archiveEndpoint, that.archiveEndpoint);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), primaryContactType, primaryContactEmail, primaryContactName,
+      primaryContactPhone, primaryContactAddress, primaryContactDescription, serviceTypes, serviceUrls, datasetDoi,
+      primaryContact, emlEndpoint, archiveEndpoint);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+      .add("primaryContactType", primaryContactType)
+      .add("primaryContactEmail", primaryContactEmail)
+      .add("primaryContactName", primaryContactName)
+      .add("primaryContactPhone", primaryContactPhone)
+      .add("primaryContactAddress", primaryContactAddress)
+      .add("primaryContactDescription", primaryContactDescription)
+      .add("serviceTypes", serviceTypes)
+      .add("serviceUrls", serviceUrls)
+      .add("datasetDoi", datasetDoi)
+      .add("primaryContact", primaryContact)
+      .add("emlEndpoint", emlEndpoint)
+      .add("archiveEndpoint", archiveEndpoint)
+      .toString();
   }
 }
