@@ -126,7 +126,5 @@ public class DublinCoreWriterTest {
 
     // ensure we have a valid XML file according to the schema
     XMLValidator.assertXMLAgainstXSD(writer.toString(), org.gbif.utils.file.FileUtils.classpath2Filepath(OAI_2_0_DC_SCHEMA));
-
   }
-
 }

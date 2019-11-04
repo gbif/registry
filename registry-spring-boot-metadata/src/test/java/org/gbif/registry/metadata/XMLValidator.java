@@ -22,10 +22,6 @@ public class XMLValidator {
 
   /**
    * Asserts that the xmlContent is valid according to the XSD at xsdLocation.
-   *
-   * @param xmlContent
-   * @param xsdLocation
-   * @throws IOException
    */
   public static void assertXMLAgainstXSD(String xmlContent, String xsdLocation) throws IOException {
     try {

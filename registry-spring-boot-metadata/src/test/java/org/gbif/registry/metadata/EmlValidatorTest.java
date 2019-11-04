@@ -6,7 +6,7 @@ import javax.xml.transform.stream.StreamSource;
 
 public class EmlValidatorTest {
 
-  private StreamSource getEMLMetadataAsStreamSource(String filename){
+  private StreamSource getEMLMetadataAsStreamSource(String filename) {
     return new StreamSource(getClass().getClassLoader().getResourceAsStream(filename));
   }
 
@@ -61,5 +61,4 @@ public class EmlValidatorTest {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
     validator.validate(getEMLMetadataAsStreamSource("eml/download_metadata.xml"));
   }
-
 }

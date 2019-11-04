@@ -23,5 +23,4 @@ public class ParagraphContainerTest {
     container.appendParagraph(" <p>is it me</p>");
     assertEquals("<p>Hello</p>\n<p>world!</p>\n<p>is it me</p>", container.toString());
   }
-
 }
