@@ -57,21 +57,21 @@ public interface PipelinesHistoryTrackingService {
   RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user);
 
   /**
-   * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
+   * Lists the history of all {@link PipelineProcessView}, sorted descending from the most recent one.
    * @param pageable paging request
-   * @return a paged response that contains a list of {@link PipelineProcess}
+   * @return a paged response that contains a list of {@link PipelineProcessView}
    */
-  PagingResponse<PipelineProcess> history(Pageable pageable);
+  PagingResponse<PipelineProcessView> history(Pageable pageable);
 
 
   /**
-   * Lists the history of all {@link PipelineProcess} of a dataset, sorted descending from the most recent one.
+   * Lists the history of all {@link PipelineProcessView} of a dataset, sorted descending from the most recent one.
    * @param datasetKey dataset identifier
    * @param pageable paging request
-   * @return a paged response that contains a list of {@link PipelineProcess}
+   * @return a paged response that contains a list of {@link PipelineProcessView}
    */
 
-  PagingResponse<PipelineProcess> history(UUID datasetKey, Pageable pageable);
+  PagingResponse<PipelineProcessView> history(UUID datasetKey, Pageable pageable);
 
   /**
    * Gets the PipelineProcess identified by the the dataset and attempt identifiers.
