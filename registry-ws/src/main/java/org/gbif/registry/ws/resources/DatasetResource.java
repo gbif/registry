@@ -945,7 +945,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void crawlAll(@QueryParam("platform") String platform) {
     CompletableFuture.runAsync(
         () ->
-            Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT)
+            Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
                 .forEach(
                     type ->
                         doOnAllOccurrenceDatasets(
