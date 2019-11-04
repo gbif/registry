@@ -1,32 +1,9 @@
 package org.gbif.registry.pipelines;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.PipelineWorkflow;
-import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.model.pipelines.WorkflowStep;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
@@ -36,20 +13,16 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.common.messaging.api.messages.*;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
-import com.google.common.collect.ImmutableList;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -57,6 +30,12 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistoryTrackingService {
@@ -246,21 +225,39 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public PagingResponse<PipelineProcess> history(Pageable pageable) {
+  public PagingResponse<PipelineProcessView> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
-    statuses.forEach(this::addNumberRecords);
-    return new PagingResponse<>(pageable, count, statuses);
+
+    List<PipelineProcessView> views =
+        statuses.stream()
+            .map(
+                p -> {
+                  addNumberRecords(p);
+                  return createPipelineProcessView(p);
+                })
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(pageable, count, views);
   }
 
   @Override
-  public PagingResponse<PipelineProcess> history(UUID datasetKey, Pageable pageable) {
+  public PagingResponse<PipelineProcessView> history(UUID datasetKey, Pageable pageable) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
-    statuses.forEach(this::addNumberRecords);
-    return new PagingResponse<>(pageable, count, statuses);
+
+    List<PipelineProcessView> views =
+        statuses.stream()
+            .map(
+                p -> {
+                  addNumberRecords(p);
+                  return createPipelineProcessView(p);
+                })
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(pageable, count, views);
   }
 
   @Override
@@ -540,5 +537,16 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     }
 
     return process;
+  }
+
+  private PipelineProcessView createPipelineProcessView(PipelineProcess process) {
+    PipelineProcessView view = new PipelineProcessView();
+
+    view.setProcess(process);
+
+    Dataset dataset = datasetService.get(process.getDatasetKey());
+    view.setDatasetTitle(dataset.getTitle());
+
+    return view;
   }
 }
