@@ -642,7 +642,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     final DOI external1 = new DOI("10.9999/nonGbif");
     final DOI external2 = new DOI("10.9999/nonGbif2");
     // we use the test prefix in tests for GBIF DOIs, see registry-test.properties
-    final DOI gbif2 = new DOI("10.5072/sthelse");
+    final DOI gbif2 = new DOI("10.21373/sthelse");
 
     Dataset src = newEntity();
     src.setDoi(external1);
