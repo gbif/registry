@@ -36,7 +36,7 @@ public class DateConverterTest {
     if (millis != null) {
       assertEquals(millis, (Integer) cal.get(Calendar.MILLISECOND));
     }
-    if (year == null && month == null && day==null) {
+    if (year == null && month == null && day == null) {
       assertNull(d);
     }
   }

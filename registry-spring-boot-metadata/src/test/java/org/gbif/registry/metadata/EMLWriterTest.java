@@ -81,8 +81,8 @@ public class EMLWriterTest {
     d.setKey(UUID.randomUUID());
 
     // remove all lastName for this test
-    d.getContacts().forEach( c -> {
-      if(c.getFirstName() != null){
+    d.getContacts().forEach(c -> {
+      if (c.getFirstName() != null) {
         c.setLastName(null);
       }
     });

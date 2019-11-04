@@ -457,14 +457,14 @@ public class DatasetParserTest {
     assertEquals("shapefile", dataset.getDataDescriptions().get(0).getFormat());
     assertEquals("2.0", dataset.getDataDescriptions().get(0).getFormatVersion());
     assertEquals(buildURI(
-        "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_1.TXT"),
+      "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_1.TXT"),
       dataset.getDataDescriptions().get(0).getUrl());
     assertEquals("INV-GCEM-0305a1_1_2.shp", dataset.getDataDescriptions().get(1).getName());
     assertEquals("ASCII", dataset.getDataDescriptions().get(1).getCharset());
     assertEquals("shapefile", dataset.getDataDescriptions().get(1).getFormat());
     assertEquals("2.0", dataset.getDataDescriptions().get(1).getFormatVersion());
     assertEquals(buildURI(
-        "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_2.TXT"),
+      "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_2.TXT"),
       dataset.getDataDescriptions().get(1).getUrl());
 
     assertEquals("Provide data to the whole world.", dataset.getPurpose());
@@ -543,7 +543,7 @@ public class DatasetParserTest {
   @Test
   public void testDatasetVersion() throws IOException {
     Dataset dataset =
-            DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/ipt_eml.xml"));
+      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/ipt_eml.xml"));
     assertEquals("2.1", dataset.getVersion());
   }
 
@@ -843,7 +843,7 @@ public class DatasetParserTest {
 
   /**
    * Check dates are in UTC, and ranges use the endpoints of the range.
-   *
+   * <p>
    * An improvement would be to use only the year, not 1st January.
    */
   @Test
