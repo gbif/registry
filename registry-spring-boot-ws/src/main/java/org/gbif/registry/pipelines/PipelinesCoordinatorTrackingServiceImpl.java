@@ -128,9 +128,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
    */
   private void doOnAllDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
-    PagingResponse<Dataset> response =
-      datasetService.listByType(datasetType, pagingRequest);
+
+    PagingResponse<Dataset> response;
     do {
+      response = datasetService.listByType(datasetType, pagingRequest);
       response
         .getResults()
         .forEach(
@@ -139,11 +140,13 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
               LOG.info("trying to rerun dataset {}", d.getKey());
               onDataset.accept(d);
             } catch (Exception ex) {
-              LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
+              LOG.error(
+                "Error processing dataset {} while rerunning all datasets: {}",
+                d.getKey(),
+                ex.getMessage());
             }
           });
-      pagingRequest.setOffset(response.getResults().size());
-      response = datasetService.listByType(datasetType, pagingRequest);
+      pagingRequest.addOffset(response.getResults().size());
     } while (!response.isEndOfRecords());
   }
 
