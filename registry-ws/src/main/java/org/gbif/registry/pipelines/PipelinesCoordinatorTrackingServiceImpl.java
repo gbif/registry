@@ -510,17 +510,20 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
               s -> {
                 try {
                   if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-                    process.setNumberRecords(
-                        OBJECT_MAPPER
-                            .readValue(s.getMessage(), PipelinesDwcaMessage.class)
-                            .getValidationReport()
-                            .getOccurrenceReport()
-                            .getCheckedRecords());
+                    PipelinesDwcaMessage message =
+                        OBJECT_MAPPER.readValue(s.getMessage(), PipelinesDwcaMessage.class);
+                    if (message != null
+                        && message.getValidationReport() != null
+                        && message.getValidationReport().getOccurrenceReport() != null) {
+                      process.setNumberRecords(
+                          message.getValidationReport().getOccurrenceReport().getCheckedRecords());
+                    }
                   } else if (s.getType() == StepType.XML_TO_VERBATIM) {
-                    process.setNumberRecords(
-                        OBJECT_MAPPER
-                            .readValue(s.getMessage(), PipelinesXmlMessage.class)
-                            .getTotalRecordCount());
+                    PipelinesXmlMessage message =
+                        OBJECT_MAPPER.readValue(s.getMessage(), PipelinesXmlMessage.class);
+                    if (message != null) {
+                      process.setNumberRecords(message.getTotalRecordCount());
+                    }
                   } // abcd doesn't have count
                 } catch (IOException ex) {
                   LOG.warn(
