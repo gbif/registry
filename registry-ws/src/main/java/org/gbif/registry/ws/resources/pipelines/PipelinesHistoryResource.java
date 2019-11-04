@@ -8,10 +8,12 @@ import org.gbif.api.model.pipelines.PipelineWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
-import org.gbif.registry.pipelines.PipelineProcessView;
 import org.gbif.registry.pipelines.RunPipelineResponse;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -48,7 +50,7 @@ public class PipelinesHistoryResource {
    * Lists the history of all pipelines.
    */
   @GET
-  public PagingResponse<PipelineProcessView> history(@Context Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(@Context Pageable pageable) {
     return historyTrackingService.history(pageable);
   }
 
@@ -57,7 +59,7 @@ public class PipelinesHistoryResource {
    */
   @GET
   @Path("{datasetKey}")
-  public PagingResponse<PipelineProcessView> history(@PathParam("datasetKey") UUID datasetKey, @Context Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(@PathParam("datasetKey") UUID datasetKey, @Context Pageable pageable) {
     return historyTrackingService.history(datasetKey, pageable);
   }
 
