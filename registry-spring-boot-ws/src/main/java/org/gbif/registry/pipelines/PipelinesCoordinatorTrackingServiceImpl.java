@@ -252,21 +252,39 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public PagingResponse<PipelineProcess> history(Pageable pageable) {
+  public PagingResponse<PipelineProcessView> history(Pageable pageable) {
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
-    statuses.forEach(this::addNumberRecords);
-    return new PagingResponse<>(pageable, count, statuses);
+
+    List<PipelineProcessView> views =
+      statuses.stream()
+        .map(
+          p -> {
+            addNumberRecords(p);
+            return createPipelineProcessView(p);
+          })
+        .collect(Collectors.toList());
+
+    return new PagingResponse<>(pageable, count, views);
   }
 
   @Override
-  public PagingResponse<PipelineProcess> history(UUID datasetKey, Pageable pageable) {
+  public PagingResponse<PipelineProcessView> history(UUID datasetKey, Pageable pageable) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
 
     long count = mapper.count(datasetKey, null);
     List<PipelineProcess> statuses = mapper.list(datasetKey, null, pageable);
-    statuses.forEach(this::addNumberRecords);
-    return new PagingResponse<>(pageable, count, statuses);
+
+    List<PipelineProcessView> views =
+      statuses.stream()
+        .map(
+          p -> {
+            addNumberRecords(p);
+            return createPipelineProcessView(p);
+          })
+        .collect(Collectors.toList());
+
+    return new PagingResponse<>(pageable, count, views);
   }
 
   @Override
@@ -553,5 +571,16 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     }
 
     return process;
+  }
+
+  private PipelineProcessView createPipelineProcessView(PipelineProcess process) {
+    PipelineProcessView view = new PipelineProcessView();
+
+    view.setProcess(process);
+
+    Dataset dataset = datasetService.get(process.getDatasetKey());
+    view.setDatasetTitle(dataset.getTitle());
+
+    return view;
   }
 }
