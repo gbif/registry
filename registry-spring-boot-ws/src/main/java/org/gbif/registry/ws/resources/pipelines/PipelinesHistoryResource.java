@@ -9,7 +9,6 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
-import org.gbif.registry.pipelines.PipelineProcessView;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
 import org.gbif.registry.pipelines.RunPipelineResponse;
 import org.springframework.http.HttpStatus;
@@ -56,7 +55,7 @@ public class PipelinesHistoryResource {
    * Lists the history of all pipelines.
    */
   @GetMapping
-  public PagingResponse<PipelineProcessView> history(Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(Pageable pageable) {
     return historyTrackingService.history(pageable);
   }
 
@@ -64,7 +63,7 @@ public class PipelinesHistoryResource {
    * Lists teh history of a dataset.
    */
   @GetMapping("{datasetKey}")
-  public PagingResponse<PipelineProcessView> history(@PathVariable("datasetKey") UUID datasetKey, Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(@PathVariable("datasetKey") UUID datasetKey, Pageable pageable) {
     return historyTrackingService.history(datasetKey, pageable);
   }
 
