@@ -914,11 +914,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response;
     do {
-      response = listByType(datasetType, pagingRequest);
+      response = list(pagingRequest);
       response
           .getResults()
           .forEach(
@@ -944,12 +944,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@QueryParam("platform") String platform) {
     CompletableFuture.runAsync(
-        () ->
-            Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
-                .forEach(
-                    type ->
-                        doOnAllOccurrenceDatasets(
-                            dataset -> crawl(dataset.getKey(), platform), type)));
+        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
   }
     /**
      * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
