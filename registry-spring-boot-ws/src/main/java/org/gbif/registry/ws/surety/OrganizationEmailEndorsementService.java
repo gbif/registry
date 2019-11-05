@@ -11,9 +11,9 @@ import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.registry.directory.DirectoryRegistryMapping;
-import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.email.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailSender;
@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * {@link OrganizationEndorsementService} implementation responsible to handle the business logic of creating and
@@ -48,34 +50,26 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   private final ChallengeCodeManager<UUID> challengeCodeManager;
   private final OrganizationEmailManager emailTemplateManager;
   private final EmailSender emailManager;
-  private final WithMyBatis withMyBatis;
 
-  // TODO: 2019-08-22 it should be carefully analyzed: projects directory-ws-client (directory) and gbif-common-ws
-  // TODO: 2019-08-22 implement test mocks for now
-  public OrganizationEmailEndorsementService(OrganizationMapper organizationMapper,
-                                             NodeMapper nodeMapper,
+  public OrganizationEmailEndorsementService(MapperServiceLocator mapperServiceLocator,
                                              ParticipantService participantService,
                                              NodeService directoryNodeService,
                                              PersonService personService,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
                                              OrganizationEmailManager emailTemplateManager,
-                                             @Qualifier("emailSender") EmailSender emailManager,
-                                             WithMyBatis withMyBatis) {
-    this.organizationMapper = organizationMapper;
-    this.nodeMapper = nodeMapper;
+                                             @Qualifier("emailSender") EmailSender emailManager) {
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
+    this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.participantService = participantService;
     this.directoryNodeService = directoryNodeService;
     this.personService = personService;
     this.challengeCodeManager = challengeCodeManager;
     this.emailTemplateManager = emailTemplateManager;
     this.emailManager = emailManager;
-    this.withMyBatis = withMyBatis;
   }
 
   /**
    * Handles the logic to generate a new challenge code and send an email to the right person.
-   *
-   * @param newOrganization
    */
   @Transactional
   @Override
@@ -87,13 +81,12 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     Optional<Person> nodeManager = getNodeContact(endorsingNode);
     try {
       BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsementEmailModel(
-          newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
+        newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
       emailManager.send(emailModel);
     } catch (IOException ex) {
       LOG.error(SuretyConstants.NOTIFY_ADMIN,
-          "Error while trying to generate email on new organization created:" + newOrganization.getKey(), ex);
+        "Error while trying to generate email on new organization created:" + newOrganization.getKey(), ex);
     }
-
   }
 
   /**
@@ -102,8 +95,6 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
    * If no challengeCode is provided, the organization endorsement will be approved without verification.
    * The caller is responsible to determine if a challengeCode should be used or not.
    *
-   * @param organizationKey
-   * @param challengeCode
    * @return the organization endorsement was approved or not
    */
   @Transactional
@@ -112,11 +103,11 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     Organization organization = organizationMapper.get(organizationKey);
 
     if (organization != null && !organization.isEndorsementApproved() &&
-        (challengeCode == null || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode)) &&
-        challengeCodeManager.remove(organizationKey)) {
-
+      (challengeCode == null || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode)) &&
+      challengeCodeManager.remove(organizationKey)) {
+      checkArgument(organization.getDeleted() == null, "Unable to update a previously deleted entity");
       organization.setEndorsementApproved(true);
-      withMyBatis.update(organizationMapper, organization);
+      organizationMapper.update(organization);
 
       Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
       try {
@@ -124,7 +115,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
         emailModel.forEach(emailManager::send);
       } catch (IOException ex) {
         LOG.error(SuretyConstants.NOTIFY_ADMIN,
-            "Error while trying to generate email on organization confirmed: " + organizationKey, ex);
+          "Error while trying to generate email on organization confirmed: " + organizationKey, ex);
       }
       return true;
     }
@@ -133,9 +124,6 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
 
   /**
    * Get the Node Manager based on a registry {@link Node}.
-   *
-   * @param endorsingNode
-   * @return
    */
   private Optional<Person> getNodeContact(Node endorsingNode) {
     if (endorsingNode == null) {
@@ -147,10 +135,10 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
       Participant participant = participantService.get(participantId);
       List<org.gbif.api.model.directory.Node> participantNodes = participant.getNodes();
       Optional<NodePerson> nodePeople = participantNodes.stream()
-          .map(pn -> directoryNodeService.get(pn.getId()).getPeople())
-          .flatMap(List::stream)
-          .filter(p -> NodePersonRole.NODE_MANAGER == p.getRole())
-          .findFirst();
+        .map(pn -> directoryNodeService.get(pn.getId()).getPeople())
+        .flatMap(List::stream)
+        .filter(p -> NodePersonRole.NODE_MANAGER == p.getRole())
+        .findFirst();
       nodeManager = nodePeople.map(np -> personService.get(np.getPersonId()));
     }
     return nodeManager;
