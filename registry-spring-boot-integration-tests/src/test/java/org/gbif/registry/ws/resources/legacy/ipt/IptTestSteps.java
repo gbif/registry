@@ -58,10 +58,10 @@ public class IptTestSteps {
   private Installation actualInstallation;
   private UUID organizationKey;
   private UUID installationKey;
-  Integer contactKeyBeforeSecondUpdate;
-  Integer endpointKeyBeforeSecondUpdate;
-  Date installationCreationDate;
-  String installationCreatedBy;
+  private Integer contactKeyBeforeSecondUpdate;
+  private Integer endpointKeyBeforeSecondUpdate;
+  private Date installationCreationDate;
+  private String installationCreatedBy;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -120,8 +120,8 @@ public class IptTestSteps {
     installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
-  @When("register new installation for organization {string}")
-  public void registerIpt(String orgName) throws Exception {
+  @When("register new installation for organization {string} using organization key and password {string}")
+  public void registerIpt(String orgName, String password) throws Exception {
     HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
 
     result = mvc
@@ -130,12 +130,12 @@ public class IptTestSteps {
           .params(headers)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organizationKey.toString(), "welcome")))
+          .with(httpBasic(organizationKey.toString(), password)))
       .andDo(print());
   }
 
-  @When("update installation {string}")
-  public void updateIpt(String instName) throws Exception {
+  @When("update installation {string} using installation key and password {string}")
+  public void updateIpt(String instName, String password) throws Exception {
     HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
 
     result = mvc
@@ -144,7 +144,7 @@ public class IptTestSteps {
           .params(headers)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey.toString(), "welcome")))
+          .with(httpBasic(installationKey.toString(), password)))
       .andDo(print());
   }
 
