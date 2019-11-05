@@ -1,6 +1,10 @@
 package org.gbif.registry.utils;
 
 import com.google.common.collect.Lists;
+import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.ws.model.LegacyInstallation;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.springframework.http.HttpHeaders;
@@ -53,21 +57,32 @@ public class LegacyInstallations {
   }
 
   public static LegacyInstallation newInstance(UUID organizationKey) {
-    LegacyInstallation i = new LegacyInstallation();
-    i.setOrganizationKey(organizationKey);
+    LegacyInstallation installation = new LegacyInstallation();
+    installation.setOrganizationKey(organizationKey);
     // main
-    i.setIptName(IPT_NAME);
-    i.setIptDescription(IPT_DESCRIPTION);
+    installation.setIptName(IPT_NAME);
+    installation.setIptDescription(IPT_DESCRIPTION);
     // primary contact
-    i.setPrimaryContactType(IPT_PRIMARY_CONTACT_TYPE);
-    i.setPrimaryContactName(IPT_PRIMARY_CONTACT_NAME);
-    i.setPrimaryContactEmail(IPT_PRIMARY_CONTACT_EMAIL.get(0));
+    installation.setPrimaryContactType(IPT_PRIMARY_CONTACT_TYPE);
+    installation.setPrimaryContactName(IPT_PRIMARY_CONTACT_NAME);
+    installation.setPrimaryContactEmail(IPT_PRIMARY_CONTACT_EMAIL.get(0));
     // service/endpoint
-    i.setEndpointType(IPT_SERVICE_TYPE);
-    i.setEndpointUrl(IPT_SERVICE_URL.toASCIIString());
+    installation.setEndpointType(IPT_SERVICE_TYPE);
+    installation.setEndpointUrl(IPT_SERVICE_URL.toASCIIString());
     // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
-    i.setWsPassword(IPT_WS_PASSWORD);
+    installation.setWsPassword(IPT_WS_PASSWORD);
 
-    return i;
+    Contact contact = new Contact();
+    contact.setFirstName(IPT_PRIMARY_CONTACT_NAME);
+    contact.setEmail(IPT_PRIMARY_CONTACT_EMAIL);
+    contact.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
+    installation.setContacts(Collections.singletonList(contact));
+
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl(IPT_SERVICE_URL);
+    endpoint.setType(EndpointType.FEED);
+    installation.setEndpoints(Collections.singletonList(endpoint));
+
+    return installation;
   }
 }

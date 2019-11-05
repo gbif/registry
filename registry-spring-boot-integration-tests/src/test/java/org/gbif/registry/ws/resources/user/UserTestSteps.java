@@ -5,10 +5,13 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.registry.ws.resources.ServiceLocator;
 import org.gbif.registry.ws.resources.TestResource;
 import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;
@@ -231,5 +234,16 @@ public class UserTestSteps {
     assertEquals(username + "@gbif.org", loggedUserWithToken.getEmail());
     assertEquals("Tim", loggedUserWithToken.getFirstName());
     assertEquals(1, loggedUserWithToken.getRoles().size());
+  }
+
+  @Autowired
+  private ServiceLocator serviceLocator;
+
+  @When("call service locator")
+  public void callServiceLocator() {
+    UserMapper userMapper = serviceLocator.getUserMapper();
+    System.out.println("ggwp");
+    GbifUser gbifUser = userMapper.get("justadmin");
+    System.out.println(gbifUser);
   }
 }
