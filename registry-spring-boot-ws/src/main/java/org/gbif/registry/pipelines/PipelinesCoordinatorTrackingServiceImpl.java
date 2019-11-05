@@ -528,41 +528,36 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   private PipelineProcess addNumberRecords(PipelineProcess process) {
-    if (process != null) {
+    if (process != null && process.getSteps() != null) {
       process.getSteps().stream()
         .filter(s -> s.getType().getExecutionOrder() == 1)
         .max(Comparator.comparing(PipelineStep::getStarted))
         .ifPresent(
           s -> {
-            if (s.getType() == StepType.DWCA_TO_VERBATIM) {
-              try {
-                process.setNumberRecords(
-                  OBJECT_MAPPER
-                    .readValue(s.getMessage(), PipelinesDwcaMessage.class)
-                    .getValidationReport()
-                    .getOccurrenceReport()
-                    .getCheckedRecords());
-              } catch (IOException ex) {
-                LOG.warn(
-                  "Couldn't get the number of records for dataset {} and attempt {}",
-                  process.getDatasetKey(),
-                  process.getAttempt(),
-                  ex);
-              }
-            } else if (s.getType() == StepType.XML_TO_VERBATIM) {
-              try {
-                process.setNumberRecords(
-                  OBJECT_MAPPER
-                    .readValue(s.getMessage(), PipelinesXmlMessage.class)
-                    .getTotalRecordCount());
-              } catch (IOException ex) {
-                LOG.warn(
-                  "Couldn't get the number of records for dataset {} and attempt {}",
-                  process.getDatasetKey(),
-                  process.getAttempt(),
-                  ex);
-              }
-            } // abcd doesn't have count
+            try {
+              if (s.getType() == StepType.DWCA_TO_VERBATIM) {
+                PipelinesDwcaMessage message =
+                  OBJECT_MAPPER.readValue(s.getMessage(), PipelinesDwcaMessage.class);
+                if (message != null
+                  && message.getValidationReport() != null
+                  && message.getValidationReport().getOccurrenceReport() != null) {
+                  process.setNumberRecords(
+                    message.getValidationReport().getOccurrenceReport().getCheckedRecords());
+                }
+              } else if (s.getType() == StepType.XML_TO_VERBATIM) {
+                PipelinesXmlMessage message =
+                  OBJECT_MAPPER.readValue(s.getMessage(), PipelinesXmlMessage.class);
+                if (message != null) {
+                  process.setNumberRecords(message.getTotalRecordCount());
+                }
+              } // abcd doesn't have count
+            } catch (IOException ex) {
+              LOG.warn(
+                "Couldn't get the number of records for dataset {} and attempt {}",
+                process.getDatasetKey(),
+                process.getAttempt(),
+                ex);
+            }
           });
     }
 
@@ -570,7 +565,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   private void setDatasetTitle(PipelineProcess process) {
-    Dataset dataset = datasetService.get(process.getDatasetKey());
-    process.setDatasetTitle(dataset.getTitle());
+    if (process != null && process.getDatasetKey() != null) {
+      Dataset dataset = datasetService.get(process.getDatasetKey());
+      if (dataset != null) {
+        process.setDatasetTitle(dataset.getTitle());
+      }
+    }
   }
 }
