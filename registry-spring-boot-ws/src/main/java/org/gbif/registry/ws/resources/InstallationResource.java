@@ -21,16 +21,11 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.model.InstallationRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.Trim;
@@ -78,36 +73,17 @@ public class InstallationResource
    */
   private final MessagePublisher messagePublisher;
 
-  public InstallationResource(
-    InstallationMapper installationMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    IdentifierMapper identifierMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    CommentMapper commentMapper,
-    DatasetMapper datasetMapper,
-    OrganizationMapper organizationMapper,
-    MetasyncHistoryMapper metasyncHistoryMapper,
-    EventManager eventManager,
-    EditorAuthorizationService userAuthService,
-    WithMyBatis withMyBatis,
-    @Autowired(required = false) MessagePublisher messagePublisher) {
-    super(installationMapper,
-      commentMapper,
-      contactMapper,
-      endpointMapper,
-      identifierMapper,
-      machineTagMapper,
-      tagMapper,
-      Installation.class,
-      eventManager,
-      userAuthService,
-      withMyBatis);
-    this.datasetMapper = datasetMapper;
-    this.installationMapper = installationMapper;
-    this.organizationMapper = organizationMapper;
-    this.metasyncHistoryMapper = metasyncHistoryMapper;
+  public InstallationResource(MapperServiceLocator mapperServiceLocator,
+                              EventManager eventManager,
+                              EditorAuthorizationService userAuthService,
+                              WithMyBatis withMyBatis,
+                              @Autowired(required = false) MessagePublisher messagePublisher) {
+    super(mapperServiceLocator.getInstallationMapper(), mapperServiceLocator, Installation.class, eventManager,
+      userAuthService, withMyBatis);
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.installationMapper = mapperServiceLocator.getInstallationMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
+    this.metasyncHistoryMapper = mapperServiceLocator.getMetasyncHistoryMapper();
     this.messagePublisher = messagePublisher;
   }
 

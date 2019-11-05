@@ -34,8 +34,7 @@ import java.util.UUID;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO: 2019-08-20 it used to be a class with static util methods
-// TODO: 2019-08-20 should be in the persistence module?
+// TODO: 05/11/2019 DELETE!
 @Service
 public class WithMyBatis {
 

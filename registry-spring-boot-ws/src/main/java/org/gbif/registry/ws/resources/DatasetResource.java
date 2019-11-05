@@ -51,18 +51,16 @@ import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.model.DatasetRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.NotFoundException;
@@ -124,9 +122,9 @@ public class DatasetResource
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
-  public static final int ALL_DATASETS_LIMIT = 200;
+  private static final int ALL_DATASETS_LIMIT = 200;
 
-  //HTML sanitizer policy for paragraph
+  // HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
     .allowCommonBlockElements() // "p", "div", "h1", ...
     .allowCommonInlineFormattingElements() // "b", "i" ...
@@ -157,40 +155,28 @@ public class DatasetResource
         }
       });
 
-  /**
-   * The messagePublisher can be optional.
-   */
+  // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
 
-  public DatasetResource(DatasetMapper datasetMapper,
-                         ContactMapper contactMapper,
-                         EndpointMapper endpointMapper,
-                         MachineTagMapper machineTagMapper,
-                         TagMapper tagMapper,
-                         IdentifierMapper identifierMapper,
-                         CommentMapper commentMapper,
+  public DatasetResource(MapperServiceLocator mapperServiceLocator,
                          EventManager eventManager,
                          @Qualifier("datasetSearchServiceStub") DatasetSearchService searchService,
-                         MetadataMapper metadataMapper,
-                         DatasetProcessStatusMapper datasetProcessStatusMapper,
-                         NetworkMapper networkMapper,
                          EditorAuthorizationService userAuthService,
-                         OrganizationMapper organizationMapper,
                          DoiGenerator doiGenerator,
                          DataCiteDoiHandlerStrategy doiHandlingStrategy,
                          WithMyBatis withMyBatis,
                          @Autowired(required = false) MessagePublisher messagePublisher) {
-    super(datasetMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-      Dataset.class, eventManager, userAuthService, withMyBatis);
+    super(mapperServiceLocator.getDatasetMapper(), mapperServiceLocator, Dataset.class, eventManager, userAuthService,
+      withMyBatis);
     this.searchService = searchService;
-    this.metadataMapper = metadataMapper;
-    this.datasetMapper = datasetMapper;
-    this.contactMapper = contactMapper;
-    this.identifierMapper = identifierMapper;
-    this.tagMapper = tagMapper;
-    this.datasetProcessStatusMapper = datasetProcessStatusMapper;
-    this.networkMapper = networkMapper;
-    this.organizationMapper = organizationMapper;
+    this.metadataMapper = mapperServiceLocator.getMetadataMapper();
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.contactMapper = mapperServiceLocator.getContactMapper();
+    this.identifierMapper = mapperServiceLocator.getIdentifierMapper();
+    this.tagMapper = mapperServiceLocator.getTagMapper();
+    this.datasetProcessStatusMapper = mapperServiceLocator.getDatasetProcessStatusMapper();
+    this.networkMapper = mapperServiceLocator.getNetworkMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.doiGenerator = doiGenerator;
     this.doiHandlerStrategy = doiHandlingStrategy;
     this.messagePublisher = messagePublisher;

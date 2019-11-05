@@ -15,16 +15,11 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.model.NodeRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.NullToNotFound;
@@ -57,28 +52,18 @@ public class NodeResource
   private final DatasetMapper datasetMapper;
   private final Augmenter nodeAugmenter;
 
-  public NodeResource(
-    NodeMapper nodeMapper,
-    IdentifierMapper identifierMapper,
-    CommentMapper commentMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    OrganizationMapper organizationMapper,
-    DatasetMapper datasetMapper,
-    InstallationMapper installationMapper,
-    EventManager eventManager,
-    Augmenter nodeAugmenter,
-    EditorAuthorizationService userAuthService,
-    WithMyBatis withMyBatis) {
-    super(nodeMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-      Node.class, eventManager, userAuthService, withMyBatis);
-    this.nodeMapper = nodeMapper;
-    this.organizationMapper = organizationMapper;
+  public NodeResource(MapperServiceLocator mapperServiceLocator,
+                      EventManager eventManager,
+                      Augmenter nodeAugmenter,
+                      EditorAuthorizationService userAuthService,
+                      WithMyBatis withMyBatis) {
+    super(mapperServiceLocator.getNodeMapper(), mapperServiceLocator, Node.class, eventManager, userAuthService,
+      withMyBatis);
+    this.nodeMapper = mapperServiceLocator.getNodeMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeAugmenter = nodeAugmenter;
-    this.datasetMapper = datasetMapper;
-    this.installationMapper = installationMapper;
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.installationMapper = mapperServiceLocator.getInstallationMapper();
   }
 
   @GetMapping("{key}")
