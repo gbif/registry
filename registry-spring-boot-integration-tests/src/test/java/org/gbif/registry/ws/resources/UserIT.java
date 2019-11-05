@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
   },
   glue = "org.gbif.registry.ws.resources.user",
   plugin = "pretty"
+  ,tags = "@TestUserFeature"
 )
 public class UserIT {
 }

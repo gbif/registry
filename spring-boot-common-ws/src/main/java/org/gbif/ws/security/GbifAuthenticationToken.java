@@ -29,7 +29,6 @@ public class GbifAuthenticationToken implements GbifAuthentication {
    */
   private final String authenticationScheme;
 
-  // TODO: 31/10/2019 introduce enum for auth scheme
   public GbifAuthenticationToken(UserDetails principal) {
     this.principal = principal;
     this.authenticationScheme = "";

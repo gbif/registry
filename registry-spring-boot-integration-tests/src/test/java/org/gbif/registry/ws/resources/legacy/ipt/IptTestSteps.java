@@ -6,6 +6,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.InstallationService;
@@ -33,6 +34,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gbif.registry.ws.resources.legacy.ipt.AssertLegacyInstallation.assertLegacyInstallations;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
@@ -52,7 +54,7 @@ public class IptTestSteps {
   private ResultActions result;
 
   private Organization organization;
-  private Installation installation;
+  private Installation actualInstallation;
   private UUID organizationKey;
   private UUID installationKey;
 
@@ -108,7 +110,7 @@ public class IptTestSteps {
   @Given("installation {string} with key {string}")
   public void prepareInstallation(String instName, String installationKey) {
     this.installationKey = UUID.fromString(installationKey);
-    installation = installationService.get(this.installationKey);
+    actualInstallation = installationService.get(this.installationKey);
   }
 
   @When("register new installation for organization {string}")
@@ -146,17 +148,39 @@ public class IptTestSteps {
   }
 
   @Then("installation UUID is returned")
-  public void checkInstallationValidity() throws Exception {
+  public void checkInstallationUuid() throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
     assertNotNull("Registered IPT key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
   }
 
-  @Then("installation is valid")
-  public void checkDates() {
+  @Then("registered installation is valid")
+  public void checkRegisteredInstallationValidity() {
     LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
-    Installation actual = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
-    assertLegacyInstallations(expected, actual);
+    actualInstallation = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    assertLegacyInstallations(expected, actualInstallation);
+  }
+
+  @Then("updated installation is valid")
+  public void checkUpdatedInstallationValidity() {
+    LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
+    actualInstallation = installationService.get(installationKey);
+    assertLegacyInstallations(expected, actualInstallation);
+  }
+
+  @Then("total number of installation is {int}")
+  public void checkNumberOfInstallations(int installationsNumber) {
+    assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
+  }
+
+  @Then("total number of contacts is {int}")
+  public void checkNumberOfContacts(int contactsNumber) {
+    assertEquals(contactsNumber, actualInstallation.getContacts().size());
+  }
+
+  @Then("total number of endpoints is {int}")
+  public void checkNumberOfEndpoints(int endpointsNumber) {
+    assertEquals(endpointsNumber, actualInstallation.getEndpoints().size());
   }
 }
