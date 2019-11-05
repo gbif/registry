@@ -22,7 +22,6 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -126,12 +125,12 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
+  private void doOnAllDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
 
     PagingResponse<Dataset> response;
     do {
-      response = datasetService.listByType(datasetType, pagingRequest);
+      response = datasetService.list(pagingRequest);
       response
         .getResults()
         .forEach(
@@ -185,14 +184,8 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
-      () ->
-        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
-          .forEach(
-            type ->
-              doOnAllDatasets(
-                dataset ->
-                  runLastAttempt(dataset.getKey(), steps, reason, user, prefix),
-                type)));
+      () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix))
+    );
 
     return RunPipelineResponse.builder()
       .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
