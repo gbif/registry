@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
   },
   glue = "org.gbif.registry.ws.resources.legacy.ipt",
   plugin = "pretty"
-  ,tags = "@UpdateIpt"
 )
 public class IptIT {
 }

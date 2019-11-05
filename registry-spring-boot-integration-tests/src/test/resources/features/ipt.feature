@@ -15,17 +15,16 @@ Feature: IPT related functionality
     When update installation "Test IPT Registry2"
     Then response status should be 204
     And updated installation is valid
-#    And some installation information was updated
-#    But some installation information was not updated
     And total number of installation is 1
     And total number of contacts is 1
     And total number of endpoints is 1
+    Given store contactKey and endpointKey
     When update installation "Test IPT Registry2"
-#    Then response status should be 204
-#    And updated installation is valid
-#    And total number of installation is 1
-#    And total number of contacts is 1
-#    And total number of endpoints is 1
-#    And contactKey is the same
-#    But endpointKey was updated
+    Then response status should be 204
+    And updated installation is valid
+    And total number of installation is 1
+    And total number of contacts is 1
+    And total number of endpoints is 1
+    And contactKey is the same
+    But endpointKey was updated
 
