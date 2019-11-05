@@ -54,6 +54,7 @@ public class IptTestSteps {
   private MockMvc mvc;
   private ResultActions result;
 
+  private HttpHeaders requestParamsData;
   private Organization organization;
   private Installation actualInstallation;
   private UUID organizationKey;
@@ -120,31 +121,42 @@ public class IptTestSteps {
     installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
-  @When("register new installation for organization {string} using organization key and password {string}")
-  public void registerIpt(String orgName, String password) throws Exception {
-    HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
+  @Given("new installation to create")
+  public void installationToCreate() {
+    requestParamsData = LegacyInstallations.buildParams(organizationKey);
+  }
 
+  @Given("without field {string}")
+  public void removePrimaryContactFromParams(String field) {
+    requestParamsData.remove(field);
+  }
+
+  @Given("installation to update")
+  public void installationToUpdate() {
+    requestParamsData = LegacyInstallations.buildParams(organizationKey);
+  }
+
+  @When("register new installation for organization {string} using organization key {string} and password {string}")
+  public void registerIpt(String orgName, String organisationKey, String password) throws Exception {
     result = mvc
       .perform(
         post("/registry/ipt/register")
-          .params(headers)
+          .params(requestParamsData)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organizationKey.toString(), password)))
+          .with(httpBasic(organisationKey, password)))
       .andDo(print());
   }
 
-  @When("update installation {string} using installation key and password {string}")
-  public void updateIpt(String instName, String password) throws Exception {
-    HttpHeaders headers = LegacyInstallations.buildParams(organizationKey);
-
+  @When("update installation {string} using installation key {string} and password {string}")
+  public void updateIpt(String instName, String installationKey, String password) throws Exception {
     result = mvc
       .perform(
         post("/registry/ipt/update/{key}", installationKey)
-          .params(headers)
+          .params(requestParamsData)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey.toString(), password)))
+          .with(httpBasic(installationKey, password)))
       .andDo(print());
   }
 
