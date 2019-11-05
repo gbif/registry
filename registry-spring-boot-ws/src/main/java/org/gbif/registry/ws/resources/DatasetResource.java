@@ -100,7 +100,6 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -873,11 +872,11 @@ public class DatasetResource
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, DatasetType datasetType) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response;
     do {
-      response = listByType(datasetType, pagingRequest);
+      response = list(pagingRequest);
       response
         .getResults()
         .forEach(
@@ -902,12 +901,7 @@ public class DatasetResource
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawlAll(@RequestParam("platform") String platform) {
     CompletableFuture.runAsync(
-      () ->
-        Arrays.asList(DatasetType.OCCURRENCE, DatasetType.SAMPLING_EVENT, DatasetType.CHECKLIST)
-          .forEach(
-            type ->
-              doOnAllOccurrenceDatasets(
-                dataset -> crawl(dataset.getKey(), platform), type)));
+      () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
   }
 
   /**
