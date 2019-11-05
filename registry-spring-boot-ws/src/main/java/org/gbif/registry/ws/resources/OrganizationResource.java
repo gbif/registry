@@ -18,15 +18,10 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.model.OrganizationRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
@@ -74,9 +69,9 @@ public class OrganizationResource
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 
-  protected static final int MINIMUM_PASSWORD_SIZE = 12;
-  protected static final int MAXIMUM_PASSWORD_SIZE = 15;
-  private static final String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  private static final int MINIMUM_PASSWORD_SIZE = 12;
+  private static final int MAXIMUM_PASSWORD_SIZE = 15;
+  private static final String ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
@@ -84,34 +79,16 @@ public class OrganizationResource
   private final OrganizationEndorsementService<UUID> organizationEndorsementService;
   private final EditorAuthorizationService userAuthService;
 
-  public OrganizationResource(
-    OrganizationMapper organizationMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    IdentifierMapper identifierMapper,
-    CommentMapper commentMapper,
-    DatasetMapper datasetMapper,
-    InstallationMapper installationMapper,
-    OrganizationEndorsementService<UUID> organizationEndorsementService,
-    EventManager eventManager,
-    EditorAuthorizationService userAuthService,
-    WithMyBatis withMyBatis) {
-    super(organizationMapper,
-      commentMapper,
-      contactMapper,
-      endpointMapper,
-      identifierMapper,
-      machineTagMapper,
-      tagMapper,
-      Organization.class,
-      eventManager,
-      userAuthService,
-      withMyBatis);
-    this.datasetMapper = datasetMapper;
-    this.organizationMapper = organizationMapper;
-    this.installationMapper = installationMapper;
+  public OrganizationResource(MapperServiceLocator mapperServiceLocator,
+                              OrganizationEndorsementService<UUID> organizationEndorsementService,
+                              EventManager eventManager,
+                              EditorAuthorizationService userAuthService,
+                              WithMyBatis withMyBatis) {
+    super(mapperServiceLocator.getOrganizationMapper(), mapperServiceLocator, Organization.class, eventManager,
+      userAuthService, withMyBatis);
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
+    this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationEndorsementService = organizationEndorsementService;
     this.userAuthService = userAuthService;
   }
@@ -162,8 +139,8 @@ public class OrganizationResource
     StringBuilder password = new StringBuilder();
     int randomIndex;
     while (size-- > 0) {
-      randomIndex = random.nextInt(PASSWORD_ALLOWED_CHARACTERS.length());
-      password.append(PASSWORD_ALLOWED_CHARACTERS.charAt(randomIndex));
+      randomIndex = random.nextInt(ALLOWED_CHARACTERS.length());
+      password.append(ALLOWED_CHARACTERS.charAt(randomIndex));
     }
     return password.toString();
   }

@@ -8,14 +8,9 @@ import org.gbif.api.model.registry.Network;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.model.NetworkRequestSearchParams;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.springframework.security.access.annotation.Secured;
@@ -40,31 +35,14 @@ public class NetworkResource
   private final DatasetMapper datasetMapper;
   private final NetworkMapper networkMapper;
 
-  public NetworkResource(
-    NetworkMapper networkMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    IdentifierMapper identifierMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    CommentMapper commentMapper,
-    DatasetMapper datasetMapper,
-    EventManager eventManager,
-    EditorAuthorizationService userAuthService,
-    WithMyBatis withMyBatis) {
-    super(networkMapper,
-      commentMapper,
-      contactMapper,
-      endpointMapper,
-      identifierMapper,
-      machineTagMapper,
-      tagMapper,
-      Network.class,
-      eventManager,
-      userAuthService,
+  public NetworkResource(MapperServiceLocator mapperServiceLocator,
+                         EventManager eventManager,
+                         EditorAuthorizationService userAuthService,
+                         WithMyBatis withMyBatis) {
+    super(mapperServiceLocator.getNetworkMapper(), mapperServiceLocator, Network.class, eventManager, userAuthService,
       withMyBatis);
-    this.datasetMapper = datasetMapper;
-    this.networkMapper = networkMapper;
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.networkMapper = mapperServiceLocator.getNetworkMapper();
   }
 
   /**

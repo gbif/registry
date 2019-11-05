@@ -33,6 +33,7 @@ import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
@@ -102,25 +103,19 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
 
-  protected BaseNetworkEntityResource(
-    BaseNetworkEntityMapper<T> mapper,
-    CommentMapper commentMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    IdentifierMapper identifierMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    Class<T> objectClass,
-    EventManager eventManager,
-    EditorAuthorizationService userAuthService,
-    WithMyBatis withMyBatis) {
+  protected BaseNetworkEntityResource(BaseNetworkEntityMapper<T> mapper,
+                                      MapperServiceLocator mapperServiceLocator,
+                                      Class<T> objectClass,
+                                      EventManager eventManager,
+                                      EditorAuthorizationService userAuthService,
+                                      WithMyBatis withMyBatis) {
     this.mapper = mapper;
-    this.commentMapper = commentMapper;
-    this.machineTagMapper = machineTagMapper;
-    this.tagMapper = tagMapper;
-    this.contactMapper = contactMapper;
-    this.endpointMapper = endpointMapper;
-    this.identifierMapper = identifierMapper;
+    this.commentMapper = mapperServiceLocator.getCommentMapper();
+    this.machineTagMapper = mapperServiceLocator.getMachineTagMapper();
+    this.tagMapper = mapperServiceLocator.getTagMapper();
+    this.contactMapper = mapperServiceLocator.getContactMapper();
+    this.endpointMapper = mapperServiceLocator.getEndpointMapper();
+    this.identifierMapper = mapperServiceLocator.getIdentifierMapper();
     this.objectClass = objectClass;
     this.eventManager = eventManager;
     this.userAuthService = userAuthService;
@@ -168,8 +163,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     eventManager.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
-
-  // TODO: 16/10/2019 analyze and maybe merge duplicated methods like delete(key,auth) and delete(key)
 
   /**
    * This method ensures that the caller is authorized to perform the action, and then deletes the entity.
