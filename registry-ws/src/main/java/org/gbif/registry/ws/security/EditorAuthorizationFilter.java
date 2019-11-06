@@ -55,6 +55,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
     // user must NOT be null if the resource requires editor rights restrictions
     if (user == null
+      && isNotGetOrOptionsRequest(request)
       && (ORGANIZATION_PATTERN.matcher(path).matches()
       || DATASET_PATTERN.matcher(path).matches()
       || INSTALLATION_PATTERN.matcher(path).matches()
@@ -64,10 +65,9 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
     if (user != null
       && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
-      && !request.getMethod().equals("GET") && !request.getMethod().equals("OPTIONS")) {
+      && isNotGetOrOptionsRequest(request)) {
 
       try {
-
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
         if (m.find()) {
           if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
@@ -117,6 +117,11 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
     }
 
     return request;
+  }
+
+  private boolean isNotGetOrOptionsRequest(ContainerRequest request) {
+    return !"GET".equals(request.getMethod())
+      && !"OPTIONS".equals(request.getMethod());
   }
 
   @VisibleForTesting
