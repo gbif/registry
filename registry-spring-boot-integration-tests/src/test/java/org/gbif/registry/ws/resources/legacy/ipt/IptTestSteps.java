@@ -121,9 +121,14 @@ public class IptTestSteps {
     installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
-  @Given("new installation to create")
+  @Given("new installation to register")
   public void installationToCreate() {
     requestParamsData = LegacyInstallations.buildParams(organizationKey);
+  }
+
+  @Given("new dataset to register")
+  public void datasetToRegister() {
+    requestParamsData = LegacyInstallations.buildDatasetParams(organizationKey, installationKey);
   }
 
   @Given("without field {string}")
@@ -146,6 +151,18 @@ public class IptTestSteps {
           .accept(APPLICATION_XML)
           .with(httpBasic(organisationKey, password)))
       .andDo(print());
+  }
+
+  @When("register new dataset using organization key {string} and password {string}")
+  public void registerDataset(String installationKey, String password) throws Exception {
+    result = mvc
+      .perform(
+        post("/registry/ipt/resource")
+          .params(requestParamsData)
+          .contentType(APPLICATION_FORM_URLENCODED)
+          .accept(APPLICATION_XML)
+          .with(httpBasic(installationKey, password))
+      ).andDo(print());
   }
 
   @When("update installation {string} using installation key {string} and password {string}")

@@ -3,7 +3,7 @@ Feature: IPT related functionality
 
   Scenario: Register IPT installation
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And new installation to create
+    And new installation to register
     When register new installation for organization "Org" using organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And installation UUID is returned
@@ -32,7 +32,7 @@ Feature: IPT related functionality
 
   Scenario: Register IPT installation by invalid random organisation key fails
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And new installation to create
+    And new installation to register
     When register new installation for organization "Org" using organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
     Then response status should be 401
 
@@ -45,7 +45,7 @@ Feature: IPT related functionality
 
   Scenario: Register IPT installation without primary contact
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And new installation to create
+    And new installation to register
     But without field "primaryContactEmail"
     When register new installation for organization "Org" using organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 400
@@ -57,3 +57,12 @@ Feature: IPT related functionality
     But without field "primaryContactEmail"
     When update installation "Test IPT Registry2" using installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
     Then response status should be 400
+
+  @RegisterDataset
+  Scenario: Register IPT dataset
+    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
+    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
+    And new dataset to register
+    When register new dataset using organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
+    Then response status should be 201
+
