@@ -128,4 +128,25 @@ public class SecurityContextCheck {
         .map(SimpleGrantedAuthority::new)
         .anyMatch(role -> authentication.getAuthorities().contains(role));
   }
+
+  /**
+   * Check if the user represented by the {@link Authentication} has the admin role.
+   */
+  public static boolean checkIsAdmin(Authentication authentication) {
+    return checkUserInRole(authentication, UserRoles.ADMIN_ROLE);
+  }
+
+  /**
+   * Check if the user represented by the {@link Authentication} does NOT have the admin role.
+   */
+  public static boolean checkIsNotAdmin(Authentication authentication) {
+    return !checkUserInRole(authentication, UserRoles.ADMIN_ROLE);
+  }
+
+  /**
+   * Check if the user represented by the {@link Authentication} has the editor role.
+   */
+  public static boolean checkIsEditor(Authentication authentication) {
+    return checkUserInRole(authentication, UserRoles.EDITOR_ROLE);
+  }
 }
