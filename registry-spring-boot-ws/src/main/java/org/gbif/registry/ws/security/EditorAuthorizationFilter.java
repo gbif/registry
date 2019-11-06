@@ -18,8 +18,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsEditor;
 import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotAdmin;
+import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotEditor;
 
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be passed.
@@ -62,32 +62,39 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
     String path = httpRequest.getRequestURI().toLowerCase();
+    boolean isRequestRequiredValidation = checkRequestRequiresEditorValidation(path);
 
-    // user must NOT be null if the resource requires editor rights restrictions
     // skip GET and OPTIONS requests
-    if (name == null
-      && isNotGetOrOptionsRequest(httpRequest)
-      && (ORGANIZATION_PATTERN.matcher(path).matches()
-      || DATASET_PATTERN.matcher(path).matches()
-      || INSTALLATION_PATTERN.matcher(path).matches()
-      || NODE_NETWORK_PATTERN.matcher(path).matches())) {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
-    }
+    if (isNotGetOrOptionsRequest(httpRequest) && isRequestRequiredValidation) {
+      // user must NOT be null if the resource requires editor rights restrictions
+      if (name == null) {
+        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      }
 
-    if (name != null
-      && isNotGetOrOptionsRequest(httpRequest)
-      && checkIsNotAdmin(authentication)
-      && checkIsEditor(authentication)) {
-      try {
-        checkOrganization(name, path);
-        checkDataset(name, path);
-        checkInstallation(name, path);
-        checkNodeNetwork(name, path);
-      } catch (IllegalArgumentException e) {
-        // no valid UUID, do nothing as it should not be a valid request anyway
+      // validate only if user not admin
+      if (checkIsNotAdmin(authentication)) {
+        // only editors allowed to modify, because admins already excluded
+        if (checkIsNotEditor(authentication)) {
+          throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        }
+        try {
+          checkOrganization(name, path);
+          checkDataset(name, path);
+          checkInstallation(name, path);
+          checkNodeNetwork(name, path);
+        } catch (IllegalArgumentException e) {
+          // no valid UUID, do nothing as it should not be a valid request anyway
+        }
       }
     }
     chain.doFilter(request, response);
+  }
+
+  private boolean checkRequestRequiresEditorValidation(String path) {
+    return ORGANIZATION_PATTERN.matcher(path).matches()
+      || DATASET_PATTERN.matcher(path).matches()
+      || INSTALLATION_PATTERN.matcher(path).matches()
+      || NODE_NETWORK_PATTERN.matcher(path).matches();
   }
 
   private void checkNodeNetwork(String name, String path) {
