@@ -45,18 +45,26 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
     this.userAuthService = userAuthService;
   }
 
-
   @Override
   public ContainerRequest filter(ContainerRequest request) {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple JSR250 annotations on the resource methods
     Principal user = secContext.getUserPrincipal();
 
+    String path = request.getPath().toLowerCase();
+
+    // user must NOT be null if the resource requires editor rights restrictions
+    if (user == null
+      && (ORGANIZATION_PATTERN.matcher(path).matches()
+      || DATASET_PATTERN.matcher(path).matches()
+      || INSTALLATION_PATTERN.matcher(path).matches()
+      || NODE_NETWORK_PATTERN.matcher(path).matches())) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
     if (user != null
       && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
       && !request.getMethod().equals("GET") && !request.getMethod().equals("OPTIONS")) {
-
-      String path = request.getPath().toLowerCase();
 
       try {
 
