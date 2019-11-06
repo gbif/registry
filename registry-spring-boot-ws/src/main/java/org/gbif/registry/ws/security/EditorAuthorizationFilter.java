@@ -34,7 +34,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
-  private static final String ENTITY_KEY = "^%s/([a-f0-9-]+)";
+  private static final String ENTITY_KEY = "^/?%s/([a-f0-9-]+)";
   private static final Pattern NODE_NETWORK_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "(?:network|node)"));
   private static final Pattern ORGANIZATION_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "organization"));
   private static final Pattern DATASET_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "dataset"));
@@ -55,12 +55,21 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     final String name = authentication.getName();
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-    if (name != null
-        && (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && SecurityContextCheck.checkUserInRole(authentication, UserRoles.EDITOR_ROLE))
-        && !httpRequest.getMethod().equals("GET") && !httpRequest.getMethod().equals("OPTIONS")) {
+    String path = httpRequest.getRequestURI().toLowerCase();
 
-      String path = httpRequest.getRequestURI().toLowerCase();
+    // user must NOT be null if the resource requires editor rights restrictions
+    if (name == null
+      && (ORGANIZATION_PATTERN.matcher(path).matches()
+      || DATASET_PATTERN.matcher(path).matches()
+      || INSTALLATION_PATTERN.matcher(path).matches()
+      || NODE_NETWORK_PATTERN.matcher(path).matches())) {
+      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+    }
+
+    if (name != null
+      && (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
+      && SecurityContextCheck.checkUserInRole(authentication, UserRoles.EDITOR_ROLE))
+      && !httpRequest.getMethod().equals("GET") && !httpRequest.getMethod().equals("OPTIONS")) {
 
       try {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
