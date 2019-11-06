@@ -6,11 +6,12 @@ import org.gbif.ws.security.GbifAuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.filter.GenericFilterBean;
 
-import javax.annotation.Nullable;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -29,7 +30,7 @@ import java.util.Objects;
  * evaluated.
  */
 @Component
-public class IdentityFilter extends OncePerRequestFilter {
+public class IdentityFilter extends GenericFilterBean {
 
   private GbifAuthenticationManager authenticationManager;
 
@@ -38,19 +39,21 @@ public class IdentityFilter extends OncePerRequestFilter {
   }
 
   @Override
-  public void doFilterInternal(@Nullable final HttpServletRequest request,
-                               @Nullable final HttpServletResponse response,
-                               final FilterChain filterChain)
-    throws IOException, ServletException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+    throws ServletException, IOException {
     Objects.requireNonNull(request, "Can't filter null request");
     Objects.requireNonNull(response, "Can't filter null response");
+
+    HttpServletRequest httpRequest = (HttpServletRequest) request;
+    HttpServletResponse httpResponse = (HttpServletResponse) response;
+
     // authenticates the HTTP method, but ignores legacy UUID user names
     try {
-      final Authentication authentication = authenticationManager.authenticate(request);
+      final Authentication authentication = authenticationManager.authenticate(httpRequest);
       SecurityContextHolder.getContext().setAuthentication(authentication);
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(httpRequest, httpResponse);
     } catch (final WebApplicationException e) {
-      response.setStatus(e.getResponse().getStatusCode().value());
+      httpResponse.setStatus(e.getResponse().getStatusCode().value());
     }
   }
 }
