@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -44,16 +43,20 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
   private static final Pattern INSTALLATION_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "installation"));
 
   private final EditorAuthorizationService userAuthService;
+  private final AuthenticationFacade authenticationFacade;
 
-  public EditorAuthorizationFilter(EditorAuthorizationService userAuthService) {
+  public EditorAuthorizationFilter(EditorAuthorizationService userAuthService,
+                                   AuthenticationFacade authenticationFacade) {
     this.userAuthService = userAuthService;
+    this.authenticationFacade = authenticationFacade;
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    throws IOException, ServletException {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource methods
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final Authentication authentication = authenticationFacade.getAuthentication();
 
     final String name = authentication.getName();
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
