@@ -49,20 +49,20 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
-        .httpBasic().disable()
-        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
-        .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
-        .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
-        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), LegacyAuthorizationFilter.class)
-        .addFilterAfter(context.getBean(AppIdentityFilter.class), EditorAuthorizationFilter.class)
-        .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
-        .csrf().disable()
-        .authorizeRequests()
-        .anyRequest().authenticated();
+      .httpBasic().disable()
+      .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
+      .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
+      .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
+      .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
+      .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
+      .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), JwtRequestFilter.class)
+      .csrf().disable()
+      .authorizeRequests()
+      .anyRequest().authenticated();
 
     http
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+      .sessionManagement()
+      .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
   @Bean
