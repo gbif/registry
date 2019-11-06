@@ -19,6 +19,9 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsEditor;
+import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotAdmin;
+
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be passed.
  * First of all any resource method is required to have the role included in the RolesAllowed annotation.
@@ -58,7 +61,9 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     String path = httpRequest.getRequestURI().toLowerCase();
 
     // user must NOT be null if the resource requires editor rights restrictions
+    // skip GET and OPTIONS requests
     if (name == null
+      && isNotGetOrOptionsRequest(httpRequest)
       && (ORGANIZATION_PATTERN.matcher(path).matches()
       || DATASET_PATTERN.matcher(path).matches()
       || INSTALLATION_PATTERN.matcher(path).matches()
@@ -67,9 +72,8 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     }
 
     if (name != null
-      && (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-      && SecurityContextCheck.checkUserInRole(authentication, UserRoles.EDITOR_ROLE))
-      && !httpRequest.getMethod().equals("GET") && !httpRequest.getMethod().equals("OPTIONS")) {
+      && isNotGetOrOptionsRequest(httpRequest)
+      && (checkIsNotAdmin(authentication) && checkIsEditor(authentication))) {
 
       try {
         Matcher m = ORGANIZATION_PATTERN.matcher(path);
@@ -120,5 +124,10 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
       }
     }
     chain.doFilter(request, response);
+  }
+
+  private boolean isNotGetOrOptionsRequest(HttpServletRequest httpRequest) {
+    return !"GET".equals(httpRequest.getMethod())
+      && !"OPTIONS".equals(httpRequest.getMethod());
   }
 }
