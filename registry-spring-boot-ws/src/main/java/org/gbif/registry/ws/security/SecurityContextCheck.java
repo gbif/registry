@@ -130,13 +130,6 @@ public class SecurityContextCheck {
   }
 
   /**
-   * Check if the user represented by the {@link Authentication} has the admin role.
-   */
-  public static boolean checkIsAdmin(Authentication authentication) {
-    return checkUserInRole(authentication, UserRoles.ADMIN_ROLE);
-  }
-
-  /**
    * Check if the user represented by the {@link Authentication} does NOT have the admin role.
    */
   public static boolean checkIsNotAdmin(Authentication authentication) {
@@ -144,9 +137,9 @@ public class SecurityContextCheck {
   }
 
   /**
-   * Check if the user represented by the {@link Authentication} has the editor role.
+   * Check if the user represented by the {@link Authentication} does NOT have the editor role.
    */
-  public static boolean checkIsEditor(Authentication authentication) {
-    return checkUserInRole(authentication, UserRoles.EDITOR_ROLE);
+  public static boolean checkIsNotEditor(Authentication authentication) {
+    return !checkUserInRole(authentication, UserRoles.EDITOR_ROLE);
   }
 }
