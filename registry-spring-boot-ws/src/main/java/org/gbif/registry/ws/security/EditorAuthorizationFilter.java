@@ -62,10 +62,9 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
     String path = httpRequest.getRequestURI().toLowerCase();
-    boolean isRequestRequiredValidation = checkRequestRequiresEditorValidation(path);
 
     // skip GET and OPTIONS requests
-    if (isNotGetOrOptionsRequest(httpRequest) && isRequestRequiredValidation) {
+    if (isNotGetOrOptionsRequest(httpRequest) && checkRequestRequiresEditorValidation(path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       if (name == null) {
         throw new WebApplicationException(HttpStatus.FORBIDDEN);
