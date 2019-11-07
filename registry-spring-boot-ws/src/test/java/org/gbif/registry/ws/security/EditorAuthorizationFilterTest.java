@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,8 @@ public class EditorAuthorizationFilterTest {
     Collections.singletonList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE));
   private static final List<GrantedAuthority> ROLES_USER_ONLY =
     Collections.singletonList(new SimpleGrantedAuthority(UserRoles.USER_ROLE));
+  private static final List<GrantedAuthority> ROLES_ADMIN_AND_EDITOR =
+    Arrays.asList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE), new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE));
 
   @Mock
   private HttpServletRequest mockRequest;
@@ -313,5 +316,25 @@ public class EditorAuthorizationFilterTest {
       verify(mockAuthentication, times(2)).getAuthorities();
       verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
     }
+  }
+
+  @Test
+  public void testOrganizationDeleteNotNullAdminUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_ADMIN_AND_EDITOR).when(mockAuthentication).getAuthorities();
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication).getAuthorities();
   }
 }
