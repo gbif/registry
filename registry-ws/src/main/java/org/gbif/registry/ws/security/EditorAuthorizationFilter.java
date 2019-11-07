@@ -1,20 +1,23 @@
 package org.gbif.registry.ws.security;
 
-import java.security.Principal;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.security.Principal;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotAdmin;
+import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotEditor;
 
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be passed.
@@ -53,70 +56,91 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
     String path = request.getPath().toLowerCase();
 
-    // user must NOT be null if the resource requires editor rights restrictions
-    if (user == null
-      && isNotGetOrOptionsRequest(request)
-      && (ORGANIZATION_PATTERN.matcher(path).matches()
-      || DATASET_PATTERN.matcher(path).matches()
-      || INSTALLATION_PATTERN.matcher(path).matches()
-      || NODE_NETWORK_PATTERN.matcher(path).matches())) {
-      throw new WebApplicationException(Response.Status.FORBIDDEN);
-    }
+    if (isNotGetOrOptionsRequest(request) && checkRequestRequiresEditorValidation(path)) {
+      if (user == null || user.getName() == null) {
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      }
 
-    if (user != null
-      && (!secContext.isUserInRole(UserRoles.ADMIN_ROLE) && secContext.isUserInRole(UserRoles.EDITOR_ROLE))
-      && isNotGetOrOptionsRequest(request)) {
-
-      try {
-        Matcher m = ORGANIZATION_PATTERN.matcher(path);
-        if (m.find()) {
-          if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify organization {}", user.getName(), m.group(1));
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-          } else {
-            LOG.debug("User {} is allowed to modify organization {}", user.getName(), m.group(1));
-            return request;
-          }
+      if (checkIsNotAdmin(secContext)) {
+        if (checkIsNotEditor(secContext)) {
+          throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
-        m = DATASET_PATTERN.matcher(path);
-        if (m.find()) {
-          if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify dataset {}", user.getName(), m.group(1));
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-          } else {
-            LOG.debug("User {} is allowed to modify dataset {}", user.getName(), m.group(1));
-            return request;
-          }
+        try {
+          checkOrganization(user, path);
+          checkDataset(user, path);
+          checkInstallation(user, path);
+          checkNodeNetwork(user, path);
+        } catch (IllegalArgumentException e) {
+          // no valid UUID, do nothing as it should not be a valid request anyway
         }
-
-        m = INSTALLATION_PATTERN.matcher(path);
-        if (m.find()) {
-          if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify installation {}", user.getName(), m.group(1));
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-          } else {
-            LOG.debug("User {} is allowed to modify installation {}", user.getName(), m.group(1));
-            return request;
-          }
-        }
-
-        m = NODE_NETWORK_PATTERN.matcher(path);
-        if (m.find()) {
-          if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(m.group(1)))) {
-            LOG.warn("User {} is not allowed to modify node/network {}", user.getName(), m.group(1));
-            throw new WebApplicationException(Response.Status.FORBIDDEN);
-          } else {
-            LOG.debug("User {} is allowed to modify node/network {}", user.getName(), m.group(1));
-            return request;
-          }
-        }
-      } catch (IllegalArgumentException e) {
-        // no valid UUID, do nothing as it should not be a valid request anyway
       }
     }
 
     return request;
+  }
+
+  private boolean checkNodeNetwork(Principal user, String path) {
+    Matcher m = NODE_NETWORK_PATTERN.matcher(path);
+    if (m.find()) {
+      if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(m.group(1)))) {
+        LOG.warn("User {} is not allowed to modify node/network {}", user.getName(), m.group(1));
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      } else {
+        LOG.debug("User {} is allowed to modify node/network {}", user.getName(), m.group(1));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean checkInstallation(Principal user, String path) {
+    Matcher m = INSTALLATION_PATTERN.matcher(path);
+    if (m.find()) {
+      if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(m.group(1)))) {
+        LOG.warn("User {} is not allowed to modify installation {}", user.getName(), m.group(1));
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      } else {
+        LOG.debug("User {} is allowed to modify installation {}", user.getName(), m.group(1));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean checkDataset(Principal user, String path) {
+    Matcher m = DATASET_PATTERN.matcher(path);
+    if (m.find()) {
+      if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(m.group(1)))) {
+        LOG.warn("User {} is not allowed to modify dataset {}", user.getName(), m.group(1));
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      } else {
+        LOG.debug("User {} is allowed to modify dataset {}", user.getName(), m.group(1));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean checkOrganization(Principal user, String path) {
+    Matcher m = ORGANIZATION_PATTERN.matcher(path);
+    if (m.find()) {
+      if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
+        LOG.warn("User {} is not allowed to modify organization {}", user.getName(), m.group(1));
+        throw new WebApplicationException(Response.Status.FORBIDDEN);
+      } else {
+        LOG.debug("User {} is allowed to modify organization {}", user.getName(), m.group(1));
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean checkRequestRequiresEditorValidation(String path) {
+    return ORGANIZATION_PATTERN.matcher(path).matches()
+      || DATASET_PATTERN.matcher(path).matches()
+      || INSTALLATION_PATTERN.matcher(path).matches()
+      || NODE_NETWORK_PATTERN.matcher(path).matches();
   }
 
   private boolean isNotGetOrOptionsRequest(ContainerRequest request) {

@@ -1,18 +1,17 @@
 package org.gbif.registry.ws.security;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.ws.security.GbifAuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 
@@ -147,9 +146,8 @@ public class SecurityContextCheck {
    * Check if the user represented by the {@link SecurityContext} has at least one of the
    * provided roles.
    *
-   * @param securityContext
-   * @param roles           this methods will return true if the user is at least in one role. If no role is
-   *                        provided this method will return false.
+   * @param roles this methods will return true if the user is at least in one role. If no role is
+   *              provided this method will return false.
    * @return the user is at least in one of the provided role(s)
    */
   public static boolean checkUserInRole(SecurityContext securityContext, String... roles) {
@@ -159,7 +157,20 @@ public class SecurityContextCheck {
       return false;
     }
     return Arrays.stream(roles)
-      .filter(securityContext::isUserInRole)
-      .findFirst().isPresent();
+      .anyMatch(securityContext::isUserInRole);
+  }
+
+  /**
+   * Check if the user represented by the {@link SecurityContext} does NOT have the admin role.
+   */
+  public static boolean checkIsNotAdmin(SecurityContext context) {
+    return !checkUserInRole(context, UserRoles.ADMIN_ROLE);
+  }
+
+  /**
+   * Check if the user represented by the {@link SecurityContext} does NOT have the editor role.
+   */
+  public static boolean checkIsNotEditor(SecurityContext context) {
+    return !checkUserInRole(context, UserRoles.EDITOR_ROLE);
   }
 }
