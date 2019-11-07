@@ -322,7 +322,7 @@ public class EditorAuthorizationFilterTest {
   public void testOrganizationDeleteNotNullAdminUserSuccess() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endpoint");
     when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_ADMIN_AND_EDITOR).when(mockAuthentication).getAuthorities();
