@@ -32,7 +32,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
-  private static final String ENTITY_KEY = "^%s/([a-f0-9-]+)";
+  private static final String ENTITY_KEY = "^/?%s/([a-f0-9-]+).*";
   private static final Pattern NODE_NETWORK_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "(?:network|node)"));
   private static final Pattern ORGANIZATION_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "organization"));
   private static final Pattern DATASET_PATTERN = Pattern.compile(String.format(ENTITY_KEY, "dataset"));
