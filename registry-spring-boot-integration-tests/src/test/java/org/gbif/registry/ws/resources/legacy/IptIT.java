@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/ipt.feature"
   },
-  glue = "org.gbif.registry.ws.resources.legacy.ipt",
+  glue = {"org.gbif.registry.ws.resources.legacy.ipt", "org.gbif.registry.utils.cucumber"},
   plugin = "pretty"
 )
 public class IptIT {
