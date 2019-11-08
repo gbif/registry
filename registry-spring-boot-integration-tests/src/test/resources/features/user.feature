@@ -16,6 +16,8 @@ Feature: User functionality
     When login "<method>" with valid credentials login "<login>" and password "<password>"
     Then response status should be <status>
     And user "<login>" is logged in
+      | userName | firstName | lastName  | email            |
+      | user_12  | Tim       | Robertson | user_12@gbif.org |
     And JWT is present in the response
 
     Scenarios:
@@ -47,4 +49,6 @@ Feature: User functionality
   Scenario: Current user
     When get user "user_12" and password "welcome" information
     Then response status should be 201
-    And response should match the user "user_12"
+    And user "user_12" is logged in
+      | userName | firstName | lastName  | email            |
+      | user_12  | Tim       | Robertson | user_12@gbif.org |
