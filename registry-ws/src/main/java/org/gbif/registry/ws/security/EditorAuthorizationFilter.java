@@ -57,15 +57,19 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
     String path = request.getPath().toLowerCase();
 
     if (isNotGetOrOptionsRequest(request) && checkRequestRequiresEditorValidation(path)) {
+      // user must be present in security context
       if (user == null || user.getName() == null) {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       }
 
+      // admin is allowed to perform operation, just skip block
       if (checkIsNotAdmin(secContext)) {
+        // user must have editor rights
         if (checkIsNotEditor(secContext)) {
           throw new WebApplicationException(Response.Status.FORBIDDEN);
         }
 
+        // check rights on specific entities
         try {
           checkOrganization(user, path);
           checkDataset(user, path);
@@ -129,10 +133,16 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
   }
 
   private boolean checkRequestRequiresEditorValidation(String path) {
-    return ORGANIZATION_PATTERN.matcher(path).matches()
+    boolean isBaseNetworkEntityResource = ORGANIZATION_PATTERN.matcher(path).matches()
       || DATASET_PATTERN.matcher(path).matches()
       || INSTALLATION_PATTERN.matcher(path).matches()
       || NODE_NETWORK_PATTERN.matcher(path).matches();
+
+    // exclude endorsement and machine tag from validation
+    boolean isNotEndorsement = !path.contains("endorsement");
+    boolean isNotMachineTag = !path.contains("machineTag");
+
+    return isBaseNetworkEntityResource && isNotEndorsement && isNotMachineTag;
   }
 
   private boolean isNotGetOrOptionsRequest(ContainerRequest request) {
