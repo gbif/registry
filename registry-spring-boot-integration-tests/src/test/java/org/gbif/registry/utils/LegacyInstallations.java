@@ -34,36 +34,6 @@ public class LegacyInstallations {
   public static final URI DATASET_OCCURRENCE_SERVICE_URL = URI.create("http://ipt.gbif.org/archive.do?r=ds123");
 
   /**
-   * Populate a list of name value pairs used in the common ws requests for IPT registrations and updates.
-   * </br>
-   * Basically a copy of the method in the IPT, to ensure the parameter names are identical.
-   *
-   * @param organizationKey organization key (UUID)
-   * @return list of name value pairs, or an empty list if the IPT or organisation key were null
-   */
-  public static HttpHeaders buildParams(UUID organizationKey) {
-    HttpHeaders requestParams = new HttpHeaders();
-    // main
-    requestParams.put(LegacyResourceConstants.ORGANIZATION_KEY_PARAM, Collections.singletonList(organizationKey.toString()));
-    requestParams.put(LegacyResourceConstants.NAME_PARAM, Collections.singletonList(IPT_NAME));
-    requestParams.put(LegacyResourceConstants.DESCRIPTION_PARAM, Collections.singletonList(IPT_DESCRIPTION));
-
-    // primary contact
-    requestParams.put(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM, Collections.singletonList(IPT_PRIMARY_CONTACT_TYPE));
-    requestParams.put(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM, Collections.singletonList(IPT_PRIMARY_CONTACT_NAME));
-    requestParams.put(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM, IPT_PRIMARY_CONTACT_EMAIL);
-
-    // service/endpoint
-    requestParams.put(LegacyResourceConstants.SERVICE_TYPES_PARAM, Collections.singletonList(IPT_SERVICE_TYPE));
-    requestParams.put(LegacyResourceConstants.SERVICE_URLS_PARAM, Collections.singletonList(IPT_SERVICE_URL.toASCIIString()));
-
-    // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
-    requestParams.put(LegacyResourceConstants.WS_PASSWORD_PARAM, Collections.singletonList(IPT_WS_PASSWORD));
-
-    return requestParams;
-  }
-
-  /**
    * Populate a list of name value pairs used in the common ws requests for IPT dataset registrations and updates.
    * </br>
    * Basically a copy of the method in the IPT, to ensure the parameter names are identical.
