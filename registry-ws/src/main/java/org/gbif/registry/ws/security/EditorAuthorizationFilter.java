@@ -80,7 +80,7 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
     return request;
   }
 
-  private boolean checkNodeNetwork(Principal user, String path) {
+  private void checkNodeNetwork(Principal user, String path) {
     Matcher m = NODE_NETWORK_PATTERN.matcher(path);
     if (m.find()) {
       if (!userAuthService.allowedToModifyEntity(user, UUID.fromString(m.group(1)))) {
@@ -88,13 +88,11 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify node/network {}", user.getName(), m.group(1));
-        return true;
       }
     }
-    return false;
   }
 
-  private boolean checkInstallation(Principal user, String path) {
+  private void checkInstallation(Principal user, String path) {
     Matcher m = INSTALLATION_PATTERN.matcher(path);
     if (m.find()) {
       if (!userAuthService.allowedToModifyInstallation(user, UUID.fromString(m.group(1)))) {
@@ -102,13 +100,11 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify installation {}", user.getName(), m.group(1));
-        return true;
       }
     }
-    return false;
   }
 
-  private boolean checkDataset(Principal user, String path) {
+  private void checkDataset(Principal user, String path) {
     Matcher m = DATASET_PATTERN.matcher(path);
     if (m.find()) {
       if (!userAuthService.allowedToModifyDataset(user, UUID.fromString(m.group(1)))) {
@@ -116,13 +112,11 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify dataset {}", user.getName(), m.group(1));
-        return true;
       }
     }
-    return false;
   }
 
-  private boolean checkOrganization(Principal user, String path) {
+  private void checkOrganization(Principal user, String path) {
     Matcher m = ORGANIZATION_PATTERN.matcher(path);
     if (m.find()) {
       if (!userAuthService.allowedToModifyOrganization(user, UUID.fromString(m.group(1)))) {
@@ -130,10 +124,8 @@ public class EditorAuthorizationFilter implements ContainerRequestFilter {
         throw new WebApplicationException(Response.Status.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify organization {}", user.getName(), m.group(1));
-        return true;
       }
     }
-    return false;
   }
 
   private boolean checkRequestRequiresEditorValidation(String path) {
