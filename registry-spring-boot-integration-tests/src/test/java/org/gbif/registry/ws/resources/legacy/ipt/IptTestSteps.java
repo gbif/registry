@@ -17,7 +17,6 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.LegacyInstallations;
-import org.gbif.registry.utils.LenientAssert;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.LegacyDataset;
@@ -41,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
 import static org.gbif.registry.ws.resources.legacy.ipt.AssertLegacyInstallation.assertLegacyInstallations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -210,18 +210,39 @@ public class IptTestSteps {
     assertNotNull("Registered Dataset key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
   }
 
-  @Then("registered installation is")
-  public void checkRegisteredInstallationValidity() {
-    LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
+  @Then("registered/updated installation is")
+  public void checkRegisteredInstallationValidity(Installation expectedInstallation) {
     actualInstallation = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
-    assertLegacyInstallations(expected, actualInstallation);
+    assertLenientEquals("Installations do not match", expectedInstallation, actualInstallation);
+    assertNotNull(actualInstallation.getCreated());
+    assertNotNull(actualInstallation.getModified());
+  }
+
+  @Then("registered/updated installation contacts are")
+  public void checkInstallationContacts(List<Contact> expectedContacts) {
+    for (int i = 0; i < expectedContacts.size(); i++) {
+      Contact actualContact = actualInstallation.getContacts().get(i);
+      assertLenientEquals("Contact does not match", expectedContacts.get(i), actualContact);
+      assertNotNull(actualContact.getCreatedBy());
+      assertNotNull(actualContact.getModifiedBy());
+    }
+  }
+
+  @Then("registered/updated installation endpoints are")
+  public void checkInstallationEndpoints(List<Endpoint> expectedEndpoints) {
+    for (int i = 0; i < expectedEndpoints.size(); i++) {
+      Endpoint actualEndpoint = actualInstallation.getEndpoints().get(i);
+      assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
+      assertNotNull(actualEndpoint.getCreatedBy());
+      assertNotNull(actualEndpoint.getModifiedBy());
+    }
   }
 
   @Then("registered dataset is")
   public void checkRegisteredDatasetValidity(LegacyDataset expectedDataset) {
     actualDataset = datasetService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
     copyGeneratedFieldsForDataset(expectedDataset, actualDataset);
-    LenientAssert.assertLenientEquals("Datasets do not match", expectedDataset, actualDataset);
+    assertLenientEquals("Datasets do not match", expectedDataset, actualDataset);
     assertNotNull(actualDataset.getCreatedBy());
     assertNotNull(actualDataset.getModifiedBy());
   }
@@ -235,7 +256,7 @@ public class IptTestSteps {
   public void checkDatasetContacts(List<Contact> expectedContacts) {
     for (int i = 0; i < expectedContacts.size(); i++) {
       Contact actualContact = actualDataset.getContacts().get(i);
-      LenientAssert.assertLenientEquals("Contact does not match", expectedContacts.get(i), actualDataset.getContacts().get(i));
+      assertLenientEquals("Contact does not match", expectedContacts.get(i), actualContact);
       assertNotNull(actualContact.getCreatedBy());
       assertNotNull(actualContact.getModifiedBy());
     }
@@ -245,7 +266,7 @@ public class IptTestSteps {
   public void checkDatasetEndpoints(List<Endpoint> expectedEndpoints) {
     for (int i = 0; i < expectedEndpoints.size(); i++) {
       Endpoint actualEndpoint = actualDataset.getEndpoints().get(i);
-      LenientAssert.assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
+      assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
       assertNotNull(actualEndpoint.getCreatedBy());
       assertNotNull(actualEndpoint.getModifiedBy());
     }
@@ -256,13 +277,18 @@ public class IptTestSteps {
     LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
     actualInstallation = installationService.get(installationKey);
     assertLegacyInstallations(expected, actualInstallation);
+
+    // TODO: 08/11/2019 assert created separately
+    // TODO: 08/11/2019 get rid of number assertion
     assertEquals(installationCreationDate, actualInstallation.getCreated());
     assertEquals(installationCreatedBy, actualInstallation.getCreatedBy());
   }
 
-  @Then("total number of installation is {int}")
-  public void checkNumberOfInstallations(int installationsNumber) {
+  @Then("^total number of installations / contacts / endpoints is (\\d+) / (\\d+) / (\\d+)$")
+  public void checkNumberOfInstallations(int installationsNumber, int contactsNumber, int endpointsNumber) {
     assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
+    assertEquals(contactsNumber, actualInstallation.getContacts().size());
+    assertEquals(endpointsNumber, actualInstallation.getEndpoints().size());
   }
 
   @Then("total number of contacts is {int}")
