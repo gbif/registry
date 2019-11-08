@@ -224,12 +224,11 @@ public class UserTestSteps {
     assertUserLogged(loggedUserWithToken, user);
   }
 
-  // TODO: 20/10/2019 predefine users
   private void assertUserLogged(LoggedUserWithToken loggedUserWithToken, String login) {
     String username = login.contains("@") ? login.split("@")[0] : login;
     assertEquals(username, loggedUserWithToken.getUserName());
     assertEquals(username + "@gbif.org", loggedUserWithToken.getEmail());
     assertEquals("Tim", loggedUserWithToken.getFirstName());
-    assertEquals(1, loggedUserWithToken.getRoles().size());
+    assertEquals(2, loggedUserWithToken.getRoles().size());
   }
 }

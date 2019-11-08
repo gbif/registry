@@ -7,14 +7,20 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.LegacyInstallations;
+import org.gbif.registry.utils.LenientAssert;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyInstallation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +37,7 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -57,12 +64,16 @@ public class IptTestSteps {
   private HttpHeaders requestParamsData;
   private Organization organization;
   private Installation actualInstallation;
+  private Dataset actualDataset;
   private UUID organizationKey;
   private UUID installationKey;
   private Integer contactKeyBeforeSecondUpdate;
   private Integer endpointKeyBeforeSecondUpdate;
   private Date installationCreationDate;
   private String installationCreatedBy;
+
+  @Autowired
+  private DatasetService datasetService;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -191,11 +202,53 @@ public class IptTestSteps {
     assertNotNull("Registered IPT key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
   }
 
-  @Then("registered installation is valid")
+  @Then("dataset UUID is returned")
+  public void checkDatasetUuid() throws Exception {
+    MvcResult mvcResult = result.andReturn();
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
+    assertNotNull("Registered Dataset key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
+  }
+
+  @Then("registered installation is")
   public void checkRegisteredInstallationValidity() {
     LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
     actualInstallation = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
     assertLegacyInstallations(expected, actualInstallation);
+  }
+
+  @Then("registered dataset is")
+  public void checkRegisteredDatasetValidity(LegacyDataset expectedDataset) {
+    actualDataset = datasetService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    copyGeneratedFieldsForDataset(expectedDataset, actualDataset);
+    LenientAssert.assertLenientEquals("Datasets do not match", expectedDataset, actualDataset);
+    assertNotNull(actualDataset.getCreatedBy());
+    assertNotNull(actualDataset.getModifiedBy());
+  }
+
+  private void copyGeneratedFieldsForDataset(Dataset expectedDataset, Dataset actualDataset) {
+    expectedDataset.setDoi(actualDataset.getDoi());
+    expectedDataset.setCitation(actualDataset.getCitation());
+  }
+
+  @Then("registered dataset contacts are")
+  public void checkDatasetContacts(List<Contact> expectedContacts) {
+    for (int i = 0; i < expectedContacts.size(); i++) {
+      Contact actualContact = actualDataset.getContacts().get(i);
+      LenientAssert.assertLenientEquals("Contact does not match", expectedContacts.get(i), actualDataset.getContacts().get(i));
+      assertNotNull(actualContact.getCreatedBy());
+      assertNotNull(actualContact.getModifiedBy());
+    }
+  }
+
+  @Then("registered dataset endpoints are")
+  public void checkDatasetEndpoints(List<Endpoint> expectedEndpoints) {
+    for (int i = 0; i < expectedEndpoints.size(); i++) {
+      Endpoint actualEndpoint = actualDataset.getEndpoints().get(i);
+      LenientAssert.assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
+      assertNotNull(actualEndpoint.getCreatedBy());
+      assertNotNull(actualEndpoint.getModifiedBy());
+    }
   }
 
   @Then("updated installation is valid")
