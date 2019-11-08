@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.resources.legacy.ipt;
+package org.gbif.registry.utils.cucumber;
 
 import io.cucumber.datatable.TableEntryTransformer;
 import org.gbif.api.model.registry.Endpoint;

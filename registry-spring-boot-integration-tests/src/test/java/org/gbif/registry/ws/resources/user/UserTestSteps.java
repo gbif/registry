@@ -107,13 +107,13 @@ public class UserTestSteps {
   }
 
   @Then("user {string} is logged in")
-  public void checkUserLoggedIn(String username) throws Exception {
+  public void checkUserLoggedIn(String username, LoggedUserWithToken expectedUser) throws Exception {
     MvcResult mvcResult = result.andReturn();
 
     String contentAsString = mvcResult.getResponse().getContentAsString();
     loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
 
-    assertUserLogged(loggedUserWithToken, username);
+    assertUserLogged(expectedUser, loggedUserWithToken);
   }
 
   @Then("JWT is present in the response")
@@ -171,7 +171,6 @@ public class UserTestSteps {
     when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
     when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
 
-    // TODO: 11/10/2019 replace manual sign with a filter
     requestObject = gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
   }
 
@@ -215,20 +214,10 @@ public class UserTestSteps {
           .with(httpBasic(user, password)));
   }
 
-  @Then("response should match the user {string}")
-  public void checkWhoamiResponse(String user) throws Exception {
-    MvcResult mvcResult = result.andReturn();
-    final String contentAsString = mvcResult.getResponse().getContentAsString();
-    final LoggedUserWithToken loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
-
-    assertUserLogged(loggedUserWithToken, user);
-  }
-
-  private void assertUserLogged(LoggedUserWithToken loggedUserWithToken, String login) {
-    String username = login.contains("@") ? login.split("@")[0] : login;
-    assertEquals(username, loggedUserWithToken.getUserName());
-    assertEquals(username + "@gbif.org", loggedUserWithToken.getEmail());
-    assertEquals("Tim", loggedUserWithToken.getFirstName());
-    assertEquals(2, loggedUserWithToken.getRoles().size());
+  private void assertUserLogged(LoggedUserWithToken expected, LoggedUserWithToken actual) {
+    assertEquals(expected.getUserName(), actual.getUserName());
+    assertEquals(expected.getEmail(), actual.getEmail());
+    assertEquals(expected.getFirstName(), actual.getFirstName());
+    assertEquals(expected.getLastName(), actual.getLastName());
   }
 }

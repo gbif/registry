@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/user.feature"
   },
-  glue = "org.gbif.registry.ws.resources.user",
+  glue = {"org.gbif.registry.ws.resources.user", "org.gbif.registry.utils.cucumber"},
   plugin = "pretty"
 )
 public class UserIT {
