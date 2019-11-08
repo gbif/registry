@@ -90,10 +90,16 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
   }
 
   private boolean checkRequestRequiresEditorValidation(String path) {
-    return ORGANIZATION_PATTERN.matcher(path).matches()
+    boolean isBaseNetworkEntityResource = ORGANIZATION_PATTERN.matcher(path).matches()
       || DATASET_PATTERN.matcher(path).matches()
       || INSTALLATION_PATTERN.matcher(path).matches()
       || NODE_NETWORK_PATTERN.matcher(path).matches();
+
+    // exclude endorsement and machine tag from validation
+    boolean isNotEndorsement = !path.contains("endorsement");
+    boolean isNotMachineTag = !path.contains("machineTag");
+
+    return isBaseNetworkEntityResource && isNotEndorsement && isNotMachineTag;
   }
 
   private void checkNodeNetwork(String name, String path) {
