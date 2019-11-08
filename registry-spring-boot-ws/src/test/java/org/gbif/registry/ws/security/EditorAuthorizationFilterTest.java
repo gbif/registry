@@ -35,6 +35,7 @@ public class EditorAuthorizationFilterTest {
     Collections.singletonList(new SimpleGrantedAuthority(UserRoles.USER_ROLE));
   private static final List<GrantedAuthority> ROLES_ADMIN_AND_EDITOR =
     Arrays.asList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE), new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE));
+  private static final List<GrantedAuthority> ROLES_EMPTY = Collections.emptyList();
 
   @Mock
   private HttpServletRequest mockRequest;
@@ -336,5 +337,23 @@ public class EditorAuthorizationFilterTest {
     verify(mockRequest, times(2)).getMethod();
     verify(mockAuthentication).getName();
     verify(mockAuthentication).getAuthorities();
+  }
+
+  @Test
+  public void testOrganizationEndorsementPostAnyUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endorsement");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
   }
 }
