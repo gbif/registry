@@ -11,7 +11,6 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
@@ -20,7 +19,7 @@ import org.gbif.registry.utils.LegacyInstallations;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.model.LegacyInstallation;
+import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -34,14 +33,16 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
+import java.net.URI;
 import java.sql.Connection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
-import static org.gbif.registry.ws.resources.legacy.ipt.AssertLegacyInstallation.assertLegacyInstallations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,11 +63,11 @@ public class IptTestSteps {
   private ResultActions result;
 
   private HttpHeaders requestParamsData;
-  private Organization organization;
   private Installation actualInstallation;
   private Dataset actualDataset;
   private UUID organizationKey;
   private UUID installationKey;
+  private UUID datasetKey;
   private Integer contactKeyBeforeSecondUpdate;
   private Integer endpointKeyBeforeSecondUpdate;
   private Date installationCreationDate;
@@ -121,7 +122,6 @@ public class IptTestSteps {
   @Given("organization {string} with key {string}")
   public void prepareOrganization(String orgName, String orgKey) {
     organizationKey = UUID.fromString(orgKey);
-    organization = organizationService.get(organizationKey);
   }
 
   @Given("installation {string} with key {string}")
@@ -132,9 +132,35 @@ public class IptTestSteps {
     installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
-  @Given("new installation to register")
-  public void installationToCreate() {
-    requestParamsData = LegacyInstallations.buildParams(organizationKey);
+  @Given("query parameters for installation registration/updating")
+  public void prepareRequestParamsInstallation(Map<String, String> params) {
+    requestParamsData = new HttpHeaders();
+    // main
+    requestParamsData.put(LegacyResourceConstants.ORGANIZATION_KEY_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)));
+    requestParamsData.put(LegacyResourceConstants.NAME_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.NAME_PARAM)));
+    requestParamsData.put(LegacyResourceConstants.DESCRIPTION_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.DESCRIPTION_PARAM)));
+
+    // primary contact
+    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)));
+    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)));
+    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)));
+
+    // service/endpoint
+    requestParamsData.put(LegacyResourceConstants.SERVICE_TYPES_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.SERVICE_TYPES_PARAM)));
+    requestParamsData.put(LegacyResourceConstants.SERVICE_URLS_PARAM,
+      Collections.singletonList(
+        URI.create(params.get(LegacyResourceConstants.SERVICE_URLS_PARAM)).toASCIIString()));
+
+    // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
+    requestParamsData.put(LegacyResourceConstants.WS_PASSWORD_PARAM,
+      Collections.singletonList(params.get(LegacyResourceConstants.WS_PASSWORD_PARAM)));
   }
 
   @Given("new dataset to register")
@@ -145,11 +171,6 @@ public class IptTestSteps {
   @Given("without field {string}")
   public void removePrimaryContactFromParams(String field) {
     requestParamsData.remove(field);
-  }
-
-  @Given("installation to update")
-  public void installationToUpdate() {
-    requestParamsData = LegacyInstallations.buildParams(organizationKey);
   }
 
   @When("register new installation for organization {string} using organization key {string} and password {string}")
@@ -177,7 +198,9 @@ public class IptTestSteps {
   }
 
   @When("update installation {string} using installation key {string} and password {string}")
-  public void updateIpt(String instName, String installationKey, String password) throws Exception {
+  public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
+    requestParamsData.replace("description", Collections.singletonList(params.get("description")));
+    requestParamsData.replace("name", Collections.singletonList(params.get("name")));
     result = mvc
       .perform(
         post("/registry/ipt/update/{key}", installationKey)
@@ -199,7 +222,8 @@ public class IptTestSteps {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    assertNotNull("Registered IPT key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    installationKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    assertNotNull("Registered IPT key should be in response", installationKey);
   }
 
   @Then("dataset UUID is returned")
@@ -207,12 +231,13 @@ public class IptTestSteps {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    assertNotNull("Registered Dataset key should be in response", UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    assertNotNull("Registered Dataset key should be in response", datasetKey);
   }
 
   @Then("registered/updated installation is")
-  public void checkRegisteredInstallationValidity(Installation expectedInstallation) {
-    actualInstallation = installationService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
+  public void checkRegisteredOrUpdatedInstallationValidity(Installation expectedInstallation) {
+    actualInstallation = installationService.get(installationKey);
     assertLenientEquals("Installations do not match", expectedInstallation, actualInstallation);
     assertNotNull(actualInstallation.getCreated());
     assertNotNull(actualInstallation.getModified());
@@ -272,33 +297,15 @@ public class IptTestSteps {
     }
   }
 
-  @Then("updated installation is valid")
-  public void checkUpdatedInstallationValidity() {
-    LegacyInstallation expected = LegacyInstallations.newInstance(organizationKey);
-    actualInstallation = installationService.get(installationKey);
-    assertLegacyInstallations(expected, actualInstallation);
+  @Then("total number of installations is {int}")
+  public void checkNumberOfInstallations(int installationsNumber) {
+    assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
+  }
 
-    // TODO: 08/11/2019 assert created separately
-    // TODO: 08/11/2019 get rid of number assertion
+  @Then("created fields were not updated")
+  public void checkCreatedFields() {
     assertEquals(installationCreationDate, actualInstallation.getCreated());
     assertEquals(installationCreatedBy, actualInstallation.getCreatedBy());
-  }
-
-  @Then("^total number of installations / contacts / endpoints is (\\d+) / (\\d+) / (\\d+)$")
-  public void checkNumberOfInstallations(int installationsNumber, int contactsNumber, int endpointsNumber) {
-    assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
-    assertEquals(contactsNumber, actualInstallation.getContacts().size());
-    assertEquals(endpointsNumber, actualInstallation.getEndpoints().size());
-  }
-
-  @Then("total number of contacts is {int}")
-  public void checkNumberOfContacts(int contactsNumber) {
-    assertEquals(contactsNumber, actualInstallation.getContacts().size());
-  }
-
-  @Then("total number of endpoints is {int}")
-  public void checkNumberOfEndpoints(int endpointsNumber) {
-    assertEquals(endpointsNumber, actualInstallation.getEndpoints().size());
   }
 
   @Given("store contactKey and endpointKey")
