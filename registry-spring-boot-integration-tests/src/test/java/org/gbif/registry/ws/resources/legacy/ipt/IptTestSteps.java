@@ -1,6 +1,5 @@
 package org.gbif.registry.ws.resources.legacy.ipt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -13,7 +12,6 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
@@ -39,7 +37,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static java.util.Collections.singletonList;
 import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.HOMEPAGE_URL_PARAM;
@@ -77,9 +74,7 @@ public class IptTestSteps {
   private HttpHeaders requestParams;
   private Installation actualInstallation;
   private Dataset actualDataset;
-  private UUID organizationKey;
   private UUID installationKey;
-  private UUID datasetKey;
   private Integer contactKeyBeforeSecondUpdate;
   private Integer endpointKeyBeforeSecondUpdate;
   private Date installationCreationDate;
@@ -89,18 +84,12 @@ public class IptTestSteps {
   private DatasetService datasetService;
 
   @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
   private WebApplicationContext context;
 
   @Autowired
   private DataSource ds;
 
   private Connection connection;
-
-  @Autowired
-  private OrganizationService organizationService;
 
   @Autowired
   private InstallationService installationService;
@@ -133,7 +122,6 @@ public class IptTestSteps {
 
   @Given("organization {string} with key {string}")
   public void prepareOrganization(String orgName, String orgKey) {
-    organizationKey = UUID.fromString(orgKey);
   }
 
   @Given("installation {string} with key {string}")
@@ -221,8 +209,8 @@ public class IptTestSteps {
 
   @When("update installation {string} using installation key {string} and password {string}")
   public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
-    requestParams.replace("description", singletonList(params.get("description")));
-    requestParams.replace("name", singletonList(params.get("name")));
+    requestParams.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParams.set(NAME_PARAM, params.get(NAME_PARAM));
 
     result = mvc
       .perform(
@@ -254,7 +242,7 @@ public class IptTestSteps {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    UUID datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
     assertNotNull("Registered Dataset key should be in response", datasetKey);
   }
 
