@@ -41,9 +41,9 @@ public final class RegistryEmailUtils {
    */
   public static Set<Address> toInternetAddresses(String strEmails) {
     return StreamSupport.stream(EMAIL_SPLITTER.split(strEmails).spliterator(), false)
-        .map(RegistryEmailUtils::toAddress)
-        .flatMap(address -> address.map(Stream::of).orElseGet(Stream::empty))
-        .collect(Collectors.toSet());
+      .map(RegistryEmailUtils::toAddress)
+      .flatMap(address -> address.map(Stream::of).orElseGet(Stream::empty))
+      .collect(Collectors.toSet());
   }
 
   /**
@@ -52,7 +52,7 @@ public final class RegistryEmailUtils {
   public static Address[] getUnitedBccArray(Set<Address> bccAddressesFromConfig, BaseEmailModel emailModel) {
     Set<Address> combinedBccAddresses = new HashSet<>(bccAddressesFromConfig);
     Optional.ofNullable(emailModel.getCcAddress())
-        .ifPresent( bccList -> bccList.forEach( bcc -> RegistryEmailUtils.toAddress(bcc).ifPresent(combinedBccAddresses::add)));
+      .ifPresent(ccList -> ccList.forEach(cc -> RegistryEmailUtils.toAddress(cc).ifPresent(combinedBccAddresses::add)));
     return combinedBccAddresses.toArray(new Address[combinedBccAddresses.size()]);
   }
 }

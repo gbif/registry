@@ -1,7 +1,6 @@
 package org.gbif.registry.surety.email;
 
 import com.google.common.base.MoreObjects;
-import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.List;
 /**
  * Very basic email model that holds the main components of an email to send.
  */
-@Validated
 public class BaseEmailModel {
 
   @NotNull
@@ -46,14 +44,13 @@ public class BaseEmailModel {
     return ccAddress;
   }
 
-  // TODO: 2019-06-26 use another (not guava?)
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-            .add("emailAddress", emailAddress)
-            .add("subject", subject)
-            .add("body", body)
-            .add("ccAddress", ccAddress)
-            .toString();
+      .add("emailAddress", emailAddress)
+      .add("subject", subject)
+      .add("body", body)
+      .add("ccAddress", ccAddress)
+      .toString();
   }
 }

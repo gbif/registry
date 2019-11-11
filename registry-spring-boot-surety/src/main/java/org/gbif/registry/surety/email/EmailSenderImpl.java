@@ -50,29 +50,27 @@ class EmailSenderImpl implements EmailSender {
   public void send(@Valid @NotNull BaseEmailModel emailModel) {
     toAddress(emailModel.getEmailAddress())
       .ifPresent(emailAddress -> {
-            try {
-              // Send E-Mail
-              final MimeMessage msg = mailSender.createMimeMessage();
-              //from will be set with the value from the {@link Session} object.
-              msg.setFrom();
-              // TODO: 2019-06-27 why cc and bcc squashed
-              msg.setRecipient(Message.RecipientType.TO, emailAddress);
-//              msg.setRecipient(Message.RecipientType.CC, emailModel);
-              msg.setRecipients(Message.RecipientType.BCC, getUnitedBccArray(getProcessedBccAddresses(), emailModel));
-              msg.setSubject(emailModel.getSubject());
-              msg.setSentDate(new Date());
-              msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
-              mailSender.send(msg);
-            } catch (MessagingException e) {
-              LOG.error(NOTIFY_ADMIN, "Sending of notification Mail for [{}] failed", emailAddress, e);
-            }
+          try {
+            // Send E-Mail
+            final MimeMessage msg = mailSender.createMimeMessage();
+            // from will be set with the value from the {@link Session} object.
+            msg.setFrom();
+            msg.setRecipient(Message.RecipientType.TO, emailAddress);
+            msg.setRecipients(Message.RecipientType.BCC, getUnitedBccArray(getProcessedBccAddresses(), emailModel));
+            msg.setSubject(emailModel.getSubject());
+            msg.setSentDate(new Date());
+            msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+            mailSender.send(msg);
+          } catch (MessagingException e) {
+            LOG.error(NOTIFY_ADMIN, "Sending of notification Mail for [{}] failed", emailAddress, e);
           }
+        }
       );
   }
 
-  Set<Address> getProcessedBccAddresses() {
+  private Set<Address> getProcessedBccAddresses() {
     return Optional.ofNullable(bcc)
-        .map(RegistryEmailUtils::toInternetAddresses)
-        .orElse(Collections.emptySet());
+      .map(RegistryEmailUtils::toInternetAddresses)
+      .orElse(Collections.emptySet());
   }
 }
