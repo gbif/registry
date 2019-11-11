@@ -183,7 +183,7 @@ public class IptTestSteps {
     requestParams.remove(field);
   }
 
-  @When("register new installation for organization {string} using organization key {string} and password {string}")
+  @When("register new installation for organization {string} using valid/invalid organization key {string} and password {string}")
   public void registerIpt(String orgName, String organisationKey, String password) throws Exception {
     result = mvc
       .perform(
@@ -195,7 +195,7 @@ public class IptTestSteps {
       .andDo(print());
   }
 
-  @When("register new dataset using organization key {string} and password {string}")
+  @When("register new dataset using valid/invalid organization key {string} and password {string}")
   public void registerDataset(String installationKey, String password) throws Exception {
     result = mvc
       .perform(
@@ -207,7 +207,7 @@ public class IptTestSteps {
       ).andDo(print());
   }
 
-  @When("update installation {string} using installation key {string} and password {string}")
+  @When("update installation {string} using valid/invalid installation key {string} and password {string}")
   public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
     requestParams.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParams.set(NAME_PARAM, params.get(NAME_PARAM));
