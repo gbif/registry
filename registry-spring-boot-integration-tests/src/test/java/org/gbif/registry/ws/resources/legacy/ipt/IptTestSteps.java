@@ -15,11 +15,9 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.utils.LegacyInstallations;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -35,14 +33,28 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.sql.Connection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static java.util.Collections.singletonList;
 import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.HOMEPAGE_URL_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.IPT_KEY_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.LOGO_URL_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.NAME_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.ORGANIZATION_KEY_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_TYPES_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_URLS_PARAM;
+import static org.gbif.registry.ws.util.LegacyResourceConstants.WS_PASSWORD_PARAM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -62,7 +74,7 @@ public class IptTestSteps {
   private MockMvc mvc;
   private ResultActions result;
 
-  private HttpHeaders requestParamsData;
+  private HttpHeaders requestParams;
   private Installation actualInstallation;
   private Dataset actualDataset;
   private UUID organizationKey;
@@ -134,43 +146,53 @@ public class IptTestSteps {
 
   @Given("query parameters for installation registration/updating")
   public void prepareRequestParamsInstallation(Map<String, String> params) {
-    requestParamsData = new HttpHeaders();
+    requestParams = new HttpHeaders();
     // main
-    requestParamsData.put(LegacyResourceConstants.ORGANIZATION_KEY_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)));
-    requestParamsData.put(LegacyResourceConstants.NAME_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.NAME_PARAM)));
-    requestParamsData.put(LegacyResourceConstants.DESCRIPTION_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.DESCRIPTION_PARAM)));
+    requestParams.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
+    requestParams.add(NAME_PARAM, params.get(NAME_PARAM));
+    requestParams.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
 
     // primary contact
-    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)));
-    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)));
-    requestParamsData.put(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)));
+    requestParams.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
+    requestParams.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
+    requestParams.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
 
     // service/endpoint
-    requestParamsData.put(LegacyResourceConstants.SERVICE_TYPES_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.SERVICE_TYPES_PARAM)));
-    requestParamsData.put(LegacyResourceConstants.SERVICE_URLS_PARAM,
-      Collections.singletonList(
-        URI.create(params.get(LegacyResourceConstants.SERVICE_URLS_PARAM)).toASCIIString()));
+    requestParams.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
+    requestParams.add(SERVICE_URLS_PARAM, URI.create(params.get(SERVICE_URLS_PARAM)).toASCIIString());
 
     // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
-    requestParamsData.put(LegacyResourceConstants.WS_PASSWORD_PARAM,
-      Collections.singletonList(params.get(LegacyResourceConstants.WS_PASSWORD_PARAM)));
+    requestParams.add(WS_PASSWORD_PARAM, params.get(WS_PASSWORD_PARAM));
   }
 
-  @Given("new dataset to register")
-  public void datasetToRegister() {
-    requestParamsData = LegacyInstallations.buildDatasetParams(organizationKey, installationKey);
+  @Given("query parameters to dataset registration")
+  public void prepareRequestParamsDataset(Map<String, String> params) {
+    requestParams = new HttpHeaders();
+    // main
+    requestParams.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
+    requestParams.add(NAME_PARAM, params.get(NAME_PARAM));
+    requestParams.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParams.add(HOMEPAGE_URL_PARAM, params.get(HOMEPAGE_URL_PARAM));
+    requestParams.add(LOGO_URL_PARAM, params.get(LOGO_URL_PARAM));
+
+    // primary contact
+    requestParams.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
+    requestParams.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
+    requestParams.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
+    requestParams.add(PRIMARY_CONTACT_ADDRESS_PARAM, params.get(PRIMARY_CONTACT_ADDRESS_PARAM));
+    requestParams.add(PRIMARY_CONTACT_PHONE_PARAM, params.get(PRIMARY_CONTACT_PHONE_PARAM));
+
+    // endpoint(s)
+    requestParams.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
+    requestParams.add(SERVICE_URLS_PARAM, params.get(SERVICE_URLS_PARAM));
+
+    // add additional ipt and organisation parameters
+    requestParams.add(IPT_KEY_PARAM, params.get(IPT_KEY_PARAM));
   }
 
   @Given("without field {string}")
   public void removePrimaryContactFromParams(String field) {
-    requestParamsData.remove(field);
+    requestParams.remove(field);
   }
 
   @When("register new installation for organization {string} using organization key {string} and password {string}")
@@ -178,7 +200,7 @@ public class IptTestSteps {
     result = mvc
       .perform(
         post("/registry/ipt/register")
-          .params(requestParamsData)
+          .params(requestParams)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(organisationKey, password)))
@@ -190,7 +212,7 @@ public class IptTestSteps {
     result = mvc
       .perform(
         post("/registry/ipt/resource")
-          .params(requestParamsData)
+          .params(requestParams)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(installationKey, password))
@@ -199,12 +221,13 @@ public class IptTestSteps {
 
   @When("update installation {string} using installation key {string} and password {string}")
   public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
-    requestParamsData.replace("description", Collections.singletonList(params.get("description")));
-    requestParamsData.replace("name", Collections.singletonList(params.get("name")));
+    requestParams.replace("description", singletonList(params.get("description")));
+    requestParams.replace("name", singletonList(params.get("name")));
+
     result = mvc
       .perform(
         post("/registry/ipt/update/{key}", installationKey)
-          .params(requestParamsData)
+          .params(requestParams)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(installationKey, password)))
