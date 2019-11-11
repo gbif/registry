@@ -1,10 +1,10 @@
 @IPT
 Feature: IPT related functionality
 
-  @RegisterIptInstallation
-  Scenario: Register IPT installation
+  Background:
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And query parameters for installation registration
+    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
+    And query parameters for installation registration or updating
       | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
       | name                | Test IPT Registry2                   |
       | description         | Description of Test IPT              |
@@ -14,6 +14,23 @@ Feature: IPT related functionality
       | serviceTypes        | RSS                                  |
       | serviceURLs         | http://ipt.gbif.org/rss.do           |
       | wsPassword          | welcome                              |
+    And query parameters to dataset registration or updating
+      | organisationKey       | 36107c15-771c-4810-a298-b7558828b8bd                                       |
+      | name                  | Test Dataset Registry2                                                     |
+      | description           | Description of Test Dataset                                                |
+      | homepageURL           | http://www.homepage.com                                                    |
+      | logoURL               | http://www.logo.com/1                                                      |
+      | primaryContactType    | administrative                                                             |
+      | primaryContactEmail   | elyk-kaarb@euskadi.eus                                                     |
+      | primaryContactName    | Jan Legind                                                                 |
+      | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
+      | primaryContactPhone   | 90909090                                                                   |
+      | serviceTypes          | OCCURRENCE                                                            |
+      | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
+      | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
+
+  @RegisterIptInstallation
+  Scenario: Register IPT installation
     When register new installation for organization "Org" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And installation UUID is returned
@@ -29,18 +46,6 @@ Feature: IPT related functionality
 
   @UpdateIptInstallation
   Scenario: Update IPT installation
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters for installation updating
-      | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
-      | name                | Test IPT Registry2                   |
-      | description         | Description of Test IPT              |
-      | primaryContactType  | technical                            |
-      | primaryContactEmail | kbraak@gbif.org                      |
-      | primaryContactName  | Kyle Braak                           |
-      | serviceTypes        | RSS                                  |
-      | serviceURLs         | http://ipt.gbif.org/rss.do           |
-      | wsPassword          | welcome                              |
     When update installation "Test IPT Registry2" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
       | name        | Updated Test IPT Registry2      |
       | description | Updated Description of Test IPT |
@@ -69,90 +74,28 @@ Feature: IPT related functionality
     But endpointKey was updated
 
   Scenario: Register IPT installation by invalid random organisation key fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And query parameters for installation registration
-      | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
-      | name                | Test IPT Registry2                   |
-      | description         | Description of Test IPT              |
-      | primaryContactType  | technical                            |
-      | primaryContactEmail | kbraak@gbif.org                      |
-      | primaryContactName  | Kyle Braak                           |
-      | serviceTypes        | RSS                                  |
-      | serviceURLs         | http://ipt.gbif.org/rss.do           |
-      | wsPassword          | welcome                              |
     When register new installation for organization "Org" using invalid organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
     Then response status should be 401
 
   Scenario: Update IPT installation by invalid random installation key fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters for installation updating
-      | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
-      | name                | Test IPT Registry2                   |
-      | description         | Description of Test IPT              |
-      | primaryContactType  | technical                            |
-      | primaryContactEmail | kbraak@gbif.org                      |
-      | primaryContactName  | Kyle Braak                           |
-      | serviceTypes        | RSS                                  |
-      | serviceURLs         | http://ipt.gbif.org/rss.do           |
-      | wsPassword          | welcome                              |
     When update installation "Test IPT Registry2" using invalid installation key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
       | name        | Updated Test IPT Registry2      |
       | description | Updated Description of Test IPT |
     Then response status should be 401
 
   Scenario: Register IPT installation without primary contact fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And query parameters for installation registration
-      | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
-      | name                | Test IPT Registry2                   |
-      | description         | Description of Test IPT              |
-      | primaryContactType  | technical                            |
-      | primaryContactEmail | kbraak@gbif.org                      |
-      | primaryContactName  | Kyle Braak                           |
-      | serviceTypes        | RSS                                  |
-      | serviceURLs         | http://ipt.gbif.org/rss.do           |
-      | wsPassword          | welcome                              |
-    But without field "primaryContactEmail"
     When register new installation for organization "Org" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 400
 
   Scenario: Update IPT installation without primary contact fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters for installation updating
-      | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
-      | name                | Test IPT Registry2                   |
-      | description         | Description of Test IPT              |
-      | primaryContactType  | technical                            |
-      | primaryContactEmail | kbraak@gbif.org                      |
-      | primaryContactName  | Kyle Braak                           |
-      | serviceTypes        | RSS                                  |
-      | serviceURLs         | http://ipt.gbif.org/rss.do           |
-      | wsPassword          | welcome                              |
-    But without field "primaryContactEmail"
+    Given installation parameters without field "primaryContactEmail"
     When update installation "Test IPT Registry2" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
       | name | Updated Test IPT Registry2 |
     Then response status should be 400
 
   @RegisterIptDataset
   Scenario Outline: Register IPT <datasetType> dataset
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters to dataset registration
-      | organisationKey       | 36107c15-771c-4810-a298-b7558828b8bd                                       |
-      | name                  | Test Dataset Registry2                                                     |
-      | description           | Description of Test Dataset                                                |
-      | homepageURL           | http://www.homepage.com                                                    |
-      | logoURL               | http://www.logo.com/1                                                      |
-      | primaryContactType    | administrative                                                             |
-      | primaryContactEmail   | elyk-kaarb@euskadi.eus                                                     |
-      | primaryContactName    | Jan Legind                                                                 |
-      | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
-      | primaryContactPhone   | 90909090                                                                   |
-      | serviceTypes          | <serviceType>                                                              |
-      | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
-      | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
+    Given dataset parameter serviceTypes is <serviceType>
     When register new dataset using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And dataset UUID is returned
@@ -173,42 +116,10 @@ Feature: IPT related functionality
       | EML\|DWC-ARCHIVE-SAMPLING-EVENT | SAMPLING_EVENT |
 
   Scenario: Register IPT dataset by invalid random organisationKey fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters to dataset registration
-      | organisationKey       | 36107c15-771c-4810-a298-b7558828b8bd                                       |
-      | name                  | Test Dataset Registry2                                                     |
-      | description           | Description of Test Dataset                                                |
-      | homepageURL           | http://www.homepage.com                                                    |
-      | logoURL               | http://www.logo.com/1                                                      |
-      | primaryContactType    | administrative                                                             |
-      | primaryContactEmail   | elyk-kaarb@euskadi.eus                                                     |
-      | primaryContactName    | Jan Legind                                                                 |
-      | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
-      | primaryContactPhone   | 90909090                                                                   |
-      | serviceTypes          | <serviceType>                                                              |
-      | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
-      | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
     When register new dataset using invalid organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
     Then response status should be 401
 
   Scenario: Register IPT dataset without primary contact fails
-    Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
-    And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And query parameters to dataset registration
-      | organisationKey       | 36107c15-771c-4810-a298-b7558828b8bd                                       |
-      | name                  | Test Dataset Registry2                                                     |
-      | description           | Description of Test Dataset                                                |
-      | homepageURL           | http://www.homepage.com                                                    |
-      | logoURL               | http://www.logo.com/1                                                      |
-      | primaryContactType    | administrative                                                             |
-      | primaryContactEmail   | elyk-kaarb@euskadi.eus                                                     |
-      | primaryContactName    | Jan Legind                                                                 |
-      | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
-      | primaryContactPhone   | 90909090                                                                   |
-      | serviceTypes          | <serviceType>                                                              |
-      | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
-      | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
-    But without field "primaryContactEmail"
+    Given dataset parameters without field "primaryContactType"
     When register new dataset using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 400
