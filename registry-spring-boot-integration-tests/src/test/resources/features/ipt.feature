@@ -136,7 +136,7 @@ Feature: IPT related functionality
     Then response status should be 400
 
   @RegisterIptDataset
-  Scenario: Register IPT dataset
+  Scenario Outline: Register IPT <datasetType> dataset
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
     And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
     And query parameters to dataset registration
@@ -150,15 +150,15 @@ Feature: IPT related functionality
       | primaryContactName    | Jan Legind                                                                 |
       | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
       | primaryContactPhone   | 90909090                                                                   |
-      | serviceTypes          | EML\|DWC-ARCHIVE-OCCURRENCE                                                |
+      | serviceTypes          | <serviceType>                                                              |
       | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
       | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
     When register new dataset using organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And dataset UUID is returned
     And registered dataset is
-      | organisationKey                      | name                   | primaryContactName | type       | description                 | homepageUrl             | logoUrl               | iptKey                               |
-      | 36107c15-771c-4810-a298-b7558828b8bd | Test Dataset Registry2 | Jan Legind         | OCCURRENCE | Description of Test Dataset | http://www.homepage.com | http://www.logo.com/1 | 2fe63cec-9b23-4974-bab1-9f4118ef7711 |
+      | organisationKey                      | name                   | primaryContactName | type          | description                 | homepageUrl             | logoUrl               | iptKey                               |
+      | 36107c15-771c-4810-a298-b7558828b8bd | Test Dataset Registry2 | Jan Legind         | <datasetType> | Description of Test Dataset | http://www.homepage.com | http://www.logo.com/1 | 2fe63cec-9b23-4974-bab1-9f4118ef7711 |
     And registered dataset contacts are
       | type           | email                  | firstName  | address                              | phone    | primary |
       | administrative | elyk-kaarb@euskadi.eus | Jan Legind | Universitetsparken 15, 2100, Denmark | 90909090 | true    |
@@ -166,3 +166,8 @@ Feature: IPT related functionality
       | url                                    | type        |
       | http://ipt.gbif.org/archive.do?r=ds123 | DWC_ARCHIVE |
       | http://ipt.gbif.org/eml.do?r=ds123     | EML         |
+
+    Scenarios:
+      | serviceType                     | datasetType    |
+      | EML\|DWC-ARCHIVE-OCCURRENCE     | OCCURRENCE     |
+      | EML\|DWC-ARCHIVE-SAMPLING-EVENT | SAMPLING_EVENT |
