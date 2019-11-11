@@ -132,14 +132,27 @@ Feature: IPT related functionality
       | wsPassword          | welcome                              |
     But without field "primaryContactEmail"
     When update installation "Test IPT Registry2" using installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
-      | name        | Updated Test IPT Registry2      |
+      | name | Updated Test IPT Registry2 |
     Then response status should be 400
 
   @RegisterIptDataset
   Scenario: Register IPT dataset
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
     And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And new dataset to register
+    And query parameters to dataset registration
+      | organisationKey       | 36107c15-771c-4810-a298-b7558828b8bd                                       |
+      | name                  | Test Dataset Registry2                                                     |
+      | description           | Description of Test Dataset                                                |
+      | homepageURL           | http://www.homepage.com                                                    |
+      | logoURL               | http://www.logo.com/1                                                      |
+      | primaryContactType    | administrative                                                             |
+      | primaryContactEmail   | elyk-kaarb@euskadi.eus                                                     |
+      | primaryContactName    | Jan Legind                                                                 |
+      | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
+      | primaryContactPhone   | 90909090                                                                   |
+      | serviceTypes          | EML\|DWC-ARCHIVE-OCCURRENCE                                                |
+      | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
+      | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
     When register new dataset using organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And dataset UUID is returned
