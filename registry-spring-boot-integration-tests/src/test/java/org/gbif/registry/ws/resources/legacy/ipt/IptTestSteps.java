@@ -71,7 +71,8 @@ public class IptTestSteps {
   private MockMvc mvc;
   private ResultActions result;
 
-  private HttpHeaders requestParams;
+  private HttpHeaders requestParamsInstallation;
+  private HttpHeaders requestParamsDataset;
   private Installation actualInstallation;
   private Dataset actualDataset;
   private UUID installationKey;
@@ -132,55 +133,64 @@ public class IptTestSteps {
     installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
-  @Given("query parameters for installation registration/updating")
+  @Given("query parameters for installation registration or updating")
   public void prepareRequestParamsInstallation(Map<String, String> params) {
-    requestParams = new HttpHeaders();
+    requestParamsInstallation = new HttpHeaders();
     // main
-    requestParams.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
-    requestParams.add(NAME_PARAM, params.get(NAME_PARAM));
-    requestParams.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParamsInstallation.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
+    requestParamsInstallation.add(NAME_PARAM, params.get(NAME_PARAM));
+    requestParamsInstallation.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
 
     // primary contact
-    requestParams.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
-    requestParams.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
-    requestParams.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
+    requestParamsInstallation.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
+    requestParamsInstallation.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
+    requestParamsInstallation.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
 
     // service/endpoint
-    requestParams.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
-    requestParams.add(SERVICE_URLS_PARAM, URI.create(params.get(SERVICE_URLS_PARAM)).toASCIIString());
+    requestParamsInstallation.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
+    requestParamsInstallation.add(SERVICE_URLS_PARAM, URI.create(params.get(SERVICE_URLS_PARAM)).toASCIIString());
 
     // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
-    requestParams.add(WS_PASSWORD_PARAM, params.get(WS_PASSWORD_PARAM));
+    requestParamsInstallation.add(WS_PASSWORD_PARAM, params.get(WS_PASSWORD_PARAM));
   }
 
-  @Given("query parameters to dataset registration")
+  @Given("query parameters to dataset registration or updating")
   public void prepareRequestParamsDataset(Map<String, String> params) {
-    requestParams = new HttpHeaders();
+    requestParamsDataset = new HttpHeaders();
     // main
-    requestParams.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
-    requestParams.add(NAME_PARAM, params.get(NAME_PARAM));
-    requestParams.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
-    requestParams.add(HOMEPAGE_URL_PARAM, params.get(HOMEPAGE_URL_PARAM));
-    requestParams.add(LOGO_URL_PARAM, params.get(LOGO_URL_PARAM));
+    requestParamsDataset.add(ORGANIZATION_KEY_PARAM, params.get(ORGANIZATION_KEY_PARAM));
+    requestParamsDataset.add(NAME_PARAM, params.get(NAME_PARAM));
+    requestParamsDataset.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParamsDataset.add(HOMEPAGE_URL_PARAM, params.get(HOMEPAGE_URL_PARAM));
+    requestParamsDataset.add(LOGO_URL_PARAM, params.get(LOGO_URL_PARAM));
 
     // primary contact
-    requestParams.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
-    requestParams.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
-    requestParams.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
-    requestParams.add(PRIMARY_CONTACT_ADDRESS_PARAM, params.get(PRIMARY_CONTACT_ADDRESS_PARAM));
-    requestParams.add(PRIMARY_CONTACT_PHONE_PARAM, params.get(PRIMARY_CONTACT_PHONE_PARAM));
+    requestParamsDataset.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
+    requestParamsDataset.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
+    requestParamsDataset.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
+    requestParamsDataset.add(PRIMARY_CONTACT_ADDRESS_PARAM, params.get(PRIMARY_CONTACT_ADDRESS_PARAM));
+    requestParamsDataset.add(PRIMARY_CONTACT_PHONE_PARAM, params.get(PRIMARY_CONTACT_PHONE_PARAM));
 
     // endpoint(s)
-    requestParams.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
-    requestParams.add(SERVICE_URLS_PARAM, params.get(SERVICE_URLS_PARAM));
+    requestParamsDataset.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
+    requestParamsDataset.add(SERVICE_URLS_PARAM, params.get(SERVICE_URLS_PARAM));
 
     // add additional ipt and organisation parameters
-    requestParams.add(IPT_KEY_PARAM, params.get(IPT_KEY_PARAM));
+    requestParamsDataset.add(IPT_KEY_PARAM, params.get(IPT_KEY_PARAM));
   }
 
-  @Given("without field {string}")
-  public void removePrimaryContactFromParams(String field) {
-    requestParams.remove(field);
+  @Given("dataset parameter {word} is {word}")
+  public void changeParamForDataset(String paramName, String paramValue) {
+    requestParamsDataset.set(paramName, paramValue);
+  }
+
+  @Given("{word} parameters without field {string}")
+  public void removePrimaryContactFromParams(String type, String field) {
+    if ("dataset".equals(type)) {
+      requestParamsDataset.remove(field);
+    } else {
+      requestParamsInstallation.remove(field);
+    }
   }
 
   @When("register new installation for organization {string} using valid/invalid organization key {string} and password {string}")
@@ -188,7 +198,7 @@ public class IptTestSteps {
     result = mvc
       .perform(
         post("/registry/ipt/register")
-          .params(requestParams)
+          .params(requestParamsInstallation)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(organisationKey, password)))
@@ -200,7 +210,7 @@ public class IptTestSteps {
     result = mvc
       .perform(
         post("/registry/ipt/resource")
-          .params(requestParams)
+          .params(requestParamsDataset)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(installationKey, password))
@@ -209,13 +219,13 @@ public class IptTestSteps {
 
   @When("update installation {string} using valid/invalid installation key {string} and password {string}")
   public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
-    requestParams.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
-    requestParams.set(NAME_PARAM, params.get(NAME_PARAM));
+    requestParamsInstallation.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParamsInstallation.set(NAME_PARAM, params.get(NAME_PARAM));
 
     result = mvc
       .perform(
         post("/registry/ipt/update/{key}", installationKey)
-          .params(requestParams)
+          .params(requestParamsInstallation)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(installationKey, password)))
