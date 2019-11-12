@@ -46,7 +46,7 @@ public class LegacyOrganizationResource {
   // if true, send mails to disposable email address service
   private final boolean useDevEmail;
   private final String smtpHost;
-  private final int smptPort;
+  private final Integer smptPort;
   private final String devEmail;
   private final String ccEmail;
   private final String fromEmail;
@@ -55,8 +55,8 @@ public class LegacyOrganizationResource {
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
                                     @Value("${mail.devemail.enabled}") boolean useDevEmail,
-                                    @Value("${spring.mail.host}") String smptHost,
-                                    @Value("${spring.mail.port}") String smptPort,
+                                    @Value("${spring.mail.host}") String smtpHost,
+                                    @Value("${spring.mail.port:#{NULL}") Integer smtpPort,
                                     @Value("${spring.mail.username}") String devEmail,
                                     @Value("${mail.cc}") String ccEmail,
                                     @Value("${mail.from}") String fromEmail) {
@@ -64,8 +64,8 @@ public class LegacyOrganizationResource {
     this.nodeService = nodeService;
     this.organizationMapper = organizationMapper;
     this.useDevEmail = useDevEmail;
-    this.smtpHost = smptHost;
-    this.smptPort = Integer.parseInt(smptPort);
+    this.smtpHost = smtpHost;
+    this.smptPort = smtpPort;
     this.devEmail = devEmail;
     this.ccEmail = ccEmail;
     this.fromEmail = fromEmail;
