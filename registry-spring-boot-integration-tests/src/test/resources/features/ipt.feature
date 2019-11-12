@@ -60,7 +60,8 @@ Feature: IPT related functionality
     And updated installation endpoints are
       | url                        | type |
       | http://ipt.gbif.org/rss.do | FEED |
-    And created fields were not updated
+    And following installation fields were not updated
+      | created | createdBy |
     And total number of installations is 1
     Given store contactKey and endpointKey
     When update installation "Updated Test IPT Registry2" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
@@ -143,3 +144,6 @@ Feature: IPT related functionality
       | url                                    | type        |
       | http://ipt.gbif.org/archive.do?r=ds123 | DWC_ARCHIVE |
       | http://ipt.gbif.org/eml.do?r=ds123     | EML         |
+    And following dataset fields were not updated
+      | created | createdBy | language | rights | citation.identifier | abbreviation | alias |
+

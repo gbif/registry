@@ -5,6 +5,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -30,7 +31,6 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.sql.Connection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,10 +78,9 @@ public class IptTestSteps {
   private UUID datasetKey;
   private Integer contactKeyBeforeSecondUpdate;
   private Integer endpointKeyBeforeSecondUpdate;
-  private Date installationCreationDate;
-  private String installationCreatedBy;
-  private Date datasetCreationDate;
-  private String datasetCreatedBy;
+
+  private Installation installationBeforeUpdate;
+  private Dataset datasetBeforeUpdate;
 
   @Autowired
   private DatasetService datasetService;
@@ -132,16 +131,12 @@ public class IptTestSteps {
   public void prepareInstallation(String instName, String installationKey) {
     this.installationKey = UUID.fromString(installationKey);
     actualInstallation = installationService.get(this.installationKey);
-    installationCreationDate = actualInstallation.getCreated();
-    installationCreatedBy = actualInstallation.getCreatedBy();
   }
 
   @Given("dataset {string} with key {string}")
   public void prepareDataset(String name, String datasetKey) {
     this.datasetKey = UUID.fromString(datasetKey);
     actualDataset = datasetService.get(this.datasetKey);
-    datasetCreationDate = actualDataset.getCreated();
-    datasetCreatedBy = actualDataset.getCreatedBy();
   }
 
   @Given("query parameters for installation registration or updating")
@@ -228,10 +223,14 @@ public class IptTestSteps {
       ).andDo(print());
   }
 
-  @When("update installation {string} using valid/invalid installation key {string} and password {string}")
-  public void updateIptInstallation(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
+  @When("update installation {string} using {word} installation key {string} and password {string}")
+  public void updateIptInstallation(String instName, String valid, String installationKey, String password, Map<String, String> params) throws Exception {
     requestParamsInstallation.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsInstallation.set(NAME_PARAM, params.get(NAME_PARAM));
+
+    if ("valid".equals(valid)) {
+      installationBeforeUpdate = installationService.get(UUID.fromString(installationKey));
+    }
 
     result = mvc
       .perform(
@@ -243,10 +242,15 @@ public class IptTestSteps {
       .andDo(print());
   }
 
-  @When("update dataset {string} with key {string} using valid/invalid installation key {string} and password {string}")
-  public void updateIptDataset(String datasetName, String datasetKey, String installationKey, String password, Map<String, String> params) throws Exception {
+  @When("update dataset {string} with key {string} using {word} installation key {string} and password {string}")
+  public void updateIptDataset(String datasetName, String datasetKey, String valid, String installationKey,
+                               String password, Map<String, String> params) throws Exception {
     requestParamsDataset.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsDataset.set(NAME_PARAM, params.get(NAME_PARAM));
+
+    if ("valid".equals(valid)) {
+      datasetBeforeUpdate = datasetService.get(UUID.fromString(datasetKey));
+    }
 
     result = mvc
       .perform(
@@ -335,10 +339,22 @@ public class IptTestSteps {
     assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
   }
 
-  @Then("created fields were not updated")
-  public void checkCreatedFields() {
-    assertEquals(installationCreationDate, actualInstallation.getCreated());
-    assertEquals(installationCreatedBy, actualInstallation.getCreatedBy());
+  @Then("following installation fields were not updated")
+  public void checkInstallationFieldsWhichAreSameAfterUpdate(List<String> expectedFields) throws Exception {
+    for (String property : expectedFields) {
+      assertEquals(
+        PropertyUtils.getNestedProperty(installationBeforeUpdate, property),
+        PropertyUtils.getNestedProperty(actualInstallation, property));
+    }
+  }
+
+  @Then("following dataset fields were not updated")
+  public void checkDatasetFieldsWhichAreSameAfterUpdate(List<String> expectedFields) throws Exception {
+    for (String property : expectedFields) {
+      assertEquals(
+        PropertyUtils.getNestedProperty(datasetBeforeUpdate, property),
+        PropertyUtils.getNestedProperty(actualDataset, property));
+    }
   }
 
   @Given("store contactKey and endpointKey")

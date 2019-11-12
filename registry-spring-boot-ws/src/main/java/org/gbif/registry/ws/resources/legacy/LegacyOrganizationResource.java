@@ -56,7 +56,7 @@ public class LegacyOrganizationResource {
                                     OrganizationMapper organizationMapper,
                                     @Value("${mail.devemail.enabled}") boolean useDevEmail,
                                     @Value("${spring.mail.host}") String smtpHost,
-                                    @Value("${spring.mail.port:#{NULL}") Integer smtpPort,
+                                    @Value("${spring.mail.port:#{NULL}}") Integer smtpPort,
                                     @Value("${spring.mail.username}") String devEmail,
                                     @Value("${mail.cc}") String ccEmail,
                                     @Value("${mail.from}") String fromEmail) {
