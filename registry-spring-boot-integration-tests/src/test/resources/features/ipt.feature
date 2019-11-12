@@ -97,13 +97,14 @@ Feature: IPT related functionality
 
   @RegisterIptDataset
   Scenario Outline: Register IPT <datasetType> dataset
-    Given dataset parameter serviceTypes is <serviceType>
+    Given dataset parameter serviceTypes is "<serviceType>"
+    And dataset parameter name is "<name>"
     When register new dataset using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
     And dataset UUID is returned
     And registered dataset is
-      | organisationKey                      | name                   | primaryContactName | type          | description                 | homepageUrl             | logoUrl               | iptKey                               |
-      | 36107c15-771c-4810-a298-b7558828b8bd | Test Dataset Registry2 | Jan Legind         | <datasetType> | Description of Test Dataset | http://www.homepage.com | http://www.logo.com/1 | 2fe63cec-9b23-4974-bab1-9f4118ef7711 |
+      | publishingOrganizationKey            | installationKey                      | type          | title  | description                 | logoUrl               | homepage                |
+      | 36107c15-771c-4810-a298-b7558828b8bd | 2fe63cec-9b23-4974-bab1-9f4118ef7711 | <datasetType> | <name> | Description of Test Dataset | http://www.logo.com/1 | http://www.homepage.com |
     And registered dataset contacts are
       | type           | email                  | firstName  | address                              | phone    | primary |
       | administrative | elyk-kaarb@euskadi.eus | Jan Legind | Universitetsparken 15, 2100, Denmark | 90909090 | true    |
@@ -113,9 +114,9 @@ Feature: IPT related functionality
       | http://ipt.gbif.org/eml.do?r=ds123     | EML         |
 
     Scenarios:
-      | serviceType                     | datasetType    |
-      | EML\|DWC-ARCHIVE-OCCURRENCE     | OCCURRENCE     |
-      | EML\|DWC-ARCHIVE-SAMPLING-EVENT | SAMPLING_EVENT |
+      | serviceType                     | datasetType    | name                        |
+      | EML\|DWC-ARCHIVE-OCCURRENCE     | OCCURRENCE     | Occurrence Test Dataset     |
+      | EML\|DWC-ARCHIVE-SAMPLING-EVENT | SAMPLING_EVENT | Sampling Event Test Dataset |
 
   Scenario: Register IPT dataset by invalid random organisationKey fails
     When register new dataset using invalid organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"

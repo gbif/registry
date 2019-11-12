@@ -24,7 +24,7 @@ INSERT INTO public.dataset (key, parent_dataset_key, duplicate_of_dataset_key, i
                             locked_for_auto_update, created_by, modified_by, created, modified, deleted,
                             fulltext_search, doi, license, maintenance_update_frequency, version)
 VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', null, null, '2fe63cec-9b23-4974-bab1-9f4118ef7711',
-        '36107c15-771c-4810-a298-b7558828b8bd', false, 'OCCURRENCE', null, 'Occurrence Dataset 1', null, null,
+        '36107c15-771c-4810-a298-b7558828b8bd', false, 'OCCURRENCE', null, 'Test Dataset Registry2', null, null,
         'Description of Test Dataset', 'en', 'http://www.homepage.com', 'http://www.logo.com/1', null, null, null,
         false, '36107c15-771c-4810-a298-b7558828b8bd', '36107c15-771c-4810-a298-b7558828b8bd',
         '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,

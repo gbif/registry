@@ -190,7 +190,7 @@ public class IptTestSteps {
     requestParamsDataset.add(IPT_KEY_PARAM, params.get(IPT_KEY_PARAM));
   }
 
-  @Given("dataset parameter {word} is {word}")
+  @Given("dataset parameter {word} is {string}")
   public void changeParamForDataset(String paramName, String paramValue) {
     requestParamsDataset.set(paramName, paramValue);
   }
@@ -278,7 +278,7 @@ public class IptTestSteps {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    UUID datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
     assertNotNull("Registered Dataset key should be in response", datasetKey);
   }
 
@@ -291,7 +291,7 @@ public class IptTestSteps {
   }
 
   @Then("registered/updated {word} contacts are")
-  public void checkInstallationContacts(String entityType, List<Contact> expectedContacts) {
+  public void checkContacts(String entityType, List<Contact> expectedContacts) {
     List<Contact> actualContacts = "dataset".equals(entityType)
       ? actualDataset.getContacts() : actualInstallation.getContacts();
 
@@ -304,7 +304,7 @@ public class IptTestSteps {
   }
 
   @Then("registered/updated {word} endpoints are")
-  public void checkInstallationEndpoints(String entityType, List<Endpoint> expectedEndpoints) {
+  public void checkEndpoints(String entityType, List<Endpoint> expectedEndpoints) {
     List<Endpoint> actualEndpoints = "dataset".equals(entityType)
       ? actualDataset.getEndpoints() : actualInstallation.getEndpoints();
 
@@ -328,26 +328,6 @@ public class IptTestSteps {
   private void copyGeneratedFieldsForDataset(Dataset expectedDataset, Dataset actualDataset) {
     expectedDataset.setDoi(actualDataset.getDoi());
     expectedDataset.setCitation(actualDataset.getCitation());
-  }
-
-  @Then("registered dataset contacts are")
-  public void checkDatasetContacts(List<Contact> expectedContacts) {
-    for (int i = 0; i < expectedContacts.size(); i++) {
-      Contact actualContact = actualDataset.getContacts().get(i);
-      assertLenientEquals("Contact does not match", expectedContacts.get(i), actualContact);
-      assertNotNull(actualContact.getCreatedBy());
-      assertNotNull(actualContact.getModifiedBy());
-    }
-  }
-
-  @Then("registered dataset endpoints are")
-  public void checkDatasetEndpoints(List<Endpoint> expectedEndpoints) {
-    for (int i = 0; i < expectedEndpoints.size(); i++) {
-      Endpoint actualEndpoint = actualDataset.getEndpoints().get(i);
-      assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
-      assertNotNull(actualEndpoint.getCreatedBy());
-      assertNotNull(actualEndpoint.getModifiedBy());
-    }
   }
 
   @Then("total number of installations is {int}")
