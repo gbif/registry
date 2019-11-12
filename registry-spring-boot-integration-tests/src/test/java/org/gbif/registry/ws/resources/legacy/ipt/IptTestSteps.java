@@ -242,8 +242,8 @@ public class IptTestSteps {
       .andDo(print());
   }
 
-  @When("update dataset {string} with key {string} using {word} installation key {string} and password {string}")
-  public void updateIptDataset(String datasetName, String datasetKey, String valid, String installationKey,
+  @When("update dataset {string} with key {string} using {word} organization key {string} and password {string}")
+  public void updateIptDataset(String datasetName, String datasetKey, String valid, String orgKey,
                                String password, Map<String, String> params) throws Exception {
     requestParamsDataset.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsDataset.set(NAME_PARAM, params.get(NAME_PARAM));
@@ -258,7 +258,7 @@ public class IptTestSteps {
           .params(requestParamsDataset)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic("36107c15-771c-4810-a298-b7558828b8bd", password)))
+          .with(httpBasic(orgKey, password)))
       .andDo(print());
   }
 
@@ -339,6 +339,11 @@ public class IptTestSteps {
     assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
   }
 
+  @Then("total number of datasets is {int}")
+  public void checkNumberOfDatasets(int datasetNumber) {
+    assertEquals(datasetNumber, datasetService.list(new PagingRequest(0, 10)).getResults().size());
+  }
+
   @Then("following installation fields were not updated")
   public void checkInstallationFieldsWhichAreSameAfterUpdate(List<String> expectedFields) throws Exception {
     for (String property : expectedFields) {
@@ -357,21 +362,37 @@ public class IptTestSteps {
     }
   }
 
-  @Given("store contactKey and endpointKey")
-  public void storeContactKeyAndEndpointKey() {
+  @Given("store installation contactKey and endpointKey")
+  public void storeInstallationContactKeyAndEndpointKey() {
     contactKeyBeforeSecondUpdate = actualInstallation.getContacts().get(0).getKey();
     endpointKeyBeforeSecondUpdate = actualInstallation.getEndpoints().get(0).getKey();
   }
 
-  @Then("contactKey is the same")
-  public void checkContactKeySameAfterUpdate() {
+  @Given("store dataset contactKey and endpointKey")
+  public void storeDatasetContactKeyAndEndpointKey() {
+    contactKeyBeforeSecondUpdate = actualDataset.getContacts().get(0).getKey();
+    endpointKeyBeforeSecondUpdate = actualDataset.getEndpoints().get(0).getKey();
+  }
+
+  @Then("installation contactKey is the same")
+  public void checkInstContactKeySameAfterUpdate() {
     // compare contact key and make sure it doesn't change after update (Contacts are mutable)
     assertEquals(contactKeyBeforeSecondUpdate, actualInstallation.getContacts().get(0).getKey());
   }
 
-  @Then("endpointKey was updated")
-  public void checkEndpointKeyNewAfterUpdate() {
+  @Then("dataset contactKey is the same")
+  public void checkDatasetContactKeySameAfterUpdate() {
+    assertEquals(contactKeyBeforeSecondUpdate, actualDataset.getContacts().get(0).getKey());
+  }
+
+  @Then("installation endpointKey was updated")
+  public void checkInstEndpointKeyNewAfterUpdate() {
     // compare endpoint key and make sure it does change after update (Endpoints are not mutable)
     assertNotEquals(endpointKeyBeforeSecondUpdate, actualInstallation.getEndpoints().get(0).getKey());
+  }
+
+  @Then("dataset endpointKey was updated")
+  public void checkDatasetEndpointKeyNewAfterUpdate() {
+    assertNotEquals(endpointKeyBeforeSecondUpdate, actualDataset.getEndpoints().get(0).getKey());
   }
 }

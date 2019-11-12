@@ -63,7 +63,7 @@ Feature: IPT related functionality
     And following installation fields were not updated
       | created | createdBy |
     And total number of installations is 1
-    Given store contactKey and endpointKey
+    Given store installation contactKey and endpointKey
     When update installation "Updated Test IPT Registry2" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
       | name        | Test IPT Registry2      |
       | description | Description of Test IPT |
@@ -72,8 +72,8 @@ Feature: IPT related functionality
       | organisationKey                      | title              | type             | description             |
       | 36107c15-771c-4810-a298-b7558828b8bd | Test IPT Registry2 | IPT_INSTALLATION | Description of Test IPT |
     And total number of installations is 1
-    And contactKey is the same
-    But endpointKey was updated
+    And installation contactKey is the same
+    But installation endpointKey was updated
 
   Scenario: Register IPT installation by invalid random organisation key fails
     When register new installation for organization "Org" using invalid organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
@@ -130,7 +130,7 @@ Feature: IPT related functionality
 
   @UpdateIptDataset
   Scenario: Update IPT dataset
-    When update dataset "Occurrence Dataset 1" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
+    When update dataset "Test Dataset Registry2" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
       | name        | Updated Dataset 1             |
       | description | Description of Test Dataset 1 |
     Then response status should be 204
@@ -146,4 +146,28 @@ Feature: IPT related functionality
       | http://ipt.gbif.org/eml.do?r=ds123     | EML         |
     And following dataset fields were not updated
       | created | createdBy | language | rights | citation.identifier | abbreviation | alias |
+    And total number of datasets is 1
+    Given store dataset contactKey and endpointKey
+    When update dataset "Test Dataset Registry2" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
+      | name        | Updated Dataset 2             |
+      | description | Description of Test Dataset 2 |
+    Then response status should be 204
+    And updated dataset is
+      | publishingOrganizationKey            | installationKey                      | type       | title             | description                   | logoUrl               | homepage                |
+      | 36107c15-771c-4810-a298-b7558828b8bd | 2fe63cec-9b23-4974-bab1-9f4118ef7711 | OCCURRENCE | Updated Dataset 2 | Description of Test Dataset 2 | http://www.logo.com/1 | http://www.homepage.com |
+    And total number of datasets is 1
+    And dataset contactKey is the same
+    But dataset endpointKey was updated
 
+  Scenario: Update IPT dataset by invalid random organization key fails
+    When update dataset "Test Dataset Registry2" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "73401488-ac6f-4d5e-b766-50e11d006eeb" and password "welcome"
+      | name        | Updated Dataset 1             |
+      | description | Description of Test Dataset 1 |
+    Then response status should be 401
+
+  Scenario: Update IPT dataset without primary contact fails
+    Given dataset parameters without field "primaryContactEmail"
+    When update dataset "Test Dataset Registry2" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
+      | name        | Updated Dataset 1             |
+      | description | Description of Test Dataset 1 |
+    Then response status should be 400
