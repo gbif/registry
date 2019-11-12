@@ -191,6 +191,11 @@ public class IptTestSteps {
     requestParamsDataset.set(paramName, paramValue);
   }
 
+  @Given("SAMPLING_EVENT does not have parameter {word} and infers it from organization")
+  public void removeInstallationKeyFromParameters(String paramName) {
+    requestParamsDataset.remove(paramName);
+  }
+
   @Given("{word} parameters without field {string}")
   public void removePrimaryContactFromParams(String type, String field) {
     if ("dataset".equals(type)) {
@@ -263,7 +268,7 @@ public class IptTestSteps {
       .andDo(print());
   }
 
-  @When("delete dataset {string} with key {string} using {word} organization key {string} and password {string}")
+  @When("delete dataset {string} with valid/invalid key {string} using {word} organization key {string} and password {string}")
   public void deleteIptDataset(String datasetName, String datasetKey, String valid, String orgKey, String password) throws Exception {
     result = mvc
       .perform(
