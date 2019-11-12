@@ -4,6 +4,7 @@ Feature: IPT related functionality
   Background:
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
     And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
+    And dataset "Occurrence Dataset 1" with key "d82273f6-9738-48a5-a639-2086f9c49d18"
     And query parameters for installation registration or updating
       | organisationKey     | 36107c15-771c-4810-a298-b7558828b8bd |
       | name                | Test IPT Registry2                   |
@@ -25,7 +26,7 @@ Feature: IPT related functionality
       | primaryContactName    | Jan Legind                                                                 |
       | primaryContactAddress | Universitetsparken 15, 2100, Denmark                                       |
       | primaryContactPhone   | 90909090                                                                   |
-      | serviceTypes          | OCCURRENCE                                                            |
+      | serviceTypes          | EML\|DWC-ARCHIVE-OCCURRENCE                                                |
       | serviceURLs           | http://ipt.gbif.org/eml.do?r=ds123\|http://ipt.gbif.org/archive.do?r=ds123 |
       | iptKey                | 2fe63cec-9b23-4974-bab1-9f4118ef7711                                       |
 
@@ -124,3 +125,20 @@ Feature: IPT related functionality
     Given dataset parameters without field "primaryContactType"
     When register new dataset using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 400
+
+  @UpdateIptDataset
+  Scenario: Update IPT dataset
+    When update dataset "Occurrence Dataset 1" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid installation key "2fe63cec-9b23-4974-bab1-9f4118ef7711" and password "welcome"
+      | name        | Updated Dataset 1             |
+      | description | Description of Test Dataset 1 |
+    Then response status should be 204
+    And updated dataset is
+      | publishingOrganizationKey            | installationKey                      | type       | title             | description                   | logoUrl               | homepage                |
+      | 36107c15-771c-4810-a298-b7558828b8bd | 2fe63cec-9b23-4974-bab1-9f4118ef7711 | OCCURRENCE | Updated Dataset 1 | Description of Test Dataset 1 | http://www.logo.com/1 | http://www.homepage.com |
+    And updated dataset contacts are
+      | type           | email                  | firstName  | address                              | phone    | primary |
+      | administrative | elyk-kaarb@euskadi.eus | Jan Legind | Universitetsparken 15, 2100, Denmark | 90909090 | true    |
+    And updated dataset endpoints are
+      | url                                    | type        |
+      | http://ipt.gbif.org/archive.do?r=ds123 | DWC_ARCHIVE |
+      | http://ipt.gbif.org/eml.do?r=ds123     | EML         |
