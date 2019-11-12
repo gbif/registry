@@ -51,13 +51,12 @@ public class LegacyOrganizationResource {
   private final String ccEmail;
   private final String fromEmail;
 
-  // TODO: 13/09/2019 use configuration instead of Value
   public LegacyOrganizationResource(OrganizationService organizationService,
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
                                     @Value("${mail.devemail.enabled}") boolean useDevEmail,
                                     @Value("${spring.mail.host}") String smptHost,
-                                    @Value("${spring.mail.port}") String smptPort,
+                                    @Value("${spring.mail.port}") int smptPort,
                                     @Value("${spring.mail.username}") String devEmail,
                                     @Value("${mail.cc}") String ccEmail,
                                     @Value("${mail.from}") String fromEmail) {
@@ -66,7 +65,7 @@ public class LegacyOrganizationResource {
     this.organizationMapper = organizationMapper;
     this.useDevEmail = useDevEmail;
     this.smtpHost = smptHost;
-    this.smptPort = 25; // TODO: 07/10/2019 use a real port (there is no this property in registry)
+    this.smptPort = smptPort;
     this.devEmail = devEmail;
     this.ccEmail = ccEmail;
     this.fromEmail = fromEmail;
@@ -235,31 +234,24 @@ public class LegacyOrganizationResource {
    * @return email body
    */
   private String getEmailBody(Contact contact, Organization organization) {
-    StringBuilder body = new StringBuilder();
-    body.append("Dear ");
-    body.append(contact.getFirstName());
-    body.append(": \n\n");
-
-    body.append("You, or someone else, has requested the password for the organisation '");
-    body.append(organization.getTitle());
-    body.append("' to be sent to your e-mail address (");
-    body.append(contact.getEmail());
-    body.append(")\n\n");
-
-    body.append("The information requested is: \n\n");
-    body.append("Username: ");
-    body.append(organization.getKey());
-    body.append("\n");
-    body.append("Password: ");
-    body.append(organization.getPassword());
-    body.append("\n\n");
-
-    body.append("If you did not request this information, please disregard this message\n\n");
-
-    body.append("GBIF (Global Biodiversity Information Facility)\n");
-    body.append("https://www.gbif.org\n");
-    body.append(ccEmail);
-
-    return body.toString();
+    return "Dear " +
+      contact.getFirstName() +
+      ": \n\n" +
+      "You, or someone else, has requested the password for the organisation '" +
+      organization.getTitle() +
+      "' to be sent to your e-mail address (" +
+      contact.getEmail() +
+      ")\n\n" +
+      "The information requested is: \n\n" +
+      "Username: " +
+      organization.getKey() +
+      "\n" +
+      "Password: " +
+      organization.getPassword() +
+      "\n\n" +
+      "If you did not request this information, please disregard this message\n\n" +
+      "GBIF (Global Biodiversity Information Facility)\n" +
+      "https://www.gbif.org\n" +
+      ccEmail;
   }
 }
