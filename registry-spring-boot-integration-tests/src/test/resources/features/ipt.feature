@@ -84,6 +84,7 @@ Feature: IPT related functionality
     Then response status should be 401
 
   Scenario: Register IPT installation without primary contact fails
+    Given installation parameters without field "primaryContactEmail"
     When register new installation for organization "Org" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 400
 
