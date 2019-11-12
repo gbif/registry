@@ -1,6 +1,5 @@
 package org.gbif.registry.persistence;
 
-import com.google.common.base.Preconditions;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
@@ -28,19 +27,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO: 05/11/2019 DELETE!
 @Service
 public class WithMyBatis {
 
+  private static final String CREATE_ERROR_MESSAGE = "Unable to create an entity which already has a key";
+
   @Transactional
   public <T extends NetworkEntity> UUID create(NetworkEntityMapper<T> mapper, T entity) {
-    checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(entity.getKey() == null, CREATE_ERROR_MESSAGE);
     // REVIEW: If this call fails the entity will have been modified anyway! We could make a copy and return that instead
     entity.setKey(UUID.randomUUID());
     mapper.create(entity);
@@ -65,15 +64,6 @@ public class WithMyBatis {
     mapper.update(entity);
   }
 
-  @Transactional
-  public <T extends NetworkEntity> void delete(NetworkEntityMapper<T> mapper, UUID key) {
-    mapper.delete(key);
-  }
-
-  public <T extends NetworkEntity> T get(NetworkEntityMapper<T> mapper, UUID key) {
-    return mapper.get(key);
-  }
-
   /**
    * The simple search option of the list.
    *
@@ -85,7 +75,7 @@ public class WithMyBatis {
   public <T extends NetworkEntity> PagingResponse<T> search(NetworkEntityMapper<T> mapper,
                                                             String query,
                                                             Pageable page) {
-    Preconditions.checkNotNull(page, "To search you must supply a page");
+    checkNotNull(page, "To search you must supply a page");
     long total = mapper.count(query);
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.search(query, page));
   }
@@ -99,11 +89,10 @@ public class WithMyBatis {
                                                                       @Nullable IdentifierType type,
                                                                       String identifier,
                                                                       Pageable page) {
-    Preconditions.checkNotNull(page, "To list by identifier you must supply a page");
-    Preconditions.checkNotNull(identifier, "To list by identifier you must supply an identifier");
+    checkNotNull(page, "To list by identifier you must supply a page");
+    checkNotNull(identifier, "To list by identifier you must supply an identifier");
     long total = mapper.countByIdentifier(type, identifier);
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier,
-      page));
+    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier, page));
   }
 
   @Transactional
@@ -111,58 +100,32 @@ public class WithMyBatis {
                         CommentableMapper commentableMapper,
                         UUID targetEntityKey,
                         Comment comment) {
-    checkArgument(comment.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(comment.getKey() == null, CREATE_ERROR_MESSAGE);
     commentMapper.createComment(comment);
     commentableMapper.addComment(targetEntityKey, comment.getKey());
     return comment.getKey();
-  }
-
-  public void deleteComment(CommentableMapper commentableMapper,
-                            UUID targetEntityKey,
-                            int commentKey) {
-    commentableMapper.deleteComment(targetEntityKey, commentKey);
-  }
-
-  public List<Comment> listComments(CommentableMapper commentableMapper, UUID targetEntityKey) {
-    return commentableMapper.listComments(targetEntityKey);
   }
 
   public int addMachineTag(MachineTagMapper machineTagMapper,
                            MachineTaggableMapper machineTaggableMapper,
                            UUID targetEntityKey,
                            MachineTag machineTag) {
-    checkArgument(machineTag.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(machineTag.getKey() == null, CREATE_ERROR_MESSAGE);
     machineTagMapper.createMachineTag(machineTag);
     machineTaggableMapper.addMachineTag(targetEntityKey, machineTag.getKey());
     return machineTag.getKey();
   }
 
-  public void deleteMachineTag(MachineTaggableMapper machineTaggableMapper,
-                               UUID targetEntityKey,
-                               int machineTagKey) {
-    machineTaggableMapper.deleteMachineTag(targetEntityKey, machineTagKey);
-  }
-
-  public void deleteMachineTags(MachineTaggableMapper machineTaggableMapper,
-                                UUID targetEntityKey,
-                                String namespace,
-                                @Nullable String name) {
-    machineTaggableMapper.deleteMachineTags(targetEntityKey, namespace, name);
-  }
-
-  public List<MachineTag> listMachineTags(MachineTaggableMapper machineTaggableMapper, UUID targetEntityKey) {
-    return machineTaggableMapper.listMachineTags(targetEntityKey);
-  }
-
+  @SuppressWarnings("unchecked")
   public <T extends NetworkEntity> PagingResponse<T> listByMachineTag(MachineTaggableMapper mapper,
                                                                       String namespace,
                                                                       @Nullable String name,
                                                                       @Nullable String value,
                                                                       Pageable page) {
-    Preconditions.checkNotNull(page, "To list by machine tag you must supply a page");
-    Preconditions.checkNotNull(namespace, "To list by machine tag you must supply a namespace");
+    checkNotNull(page, "To list by machine tag you must supply a page");
+    checkNotNull(namespace, "To list by machine tag you must supply a namespace");
     long total = mapper.countByMachineTag(namespace, name, value);
-    return new PagingResponse<T>(page.getOffset(), page.getLimit(), total, mapper.listByMachineTag(namespace, name, value, page));
+    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.listByMachineTag(namespace, name, value, page));
   }
 
   @Transactional
@@ -176,22 +139,12 @@ public class WithMyBatis {
     return tag.getKey();
   }
 
-  public void deleteTag(TaggableMapper taggableMapper, UUID targetEntityKey, int tagKey) {
-    taggableMapper.deleteTag(targetEntityKey, tagKey);
-  }
-
-  public List<Tag> listTags(TaggableMapper taggableMapper,
-                            UUID targetEntityKey,
-                            String owner) {
-    return taggableMapper.listTags(targetEntityKey);
-  }
-
   @Transactional
   public int addContact(ContactMapper contactMapper,
                         ContactableMapper contactableMapper,
                         UUID targetEntityKey,
                         Contact contact) {
-    checkArgument(contact.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(contact.getKey() == null, CREATE_ERROR_MESSAGE);
     contactMapper.createContact(contact);
     // is this a primary contact? We need to make sure it only exists once per type
     if (contact.isPrimary()) {
@@ -220,23 +173,13 @@ public class WithMyBatis {
     return contact.getKey();
   }
 
-  public void deleteContact(ContactableMapper contactableMapper,
-                            UUID targetEntityKey,
-                            int contactKey) {
-    contactableMapper.deleteContact(targetEntityKey, contactKey);
-  }
-
-  public List<Contact> listContacts(ContactableMapper contactableMapper, UUID targetEntityKey) {
-    return contactableMapper.listContacts(targetEntityKey);
-  }
-
   @Transactional
   public int addEndpoint(EndpointMapper endpointMapper,
                          EndpointableMapper endpointableMapper,
                          UUID targetEntityKey,
                          Endpoint endpoint,
                          MachineTagMapper machineTagMapper) {
-    checkArgument(endpoint.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(endpoint.getKey() == null, CREATE_ERROR_MESSAGE);
     endpointMapper.createEndpoint(endpoint);
     endpointableMapper.addEndpoint(targetEntityKey, endpoint.getKey());
 
@@ -265,28 +208,14 @@ public class WithMyBatis {
     endpointableMapper.deleteEndpoint(targetEntityKey, endpointKey);
   }
 
-  public List<Endpoint> listEndpoints(EndpointableMapper endpointableMapper, UUID targetEntityKey) {
-    return endpointableMapper.listEndpoints(targetEntityKey);
-  }
-
   @Transactional
   public int addIdentifier(IdentifierMapper identifierMapper,
                            IdentifiableMapper identifiableMapper,
                            UUID targetEntityKey,
                            Identifier identifier) {
-    checkArgument(identifier.getKey() == null, "Unable to create an entity which already has a key");
+    checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
     identifierMapper.createIdentifier(identifier);
     identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey());
     return identifier.getKey();
-  }
-
-  public void deleteIdentifier(IdentifiableMapper identifiableMapper,
-                               UUID targetEntityKey,
-                               int identifierKey) {
-    identifiableMapper.deleteIdentifier(targetEntityKey, identifierKey);
-  }
-
-  public List<Identifier> listIdentifiers(IdentifiableMapper identifiableMapper, UUID targetEntityKey) {
-    return identifiableMapper.listIdentifiers(targetEntityKey);
   }
 }

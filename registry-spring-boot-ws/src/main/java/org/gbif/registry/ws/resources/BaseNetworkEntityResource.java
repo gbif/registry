@@ -40,6 +40,8 @@ import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -90,6 +92,8 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
   consumes = MediaType.APPLICATION_JSON_VALUE,
   produces = MediaType.APPLICATION_JSON_VALUE)
 public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(BaseNetworkEntityResource.class);
 
   private final BaseNetworkEntityMapper<T> mapper;
   private final CommentMapper commentMapper;
@@ -187,9 +191,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
+  @Transactional
   public void delete(UUID key) {
     T objectToDelete = get(key);
-    withMyBatis.delete(mapper, key);
+    mapper.delete(key);
     eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
@@ -198,7 +203,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @GetMapping(value = "{key}")
   @Override
   public T get(@NotNull @PathVariable UUID key) {
-    return withMyBatis.get(mapper, key);
+    return mapper.get(key);
   }
 
   // we do a post not get cause we expect large numbers of keys to be sent
@@ -301,14 +306,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
-    withMyBatis.deleteComment(mapper, targetEntityKey, commentKey);
+    mapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
   }
 
   @GetMapping(value = "{key}/comment")
   @Override
   public List<Comment> listComments(@NotNull @PathVariable("key") UUID targetEntityKey) {
-    return withMyBatis.listComments(mapper, targetEntityKey);
+    return mapper.listComments(targetEntityKey);
   }
 
   /**
@@ -363,11 +368,15 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete a machine tag.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
+  @SuppressWarnings("unchecked")
   public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
-    Optional<MachineTag> optMachineTag = withMyBatis.listMachineTags(mapper, targetEntityKey).stream()
-      .filter(m -> m.getKey() == machineTagKey).findFirst();
+    List<MachineTag> machineTags = mapper.listMachineTags(targetEntityKey);
+    Optional<MachineTag> optMachineTag = machineTags
+      .stream()
+      .filter(m -> m.getKey() == machineTagKey)
+      .findFirst();
 
     if (optMachineTag.isPresent()) {
       MachineTag machineTag = optMachineTag.get();
@@ -396,7 +405,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Override
   public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
-    withMyBatis.deleteMachineTag(mapper, targetEntityKey, machineTagKey);
+    mapper.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
@@ -434,7 +443,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
-    withMyBatis.deleteMachineTags(mapper, targetEntityKey, namespace, null);
+    mapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
   /**
@@ -460,13 +469,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Override
   public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
-    withMyBatis.deleteMachineTags(mapper, targetEntityKey, namespace, name);
+    mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
+  @SuppressWarnings("unchecked")
   @GetMapping(value = "{key}/machineTag")
   @Override
   public List<MachineTag> listMachineTags(@PathVariable("key") UUID targetEntityKey) {
-    return withMyBatis.listMachineTags(mapper, targetEntityKey);
+    return mapper.listMachineTags(targetEntityKey);
   }
 
   @Override
@@ -516,14 +526,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
-    withMyBatis.deleteTag(mapper, targetEntityKey, tagKey);
+    mapper.deleteTag(targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
 
   @GetMapping("{key}/tag")
   @Override
   public List<Tag> listTags(@PathVariable("key") UUID targetEntityKey, @RequestParam(value = "owner", required = false) String owner) {
-    return withMyBatis.listTags(mapper, targetEntityKey, owner);
+    if (owner != null) {
+      LOG.warn("Owner is not supported. Value: {}", owner);
+    }
+    return mapper.listTags(targetEntityKey);
   }
 
   /**
@@ -591,14 +604,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
-    withMyBatis.deleteContact(mapper, targetEntityKey, contactKey);
+    mapper.deleteContact(targetEntityKey, contactKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
 
   @GetMapping("{key}/contact")
   @Override
   public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
-    return withMyBatis.listContacts(mapper, targetEntityKey);
+    return mapper.listContacts(targetEntityKey);
   }
 
   /**
@@ -655,7 +668,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @GetMapping("{key}/endpoint")
   @Override
   public List<Endpoint> listEndpoints(@PathVariable("key") UUID targetEntityKey) {
-    return withMyBatis.listEndpoints(mapper, targetEntityKey);
+    return mapper.listEndpoints(targetEntityKey);
   }
 
   /**
@@ -693,14 +706,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey, @PathVariable("identifierKey") int identifierKey) {
-    withMyBatis.deleteIdentifier(mapper, targetEntityKey, identifierKey);
+    mapper.deleteIdentifier(targetEntityKey, identifierKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
 
   @GetMapping("{key}/identifier")
   @Override
   public List<Identifier> listIdentifiers(@PathVariable("key") UUID targetEntityKey) {
-    return withMyBatis.listIdentifiers(mapper, targetEntityKey);
+    return mapper.listIdentifiers(targetEntityKey);
   }
 
   /**

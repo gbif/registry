@@ -27,6 +27,8 @@ import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.Trim;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +60,10 @@ import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
  * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
  */
 public abstract class BaseExtendableCollectionResource<T extends CollectionEntity & Taggable & Identifiable & Contactable>
-    extends BaseCrudResource<T> implements TagService, IdentifierService, ContactService {
+  extends BaseCrudResource<T>
+  implements TagService, IdentifierService, ContactService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(BaseExtendableCollectionResource.class);
 
   private final CrudMapper<T> crudMapper;
   private final AddressMapper addressMapper;
@@ -138,7 +143,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     if (entityOld.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
       checkArgument(entity.getDeleted() == null,
-          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+        "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // not allowed to delete when updating
       checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
@@ -214,8 +219,9 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @PostMapping("{key}/identifier")
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Identifier identifier,
-                               Authentication authentication) {
+  public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey,
+                           @RequestBody @NotNull Identifier identifier,
+                           Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -232,7 +238,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Transactional
   @Override
   public void deleteIdentifier(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
-    withMyBatis.deleteIdentifier(identifiableMapper, entityKey, identifierKey);
+    identifiableMapper.deleteIdentifier(entityKey, identifierKey);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
 
@@ -241,14 +247,15 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @ValidateReturnedValue
   @Override
   public List<Identifier> listIdentifiers(@PathVariable @NotNull UUID key) {
-    return withMyBatis.listIdentifiers(identifiableMapper, key);
+    return identifiableMapper.listIdentifiers(key);
   }
 
   @PostMapping("{key}/tag")
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addTag(@PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull Tag tag,
-                        Authentication authentication) {
+  public int addTag(@PathVariable("key") @NotNull UUID entityKey,
+                    @RequestBody @NotNull Tag tag,
+                    Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(entityKey, tag);
   }
@@ -272,7 +279,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Transactional
   @Override
   public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
-    withMyBatis.deleteTag(taggableMapper, entityKey, tagKey);
+    taggableMapper.deleteTag(entityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
@@ -280,7 +287,11 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Nullable
   @ValidateReturnedValue
   @Override
-  public List<Tag> listTags(@PathVariable("key") @NotNull UUID key, @RequestParam(value = "owner", required = false) @Nullable String owner) {
-    return withMyBatis.listTags(taggableMapper, key, owner);
+  public List<Tag> listTags(@PathVariable("key") @NotNull UUID key,
+                            @RequestParam(value = "owner", required = false) @Nullable String owner) {
+    if (owner != null) {
+      LOG.warn("Owner is not supported. Passed value: {}", owner);
+    }
+    return taggableMapper.listTags(key);
   }
 }
