@@ -58,6 +58,7 @@ import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -258,6 +259,16 @@ public class IptTestSteps {
           .params(requestParamsDataset)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
+          .with(httpBasic(orgKey, password)))
+      .andDo(print());
+  }
+
+  @When("delete dataset {string} with key {string} using {word} organization key {string} and password {string}")
+  public void deleteIptDataset(String datasetName, String datasetKey, String valid, String orgKey, String password) throws Exception {
+    result = mvc
+      .perform(
+        delete("/registry/ipt/resource/{key}", datasetKey)
+          .contentType(APPLICATION_FORM_URLENCODED)
           .with(httpBasic(orgKey, password)))
       .andDo(print());
   }
