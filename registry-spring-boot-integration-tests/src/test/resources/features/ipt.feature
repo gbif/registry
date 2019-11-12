@@ -171,3 +171,9 @@ Feature: IPT related functionality
       | name        | Updated Dataset 1             |
       | description | Description of Test Dataset 1 |
     Then response status should be 400
+
+  Scenario: Delete IPT dataset
+    Given total number of datasets is 1
+    When delete dataset "Test Dataset Registry2" with key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
+    Then response status should be 200
+    And total number of datasets is 0
