@@ -15,7 +15,6 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
-import org.gbif.registry.ws.model.LegacyDataset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -76,10 +75,13 @@ public class IptTestSteps {
   private Installation actualInstallation;
   private Dataset actualDataset;
   private UUID installationKey;
+  private UUID datasetKey;
   private Integer contactKeyBeforeSecondUpdate;
   private Integer endpointKeyBeforeSecondUpdate;
   private Date installationCreationDate;
   private String installationCreatedBy;
+  private Date datasetCreationDate;
+  private String datasetCreatedBy;
 
   @Autowired
   private DatasetService datasetService;
@@ -123,6 +125,7 @@ public class IptTestSteps {
 
   @Given("organization {string} with key {string}")
   public void prepareOrganization(String orgName, String orgKey) {
+    // prepared by script ipt_register_prepare
   }
 
   @Given("installation {string} with key {string}")
@@ -131,6 +134,14 @@ public class IptTestSteps {
     actualInstallation = installationService.get(this.installationKey);
     installationCreationDate = actualInstallation.getCreated();
     installationCreatedBy = actualInstallation.getCreatedBy();
+  }
+
+  @Given("dataset {string} with key {string}")
+  public void prepareDataset(String name, String datasetKey) {
+    this.datasetKey = UUID.fromString(datasetKey);
+    actualDataset = datasetService.get(this.datasetKey);
+    datasetCreationDate = actualDataset.getCreated();
+    datasetCreatedBy = actualDataset.getCreatedBy();
   }
 
   @Given("query parameters for installation registration or updating")
@@ -218,7 +229,7 @@ public class IptTestSteps {
   }
 
   @When("update installation {string} using valid/invalid installation key {string} and password {string}")
-  public void updateIpt(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
+  public void updateIptInstallation(String instName, String installationKey, String password, Map<String, String> params) throws Exception {
     requestParamsInstallation.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsInstallation.set(NAME_PARAM, params.get(NAME_PARAM));
 
@@ -229,6 +240,21 @@ public class IptTestSteps {
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(installationKey, password)))
+      .andDo(print());
+  }
+
+  @When("update dataset {string} with key {string} using valid/invalid installation key {string} and password {string}")
+  public void updateIptDataset(String datasetName, String datasetKey, String installationKey, String password, Map<String, String> params) throws Exception {
+    requestParamsDataset.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
+    requestParamsDataset.set(NAME_PARAM, params.get(NAME_PARAM));
+
+    result = mvc
+      .perform(
+        post("/registry/ipt/resource/{key}", datasetKey)
+          .params(requestParamsDataset)
+          .contentType(APPLICATION_FORM_URLENCODED)
+          .accept(APPLICATION_XML)
+          .with(httpBasic("36107c15-771c-4810-a298-b7558828b8bd", password)))
       .andDo(print());
   }
 
@@ -264,29 +290,35 @@ public class IptTestSteps {
     assertNotNull(actualInstallation.getModified());
   }
 
-  @Then("registered/updated installation contacts are")
-  public void checkInstallationContacts(List<Contact> expectedContacts) {
+  @Then("registered/updated {word} contacts are")
+  public void checkInstallationContacts(String entityType, List<Contact> expectedContacts) {
+    List<Contact> actualContacts = "dataset".equals(entityType)
+      ? actualDataset.getContacts() : actualInstallation.getContacts();
+
     for (int i = 0; i < expectedContacts.size(); i++) {
-      Contact actualContact = actualInstallation.getContacts().get(i);
+      Contact actualContact = actualContacts.get(i);
       assertLenientEquals("Contact does not match", expectedContacts.get(i), actualContact);
       assertNotNull(actualContact.getCreatedBy());
       assertNotNull(actualContact.getModifiedBy());
     }
   }
 
-  @Then("registered/updated installation endpoints are")
-  public void checkInstallationEndpoints(List<Endpoint> expectedEndpoints) {
+  @Then("registered/updated {word} endpoints are")
+  public void checkInstallationEndpoints(String entityType, List<Endpoint> expectedEndpoints) {
+    List<Endpoint> actualEndpoints = "dataset".equals(entityType)
+      ? actualDataset.getEndpoints() : actualInstallation.getEndpoints();
+
     for (int i = 0; i < expectedEndpoints.size(); i++) {
-      Endpoint actualEndpoint = actualInstallation.getEndpoints().get(i);
+      Endpoint actualEndpoint = actualEndpoints.get(i);
       assertLenientEquals("Endpoint does not match", expectedEndpoints.get(i), actualEndpoint);
       assertNotNull(actualEndpoint.getCreatedBy());
       assertNotNull(actualEndpoint.getModifiedBy());
     }
   }
 
-  @Then("registered dataset is")
-  public void checkRegisteredDatasetValidity(LegacyDataset expectedDataset) {
-    actualDataset = datasetService.get(UUID.fromString(Parsers.legacyIptEntityHandler.key));
+  @Then("registered/updated dataset is")
+  public void checkRegisteredDatasetValidity(Dataset expectedDataset) {
+    actualDataset = datasetService.get(datasetKey);
     copyGeneratedFieldsForDataset(expectedDataset, actualDataset);
     assertLenientEquals("Datasets do not match", expectedDataset, actualDataset);
     assertNotNull(actualDataset.getCreatedBy());

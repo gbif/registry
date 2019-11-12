@@ -17,3 +17,16 @@ VALUES ('2fe63cec-9b23-4974-bab1-9f4118ef7711', '36107c15-771c-4810-a298-b755882
         'Test IPT Registry2', 'Description of Test IPT', '36107c15-771c-4810-a298-b7558828b8bd',
         '36107c15-771c-4810-a298-b7558828b8bd', '2019-11-01 14:48:02.486307', '2019-11-01 14:48:02.486307', null,
         null, 'welcome', false);
+
+INSERT INTO public.dataset (key, parent_dataset_key, duplicate_of_dataset_key, installation_key,
+                            publishing_organization_key, external, type, sub_type, title, alias, abbreviation,
+                            description, language, homepage, logo_url, citation, citation_identifier, rights,
+                            locked_for_auto_update, created_by, modified_by, created, modified, deleted,
+                            fulltext_search, doi, license, maintenance_update_frequency, version)
+VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', null, null, '2fe63cec-9b23-4974-bab1-9f4118ef7711',
+        '36107c15-771c-4810-a298-b7558828b8bd', false, 'OCCURRENCE', null, 'Occurrence Dataset 1', null, null,
+        'Description of Test Dataset', 'en', 'http://www.homepage.com', 'http://www.logo.com/1', null, null, null,
+        false, '36107c15-771c-4810-a298-b7558828b8bd', '36107c15-771c-4810-a298-b7558828b8bd',
+        '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,
+        '''dataset'':2,8 ''descript'':5 ''occurr'':4 ''registry2'':3 ''test'':1,7 ''www.homepage.com'':9',
+        '10.21373/h9c3vc', 'UNSPECIFIED', null, null);
