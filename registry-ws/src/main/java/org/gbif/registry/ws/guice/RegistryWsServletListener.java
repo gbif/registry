@@ -12,6 +12,13 @@
  */
 package org.gbif.registry.ws.guice;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.sun.jersey.spi.container.ContainerRequestFilter;
+import com.sun.jersey.spi.container.ContainerResponseFilter;
+import org.apache.bval.guice.ValidationModule;
 import org.gbif.identity.inject.IdentityModule;
 import org.gbif.occurrence.query.TitleLookupModule;
 import org.gbif.registry.directory.DirectoryModule;
@@ -40,18 +47,9 @@ import org.gbif.ws.server.guice.GbifServletListener;
 import org.gbif.ws.server.guice.WsJerseyModuleConfiguration;
 
 import java.io.IOException;
-import java.nio.channels.Pipe;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
-import org.apache.bval.guice.ValidationModule;
 
 /**
  * The Registry WS module.
@@ -69,9 +67,9 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   static {
     requestFilters.add(LegacyAuthorizationFilter.class);
-    requestFilters.add(EditorAuthorizationFilter.class);
     requestFilters.add(AppIdentityFilter.class);
     requestFilters.add(JwtRequestFilter.class);
+    requestFilters.add(EditorAuthorizationFilter.class);
     responseFilters.add(AuthResponseCodeOverwriteFilter.class);
     responseFilters.add(JwtResponseFilter.class);
   }
@@ -87,7 +85,7 @@ public class RegistryWsServletListener extends GbifServletListener {
    * @param properties
    * @return
    */
-  private static Properties getMetricsProperties(Properties properties){
+  private static Properties getMetricsProperties(Properties properties) {
     Properties metricsProperties = new Properties();
     metricsProperties.setProperty("metrics.ws.url", properties.getProperty(API_URL_PROPERTY));
     metricsProperties.setProperty(GbifWsClientModule.HttpClientConnParams.HTTP_TIMEOUT, METRICS_WS_HTTP_TIMEOUT);
@@ -96,19 +94,19 @@ public class RegistryWsServletListener extends GbifServletListener {
 
   public RegistryWsServletListener() throws IOException {
     super(PropertiesUtil.readFromFile(ConfUtils.getAppConfFile(APP_CONF_FILE)),
-            new WsJerseyModuleConfiguration()
-                    .resourcePackages(PACKAGES)
-                    .useAuthenticationFilter(IdentityFilter.class)
-                    .responseFilters(responseFilters)
-                    .requestFilters(requestFilters));
+      new WsJerseyModuleConfiguration()
+        .resourcePackages(PACKAGES)
+        .useAuthenticationFilter(IdentityFilter.class)
+        .responseFilters(responseFilters)
+        .requestFilters(requestFilters));
   }
 
   @VisibleForTesting
   public RegistryWsServletListener(Properties properties) {
     super(properties, new WsJerseyModuleConfiguration()
-            .resourcePackages(PACKAGES)
-            .useAuthenticationFilter(IdentityFilter.class)
-            .requestFilters(requestFilters));
+      .resourcePackages(PACKAGES)
+      .useAuthenticationFilter(IdentityFilter.class)
+      .requestFilters(requestFilters));
   }
 
   @Override
@@ -119,22 +117,22 @@ public class RegistryWsServletListener extends GbifServletListener {
   @Override
   protected List<Module> getModules(Properties properties) {
     return Lists.newArrayList(new DoiModule(properties),
-                              new RegistryMyBatisModule(properties),
-                              //shared email manager (identity, organization creation)
-                              new EmailManagerModule(properties),
-                              new IdentityModule(properties),
-                              new OrganizationSuretyModule(properties),
-                              new DirectoryModule(properties),
-                              StringTrimInterceptor.newMethodInterceptingModule(),
-                              new ValidationModule(),
-                              new EventModule(properties),
-                              new RegistrySearchModule(properties),
-                              new SecurityModule(properties),
-                              new VarnishPurgeModule(properties),
-                              new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
-                              new OccurrenceMetricsModule(getMetricsProperties(properties)),
-                              new OaipmhModule(properties),
-                              new PipelinesModule(properties));
+      new RegistryMyBatisModule(properties),
+      //shared email manager (identity, organization creation)
+      new EmailManagerModule(properties),
+      new IdentityModule(properties),
+      new OrganizationSuretyModule(properties),
+      new DirectoryModule(properties),
+      StringTrimInterceptor.newMethodInterceptingModule(),
+      new ValidationModule(),
+      new EventModule(properties),
+      new RegistrySearchModule(properties),
+      new SecurityModule(properties),
+      new VarnishPurgeModule(properties),
+      new TitleLookupModule(true, properties.getProperty(API_URL_PROPERTY)),
+      new OccurrenceMetricsModule(getMetricsProperties(properties)),
+      new OaipmhModule(properties),
+      new PipelinesModule(properties));
   }
 
   @VisibleForTesting
