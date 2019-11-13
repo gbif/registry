@@ -7,6 +7,7 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -54,7 +55,7 @@ public interface PipelinesHistoryTrackingService {
    * @param user the user who is running the attempt
    * @return the response of the execution request
    */
-  RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user);
+  RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user, List<UUID> datasetsToExclude);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
