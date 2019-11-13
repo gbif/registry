@@ -99,14 +99,14 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   /** Utility method to run batch jobs on all dataset elements */
-  private void doOnAllDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
 
     PagingResponse<Dataset> response;
     do {
       response = datasetService.list(pagingRequest);
-      response
-          .getResults()
+      response.getResults().stream()
+          .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
           .forEach(
               d -> {
                 try {
@@ -155,11 +155,13 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
   }
 
   @Override
-  public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user) {
+  public RunPipelineResponse runLastAttempt(Set<StepType> steps, String reason, String user, List<UUID> datasetsToExclude) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
-      () -> doOnAllDatasets(dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix))
-    );
+        () ->
+            doOnAllDatasets(
+                dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix),
+                datasetsToExclude));
 
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)

@@ -10,11 +10,9 @@ import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
 import org.gbif.registry.pipelines.RunPipelineResponse;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -117,19 +115,25 @@ public class PipelinesHistoryResource {
     return historyTrackingService.getPipelineWorkflow(datasetKey, attempt);
   }
 
-  /**
-   * Runs the last attempt for all datasets.
-   */
+  /** Runs the last attempt for all datasets. */
   @POST
   @Path(RUN_PATH)
+  @Consumes(MediaType.APPLICATION_JSON)
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public Response runAll(@QueryParam("steps") String steps, @QueryParam("reason") String reason, @Context SecurityContext security) {
+  public Response runAll(
+      @QueryParam("steps") String steps,
+      @QueryParam("reason") String reason,
+      @Context SecurityContext security,
+      @Nullable RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
         .orElseGet(
             () ->
                 toHttpResponse(
                     historyTrackingService.runLastAttempt(
-                        parseSteps(steps), reason, security.getUserPrincipal().getName())));
+                        parseSteps(steps),
+                        reason,
+                        security.getUserPrincipal().getName(),
+                        runAllParams != null ? runAllParams.datasetsToExclude : null)));
   }
 
   /**
@@ -210,5 +214,22 @@ public class PipelinesHistoryResource {
     return Arrays.stream(steps.split(","))
         .map(s -> StepType.valueOf(s.toUpperCase()))
         .collect(Collectors.toSet());
+  }
+
+  /**
+   * Encapsulates the params to pass in the body for the runAll method.
+   */
+  private static class RunAllParams {
+    List<UUID> datasetsToExclude = new ArrayList<>();
+
+    // getters and setters needed for jackson
+
+    public List<UUID> getDatasetsToExclude() {
+      return datasetsToExclude;
+    }
+
+    public void setDatasetsToExclude(List<UUID> datasetsToExclude) {
+      this.datasetsToExclude = datasetsToExclude;
+    }
   }
 }
