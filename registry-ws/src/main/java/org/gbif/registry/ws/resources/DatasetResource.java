@@ -12,6 +12,52 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.exception.ServiceUnavailableException;
+import org.gbif.api.model.Constants;
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.search.SearchResponse;
+import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.search.*;
+import org.gbif.api.service.registry.DatasetProcessStatusService;
+import org.gbif.api.service.registry.DatasetSearchService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.vocabulary.*;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.Platform;
+import org.gbif.common.messaging.api.messages.StartCrawlMessage;
+import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
+import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.metadata.CitationGenerator;
+import org.gbif.registry.metadata.EMLWriter;
+import org.gbif.registry.metadata.parse.DatasetParser;
+import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
+import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.ws.server.interceptor.NullToNotFound;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
@@ -26,101 +72,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.bval.guice.Validate;
-import org.gbif.api.exception.ServiceUnavailableException;
-import org.gbif.api.model.Constants;
-import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.model.crawler.DatasetProcessStatus;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.LenientEquals;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.search.DatasetSearchParameter;
-import org.gbif.api.model.registry.search.DatasetSearchRequest;
-import org.gbif.api.model.registry.search.DatasetSearchResult;
-import org.gbif.api.model.registry.search.DatasetSuggestRequest;
-import org.gbif.api.model.registry.search.DatasetSuggestResult;
-import org.gbif.api.service.registry.DatasetProcessStatusService;
-import org.gbif.api.service.registry.DatasetSearchService;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.MetadataType;
-import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.Platform;
-import org.gbif.common.messaging.api.messages.StartCrawlMessage;
-import org.gbif.common.messaging.api.messages.StartCrawlMessage.Priority;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
-import org.gbif.registry.metadata.CitationGenerator;
-import org.gbif.registry.metadata.EMLWriter;
-import org.gbif.registry.metadata.parse.DatasetParser;
-import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.MetadataMapper;
-import org.gbif.registry.persistence.mapper.NetworkMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
-import org.gbif.registry.ws.guice.Trim;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.ws.server.interceptor.NullToNotFound;
 import org.mybatis.guice.transactional.Transactional;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
  * A MyBATIS implementation of the service.
@@ -914,20 +876,23 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response;
     do {
       response = list(pagingRequest);
-      response
-          .getResults()
+      response.getResults().stream()
+          .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
           .forEach(
               d -> {
                 try {
                   LOG.info("trying to crawl dataset {}", d.getKey());
                   onDataset.accept(d);
                 } catch (Exception ex) {
-                  LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
+                  LOG.error(
+                      "Error processing dataset {} while crawling all: {}",
+                      d.getKey(),
+                      ex.getMessage());
                 }
               });
       pagingRequest.addOffset(response.getResults().size());
@@ -935,16 +900,20 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
-   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
-   * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
-   * necessary security.
+   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to
+   * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
+   * crawl, and applies necessary security.
    */
   @POST
   @Path("crawlall")
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawlAll(@QueryParam("platform") String platform) {
+  public void crawlAll(
+      @QueryParam("platform") String platform, @Nullable CrawlAllParams crawlAllParams) {
     CompletableFuture.runAsync(
-        () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
+        () ->
+            doOnAllOccurrenceDatasets(
+                dataset -> crawl(dataset.getKey(), platform),
+                crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
   }
     /**
      * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
@@ -1068,5 +1037,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public PagingResponse<Dataset> listByDOI(@PathParam("doi") String doi, @Context Pageable page) {
     return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+  }
+
+  /**
+   * Encapsulates the params to pass in the body for the crawAll method.
+   */
+  private static class CrawlAllParams {
+    List<UUID> datasetsToExclude = new ArrayList<>();
+
+    // getters and setters needed for jackson
+
+    public List<UUID> getDatasetsToExclude() {
+      return datasetsToExclude;
+    }
+
+    public void setDatasetsToExclude(List<UUID> datasetsToExclude) {
+      this.datasetsToExclude = datasetsToExclude;
+    }
   }
 }
