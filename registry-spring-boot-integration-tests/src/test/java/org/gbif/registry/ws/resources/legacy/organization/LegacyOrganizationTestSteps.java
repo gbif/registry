@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.resources.legacy.organization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -8,6 +9,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.TestSerializationConfiguration;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +32,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
+@SpringBootTest(classes = {TestEmailConfiguration.class,
+  TestSerializationConfiguration.class,
+  RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class LegacyOrganizationTestSteps {
@@ -49,6 +53,9 @@ public class LegacyOrganizationTestSteps {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @Autowired
+  private XmlMapper xmlMapper;
 
   @Before("@LegacyOrganization")
   public void setUp() throws Exception {
@@ -91,11 +98,11 @@ public class LegacyOrganizationTestSteps {
     // prepared by script legacy_organization_prepare
   }
 
-  @When("get organization {string} with no credentials")
-  public void registerIpt(String organisationKey) throws Exception {
+  @When("get organization {string} with no credentials and extension {word}")
+  public void registerIpt(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation/{key}.json", organisationKey)
+        get("/registry/organisation/{key}." + extension, organisationKey)
           .contentType("application/javascript"))
       .andDo(print());
   }
@@ -106,11 +113,15 @@ public class LegacyOrganizationTestSteps {
       .andExpect(status().is(status));
   }
 
-  @Then("JSON is expected")
-  public void checkResponseIsJson() throws Exception {
+  @Then("{word} is expected")
+  public void checkResponseIsJson(String extension) throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    actualResponse = objectMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
+    if ("json".equals(extension)) {
+      actualResponse = objectMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
+    } else {
+      actualResponse = xmlMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
+    }
   }
 
   @Then("returned response is")
