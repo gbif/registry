@@ -51,6 +51,7 @@ public class LegacyOrganizationResource {
   private final String devEmail;
   private final String ccEmail;
   private final String fromEmail;
+  private final String password;
 
   public LegacyOrganizationResource(OrganizationService organizationService,
                                     NodeService nodeService,
@@ -60,7 +61,8 @@ public class LegacyOrganizationResource {
                                     @Value("${spring.mail.port:#{NULL}}") Integer smtpPort,
                                     @Value("${spring.mail.username}") String devEmail,
                                     @Value("${mail.cc}") String ccEmail,
-                                    @Value("${mail.from}") String fromEmail) {
+                                    @Value("${mail.from}") String fromEmail,
+                                    @Value("${spring.mail.password}") String password) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.organizationMapper = organizationMapper;
@@ -70,6 +72,7 @@ public class LegacyOrganizationResource {
     this.devEmail = devEmail;
     this.ccEmail = ccEmail;
     this.fromEmail = fromEmail;
+    this.password = password;
   }
 
   /**
@@ -185,6 +188,8 @@ public class LegacyOrganizationResource {
             // add recipients, depending on whether development mode is on for sending email?
             if (useDevEmail) {
               email.addTo(devEmail);
+              email.setStartTLSEnabled(true);
+              email.setAuthentication(devEmail, password);
             } else {
               email.addTo(emailAddress);
               email.addCc(ccEmail);

@@ -102,12 +102,8 @@ spring:
     port: @mail.port@
     properties:
       mail:
-        debug: false
-        transport:
-          protocol: smtp
         smtp:
           auth: true
           starttls:
             enable: true
-    protocol: smtp
-    test-connection: false
+    test-connection: true
