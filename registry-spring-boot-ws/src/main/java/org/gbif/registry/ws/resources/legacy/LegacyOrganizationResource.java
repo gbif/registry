@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,31 +85,52 @@ public class LegacyOrganizationResource {
    * 3. Trigger an email reminder for the organization, sent to the primary contact email. Handling request with path
    * /registry/organization/{key}.json?op=password. An HTML response indicating successful delivery is included in 200
    * response.
+   * <p>
    *
-   * @param organisationKey organization key (UUID) coming in as path param
-   * @param callback        parameter
+   * @param organisationKeyWithExtension organization key (UUID) coming in as path param
+   * @param callback                     parameter
    * @return 1. Organization, wrapped with callback parameter in JSONP, or null if organization with key does not
    * exist.
    * 2. (case: op=login) Response with Status.OK if credentials were verified, or Response with
    * Status.UNAUTHORIZED if they weren't
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
-  @GetMapping(value = "{key}",
-    consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      "application/x-javascript", "application/javascript"},
-    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE,
-      "application/x-javascript", "application/javascriptx-javascript"})
-  public Object getOrganization(@PathVariable("key") UUID organisationKey,
+  @GetMapping(value = "{key:.+}",
+    consumes = {MediaType.TEXT_PLAIN_VALUE,
+      MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+      "application/x-javascript",
+      "application/javascript"},
+    produces = {MediaType.APPLICATION_XML_VALUE,
+      MediaType.APPLICATION_JSON_VALUE,
+      "application/x-javascript",
+      "application/javascriptx-javascript"})
+  public Object getOrganization(@PathVariable("key") String organisationKeyWithExtension,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
+                                HttpServletResponse response,
                                 Authentication authentication) {
+    // TODO: 18/11/2019 move technical part which handles extensions to separated object (advice?)
+    String[] keyAndExtension = organisationKeyWithExtension.split("\\.");
+    UUID organisationKey;
+    String extension;
 
-    // incoming path parameter for organization key required
-    if (organisationKey == null) {
-      return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .cacheControl(CacheControl.noCache())
-        .build();
+    if (keyAndExtension.length == 1) {
+      organisationKey = UUID.fromString(organisationKeyWithExtension);
+      response.setContentType(MediaType.APPLICATION_XML_VALUE);
+    } else {
+      organisationKey = UUID.fromString(keyAndExtension[0]);
+      extension = keyAndExtension[1];
+
+      if ("json".equals(extension)) {
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      } else if ("xml".equals(extension)) {
+        response.setContentType(MediaType.APPLICATION_XML_VALUE);
+      } else {
+        return ResponseEntity
+          .status(HttpStatus.NOT_FOUND)
+          .cacheControl(CacheControl.noCache())
+          .build();
+      }
     }
     LOG.info("Get Organization with key={}", organisationKey);
 
