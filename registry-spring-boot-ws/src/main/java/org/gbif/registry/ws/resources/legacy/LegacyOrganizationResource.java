@@ -99,8 +99,8 @@ public class LegacyOrganizationResource {
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE,
       "application/x-javascript", "application/javascriptx-javascript"})
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
-                                @RequestParam("callback") String callback,
-                                @RequestParam("op") String op,
+                                @RequestParam(value = "callback", required = false) String callback,
+                                @RequestParam(value = "op", required = false) String op,
                                 Authentication authentication) {
 
     // incoming path parameter for organization key required
