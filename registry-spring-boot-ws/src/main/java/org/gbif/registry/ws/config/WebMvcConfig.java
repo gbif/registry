@@ -18,6 +18,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
@@ -82,6 +83,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     };
   }
 
+  @Primary
   @Bean
   public ObjectMapper titleLookupObjectMapper() {
     final ObjectMapper objectMapper = new ObjectMapper();
