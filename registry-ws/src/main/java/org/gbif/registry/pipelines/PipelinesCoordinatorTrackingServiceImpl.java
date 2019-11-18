@@ -9,7 +9,6 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -30,6 +29,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -59,6 +59,13 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
 
     // Enforce use of ISO-8601 format dates (http://wiki.fasterxml.com/JacksonFAQDateHandling)
     OBJECT_MAPPER.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+    // workaround to ignore a java 8 Optional property. We should use the Jdk8Module when migrating
+    // to Jackson 2 and all the messages in the DB are correct (now some are not serializing the
+    // Optional value).
+    OBJECT_MAPPER
+        .getDeserializationConfig()
+        .addMixInAnnotations(PipelinesAbcdMessage.class, PipelineAbcdMessageMixin.class);
   }
 
   private static final Comparator<Endpoint> ENDPOINT_COMPARATOR = Ordering.compound(Lists.newArrayList(
@@ -542,4 +549,10 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
       }
     }
   }
+
+  static abstract class PipelineAbcdMessageMixin {
+    @JsonIgnore
+    Optional<Date> lastModified;
+  }
+
 }
