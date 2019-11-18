@@ -311,10 +311,11 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                         if (message != null) {
                           responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
                           publisher.send(message);
+
+                          // update rerun reason and modifier user
+                          mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
                         }
 
-                        // update rerun reason and modifier user
-                        mapper.updatePipelineStep(step.setRerunReason(reason).setModifiedBy(user));
                       } catch (IOException ex) {
                         LOG.error("Error reading message", ex);
                         throw Throwables.propagate(ex);
