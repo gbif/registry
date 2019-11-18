@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -99,10 +100,22 @@ public class LegacyOrganizationTestSteps {
   }
 
   @When("get organization {string} with no credentials and extension {string}")
-  public void registerIpt(String organisationKey, String extension) throws Exception {
+  public void getOrganization(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
+          .contentType("application/javascript"))
+      .andDo(print());
+  }
+
+  @When("get organization {string} with login {string} and password {string} and extension {string} and parameter {word} with value {word}")
+  public void getOrganization(String organisationKey, String login, String password, String extension, String paramName,
+                          String paramValue) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/organisation/{key}" + extension, organisationKey)
+          .param(paramName, paramValue)
+          .with(httpBasic(login, password))
           .contentType("application/javascript"))
       .andDo(print());
   }
