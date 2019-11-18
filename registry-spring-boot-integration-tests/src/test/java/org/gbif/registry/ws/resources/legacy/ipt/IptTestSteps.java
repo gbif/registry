@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.legacy.ipt;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -14,8 +15,8 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.IptEntityResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -96,6 +97,9 @@ public class IptTestSteps {
 
   @Autowired
   private InstallationService installationService;
+
+  @Autowired
+  private XmlMapper xmlMapper;
 
   @Before("@IPT")
   public void setUp() throws Exception {
@@ -288,8 +292,8 @@ public class IptTestSteps {
   public void checkInstallationUuid() throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    installationKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    IptEntityResponse iptEntityResponse = xmlMapper.readValue(contentAsString, IptEntityResponse.class);
+    installationKey = UUID.fromString(iptEntityResponse.getKey());
     assertNotNull("Registered IPT key should be in response", installationKey);
   }
 
@@ -297,8 +301,8 @@ public class IptTestSteps {
   public void checkDatasetUuid() throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    Parsers.saxParser.parse(Parsers.getUtf8Stream(contentAsString), Parsers.legacyIptEntityHandler);
-    datasetKey = UUID.fromString(Parsers.legacyIptEntityHandler.key);
+    IptEntityResponse iptEntityResponse = xmlMapper.readValue(contentAsString, IptEntityResponse.class);
+    datasetKey = UUID.fromString(iptEntityResponse.getKey());
     assertNotNull("Registered Dataset key should be in response", datasetKey);
   }
 
