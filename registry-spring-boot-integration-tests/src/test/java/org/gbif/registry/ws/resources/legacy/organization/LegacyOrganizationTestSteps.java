@@ -98,11 +98,11 @@ public class LegacyOrganizationTestSteps {
     // prepared by script legacy_organization_prepare
   }
 
-  @When("get organization {string} with no credentials and extension {word}")
+  @When("get organization {string} with no credentials and extension {string}")
   public void registerIpt(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation/{key}." + extension, organisationKey)
+        get("/registry/organisation/{key}" + extension, organisationKey)
           .contentType("application/javascript"))
       .andDo(print());
   }
@@ -117,7 +117,7 @@ public class LegacyOrganizationTestSteps {
   public void checkResponseIsJson(String extension) throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    if ("json".equals(extension)) {
+    if ("JSON".equals(extension)) {
       actualResponse = objectMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
     } else {
       actualResponse = xmlMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
