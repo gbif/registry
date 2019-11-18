@@ -1,16 +1,20 @@
 package org.gbif.registry.ws.model;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Optional;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation with an s in the
@@ -41,24 +45,33 @@ public class LegacyOrganizationResponse {
   private static final Joiner CONTACT_NAME = Joiner.on(" ").skipNulls();
 
   public LegacyOrganizationResponse(Organization organization, Contact contact, Node node) {
+    mapOrganizationPart(organization);
+    mapContactPart(contact);
+    mapNodePart(node);
+  }
+
+  private void mapOrganizationPart(Organization organization) {
     key = organization.getKey() == null ? "" : organization.getKey().toString();
     name = Strings.nullToEmpty(organization.getTitle());
-    nameLanguage = organization.getLanguage() == null ? "" : organization.getLanguage().getIso2LetterCode();
+    nameLanguage = Optional.ofNullable(organization.getLanguage())
+      .map(Language::getIso2LetterCode)
+      .orElse("");
     homepageURL = organization.getHomepage() == null ? "" : organization.getHomepage().toString();
     description = Strings.nullToEmpty(organization.getDescription());
-    descriptionLanguage = organization.getLanguage() == null ? "" : organization.getLanguage().getIso2LetterCode();
+    descriptionLanguage = nameLanguage;
+  }
+
+  private void mapContactPart(Contact contact) {
     primaryContactAddress = contact == null || contact.getAddress().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getAddress().get(0));
+      Strings.nullToEmpty(contact.getAddress().get(0));
     primaryContactDescription = contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
-    primaryContactEmail = contact == null || contact.getEmail().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getEmail().get(0));
-    primaryContactPhone = contact == null || contact.getPhone().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getPhone().get(0));
+    primaryContactEmail = contact == null || contact.getEmail() == null || contact.getEmail().isEmpty() ? "" :
+      Strings.nullToEmpty(contact.getEmail().get(0));
+    primaryContactPhone = contact == null || contact.getPhone() == null || contact.getPhone().isEmpty() ? "" :
+      Strings.nullToEmpty(contact.getPhone().get(0));
     primaryContactName =
-        contact == null ? "" : CONTACT_NAME.join(new String[] {contact.getFirstName(), contact.getLastName()});
-    nodeKey = node.getKey() == null ? "" : node.getKey().toString();
-    nodeName = node.getTitle() == null ? "" : node.getTitle();
-    nodeContactEmail = node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
+      contact == null ? "" : CONTACT_NAME.join(new String[]{contact.getFirstName(), contact.getLastName()});
+
     // conversion of contact type, defaulting to empty
     primaryContactType = "";
     if (contact != null) {
@@ -71,6 +84,12 @@ public class LegacyOrganizationResponse {
         }
       }
     }
+  }
+
+  private void mapNodePart(Node node) {
+    nodeKey = node.getKey() == null ? "" : node.getKey().toString();
+    nodeName = node.getTitle() == null ? "" : node.getTitle();
+    nodeContactEmail = node.getEmail() == null || node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
   }
 
   /**
@@ -227,5 +246,55 @@ public class LegacyOrganizationResponse {
 
   public void setPrimaryContactDescription(String primaryContactDescription) {
     this.primaryContactDescription = primaryContactDescription;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    LegacyOrganizationResponse that = (LegacyOrganizationResponse) o;
+    return Objects.equal(key, that.key) &&
+      Objects.equal(name, that.name) &&
+      Objects.equal(nameLanguage, that.nameLanguage) &&
+      Objects.equal(homepageURL, that.homepageURL) &&
+      Objects.equal(description, that.description) &&
+      Objects.equal(descriptionLanguage, that.descriptionLanguage) &&
+      Objects.equal(nodeKey, that.nodeKey) &&
+      Objects.equal(nodeName, that.nodeName) &&
+      Objects.equal(nodeContactEmail, that.nodeContactEmail) &&
+      Objects.equal(primaryContactType, that.primaryContactType) &&
+      Objects.equal(primaryContactName, that.primaryContactName) &&
+      Objects.equal(primaryContactEmail, that.primaryContactEmail) &&
+      Objects.equal(primaryContactAddress, that.primaryContactAddress) &&
+      Objects.equal(primaryContactPhone, that.primaryContactPhone) &&
+      Objects.equal(primaryContactDescription, that.primaryContactDescription);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(key, name, nameLanguage, homepageURL, description, descriptionLanguage, nodeKey, nodeName,
+      nodeContactEmail, primaryContactType, primaryContactName, primaryContactEmail, primaryContactAddress,
+      primaryContactPhone, primaryContactDescription);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+      .add("key", key)
+      .add("name", name)
+      .add("nameLanguage", nameLanguage)
+      .add("homepageURL", homepageURL)
+      .add("description", description)
+      .add("descriptionLanguage", descriptionLanguage)
+      .add("nodeKey", nodeKey)
+      .add("nodeName", nodeName)
+      .add("nodeContactEmail", nodeContactEmail)
+      .add("primaryContactType", primaryContactType)
+      .add("primaryContactName", primaryContactName)
+      .add("primaryContactEmail", primaryContactEmail)
+      .add("primaryContactAddress", primaryContactAddress)
+      .add("primaryContactPhone", primaryContactPhone)
+      .add("primaryContactDescription", primaryContactDescription)
+      .toString();
   }
 }
