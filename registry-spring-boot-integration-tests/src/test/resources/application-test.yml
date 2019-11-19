@@ -6,10 +6,10 @@ api:
 
 #Mail Properties
 mail:
-  cc: cc3
-  bcc: cc4
+  cc: @mail.cc@
+  bcc:
   devemail:
-    enabled: true
+    enabled: @mail.devemail.enabled@
 
 # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
