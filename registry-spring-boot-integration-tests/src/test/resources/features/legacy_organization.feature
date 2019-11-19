@@ -28,3 +28,8 @@ Feature: LegacyOrganizationResource functionality
       | paramName | paramValue |
       | op        | login      |
       | op        | password   |
+
+  Scenario: Request Organization (GET) with callback parameter, signifying that the response must be JSONP
+    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with extension ".json" and parameter callback with value "jQuery15106997501577716321_1384974875868&_=1384974903371"
+    Then response status should be 200
+    And response should start with "jQuery15106997501577716321_1384974875868&_=1384974903371({"
