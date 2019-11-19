@@ -1,5 +1,6 @@
 package org.gbif.registry.ws.resources.legacy.organization;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
@@ -10,6 +11,7 @@ import io.cucumber.java.en.When;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.TestSerializationConfiguration;
+import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +26,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +47,7 @@ public class LegacyOrganizationTestSteps {
   private MockMvc mvc;
   private ResultActions result;
   private LegacyOrganizationResponse actualResponse;
+  private List<LegacyOrganizationBriefResponse> actualOrganizationsResponse;
 
   @Autowired
   private WebApplicationContext context;
@@ -110,7 +114,7 @@ public class LegacyOrganizationTestSteps {
 
   @When("get organization {string} with login {string} and password {string} and extension {string} and parameter {word} with value {word}")
   public void getOrganization(String organisationKey, String login, String password, String extension, String paramName,
-                          String paramValue) throws Exception {
+                              String paramValue) throws Exception {
     result = mvc
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
@@ -128,6 +132,14 @@ public class LegacyOrganizationTestSteps {
       .andDo(print());
   }
 
+  @When("get organizations with extension {string}")
+  public void getOrganizations(String extension) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/organisation{extension}", extension))
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -142,7 +154,7 @@ public class LegacyOrganizationTestSteps {
   }
 
   @Then("{word} is expected")
-  public void checkResponseIsJson(String extension) throws Exception {
+  public void checkResponseProperFormatAndParse(String extension) throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     if ("JSON".equals(extension)) {
@@ -152,8 +164,28 @@ public class LegacyOrganizationTestSteps {
     }
   }
 
-  @Then("returned response is")
+  @Then("valid {word} array is expected")
+  public void checkArrayResponseProperFormatAndParse(String extension) throws Exception {
+    MvcResult mvcResult = result.andReturn();
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    if ("JSON".equals(extension)) {
+      actualOrganizationsResponse = objectMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
+      });
+    } else {
+      // TODO: 19/11/2019 fix this
+//      assertTrue(contentAsString.contains("<legacyOrganizationBriefResponses><organisation>"));
+      actualOrganizationsResponse = xmlMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
+      });
+    }
+  }
+
+  @Then("returned organization is")
   public void assertResponse(LegacyOrganizationResponse expectedResponse) {
     assertEquals(expectedResponse, actualResponse);
+  }
+
+  @Then("returned brief organizations information are")
+  public void assertOrganizationsBriefResponse(List<LegacyOrganizationBriefResponse> expectedResponse) {
+    assertEquals(expectedResponse, actualOrganizationsResponse);
   }
 }
