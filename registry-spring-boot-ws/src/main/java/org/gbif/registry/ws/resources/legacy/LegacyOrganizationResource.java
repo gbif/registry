@@ -99,21 +99,41 @@ public class LegacyOrganizationResource {
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
   @GetMapping(value = "organisation/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}",
-    consumes = {MediaType.ALL_VALUE,
-      MediaType.TEXT_PLAIN_VALUE,
-      MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-      "application/x-javascript",
-      "application/javascript"},
+    consumes = {MediaType.ALL_VALUE},
     produces = {MediaType.APPLICATION_XML_VALUE,
       MediaType.APPLICATION_JSON_VALUE,
       "application/x-javascript",
       "application/javascriptx-javascript"})
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
-                                @PathVariable(value = "extension", required = false) String extension,
+                                @PathVariable("extension") String extension,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
                                 HttpServletResponse response,
                                 Authentication authentication) {
+    return getOrganizationInternal(organisationKey, extension, callback, op, response, authentication);
+  }
+
+  // when no extension provided then xml is default
+  @GetMapping(value = "organisation/{key:[a-zA-Z0-9-]+}",
+    consumes = {MediaType.ALL_VALUE},
+    produces = {MediaType.APPLICATION_XML_VALUE,
+      MediaType.APPLICATION_JSON_VALUE,
+      "application/x-javascript",
+      "application/javascriptx-javascript"})
+  public Object getOrganization(@PathVariable("key") UUID organisationKey,
+                                @RequestParam(value = "callback", required = false) String callback,
+                                @RequestParam(value = "op", required = false) String op,
+                                HttpServletResponse response,
+                                Authentication authentication) {
+    return getOrganizationInternal(organisationKey, ".xml", callback, op, response, authentication);
+  }
+
+  private Object getOrganizationInternal(UUID organisationKey,
+                                         String extension,
+                                         String callback,
+                                         String op,
+                                         HttpServletResponse response,
+                                         Authentication authentication) {
     String responseType = getResponseTypeByExtension(extension);
     if (responseType != null) {
       response.setContentType(responseType);
@@ -229,7 +249,18 @@ public class LegacyOrganizationResource {
    */
   @GetMapping(value = "organisation{extension:\\.[a-z]+}",
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity getOrganizations(@PathVariable(required = false) String extension, HttpServletResponse response) {
+  public ResponseEntity getOrganizations(@PathVariable String extension, HttpServletResponse response) {
+    return getOrganizationsInternal(extension, response);
+  }
+
+  // when no extension provided then xml is default
+  @GetMapping(value = "organisation",
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity getOrganizations(HttpServletResponse response) {
+    return getOrganizationsInternal(".xml", response);
+  }
+
+  private ResponseEntity getOrganizationsInternal(String extension, HttpServletResponse response) {
     LOG.debug("List all Organizations for IPT");
 
     String responseType = getResponseTypeByExtension(extension);
@@ -285,8 +316,7 @@ public class LegacyOrganizationResource {
   }
 
   private String getResponseTypeByExtension(String extension) {
-    // if extension is null then default type is xml
-    if (extension == null || ".xml".equals(extension)) {
+    if (".xml".equals(extension)) {
       return MediaType.APPLICATION_XML_VALUE;
     } else if (".json".equals(extension)) {
       return MediaType.APPLICATION_JSON_VALUE;
