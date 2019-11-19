@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.model;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
@@ -49,5 +51,27 @@ public class LegacyOrganizationBriefResponse {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    LegacyOrganizationBriefResponse that = (LegacyOrganizationBriefResponse) o;
+    return Objects.equal(key, that.key) &&
+      Objects.equal(name, that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(key, name);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+      .add("key", key)
+      .add("name", name)
+      .toString();
   }
 }
