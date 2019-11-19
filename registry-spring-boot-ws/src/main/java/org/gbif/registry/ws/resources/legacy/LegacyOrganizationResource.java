@@ -36,7 +36,7 @@ import java.util.UUID;
  * Handle all legacy web service Organization requests, previously handled by the GBRDS.
  */
 @RestController
-@RequestMapping("registry/organisation")
+@RequestMapping("registry")
 public class LegacyOrganizationResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyOrganizationResource.class);
@@ -90,15 +90,15 @@ public class LegacyOrganizationResource {
    * response.
    * <p>
    *
-   * @param organisationKeyWithExtension organization key (UUID) coming in as path param
-   * @param callback                     parameter
+   * @param organisationKey organization key (UUID) coming in as path param
+   * @param callback        parameter
    * @return 1. Organization, wrapped with callback parameter in JSONP, or null if organization with key does not
    * exist.
    * 2. (case: op=login) Response with Status.OK if credentials were verified, or Response with
    * Status.UNAUTHORIZED if they weren't
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
-  @GetMapping(value = "{key:.+}",
+  @GetMapping(value = "organisation/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}",
     consumes = {MediaType.ALL_VALUE,
       MediaType.TEXT_PLAIN_VALUE,
       MediaType.APPLICATION_FORM_URLENCODED_VALUE,
@@ -108,33 +108,20 @@ public class LegacyOrganizationResource {
       MediaType.APPLICATION_JSON_VALUE,
       "application/x-javascript",
       "application/javascriptx-javascript"})
-  public Object getOrganization(@PathVariable("key") String organisationKeyWithExtension,
+  public Object getOrganization(@PathVariable("key") UUID organisationKey,
+                                @PathVariable(value = "extension", required = false) String extension,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
                                 HttpServletResponse response,
                                 Authentication authentication) {
-    // TODO: 18/11/2019 move technical part which handles extensions to separated object (advice?)
-    String[] keyAndExtension = organisationKeyWithExtension.split("\\.");
-    UUID organisationKey;
-    String extension;
-
-    if (keyAndExtension.length == 1) {
-      organisationKey = UUID.fromString(organisationKeyWithExtension);
-      response.setContentType(MediaType.APPLICATION_XML_VALUE);
+    String responseType = getResponseTypeByExtension(extension);
+    if (responseType != null) {
+      response.setContentType(responseType);
     } else {
-      organisationKey = UUID.fromString(keyAndExtension[0]);
-      extension = keyAndExtension[1];
-
-      if ("json".equals(extension)) {
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      } else if ("xml".equals(extension)) {
-        response.setContentType(MediaType.APPLICATION_XML_VALUE);
-      } else {
-        return ResponseEntity
-          .status(HttpStatus.NOT_FOUND)
-          .cacheControl(CacheControl.noCache())
-          .build();
-      }
+      return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .cacheControl(CacheControl.noCache())
+        .build();
     }
     LOG.info("Get Organization with key={}", organisationKey);
 
@@ -240,15 +227,28 @@ public class LegacyOrganizationResource {
    *
    * @return list of all Organizations
    */
-  @GetMapping(produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity getOrganizations() {
+  @GetMapping(value = "organisation{extension:\\.[a-z]+}",
+    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity getOrganizations(@PathVariable(required = false) String extension, HttpServletResponse response) {
     LOG.debug("List all Organizations for IPT");
+
+    String responseType = getResponseTypeByExtension(extension);
+    if (responseType != null) {
+      response.setContentType(responseType);
+    } else {
+      return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .cacheControl(CacheControl.noCache())
+        .build();
+    }
+
     List<LegacyOrganizationBriefResponse> organizations = organizationMapper.listLegacyOrganizationsBrief();
 
     // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
     // writer for Java class java.util.ArrayList
     LegacyOrganizationBriefResponse[] array =
       organizations.toArray(new LegacyOrganizationBriefResponse[organizations.size()]);
+
     return ResponseEntity
       .status(HttpStatus.OK)
       .cacheControl(CacheControl.noCache())
@@ -282,5 +282,16 @@ public class LegacyOrganizationResource {
       "GBIF (Global Biodiversity Information Facility)\n" +
       "https://www.gbif.org\n" +
       ccEmail;
+  }
+
+  private String getResponseTypeByExtension(String extension) {
+    // if extension is null then default type is xml
+    if (extension == null || ".xml".equals(extension)) {
+      return MediaType.APPLICATION_XML_VALUE;
+    } else if (".json".equals(extension)) {
+      return MediaType.APPLICATION_JSON_VALUE;
+    } else {
+      return null;
+    }
   }
 }
