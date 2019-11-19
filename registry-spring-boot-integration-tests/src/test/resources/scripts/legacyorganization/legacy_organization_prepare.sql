@@ -13,6 +13,15 @@ VALUES ('0af41159-061f-4693-b2e5-d3d062a8285d', '25871695-fe22-4407-894d-cb595d2
         'WS TEST', 'WS TEST', '2019-11-18 09:28:17.396510', '2019-11-18 09:28:17.396510', null,
         '''1408'':16 ''2920202'':9 ''a@b.com'':8 ''berlin'':5,12,13,14 ''bgbm'':2,3 ''botan'':6 ''de'':7,15 ''www.example.org'':10,11',
         '{a@b.com}', '{2920202}', '{http://www.example.org}', '{Berliner}', null);
+INSERT INTO public.organization (key, endorsing_node_key, endorsement_approved, password, title, abbreviation,
+                                 description, language, logo_url, city, province, country, postal_code, latitude,
+                                 longitude, created_by, modified_by, created, modified, deleted, fulltext_search, email,
+                                 phone, homepage, address, challenge_code_key)
+VALUES ('d3894ec1-6eb0-48c8-bbb1-0a63f8731159', '25871695-fe22-4407-894d-cb595d209690', false, 'password', 'The Second Org',
+        'SO', 'Test second org', 'de', 'http://www.example.org', 'BERLIN', 'BERLIN', 'DE', '1408', null, null,
+        'WS TEST', 'WS TEST', '2019-11-18 09:28:17.396510', '2019-11-18 09:28:17.396510', null,
+        '''1408'':16 ''2920202'':9 ''a@b.com'':8 ''berlin'':5,12,13,14 ''bgbm'':2,3 ''botan'':6 ''de'':7,15 ''www.example.org'':10,11',
+        '{a@b.com}', '{2920202}', '{http://www.example.org}', '{Berliner}', null);
 
 INSERT INTO public.contact (key, last_name, description, organization, city, province, country, postal_code, created_by,
                             modified_by, created, modified, fulltext_search, first_name, user_id, homepage, position,
