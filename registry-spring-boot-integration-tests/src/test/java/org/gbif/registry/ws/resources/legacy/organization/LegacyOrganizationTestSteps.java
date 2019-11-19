@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -120,10 +121,28 @@ public class LegacyOrganizationTestSteps {
       .andDo(print());
   }
 
+  @When("get organization {string} with extension {string} and parameter {word} with value {string}")
+  public void getOrganization(String organisationKey, String extension, String paramName, String paramValue) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/organisation/{key}" + extension, organisationKey)
+          .param(paramName, paramValue)
+          .contentType("application/javascript")
+      )
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
       .andExpect(status().is(status));
+  }
+
+  @Then("response should start with {string}")
+  public void checkResponseStartsWith(String str) throws Exception {
+    MvcResult mvcResult = result.andReturn();
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    assertTrue(contentAsString.startsWith(str));
   }
 
   @Then("{word} is expected")
