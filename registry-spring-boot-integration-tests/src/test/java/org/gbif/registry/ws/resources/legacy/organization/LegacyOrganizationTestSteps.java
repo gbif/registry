@@ -104,8 +104,7 @@ public class LegacyOrganizationTestSteps {
   public void getOrganization(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation/{key}" + extension, organisationKey)
-          .contentType("application/javascript"))
+        get("/registry/organisation/{key}" + extension, organisationKey))
       .andDo(print());
   }
 
@@ -116,8 +115,7 @@ public class LegacyOrganizationTestSteps {
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
           .param(paramName, paramValue)
-          .with(httpBasic(login, password))
-          .contentType("application/javascript"))
+          .with(httpBasic(login, password)))
       .andDo(print());
   }
 
@@ -126,9 +124,7 @@ public class LegacyOrganizationTestSteps {
     result = mvc
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
-          .param(paramName, paramValue)
-          .contentType("application/javascript")
-      )
+          .param(paramName, paramValue))
       .andDo(print());
   }
 

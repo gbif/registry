@@ -99,7 +99,8 @@ public class LegacyOrganizationResource {
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
   @GetMapping(value = "{key:.+}",
-    consumes = {MediaType.TEXT_PLAIN_VALUE,
+    consumes = {MediaType.ALL_VALUE,
+      MediaType.TEXT_PLAIN_VALUE,
       MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       "application/x-javascript",
       "application/javascript"},
@@ -189,6 +190,7 @@ public class LegacyOrganizationResource {
             if (useDevEmail) {
               email.addTo(devEmail);
               email.setStartTLSEnabled(true);
+              email.setSSLCheckServerIdentity(true);
               email.setAuthentication(devEmail, password);
             } else {
               email.addTo(emailAddress);
