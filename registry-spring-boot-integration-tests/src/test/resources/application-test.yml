@@ -96,10 +96,10 @@ spring:
   # Mail
   mail:
     default-encoding: UTF-8
-    host: @mail.host@
+    host: @mail.smtp.host@
     username: @mail.username@
     password: @mail.password@
-    port: @mail.port@
+    port: @mail.smtp.port@
     properties:
       mail:
         smtp:
