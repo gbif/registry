@@ -3,14 +3,14 @@
   "lastName":"Robertson",
   "type":"PROGRAMMER",
   "primary":true,
-  "description":"About 175cm, geeky, scruffy...",
+  "description":"Description stuff...",
   "position": ["Programmer"],
-  "email":["trobertson@gbif.org"],
+  "email":["test@mailinator.com"],
   "phone":["+45 28261487"],
   "organization":"GBIF",
   "address":["Universitetsparken 15"],
-  "city":"København",
-  "province":"Sjælland",
+  "city":"Copenhagen",
+  "province":"Capital",
   "country":"DK",
   "postalCode":"2100"
 }
