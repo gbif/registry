@@ -30,6 +30,16 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationFilter.class);
 
+  private static final String DOT = ".";
+  private static final String SLASH = "/";
+  private static final String REGISTRY_END_SIDE_SLASH_MAPPING = "registry/";
+  private static final String RESOURCE_MAPPING = "/resource";
+  private static final String UPDATE_BOTH_SIDE_SLASH_MAPPING = "/update/";
+  private static final String REGISTER_MAPPING = "/register";
+  private static final String SERVICE_MAPPING = "/service";
+  private static final String IPT_MAPPING = "/ipt";
+  private static final String RESOURCE_BOTH_SIDE_SLASH_MAPPING = "/resource/";
+
   private final LegacyAuthorizationService legacyAuthorizationService;
 
   public LegacyAuthorizationFilter(LegacyAuthorizationService legacyAuthorizationService) {
@@ -42,64 +52,68 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
     String path = httpRequest.getRequestURI().toLowerCase();
 
     // is it a legacy web service request?
-    if (path.contains("registry/")) {
-      // is it a GET request requiring authorization?
+    if (path.contains(REGISTRY_END_SIDE_SLASH_MAPPING)) {
       if ("GET".equalsIgnoreCase(httpRequest.getMethod())) {
-
-        // E.g. validate organization request, identified by param op=login
-        if (getFirst(httpRequest.getParameterMap(), "op") != null &&
-          getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
-          UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
-          authorizeOrganizationChange(httpRequest, organizationKey);
-        }
-      }
-      // is it a POST, PUT, DELETE request requiring authorization?
-      else if ("POST".equalsIgnoreCase(httpRequest.getMethod())
+        filterGetRequests(httpRequest);
+      } else if ("POST".equalsIgnoreCase(httpRequest.getMethod())
         || "PUT".equalsIgnoreCase(httpRequest.getMethod())
         || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
-        // legacy installation request
-        if (path.contains("/ipt")) {
-          // register installation?
-          if (path.endsWith("/register")) {
-            authorizeOrganizationChange(httpRequest);
-          }
-          // update installation?
-          else if (path.contains("/update/")) {
-            UUID installationKey = retrieveKeyFromRequestPath(httpRequest);
-            authorizeInstallationChange(httpRequest, installationKey);
-          }
-          // register dataset?
-          else if (path.endsWith("/resource")) {
-            authorizeOrganizationChange(httpRequest);
-          }
-          // update dataset, delete dataset?
-          else if (path.contains("/resource/")) {
-            UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
-            authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-          }
-        }
-        // legacy dataset request
-        else if (path.contains("/resource")) {
-          // register dataset?
-          if (path.endsWith("/resource")) {
-            authorizeOrganizationChange(httpRequest);
-          }
-          // update dataset, delete dataset?
-          else if (path.contains("/resource/")) {
-            UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
-            authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-          }
-        }
-        // legacy endpoint request, add endpoint?
-        else if (path.endsWith("/service") &&
-          request.getParameterMap().isEmpty() || httpRequest.getRequestURI().contains("?resourceKey=")) {
-          UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
-          authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-        }
+        filterPostPutDeleteRequests(httpRequest, path);
       }
     }
     // otherwise just do nothing (request unchanged)
     chain.doFilter(request, response);
+  }
+
+  private void filterPostPutDeleteRequests(HttpServletRequest httpRequest, String path) {
+    // legacy installation request
+    if (path.contains(IPT_MAPPING)) {
+      // register installation?
+      if (path.endsWith(REGISTER_MAPPING)) {
+        authorizeOrganizationChange(httpRequest);
+      }
+      // update installation?
+      else if (path.contains(UPDATE_BOTH_SIDE_SLASH_MAPPING)) {
+        UUID installationKey = retrieveKeyFromRequestPath(httpRequest);
+        authorizeInstallationChange(httpRequest, installationKey);
+      }
+      // register dataset?
+      else if (path.endsWith(RESOURCE_MAPPING)) {
+        authorizeOrganizationChange(httpRequest);
+      }
+      // update dataset, delete dataset?
+      else if (path.contains(RESOURCE_BOTH_SIDE_SLASH_MAPPING)) {
+        UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
+        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+      }
+    }
+    // legacy dataset request
+    else if (path.contains(RESOURCE_MAPPING)) {
+      // register dataset?
+      if (path.endsWith(RESOURCE_MAPPING)) {
+        authorizeOrganizationChange(httpRequest);
+      }
+      // update dataset, delete dataset?
+      else if (path.contains(RESOURCE_BOTH_SIDE_SLASH_MAPPING)) {
+        UUID datasetKey = retrieveKeyFromRequestPath(httpRequest);
+        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+      }
+    }
+    // legacy endpoint request, add endpoint?
+    else if (path.endsWith(SERVICE_MAPPING) &&
+      httpRequest.getParameterMap().isEmpty() || httpRequest.getRequestURI().contains("?resourceKey=")) {
+      UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
+      authorizeOrganizationDatasetChange(httpRequest, datasetKey);
+    }
+  }
+
+  private void filterGetRequests(HttpServletRequest httpRequest) {
+    // E.g. validate organization request, identified by param op=login
+    if (getFirst(httpRequest.getParameterMap(), "op") != null &&
+      getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
+      UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
+      authorizeOrganizationChange(httpRequest, organizationKey);
+    }
   }
 
   /**
@@ -180,9 +194,9 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
    */
   private UUID retrieveKeyFromRequestPath(HttpServletRequest request) {
     String path = request.getRequestURI();
-    String key = path.substring(path.lastIndexOf("/") + 1);
-    if (key.contains(".")) {
-      key = key.substring(0, key.lastIndexOf("."));
+    String key = path.substring(path.lastIndexOf(SLASH) + 1);
+    if (key.contains(DOT)) {
+      key = key.substring(0, key.lastIndexOf(DOT));
     }
     try {
       return UUID.fromString(key);
