@@ -14,6 +14,7 @@ import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -145,8 +146,10 @@ public class LegacyOrganizationResource {
     }
     LOG.info("Get Organization with key={}", organisationKey);
 
-    Organization organization = organizationService.get(organisationKey);
-    if (organization == null) {
+    Organization organization;
+    try {
+      organization = organizationService.get(organisationKey);
+    } catch (NotFoundException e) {
       // the organization didn't exist, and expected response is "{Error: "No organisation matches the key provided}"
       return ResponseEntity
         .status(HttpStatus.OK)
