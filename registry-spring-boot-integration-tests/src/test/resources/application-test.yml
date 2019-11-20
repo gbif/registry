@@ -8,7 +8,7 @@ api:
 mail:
   cc: @mail.cc@
   bcc:
-  devemail:
+  devemail: gbifregistry@mailinator.com
     enabled: @mail.devemail.enabled@
 
 # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
