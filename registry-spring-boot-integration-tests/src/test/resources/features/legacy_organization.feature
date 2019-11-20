@@ -5,7 +5,9 @@ Feature: LegacyOrganizationResource functionality
     Given node "The UK National Node" with key "25871695-fe22-4407-894d-cb595d209690"
     And organization "The BGBM" with key "0af41159-061f-4693-b2e5-d3d062a8285d"
     And organization "The Second Org" with key "d3894ec1-6eb0-48c8-bbb1-0a63f8731159"
+    And organization "The Third Org" with key "c55dc610-63a2-4fbf-919d-0ad74b4f24dd"
     And contact with key "1985" of organization "The GBGM"
+    And contact with key "2042" of organization "Org without email"
 
   Scenario Outline: Request Organization (GET) with no parameters and "<extension>", signifying that the response must be <case>
     When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with no credentials and extension "<extension>"
@@ -44,10 +46,16 @@ Feature: LegacyOrganizationResource functionality
       | key                                  | name           |
       | 0af41159-061f-4693-b2e5-d3d062a8285d | The BGBM       |
       | d3894ec1-6eb0-48c8-bbb1-0a63f8731159 | The Second Org |
+      | c55dc610-63a2-4fbf-919d-0ad74b4f24dd | The Third Org |
 
     Scenarios:
       | case    | extension |
       | JSON    | .json     |
       | XML     | .xml      |
       | MISSING |           |
+
+  Scenario: Sends a password reminder (GET) request with op=password parameter, using an organization whose primarycontact doesn't have an email address. Internal Server Error 500 response is expected
+    When get organization "c55dc610-63a2-4fbf-919d-0ad74b4f24dd" with extension ".json" and parameter op with value "password"
+    Then response status should be 500
+
 
