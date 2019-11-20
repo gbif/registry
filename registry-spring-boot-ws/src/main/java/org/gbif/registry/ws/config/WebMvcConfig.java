@@ -2,12 +2,16 @@ package org.gbif.registry.ws.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.mixin.LicenseMixin;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
@@ -16,6 +20,7 @@ import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentRes
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -93,6 +98,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
     objectMapper.addMixIn(Dataset.class, LicenseMixin.class);
 
     return objectMapper;
+  }
+
+  @Bean
+  public XmlMapper xmlMapper() {
+    XmlMapper xmlMapper = new XmlMapper();
+
+    ArrayList<Module> modules = new ArrayList<>();
+
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
+    modules.add(module);
+
+    xmlMapper.registerModules(modules);
+
+    return xmlMapper;
+  }
+
+  @Bean
+  public Jackson2ObjectMapperBuilderCustomizer customJson() {
+    return builder ->
+      builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
   }
 
   @Bean
