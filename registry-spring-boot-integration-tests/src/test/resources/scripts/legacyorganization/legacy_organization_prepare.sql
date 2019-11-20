@@ -38,8 +38,8 @@ INSERT INTO public.contact (key, last_name, description, organization, city, pro
                             email, phone, address)
 VALUES (1987, 'Robertson', 'Description stuff', 'GBIF', 'Copenhagen', 'Capital', 'DK', '2100', 'WS TEST',
         'WS TEST', '2019-11-18 10:14:36.264343', '2019-11-18 10:14:36.264343',
-        '''+45'':9 ''15'':13 ''175cm'':4 ''2100'':17 ''28261487'':10 ''dk'':16 ''gbif'':11 ''geeki'':5 ''kobenhavn'':14 ''programm'':7 ''robertson'':2 ''scruffi'':6 ''sjaelland'':15 ''tim'':1 ''trobertson@gbif.org'':8 ''universitetsparken'':12',
-        'Tim', '{}', '{}', '{Programmer}', '{trobertson@gbif.org}', '{+45 28261487}', '{Universitetsparken 15}');
+        '''+45'':9 ''15'':13 ''175cm'':4 ''2100'':17 ''28261487'':10 ''dk'':16 ''gbif'':11 ''geeki'':5 ''kobenhavn'':14 ''programm'':7 ''robertson'':2 ''scruffi'':6 ''sjaelland'':15 ''tim'':1 ''test@mailinator.com'':8 ''universitetsparken'':12',
+        'Tim', '{}', '{}', '{Programmer}', '{test@mailinator.com}', '{+45 28261487}', '{Universitetsparken 15}');
 INSERT INTO public.contact (key, last_name, description, organization, city, province, country, postal_code, created_by,
                             modified_by, created, modified, fulltext_search, first_name, user_id, homepage, position,
                             email, phone, address)
