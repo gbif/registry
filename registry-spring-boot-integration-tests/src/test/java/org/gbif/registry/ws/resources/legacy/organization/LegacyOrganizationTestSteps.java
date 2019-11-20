@@ -10,6 +10,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,6 +150,14 @@ public class LegacyOrganizationTestSteps {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
     assertTrue(contentAsString.startsWith(str));
+  }
+
+  @Then("returned response is {string}")
+  public void checkErrorResponse(String errorResponseExpectedMessage) throws Exception {
+    MvcResult mvcResult = result.andReturn();
+    String contentAsString = mvcResult.getResponse().getContentAsString();
+    ErrorResponse errorResponseActual = objectMapper.readValue(contentAsString, ErrorResponse.class);
+    assertEquals(errorResponseExpectedMessage, errorResponseActual.getError());
   }
 
   @Then("{word} is expected")

@@ -45,7 +45,7 @@ Feature: LegacyOrganizationResource functionality
       | key                                  | name           |
       | 0af41159-061f-4693-b2e5-d3d062a8285d | The BGBM       |
       | d3894ec1-6eb0-48c8-bbb1-0a63f8731159 | The Second Org |
-      | c55dc610-63a2-4fbf-919d-0ad74b4f24dd | The Third Org |
+      | c55dc610-63a2-4fbf-919d-0ad74b4f24dd | The Third Org  |
 
     Scenarios:
       | case    | extension |
@@ -53,8 +53,25 @@ Feature: LegacyOrganizationResource functionality
       | XML     | .xml      |
       | MISSING |           |
 
-  Scenario: Sends a password reminder (GET) request with op=password parameter, using an organization whose primarycontact doesn't have an email address. Internal Server Error 500 response is expected
+  Scenario: Send a password reminder (GET) request with op=password parameter, using an organization whose primarycontact doesn't have an email address. Internal Server Error 500 response is expected
     When get organization "c55dc610-63a2-4fbf-919d-0ad74b4f24dd" with extension ".json" and parameter op with value "password"
     Then response status should be 500
+
+  Scenario: Send a request organisation (GET) with unknown extension ".unknown". Not Found 404 is expected
+    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with no credentials and extension ".unknown"
+    Then response status should be 404
+
+  Scenario: Send a request all organisations (GET) with unknown extension ".unknown". Not Found 404 is expected
+    When get organizations with extension ".unknown"
+    Then response status should be 404
+
+  Scenario: Send a request organisation (GET) with unknown key. OK with explanation is expected
+    When get organization "0af41159-061f-4693-b2e5-d3d062a82833" with no credentials and extension ".json"
+    Then response status should be 200
+    And returned response is "No organisation matches the key provided"
+
+  Scenario: Send a request organisation (GET) with key with parameter op and value login using random UUID as login. Unauthorized 401 is expected
+    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with login "c55dc610-63a2-4fbf-919d-0ad74b4f24dd" and password "password" and extension ".json" and parameter op with value login
+    Then response status should be 401
 
 
