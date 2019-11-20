@@ -23,14 +23,13 @@ Feature: LegacyOrganizationResource functionality
       | XML     | .xml      |
       | MISSING |           |
 
-  Scenario Outline: Request Organization (GET) with parameter <paramName>=<paramValue> to check if the organization credentials (key/password) supplied are correct
-    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with login "0af41159-061f-4693-b2e5-d3d062a8285d" and password "password" and extension ".json" and parameter <paramName> with value <paramValue>
+  Scenario: Request Organization (GET) with parameter op and value "login" to check if the organization credentials (key/password) supplied are correct
+    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with login "0af41159-061f-4693-b2e5-d3d062a8285d" and password "password" and extension ".json" and parameter op with value login
     Then response status should be 200
 
-    Scenarios:
-      | paramName | paramValue |
-      | op        | login      |
-      | op        | password   |
+  Scenario: Request Organization (GET) with parameter op and value "password"
+    When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with extension ".json" and parameter op with value "password"
+    Then response status should be 200
 
   Scenario: Request Organization (GET) with callback parameter, signifying that the response must be JSONP
     When get organization "0af41159-061f-4693-b2e5-d3d062a8285d" with extension ".json" and parameter callback with value "jQuery15106997501577716321_1384974875868&_=1384974903371"
