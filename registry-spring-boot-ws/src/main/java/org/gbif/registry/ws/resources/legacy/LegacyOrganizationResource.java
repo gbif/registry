@@ -177,7 +177,9 @@ public class LegacyOrganizationResource {
       else if (op.equalsIgnoreCase("password")) {
         // contact email address is nullable, but mandatory for sending a mail
         Contact contact = LegacyResourceUtils.getPrimaryContact(organization);
-        String emailAddress = (contact == null || contact.getEmail().isEmpty()) ? null : contact.getEmail().get(0);
+        String emailAddress = (contact == null || contact.getEmail() == null || contact.getEmail().isEmpty())
+          ? null
+          : contact.getEmail().get(0);
         if (emailAddress == null) {
           LOG.error("Password reminder failed: organization primary contact has no email address");
           return ResponseEntity
@@ -275,10 +277,8 @@ public class LegacyOrganizationResource {
 
     List<LegacyOrganizationBriefResponse> organizations = organizationMapper.listLegacyOrganizationsBrief();
 
-    // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
-    // writer for Java class java.util.ArrayList
-    LegacyOrganizationBriefResponse[] array =
-      organizations.toArray(new LegacyOrganizationBriefResponse[organizations.size()]);
+    // for xml mapping wrap to array
+    LegacyOrganizationBriefResponse[] array = organizations.toArray(new LegacyOrganizationBriefResponse[0]);
 
     return ResponseEntity
       .status(HttpStatus.OK)
