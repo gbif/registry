@@ -47,17 +47,16 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
       if ("GET".equalsIgnoreCase(httpRequest.getMethod())) {
 
         // E.g. validate organization request, identified by param op=login
-        if (getFirst(httpRequest.getParameterMap(), "op") != null) {
-          if (getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
-            UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
-            authorizeOrganizationChange(httpRequest, organizationKey);
-          }
+        if (getFirst(httpRequest.getParameterMap(), "op") != null &&
+          getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
+          UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
+          authorizeOrganizationChange(httpRequest, organizationKey);
         }
       }
       // is it a POST, PUT, DELETE request requiring authorization?
       else if ("POST".equalsIgnoreCase(httpRequest.getMethod())
-          || "PUT".equalsIgnoreCase(httpRequest.getMethod())
-          || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
+        || "PUT".equalsIgnoreCase(httpRequest.getMethod())
+        || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
         // legacy installation request
         if (path.contains("/ipt")) {
           // register installation?
@@ -91,13 +90,11 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
             authorizeOrganizationDatasetChange(httpRequest, datasetKey);
           }
         }
-        // legacy endpoint request
-        else if (path.endsWith("/service")) {
-          // add endpoint?
-          if (request.getParameterMap().isEmpty() || httpRequest.getRequestURI().contains("?resourceKey=")) {
-            UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
-            authorizeOrganizationDatasetChange(httpRequest, datasetKey);
-          }
+        // legacy endpoint request, add endpoint?
+        else if (path.endsWith("/service") &&
+          request.getParameterMap().isEmpty() || httpRequest.getRequestURI().contains("?resourceKey=")) {
+          UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
+          authorizeOrganizationDatasetChange(httpRequest, datasetKey);
         }
       }
     }

@@ -22,7 +22,6 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -109,9 +108,8 @@ public class LegacyOrganizationResource {
                                 @PathVariable("extension") String extension,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
-                                HttpServletResponse response,
-                                Authentication authentication) {
-    return getOrganizationInternal(organisationKey, extension, callback, op, response, authentication);
+                                HttpServletResponse response) {
+    return getOrganizationInternal(organisationKey, extension, callback, op, response);
   }
 
   // when no extension provided then xml is default
@@ -124,17 +122,15 @@ public class LegacyOrganizationResource {
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
-                                HttpServletResponse response,
-                                Authentication authentication) {
-    return getOrganizationInternal(organisationKey, ".xml", callback, op, response, authentication);
+                                HttpServletResponse response) {
+    return getOrganizationInternal(organisationKey, ".xml", callback, op, response);
   }
 
   private Object getOrganizationInternal(UUID organisationKey,
                                          String extension,
                                          String callback,
                                          String op,
-                                         HttpServletResponse response,
-                                         Authentication authentication) {
+                                         HttpServletResponse response) {
     String responseType = getResponseTypeByExtension(extension);
     if (responseType != null) {
       response.setContentType(responseType);
@@ -160,16 +156,7 @@ public class LegacyOrganizationResource {
     if (op != null) {
       // ?op=login
       if (op.equalsIgnoreCase("login")) {
-        // are the organization credentials matching with the path?
-        UUID authKey = LegacyResourceUtils.extractOrgKeyFromSecurity(authentication);
-
-        if (!organisationKey.equals(authKey)) {
-          LOG.error("Authorization failed for organization with key={}", organisationKey);
-          return ResponseEntity
-            .status(HttpStatus.UNAUTHORIZED)
-            .cacheControl(CacheControl.noCache())
-            .build();
-        }
+        // LegacyAuthorizationFilter will cause 401 if wrong organisationKey was used as a login
         return ResponseEntity
           .status(HttpStatus.OK)
           .cacheControl(CacheControl.noCache())
