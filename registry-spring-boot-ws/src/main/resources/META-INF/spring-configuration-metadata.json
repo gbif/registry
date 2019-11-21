@@ -29,7 +29,7 @@
       "type": "java.lang.Integer"
     },
     {
-      "name": "mail.devemail",
+      "name": "mail.devemail.address",
       "type": "java.lang.String"
     },
     {
