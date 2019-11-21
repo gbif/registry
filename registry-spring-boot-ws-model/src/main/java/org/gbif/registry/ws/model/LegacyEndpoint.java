@@ -150,6 +150,9 @@ public class LegacyEndpoint extends Endpoint {
   @XmlElement(name = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
   @NotNull
   public String getEndpointUrl() {
+    if (getUrl() == null) {
+      throw new IllegalStateException("Null is not acceptable");
+    }
     return getUrl().toASCIIString();
   }
 
