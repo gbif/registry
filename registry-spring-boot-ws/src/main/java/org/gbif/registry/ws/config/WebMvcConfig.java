@@ -110,6 +110,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     SimpleModule module = new SimpleModule();
     module.addSerializer(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
     modules.add(module);
+    modules.add(new JaxbAnnotationModule());
 
     xmlMapper.registerModules(modules);
 

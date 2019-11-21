@@ -130,7 +130,7 @@ public class LegacyEndpoint extends Endpoint {
    * @param url of the endpoint
    */
   @ParamName(value = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
-  public void setUrl(String url) {
+  public void setEndpointUrl(String url) {
     if (!Strings.isNullOrEmpty(url)) {
       try {
         URI uri = new URI(url);
