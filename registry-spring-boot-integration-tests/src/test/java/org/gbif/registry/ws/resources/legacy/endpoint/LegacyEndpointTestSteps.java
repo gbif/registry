@@ -39,6 +39,7 @@ import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -135,6 +136,29 @@ public class LegacyEndpointTestSteps {
       .perform(
         post("/registry/service")
           .params(requestParamsEndpoint)
+          .contentType(APPLICATION_FORM_URLENCODED)
+          .accept(APPLICATION_XML)
+          .with(httpBasic(organisationKey, password)))
+      .andDo(print());
+  }
+
+  @When("delete endpoint by (in)valid resource key {string} using valid organization key {string} and password {string}")
+  public void deleteDatasetEndpoints(String datasetKey, String organisationKey, String password) throws Exception {
+    result = mvc
+      .perform(
+        delete("/registry/service")
+          .param("resourceKey", datasetKey)
+          .contentType(APPLICATION_FORM_URLENCODED)
+          .accept(APPLICATION_XML)
+          .with(httpBasic(organisationKey, password)))
+      .andDo(print());
+  }
+
+  @When("delete endpoint without resource key using valid organization key {string} and password {string}")
+  public void deleteDatasetEndpoints(String organisationKey, String password) throws Exception {
+    result = mvc
+      .perform(
+        delete("/registry/service")
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(organisationKey, password)))
