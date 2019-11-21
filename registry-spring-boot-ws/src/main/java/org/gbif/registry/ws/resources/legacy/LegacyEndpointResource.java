@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -54,29 +55,24 @@ public class LegacyEndpointResource {
    */
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerEndpoint(@RequestParam LegacyEndpoint endpoint, Authentication authentication) {
-    if (endpoint != null) {
+  public ResponseEntity registerEndpoint(@RequestParam @NotNull LegacyEndpoint endpoint, Authentication authentication) {
+    // required fields present, and corresponding dataset exists?
+    if (LegacyResourceUtils.isValid(endpoint, datasetService)) {
       // set required fields
       endpoint.setCreatedBy(authentication.getName());
       endpoint.setModifiedBy(authentication.getName());
 
-      // required fields present, and corresponding dataset exists?
-      if (LegacyResourceUtils.isValid(endpoint, datasetService)) {
+      // persist endpoint
+      int key = datasetService.addEndpoint(endpoint.getDatasetKey(), endpoint);
+      LOG.info("Endpoint created successfully, key={}", key);
 
-        // persist endpoint
-        int key = datasetService.addEndpoint(endpoint.getDatasetKey(), endpoint);
-        LOG.info("Endpoint created successfully, key={}", key);
-
-        // generate response
-        return ResponseEntity
-          .status(HttpStatus.CREATED)
-          .cacheControl(CacheControl.noCache())
-          .body(endpoint);
-      } else {
-        LOG.error("Mandatory parameter(s) missing or invalid!");
-      }
+      // generate response
+      return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .cacheControl(CacheControl.noCache())
+        .body(endpoint);
     }
-    LOG.error("Endpoint creation failed");
+    LOG.error("Mandatory parameter(s) missing or invalid! Endpoint creation failed");
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)
       .cacheControl(CacheControl.noCache())

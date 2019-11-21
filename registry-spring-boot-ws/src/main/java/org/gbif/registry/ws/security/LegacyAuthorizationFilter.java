@@ -215,7 +215,11 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
     Map<String, String[]> params = request.getParameterMap();
     String key = getFirst(params, LegacyResourceConstants.RESOURCE_KEY_PARAM);
     try {
-      return UUID.fromString(key);
+      if (key != null) {
+        return UUID.fromString(key);
+      } else {
+        throw new IllegalArgumentException("Key is not present in parameters!");
+      }
     } catch (IllegalArgumentException e) {
       throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     }
