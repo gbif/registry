@@ -100,8 +100,7 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
       }
     }
     // legacy endpoint request, add endpoint?
-    else if (path.endsWith(SERVICE_MAPPING) &&
-      httpRequest.getParameterMap().isEmpty() || httpRequest.getRequestURI().contains("?resourceKey=")) {
+    else if (path.endsWith(SERVICE_MAPPING)) {
       UUID datasetKey = retrieveDatasetKeyFromFormOrQueryParameters(httpRequest);
       authorizeOrganizationDatasetChange(httpRequest, datasetKey);
     }
