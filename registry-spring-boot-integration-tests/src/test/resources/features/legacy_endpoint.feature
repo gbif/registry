@@ -13,5 +13,10 @@ Feature: LegacyEndpointResource functionality
 
   @RegisterLegacyEndpoint
   Scenario: Register legacy endpoint
+    Given 0 endpoints in database before
     When register new endpoint using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
+    And 1 endpoint in database after
+    And registered endpoint is
+      | resourceKey                          | description                  | type | accessPointURL                              |
+      | d82273f6-9738-48a5-a639-2086f9c49d18 | Description of Test Endpoint | EML  | http://ipt.gbif.org/eml.do?r=bigdbtest&v=18 |

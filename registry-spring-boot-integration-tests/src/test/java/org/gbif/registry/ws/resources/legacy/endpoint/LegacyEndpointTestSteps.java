@@ -1,16 +1,16 @@
 package org.gbif.registry.ws.resources.legacy.endpoint;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -28,10 +28,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.ACCESS_POINT_URL_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.RESOURCE_KEY_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.TYPE_PARAM;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -49,16 +52,11 @@ public class LegacyEndpointTestSteps {
   private MockMvc mvc;
   private ResultActions result;
   private HttpHeaders requestParamsEndpoint;
-  private Installation actualInstallation;
-  private Dataset actualDataset;
-  private UUID installationKey;
+  private Endpoint actualEndpoint;
   private UUID datasetKey;
 
   @Autowired
   private DatasetService datasetService;
-
-  @Autowired
-  private InstallationService installationService;
 
   @Autowired
   private WebApplicationContext context;
@@ -67,6 +65,9 @@ public class LegacyEndpointTestSteps {
   private DataSource ds;
 
   private Connection connection;
+
+  @Autowired
+  private XmlMapper xmlMapper;
 
   @Before("@LegacyEndpoint")
   public void setUp() throws Exception {
@@ -101,14 +102,12 @@ public class LegacyEndpointTestSteps {
 
   @Given("installation {string} with key {string}")
   public void prepareInstallation(String instName, String installationKey) {
-    this.installationKey = UUID.fromString(installationKey);
-    actualInstallation = installationService.get(this.installationKey);
+    // prepared by script, see @Before
   }
 
   @Given("dataset {string} with key {string}")
   public void prepareDataset(String name, String datasetKey) {
     this.datasetKey = UUID.fromString(datasetKey);
-    actualDataset = datasetService.get(this.datasetKey);
   }
 
   @Given("query parameters for endpoint registration or updating")
@@ -118,6 +117,11 @@ public class LegacyEndpointTestSteps {
     requestParamsEndpoint.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsEndpoint.add(TYPE_PARAM, params.get(TYPE_PARAM));
     requestParamsEndpoint.add(ACCESS_POINT_URL_PARAM, params.get(ACCESS_POINT_URL_PARAM));
+  }
+
+  @Given("{int} endpoint(s) in database before/after")
+  public void checkNumberOfEndpoints(int expectedNumber) {
+    assertEquals(expectedNumber, datasetService.listEndpoints(datasetKey).size());
   }
 
   @When("register new endpoint using valid/invalid organization key {string} and password {string}")
@@ -136,5 +140,15 @@ public class LegacyEndpointTestSteps {
   public void assertResponseCode(int status) throws Exception {
     result
       .andExpect(status().is(status));
+  }
+
+  @Then("registered/updated endpoint is")
+  public void checkEndpoint(LegacyEndpoint expectedEndpoint) throws Exception {
+    String contentAsString = result.andReturn().getResponse().getContentAsString();
+    actualEndpoint = xmlMapper.readValue(contentAsString, LegacyEndpoint.class);
+    assertLenientEquals("Endpoints do not match", expectedEndpoint, actualEndpoint);
+    assertNotNull(actualEndpoint.getKey());
+    assertNotNull(actualEndpoint.getCreatedBy());
+    assertNotNull(actualEndpoint.getModifiedBy());
   }
 }
