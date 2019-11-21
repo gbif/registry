@@ -110,7 +110,7 @@ public class LegacyEndpointTestSteps {
     this.datasetKey = UUID.fromString(datasetKey);
   }
 
-  @Given("query parameters for endpoint registration or updating")
+  @Given("endpoint request parameters")
   public void prepareRequestParamsEndpoint(Map<String, String> params) {
     requestParamsEndpoint = new HttpHeaders();
     requestParamsEndpoint.add(RESOURCE_KEY_PARAM, params.get(RESOURCE_KEY_PARAM));
@@ -122,6 +122,11 @@ public class LegacyEndpointTestSteps {
   @Given("{int} endpoint(s) in database before/after")
   public void checkNumberOfEndpoints(int expectedNumber) {
     assertEquals(expectedNumber, datasetService.listEndpoints(datasetKey).size());
+  }
+
+  @Given("exclude parameter {string} from endpoint request parameters")
+  public void removeFromParams(String field) {
+    requestParamsEndpoint.remove(field);
   }
 
   @When("register new endpoint using valid/invalid organization key {string} and password {string}")
