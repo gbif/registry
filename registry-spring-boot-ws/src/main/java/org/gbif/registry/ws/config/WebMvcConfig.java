@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
@@ -117,8 +118,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer customJson() {
-    return builder ->
+    return builder -> {
       builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
+      builder.modulesToInstall(new JaxbAnnotationModule());
+    };
   }
 
   @Bean
