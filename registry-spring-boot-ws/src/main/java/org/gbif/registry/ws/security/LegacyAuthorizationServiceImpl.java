@@ -12,6 +12,7 @@ import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -70,32 +71,37 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       String organizationKeyStr = getFirst(httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
       final UUID organizationKey = organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
 
-      // try to validate organization key first
-      try {
-        Organization org = organizationService.get(user);
-        if (password.equals(org.getPassword())) {
-          return new LegacyRequestAuthorization(user, organizationKey);
-        } else {
-          throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
-        }
-      } catch (NotFoundException e) {
-        // maybe an installation?
-        try {
-          Installation installation = installationService.get(user);
-          if (password.equals(installation.getPassword())) {
-            return new LegacyRequestAuthorization(user, organizationKey);
-          }
-        } catch (NotFoundException e1) {
-          // throw
-        }
-        throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
-      }
+      return authenticateInternal(user, password, organizationKey);
     } catch (NoSuchElementException e) {
       LOG.warn("Invalid Basic Authentication syntax: {}", authentication);
       throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     } catch (IllegalArgumentException e) {
       // no valid username UUID
       LOG.warn("Invalid username, UUID required: {}", decrypted);
+      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @NotNull
+  private LegacyRequestAuthorization authenticateInternal(UUID user, String password, UUID organizationKey) {
+    // try to validate organization key first
+    try {
+      Organization org = organizationService.get(user);
+      if (password.equals(org.getPassword())) {
+        return new LegacyRequestAuthorization(user, organizationKey);
+      } else {
+        throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      }
+    } catch (NotFoundException e) {
+      // maybe an installation?
+      try {
+        Installation installation = installationService.get(user);
+        if (password.equals(installation.getPassword())) {
+          return new LegacyRequestAuthorization(user, organizationKey);
+        }
+      } catch (NotFoundException e1) {
+        // throw
+      }
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
   }
@@ -122,7 +128,14 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // validate installation key belongs to an existing installation
-    Organization org = organizationService.get(organizationKey);
+    Organization org;
+    try {
+      org = organizationService.get(organizationKey);
+    } catch (NotFoundException e) {
+      LOG.error("Organization with key={} does not exist", organizationKey);
+      return false;
+    }
+
     return org != null && org.getKey() != null && org.getKey().equals(authorization.getUserKey());
   }
 
@@ -143,8 +156,11 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // retrieve dataset to ensure it exists
-    Dataset dataset = datasetService.get(datasetKey);
-    if (dataset == null) {
+    Dataset dataset;
+
+    try {
+      dataset = datasetService.get(datasetKey);
+    } catch (NotFoundException e) {
       LOG.error("Dataset with key={} does not exist", datasetKey);
       return false;
     }
@@ -157,11 +173,11 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
 
     // check if an organisationKey was included in form params, that the organization keys match
     UUID organizationKeyFromFormParams = authorization.getOrganizationKey();
-    if (organizationKeyFromFormParams != null) {
-      if (organizationKeyFromFormParams.compareTo(authorization.getUserKey()) != 0) {
-        LOG.error("Different organization keys were specified in the form parameters and credentials");
-        return false;
-      }
+    if (organizationKeyFromFormParams != null &&
+      organizationKeyFromFormParams.compareTo(authorization.getUserKey()) != 0) {
+      LOG.error("Different organization keys were specified in the form parameters and credentials");
+      return false;
+
     }
     LOG.info("Authorization succeeded, can modify dataset with key={} belonging to organization with key={}",
       datasetKey, authorization.getUserKey());
@@ -181,7 +197,14 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // validate installation key belongs to an existing installation
-    Installation installation = installationService.get(installationKey);
+    Installation installation;
+    try {
+      installation = installationService.get(installationKey);
+    } catch (NotFoundException e) {
+      LOG.error("Installation with key={} does not exist", installationKey);
+      return false;
+    }
+
     return installation != null && installation.getKey() != null && installation.getKey().equals(authorization.getUserKey());
   }
 }
