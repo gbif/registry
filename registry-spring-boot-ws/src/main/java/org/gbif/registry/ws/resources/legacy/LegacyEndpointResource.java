@@ -1,8 +1,7 @@
 package org.gbif.registry.ws.resources.legacy;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
+import org.apache.commons.io.FileUtils;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
@@ -18,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -137,9 +137,8 @@ public class LegacyEndpointResource {
 
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
-      // TODO: replace static list http://dev.gbif.org/issues/browse/REG-394
       try {
-        String content = Resources.toString(Resources.getResource("legacy/service_types.json"), Charsets.UTF_8);
+        String content = FileUtils.readFileToString(ResourceUtils.getFile("classpath:legacy/service_types.json"));
         LOG.debug("Get service types finished");
         return ResponseEntity
           .status(HttpStatus.OK)
@@ -169,7 +168,7 @@ public class LegacyEndpointResource {
         LOG.debug("Get all Endpoints for Dataset finished");
         // return array, required for serialization otherwise might get an exception
         // writer for Java class java.util.ArrayList
-        LegacyEndpointResponse[] array = endpoints.toArray(new LegacyEndpointResponse[endpoints.size()]);
+        LegacyEndpointResponse[] array = endpoints.toArray(new LegacyEndpointResponse[0]);
         return ResponseEntity
           .status(HttpStatus.OK)
           .cacheControl(CacheControl.noCache())
