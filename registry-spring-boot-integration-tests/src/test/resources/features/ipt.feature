@@ -181,5 +181,5 @@ Feature: IPT related functionality
 
   Scenario: Delete IPT not existing dataset
     When delete dataset "Test Dataset Registry2" with invalid key "73401488-ac6f-4d5e-b766-50e11d006eeb" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
-    Then response status should be 404
+    Then response status should be 401
     And total number of datasets is 1
