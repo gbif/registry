@@ -61,7 +61,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
@@ -217,8 +216,7 @@ public class IptTestSteps {
           .params(requestParamsInstallation)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organisationKey, password)))
-      .andDo(print());
+          .with(httpBasic(organisationKey, password)));
   }
 
   @When("register new dataset using valid/invalid organization key {string} and password {string}")
@@ -229,8 +227,7 @@ public class IptTestSteps {
           .params(requestParamsDataset)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey, password))
-      ).andDo(print());
+          .with(httpBasic(installationKey, password)));
   }
 
   @When("update installation {string} using {word} installation key {string} and password {string}")
@@ -248,8 +245,7 @@ public class IptTestSteps {
           .params(requestParamsInstallation)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey, password)))
-      .andDo(print());
+          .with(httpBasic(installationKey, password)));
   }
 
   @When("update dataset {string} with key {string} using {word} organization key {string} and password {string}")
@@ -268,8 +264,7 @@ public class IptTestSteps {
           .params(requestParamsDataset)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(orgKey, password)))
-      .andDo(print());
+          .with(httpBasic(orgKey, password)));
   }
 
   @When("delete dataset {string} with valid/invalid key {string} using {word} organization key {string} and password {string}")
@@ -278,8 +273,7 @@ public class IptTestSteps {
       .perform(
         delete("/registry/ipt/resource/{key}", datasetKey)
           .contentType(APPLICATION_FORM_URLENCODED)
-          .with(httpBasic(orgKey, password)))
-      .andDo(print());
+          .with(httpBasic(orgKey, password)));
   }
 
   @Then("response status should be {int}")

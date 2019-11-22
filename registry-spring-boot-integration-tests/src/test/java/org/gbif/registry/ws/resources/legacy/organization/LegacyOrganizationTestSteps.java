@@ -34,7 +34,6 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class,
@@ -107,8 +106,7 @@ public class LegacyOrganizationTestSteps {
   public void getOrganization(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation/{key}" + extension, organisationKey))
-      .andDo(print());
+        get("/registry/organisation/{key}" + extension, organisationKey));
   }
 
   @When("get organization {string} with login {string} and password {string} and extension {string} and parameter {word} with value {word}")
@@ -118,8 +116,7 @@ public class LegacyOrganizationTestSteps {
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
           .param(paramName, paramValue)
-          .with(httpBasic(login, password)))
-      .andDo(print());
+          .with(httpBasic(login, password)));
   }
 
   @When("get organization {string} with extension {string} and parameter {word} with value {string}")
@@ -127,16 +124,14 @@ public class LegacyOrganizationTestSteps {
     result = mvc
       .perform(
         get("/registry/organisation/{key}" + extension, organisationKey)
-          .param(paramName, paramValue))
-      .andDo(print());
+          .param(paramName, paramValue));
   }
 
   @When("get organizations with extension {string}")
   public void getOrganizations(String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation{extension}", extension))
-      .andDo(print());
+        get("/registry/organisation{extension}", extension));
   }
 
   @Then("response status should be {int}")

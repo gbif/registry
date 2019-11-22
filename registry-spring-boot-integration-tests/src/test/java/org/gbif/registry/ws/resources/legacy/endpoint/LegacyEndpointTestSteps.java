@@ -46,7 +46,6 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class,
@@ -146,8 +145,7 @@ public class LegacyEndpointTestSteps {
           .params(requestParamsEndpoint)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organisationKey, password)))
-      .andDo(print());
+          .with(httpBasic(organisationKey, password)));
   }
 
   @When("delete endpoint by (in)valid resource key {string} using valid organization key {string} and password {string}")
@@ -158,8 +156,7 @@ public class LegacyEndpointTestSteps {
           .param("resourceKey", datasetKey)
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organisationKey, password)))
-      .andDo(print());
+          .with(httpBasic(organisationKey, password)));
   }
 
   @When("delete endpoint without resource key using valid organization key {string} and password {string}")
@@ -169,8 +166,7 @@ public class LegacyEndpointTestSteps {
         delete("/registry/service")
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
-          .with(httpBasic(organisationKey, password)))
-      .andDo(print());
+          .with(httpBasic(organisationKey, password)));
   }
 
   @When("perform get all service types request")
@@ -179,8 +175,7 @@ public class LegacyEndpointTestSteps {
       .perform(
         get("/registry/service{extension}", ".json")
           .param("op", "types")
-          .contentType(TEXT_PLAIN))
-      .andDo(print());
+          .contentType(TEXT_PLAIN));
   }
 
   @Then("response status should be {int}")
