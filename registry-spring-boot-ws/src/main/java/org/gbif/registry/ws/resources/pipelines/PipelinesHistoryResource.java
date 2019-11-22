@@ -127,8 +127,8 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(RUN_PATH)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runAll(@RequestParam("steps") String steps,
-                                                    @RequestParam("reason") String reason,
+  public ResponseEntity<RunPipelineResponse> runAll(@RequestParam(value = "steps", required = false) String steps,
+                                                    @RequestParam(value = "reason", required = false) String reason,
                                                     Authentication authentication,
                                                     @Nullable RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
@@ -148,8 +148,8 @@ public class PipelinesHistoryResource {
   @PostMapping(RUN_PATH + "{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
-                                                                @RequestParam("steps") String steps,
-                                                                @RequestParam("reason") String reason,
+                                                                @RequestParam(value = "steps", required = false) String steps,
+                                                                @RequestParam(value = "reason", required = false) String reason,
                                                                 Authentication authentication) {
     return checkRunInputParams(steps, reason)
         .orElseGet(
@@ -170,8 +170,8 @@ public class PipelinesHistoryResource {
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
                                                                 @PathVariable("attempt") int attempt,
-                                                                @RequestParam("steps") String steps,
-                                                                @RequestParam("reason") String reason,
+                                                                @RequestParam(value = "steps", required = false) String steps,
+                                                                @RequestParam(value = "reason", required = false) String reason,
                                                                 Authentication authentication) {
     return checkRunInputParams(steps, reason)
         .orElseGet(

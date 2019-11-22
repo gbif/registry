@@ -69,7 +69,7 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
 
   @GetMapping("suggest")
   @Override
-  public List<KeyCodeNameResult> suggest(@RequestParam("q") String q) {
+  public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionMapper.suggest(q);
   }
 }

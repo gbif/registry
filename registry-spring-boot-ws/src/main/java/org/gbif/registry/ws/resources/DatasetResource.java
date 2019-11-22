@@ -823,7 +823,8 @@ public class DatasetResource
 
   @GetMapping("{key}/metadata")
   @Override
-  public List<Metadata> listMetadata(@PathVariable("key") UUID datasetKey, @RequestParam("type") MetadataType type) {
+  public List<Metadata> listMetadata(@PathVariable("key") UUID datasetKey,
+                                     @RequestParam(value = "type", required = false) MetadataType type) {
     return metadataMapper.list(datasetKey, type);
   }
 
@@ -902,7 +903,7 @@ public class DatasetResource
    */
   @PostMapping("crawlall")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawlAll(@RequestParam("platform") String platform, @Nullable CrawlAllParams crawlAllParams) {
+  public void crawlAll(@RequestParam(value = "platform", required = false) String platform, @Nullable CrawlAllParams crawlAllParams) {
     CompletableFuture.runAsync(
       () ->
         doOnAllOccurrenceDatasets(
@@ -917,7 +918,8 @@ public class DatasetResource
    */
   @PostMapping("{key}/crawl")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawl(@PathVariable("key") UUID datasetKey, @RequestParam("platform") String platform) {
+  public void crawl(@PathVariable("key") UUID datasetKey,
+                    @RequestParam(value = "platform", required = false) String platform) {
     Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
