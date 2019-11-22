@@ -118,7 +118,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping
   @Secured(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(Pageable page, @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+  public PagingResponse<Download> list(Pageable page,
+                                       @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     if (status == null || status.isEmpty()) {
       return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
@@ -191,7 +192,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable @PartialDate Date fromDate,
                                                                         @Nullable @PartialDate Date toDate,
                                                                         @Nullable Country publishingCountry,
-                                                                        @RequestParam("datasetKey") UUID datasetKey) {
+                                                                        @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
     return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
       Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
       datasetKey));

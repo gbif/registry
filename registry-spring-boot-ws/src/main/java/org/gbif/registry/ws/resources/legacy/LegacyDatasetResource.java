@@ -181,7 +181,7 @@ public class LegacyDatasetResource {
    */
   @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity datasetsForOrganization(@RequestParam("organisationKey") UUID organizationKey) {
+  public ResponseEntity datasetsForOrganization(@RequestParam(value = "organisationKey", required = false) UUID organizationKey) {
     if (organizationKey != null) {
       try {
         LOG.debug("Get all Datasets owned by Organization, key={}", organizationKey);

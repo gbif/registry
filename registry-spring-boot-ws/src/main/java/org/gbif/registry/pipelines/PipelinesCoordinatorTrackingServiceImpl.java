@@ -285,7 +285,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
     Objects.requireNonNull(publisher, "No message publisher configured");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
+    Objects.requireNonNull(user, "user can't be null");
 
     PipelineProcess status = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 

@@ -51,8 +51,8 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
 
   @GetMapping
   public PagingResponse<Collection> list(@Nullable @RequestParam(value = "q", required = false) String query,
-                                         @Nullable @RequestParam("institution") UUID institutionKey,
-                                         @Nullable @RequestParam("contact") UUID contactKey,
+                                         @Nullable @RequestParam(value = "institution", required = false) UUID institutionKey,
+                                         @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
                                          Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
@@ -69,7 +69,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
 
   @GetMapping("suggest")
   @Override
-  public List<KeyCodeNameResult> suggest(@RequestParam("q") String q) {
+  public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionMapper.suggest(q);
   }
 }
