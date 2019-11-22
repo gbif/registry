@@ -57,7 +57,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
@@ -144,8 +143,7 @@ public class NetworkEntityTestSteps {
           .with(httpBasic("justadmin", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
-          .contentType(MediaType.APPLICATION_JSON))
-      .andDo(print());
+          .contentType(MediaType.APPLICATION_JSON));
 
     key =
       RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
