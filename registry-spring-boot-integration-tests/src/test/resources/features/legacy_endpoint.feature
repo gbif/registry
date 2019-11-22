@@ -51,3 +51,20 @@ Feature: LegacyEndpointResource functionality
   Scenario: Delete legacy endpoint by invalid random organization key fails
     When register new endpoint using invalid organization key "a1446513-90b8-481b-9bcf-d78c8f46e47b" and password "welcome"
     Then response status should be 401
+
+  @RunThis
+  Scenario: Send a get all service types (GET) request, the JSON response having a name, description, overviewURL, and key for each service in the list
+    When perform get all service types request
+    Then response status should be 200
+    And response is following JSON
+      | description | name                       | overviewURL | key   |
+      |             | EML                        |             | 16000 |
+      |             | RSS                        |             | 16010 |
+      |             | DIGIR                      |             | 16100 |
+      |             | MANISDIGIR                 |             | 16110 |
+      |             | TAPIR                      |             | 16120 |
+      |             | BIOCASE                    |             | 16130 |
+      |             | DWC-ARCHIVE-CHECKLIST      |             | 16160 |
+      |             | DWC-ARCHIVE-OCCURRENCE     |             | 16170 |
+      |             | OTHER                      |             | 16180 |
+      |             | DWC-ARCHIVE-SAMPLING-EVENT |             | 16190 |
