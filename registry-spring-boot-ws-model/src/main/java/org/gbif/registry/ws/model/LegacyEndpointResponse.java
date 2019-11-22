@@ -6,6 +6,7 @@ import org.gbif.registry.ws.util.LegacyResourceConstants;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -27,8 +28,8 @@ public class LegacyEndpointResponse {
   private String accessPointURL;
 
   public LegacyEndpointResponse(Endpoint endpoint, UUID datasetKey) {
-    key = endpoint.getKey() == null ? "" : endpoint.getKey().toString();
-    type = endpoint.getType() == null ? "" : endpoint.getType().name();
+    key = Optional.ofNullable(endpoint.getKey()).map(Object::toString).orElse("");
+    type = Optional.ofNullable(endpoint.getType()).map(Enum::name).orElse("");
     resourceKey = datasetKey == null ? "" : datasetKey.toString();
     description = endpoint.getDescription() == null ? "" : endpoint.getDescription();
     accessPointURL = endpoint.getUrl() == null ? "" : endpoint.getUrl().toASCIIString();
