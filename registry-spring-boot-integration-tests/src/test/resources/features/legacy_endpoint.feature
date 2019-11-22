@@ -5,6 +5,8 @@ Feature: LegacyEndpointResource functionality
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
     And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
     And dataset "Occurrence Dataset 1" with key "d82273f6-9738-48a5-a639-2086f9c49d18"
+    And dataset endpoint "A Tapir installation" with key 1181
+    And dataset endpoint "A Tapir installation 2" with key 1182
     And endpoint request parameters
       | resourceKey    | d82273f6-9738-48a5-a639-2086f9c49d18        |
       | description    | Description of Test Endpoint                |
@@ -12,11 +14,11 @@ Feature: LegacyEndpointResource functionality
       | accessPointURL | http://ipt.gbif.org/eml.do?r=bigdbtest&v=18 |
 
   Scenario: Register and delete legacy endpoint
-    Given 0 endpoints in database before
+    Given 2 endpoints in database before
     When register new endpoint using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
     Then response status should be 201
-    And 1 endpoint in database after
-    And registered endpoint is
+    And 3 endpoints in database after
+    And registered endpoint in XML is
       | resourceKey                          | description                  | type | accessPointURL                              |
       | d82273f6-9738-48a5-a639-2086f9c49d18 | Description of Test Endpoint | EML  | http://ipt.gbif.org/eml.do?r=bigdbtest&v=18 |
     When delete endpoint by valid resource key "d82273f6-9738-48a5-a639-2086f9c49d18" using valid organization key "36107c15-771c-4810-a298-b7558828b8bd" and password "welcome"
@@ -24,10 +26,10 @@ Feature: LegacyEndpointResource functionality
     And 0 endpoints in database after
 
   Scenario: Register legacy endpoint by invalid random organization key fails
-    Given 0 endpoints in database before
+    Given 2 endpoints in database before
     When register new endpoint using invalid organization key "a1446513-90b8-481b-9bcf-d78c8f46e47b" and password "welcome"
     Then response status should be 401
-    And 0 endpoints in database after
+    And 2 endpoints in database after
 
   Scenario Outline: Register legacy endpoint without mandatory parameter <parameter> key fails
     Given exclude parameter "<parameter>" from endpoint request parameters
@@ -53,7 +55,7 @@ Feature: LegacyEndpointResource functionality
     Then response status should be 401
 
   Scenario: Send a get all service types (GET) request, the JSON response having a name, description, overviewURL, and key for each service in the list
-    When perform get all service types request
+    When perform get dataset endpoints request with extension ".json" and parameter op and value "types"
     Then response status should be 200
     And response is following JSON
       | description | name                       | overviewURL | key   |
@@ -67,3 +69,13 @@ Feature: LegacyEndpointResource functionality
       |             | DWC-ARCHIVE-OCCURRENCE     |             | 16170 |
       |             | OTHER                      |             | 16180 |
       |             | DWC-ARCHIVE-SAMPLING-EVENT |             | 16190 |
+
+  Scenario: Send a get all endpoints for dataset (GET) request, the XML response having at the very least the dataset key, endpoint key, endpoint type, and endpoint url
+    Given 2 endpoint in database before
+    When perform get dataset endpoints request with extension ".xml" and parameter resourceKey and value "d82273f6-9738-48a5-a639-2086f9c49d18"
+    Then response status should be 200
+    And 2 endpoint in database after
+    And returned response in XML is
+      | resourceKey                          | description            | type  | accessPointURL           |
+      | d82273f6-9738-48a5-a639-2086f9c49d18 | A Tapir installation   | TAPIR | http://www.example.org/1 |
+      | d82273f6-9738-48a5-a639-2086f9c49d18 | A Tapir installation 2 | TAPIR | http://www.example.org/2 |

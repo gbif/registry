@@ -6,6 +6,7 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.LegacyEndpoint;
+import org.gbif.registry.ws.model.LegacyEndpointListWrapper;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
@@ -169,15 +170,12 @@ public class LegacyEndpointResource {
         for (Endpoint e : response) {
           endpoints.add(new LegacyEndpointResponse(e, datasetKey));
         }
-
         LOG.debug("Get all Endpoints for Dataset finished");
-        // return array, required for serialization otherwise might get an exception
-        // writer for Java class java.util.ArrayList
-        LegacyEndpointResponse[] array = endpoints.toArray(new LegacyEndpointResponse[0]);
+
         return ResponseEntity
           .status(HttpStatus.OK)
           .cacheControl(CacheControl.noCache())
-          .body(array);
+          .body(new LegacyEndpointListWrapper(endpoints));
       } catch (NotFoundException e) {
         LOG.error("The dataset with key {} specified by query parameter does not exist", datasetKey);
         // the dataset didn't exist, and expected response is "{Error: "No services associated to the organisation}"
