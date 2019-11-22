@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,7 +35,7 @@ import java.util.UUID;
  * Handle all legacy web service Endpoint requests (excluding IPT requests), previously handled by the GBRDS.
  */
 @RestController
-@RequestMapping("registry/service")
+@RequestMapping("registry")
 public class LegacyEndpointResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyEndpointResource.class);
@@ -53,7 +54,8 @@ public class LegacyEndpointResource {
    * @param endpoint LegacyEndpoint with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED if successful
    */
-  @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+  @PostMapping(value = "service",
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerEndpoint(@RequestParam @NotNull LegacyEndpoint endpoint, Authentication authentication) {
     // required fields present, and corresponding dataset exists?
@@ -86,8 +88,9 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return ResponseEntity with HttpStatus.OK if successful
    */
-  @DeleteMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity deleteAllDatasetEndpoints(@RequestParam("resourceKey") UUID datasetKey) {
+  @DeleteMapping(value = "service",
+    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  public ResponseEntity deleteAllDatasetEndpoints(@RequestParam(value = "resourceKey", required = false) UUID datasetKey) {
     if (datasetKey != null) {
       // retrieve existing dataset
       Dataset existing = datasetService.get(datasetKey);
@@ -127,9 +130,12 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return ResponseEntity with list of Endpoints or empty list with error message if none found
    */
-  @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
+  @GetMapping(value = "service{extension:\\.[a-z]+}",
+    consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity endpointsForDataset(@RequestParam("resourceKey") UUID datasetKey, @RequestParam("op") String op) {
+  public ResponseEntity endpointsForDataset(@PathVariable("extension") String extension,
+                                            @RequestParam(value = "resourceKey", required = false) UUID datasetKey,
+                                            @RequestParam(value = "op", required = false) String op) {
 
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
