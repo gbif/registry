@@ -26,7 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -125,14 +128,18 @@ public class PipelinesHistoryResource {
   @PostMapping(RUN_PATH)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runAll(@RequestParam("steps") String steps,
-                                                    @RequestParam("reason") String reason) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                                                    @RequestParam("reason") String reason,
+                                                    Authentication authentication,
+                                                    @Nullable RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
-        .orElseGet(
-            () ->
-                toHttpResponse(
-                    historyTrackingService.runLastAttempt(
-                        parseSteps(steps), reason, authentication.getName())));
+      .orElseGet(
+        () ->
+          toHttpResponse(
+            historyTrackingService.runLastAttempt(
+              parseSteps(steps),
+              reason,
+              authentication.getName(),
+              runAllParams != null ? runAllParams.datasetsToExclude : null)));
   }
 
   /**
@@ -142,8 +149,8 @@ public class PipelinesHistoryResource {
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
                                                                 @RequestParam("steps") String steps,
-                                                                @RequestParam("reason") String reason) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                                                                @RequestParam("reason") String reason,
+                                                                Authentication authentication) {
     return checkRunInputParams(steps, reason)
         .orElseGet(
             () ->
@@ -164,8 +171,8 @@ public class PipelinesHistoryResource {
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
                                                                 @PathVariable("attempt") int attempt,
                                                                 @RequestParam("steps") String steps,
-                                                                @RequestParam("reason") String reason) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                                                                @RequestParam("reason") String reason,
+                                                                Authentication authentication) {
     return checkRunInputParams(steps, reason)
         .orElseGet(
             () ->
@@ -215,5 +222,22 @@ public class PipelinesHistoryResource {
     return Arrays.stream(steps.split(","))
         .map(s -> StepType.valueOf(s.toUpperCase()))
         .collect(Collectors.toSet());
+  }
+
+  /**
+   * Encapsulates the params to pass in the body for the runAll method.
+   */
+  private static class RunAllParams {
+    List<UUID> datasetsToExclude = new ArrayList<>();
+
+    // getters and setters needed for jackson
+
+    public List<UUID> getDatasetsToExclude() {
+      return datasetsToExclude;
+    }
+
+    public void setDatasetsToExclude(List<UUID> datasetsToExclude) {
+      this.datasetsToExclude = datasetsToExclude;
+    }
   }
 }
