@@ -1,7 +1,6 @@
 package org.gbif.registry.ws.resources.legacy;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.io.FileUtils;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
@@ -12,12 +11,13 @@ import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.util.ResourceUtils;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -140,7 +141,9 @@ public class LegacyEndpointResource {
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
       try {
-        String content = FileUtils.readFileToString(ResourceUtils.getFile("classpath:legacy/service_types.json"));
+        String content = new String(
+          FileCopyUtils.copyToByteArray(new ClassPathResource("legacy/service_types.json").getInputStream()),
+          StandardCharsets.UTF_8);
         LOG.debug("Get service types finished");
         return ResponseEntity
           .status(HttpStatus.OK)

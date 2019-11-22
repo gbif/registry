@@ -52,7 +52,6 @@ Feature: LegacyEndpointResource functionality
     When register new endpoint using invalid organization key "a1446513-90b8-481b-9bcf-d78c8f46e47b" and password "welcome"
     Then response status should be 401
 
-  @RunThis
   Scenario: Send a get all service types (GET) request, the JSON response having a name, description, overviewURL, and key for each service in the list
     When perform get all service types request
     Then response status should be 200
