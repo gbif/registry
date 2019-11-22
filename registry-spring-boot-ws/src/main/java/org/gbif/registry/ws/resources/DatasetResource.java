@@ -872,20 +872,23 @@ public class DatasetResource
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset) {
+  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response;
     do {
       response = list(pagingRequest);
-      response
-        .getResults()
+      response.getResults().stream()
+        .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
         .forEach(
           d -> {
             try {
               LOG.info("trying to crawl dataset {}", d.getKey());
               onDataset.accept(d);
             } catch (Exception ex) {
-              LOG.error("Error processing dataset {} while crawling all: {}", d.getKey(), ex.getMessage());
+              LOG.error(
+                "Error processing dataset {} while crawling all: {}",
+                d.getKey(),
+                ex.getMessage());
             }
           });
       pagingRequest.addOffset(response.getResults().size());
@@ -899,9 +902,12 @@ public class DatasetResource
    */
   @PostMapping("crawlall")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawlAll(@RequestParam("platform") String platform) {
+  public void crawlAll(@RequestParam("platform") String platform, @Nullable CrawlAllParams crawlAllParams) {
     CompletableFuture.runAsync(
-      () -> doOnAllOccurrenceDatasets(dataset -> crawl(dataset.getKey(), platform)));
+      () ->
+        doOnAllOccurrenceDatasets(
+          dataset -> crawl(dataset.getKey(), platform),
+          crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
   }
 
   /**
@@ -1016,5 +1022,22 @@ public class DatasetResource
   @Override
   public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {
     return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+  }
+
+  /**
+   * Encapsulates the params to pass in the body for the crawAll method.
+   */
+  private static class CrawlAllParams {
+    List<UUID> datasetsToExclude = new ArrayList<>();
+
+    // getters and setters needed for jackson
+
+    public List<UUID> getDatasetsToExclude() {
+      return datasetsToExclude;
+    }
+
+    public void setDatasetsToExclude(List<UUID> datasetsToExclude) {
+      this.datasetsToExclude = datasetsToExclude;
+    }
   }
 }
