@@ -78,7 +78,7 @@ public class LegacyOrganizationBriefResponse {
       .toString();
   }
 
-  public static class ItemSerializer extends JsonSerializer<LegacyOrganizationBriefResponse[]> {
+  public static class LegacyOrganizationArraySerializer extends JsonSerializer<LegacyOrganizationBriefResponse[]> {
 
     @Override
     public void serialize(

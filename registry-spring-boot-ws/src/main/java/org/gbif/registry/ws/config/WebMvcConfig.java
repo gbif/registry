@@ -117,7 +117,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     ArrayList<Module> modules = new ArrayList<>();
 
     SimpleModule module = new SimpleModule();
-    module.addSerializer(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
+    module.addSerializer(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.LegacyOrganizationArraySerializer());
     modules.add(module);
     modules.add(new JaxbAnnotationModule());
 
@@ -129,7 +129,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer customJson() {
     return builder -> {
-      builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
+      builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.LegacyOrganizationArraySerializer());
       builder.modulesToInstall(new JaxbAnnotationModule());
     };
   }
