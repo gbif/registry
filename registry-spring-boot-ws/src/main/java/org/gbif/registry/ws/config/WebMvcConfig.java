@@ -12,6 +12,8 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.model.LegacyEndpointListWrapper;
+import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.mixin.LicenseMixin;
@@ -19,7 +21,7 @@ import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
-import org.springframework.beans.BeansException;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -27,13 +29,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -50,6 +56,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Override
   public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
     converters.add(new UuidTextMessageConverter());
+    converters.add(marshallingMessageConverter());
   }
 
   /**
@@ -72,15 +79,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     return new BeanPostProcessor() {
 
       @Override
-      public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+      public Object postProcessBeforeInitialization(@NotNull Object bean, String beanName) {
         return bean;
       }
 
       @Override
-      public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+      public Object postProcessAfterInitialization(@NotNull Object bean, String beanName) {
         if (bean instanceof RequestMappingHandlerAdapter) {
           RequestMappingHandlerAdapter adapter = (RequestMappingHandlerAdapter) bean;
-          List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(adapter.getArgumentResolvers());
+          List<HandlerMethodArgumentResolver> nullSafeArgumentResolvers = Optional.ofNullable(adapter.getArgumentResolvers())
+            .orElse(Collections.emptyList());
+          List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(nullSafeArgumentResolvers);
           argumentResolvers.add(0, paramNameProcessor());
           adapter.setArgumentResolvers(argumentResolvers);
         }
@@ -123,6 +132,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
       builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.ItemSerializer());
       builder.modulesToInstall(new JaxbAnnotationModule());
     };
+  }
+
+  @Bean
+  public MarshallingHttpMessageConverter marshallingMessageConverter() {
+    MarshallingHttpMessageConverter converter = new MarshallingHttpMessageConverter();
+    converter.setMarshaller(jaxbMarshaller());
+    converter.setUnmarshaller(jaxbMarshaller());
+    return converter;
+  }
+
+  @Bean
+  public Jaxb2Marshaller jaxbMarshaller() {
+    Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+    marshaller.setClassesToBeBound(LegacyEndpointListWrapper.class, LegacyEndpointResponse.class);
+    return marshaller;
   }
 
   @Bean

@@ -30,3 +30,13 @@ VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', null, null, '2fe63cec-9b23-4974-
         '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,
         '''dataset'':2,8 ''descript'':5 ''occurr'':4 ''registry2'':3 ''test'':1,7 ''www.homepage.com'':9',
         '10.21373/h9c3vc', 'UNSPECIFIED', null, null);
+
+INSERT INTO public.endpoint (key, type, url, description, created_by, modified_by, created, modified)
+VALUES (1181, 'TAPIR', 'http://www.example.org/1', 'A Tapir installation', 'WS TEST', 'WS TEST',
+        '2019-11-22 13:02:47.036655', '2019-11-22 13:02:47.036655');
+INSERT INTO public.endpoint (key, type, url, description, created_by, modified_by, created, modified)
+VALUES (1182, 'TAPIR', 'http://www.example.org/2', 'A Tapir installation 2', 'WS TEST', 'WS TEST',
+        '2019-11-22 13:02:47.036655', '2019-11-22 13:02:47.036655');
+
+INSERT INTO public.dataset_endpoint (dataset_key, endpoint_key) VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', 1181);
+INSERT INTO public.dataset_endpoint (dataset_key, endpoint_key) VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', 1182);
