@@ -1,5 +1,7 @@
 package org.gbif.registry.ws.resources.legacy.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -24,6 +26,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,9 +40,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -69,6 +74,9 @@ public class LegacyEndpointTestSteps {
 
   @Autowired
   private XmlMapper xmlMapper;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Before("@LegacyEndpoint")
   public void setUp() throws Exception {
@@ -165,6 +173,16 @@ public class LegacyEndpointTestSteps {
       .andDo(print());
   }
 
+  @When("perform get all service types request")
+  public void getAllTypes() throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/service{extension}", ".json")
+          .param("op", "types")
+          .contentType(TEXT_PLAIN))
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -179,5 +197,18 @@ public class LegacyEndpointTestSteps {
     assertNotNull(actualEndpoint.getKey());
     assertNotNull(actualEndpoint.getCreatedBy());
     assertNotNull(actualEndpoint.getModifiedBy());
+  }
+
+  @Then("response is following JSON")
+  public void checkGetAllTypesResponse(List<Map<String, String>> expectedData) throws Exception {
+    String contentAsString = result.andReturn().getResponse().getContentAsString();
+    JsonNode actualData = objectMapper.readTree(contentAsString);
+
+    for (int i = 0; i < expectedData.size(); i++) {
+      assertEquals(expectedData.get(i).get("name"), actualData.get(i).get("name").asText());
+      assertEquals(expectedData.get(i).get("overviewURL"), actualData.get(i).get("overviewURL").asText());
+      assertEquals(expectedData.get(i).get("description"), actualData.get(i).get("description").asText());
+      assertEquals(expectedData.get(i).get("key"), actualData.get(i).get("key").asText());
+    }
   }
 }
