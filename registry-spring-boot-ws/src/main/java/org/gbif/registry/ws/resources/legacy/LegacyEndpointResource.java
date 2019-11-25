@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -144,9 +145,7 @@ public class LegacyEndpointResource {
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
       try {
-        String content = new String(
-          FileCopyUtils.copyToByteArray(new ClassPathResource("legacy/service_types.json").getInputStream()),
-          StandardCharsets.UTF_8);
+        String content = new String(FileCopyUtils.copyToByteArray(getServiceTypesInputStream()), StandardCharsets.UTF_8);
         LOG.debug("Get service types finished");
         return ResponseEntity
           .status(HttpStatus.OK)
@@ -201,5 +200,9 @@ public class LegacyEndpointResource {
       .status(HttpStatus.BAD_REQUEST)
       .cacheControl(CacheControl.noCache())
       .build();
+  }
+
+  private InputStream getServiceTypesInputStream() throws IOException {
+    return new ClassPathResource("legacy/service_types.json").getInputStream();
   }
 }

@@ -84,3 +84,17 @@ Feature: LegacyEndpointResource functionality
       | case | extension |
       | XML  | .xml      |
       | JSON | .json     |
+
+  Scenario: Send a get endpoints (GET) request for a dataset that does not exist. The JSON response having an error message, not a 404
+    When perform get dataset endpoints request with extension ".json" and parameter resourceKey and value "a1446513-90b8-481b-9bcf-d78c8f46e47b"
+    Then response status should be 200
+    And returned get endpoints error response is
+      | No dataset matches the key provided |
+
+  Scenario: Send a get endpoints (GET) request for a dataset without resourceKey parameter. Response should be 400
+    When perform get dataset endpoints request with extension ".json" and without resourceKey parameter
+    Then response status should be 400
+
+  Scenario: Send a get endpoints (GET) request for a dataset with unknown extension parameter. Response should be 404
+    When perform get dataset endpoints request with extension ".unknown" and parameter resourceKey and value "a1446513-90b8-481b-9bcf-d78c8f46e47b"
+    Then response status should be 404
