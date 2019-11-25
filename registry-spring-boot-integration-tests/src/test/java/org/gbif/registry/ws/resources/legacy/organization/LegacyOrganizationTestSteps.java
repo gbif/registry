@@ -1,6 +1,5 @@
 package org.gbif.registry.ws.resources.legacy.organization;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
@@ -34,7 +33,9 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class,
   RegistryIntegrationTestsConfiguration.class},
@@ -45,7 +46,6 @@ public class LegacyOrganizationTestSteps {
   private MockMvc mvc;
   private ResultActions result;
   private LegacyOrganizationResponse actualResponse;
-  private List<LegacyOrganizationBriefResponse> actualOrganizationsResponse;
 
   @Autowired
   private WebApplicationContext context;
@@ -166,28 +166,41 @@ public class LegacyOrganizationTestSteps {
     }
   }
 
-  @Then("valid {word} array is expected")
-  public void checkArrayResponseProperFormatAndParse(String extension) throws Exception {
-    MvcResult mvcResult = result.andReturn();
-    String contentAsString = mvcResult.getResponse().getContentAsString();
-    if ("JSON".equals(extension)) {
-      actualOrganizationsResponse = objectMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
-      });
-    } else {
-      assertTrue("Xml should start with <legacyOrganizationBriefResponses><organisation>",
-        contentAsString.contains("<legacyOrganizationBriefResponses><organisation>"));
-      actualOrganizationsResponse = xmlMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
-      });
-    }
-  }
-
   @Then("returned organization is")
   public void assertResponse(LegacyOrganizationResponse expectedResponse) {
     assertEquals(expectedResponse, actualResponse);
   }
 
-  @Then("returned brief organizations information are")
-  public void assertOrganizationsBriefResponse(List<LegacyOrganizationBriefResponse> expectedResponse) {
-    assertEquals(expectedResponse, actualOrganizationsResponse);
+  @Then("returned brief organizations {word} response are")
+  public void assertOrganizationsBriefResponse(String type, List<LegacyOrganizationBriefResponse> expectedResponse) throws Exception {
+    if ("JSON".equals(type)) {
+      assertOrganizationsBriefResponseJson(expectedResponse);
+    } else {
+      assertOrganizationsBriefResponseXml(expectedResponse);
+    }
+  }
+
+  private void assertOrganizationsBriefResponseXml(List<LegacyOrganizationBriefResponse> expectedResponses) throws Exception {
+    for (int i = 0; i < expectedResponses.size(); i++) {
+      result
+        .andExpect(
+          xpath(String.format("/legacyOrganizationBriefResponses/organisation[%d]/key", i + 1))
+            .string(expectedResponses.get(i).getKey()))
+        .andExpect(
+          xpath(String.format("/legacyOrganizationBriefResponses/organisation[%d]/name", i + 1))
+            .string(expectedResponses.get(i).getName()));
+    }
+  }
+
+  private void assertOrganizationsBriefResponseJson(List<LegacyOrganizationBriefResponse> expectedResponses) throws Exception {
+    for (int i = 0; i < expectedResponses.size(); i++) {
+      result
+        .andExpect(
+          jsonPath(String.format("[%d].key", i))
+            .value(expectedResponses.get(i).getKey()))
+        .andExpect(
+          jsonPath(String.format("[%d].name", i))
+            .value(expectedResponses.get(i).getName()));
+    }
   }
 }
