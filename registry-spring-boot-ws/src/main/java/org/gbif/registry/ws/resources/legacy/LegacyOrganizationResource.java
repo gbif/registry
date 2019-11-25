@@ -12,6 +12,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
+import org.gbif.registry.ws.model.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
@@ -268,13 +269,10 @@ public class LegacyOrganizationResource {
 
     List<LegacyOrganizationBriefResponse> organizations = organizationMapper.listLegacyOrganizationsBrief();
 
-    // for xml mapping wrap to array
-    LegacyOrganizationBriefResponse[] array = organizations.toArray(new LegacyOrganizationBriefResponse[0]);
-
     return ResponseEntity
       .status(HttpStatus.OK)
       .cacheControl(CacheControl.noCache())
-      .body(array);
+      .body(new LegacyOrganizationBriefResponseListWrapper(organizations));
   }
 
   /**

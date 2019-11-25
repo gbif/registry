@@ -15,6 +15,7 @@ import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyEndpointResponseListWrapper;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
+import org.gbif.registry.ws.model.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.mixin.LicenseMixin;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
@@ -117,7 +118,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     ArrayList<Module> modules = new ArrayList<>();
 
     SimpleModule module = new SimpleModule();
-    module.addSerializer(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.LegacyOrganizationArraySerializer());
     modules.add(module);
     modules.add(new JaxbAnnotationModule());
 
@@ -128,10 +128,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer customJson() {
-    return builder -> {
-      builder.serializerByType(LegacyOrganizationBriefResponse[].class, new LegacyOrganizationBriefResponse.LegacyOrganizationArraySerializer());
-      builder.modulesToInstall(new JaxbAnnotationModule());
-    };
+    return builder -> builder.modulesToInstall(new JaxbAnnotationModule());
   }
 
   @Bean
@@ -146,6 +143,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(LegacyEndpointResponseListWrapper.class, LegacyEndpointResponse.class);
+    marshaller.setClassesToBeBound(LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class);
     return marshaller;
   }
 
