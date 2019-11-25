@@ -142,8 +142,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-    marshaller.setClassesToBeBound(LegacyEndpointResponseListWrapper.class, LegacyEndpointResponse.class);
-    marshaller.setClassesToBeBound(LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class);
+    marshaller.setClassesToBeBound(
+      LegacyEndpointResponseListWrapper.class, LegacyEndpointResponse.class,
+      LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class);
     return marshaller;
   }
 
