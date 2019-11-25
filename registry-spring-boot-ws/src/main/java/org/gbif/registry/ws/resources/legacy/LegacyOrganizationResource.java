@@ -15,6 +15,7 @@ import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.util.CommonWsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -131,7 +132,7 @@ public class LegacyOrganizationResource {
                                          String callback,
                                          String op,
                                          HttpServletResponse response) {
-    String responseType = getResponseTypeByExtension(extension);
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
     if (responseType != null) {
       response.setContentType(responseType);
     } else {
@@ -255,7 +256,7 @@ public class LegacyOrganizationResource {
   private ResponseEntity getOrganizationsInternal(String extension, HttpServletResponse response) {
     LOG.debug("List all Organizations for IPT");
 
-    String responseType = getResponseTypeByExtension(extension);
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
     if (responseType != null) {
       response.setContentType(responseType);
     } else {
@@ -303,15 +304,5 @@ public class LegacyOrganizationResource {
       "GBIF (Global Biodiversity Information Facility)\n" +
       "https://www.gbif.org\n" +
       ccEmail;
-  }
-
-  private String getResponseTypeByExtension(String extension) {
-    if (".xml".equals(extension)) {
-      return MediaType.APPLICATION_XML_VALUE;
-    } else if (".json".equals(extension)) {
-      return MediaType.APPLICATION_JSON_VALUE;
-    } else {
-      return null;
-    }
   }
 }
