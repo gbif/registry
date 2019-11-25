@@ -194,6 +194,15 @@ public class LegacyEndpointTestSteps {
       .andDo(print());
   }
 
+  @When("perform get dataset endpoints request with extension {string} and without {word} parameter")
+  public void getDatasetEndpoints(String extension, String parameter) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/service{extension}", extension)
+          .contentType(TEXT_PLAIN))
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -294,5 +303,11 @@ public class LegacyEndpointTestSteps {
       assertEquals(expectedData.get(i).get("description"), actualData.get(i).get("description").asText());
       assertEquals(expectedData.get(i).get("key"), actualData.get(i).get("key").asText());
     }
+  }
+
+  @Then("returned get endpoints error response is")
+  public void checkGetEndpointsForDatasetErrorResponse(String response) throws Exception {
+    result
+      .andExpect(jsonPath("$.error").value(response));
   }
 }
