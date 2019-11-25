@@ -174,9 +174,8 @@ public class LegacyOrganizationTestSteps {
       actualOrganizationsResponse = objectMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
       });
     } else {
-      // TODO: 20/11/2019 fix this, should start with lowercase 'l'
       assertTrue("Xml should start with <legacyOrganizationBriefResponses><organisation>",
-        contentAsString.contains("<LegacyOrganizationBriefResponses><organisation>"));
+        contentAsString.contains("<legacyOrganizationBriefResponses><organisation>"));
       actualOrganizationsResponse = xmlMapper.readValue(contentAsString, new TypeReference<List<LegacyOrganizationBriefResponse>>() {
       });
     }
