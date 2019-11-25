@@ -70,12 +70,17 @@ Feature: LegacyEndpointResource functionality
       |             | OTHER                      |             | 16180 |
       |             | DWC-ARCHIVE-SAMPLING-EVENT |             | 16190 |
 
-  Scenario: Send a get all endpoints for dataset (GET) request, the XML response having at the very least the dataset key, endpoint key, endpoint type, and endpoint url
+  Scenario Outline: Send a get all endpoints for dataset (GET) request, the <case> response having at the very least the dataset key, endpoint key, endpoint type, and endpoint url
     Given 2 endpoint in database before
-    When perform get dataset endpoints request with extension ".xml" and parameter resourceKey and value "d82273f6-9738-48a5-a639-2086f9c49d18"
+    When perform get dataset endpoints request with extension "<extension>" and parameter resourceKey and value "d82273f6-9738-48a5-a639-2086f9c49d18"
     Then response status should be 200
     And 2 endpoint in database after
-    And returned response in XML is
+    And returned response in <case> is
       | resourceKey                          | description            | type  | accessPointURL           |
       | d82273f6-9738-48a5-a639-2086f9c49d18 | A Tapir installation   | TAPIR | http://www.example.org/1 |
       | d82273f6-9738-48a5-a639-2086f9c49d18 | A Tapir installation 2 | TAPIR | http://www.example.org/2 |
+
+    Scenarios:
+      | case | extension |
+      | XML  | .xml      |
+      | JSON | .json     |

@@ -10,6 +10,7 @@ import org.gbif.registry.ws.model.LegacyEndpointListWrapper;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.util.CommonWsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -137,8 +139,8 @@ public class LegacyEndpointResource {
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity endpointsForDataset(@PathVariable("extension") String extension,
                                             @RequestParam(value = "resourceKey", required = false) UUID datasetKey,
-                                            @RequestParam(value = "op", required = false) String op) {
-
+                                            @RequestParam(value = "op", required = false) String op,
+                                            HttpServletResponse httpServletResponse) {
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
       try {
@@ -158,6 +160,16 @@ public class LegacyEndpointResource {
           .build();
       }
     } else if (datasetKey != null) {
+      String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
+      if (responseType != null) {
+        httpServletResponse.setContentType(responseType);
+      } else {
+        return ResponseEntity
+          .status(HttpStatus.NOT_FOUND)
+          .cacheControl(CacheControl.noCache())
+          .build();
+      }
+
       try {
         // verify Dataset with key exists, otherwise NotFoundException gets thrown
         datasetService.get(datasetKey);

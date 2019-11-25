@@ -50,6 +50,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
@@ -216,35 +217,69 @@ public class LegacyEndpointTestSteps {
   @Then("returned response in {word} is")
   public void checkEndpointResponse(String contentType, List<LegacyEndpointResponse> expectedResponses) throws Exception {
     if ("XML".equals(contentType)) {
-      for (int i = 0; i < expectedResponses.size(); i++) {
-        result
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/accessPointURL", i + 1))
-              .string(expectedResponses.get(i).getAccessPointURL()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/description", i + 1))
-              .string(expectedResponses.get(i).getDescription()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/descriptionLanguage", i + 1))
-              .string(isEmptyString()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/key", i + 1))
-              .string(not(isEmptyString())))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/organisationKey", i + 1))
-              .string(isEmptyString()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/resourceKey", i + 1))
-              .string(expectedResponses.get(i).getResourceKey()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/type", i + 1))
-              .string(expectedResponses.get(i).getType()))
-          .andExpect(
-            xpath(String.format("/legacyEndpointResponses/service[%d]/typeDescription", i + 1))
-              .string(isEmptyString()));
-      }
+      checkEndpointResponseXML(expectedResponses);
     } else {
-      // json stuff
+      checkEndpointResponseJSON(expectedResponses);
+    }
+  }
+
+  private void checkEndpointResponseJSON(List<LegacyEndpointResponse> expectedResponses) throws Exception {
+    for (int i = 0; i < expectedResponses.size(); i++) {
+      result
+        .andExpect(
+          jsonPath(String.format("[%d].accessPointURL", i))
+            .value(expectedResponses.get(i).getAccessPointURL()))
+        .andExpect(
+          jsonPath(String.format("[%d].description", i))
+            .value(expectedResponses.get(i).getDescription()))
+        .andExpect(
+          jsonPath(String.format("[%d].descriptionLanguage", i))
+            .value(isEmptyString()))
+        .andExpect(
+          jsonPath(String.format("[%d].key", i))
+            .value(not(isEmptyString())))
+        .andExpect(
+          jsonPath(String.format("[%d].organisationKey", i))
+            .value(isEmptyString()))
+        .andExpect(
+          jsonPath(String.format("[%d].resourceKey", i))
+            .value(expectedResponses.get(i).getResourceKey()))
+        .andExpect(
+          jsonPath(String.format("[%d].type", i))
+            .value(expectedResponses.get(i).getType()))
+        .andExpect(
+          jsonPath(String.format("[%d].typeDescription", i))
+            .value(isEmptyString()));
+    }
+  }
+
+  private void checkEndpointResponseXML(List<LegacyEndpointResponse> expectedResponses) throws Exception {
+    for (int i = 0; i < expectedResponses.size(); i++) {
+      result
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/accessPointURL", i + 1))
+            .string(expectedResponses.get(i).getAccessPointURL()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/description", i + 1))
+            .string(expectedResponses.get(i).getDescription()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/descriptionLanguage", i + 1))
+            .string(isEmptyString()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/key", i + 1))
+            .string(not(isEmptyString())))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/organisationKey", i + 1))
+            .string(isEmptyString()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/resourceKey", i + 1))
+            .string(expectedResponses.get(i).getResourceKey()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/type", i + 1))
+            .string(expectedResponses.get(i).getType()))
+        .andExpect(
+          xpath(String.format("/legacyEndpointResponses/service[%d]/typeDescription", i + 1))
+            .string(isEmptyString()));
     }
   }
 
