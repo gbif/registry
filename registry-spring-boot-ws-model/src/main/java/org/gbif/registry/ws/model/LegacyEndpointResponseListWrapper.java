@@ -10,16 +10,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.IOException;
 import java.util.List;
 
-@JsonSerialize(using = LegacyEndpointListWrapper.LegacyEndpointResponseListWrapperJsonSerializer.class)
+@JsonSerialize(using = LegacyEndpointResponseListWrapper.LegacyEndpointResponseListWrapperJsonSerializer.class)
 @XmlRootElement(name = "legacyEndpointResponses")
-public class LegacyEndpointListWrapper {
+public class LegacyEndpointResponseListWrapper {
 
   private List<LegacyEndpointResponse> legacyEndpointResponses;
 
-  public LegacyEndpointListWrapper() {
+  public LegacyEndpointResponseListWrapper() {
   }
 
-  public LegacyEndpointListWrapper(List<LegacyEndpointResponse> legacyEndpointResponses) {
+  public LegacyEndpointResponseListWrapper(List<LegacyEndpointResponse> legacyEndpointResponses) {
     this.legacyEndpointResponses = legacyEndpointResponses;
   }
 
@@ -32,10 +32,10 @@ public class LegacyEndpointListWrapper {
     this.legacyEndpointResponses = legacyEndpointResponses;
   }
 
-  public static class LegacyEndpointResponseListWrapperJsonSerializer extends JsonSerializer<LegacyEndpointListWrapper> {
+  public static class LegacyEndpointResponseListWrapperJsonSerializer extends JsonSerializer<LegacyEndpointResponseListWrapper> {
 
     @Override
-    public void serialize(LegacyEndpointListWrapper value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(LegacyEndpointResponseListWrapper value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
       if (value == null) {
         jgen.writeNull();
         return;
