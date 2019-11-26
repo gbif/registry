@@ -9,6 +9,8 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
+import org.gbif.registry.ws.model.LegacyDatasetResponse;
+import org.gbif.ws.util.CommonWsUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -22,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,8 +43,10 @@ import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_TYPES_PA
 import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_URLS_PARAM;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -154,6 +159,17 @@ public class LegacyDatasetTestSteps {
           .contentType(APPLICATION_FORM_URLENCODED)
           .accept(APPLICATION_XML)
           .with(httpBasic(orgKey, password)))
+      .andDo(print());
+  }
+
+  @When("perform get datasets for organization request with extension {string} and parameter {word} and value {string}")
+  public void updateIptDataset(String extension, String paramName, String paramValue) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/resource")
+          .param(paramName, paramValue)
+          .contentType(TEXT_PLAIN)
+          .accept(CommonWsUtils.getResponseTypeByExtension(extension)))
       .andDo(print());
   }
 
@@ -278,5 +294,45 @@ public class LegacyDatasetTestSteps {
       .andExpect(
         xpath("/resource/contacts/modifiedBy")
           .string(expectedContact.getModifiedBy()));
+  }
+
+  @Then("returned {word} datasets for organization are")
+  public void checkDatasetsForOrganizationResponse(String type, List<LegacyDatasetResponse> expectedResponse) throws Exception {
+    if ("XML".equals(type)) {
+      checkDatasetsForOrganizationResponseXml(expectedResponse);
+    } else {
+      checkDatasetsForOrganizationResponseJson(expectedResponse);
+    }
+  }
+
+  private void checkDatasetsForOrganizationResponseXml(List<LegacyDatasetResponse> expectedResponse) throws Exception {
+    for (int i = 0; i < expectedResponse.size(); i++) {
+      result
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/key", i + 1))
+            .string(expectedResponse.get(i).getKey()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/description", i + 1))
+            .string(expectedResponse.get(i).getDescription()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/descriptionLanguage", i + 1))
+            .string(expectedResponse.get(i).getDescriptionLanguage()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/homepageURL", i + 1))
+            .string(expectedResponse.get(i).getHomepageURL()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/name", i + 1))
+            .string(expectedResponse.get(i).getName()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/nameLanguage", i + 1))
+            .string(expectedResponse.get(i).getNameLanguage()))
+        .andExpect(
+          xpath(String.format("/legacyDatasetResponses/resource[%d]/organisationKey", i + 1))
+            .string(expectedResponse.get(i).getOrganisationKey()));
+    }
+  }
+
+  private void checkDatasetsForOrganizationResponseJson(List<LegacyDatasetResponse> expectedResponse) throws Exception {
+    // add json assertions
   }
 }
