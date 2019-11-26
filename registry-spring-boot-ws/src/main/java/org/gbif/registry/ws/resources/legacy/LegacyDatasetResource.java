@@ -91,78 +91,77 @@ public class LegacyDatasetResource {
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey,
                                       @RequestParam LegacyDataset dataset,
                                       Authentication authentication) {
-    if (dataset != null) {
-      // set required fields
-      String user = authentication.getName();
-      dataset.setCreatedBy(user);
-      dataset.setModifiedBy(user);
-      dataset.setKey(datasetKey);
-      // retrieve existing dataset
-      Dataset existing = datasetService.get(datasetKey);
-      // populate dataset with existing primary contact so it gets updated, not duplicated
-      dataset.setContacts(existing.getContacts());
-      // if primary contact wasn't supplied, set existing one here so that it doesn't respond BAD_REQUEST
-      if (dataset.getPrimaryContactAddress() == null && dataset.getPrimaryContactEmail() == null
-        && dataset.getPrimaryContactType() == null && dataset.getPrimaryContactPhone() == null
-        && dataset.getPrimaryContactName() == null && dataset.getPrimaryContactDescription() == null) {
-        dataset.setPrimaryContact(LegacyResourceUtils.getPrimaryContact(existing));
-      }
-      // otherwise, update primary contact and type
-      else {
-        dataset.prepare();
-      }
-      // If installation key wasn't provided, reuse existing dataset's installation key
-      // Reason: non-IPT consumers weren't aware they could supply the parameter iptKey on dataset updates before
-      if (dataset.getInstallationKey() == null) {
-        dataset.setInstallationKey(existing.getInstallationKey());
-      }
-      // Dataset can only have 1 installation key, log if the hosting installation is being changed
-      else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
-        LOG.debug("The dataset's technical installation is being changed from {} to {}", dataset.getInstallationKey(), existing.getInstallationKey());
-      }
-      // type can't be derived from endpoints, since there are no endpoints supplied on this update, so re-set existing
-      dataset.setType(existing.getType());
-      // populate publishing organization from credentials
-      dataset.setPublishingOrganizationKey(extractOrgKeyFromSecurity(authentication));
-      // ensure the publishing organization exists, the installation exists, primary contact exists, etc
-      Contact contact = dataset.getPrimaryContact();
-      if (contact != null && LegacyResourceUtils.isValidOnUpdate(dataset,
-        datasetService, organizationService, installationService)) {
-        // update only fields that could have changed
-        existing.setModifiedBy(user);
-        existing.setTitle(dataset.getTitle());
-        existing.setDescription(dataset.getDescription());
-        existing.setHomepage(dataset.getHomepage());
-        existing.setLogoUrl(dataset.getLogoUrl());
-        existing.setLanguage(dataset.getLanguage());
-        existing.setInstallationKey(dataset.getInstallationKey());
-
-        existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-
-        // persist changes
-        datasetService.update(existing);
-
-        // set primary contact's required field(s)
-        contact.setModifiedBy(user);
-        // add/update primary contact: Contacts are mutable, so try to update if the Contact already exists
-        if (contact.getKey() == null) {
-          contact.setCreatedBy(user);
-          datasetService.addContact(datasetKey, contact);
-        } else {
-          datasetService.updateContact(datasetKey, contact);
-        }
-
-        // endpoint changes are done through Service API
-
-        LOG.info("Dataset updated successfully, key={}", datasetKey);
-        return ResponseEntity
-          .status(HttpStatus.CREATED)
-          .cacheControl(CacheControl.noCache())
-          .body(dataset);
-      } else {
-        LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
-      }
+    // set required fields
+    String user = authentication.getName();
+    dataset.setCreatedBy(user);
+    dataset.setModifiedBy(user);
+    dataset.setKey(datasetKey);
+    // retrieve existing dataset
+    Dataset existing = datasetService.get(datasetKey);
+    // populate dataset with existing primary contact so it gets updated, not duplicated
+    dataset.setContacts(existing.getContacts());
+    // if primary contact wasn't supplied, set existing one here so that it doesn't respond BAD_REQUEST
+    if (dataset.getPrimaryContactAddress() == null && dataset.getPrimaryContactEmail() == null
+      && dataset.getPrimaryContactType() == null && dataset.getPrimaryContactPhone() == null
+      && dataset.getPrimaryContactName() == null && dataset.getPrimaryContactDescription() == null) {
+      dataset.setPrimaryContact(LegacyResourceUtils.getPrimaryContact(existing));
     }
+    // otherwise, update primary contact and type
+    else {
+      dataset.prepare();
+    }
+    // If installation key wasn't provided, reuse existing dataset's installation key
+    // Reason: non-IPT consumers weren't aware they could supply the parameter iptKey on dataset updates before
+    if (dataset.getInstallationKey() == null) {
+      dataset.setInstallationKey(existing.getInstallationKey());
+    }
+    // Dataset can only have 1 installation key, log if the hosting installation is being changed
+    else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
+      LOG.debug("The dataset's technical installation is being changed from {} to {}", dataset.getInstallationKey(), existing.getInstallationKey());
+    }
+    // type can't be derived from endpoints, since there are no endpoints supplied on this update, so re-set existing
+    dataset.setType(existing.getType());
+    // populate publishing organization from credentials
+    dataset.setPublishingOrganizationKey(extractOrgKeyFromSecurity(authentication));
+    // ensure the publishing organization exists, the installation exists, primary contact exists, etc
+    Contact contact = dataset.getPrimaryContact();
+    if (contact != null && LegacyResourceUtils.isValidOnUpdate(dataset,
+      datasetService, organizationService, installationService)) {
+      // update only fields that could have changed
+      existing.setModifiedBy(user);
+      existing.setTitle(dataset.getTitle());
+      existing.setDescription(dataset.getDescription());
+      existing.setHomepage(dataset.getHomepage());
+      existing.setLogoUrl(dataset.getLogoUrl());
+      existing.setLanguage(dataset.getLanguage());
+      existing.setInstallationKey(dataset.getInstallationKey());
+
+      existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+
+      // persist changes
+      datasetService.update(existing);
+
+      // set primary contact's required field(s)
+      contact.setModifiedBy(user);
+      // add/update primary contact: Contacts are mutable, so try to update if the Contact already exists
+      if (contact.getKey() == null) {
+        contact.setCreatedBy(user);
+        datasetService.addContact(datasetKey, contact);
+      } else {
+        datasetService.updateContact(datasetKey, contact);
+      }
+
+      // endpoint changes are done through Service API
+
+      LOG.info("Dataset updated successfully, key={}", datasetKey);
+      return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .cacheControl(CacheControl.noCache())
+        .body(dataset);
+    } else {
+      LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
+    }
+
     LOG.error("Dataset update failed");
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)
