@@ -11,6 +11,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyDatasetResponse;
+import org.gbif.registry.ws.model.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
@@ -200,12 +201,10 @@ public class LegacyDatasetResource {
           page.nextPage();
         } while (!response.isEndOfRecords());
         LOG.debug("Get all Datasets owned by Organization finished");
-        // return array, required for serialization otherwise might get an exception
-        // writer for Java class java.util.ArrayList
-        LegacyDatasetResponse[] array = datasets.toArray(new LegacyDatasetResponse[datasets.size()]);
+
         return ResponseEntity
           .status(HttpStatus.OK)
-          .body(array);
+          .body(new LegacyDatasetResponseListWrapper(datasets));
       } catch (NotFoundException e) {
         LOG.error("The organization with key {} specified by query parameter does not exist", organizationKey);
       }
