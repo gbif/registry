@@ -49,6 +49,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
@@ -333,6 +334,29 @@ public class LegacyDatasetTestSteps {
   }
 
   private void checkDatasetsForOrganizationResponseJson(List<LegacyDatasetResponse> expectedResponse) throws Exception {
-    // add json assertions
+    for (int i = 0; i < expectedResponse.size(); i++) {
+      result
+        .andExpect(
+          jsonPath(String.format("[%d].key", i))
+            .value(expectedResponse.get(i).getKey()))
+        .andExpect(
+          jsonPath(String.format("[%d].organisationKey", i))
+            .value(expectedResponse.get(i).getOrganisationKey()))
+        .andExpect(
+          jsonPath(String.format("[%d].name", i))
+            .value(expectedResponse.get(i).getName()))
+        .andExpect(
+          jsonPath(String.format("[%d].nameLanguage", i))
+            .value(expectedResponse.get(i).getNameLanguage()))
+        .andExpect(
+          jsonPath(String.format("[%d].description", i))
+            .value(expectedResponse.get(i).getDescription()))
+        .andExpect(
+          jsonPath(String.format("[%d].descriptionLanguage", i))
+            .value(expectedResponse.get(i).getDescriptionLanguage()))
+        .andExpect(
+          jsonPath(String.format("[%d].homepageURL", i))
+            .value(expectedResponse.get(i).getHomepageURL()));
+    }
   }
 }
