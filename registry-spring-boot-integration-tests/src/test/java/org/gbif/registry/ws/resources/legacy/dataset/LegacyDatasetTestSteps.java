@@ -102,23 +102,23 @@ public class LegacyDatasetTestSteps {
     // prepared by script, see @Before
   }
 
-  @Given("installation {string} with key {string}")
-  public void prepareInstallation(String instName, String installationKey) {
+  @Given("installation {string} with key {string} for organization {string}")
+  public void prepareInstallation(String instName, String installationKey, String orgName) {
     // prepared by script, see @Before
   }
 
-  @Given("dataset {string} with key {string}")
-  public void prepareDataset(String name, String datasetKey) {
+  @Given("dataset {string} with key {string} for installation {string}")
+  public void prepareDataset(String name, String datasetKey, String installationName) {
     // prepared by script, see @Before
   }
 
-  @Given("dataset contact {string} with key {int}")
-  public void prepareContact(String email, int key) {
+  @Given("dataset contact {string} with key {int} for dataset {string}")
+  public void prepareContact(String email, int key, String datasetName) {
     // prepared by script, see @Before
   }
 
-  @Given("dataset endpoint {string} with key {int}")
-  public void prepareEndpoint(String description, int key) {
+  @Given("dataset endpoint {string} with key {int} for dataset {string}")
+  public void prepareEndpoint(String description, int key, String datasetName) {
     // prepared by script, see @Before
   }
 
@@ -358,5 +358,24 @@ public class LegacyDatasetTestSteps {
           jsonPath(String.format("[%d].homepageURL", i))
             .value(expectedResponse.get(i).getHomepageURL()));
     }
+  }
+
+  @Then("datasets error {word} response is {string}")
+  public void checkDatasetsForOrganizationErrorResponse(String type, String expectedErrorMessage) throws Exception {
+    if ("XML".equals(type)) {
+      result.andExpect(xpath("/IptError/@error").string(expectedErrorMessage));
+    } else {
+      result.andExpect(jsonPath("$.error").value(expectedErrorMessage));
+    }
+  }
+
+  @Then("datasets {word} response is empty")
+  public void checkDatasetsForOrganizationEmptyResponse(String type) throws Exception {
+    if ("XML".equals(type)) {
+      result.andExpect(xpath("/legacyDatasetResponses").string(""));
+    } else {
+      result.andExpect(jsonPath("$").isEmpty());
+    }
+
   }
 }
