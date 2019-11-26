@@ -12,11 +12,17 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.model.ErrorResponse;
+import org.gbif.registry.ws.model.IptEntityResponse;
 import org.gbif.registry.ws.model.LegacyDataset;
+import org.gbif.registry.ws.model.LegacyDatasetResponse;
+import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyEndpointResponseListWrapper;
+import org.gbif.registry.ws.model.LegacyInstallation;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponseListWrapper;
+import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.mixin.LicenseMixin;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
@@ -144,9 +150,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(
-      LegacyEndpointResponseListWrapper.class, LegacyEndpointResponse.class,
-      LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class,
-      LegacyDataset.class);
+      LegacyEndpoint.class, LegacyEndpointResponse.class, LegacyEndpointResponseListWrapper.class,
+      LegacyInstallation.class,
+      LegacyOrganizationResponse.class, LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class,
+      LegacyDataset.class, LegacyDatasetResponse.class,
+      IptEntityResponse.class, ErrorResponse.class);
     return marshaller;
   }
 
