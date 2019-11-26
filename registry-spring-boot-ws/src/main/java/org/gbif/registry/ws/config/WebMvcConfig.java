@@ -12,6 +12,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.annotation.ParamName;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyEndpointResponseListWrapper;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
@@ -144,7 +145,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(
       LegacyEndpointResponseListWrapper.class, LegacyEndpointResponse.class,
-      LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class);
+      LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class,
+      LegacyDataset.class);
     return marshaller;
   }
 
