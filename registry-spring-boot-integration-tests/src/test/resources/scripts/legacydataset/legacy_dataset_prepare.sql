@@ -10,6 +10,13 @@ INSERT INTO public.organization (key, endorsing_node_key, endorsement_approved, 
 VALUES ('36107c15-771c-4810-a298-b7558828b8bd', '710970cf-e3f1-4e74-b09c-d8c86b9819d9', true, 'welcome', 'Org', null,
         null, 'en', null, null, null, null, null, null, null, 'WS TEST', 'WS TEST', '2019-09-12 12:06:01.835000',
         '2019-09-12 12:06:04.366000', null, null, null, null, null, null, null);
+INSERT INTO public.organization (key, endorsing_node_key, endorsement_approved, password, title, abbreviation,
+                                 description, language, logo_url, city, province, country, postal_code, latitude,
+                                 longitude, created_by, modified_by, created, modified, deleted, fulltext_search, email,
+                                 phone, homepage, address, challenge_code_key)
+VALUES ('58f3a88a-0557-4208-a504-1f67fc74764f', '710970cf-e3f1-4e74-b09c-d8c86b9819d9', true, 'welcome', 'Org 2', null,
+        null, 'en', null, null, null, null, null, null, null, 'WS TEST', 'WS TEST', '2019-09-12 12:06:01.835000',
+        '2019-09-12 12:06:04.366000', null, null, null, null, null, null, null);
 
 INSERT INTO public.installation (key, organization_key, type, title, description, created_by, modified_by, created,
                                  modified, deleted, fulltext_search, password, disabled)
