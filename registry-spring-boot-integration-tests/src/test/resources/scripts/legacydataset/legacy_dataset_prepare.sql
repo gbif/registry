@@ -37,7 +37,7 @@ INSERT INTO public.contact (key, last_name, description, organization, city, pro
 VALUES (2055, 'Robertson', 'About 175cm', 'GBIF', 'Copenhagen', 'Capital', 'DK', '2100', 'WS TEST',
         'WS TEST', '2019-11-25 15:43:05.759173', '2019-11-25 15:43:05.759173',
         '''+45'':9 ''15'':13 ''175cm'':4 ''2100'':17 ''28261487'':10 ''dk'':16 ''gbif'':11 ''geeki'':5 ''kobenhavn'':14 ''programm'':7 ''robertson'':2 ''scruffi'':6 ''sjaelland'':15 ''tim'':1 ''trobertson@gbif.org'':8 ''universitetsparken'':12',
-        'Tim', '', '', '{Programmer}', '{gbifregistry@mailinator.com}', '{+45 28261487}', '{Universitetsparken 15}');
+        'Tim', '{}', '{}', '{Programmer}', '{gbifregistry@mailinator.com}', '{+45 28261487}', '{Universitetsparken 15}');
 INSERT INTO public.dataset_contact (dataset_key, contact_key, type, is_primary)
 VALUES ('d82273f6-9738-48a5-a639-2086f9c49d18', 2055, 'TECHNICAL_POINT_OF_CONTACT', true);
 
