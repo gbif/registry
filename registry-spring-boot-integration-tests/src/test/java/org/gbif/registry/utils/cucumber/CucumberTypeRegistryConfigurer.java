@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.common.LoggedUserWithToken;
+import org.gbif.registry.ws.model.LegacyDatasetResponse;
 import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
@@ -33,5 +34,6 @@ public class CucumberTypeRegistryConfigurer implements TypeRegistryConfigurer {
     typeRegistry.defineDataTableType(new DataTableType(LegacyOrganizationBriefResponse.class, new LegacyOrganizationBriefResponseTableEntryTransformer()));
     typeRegistry.defineDataTableType(new DataTableType(LegacyEndpoint.class, new LegacyEndpointTableEntryTransformer()));
     typeRegistry.defineDataTableType(new DataTableType(LegacyEndpointResponse.class, new LegacyEndpointResponseTableEntryTransformer()));
+    typeRegistry.defineDataTableType(new DataTableType(LegacyDatasetResponse.class, new LegacyDatasetResponseTableEntryTransformer()));
   }
 }

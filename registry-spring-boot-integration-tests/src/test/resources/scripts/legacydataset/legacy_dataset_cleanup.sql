@@ -7,3 +7,4 @@ DELETE FROM public.installation;
 DELETE FROM public.organization;
 DELETE FROM public.node;
 DELETE FROM public.endpoint;
+DELETE FROM public.contact;

@@ -4,7 +4,8 @@ Feature: LegacyDatasetResource functionality
   Background:
     Given organization "Org" with key "36107c15-771c-4810-a298-b7558828b8bd"
     And installation "Test IPT Registry2" with key "2fe63cec-9b23-4974-bab1-9f4118ef7711"
-    And dataset "Occurrence Dataset 1" with key "d82273f6-9738-48a5-a639-2086f9c49d18"
+    And dataset "Test Dataset Registry" with key "d82273f6-9738-48a5-a639-2086f9c49d18"
+    And dataset "Test Dataset Registry 2" with key "4348adaa-d744-4241-92a0-ebf9d55eb9bb"
     And dataset contact "gbifregistry@mailinator.com" with key 1188
     And dataset endpoint "http://www.example.org" with key 2055
     And query parameters to dataset updating
@@ -28,4 +29,17 @@ Feature: LegacyDatasetResource functionality
     And updated dataset contact is
       | key  | type                       | primary | firstName | lastName  | position   | description | email                       | phone        | organization | address               | city       | province | country | postalCode | createdBy | modifiedBy                           |
       | 2055 | TECHNICAL_POINT_OF_CONTACT | true    | Tim       | Robertson | Programmer | About 175cm | gbifregistry@mailinator.com | +45 28261487 | GBIF         | Universitetsparken 15 | Copenhagen | Capital  | DENMARK | 2100       | WS TEST   | 36107c15-771c-4810-a298-b7558828b8bd |
+
+  Scenario Outline: Sends a get all datasets owned by organization (GET) request, the <case> response having at the very least the dataset key, publishing organization key, dataset title, and dataset description
+    When perform get datasets for organization request with extension "<extension>" and parameter organisationKey and value "36107c15-771c-4810-a298-b7558828b8bd"
+    Then response status should be 200
+    And returned <case> datasets for organization are
+      | key                                  | description                   | descriptionLanguage | homepageURL             | name                    | nameLanguage | organisationKey                      |
+      | 4348adaa-d744-4241-92a0-ebf9d55eb9bb | Description of Test Dataset 2 | en                  | http://www.homepage.com | Test Dataset Registry 2 | en           | 36107c15-771c-4810-a298-b7558828b8bd |
+      | d82273f6-9738-48a5-a639-2086f9c49d18 | Description of Test Dataset   | en                  | http://www.homepage.com | Test Dataset Registry   | en           | 36107c15-771c-4810-a298-b7558828b8bd |
+
+    Scenarios:
+      | case | extension |
+      | XML  | .xml      |
+      | JSON | .json     |
 
