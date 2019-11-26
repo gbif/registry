@@ -16,6 +16,7 @@ import org.gbif.registry.ws.model.ErrorResponse;
 import org.gbif.registry.ws.model.IptEntityResponse;
 import org.gbif.registry.ws.model.LegacyDataset;
 import org.gbif.registry.ws.model.LegacyDatasetResponse;
+import org.gbif.registry.ws.model.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.ws.model.LegacyEndpoint;
 import org.gbif.registry.ws.model.LegacyEndpointResponse;
 import org.gbif.registry.ws.model.LegacyEndpointResponseListWrapper;
@@ -153,7 +154,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
       LegacyEndpoint.class, LegacyEndpointResponse.class, LegacyEndpointResponseListWrapper.class,
       LegacyInstallation.class,
       LegacyOrganizationResponse.class, LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class,
-      LegacyDataset.class, LegacyDatasetResponse.class,
+      LegacyDataset.class, LegacyDatasetResponse.class, LegacyDatasetResponseListWrapper.class,
       IptEntityResponse.class, ErrorResponse.class);
     return marshaller;
   }
