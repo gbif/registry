@@ -488,4 +488,13 @@ public class LegacyDatasetTestSteps {
   public void checkResponseProperFormatAndParse(String contentType) {
     assertTrue(result.andReturn().getResponse().getContentType().contains(contentType));
   }
+
+  @Then("dataset error {word} response is {string}")
+  public void checkErrorResponse(String type, String expectedErrorMessage) throws Exception {
+    if ("JSON".equals(type)) {
+      result.andExpect(jsonPath("$.error").value(expectedErrorMessage));
+    } else {
+      result.andExpect(xpath("/IptError/@error").string(expectedErrorMessage));
+    }
+  }
 }
