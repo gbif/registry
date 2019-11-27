@@ -10,7 +10,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.model.LegacyDatasetResponse;
-import org.gbif.ws.util.CommonWsUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -41,6 +40,7 @@ import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_
 import static org.gbif.registry.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_TYPES_PARAM;
 import static org.gbif.registry.ws.util.LegacyResourceConstants.SERVICE_URLS_PARAM;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
@@ -148,7 +148,7 @@ public class LegacyDatasetTestSteps {
   }
 
   @When("update dataset {string} with key {string} using {word} organization key {string} and password {string}")
-  public void updateIptDataset(String datasetName, String datasetKey, String valid, String orgKey,
+  public void updateDataset(String datasetName, String datasetKey, String valid, String orgKey,
                                String password, Map<String, String> params) throws Exception {
     requestParamsDataset.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsDataset.set(NAME_PARAM, params.get(NAME_PARAM));
@@ -164,13 +164,21 @@ public class LegacyDatasetTestSteps {
   }
 
   @When("perform get datasets for organization request with extension {string} and parameter {word} and value {string}")
-  public void updateIptDataset(String extension, String paramName, String paramValue) throws Exception {
+  public void getDatasetsForOrganization(String extension, String paramName, String paramValue) throws Exception {
     result = mvc
       .perform(
-        get("/registry/resource")
+        get("/registry/resource{extension}", extension)
           .param(paramName, paramValue)
-          .contentType(TEXT_PLAIN)
-          .accept(CommonWsUtils.getResponseTypeByExtension(extension)))
+          .contentType(TEXT_PLAIN))
+      .andDo(print());
+  }
+
+  @When("perform get dataset {string} request with extension {string}")
+  public void getDataset(String datasetKey, String extension) throws Exception {
+    result = mvc
+      .perform(
+        get("/registry/resource/{key}{extension}", datasetKey, extension)
+          .contentType(TEXT_PLAIN))
       .andDo(print());
   }
 
@@ -299,10 +307,10 @@ public class LegacyDatasetTestSteps {
 
   @Then("returned {word} datasets for organization are")
   public void checkDatasetsForOrganizationResponse(String type, List<LegacyDatasetResponse> expectedResponse) throws Exception {
-    if ("XML".equals(type)) {
-      checkDatasetsForOrganizationResponseXml(expectedResponse);
-    } else {
+    if ("JSON".equals(type)) {
       checkDatasetsForOrganizationResponseJson(expectedResponse);
+    } else {
+      checkDatasetsForOrganizationResponseXml(expectedResponse);
     }
   }
 
@@ -362,20 +370,25 @@ public class LegacyDatasetTestSteps {
 
   @Then("datasets error {word} response is {string}")
   public void checkDatasetsForOrganizationErrorResponse(String type, String expectedErrorMessage) throws Exception {
-    if ("XML".equals(type)) {
-      result.andExpect(xpath("/IptError/@error").string(expectedErrorMessage));
-    } else {
+    if ("JSON".equals(type)) {
       result.andExpect(jsonPath("$.error").value(expectedErrorMessage));
+    } else {
+      result.andExpect(xpath("/IptError/@error").string(expectedErrorMessage));
     }
   }
 
   @Then("datasets {word} response is empty")
   public void checkDatasetsForOrganizationEmptyResponse(String type) throws Exception {
-    if ("XML".equals(type)) {
-      result.andExpect(xpath("/legacyDatasetResponses").string(""));
-    } else {
+    if ("JSON".equals(type)) {
       result.andExpect(jsonPath("$").isEmpty());
+    } else {
+      result.andExpect(xpath("/legacyDatasetResponses").string(""));
     }
+  }
 
+  @SuppressWarnings("ConstantConditions")
+  @Then("content type {string} is expected")
+  public void checkResponseProperFormatAndParse(String contentType) {
+    assertTrue(result.andReturn().getResponse().getContentType().contains(contentType));
   }
 }
