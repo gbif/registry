@@ -15,7 +15,6 @@ import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,7 +30,6 @@ import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -160,24 +158,17 @@ public class LegacyOrganizationTestSteps {
   }
 
   @Then("content type {string} is expected")
-  public void checkResponseProperFormatAndParse(String contentType) throws Exception {
+  public void checkResponseProperFormatAndParse(String contentType) {
     assertEquals(contentType, result.andReturn().getResponse().getContentType());
-
-    // TODO: 27/11/2019 replace with jsonpath and xpath stuff
-    MvcResult mvcResult = result.andReturn();
-    String contentAsString = mvcResult.getResponse().getContentAsString();
-    if (MediaType.APPLICATION_JSON_VALUE.equals(contentType)) {
-      actualResponse = objectMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
-    } else if (MediaType.APPLICATION_XML_VALUE.equals(contentType)) {
-      actualResponse = xmlMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
-    } else {
-      fail("JSON or XML are expected!");
-    }
   }
 
   @Then("returned organization for case {word} is")
-  public void assertResponse(String type, LegacyOrganizationResponse expectedResponse) {
-    assertEquals(expectedResponse, actualResponse);
+  public void assertOrganizationResponse(String type, LegacyOrganizationResponse expectedResponse) throws Exception {
+    if ("JSON".equals(type)) {
+      checkOrganizationResponseJson(expectedResponse);
+    } else {
+      checkOrganizationResponseXml(expectedResponse);
+    }
   }
 
   @Then("returned brief organizations response for case {word} are")
@@ -211,5 +202,100 @@ public class LegacyOrganizationTestSteps {
           jsonPath(String.format("[%d].name", i))
             .value(expectedResponses.get(i).getName()));
     }
+  }
+
+  private void checkOrganizationResponseXml(LegacyOrganizationResponse expectedEntity) throws Exception {
+    result
+      .andExpect(
+        xpath("/organisation/key")
+          .string(expectedEntity.getKey()))
+      .andExpect(
+        xpath("/organisation/description")
+          .string(expectedEntity.getDescription()))
+      .andExpect(
+        xpath("/organisation/descriptionLanguage")
+          .string(expectedEntity.getDescriptionLanguage()))
+      .andExpect(
+        xpath("/organisation/homepageURL")
+          .string(expectedEntity.getHomepageURL()))
+      .andExpect(
+        xpath("/organisation/name")
+          .string(expectedEntity.getName()))
+      .andExpect(
+        xpath("/organisation/nodeKey")
+          .string(expectedEntity.getNodeKey()))
+      .andExpect(
+        xpath("/organisation/nodeName")
+          .string(expectedEntity.getNodeName()))
+      .andExpect(
+        xpath("/organisation/primaryContactAddress")
+          .string(expectedEntity.getPrimaryContactAddress()))
+      .andExpect(
+        xpath("/organisation/primaryContactDescription")
+          .string(expectedEntity.getPrimaryContactDescription()))
+      .andExpect(
+        xpath("/organisation/primaryContactEmail")
+          .string(expectedEntity.getPrimaryContactEmail()))
+      .andExpect(
+        xpath("/organisation/primaryContactName")
+          .string(expectedEntity.getPrimaryContactName()))
+      .andExpect(
+        xpath("/organisation/primaryContactPhone")
+          .string(expectedEntity.getPrimaryContactPhone()))
+      .andExpect(
+        xpath("/organisation/primaryContactType")
+          .string(expectedEntity.getPrimaryContactType()))
+      .andExpect(
+        xpath("/organisation/nodeContactEmail")
+          .string(expectedEntity.getNodeContactEmail()));
+  }
+
+  private void checkOrganizationResponseJson(LegacyOrganizationResponse expectedEntity) throws Exception {
+    result
+      .andExpect(
+        jsonPath("$.key")
+          .value(expectedEntity.getKey()))
+      .andExpect(
+        jsonPath("$.name")
+          .value(expectedEntity.getName()))
+      .andExpect(
+        jsonPath("$.nameLanguage")
+          .value(expectedEntity.getNameLanguage()))
+      .andExpect(
+        jsonPath("$.description")
+          .value(expectedEntity.getDescription()))
+      .andExpect(
+        jsonPath("$.descriptionLanguage")
+          .value(expectedEntity.getDescriptionLanguage()))
+      .andExpect(
+        jsonPath("$.homepageURL")
+          .value(expectedEntity.getHomepageURL()))
+      .andExpect(
+        jsonPath("$.nodeKey")
+          .value(expectedEntity.getNodeKey()))
+      .andExpect(
+        jsonPath("$.nodeName")
+          .value(expectedEntity.getNodeName()))
+      .andExpect(
+        jsonPath("$.primaryContactName")
+          .value(expectedEntity.getPrimaryContactName()))
+      .andExpect(
+        jsonPath("$.primaryContactAddress")
+          .value(expectedEntity.getPrimaryContactAddress()))
+      .andExpect(
+        jsonPath("$.primaryContactEmail")
+          .value(expectedEntity.getPrimaryContactEmail()))
+      .andExpect(
+        jsonPath("$.primaryContactPhone")
+          .value(expectedEntity.getPrimaryContactPhone()))
+      .andExpect(
+        jsonPath("$.primaryContactDescription")
+          .value(expectedEntity.getPrimaryContactDescription()))
+      .andExpect(
+        jsonPath("$.primaryContactType")
+          .value(expectedEntity.getPrimaryContactType()))
+      .andExpect(
+        jsonPath("$.nodeContactEmail")
+          .value(expectedEntity.getNodeContactEmail()));
   }
 }

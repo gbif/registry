@@ -37,10 +37,10 @@ Feature: LegacyOrganizationResource functionality
     And response should start with "jQuery15106997501577716321_1384974875868&_=1384974903371({"
 
   @GetOrganizations
-  Scenario Outline: Request all organizations (GET) with extension "<extension>", the <case> response having a key and name for each organisation in the list
+  Scenario Outline: Request all organizations (GET) with extension "<extension>", the response having a key and name for each organisation in the list
     When get organizations with extension "<extension>"
     Then response status should be 200
-#    And content type "<expectedContentType>" is expected
+    And content type "<expectedContentType>" is expected
     And returned brief organizations response for case <case> are
       | key                                  | name           |
       | 0af41159-061f-4693-b2e5-d3d062a8285d | The BGBM       |
