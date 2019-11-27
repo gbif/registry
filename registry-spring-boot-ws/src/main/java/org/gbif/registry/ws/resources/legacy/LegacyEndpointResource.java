@@ -159,7 +159,7 @@ public class LegacyEndpointResource {
           .build();
       }
     } else if (datasetKey != null) {
-      String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
+      String responseType = CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
       if (responseType != null) {
         httpServletResponse.setContentType(responseType);
       } else {
