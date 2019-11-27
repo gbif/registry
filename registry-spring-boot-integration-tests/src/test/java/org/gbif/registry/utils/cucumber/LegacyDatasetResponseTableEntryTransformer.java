@@ -18,6 +18,12 @@ public class LegacyDatasetResponseTableEntryTransformer implements TableEntryTra
     result.setName(entry.get("name"));
     result.setNameLanguage(entry.get("nameLanguage"));
     result.setOrganisationKey(entry.get("organisationKey"));
+    result.setPrimaryContactAddress(entry.get("primaryContactAddress"));
+    result.setPrimaryContactDescription(entry.get("primaryContactDescription"));
+    result.setPrimaryContactEmail(entry.get("primaryContactEmail"));
+    result.setPrimaryContactName(entry.get("primaryContactName"));
+    result.setPrimaryContactPhone(entry.get("primaryContactPhone"));
+    result.setPrimaryContactType(entry.get("primaryContactType"));
 
     return result;
   }

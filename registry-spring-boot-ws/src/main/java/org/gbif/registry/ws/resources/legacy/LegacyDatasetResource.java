@@ -235,7 +235,7 @@ public class LegacyDatasetResource {
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
-  @GetMapping(value = "resource/{key}{extension:\\.[a-z]+}",
+  @GetMapping(value = {"resource/{key:[a-zA-Z0-9-]+}", "resource/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
     consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity readDataset(@PathVariable("key") UUID datasetKey,
