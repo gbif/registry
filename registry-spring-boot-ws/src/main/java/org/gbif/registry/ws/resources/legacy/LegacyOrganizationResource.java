@@ -100,40 +100,18 @@ public class LegacyOrganizationResource {
    * Status.UNAUTHORIZED if they weren't
    * 3. (case: op=password) Response with Status.OK if email reminder was delivered successfully
    */
-  @GetMapping(value = "organisation/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}",
+  @GetMapping(value = {"organisation/{key:[a-zA-Z0-9-]+}", "organisation/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
     consumes = {MediaType.ALL_VALUE},
     produces = {MediaType.APPLICATION_XML_VALUE,
       MediaType.APPLICATION_JSON_VALUE,
       "application/x-javascript",
       "application/javascriptx-javascript"})
   public Object getOrganization(@PathVariable("key") UUID organisationKey,
-                                @PathVariable("extension") String extension,
+                                @PathVariable(value = "extension", required = false) String extension,
                                 @RequestParam(value = "callback", required = false) String callback,
                                 @RequestParam(value = "op", required = false) String op,
                                 HttpServletResponse response) {
-    return getOrganizationInternal(organisationKey, extension, callback, op, response);
-  }
-
-  // when no extension provided then xml is default
-  @GetMapping(value = "organisation/{key:[a-zA-Z0-9-]+}",
-    consumes = {MediaType.ALL_VALUE},
-    produces = {MediaType.APPLICATION_XML_VALUE,
-      MediaType.APPLICATION_JSON_VALUE,
-      "application/x-javascript",
-      "application/javascriptx-javascript"})
-  public Object getOrganization(@PathVariable("key") UUID organisationKey,
-                                @RequestParam(value = "callback", required = false) String callback,
-                                @RequestParam(value = "op", required = false) String op,
-                                HttpServletResponse response) {
-    return getOrganizationInternal(organisationKey, ".xml", callback, op, response);
-  }
-
-  private Object getOrganizationInternal(UUID organisationKey,
-                                         String extension,
-                                         String callback,
-                                         String op,
-                                         HttpServletResponse response) {
-    String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
     if (responseType != null) {
       response.setContentType(responseType);
     } else {
@@ -238,26 +216,17 @@ public class LegacyOrganizationResource {
   /**
    * Get a list of all Organizations, handling incoming request with path /registry/organisation.json. For each
    * Organization, only the key and title(name) fields are required. No authorization is required for this request.
+   * When no extension provided then xml is default
    *
    * @return list of all Organizations
    */
-  @GetMapping(value = "organisation{extension:\\.[a-z]+}",
+  @GetMapping(value = {"organisation", "organisation{extension:\\.[a-z]+}"},
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity getOrganizations(@PathVariable String extension, HttpServletResponse response) {
-    return getOrganizationsInternal(extension, response);
-  }
-
-  // when no extension provided then xml is default
-  @GetMapping(value = "organisation",
-    produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity getOrganizations(HttpServletResponse response) {
-    return getOrganizationsInternal(".xml", response);
-  }
-
-  private ResponseEntity getOrganizationsInternal(String extension, HttpServletResponse response) {
+  public ResponseEntity getOrganizations(@PathVariable(required = false, value = "extension") String extension,
+                                         HttpServletResponse response) {
     LOG.debug("List all Organizations for IPT");
 
-    String responseType = CommonWsUtils.getResponseTypeByExtension(extension);
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
     if (responseType != null) {
       response.setContentType(responseType);
     } else {
