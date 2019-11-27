@@ -435,8 +435,7 @@ public class LegacyDatasetTestSteps {
           .string(expectedDataset.getPrimaryContactPhone()))
       .andExpect(
         xpath("/resource/primaryContactType")
-          .string(expectedDataset.getPrimaryContactType()))
-    ;
+          .string(expectedDataset.getPrimaryContactType()));
   }
 
   private void checkDatasetResponseJson(LegacyDatasetResponse expectedDataset) throws Exception {
@@ -479,8 +478,7 @@ public class LegacyDatasetTestSteps {
           .value(expectedDataset.getPrimaryContactDescription()))
       .andExpect(
         jsonPath("$.primaryContactType")
-          .value(expectedDataset.getPrimaryContactType()))
-    ;
+          .value(expectedDataset.getPrimaryContactType()));
   }
 
   @SuppressWarnings("ConstantConditions")

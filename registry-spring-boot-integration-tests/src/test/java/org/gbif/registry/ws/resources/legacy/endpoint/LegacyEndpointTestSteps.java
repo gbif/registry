@@ -1,6 +1,5 @@
 package org.gbif.registry.ws.resources.legacy.endpoint;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.cucumber.java.After;
@@ -209,6 +208,11 @@ public class LegacyEndpointTestSteps {
       .andExpect(status().is(status));
   }
 
+  @Then("content type {string} is expected")
+  public void checkResponseProperFormatAndParse(String contentType) {
+    assertEquals(contentType, result.andReturn().getResponse().getContentType());
+  }
+
   @Then("registered/returned endpoint in {word} is")
   public void checkEndpoint(String contentType, LegacyEndpoint expectedEndpoint) throws Exception {
     String contentAsString = result.andReturn().getResponse().getContentAsString();
@@ -225,10 +229,10 @@ public class LegacyEndpointTestSteps {
 
   @Then("returned response in {word} is")
   public void checkEndpointResponse(String contentType, List<LegacyEndpointResponse> expectedResponses) throws Exception {
-    if ("XML".equals(contentType)) {
-      checkEndpointResponseXML(expectedResponses);
-    } else {
+    if ("JSON".equals(contentType)) {
       checkEndpointResponseJSON(expectedResponses);
+    } else {
+      checkEndpointResponseXML(expectedResponses);
     }
   }
 
@@ -294,14 +298,20 @@ public class LegacyEndpointTestSteps {
 
   @Then("response is following JSON")
   public void checkGetAllTypesResponse(List<Map<String, String>> expectedData) throws Exception {
-    String contentAsString = result.andReturn().getResponse().getContentAsString();
-    JsonNode actualData = objectMapper.readTree(contentAsString);
-
     for (int i = 0; i < expectedData.size(); i++) {
-      assertEquals(expectedData.get(i).get("name"), actualData.get(i).get("name").asText());
-      assertEquals(expectedData.get(i).get("overviewURL"), actualData.get(i).get("overviewURL").asText());
-      assertEquals(expectedData.get(i).get("description"), actualData.get(i).get("description").asText());
-      assertEquals(expectedData.get(i).get("key"), actualData.get(i).get("key").asText());
+      result
+        .andExpect(
+          jsonPath(String.format("[%d].name", i))
+            .value(expectedData.get(i).get("name")))
+        .andExpect(
+          jsonPath(String.format("[%d].overviewURL", i))
+            .value(expectedData.get(i).get("overviewURL")))
+        .andExpect(
+          jsonPath(String.format("[%d].description", i))
+            .value(expectedData.get(i).get("description")))
+        .andExpect(
+          jsonPath(String.format("[%d].key", i))
+            .value(expectedData.get(i).get("key")));
     }
   }
 

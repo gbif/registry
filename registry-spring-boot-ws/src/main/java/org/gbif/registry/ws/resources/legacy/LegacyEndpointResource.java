@@ -135,10 +135,10 @@ public class LegacyEndpointResource {
    * @param datasetKey dataset key (UUID) coming in as query param
    * @return ResponseEntity with list of Endpoints or empty list with error message if none found
    */
-  @GetMapping(value = "service{extension:\\.[a-z]+}",
+  @GetMapping(value = {"service", "service{extension:\\.[a-z]+}"},
     consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity endpointsForDataset(@PathVariable("extension") String extension,
+  public ResponseEntity endpointsForDataset(@PathVariable(value = "extension", required = false) String extension,
                                             @RequestParam(value = "resourceKey", required = false) UUID datasetKey,
                                             @RequestParam(value = "op", required = false) String op,
                                             HttpServletResponse httpServletResponse) {
