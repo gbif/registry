@@ -15,6 +15,7 @@ import org.gbif.registry.ws.model.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.ws.util.LegacyResourceConstants;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.util.CommonWsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.UUID;
 
@@ -220,23 +222,32 @@ public class LegacyDatasetResource {
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
-  @GetMapping(value = "{key}",
+  @GetMapping(value = "{key}{extension:\\.[a-z]+}",
     consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity readDataset(@PathVariable("key") UUID datasetKey) {
-    if (datasetKey != null) {
-      try {
-        LOG.debug("Get Dataset, key={}", datasetKey);
-        // verify Dataset with key exists, otherwise NotFoundException gets thrown
-        Dataset dataset = datasetService.get(datasetKey);
-        Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
-        return ResponseEntity
-          .status(HttpStatus.OK)
-          .cacheControl(CacheControl.noCache())
-          .body(new LegacyDatasetResponse(dataset, contact));
-      } catch (NotFoundException e) {
-        LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
-      }
+  public ResponseEntity readDataset(@PathVariable("key") UUID datasetKey,
+                                    @PathVariable(value = "extension", required = false) String extension,
+                                    HttpServletResponse response) {
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
+    if (responseType != null) {
+      response.setContentType(responseType);
+    } else {
+      return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .cacheControl(CacheControl.noCache())
+        .build();
+    }
+    try {
+      LOG.debug("Get Dataset, key={}", datasetKey);
+      // verify Dataset with key exists, otherwise NotFoundException gets thrown
+      Dataset dataset = datasetService.get(datasetKey);
+      Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
+      return ResponseEntity
+        .status(HttpStatus.OK)
+        .cacheControl(CacheControl.noCache())
+        .body(new LegacyDatasetResponse(dataset, contact));
+    } catch (NotFoundException e) {
+      LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
     }
     return ResponseEntity
       .status(HttpStatus.OK)
