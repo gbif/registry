@@ -70,6 +70,10 @@ Feature: LegacyDatasetResource functionality
       | XML          | .xml      | application/xml     |
       | NO_EXTENSION |           | application/xml     |
 
+  Scenario: Send a get all datasets for organization (GET) request with unknown extension ".unknown", Not Found 404 is expected
+    When perform get datasets for organization request with extension ".unknown" and parameter organisationKey and value "36107c15-771c-4810-a298-b7558828b8bd"
+    Then response status should be 404
+
   Scenario Outline: Send a get dataset (GET) request with extension "<extension>", the response having all of: key, organisationKey, name, description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc
     When perform get dataset "d82273f6-9738-48a5-a639-2086f9c49d18" request with extension "<extension>"
     Then response status should be 200
@@ -83,3 +87,7 @@ Feature: LegacyDatasetResource functionality
       | JSON         | .json     | application/json    |
       | XML          | .xml      | application/xml     |
       | NO_EXTENSION |           | application/xml     |
+
+  Scenario: Send a get dataset (GET) request with unknown extension ".unknown", Not Found 404 is expected
+    When perform get dataset "d82273f6-9738-48a5-a639-2086f9c49d18" request with extension ".unknown"
+    Then response status should be 404
