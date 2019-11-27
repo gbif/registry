@@ -91,3 +91,15 @@ Feature: LegacyDatasetResource functionality
   Scenario: Send a get dataset (GET) request with unknown extension ".unknown", Not Found 404 is expected
     When perform get dataset "d82273f6-9738-48a5-a639-2086f9c49d18" request with extension ".unknown"
     Then response status should be 404
+
+  Scenario Outline: Send a get dataset (GET) request with extension "<extension>", dataset does not exist, Not Found 404 is expected
+    When perform get dataset "58f3a88a-0557-4208-a504-1f67fc74764f" request with extension "<extension>"
+    Then response status should be 200
+    And content type "<expectedContentType>" is expected
+    And dataset error <case> response is "No resource matches the key provided"
+
+    Scenarios:
+      | case         | extension | expectedContentType |
+      | JSON         | .json     | application/json    |
+      | XML          | .xml      | application/xml     |
+      | NO_EXTENSION |           | application/xml     |
