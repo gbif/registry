@@ -15,6 +15,7 @@ import org.gbif.registry.ws.model.LegacyOrganizationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,9 +31,11 @@ import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
@@ -106,7 +109,8 @@ public class LegacyOrganizationTestSteps {
   public void getOrganization(String organisationKey, String extension) throws Exception {
     result = mvc
       .perform(
-        get("/registry/organisation/{key}" + extension, organisationKey));
+        get("/registry/organisation/{key}{extension}", organisationKey, extension))
+      .andDo(print());
   }
 
   @When("get organization {string} with login {string} and password {string} and extension {string} and parameter {word} with value {word}")
@@ -155,23 +159,28 @@ public class LegacyOrganizationTestSteps {
     assertEquals(errorResponseExpectedMessage, errorResponseActual.getError());
   }
 
-  @Then("{word} is expected")
-  public void checkResponseProperFormatAndParse(String extension) throws Exception {
+  @Then("content type {string} is expected")
+  public void checkResponseProperFormatAndParse(String contentType) throws Exception {
+    assertEquals(contentType, result.andReturn().getResponse().getContentType());
+
+    // TODO: 27/11/2019 replace with jsonpath and xpath stuff
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    if ("JSON".equals(extension)) {
+    if (MediaType.APPLICATION_JSON_VALUE.equals(contentType)) {
       actualResponse = objectMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
-    } else {
+    } else if (MediaType.APPLICATION_XML_VALUE.equals(contentType)) {
       actualResponse = xmlMapper.readValue(contentAsString, LegacyOrganizationResponse.class);
+    } else {
+      fail("JSON or XML are expected!");
     }
   }
 
-  @Then("returned organization is")
-  public void assertResponse(LegacyOrganizationResponse expectedResponse) {
+  @Then("returned organization for case {word} is")
+  public void assertResponse(String type, LegacyOrganizationResponse expectedResponse) {
     assertEquals(expectedResponse, actualResponse);
   }
 
-  @Then("returned brief organizations {word} response are")
+  @Then("returned brief organizations response for case {word} are")
   public void assertOrganizationsBriefResponse(String type, List<LegacyOrganizationBriefResponse> expectedResponse) throws Exception {
     if ("JSON".equals(type)) {
       assertOrganizationsBriefResponseJson(expectedResponse);

@@ -1,8 +1,10 @@
 package org.gbif.ws.util;
 
+import com.google.common.base.Strings;
 import org.springframework.http.MediaType;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 /**
@@ -32,8 +34,10 @@ public final class CommonWsUtils {
    * MediaType by string extension.
    */
   @Nullable
-  public static String getResponseTypeByExtension(String extension) {
-    if (".xml".equals(extension)) {
+  public static String getResponseTypeByExtension(@Nullable String extension, @NotNull String defaultMediaType) {
+    if (Strings.isNullOrEmpty(extension)) {
+      return defaultMediaType;
+    } else if (".xml".equals(extension)) {
       return MediaType.APPLICATION_XML_VALUE;
     } else if (".json".equals(extension)) {
       return MediaType.APPLICATION_JSON_VALUE;
