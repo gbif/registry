@@ -69,3 +69,17 @@ Feature: LegacyDatasetResource functionality
       | JSON         | .json     | application/json    |
       | XML          | .xml      | application/xml     |
       | NO_EXTENSION |           | application/xml     |
+
+  Scenario Outline: Send a get dataset (GET) request with extension "<extension>", the response having all of: key, organisationKey, name, description, nameLanguage, descriptionLanguage, homepageURL, primaryContactType/Name/Email/Phone/Address/Desc
+    When perform get dataset "d82273f6-9738-48a5-a639-2086f9c49d18" request with extension "<extension>"
+    Then response status should be 200
+    And content type "<expectedContentType>" is expected
+    And dataset response for case <case> is
+      | key                                  | description                 | descriptionLanguage | homepageURL             | name                  | nameLanguage | organisationKey                      | primaryContactAddress | primaryContactDescription | primaryContactEmail         | primaryContactName | primaryContactPhone | primaryContactType |
+      | d82273f6-9738-48a5-a639-2086f9c49d18 | Description of Test Dataset | en                  | http://www.homepage.com | Test Dataset Registry | en           | 36107c15-771c-4810-a298-b7558828b8bd | Universitetsparken 15 | About 175cm               | gbifregistry@mailinator.com | Tim Robertson      | +45 28261487        | technical          |
+
+    Scenarios:
+      | case         | extension | expectedContentType |
+      | JSON         | .json     | application/json    |
+      | XML          | .xml      | application/xml     |
+      | NO_EXTENSION |           | application/xml     |

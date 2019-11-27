@@ -386,6 +386,103 @@ public class LegacyDatasetTestSteps {
     }
   }
 
+  @Then("dataset response for case {word} is")
+  public void checkDataset(String type, LegacyDatasetResponse expectedDataset) throws Exception {
+    if ("JSON".equals(type)) {
+      checkDatasetResponseJson(expectedDataset);
+    } else {
+      checkDatasetResponseXml(expectedDataset);;
+    }
+  }
+
+  private void checkDatasetResponseXml(LegacyDatasetResponse expectedDataset) throws Exception {
+    result
+      .andExpect(
+        xpath("/resource/key")
+          .string(expectedDataset.getKey()))
+      .andExpect(
+        xpath("/resource/description")
+          .string(expectedDataset.getDescription()))
+      .andExpect(
+        xpath("/resource/descriptionLanguage")
+          .string(expectedDataset.getDescriptionLanguage()))
+      .andExpect(
+        xpath("/resource/homepageURL")
+          .string(expectedDataset.getHomepageURL()))
+      .andExpect(
+        xpath("/resource/name")
+          .string(expectedDataset.getName()))
+      .andExpect(
+        xpath("/resource/nameLanguage")
+          .string(expectedDataset.getNameLanguage()))
+      .andExpect(
+        xpath("/resource/organisationKey")
+          .string(expectedDataset.getOrganisationKey()))
+      .andExpect(
+        xpath("/resource/primaryContactAddress")
+          .string(expectedDataset.getPrimaryContactAddress()))
+      .andExpect(
+        xpath("/resource/primaryContactDescription")
+          .string(expectedDataset.getPrimaryContactDescription()))
+      .andExpect(
+        xpath("/resource/primaryContactEmail")
+          .string(expectedDataset.getPrimaryContactEmail()))
+      .andExpect(
+        xpath("/resource/primaryContactName")
+          .string(expectedDataset.getPrimaryContactName()))
+      .andExpect(
+        xpath("/resource/primaryContactPhone")
+          .string(expectedDataset.getPrimaryContactPhone()))
+      .andExpect(
+        xpath("/resource/primaryContactType")
+          .string(expectedDataset.getPrimaryContactType()))
+    ;
+  }
+
+  private void checkDatasetResponseJson(LegacyDatasetResponse expectedDataset) throws Exception {
+    result
+      .andExpect(
+        jsonPath("$.key")
+          .value(expectedDataset.getKey()))
+      .andExpect(
+        jsonPath("$.organisationKey")
+          .value(expectedDataset.getOrganisationKey()))
+      .andExpect(
+        jsonPath("$.name")
+          .value(expectedDataset.getName()))
+      .andExpect(
+        jsonPath("$.nameLanguage")
+          .value(expectedDataset.getNameLanguage()))
+      .andExpect(
+        jsonPath("$.description")
+          .value(expectedDataset.getDescription()))
+      .andExpect(
+        jsonPath("$.descriptionLanguage")
+          .value(expectedDataset.getDescriptionLanguage()))
+      .andExpect(
+        jsonPath("$.homepageURL")
+          .value(expectedDataset.getHomepageURL()))
+      .andExpect(
+        jsonPath("$.primaryContactName")
+          .value(expectedDataset.getPrimaryContactName()))
+      .andExpect(
+        jsonPath("$.primaryContactAddress")
+          .value(expectedDataset.getPrimaryContactAddress()))
+      .andExpect(
+        jsonPath("$.primaryContactEmail")
+          .value(expectedDataset.getPrimaryContactEmail()))
+      .andExpect(
+        jsonPath("$.primaryContactPhone")
+          .value(expectedDataset.getPrimaryContactPhone()))
+      .andExpect(
+        jsonPath("$.primaryContactDescription")
+          .value(expectedDataset.getPrimaryContactDescription()))
+      .andExpect(
+        jsonPath("$.primaryContactType")
+          .value(expectedDataset.getPrimaryContactType()))
+    ;
+  }
+
   @SuppressWarnings("ConstantConditions")
   @Then("content type {string} is expected")
   public void checkResponseProperFormatAndParse(String contentType) {
