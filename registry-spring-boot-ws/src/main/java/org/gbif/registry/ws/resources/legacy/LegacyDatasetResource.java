@@ -41,7 +41,7 @@ import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSec
  * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by the GBRDS.
  */
 @RestController
-@RequestMapping("registry/resource")
+@RequestMapping("registry")
 public class LegacyDatasetResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyDatasetResource.class);
@@ -88,7 +88,7 @@ public class LegacyDatasetResource {
    * @param dataset    IptDataset with HTTP form parameters
    * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
-  @PostMapping(value = "{key}",
+  @PostMapping(value = "resource/{key}",
     consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity updateDataset(@PathVariable("key") UUID datasetKey,
@@ -181,9 +181,22 @@ public class LegacyDatasetResource {
    * @param organizationKey organization key (UUID) coming in as query param
    * @return ResponseEntity with list of Datasets or empty list with error message if none found
    */
-  @GetMapping(consumes = MediaType.TEXT_PLAIN_VALUE,
+  @GetMapping(value = {"resource", "resource{extension:\\.[a-z]+}"},
+    consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity datasetsForOrganization(@RequestParam(value = "organisationKey", required = false) UUID organizationKey) {
+  public ResponseEntity datasetsForOrganization(@PathVariable(value = "extension", required = false) String extension,
+                                                @RequestParam(value = "organisationKey", required = false) UUID organizationKey,
+                                                HttpServletResponse httpResponse) {
+    String responseType = CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
+    if (responseType != null) {
+      httpResponse.setContentType(responseType);
+    } else {
+      return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .cacheControl(CacheControl.noCache())
+        .build();
+    }
+
     if (organizationKey != null) {
       try {
         LOG.debug("Get all Datasets owned by Organization, key={}", organizationKey);
@@ -222,7 +235,7 @@ public class LegacyDatasetResource {
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
-  @GetMapping(value = "{key}{extension:\\.[a-z]+}",
+  @GetMapping(value = "resource/{key}{extension:\\.[a-z]+}",
     consumes = MediaType.TEXT_PLAIN_VALUE,
     produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity readDataset(@PathVariable("key") UUID datasetKey,
@@ -263,7 +276,7 @@ public class LegacyDatasetResource {
    * @return ResponseEntity with HttpStatus.OK if successful
    * @see IptResource#deleteDataset(java.util.UUID)
    */
-  @DeleteMapping(value = "{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  @DeleteMapping(value = "resource/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
