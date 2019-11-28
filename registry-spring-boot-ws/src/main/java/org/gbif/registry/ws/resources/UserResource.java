@@ -12,11 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
@@ -40,18 +40,14 @@ public class UserResource {
    *
    * @return the user as {@link LoggedUser}
    */
-  @GetMapping("login")
-  public ResponseEntity<LoggedUserWithToken> loginGet(Authentication authentication) {
+  @RequestMapping(value = "login",
+    method = {RequestMethod.GET, RequestMethod.POST})
+  public ResponseEntity<LoggedUserWithToken> login(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
     return login(authentication.getName());
-  }
-
-  @PostMapping("login")
-  public ResponseEntity<LoggedUserWithToken> loginPost(Authentication authentication) {
-    return loginGet(authentication);
   }
 
   // only to use in login since it updates the last login

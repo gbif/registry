@@ -240,7 +240,7 @@ public class UserTestSteps {
     verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
   }
 
-  @When("get user {string} and password {string} information")
+  @When("perform whoami request for user {string} with password {string}")
   public void getUserInformation(String user, String password) throws Exception {
     result = mvc
       .perform(
