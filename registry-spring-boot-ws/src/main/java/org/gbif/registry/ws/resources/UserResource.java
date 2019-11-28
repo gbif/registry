@@ -47,11 +47,7 @@ public class UserResource {
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
 
-    return login(authentication.getName());
-  }
-
-  // only to use in login since it updates the last login
-  private ResponseEntity<LoggedUserWithToken> login(String username) {
+    String username = authentication.getName();
     // get the user
     final GbifUser user = identityService.get(username);
 
