@@ -2,6 +2,10 @@
 Feature: User functionality
 
   Background:
+    Given user "user_12"
+    And user "user_13"
+    And user "user_update_password"
+    And user "user_reset_password"
 
   Scenario Outline: Login with no credentials <method>
     When login "<method>" with no credentials
