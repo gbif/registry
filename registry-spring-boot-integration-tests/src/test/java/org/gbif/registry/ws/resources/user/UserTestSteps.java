@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.resources.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -16,8 +17,10 @@ import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,8 +31,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
+import java.sql.Connection;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.StringTokenizer;
 
 import static org.hamcrest.CoreMatchers.not;
@@ -71,12 +77,40 @@ public class UserTestSteps {
   @Autowired
   private GbifAuthServiceImpl gbifAuthService;
 
+  @Autowired
+  private DataSource ds;
+
+  private Connection connection;
+
   @Before("@User")
-  public void setUp() {
+  public void setUp() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/user/user_cleanup.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/user/user_prepare.sql"));
+
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
+  }
+
+  @After("@User")
+  public void tearDown() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/user/user_cleanup.sql"));
+
+    connection.close();
+  }
+
+  @Given("user {string}")
+  public void prepareUser(String username) {
+    // data prepared by scripts
   }
 
   @When("login {string} with no credentials")
