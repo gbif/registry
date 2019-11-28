@@ -37,6 +37,11 @@ Feature: User functionality
     When login "user_13" with new password "123456"
     Then response status should be 200
 
+  Scenario: Change password too short fails with Unprocessable Entity 422
+    When change password for user "user_12" from "welcome" to "1"
+    Then response status should be 422
+    And change password response contains error information "PASSWORD_LENGTH_VIOLATION"
+
   Scenario Outline: Login by <state> APP role
     Given <state> request with <body> and sign
     When "<state>" login by APP role

@@ -51,6 +51,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
@@ -165,7 +167,8 @@ public class UserTestSteps {
         put("/user/changePassword")
           .content(objectMapper.writeValueAsString(params))
           .contentType(MediaType.APPLICATION_JSON)
-          .with(httpBasic(login, oldPassword)));
+          .with(httpBasic(login, oldPassword)))
+    .andDo(print());
   }
 
   @When("login {string} with old password {string}")
@@ -246,6 +249,11 @@ public class UserTestSteps {
       .perform(
         post("/user/whoami")
           .with(httpBasic(user, password)));
+  }
+
+  @Then("change password response contains error information {string}")
+  public void checkChangePasswordErrorResponse(String errorInformation) throws Exception {
+    result.andExpect(jsonPath("$.error").value(errorInformation));
   }
 
   private void assertUserLogged(LoggedUserWithToken expected, LoggedUserWithToken actual) {
