@@ -50,8 +50,8 @@ Feature: User functionality
       | invalid | no body | 403    |
       | valid   | body    | 201    |
 
-  Scenario: Current user
-    When get user "user_12" and password "welcome" information
+  Scenario: Get current user for existing user "user_12" should be successful
+    When perform whoami request for user "user_12" with password "welcome"
     Then response status should be 201
     And user "user_12" is logged in
       | userName | firstName | lastName  | email            |
