@@ -1,6 +1,10 @@
 @UserManagement
 Feature: User management functionality
 
+  Background:
+    Given user "user_reset_password"
+    And user "user_update_password"
+
   Scenario: Create, confirm and login with new user. Use valid APP role
     When create a new user "user_14" with APP role "gbif.app.it"
     Then response status should be 201

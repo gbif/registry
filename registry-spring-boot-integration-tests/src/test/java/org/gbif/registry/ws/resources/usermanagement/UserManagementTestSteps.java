@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.resources.usermanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -20,7 +21,9 @@ import org.gbif.ws.security.SigningService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -28,8 +31,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -89,14 +95,42 @@ public class UserManagementTestSteps {
   @Autowired
   private WebApplicationContext context;
 
-  @Before
+  @Autowired
+  private DataSource ds;
+
+  private Connection connection;
+
+  @Before("@UserManagement")
   public void setUp() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/usermanagement/user_management_cleanup.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/usermanagement/user_management_prepare.sql"));
+
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
 
     secrets = PropertiesUtil.loadProperties(appkeysFile);
+  }
+
+  @After("@UserManagement")
+  public void tearDown() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/usermanagement/user_management_cleanup.sql"));
+
+    connection.close();
+  }
+
+  @Given("user {string}")
+  public void prepareUser(String username) {
+    // data prepared by scripts
   }
 
   @When("create a new user {string} with APP role {string}")
