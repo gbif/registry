@@ -55,7 +55,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
                                          @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
                                          Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     long total = collectionMapper.count(institutionKey, contactKey, query);
     return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
   }

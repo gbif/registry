@@ -115,7 +115,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
                                      @Nullable @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
                                      @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     long total = personMapper.count(institutionKey, collectionKey, query);
     return new PagingResponse<>(page, total, personMapper.list(institutionKey, collectionKey, query, page));
   }

@@ -218,7 +218,7 @@ public class OrganizationResource
 
     // This uses to Organization Mapper overloaded option of search which will scope (AND) the query, country and endorsement.
     String query = request.getQ() != null ?
-      Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ())) : request.getQ();
+      Strings.emptyToNull(CharMatcher.whitespace().trimFrom(request.getQ())) : request.getQ();
     long total = organizationMapper.count(query, country, request.getIsEndorsed());
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total,

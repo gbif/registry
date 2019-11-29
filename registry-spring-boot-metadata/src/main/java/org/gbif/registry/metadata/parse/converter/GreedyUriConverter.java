@@ -47,7 +47,7 @@ public final class GreedyUriConverter extends AbstractConverter {
   @Override
   protected Object convertToType(Class type, Object value) {
     Preconditions.checkNotNull(value, "Must provide a type to convert to null");
-    String valueAsString = Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(String.valueOf(value)));
+    String valueAsString = Strings.emptyToNull(CharMatcher.whitespace().trimFrom(String.valueOf(value)));
 
     URI uri = null;
     if (!Strings.isNullOrEmpty(valueAsString)) {

@@ -1,6 +1,6 @@
 package org.gbif.registry.metadata.parse;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import org.gbif.api.model.common.DOI;
@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
 /**
  * A delegating wrapper to a Dataset that can be instructed to override existing content or not.
  * This allows an existing Dataset to be augmented by new content.
- *
+ * <p>
  * Warning: Apache Digester can(I can not confirm it is always) call the setter of a parent object before the setter
  * of nested objects.
  * e.g. setCitation will be called before the setIdentifier and setText on the Citation object.
@@ -67,7 +67,7 @@ public class DatasetWrapper {
   private static final Logger LOG = LoggerFactory.getLogger(DatasetWrapper.class);
   //matches UUID v4 + version like /v2.1
   private static final Pattern PACKAGE_ID_VERSION_PATTERN =
-      Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/v(\\d+.\\d+)");
+    Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/v(\\d+.\\d+)");
   private final Dataset target = new Dataset();
   private ParagraphContainer description = new ParagraphContainer();
 
@@ -75,12 +75,10 @@ public class DatasetWrapper {
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year, ignoring whitespace
    *
    * @param dateString To set in format YYYY-MM-DD or YYYY
-   *
    * @return the parsed date
-   *
    * @throws java.text.ParseException Should it be an erroneous format
    * @see <a href="http://knb.ecoinformatics.org/software/eml/eml-2.1.0/eml-coverage.html#calendarDate">EML Coverage
-   *      calendarDate keyword</a>
+   * calendarDate keyword</a>
    */
   private static Date calendarDate(String dateString) throws ParseException {
     if (Strings.isNullOrEmpty(dateString)) {
@@ -124,13 +122,13 @@ public class DatasetWrapper {
    * @return true if the minimal required contact information exists
    */
   private boolean verifyContact(Contact contact) {
-    return contact.getFirstName() !=null
-        || contact.getLastName()  !=null
-        || !contact.getPosition().isEmpty()
-        || !contact.getEmail().isEmpty()
-        || !contact.getPhone().isEmpty()
-        || contact.getOrganization() !=null
-        || (!contact.getAddress().isEmpty() && contact.getCity() !=null);
+    return contact.getFirstName() != null
+      || contact.getLastName() != null
+      || !contact.getPosition().isEmpty()
+      || !contact.getEmail().isEmpty()
+      || !contact.getPhone().isEmpty()
+      || contact.getOrganization() != null
+      || (!contact.getAddress().isEmpty() && contact.getCity() != null);
   }
 
   /**
@@ -271,8 +269,7 @@ public class DatasetWrapper {
    * Check if primary contact of particular type exists already in list of Contacts.
    *
    * @param contactType type to check for
-   * @param contacts list of Contacts
-   *
+   * @param contacts    list of Contacts
    * @return true if primary contact of particular type exists already, false otherwise
    */
   private boolean isPrimaryExisting(ContactType contactType, List<Contact> contacts) {
@@ -424,6 +421,7 @@ public class DatasetWrapper {
 
   /**
    * Concatenates the new paragrpah to an existing one, inserting a new html break line.
+   *
    * @param existing
    * @param para
    */
@@ -440,7 +438,7 @@ public class DatasetWrapper {
   public void appendMethodStepParagraph(String paragraph) {
     final int lastIdx = target.getSamplingDescription().getMethodSteps().size() - 1;
     target.getSamplingDescription().getMethodSteps().set(lastIdx,
-        appendParagraph(target.getSamplingDescription().getMethodSteps().get(lastIdx), paragraph));
+      appendParagraph(target.getSamplingDescription().getMethodSteps().get(lastIdx), paragraph));
   }
 
   /**
@@ -532,7 +530,7 @@ public class DatasetWrapper {
 
   public void setTitle(String title) {
     // keep first true title in case we encounter several - just to be safe with this important property
-    target.setTitle(Objects.firstNonNull(target.getTitle(), title));
+    target.setTitle(MoreObjects.firstNonNull(target.getTitle(), title));
   }
 
   public void setType(DatasetType type) {
@@ -543,7 +541,7 @@ public class DatasetWrapper {
     updateTaxonomicCoverageRanks();
     updatePrimaryDOI();
 
-    if(target.getCitation() != null) {
+    if (target.getCitation() != null) {
       CleanUtils.removeEmptyStrings(target.getCitation());
     }
   }
@@ -569,7 +567,7 @@ public class DatasetWrapper {
         Identifier i = iter.next();
         if (i.getType() == IdentifierType.DOI) {
           if (DOI.isParsable(i.getIdentifier())) {
-            target.setDoi( new DOI(i.getIdentifier()) );
+            target.setDoi(new DOI(i.getIdentifier()));
             iter.remove();
             return;
           }
@@ -578,7 +576,7 @@ public class DatasetWrapper {
       // at last also check the citation field
       if (!Strings.isNullOrEmpty(target.getCitation().getIdentifier())) {
         try {
-          target.setDoi( new DOI(target.getCitation().getIdentifier()) );
+          target.setDoi(new DOI(target.getCitation().getIdentifier()));
         } catch (IllegalArgumentException e) {
           // invalid DOI, skip
         }
