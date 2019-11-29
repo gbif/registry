@@ -381,6 +381,17 @@ public class UserManagementTestSteps {
         get("/admin/user/roles"));
   }
 
+  @When("perform search user with query {string}")
+  public void searchUser(String query) throws Exception {
+    result = mvc
+      .perform(
+        get("/admin/user/search")
+          .param("q", query)
+          .param("limit", "20")
+          .param("offset", "0")
+          .with(httpBasic("justadmin", "welcome")));
+  }
+
   @Then("create user response contains error information {string}")
   public void checkChangePasswordErrorResponse(String errorInformation) throws Exception {
     result.andExpect(jsonPath("$.error").value(errorInformation));
@@ -390,7 +401,21 @@ public class UserManagementTestSteps {
   public void assertRolesResponse(List<String> expectedRoles) throws Exception {
     result.andExpect(jsonPath("length()").value(expectedRoles.size()));
     for (int i = 0; i < expectedRoles.size(); i++) {
-      result.andExpect(jsonPath("[" + i + "]").value(expectedRoles.get(i)));
+      result.andExpect(jsonPath(String.format("[%d]", i)).value(expectedRoles.get(i)));
+    }
+  }
+
+  @Then("search users response are")
+  public void assertSearchUsers(List<GbifUser> expectedUsers) throws Exception {
+    result.andExpect(jsonPath("$.count").value(expectedUsers.size()));
+    for (int i = 0; i < expectedUsers.size(); i++) {
+      result
+        .andExpect(jsonPath(String.format("$.results[%d].key", i)).value(expectedUsers.get(i).getKey()))
+        .andExpect(jsonPath(String.format("$.results[%d].userName", i)).value(expectedUsers.get(i).getUserName()))
+        .andExpect(jsonPath(String.format("$.results[%d].firstName", i)).value(expectedUsers.get(i).getFirstName()))
+        .andExpect(jsonPath(String.format("$.results[%d].lastName", i)).value(expectedUsers.get(i).getLastName()))
+        .andExpect(jsonPath(String.format("$.results[%d].email", i)).value(expectedUsers.get(i).getEmail()))
+        .andExpect(jsonPath(String.format("$.results[%d].roles", i)).value(expectedUsers.get(i).getRoles()));
     }
   }
 

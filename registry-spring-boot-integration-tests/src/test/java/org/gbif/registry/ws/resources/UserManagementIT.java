@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/user_management.feature"
   },
-  glue = "org.gbif.registry.ws.resources.usermanagement",
+  glue = {"org.gbif.registry.ws.resources.usermanagement", "org.gbif.registry.utils.cucumber"},
   plugin = "pretty"
 )
 public class UserManagementIT {
