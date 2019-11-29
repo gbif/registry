@@ -45,7 +45,7 @@
     <module>registry-spring-boot-persistence</module>
     <module>registry-spring-boot-surety</module>
     <module>registry-spring-boot-identity</module>
-    <module>registry-spring-boot-ws-model</module>
+    <module>registry-spring-boot-domain</module>
     <module>registry-spring-boot-ws-client</module>
     <module>registry-spring-boot-integration-tests</module>
   </modules>
@@ -134,7 +134,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-ws-model</artifactId>
+        <artifactId>registry-spring-boot-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
