@@ -1,6 +1,5 @@
 package org.gbif.registry.identity.service;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
@@ -72,7 +71,7 @@ public class IdentityServiceImplIT {
         deleteUsers.execute();
         deleteRight.execute();
       } catch (SQLException e) {
-        Throwables.propagate(e);
+        throw new RuntimeException(e);
       }
   }
 
