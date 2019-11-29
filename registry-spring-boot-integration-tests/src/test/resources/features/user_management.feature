@@ -135,3 +135,12 @@ Feature: User management functionality
     And roles response should be
       | USER | REGISTRY_ADMIN | REGISTRY_EDITOR | DATA_REPO_USER | COL_ADMIN | COL_EDITOR | VOCABULARY_ADMIN | VOCABULARY_EDITOR | GRSCICOLL_ADMIN | GRSCICOLL_EDITOR |
 
+  Scenario: Search users
+    When perform search user with query "user"
+    Then response status should be 200
+    And search users response are
+      | key | userName             | firstName | lastName  | email                         | roles |
+      | 2   | justuser             | John      | Doe       | justuser@gbif.org             | USER  |
+      | 6   | user_reset_password  | Tim       | Robertson | user_reset_password@gbif.org  | USER  |
+      | 7   | user_update_password | Tim       | Robertson | user_update_password@gbif.org | USER  |
+
