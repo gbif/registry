@@ -64,7 +64,6 @@ class IdentityServiceImpl implements IdentityService {
   @Override
   @Transactional
   public UserModelMutationResult create(GbifUser rawUser, String password) {
-
     GbifUser user = normalize(rawUser);
     if (userMapper.get(user.getUserName()) != null || userMapper.getByEmail(user.getEmail()) != null) {
       return withError(ModelMutationError.USER_ALREADY_EXIST);

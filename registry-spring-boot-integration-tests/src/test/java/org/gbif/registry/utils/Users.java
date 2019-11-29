@@ -4,15 +4,15 @@ import org.gbif.registry.ws.model.UserCreation;
 
 public class Users {
 
-  public static UserCreation prepareUserCreation() {
+  public static UserCreation prepareUserCreation(String username, String password) {
     UserCreation user = new UserCreation();
-    user.setUserName("user_14");
+    user.setUserName(username);
     user.setFirstName("Tim");
     user.setLastName("Robertson");
-    user.setPassword("welcome");
+    user.setPassword(password);
     user.getSettings().put("language", "en");
     user.getSettings().put("country", "dk");
-    user.setEmail("user_14@gbif.org");
+    user.setEmail(username + "@gbif.org");
     return user;
   }
 }
