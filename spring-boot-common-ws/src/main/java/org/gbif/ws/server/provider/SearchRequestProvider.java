@@ -6,6 +6,7 @@ import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
+import org.gbif.ws.CommonRuntimeException;
 import org.springframework.web.context.request.WebRequest;
 
 import java.util.Arrays;
@@ -43,7 +44,7 @@ public class SearchRequestProvider<RT extends SearchRequest<P>, P extends Enum<?
       return getSearchRequest(webRequest, req);
     } catch (InstantiationException | IllegalAccessException e) {
       // should never happen
-      throw new RuntimeException(e);
+      throw new CommonRuntimeException(e);
     }
   }
 

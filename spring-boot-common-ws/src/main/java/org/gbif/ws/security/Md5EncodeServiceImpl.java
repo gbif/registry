@@ -2,6 +2,7 @@ package org.gbif.ws.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.gbif.ws.CommonRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class Md5EncodeServiceImpl implements Md5EncodeService {
       return Base64.getEncoder().encodeToString(DigestUtils.md5(content));
     } catch (IOException e) {
       LOG.error("Failed to serialize http entity [{}]", entity);
-      throw new RuntimeException(e);
+      throw new CommonRuntimeException(e);
     }
   }
 }

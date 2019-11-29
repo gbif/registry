@@ -30,6 +30,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.gbif.ws.CommonRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -343,7 +344,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                 }
               } catch (IOException ex) {
                 LOG.error("Error reading message", ex);
-                throw new RuntimeException(ex);
+                throw new CommonRuntimeException(ex);
               }
             }));
 
