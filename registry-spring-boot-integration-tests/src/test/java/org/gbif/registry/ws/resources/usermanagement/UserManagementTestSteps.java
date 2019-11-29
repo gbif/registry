@@ -119,10 +119,16 @@ public class UserManagementTestSteps {
     secrets = PropertiesUtil.loadProperties(appkeysFile);
   }
 
-  @After("@UserManagement")
+  @After(value = "@UserCRUD", order = 1)
+  public void cleanAfterUserCrud() {
+    Objects.requireNonNull(connection, "Connection must not be null");
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/usermanagement/user_management_crud_cleanup.sql"));
+  }
+
+  @After(value = "@UserManagement", order = 0)
   public void tearDown() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
-
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/usermanagement/user_management_cleanup.sql"));
 
@@ -151,6 +157,16 @@ public class UserManagementTestSteps {
           .header(HEADER_CONTENT_MD5, contentMd5)
           .header(HEADER_GBIF_USER, appRole)
           .header(AUTHORIZATION, gbifAuthorization));
+  }
+
+  @When("delete user {string}")
+  public void deleteUser(String username) throws Exception {
+    GbifUser gbifUser = userMapper.get(username);
+
+    result = mvc
+      .perform(
+        delete("/admin/user/{userKey}", gbifUser.getKey())
+          .with(httpBasic("justadmin", "welcome")));
   }
 
   @Then("response status should be {int}")
@@ -414,8 +430,7 @@ public class UserManagementTestSteps {
         .andExpect(jsonPath(String.format("$.results[%d].userName", i)).value(expectedUsers.get(i).getUserName()))
         .andExpect(jsonPath(String.format("$.results[%d].firstName", i)).value(expectedUsers.get(i).getFirstName()))
         .andExpect(jsonPath(String.format("$.results[%d].lastName", i)).value(expectedUsers.get(i).getLastName()))
-        .andExpect(jsonPath(String.format("$.results[%d].email", i)).value(expectedUsers.get(i).getEmail()))
-        .andExpect(jsonPath(String.format("$.results[%d].roles", i)).value(expectedUsers.get(i).getRoles()));
+        .andExpect(jsonPath(String.format("$.results[%d].email", i)).value(expectedUsers.get(i).getEmail()));
     }
   }
 

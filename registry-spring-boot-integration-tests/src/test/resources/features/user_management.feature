@@ -5,7 +5,8 @@ Feature: User management functionality
     Given user "user_reset_password"
     And user "user_update_password"
 
-  Scenario: Create, confirm and login with new user. Use valid APP role
+  @UserCRUD
+  Scenario: Create, confirm, login and then delete user. Use valid APP role
     When create new user "user_14" with password "welcome" by APP role "gbif.app.it"
     Then response status should be 201
     And user "user_14" reflects the original one
@@ -16,6 +17,10 @@ Feature: User management functionality
     And response of confirmation is valid
     When login with user "user_14" and password "welcome"
     Then response status should be 200
+    When delete user "user_14"
+    Then response status should be 204
+    When login with user "user_14" and password "welcome"
+    Then response status should be 401
 
   Scenario: Create user. Use invalid APP role
     When create new user "user_14" with password "welcome" by APP role "gbif.app.it2"
