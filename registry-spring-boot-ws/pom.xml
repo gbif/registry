@@ -52,7 +52,7 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-spring-boot-ws-model</artifactId>
+      <artifactId>registry-spring-boot-domain</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
