@@ -6,7 +6,7 @@ Feature: User management functionality
     And user "user_update_password"
 
   Scenario: Create, confirm and login with new user. Use valid APP role
-    When create a new user "user_14" with APP role "gbif.app.it"
+    When create new user "user_14" with password "welcome" by APP role "gbif.app.it"
     Then response status should be 201
     And user "user_14" reflects the original one
     When login with user "user_14" and password "welcome"
@@ -17,9 +17,19 @@ Feature: User management functionality
     When login with user "user_14" and password "welcome"
     Then response status should be 200
 
-  Scenario: Create a user. Use invalid APP role
-    When create a new user "user_14" with APP role "gbif.app.it2"
+  Scenario: Create user. Use invalid APP role
+    When create new user "user_14" with password "welcome" by APP role "gbif.app.it2"
     Then response status should be 403
+
+  Scenario: Create user which already exist fails with Unprocessable Entity 422
+    When create existing user "justuser" with password "welcome" by APP role "gbif.app.it"
+    Then response status should be 422
+    And create user response contains error information "USER_ALREADY_EXIST"
+
+  Scenario: Create user with too short password fails with Unprocessable Entity 422
+    When create new user "new_user" with password "1" by APP role "gbif.app.it"
+    Then response status should be 422
+    And create user response contains error information "PASSWORD_LENGTH_VIOLATION"
 
   Scenario: Get user
     When get user by "justuser"
@@ -118,3 +128,10 @@ Feature: User management functionality
       | justuser        | e323a550-ad60-408d-88d2-cc1356fc10fb | justadmin | welcome  | admin | 404    | Right does not exist |
       | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justadmin | welcome  | admin | 404    | User does not exist  |
       | justuser        | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justuser  | welcome  | user  | 403    | Not an admin user    |
+
+  Scenario: List roles should have 10 roles
+    When perform list roles
+    Then response status should be 200
+    And roles response should be
+      | USER | REGISTRY_ADMIN | REGISTRY_EDITOR | DATA_REPO_USER | COL_ADMIN | COL_EDITOR | VOCABULARY_ADMIN | VOCABULARY_EDITOR | GRSCICOLL_ADMIN | GRSCICOLL_EDITOR |
+

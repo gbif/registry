@@ -34,6 +34,7 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -133,9 +134,9 @@ public class UserManagementTestSteps {
     // data prepared by scripts
   }
 
-  @When("create a new user {string} with APP role {string}")
-  public void createNewUser(String username, String appRole) throws Exception {
-    user = prepareUserCreation();
+  @When("create new/existing user {string} with password {string} by APP role {string}")
+  public void createNewUser(String username, String password, String appRole) throws Exception {
+    user = prepareUserCreation(username, password);
 
     String userJsonString = objectMapper.writeValueAsString(user);
 
@@ -371,6 +372,26 @@ public class UserManagementTestSteps {
       .perform(
         delete("/admin/user/{username}/editorRight/{key}", username, right)
           .with(httpBasic(performer, credentials.get(performer))));
+  }
+
+  @When("perform list roles")
+  public void listRoles() throws Exception {
+    result = mvc
+      .perform(
+        get("/admin/user/roles"));
+  }
+
+  @Then("create user response contains error information {string}")
+  public void checkChangePasswordErrorResponse(String errorInformation) throws Exception {
+    result.andExpect(jsonPath("$.error").value(errorInformation));
+  }
+
+  @Then("roles response should be")
+  public void assertRolesResponse(List<String> expectedRoles) throws Exception {
+    result.andExpect(jsonPath("length()").value(expectedRoles.size()));
+    for (int i = 0; i < expectedRoles.size(); i++) {
+      result.andExpect(jsonPath("[" + i + "]").value(expectedRoles.get(i)));
+    }
   }
 
   private String getGbifAuthorization(RequestMethod method, String requestUrl, MediaType contentType, String contentMd5, String user, String authUser, String secretKey) {
