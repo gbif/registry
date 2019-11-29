@@ -118,8 +118,8 @@ public class DublinCoreWriterTest {
     String expectedContent = FileUtils.readFileToString(org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));
 
     //compare without the whitespace characters
-    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
-    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());
+    String expectedFileContent = CharMatcher.whitespace().removeFrom(expectedContent);
+    String actualFileContent = CharMatcher.whitespace().removeFrom(writer.toString());
 
     assertEquals(expectedFileContent, actualFileContent);
 
