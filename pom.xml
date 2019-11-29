@@ -69,6 +69,7 @@
     <commons-email.version>1.3.3</commons-email.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <jjwt.version>0.9.1</jjwt.version>
+    <guava.version>28.1-android</guava.version>
     <retrofit.version>2.5.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
@@ -179,6 +180,10 @@
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -209,6 +214,12 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-doi</artifactId>
         <version>${gbif-doi.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -253,6 +264,12 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-httputils</artifactId>
         <version>${gbif-httputils.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Third party dependencies -->
@@ -297,6 +314,11 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${findbugs-jsr305.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
       </dependency>
 
       <dependency>
