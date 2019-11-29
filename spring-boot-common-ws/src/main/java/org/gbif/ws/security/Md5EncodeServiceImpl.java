@@ -1,7 +1,6 @@
 package org.gbif.ws.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class Md5EncodeServiceImpl implements Md5EncodeService {
       return Base64.getEncoder().encodeToString(DigestUtils.md5(content));
     } catch (IOException e) {
       LOG.error("Failed to serialize http entity [{}]", entity);
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 }

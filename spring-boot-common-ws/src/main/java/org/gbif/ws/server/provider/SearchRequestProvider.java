@@ -1,7 +1,6 @@
 package org.gbif.ws.server.provider;
 
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
@@ -44,9 +43,8 @@ public class SearchRequestProvider<RT extends SearchRequest<P>, P extends Enum<?
       return getSearchRequest(webRequest, req);
     } catch (InstantiationException | IllegalAccessException e) {
       // should never happen
-      Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
-    return null;
   }
 
   protected P findSearchParam(String name) {

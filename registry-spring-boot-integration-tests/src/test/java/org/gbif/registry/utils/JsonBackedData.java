@@ -3,7 +3,6 @@ package org.gbif.registry.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Throwables;
 import com.google.common.io.Resources;
 
 import java.io.IOException;
@@ -27,7 +26,7 @@ abstract class JsonBackedData<T> {
     try {
       return MAPPER.readValue(json, type);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -36,7 +35,7 @@ abstract class JsonBackedData<T> {
     try {
       return Resources.toString(Resources.getResource(file), Charsets.UTF_8);
     } catch (IOException e) {
-      throw Throwables.propagate(e);
+      throw new RuntimeException(e);
     }
   }
 

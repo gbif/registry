@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import org.gbif.api.model.common.paging.Pageable;
@@ -344,7 +343,7 @@ public class PipelinesCoordinatorTrackingServiceImpl implements PipelinesHistory
                 }
               } catch (IOException ex) {
                 LOG.error("Error reading message", ex);
-                throw Throwables.propagate(ex);
+                throw new RuntimeException(ex);
               }
             }));
 
