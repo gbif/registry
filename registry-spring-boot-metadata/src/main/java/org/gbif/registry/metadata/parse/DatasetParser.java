@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 
+import static org.gbif.api.vocabulary.MetadataType.DC;
+import static org.gbif.api.vocabulary.MetadataType.EML;
+
 /**
  * Main parser of dataset metadata that uses parser specific digester RuleSets for EML or Dublin Core.
  * It can automatically detect the document type if it is unknown or be used only with a specific parser type.
@@ -32,6 +35,10 @@ public class DatasetParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetParser.class);
 
+  private DatasetParser() {
+    // empty constructor
+  }
+
   private static class ParserDetectionHandler extends DefaultHandler {
     private static final String DC_NAMESPACE = "http://purl.org/dc/terms/";
     private MetadataType parserType;
@@ -41,7 +48,7 @@ public class DatasetParser {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
       // look for EML
       if (path.size() == 1 && path.get(0).equals("eml") && localName.equals("dataset")) {
-        parserType = MetadataType.EML;
+        parserType = EML;
       }
 
       // look for DC title
@@ -106,15 +113,12 @@ public class DatasetParser {
     digester.setNamespaceAware(true);
 
     // add digester rules based on parser type
-    switch (type) {
-      case EML:
-        LOG.debug("Parsing EML document");
-        digester.addRuleSet(new EMLRuleSet());
-        break;
-      case DC:
-        LOG.debug("Parsing DC document");
-        digester.addRuleSet(new DublinCoreRuleSet());
-        break;
+    if (type == EML) {
+      LOG.debug("Parsing EML document");
+      digester.addRuleSet(new EMLRuleSet());
+    } else if (type == DC) {
+      LOG.debug("Parsing DC document");
+      digester.addRuleSet(new DublinCoreRuleSet());
     }
 
     // push the Delegating object onto the stack
@@ -124,9 +128,11 @@ public class DatasetParser {
     // now parse and return the dataset
     try {
       digester.parse(xml);
-    } catch (ConversionException e) {
+    } catch (
+      ConversionException e) {
       // swallow
-    } catch (SAXException e) {
+    } catch (
+      SAXException e) {
       if (e.getException() == null || !e.getException().getClass().equals(ConversionException.class)) {
         // allow type conversions to happen
         throw new IllegalArgumentException("Invalid metadata xml document", e);
@@ -138,5 +144,4 @@ public class DatasetParser {
 
     return delegator.getTarget();
   }
-
 }
