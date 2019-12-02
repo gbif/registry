@@ -137,7 +137,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity,
+                     Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
@@ -178,7 +179,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
-  public void delete(@NotNull @PathVariable UUID key, Authentication authentication) {
+  public void delete(@NotNull @PathVariable UUID key,
+                     Authentication authentication) {
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
@@ -224,7 +226,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> search(String query, Pageable page) {
+  public PagingResponse<T> search(String query,
+                                  Pageable page) {
     page = page == null ? new PagingRequest() : page;
     // trim and handle null from given input
     String q = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
@@ -232,13 +235,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
+  public PagingResponse<T> listByIdentifier(IdentifierType type,
+                                            String identifier,
+                                            Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByIdentifier(mapper, type, identifier, page);
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
+  public PagingResponse<T> listByIdentifier(String identifier,
+                                            Pageable page) {
     return listByIdentifier(null, identifier, page);
   }
 
@@ -282,7 +288,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addComment(@NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Comment comment,
+  public int addComment(@NotNull @PathVariable("key") UUID targetEntityKey,
+                        @RequestBody @NotNull @Trim Comment comment,
                         Authentication authentication) {
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
@@ -290,7 +297,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addComment(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Comment comment) {
+  public int addComment(UUID targetEntityKey,
+                        @Validated({PrePersist.class, Default.class}) Comment comment) {
     int key = withMyBatis.addComment(commentMapper, mapper, targetEntityKey, comment);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
     return key;
@@ -305,7 +313,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/comment/{commentKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
+  public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey,
+                            @PathVariable int commentKey) {
     mapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
   }
@@ -327,7 +336,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @PostMapping(value = "{key}/machineTag")
   @Trim
   @Transactional
-  public int addMachineTag(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim MachineTag machineTag,
+  public int addMachineTag(@PathVariable("key") UUID targetEntityKey,
+                           @RequestBody @NotNull @Trim MachineTag machineTag,
                            Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
@@ -345,12 +355,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
+  public int addMachineTag(UUID targetEntityKey,
+                           @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name, @NotNull String value) {
+  public int addMachineTag(@NotNull UUID targetEntityKey,
+                           @NotNull String namespace,
+                           @NotNull String name,
+                           @NotNull String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -359,7 +373,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
+  public int addMachineTag(@NotNull UUID targetEntityKey,
+                           @NotNull TagName tagName,
+                           @NotNull String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
@@ -369,7 +385,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
   @SuppressWarnings("unchecked")
-  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey, int machineTagKey, Authentication authentication) {
+  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey,
+                                              int machineTagKey,
+                                              Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     List<MachineTag> machineTags = mapper.listMachineTags(targetEntityKey);
@@ -404,7 +422,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param machineTagKey   key of MachineTag to delete
    */
   @Override
-  public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
+  public void deleteMachineTag(UUID targetEntityKey,
+                               int machineTagKey) {
     mapper.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
@@ -412,7 +431,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag in a namespace.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  public void deleteMachineTagsByNamespace(UUID targetEntityKey, String namespace, Authentication authentication) {
+  public void deleteMachineTagsByNamespace(UUID targetEntityKey,
+                                           String namespace,
+                                           Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
@@ -427,7 +448,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
    */
   @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String parameter,
+  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
+                                @PathVariable String parameter,
                                 Authentication authentication) {
     if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
       deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
@@ -437,12 +459,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey,
+                                @NotNull TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey,
+                                @NotNull String namespace) {
     mapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
@@ -451,8 +475,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey, @PathVariable String namespace,
-                                @PathVariable String name, Authentication authentication) {
+  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
+                                @PathVariable String namespace,
+                                @PathVariable String name,
+                                Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
@@ -463,12 +489,15 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey,
+                                @NotNull TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey,
+                                @NotNull String namespace,
+                                @NotNull String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -480,7 +509,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> listByMachineTag(String namespace, @Nullable String name, @Nullable String value,
+  public PagingResponse<T> listByMachineTag(String namespace,
+                                            @Nullable String name,
+                                            @Nullable String value,
                                             Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(mapper, namespace, name, value, page);
@@ -496,21 +527,24 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @PostMapping(value = "{key}/tag")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addTag(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull Tag tag,
+  public int addTag(@PathVariable("key") UUID targetEntityKey,
+                    @RequestBody @NotNull Tag tag,
                     Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(targetEntityKey, tag);
   }
 
   @Override
-  public int addTag(@NotNull UUID targetEntityKey, @NotNull String value) {
+  public int addTag(@NotNull UUID targetEntityKey,
+                    @NotNull String value) {
     Tag tag = new Tag();
     tag.setValue(value);
     return addTag(targetEntityKey, tag);
   }
 
   @Override
-  public int addTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Tag tag) {
+  public int addTag(UUID targetEntityKey,
+                    @Validated({PrePersist.class, Default.class}) Tag tag) {
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
     return key;
@@ -525,14 +559,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/tag/{tagKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID targetEntityKey,
+                        @PathVariable int tagKey) {
     mapper.deleteTag(targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
 
   @GetMapping("{key}/tag")
   @Override
-  public List<Tag> listTags(@PathVariable("key") UUID targetEntityKey, @RequestParam(value = "owner", required = false) String owner) {
+  public List<Tag> listTags(@PathVariable("key") UUID targetEntityKey,
+                            @RequestParam(value = "owner", required = false) String owner) {
     if (owner != null) {
       LOG.warn("Owner is not supported. Value: {}", owner);
     }
@@ -552,7 +588,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Contact contact,
+  public int addContact(@PathVariable("key") UUID targetEntityKey,
+                        @RequestBody @NotNull @Trim Contact contact,
                         Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
@@ -560,7 +597,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addContact(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
+  public int addContact(UUID targetEntityKey,
+                        @Validated({PrePersist.class, Default.class}) Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
@@ -578,7 +616,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updateContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey,
+  public void updateContact(@PathVariable("key") UUID targetEntityKey,
+                            @PathVariable int contactKey,
                             @RequestBody @NotNull @Trim Contact contact) {
     // for safety, and to match a nice RESTful URL structure
     Preconditions.checkArgument(Integer.valueOf(contactKey).equals(contact.getKey()),
@@ -589,7 +628,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void updateContact(UUID targetEntityKey, @Validated({PostPersist.class, Default.class}) Contact contact) {
+  public void updateContact(UUID targetEntityKey,
+                            @Validated({PostPersist.class, Default.class}) Contact contact) {
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
@@ -603,7 +643,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteContact(@PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
+  public void deleteContact(@PathVariable("key") UUID targetEntityKey,
+                            @PathVariable int contactKey) {
     mapper.deleteContact(targetEntityKey, contactKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
@@ -626,7 +667,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addEndpoint(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Endpoint endpoint,
+  public int addEndpoint(@PathVariable("key") UUID targetEntityKey,
+                         @RequestBody @NotNull @Trim Endpoint endpoint,
                          Authentication authentication) {
     endpoint.setCreatedBy(authentication.getName());
     endpoint.setModifiedBy(authentication.getName());
@@ -634,7 +676,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addEndpoint(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
+  public int addEndpoint(UUID targetEntityKey,
+                         @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
     T oldEntity = get(targetEntityKey);
     int key = withMyBatis.addEndpoint(endpointMapper, mapper, targetEntityKey, endpoint, machineTagMapper);
     T newEntity = get(targetEntityKey);
@@ -683,14 +726,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addIdentifier(@PathVariable("key") UUID targetEntityKey, @RequestBody @NotNull @Trim Identifier identifier,
+  public int addIdentifier(@PathVariable("key") UUID targetEntityKey,
+                           @RequestBody @NotNull @Trim Identifier identifier,
                            Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(targetEntityKey, identifier);
   }
 
   @Override
-  public int addIdentifier(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Identifier identifier) {
+  public int addIdentifier(UUID targetEntityKey,
+                           @Validated({PrePersist.class, Default.class}) Identifier identifier) {
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
     return key;
@@ -705,7 +750,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @DeleteMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey, @PathVariable("identifierKey") int identifierKey) {
+  public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey,
+                               @PathVariable("identifierKey") int identifierKey) {
     mapper.deleteIdentifier(targetEntityKey, identifierKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
@@ -721,6 +767,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * If null is returned only admins are allowed to create new entities which is the default.
    */
   protected List<UUID> owningEntityKeys(@NotNull T entity) {
+    LOG.warn("Method not implemented. Entity {} with key {} was not used", entity.getClass(), entity.getKey());
     return new ArrayList<>();
   }
 
@@ -729,7 +776,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param page page to create response for, can be null
    */
-  protected <D> PagingResponse<D> pagingResponse(Pageable page, Long count, List<D> result) {
+  protected <D> PagingResponse<D> pagingResponse(Pageable page,
+                                                 Long count,
+                                                 List<D> result) {
     if (page == null) {
       // use default request
       page = new PagingRequest();
