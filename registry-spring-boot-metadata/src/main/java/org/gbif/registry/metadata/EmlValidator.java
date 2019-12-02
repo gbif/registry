@@ -3,7 +3,6 @@ package org.gbif.registry.metadata;
 import org.xml.sax.SAXException;
 
 import javax.annotation.concurrent.NotThreadSafe;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -32,11 +31,6 @@ public class EmlValidator {
    */
   public static EmlValidator newValidator(EMLProfileVersion version) throws SAXException {
     SchemaFactory factory = SchemaFactory.newInstance(SCHEMA_LANG);
-
-    // disable external entities
-    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
-    factory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
-
     Schema schema = factory.newSchema(new StreamSource(version.getSchemaLocation()));
     return new EmlValidator(schema.newValidator());
   }

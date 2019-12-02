@@ -16,7 +16,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.XMLConstants;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,8 +74,6 @@ public class DatasetParser {
   public static MetadataType detectParserType(InputStream xml) {
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-      xmlReader.setProperty(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-
       ParserDetectionHandler handler = new ParserDetectionHandler();
       xmlReader.setContentHandler(handler);
       InputSource inputSource = new InputSource(xml);
