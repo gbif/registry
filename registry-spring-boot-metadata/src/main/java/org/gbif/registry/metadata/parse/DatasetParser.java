@@ -16,6 +16,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import javax.xml.XMLConstants;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,7 @@ import java.util.LinkedList;
 /**
  * Main parser of dataset metadata that uses parser specific digester RuleSets for EML or Dublin Core.
  * It can automatically detect the document type if it is unknown or be used only with a specific parser type.
- *
+ * <p>
  * This parser and its digester rules use the DatasetDelegator class to wrap a dataset and set complex bean components.
  */
 public class DatasetParser {
@@ -67,6 +68,8 @@ public class DatasetParser {
   public static MetadataType detectParserType(InputStream xml) {
     try {
       XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+      xmlReader.setProperty(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
       ParserDetectionHandler handler = new ParserDetectionHandler();
       xmlReader.setContentHandler(handler);
       InputSource inputSource = new InputSource(xml);
@@ -88,7 +91,7 @@ public class DatasetParser {
    *
    * @param xml to read
    * @return The Dataset populated, never null
-   * @throws java.io.IOException If the Stream cannot be read from
+   * @throws java.io.IOException      If the Stream cannot be read from
    * @throws IllegalArgumentException If the XML is not well formed or is not understood
    */
   public static Dataset build(InputStream xml) throws IOException {
