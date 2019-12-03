@@ -1,4 +1,6 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
+
+import org.gbif.registry.domain.mail.BaseEmailModel;
 
 /**
  * Manager of emails related tasks.

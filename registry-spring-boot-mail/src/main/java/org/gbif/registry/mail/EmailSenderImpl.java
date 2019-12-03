@@ -1,5 +1,7 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
+import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,10 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-
-import static org.gbif.registry.surety.SuretyConstants.NOTIFY_ADMIN;
-import static org.gbif.registry.surety.email.RegistryEmailUtils.getUnitedBccArray;
-import static org.gbif.registry.surety.email.RegistryEmailUtils.toAddress;
 
 /**
  * Allows to send {@link BaseEmailModel}
@@ -48,7 +46,7 @@ class EmailSenderImpl implements EmailSender {
    */
   @Override
   public void send(@Valid @NotNull BaseEmailModel emailModel) {
-    toAddress(emailModel.getEmailAddress())
+    RegistryMailUtils.toAddress(emailModel.getEmailAddress())
       .ifPresent(emailAddress -> {
           try {
             // Send E-Mail
@@ -56,13 +54,13 @@ class EmailSenderImpl implements EmailSender {
             // from will be set with the value from the {@link Session} object.
             msg.setFrom();
             msg.setRecipient(Message.RecipientType.TO, emailAddress);
-            msg.setRecipients(Message.RecipientType.BCC, getUnitedBccArray(getProcessedBccAddresses(), emailModel));
+            msg.setRecipients(Message.RecipientType.BCC, RegistryMailUtils.getUnitedBccArray(getProcessedBccAddresses(), emailModel));
             msg.setSubject(emailModel.getSubject());
             msg.setSentDate(new Date());
             msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
             mailSender.send(msg);
           } catch (MessagingException e) {
-            LOG.error(NOTIFY_ADMIN, "Sending of notification Mail for [{}] failed", emailAddress, e);
+            LOG.error(RegistryMailUtils.NOTIFY_ADMIN, "Sending of notification Mail for [{}] failed", emailAddress, e);
           }
         }
       );
@@ -70,7 +68,7 @@ class EmailSenderImpl implements EmailSender {
 
   private Set<Address> getProcessedBccAddresses() {
     return Optional.ofNullable(bcc)
-      .map(RegistryEmailUtils::toInternetAddresses)
+      .map(RegistryMailUtils::toInternetAddresses)
       .orElse(Collections.emptySet());
   }
 }

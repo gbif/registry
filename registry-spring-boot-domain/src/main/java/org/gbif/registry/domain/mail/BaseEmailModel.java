@@ -1,4 +1,4 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.domain.mail;
 
 import com.google.common.base.MoreObjects;
 
