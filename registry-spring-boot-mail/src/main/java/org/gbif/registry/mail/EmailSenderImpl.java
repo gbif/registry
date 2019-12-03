@@ -15,10 +15,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Optional;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Allows to send {@link BaseEmailModel}
@@ -31,8 +29,8 @@ public class EmailSenderImpl implements EmailSender {
 
   private static final String HTML_CONTENT_TYPE = "text/html; charset=UTF-8";
 
-  @Value("${mail.bcc}")
-  private String bcc;
+  @Value("#{'${mail.bcc}'.split('[,;]+')}")
+  private List<String> bcc;
 
   private final JavaMailSender mailSender;
 
@@ -54,7 +52,10 @@ public class EmailSenderImpl implements EmailSender {
             // from will be set with the value from the {@link Session} object.
             msg.setFrom();
             msg.setRecipient(Message.RecipientType.TO, emailAddress);
-            msg.setRecipients(Message.RecipientType.BCC, RegistryMailUtils.getUnitedBccArray(getProcessedBccAddresses(), emailModel));
+            msg.setRecipients(Message.RecipientType.CC,
+              RegistryMailUtils.toInternetAddresses(emailModel.getCcAddress()).toArray(new Address[0]));
+            msg.setRecipients(Message.RecipientType.BCC,
+              RegistryMailUtils.toInternetAddresses(bcc).toArray(new Address[0]));
             msg.setSubject(emailModel.getSubject());
             msg.setSentDate(new Date());
             msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
@@ -64,11 +65,5 @@ public class EmailSenderImpl implements EmailSender {
           }
         }
       );
-  }
-
-  private Set<Address> getProcessedBccAddresses() {
-    return Optional.ofNullable(bcc)
-      .map(RegistryMailUtils::toInternetAddresses)
-      .orElse(Collections.emptySet());
   }
 }

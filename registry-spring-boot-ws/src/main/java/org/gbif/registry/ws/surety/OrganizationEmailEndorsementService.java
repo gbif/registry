@@ -4,6 +4,7 @@ import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.directory.Person;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.directory.NodeService;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -121,6 +123,24 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
       return true;
     }
     return false;
+  }
+
+  /**
+   * Handles the logic to generate an organization password reminder and send an email to the right person.
+   *
+   * @return organization reminder was sent or not
+   */
+  public boolean passwordReminder(Organization organization, Contact contact, @NotNull String emailAddress) {
+    try {
+      BaseEmailModel emailModel = emailTemplateManager.generateOrganizationPasswordReminderEmailModel(organization, contact, emailAddress);
+      emailSender.send(emailModel);
+    } catch (IOException e) {
+      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
+        "Error while trying to generate email on organization password reminder: " + organization.getKey(), e);
+      return false;
+    }
+
+    return true;
   }
 
   /**

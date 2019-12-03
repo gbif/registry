@@ -1,6 +1,5 @@
 package org.gbif.registry.mail.util;
 
-import com.google.common.base.Splitter;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,17 +10,16 @@ import javax.mail.Address;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class RegistryMailUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryMailUtils.class);
 
-  private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();
   public static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
 
   private RegistryMailUtils() {
@@ -43,8 +41,8 @@ public class RegistryMailUtils {
   /**
    * Transforms a string of addresses into a list of email addresses.
    */
-  public static Set<Address> toInternetAddresses(String strEmails) {
-    return StreamSupport.stream(EMAIL_SPLITTER.split(strEmails).spliterator(), false)
+  public static Set<Address> toInternetAddresses(List<String> strEmails) {
+    return strEmails.stream()
       .map(RegistryMailUtils::toAddress)
       .flatMap(address -> address.map(Stream::of).orElseGet(Stream::empty))
       .collect(Collectors.toSet());
