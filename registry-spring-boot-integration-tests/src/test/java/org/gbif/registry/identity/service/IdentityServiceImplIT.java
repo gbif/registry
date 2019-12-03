@@ -7,22 +7,15 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.mail.EmailSender;
-import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,11 +35,7 @@ public class IdentityServiceImplIT {
   private static final AtomicInteger index = new AtomicInteger(0);
 
   @Autowired
-  private DataSource dataSource;
-
-  @Autowired
-  @Qualifier("inMemoryEmailSender")
-  private EmailSender inMemoryEmailSender;
+  private EmailSender emailSender;
 
   @Autowired
   private ChallengeCodeMapper challengeCodeMapper;
@@ -56,23 +45,6 @@ public class IdentityServiceImplIT {
 
   @Autowired
   private IdentityService identityService;
-
-  @Before
-  public void setUp() {
-    cleanDb();
-  }
-
-  // TODO: 2019-07-02 before each run?
-  private void cleanDb() {
-      try (Connection connection = dataSource.getConnection();
-           PreparedStatement deleteUsers = connection.prepareStatement("TRUNCATE public.user");
-           PreparedStatement deleteRight = connection.prepareStatement("TRUNCATE editor_rights")) {
-        deleteUsers.execute();
-        deleteRight.execute();
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
-  }
 
   /**
    * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
@@ -181,28 +153,28 @@ public class IdentityServiceImplIT {
 
   @Test
   public void testCreateUserChallengeCodeSequence() {
-    GbifUser user = createConfirmedUser(identityService, inMemoryEmailSender);
+    GbifUser user = createConfirmedUser(identityService, emailSender);
     assertNotNull(user);
   }
 
   @Test
   public void testResetPasswordSequence() {
-    GbifUser user = createConfirmedUser(identityService, inMemoryEmailSender);
+    GbifUser user = createConfirmedUser(identityService, emailSender);
     identityService.resetPassword(user.getKey());
 
     //ensure we can not login
     assertNull("Can not login until the password is changed",
-        identityService.authenticate(user.getUserName(), TEST_PASSWORD));
+      identityService.authenticate(user.getUserName(), TEST_PASSWORD));
 
     //confirm challenge code
     UUID challengeCode = getChallengeCode(user.getKey());
     assertNotNull("Got a challenge code for " + user.getEmail(), challengeCode);
     assertFalse("password can be changed using challengeCode", identityService.updatePassword(user.getKey(),
-        TEST_PASSWORD2, challengeCode).containsError());
+      TEST_PASSWORD2, challengeCode).containsError());
 
     //ensure we can now login
     assertNotNull("Can login after the challenge code is confirmed",
-        identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
+      identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
   }
 
   @Test
@@ -247,14 +219,11 @@ public class IdentityServiceImplIT {
    * Creates a new user and confirms its challenge code.
    * No assertion performed.
    */
-  public GbifUser createConfirmedUser(IdentityService identityService, EmailSender inMemoryEmailManager) {
+  public GbifUser createConfirmedUser(IdentityService identityService, EmailSender emailManager) {
     GbifUser u1 = generateUser();
     // create the user
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
-
-    //ensure we got an email
-    assertNotNull("The user got an email with the challenge code", ((InMemoryEmailSender) inMemoryEmailManager).getEmail(u1.getEmail()));
 
     //ensure we can not login
     assertNull("Can not login until the challenge code is confirmed", identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
