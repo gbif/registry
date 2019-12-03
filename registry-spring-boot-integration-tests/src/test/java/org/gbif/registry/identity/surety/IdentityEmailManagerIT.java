@@ -3,6 +3,7 @@ package org.gbif.registry.identity.surety;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.identity.IdentityEmailManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

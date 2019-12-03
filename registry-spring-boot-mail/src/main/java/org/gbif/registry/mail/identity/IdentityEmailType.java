@@ -1,4 +1,4 @@
-package org.gbif.registry.identity.surety;
+package org.gbif.registry.mail.identity;
 
 import org.gbif.registry.mail.EmailType;
 
