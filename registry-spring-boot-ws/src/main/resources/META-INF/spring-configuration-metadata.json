@@ -34,7 +34,13 @@
     },
     {
       "name": "mail.cc",
-      "type": "java.lang.String"
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "mail.bcc",
+      "type": "java.lang.String",
+      "defaultValue": ""
     },
     {
       "name": "mail.from",
