@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-class DatasetTestDataProvider {
+public class DatasetTestDataProvider {
 
   static Dataset prepareFullDataset(DOI doi) {
     Dataset dataset = new Dataset();

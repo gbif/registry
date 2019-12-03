@@ -14,7 +14,7 @@ import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.UUID;
 
-class DownloadTestDataProvider {
+public class DownloadTestDataProvider {
 
   static Download prepareDownload() {
     Download download = new Download();

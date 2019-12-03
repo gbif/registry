@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class counts the number of webservice lookups needed to format a {@link Predicate} hierarchy.
  */
-class PredicateLookupCounter extends PredicateVisitor<Integer> {
+public class PredicateLookupCounter extends PredicateVisitor<Integer> {
 
   protected static final Logger LOG = LoggerFactory.getLogger(PredicateLookupCounter.class);
 
