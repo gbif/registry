@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.surety;
+package org.gbif.registry.domain.ws.surety;
 
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -20,12 +20,12 @@ public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
   private final Node endorsingNode;
   private final boolean reachableNodeManager;
 
-  static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organization,
+  public static OrganizationTemplateDataModel buildEndorsementModel(String name, URL url, Organization organization,
                                                              Node endorsingNode, boolean reachableNodeManager){
     return new OrganizationTemplateDataModel(name, url, organization, null, endorsingNode, reachableNodeManager);
   }
 
-  static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organization, URL organizationUrl, Node endorsingNode){
+  public static OrganizationTemplateDataModel buildEndorsedModel(String name, Organization organization, URL organizationUrl, Node endorsingNode){
     return new OrganizationTemplateDataModel(name, null, organization, organizationUrl, endorsingNode, false);
   }
 

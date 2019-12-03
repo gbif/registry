@@ -25,7 +25,7 @@ import java.util.Set;
  */
 @Service
 @Qualifier("emailSender")
-class EmailSenderImpl implements EmailSender {
+public class EmailSenderImpl implements EmailSender {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailSenderImpl.class);
 
