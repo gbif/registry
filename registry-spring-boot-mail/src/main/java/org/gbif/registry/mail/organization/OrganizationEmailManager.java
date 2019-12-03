@@ -8,7 +8,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.mail.BaseEmailModel;
-import org.gbif.registry.domain.ws.surety.OrganizationTemplateDataModel;
+import org.gbif.registry.domain.mail.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
