@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 
 @TestConfiguration
@@ -18,6 +19,7 @@ public class RegistryIntegrationTestsConfiguration {
 
   // use InMemoryEmailSender if devemail is disabled
   @Bean
+  @Primary
   @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
   public EmailSender emailSender() {
     return new InMemoryEmailSender();

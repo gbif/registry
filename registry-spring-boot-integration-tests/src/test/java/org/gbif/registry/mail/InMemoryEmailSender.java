@@ -1,8 +1,6 @@
 package org.gbif.registry.mail;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +11,6 @@ import java.util.Map;
  * - 1 {@link BaseEmailModel} is stored per email address
  * - no automatic cleanup
  */
-@Service
-@Qualifier("inMemoryEmailSender")
 public class InMemoryEmailSender implements EmailSender {
 
   private final Map<String, BaseEmailModel> emails = new HashMap<>();
@@ -39,5 +35,4 @@ public class InMemoryEmailSender implements EmailSender {
   public String toString() {
     return emails.toString();
   }
-
 }
