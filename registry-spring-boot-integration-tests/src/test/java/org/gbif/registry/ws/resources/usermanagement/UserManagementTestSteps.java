@@ -14,7 +14,6 @@ import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.SigningService;
@@ -62,7 +61,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
+@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class UserManagementTestSteps {

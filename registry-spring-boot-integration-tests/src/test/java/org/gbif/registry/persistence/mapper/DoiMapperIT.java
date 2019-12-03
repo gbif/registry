@@ -5,7 +5,6 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.registry.ws.TestEmailConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class})
+@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class})
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class DoiMapperIT {

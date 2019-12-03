@@ -9,7 +9,6 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
-import org.gbif.registry.ws.TestEmailConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -53,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class,
+@SpringBootTest(classes = {
   RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
