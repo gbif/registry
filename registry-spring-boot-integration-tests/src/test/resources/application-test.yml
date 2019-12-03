@@ -23,7 +23,7 @@ identity:
 organization:
   surety:
     helpdessk:
-      email: helpdesk@gbif.org
+      email: @mail.helpdesk@
     mail:
       enable: false
       urlTemplate:
