@@ -10,7 +10,6 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.ws.TestEmailConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class})
+@SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class IdentityServiceImplIT {

@@ -9,7 +9,6 @@ import io.cucumber.java.en.When;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
-import org.gbif.registry.ws.TestEmailConfiguration;
 import org.gbif.registry.ws.resources.TestResource;
 import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;
@@ -55,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {TestEmailConfiguration.class, RegistryIntegrationTestsConfiguration.class},
+@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class UserTestSteps {
