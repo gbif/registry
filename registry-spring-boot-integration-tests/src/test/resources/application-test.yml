@@ -7,9 +7,9 @@ api:
 #Mail Properties
 mail:
   cc: @mail.cc@
-  bcc:
+  bcc: @mail.bcc@
   devemail:
-    address: gbifregistry@mailinator.com
+    address: mpodolskiy@gbif.org
     enabled: @mail.devemail.enabled@
 
 # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
