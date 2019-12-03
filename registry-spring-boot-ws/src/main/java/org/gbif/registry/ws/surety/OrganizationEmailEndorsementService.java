@@ -58,7 +58,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
                                              PersonService personService,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
                                              OrganizationEmailManager emailTemplateManager,
-                                             EmailSender emailSender) {
+                                             @Qualifier("emailSender") EmailSender emailSender) {
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.participantService = participantService;
