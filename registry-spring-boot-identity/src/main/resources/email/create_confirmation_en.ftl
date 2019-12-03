@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="" type="org.gbif.registry.surety.email.BaseEmailModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseEmailModel" -->
 <p>Hello ${name},</p>
 
 <p>Thanks for registering at GBIF.org.
