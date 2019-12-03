@@ -1,4 +1,4 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
 import java.util.Locale;
 

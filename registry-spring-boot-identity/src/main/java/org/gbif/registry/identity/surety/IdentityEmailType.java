@@ -1,6 +1,6 @@
 package org.gbif.registry.identity.surety;
 
-import org.gbif.registry.surety.email.EmailType;
+import org.gbif.registry.mail.EmailType;
 
 public enum  IdentityEmailType implements EmailType {
 
