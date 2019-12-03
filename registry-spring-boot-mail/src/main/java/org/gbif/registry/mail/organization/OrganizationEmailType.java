@@ -15,7 +15,12 @@ public enum OrganizationEmailType implements EmailType {
   /**
    * Email 'Organization was endorsed'.
    */
-  ENDORSEMENT_CONFIRMATION("endorsementConfirmation", "organization_confirmed_en.ftl");
+  ENDORSEMENT_CONFIRMATION("endorsementConfirmation", "organization_confirmed_en.ftl"),
+
+  /**
+   * Email 'Password reminder'.
+   */
+  PASSWORD_REMINDER("passwordReminder", "organization_password_reminder_en.ftl");
 
   private final String subjectKey;
   private final String ftlTemplate;
