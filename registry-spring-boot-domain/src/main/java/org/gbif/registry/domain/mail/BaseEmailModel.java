@@ -3,6 +3,7 @@ package org.gbif.registry.domain.mail;
 import com.google.common.base.MoreObjects;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class BaseEmailModel {
   private final List<String> ccAddress;
 
   public BaseEmailModel(String emailAddress, String subject, String body) {
-    this(emailAddress, subject, body, null);
+    this(emailAddress, subject, body, Collections.emptyList());
   }
 
   public BaseEmailModel(String emailAddress, String subject, String body, List<String> ccAddress) {

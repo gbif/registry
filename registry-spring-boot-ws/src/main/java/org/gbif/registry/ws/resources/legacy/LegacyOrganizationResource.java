@@ -1,9 +1,6 @@
 package org.gbif.registry.ws.resources.legacy;
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -15,11 +12,11 @@ import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.ws.surety.OrganizationEmailEndorsementService;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.util.CommonWsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,35 +43,16 @@ public class LegacyOrganizationResource {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final OrganizationMapper organizationMapper;
-  // if true, send mails to disposable email address service
-  private final boolean useDevEmail;
-  private final String smtpHost;
-  private final Integer smptPort;
-  private final String devEmail;
-  private final String ccEmail;
-  private final String fromEmail;
-  private final String password;
+  private final OrganizationEmailEndorsementService emailManager;
 
   public LegacyOrganizationResource(OrganizationService organizationService,
                                     NodeService nodeService,
                                     OrganizationMapper organizationMapper,
-                                    @Value("${mail.devemail.enabled}") boolean useDevEmail,
-                                    @Value("${spring.mail.host}") String smtpHost,
-                                    @Value("${spring.mail.port:#{NULL}}") Integer smtpPort,
-                                    @Value("${mail.devemail.address}") String devEmail,
-                                    @Value("${mail.cc}") String ccEmail,
-                                    @Value("${mail.from}") String fromEmail,
-                                    @Value("${spring.mail.password}") String password) {
+                                    OrganizationEmailEndorsementService emailManager) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.organizationMapper = organizationMapper;
-    this.useDevEmail = useDevEmail;
-    this.smtpHost = smtpHost;
-    this.smptPort = smtpPort;
-    this.devEmail = devEmail;
-    this.ccEmail = ccEmail;
-    this.fromEmail = fromEmail;
-    this.password = password;
+    this.emailManager = emailManager;
   }
 
   /**
@@ -157,33 +135,14 @@ public class LegacyOrganizationResource {
             .cacheControl(CacheControl.noCache())
             .body(new ErrorResponse("Password reminder failed: organization primary contact has no email address"));
         } else {
-          try {
-            Email email = new SimpleEmail();
-            email.setHostName(smtpHost);
-            email.setSmtpPort(smptPort);
-            email.setFrom(fromEmail);
-            email.setSubject("GBIF: Password reminder for: " + organization.getTitle());
-            email.setMsg(getEmailBody(contact, organization));
-
-            // add recipients, depending on whether development mode is on for sending email?
-            if (useDevEmail) {
-              email.addTo(devEmail);
-              email.setStartTLSEnabled(true);
-              email.setSSLCheckServerIdentity(true);
-              email.setAuthentication(devEmail, password);
-            } else {
-              email.addTo(emailAddress);
-              email.addCc(ccEmail);
-            }
-
-            email.send();
-          } catch (EmailException e) {
-            LOG.error("Password reminder failed", e);
+          boolean reminderResultSuccess = emailManager.passwordReminder(organization, contact, emailAddress);
+          if (!reminderResultSuccess) {
+            LOG.error("Password reminder failed");
             return ResponseEntity
               .status(HttpStatus.INTERNAL_SERVER_ERROR)
               .contentType(MediaType.APPLICATION_JSON)
               .cacheControl(CacheControl.noCache())
-              .body(new ErrorResponse("Password reminder failed: " + e.getMessage()));
+              .body(new ErrorResponse("Password reminder failed"));
           }
           LOG.debug("Password reminder sent to: {}", emailAddress);
           return ResponseEntity
@@ -242,34 +201,5 @@ public class LegacyOrganizationResource {
       .status(HttpStatus.OK)
       .cacheControl(CacheControl.noCache())
       .body(new LegacyOrganizationBriefResponseListWrapper(organizations));
-  }
-
-  /**
-   * Build the email body, sent to the primary contact of the organization reminding them of the password.
-   *
-   * @param contact      primary contact of the organization
-   * @param organization organization
-   * @return email body
-   */
-  private String getEmailBody(Contact contact, Organization organization) {
-    return "Dear " +
-      contact.getFirstName() +
-      ": \n\n" +
-      "You, or someone else, has requested the password for the organisation '" +
-      organization.getTitle() +
-      "' to be sent to your e-mail address (" +
-      contact.getEmail() +
-      ")\n\n" +
-      "The information requested is: \n\n" +
-      "Username: " +
-      organization.getKey() +
-      "\n" +
-      "Password: " +
-      organization.getPassword() +
-      "\n\n" +
-      "If you did not request this information, please disregard this message\n\n" +
-      "GBIF (Global Biodiversity Information Facility)\n" +
-      "https://www.gbif.org\n" +
-      ccEmail;
   }
 }

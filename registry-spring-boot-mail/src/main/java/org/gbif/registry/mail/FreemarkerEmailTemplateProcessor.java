@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -48,7 +49,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
                                    @Nullable Locale locale,
                                    String... subjectParams)
     throws IOException, TemplateException {
-    return buildEmail(emailType, emailAddress, templateDataModel, locale, null, subjectParams);
+    return buildEmail(emailType, emailAddress, templateDataModel, locale, Collections.emptyList(), subjectParams);
   }
 
   /**

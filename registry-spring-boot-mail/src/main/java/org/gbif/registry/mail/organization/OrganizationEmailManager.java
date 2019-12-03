@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.domain.mail.OrganizationPasswordReminderTemplateDataModel;
 import org.gbif.registry.domain.mail.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -36,11 +38,10 @@ import java.util.UUID;
 @Service
 public class OrganizationEmailManager {
 
-  // TODO: 2019-08-22 move to ConfigurationProperties
+  // TODO: 2019-08-22 move to ConfigurationProperties, add disable\enable functionality
   @Value("${organization.surety.helpdesk.email}")
   private String helpdeskEmail;
 
-  // TODO: 2019-08-22 add disable\enable functionality
   @Value("${organization.surety.mail.enable}")
   private boolean isEmailEnabled;
 
@@ -49,6 +50,15 @@ public class OrganizationEmailManager {
 
   @Value("${organization.surety.mail.urlTemplate.organization}")
   private String organizationUrlTemplate;
+
+  @Value("${mail.devemail.enabled}")
+  private boolean useDevEmail;
+
+  @Value("${mail.devemail.address}")
+  private String devEmail;
+
+  @Value("#{'${mail.cc}'.split('[,;]+')}")
+  private List<String> ccEmail;
 
   private final EmailTemplateProcessor emailTemplateProcessors;
 
@@ -72,9 +82,9 @@ public class OrganizationEmailManager {
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   public BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
-                                                           Person nodeManager,
-                                                           UUID confirmationKey,
-                                                           Node endorsingNode) throws IOException {
+                                                                  Person nodeManager,
+                                                                  UUID confirmationKey,
+                                                                  Node endorsingNode) throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
     Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
@@ -146,6 +156,40 @@ public class OrganizationEmailManager {
       throw new IOException(tEx);
     }
     return baseEmailModelList;
+  }
+
+  public BaseEmailModel generateOrganizationPasswordReminderEmailModel(Organization organization, Contact contact, String emailAddress) throws IOException {
+    BaseEmailModel baseEmailModel;
+    OrganizationPasswordReminderTemplateDataModel templateDataModel =
+      new OrganizationPasswordReminderTemplateDataModel(
+        contact.getFirstName(),
+        URI.create("https://gbif.org").toURL(),
+        organization,
+        contact,
+        emailAddress,
+        ccEmail);
+    try {
+      // if true, send mails to disposable email address service
+      if (useDevEmail) {
+        baseEmailModel = emailTemplateProcessors.buildEmail(
+          OrganizationEmailType.PASSWORD_REMINDER,
+          devEmail, templateDataModel,
+          Locale.ENGLISH,
+          organization.getTitle());
+      } else {
+        baseEmailModel = emailTemplateProcessors.buildEmail(
+          OrganizationEmailType.PASSWORD_REMINDER,
+          emailAddress,
+          templateDataModel,
+          Locale.ENGLISH,
+          ccEmail,
+          organization.getTitle());
+      }
+    } catch (TemplateException tEx) {
+      throw new IOException(tEx);
+    }
+
+    return baseEmailModel;
   }
 
   /**
