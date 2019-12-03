@@ -1,4 +1,4 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -13,8 +13,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-import static freemarker.template.Configuration.VERSION_2_3_25;
-
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
  */
@@ -23,7 +21,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
   private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
   // shared config among all instances
-  private static final Configuration FREEMARKER_CONFIG = new Configuration(VERSION_2_3_25);
+  private static final Configuration FREEMARKER_CONFIG = new Configuration(Configuration.VERSION_2_3_25);
 
   static {
     FREEMARKER_CONFIG.setDefaultEncoding(StandardCharsets.UTF_8.name());
@@ -31,11 +29,11 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
     FREEMARKER_CONFIG.setNumberFormat("0.####");
     FREEMARKER_CONFIG.setDateFormat("yyyy-mm-dd");
     FREEMARKER_CONFIG.setClassForTemplateLoading(FreemarkerEmailTemplateProcessor.class,
-        "/email");
+      "/email");
   }
 
   public BaseEmailModel buildEmail(EmailType emailType, String emailAddress, Object templateDataModel, @Nullable Locale locale)
-      throws IOException, TemplateException {
+    throws IOException, TemplateException {
     return buildEmail(emailType, emailAddress, templateDataModel, locale, null);
   }
 
@@ -43,7 +41,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * Build a {@link BaseEmailModel} from
    *
    * @param emailType         template type (new user, reset password or welcome)
-   * @param emailAddress email address
+   * @param emailAddress      email address
    * @param templateDataModel source data
    * @param locale            if null is provided {@link #DEFAULT_LOCALE} will be used
    * @return email model to send
@@ -53,7 +51,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
                                    Object templateDataModel,
                                    @Nullable Locale locale,
                                    List<String> ccAddresses)
-      throws IOException, TemplateException {
+    throws IOException, TemplateException {
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
 

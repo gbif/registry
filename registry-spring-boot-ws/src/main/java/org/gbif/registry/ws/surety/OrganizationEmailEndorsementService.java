@@ -13,10 +13,10 @@ import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.registry.directory.DirectoryRegistryMapping;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.surety.SuretyConstants;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +84,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
         newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
       emailManager.send(emailModel);
     } catch (IOException ex) {
-      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
         "Error while trying to generate email on new organization created:" + newOrganization.getKey(), ex);
     }
   }
@@ -114,7 +114,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
         List<BaseEmailModel> emailModel = emailTemplateManager.generateOrganizationEndorsedEmailModel(organization, endorsingNode);
         emailModel.forEach(emailManager::send);
       } catch (IOException ex) {
-        LOG.error(SuretyConstants.NOTIFY_ADMIN,
+        LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
           "Error while trying to generate email on organization confirmed: " + organizationKey, ex);
       }
       return true;

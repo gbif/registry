@@ -5,7 +5,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.identity.surety.IdentityEmailManager;
 import org.gbif.registry.mail.EmailSender;
-import org.gbif.registry.surety.SuretyConstants;
+import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
     try {
       emailModel = identityEmailManager.generateNewUserEmailModel(user, challengeCode);
     } catch (IOException e) {
-      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
         "Error while trying to generate email to confirm user " + user.getUserName(), e);
       return;
     }
@@ -72,7 +72,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);
       } catch (IOException e) {
-        LOG.error(SuretyConstants.NOTIFY_ADMIN,
+        LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
           "Error while trying to generate welcome email for user " + user.getUserName(), e);
       }
     }
@@ -86,7 +86,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
     try {
       emailModel = identityEmailManager.generateResetPasswordEmailModel(user, challengeCode);
     } catch (IOException e) {
-      LOG.error(SuretyConstants.NOTIFY_ADMIN,
+      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
         "Error while trying to generate email to reset password of user " + user.getUserName(), e);
       return;
     }

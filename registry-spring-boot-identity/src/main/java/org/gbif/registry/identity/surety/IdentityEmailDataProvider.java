@@ -1,7 +1,7 @@
 package org.gbif.registry.identity.surety;
 
-import org.gbif.registry.surety.email.EmailDataProvider;
-import org.gbif.registry.surety.email.EmailType;
+import org.gbif.registry.mail.EmailDataProvider;
+import org.gbif.registry.mail.EmailType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 

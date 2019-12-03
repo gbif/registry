@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.surety;
 
-import org.gbif.registry.surety.email.EmailType;
+import org.gbif.registry.mail.EmailType;
 
 /**
  * Type of emails related to organization endorsement

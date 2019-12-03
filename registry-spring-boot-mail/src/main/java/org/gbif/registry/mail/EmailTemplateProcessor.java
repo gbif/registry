@@ -1,4 +1,4 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
 import freemarker.template.TemplateException;
 import org.gbif.registry.domain.mail.BaseEmailModel;

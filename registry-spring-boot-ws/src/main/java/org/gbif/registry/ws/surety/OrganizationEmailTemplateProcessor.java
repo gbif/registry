@@ -1,7 +1,7 @@
 package org.gbif.registry.ws.surety;
 
-import org.gbif.registry.surety.email.EmailDataProvider;
-import org.gbif.registry.surety.email.FreemarkerEmailTemplateProcessor;
+import org.gbif.registry.mail.EmailDataProvider;
+import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
