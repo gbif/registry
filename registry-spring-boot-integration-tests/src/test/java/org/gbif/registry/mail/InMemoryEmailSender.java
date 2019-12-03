@@ -1,6 +1,8 @@
 package org.gbif.registry.mail;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +15,13 @@ import java.util.Map;
  */
 public class InMemoryEmailSender implements EmailSender {
 
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryEmailSender.class);
+
   private final Map<String, BaseEmailModel> emails = new HashMap<>();
+
+  public InMemoryEmailSender() {
+    LOG.debug("Use InMemoryEmailSender");
+  }
 
   @Override
   public void send(BaseEmailModel baseEmailModel) {
