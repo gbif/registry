@@ -32,6 +32,14 @@
       <artifactId>registry-spring-boot-persistence</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-domain</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
     </dependency>

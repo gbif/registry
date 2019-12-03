@@ -1,5 +1,7 @@
 package org.gbif.registry.surety.email;
 
+import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailSender;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,10 +36,10 @@ public class EmailSenderIT {
   @Test
   public void testSendWhenTwoValidCcEmailThenGotFourMessages() throws MessagingException, IOException {
     BaseEmailModel mail = new BaseEmailModel(
-        "info@memorynotfound.com",
-        "Spring Mail Integration Testing with JUnit and GreenMail Example",
-        "We show how to write Integration Tests using Spring and GreenMail.",
-        Arrays.asList("cc1", "cc2")
+      "info@memorynotfound.com",
+      "Spring Mail Integration Testing with JUnit and GreenMail Example",
+      "We show how to write Integration Tests using Spring and GreenMail.",
+      Arrays.asList("cc1", "cc2")
     );
 
     emailService.send(mail);
@@ -59,10 +61,10 @@ public class EmailSenderIT {
   public void testSendWhenOneCcEmailWrongThenGotTwoMessages() throws Exception {
 
     BaseEmailModel mail = new BaseEmailModel(
-        "info@memorynotfound.com",
-        "Spring Mail Integration Testing with JUnit and GreenMail Example",
-        "We show how to write Integration Tests using Spring and GreenMail.",
-        Collections.singletonList("wrong email")
+      "info@memorynotfound.com",
+      "Spring Mail Integration Testing with JUnit and GreenMail Example",
+      "We show how to write Integration Tests using Spring and GreenMail.",
+      Collections.singletonList("wrong email")
     );
 
     emailService.send(mail);

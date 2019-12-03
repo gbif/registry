@@ -2,6 +2,7 @@ package org.gbif.registry.surety.email;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -42,21 +43,21 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * Build a {@link BaseEmailModel} from
    *
    * @param emailType         template type (new user, reset password or welcome)
-   * @param emailAddress
-   * @param templateDataModel
+   * @param emailAddress email address
+   * @param templateDataModel source data
    * @param locale            if null is provided {@link #DEFAULT_LOCALE} will be used
-   * @return
-   * @throws IOException
-   * @throws TemplateException
+   * @return email model to send
    */
-  public BaseEmailModel buildEmail(EmailType emailType, String emailAddress, Object templateDataModel, @Nullable Locale locale,
+  public BaseEmailModel buildEmail(EmailType emailType,
+                                   String emailAddress,
+                                   Object templateDataModel,
+                                   @Nullable Locale locale,
                                    List<String> ccAddresses)
       throws IOException, TemplateException {
-
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
 
-    //at some point this class should be able to check supported locale
+    // at some point this class should be able to check supported locale
     Locale emailLocale = Optional.ofNullable(locale).orElse(DEFAULT_LOCALE);
 
     // Prepare the E-Mail body text

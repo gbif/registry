@@ -7,7 +7,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.registry.surety.email.BaseEmailModel;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.email.FreemarkerEmailTemplateProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -85,9 +85,9 @@ class OrganizationEmailManager {
     // do we have an email to contact the node manager ?
     if (nodeManagerEmailAddress.isPresent()) {
       name = Optional.ofNullable(StringUtils.trimToNull(
-          org.gbif.utils.text.StringUtils.thenJoin(StringUtils::trimToNull, nodeManager.getFirstName(),
-              nodeManager.getSurname())))
-          .orElse(endorsingNode.getTitle());
+        org.gbif.utils.text.StringUtils.thenJoin(StringUtils::trimToNull, nodeManager.getFirstName(),
+          nodeManager.getSurname())))
+        .orElse(endorsingNode.getTitle());
       emailAddress = nodeManagerEmailAddress.get();
     }
 
@@ -95,13 +95,13 @@ class OrganizationEmailManager {
     try {
       URL endorsementUrl = generateEndorsementUrl(newOrganization.getKey(), confirmationKey);
       OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel
-          .buildEndorsementModel(name, endorsementUrl, newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
+        .buildEndorsementModel(name, endorsementUrl, newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
 
       baseEmailModel = emailTemplateProcessors.buildEmail(OrganizationEmailType.NEW_ORGANIZATION, emailAddress, templateDataModel, Locale.ENGLISH,
-          //CC helpdesk unless we are sending the email to helpdesk
-          Optional.ofNullable(emailAddress)
-              .filter(e -> !e.equals(helpdeskEmail))
-              .map(e -> Collections.singletonList(helpdeskEmail)).orElse(null));
+        //CC helpdesk unless we are sending the email to helpdesk
+        Optional.ofNullable(emailAddress)
+          .filter(e -> !e.equals(helpdeskEmail))
+          .map(e -> Collections.singletonList(helpdeskEmail)).orElse(null));
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
@@ -121,24 +121,24 @@ class OrganizationEmailManager {
     URL organizationUrl = generateOrganizationUrl(newOrganization.getKey());
 
     OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel.
-        buildEndorsedModel(HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
+      buildEndorsedModel(HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
 
     try {
       baseEmailModelList.add(emailTemplateProcessors.buildEmail(OrganizationEmailType.ENDORSEMENT_CONFIRMATION, helpdeskEmail, templateDataModel, Locale.ENGLISH));
 
       Optional<Contact> pointOfContact = newOrganization.getContacts()
-          .stream()
-          .filter(c -> ContactType.POINT_OF_CONTACT == c.getType())
-          .findFirst();
+        .stream()
+        .filter(c -> ContactType.POINT_OF_CONTACT == c.getType())
+        .findFirst();
       Optional<String> pointOfContactEmail = pointOfContact
-          .map(Contact::getEmail)
-          .orElse(Collections.emptyList())
-          .stream().findFirst();
+        .map(Contact::getEmail)
+        .orElse(Collections.emptyList())
+        .stream().findFirst();
 
       if (pointOfContactEmail.isPresent()) {
         templateDataModel = OrganizationTemplateDataModel.
-            buildEndorsedModel(pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
-                newOrganization, organizationUrl, endorsingNode);
+          buildEndorsedModel(pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
+            newOrganization, organizationUrl, endorsingNode);
         baseEmailModelList.add(emailTemplateProcessors.buildEmail(OrganizationEmailType.ENDORSEMENT_CONFIRMATION, pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
       }
     } catch (TemplateException tEx) {
