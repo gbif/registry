@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -9,7 +9,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;

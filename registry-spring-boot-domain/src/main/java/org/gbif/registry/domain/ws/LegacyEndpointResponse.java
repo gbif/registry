@@ -1,7 +1,7 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import org.gbif.api.model.registry.Endpoint;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;

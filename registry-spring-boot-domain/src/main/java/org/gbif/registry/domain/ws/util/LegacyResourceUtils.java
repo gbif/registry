@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.util;
+package org.gbif.registry.domain.ws.util;
 
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Contact;
@@ -8,9 +8,9 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.model.LegacyEndpoint;
-import org.gbif.registry.ws.model.LegacyInstallation;
+import org.gbif.registry.domain.ws.LegacyDataset;
+import org.gbif.registry.domain.ws.LegacyEndpoint;
+import org.gbif.registry.domain.ws.LegacyInstallation;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

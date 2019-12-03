@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;

@@ -9,11 +9,11 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.common.LoggedUserWithToken;
-import org.gbif.registry.ws.model.LegacyDatasetResponse;
-import org.gbif.registry.ws.model.LegacyEndpoint;
-import org.gbif.registry.ws.model.LegacyEndpointResponse;
-import org.gbif.registry.ws.model.LegacyOrganizationBriefResponse;
-import org.gbif.registry.ws.model.LegacyOrganizationResponse;
+import org.gbif.registry.domain.ws.LegacyDatasetResponse;
+import org.gbif.registry.domain.ws.LegacyEndpoint;
+import org.gbif.registry.domain.ws.LegacyEndpointResponse;
+import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
+import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 
 import java.util.Locale;
 

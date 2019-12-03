@@ -2,7 +2,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.service.common.LoggedUserWithToken;
-import org.gbif.registry.ws.model.AuthenticationDataParameters;
+import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.gbif.ws.security.GbifAuthentication;
 import org.junit.Test;

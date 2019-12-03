@@ -8,7 +8,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;

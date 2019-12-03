@@ -1,6 +1,6 @@
 package org.gbif.registry.processor;
 
-import org.gbif.registry.ws.annotation.ParamName;
+import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.MutablePropertyValues;

@@ -2,7 +2,7 @@ package org.gbif.registry.utils.cucumber;
 
 import io.cucumber.datatable.TableEntryTransformer;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.registry.ws.model.LegacyEndpoint;
+import org.gbif.registry.domain.ws.LegacyEndpoint;
 
 import java.net.URI;
 import java.util.Map;

@@ -2,8 +2,8 @@ package org.gbif.registry.ws.security;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.ws.model.UserCreation;
-import org.gbif.registry.ws.model.UserUpdate;
+import org.gbif.registry.domain.ws.UserCreation;
+import org.gbif.registry.domain.ws.UserUpdate;
 
 import javax.annotation.Nullable;
 import java.util.Set;

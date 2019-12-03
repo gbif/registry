@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.annotation;
+package org.gbif.registry.domain.ws.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

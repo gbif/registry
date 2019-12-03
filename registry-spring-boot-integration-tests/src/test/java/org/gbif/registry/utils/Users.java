@@ -1,6 +1,6 @@
 package org.gbif.registry.utils;
 
-import org.gbif.registry.ws.model.UserCreation;
+import org.gbif.registry.domain.ws.UserCreation;
 
 public class Users {
 

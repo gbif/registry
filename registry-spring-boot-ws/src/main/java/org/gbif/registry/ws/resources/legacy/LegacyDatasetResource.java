@@ -8,12 +8,12 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.ws.model.ErrorResponse;
-import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.model.LegacyDatasetResponse;
-import org.gbif.registry.ws.model.LegacyDatasetResponseListWrapper;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
-import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.registry.domain.ws.ErrorResponse;
+import org.gbif.registry.domain.ws.LegacyDataset;
+import org.gbif.registry.domain.ws.LegacyDatasetResponse;
+import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.util.CommonWsUtils;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
+import static org.gbif.registry.domain.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by the GBRDS.
