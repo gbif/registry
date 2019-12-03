@@ -2,7 +2,7 @@ package org.gbif.registry.identity.surety;
 
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.surety.email.BaseEmailModel;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class IdentityEmailManagerIT {
   public void testGenerateNewUserEmailModel() throws IOException {
     GbifUser newUser = generateTestUser();
     BaseEmailModel baseEmail =
-        identityEmailManager.generateNewUserEmailModel(newUser, ChallengeCode.newRandom());
+      identityEmailManager.generateNewUserEmailModel(newUser, ChallengeCode.newRandom());
     assertNotNull("We can generate the model from the template", baseEmail);
   }
 
@@ -46,7 +46,7 @@ public class IdentityEmailManagerIT {
   public void testGenerateResetPasswordEmailModel() throws IOException {
     GbifUser newUser = generateTestUser();
     BaseEmailModel baseEmail =
-        identityEmailManager.generateResetPasswordEmailModel(newUser, ChallengeCode.newRandom());
+      identityEmailManager.generateResetPasswordEmailModel(newUser, ChallengeCode.newRandom());
     assertNotNull("We can generate the model from the template", baseEmail);
   }
 
@@ -56,7 +56,7 @@ public class IdentityEmailManagerIT {
     newUser.setUserName("User");
     newUser.setEmail("a@b.com");
     BaseEmailModel baseEmail =
-        identityEmailManager.generateWelcomeEmailModel(newUser);
+      identityEmailManager.generateWelcomeEmailModel(newUser);
     assertNotNull("We can generate the model from the template", baseEmail);
   }
 
