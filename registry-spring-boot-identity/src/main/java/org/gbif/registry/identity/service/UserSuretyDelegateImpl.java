@@ -2,10 +2,10 @@ package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.identity.surety.IdentityEmailManager;
+import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.surety.SuretyConstants;
-import org.gbif.registry.surety.email.BaseEmailModel;
-import org.gbif.registry.surety.email.EmailSender;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +29,9 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private final IdentityEmailManager identityEmailManager;
 
   public UserSuretyDelegateImpl(
-      @Qualifier("emailSender") EmailSender emailSender,
-      ChallengeCodeManager<Integer> challengeCodeManager,
-      IdentityEmailManager identityEmailManager) {
+    @Qualifier("emailSender") EmailSender emailSender,
+    ChallengeCodeManager<Integer> challengeCodeManager,
+    IdentityEmailManager identityEmailManager) {
     this.emailSender = emailSender;
     this.challengeCodeManager = challengeCodeManager;
     this.identityEmailManager = identityEmailManager;
@@ -55,7 +55,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
       emailModel = identityEmailManager.generateNewUserEmailModel(user, challengeCode);
     } catch (IOException e) {
       LOG.error(SuretyConstants.NOTIFY_ADMIN,
-          "Error while trying to generate email to confirm user " + user.getUserName(), e);
+        "Error while trying to generate email to confirm user " + user.getUserName(), e);
       return;
     }
     emailSender.send(emailModel);
@@ -64,16 +64,16 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
   @Override
   public boolean confirmUser(GbifUser user, UUID confirmationObject) {
     Boolean confirmationSucceeded = Optional.ofNullable(user.getKey())
-        .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
-            && challengeCodeManager.remove(keyVal))
-        .orElse(Boolean.FALSE);
+      .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
+        && challengeCodeManager.remove(keyVal))
+      .orElse(Boolean.FALSE);
     if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);
       } catch (IOException e) {
         LOG.error(SuretyConstants.NOTIFY_ADMIN,
-            "Error while trying to generate welcome email for user " + user.getUserName(), e);
+          "Error while trying to generate welcome email for user " + user.getUserName(), e);
       }
     }
     return confirmationSucceeded;
@@ -87,7 +87,7 @@ class UserSuretyDelegateImpl implements UserSuretyDelegate {
       emailModel = identityEmailManager.generateResetPasswordEmailModel(user, challengeCode);
     } catch (IOException e) {
       LOG.error(SuretyConstants.NOTIFY_ADMIN,
-          "Error while trying to generate email to reset password of user " + user.getUserName(), e);
+        "Error while trying to generate email to reset password of user " + user.getUserName(), e);
       return;
     }
     emailSender.send(emailModel);

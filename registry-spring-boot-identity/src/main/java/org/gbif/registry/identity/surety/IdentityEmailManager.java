@@ -3,7 +3,7 @@ package org.gbif.registry.identity.surety;
 import freemarker.template.TemplateException;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.surety.email.BaseEmailModel;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.surety.email.BaseTemplateDataModel;
 import org.gbif.registry.surety.email.EmailTemplateProcessor;
 import org.gbif.registry.surety.email.EmailType;
@@ -40,7 +40,7 @@ public class IdentityEmailManager {
   public BaseEmailModel generateNewUserEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
       return generateConfirmationEmailModel(user, generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
-          IdentityEmailType.NEW_USER);
+        IdentityEmailType.NEW_USER);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -49,7 +49,7 @@ public class IdentityEmailManager {
   public BaseEmailModel generateResetPasswordEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
       return generateConfirmationEmailModel(user, generateResetPasswordUrl(user.getUserName(), challengeCode.getCode()),
-          IdentityEmailType.RESET_PASSWORD);
+        IdentityEmailType.RESET_PASSWORD);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -69,7 +69,7 @@ public class IdentityEmailManager {
    * @return new {@link BaseEmailModel} or null if an error occurred
    */
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
-      throws IOException, TemplateException {
+    throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, Locale.ENGLISH);
   }

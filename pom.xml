@@ -135,6 +135,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-mail</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
