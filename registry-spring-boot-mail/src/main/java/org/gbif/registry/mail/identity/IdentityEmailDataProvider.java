@@ -17,7 +17,7 @@ public class IdentityEmailDataProvider implements EmailDataProvider {
       "email/subjects/identity_email_subjects", Locale.ENGLISH);
 
   @Override
-  public String getSubject(Locale locale, EmailType emailType) {
+  public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
     return EMAIL_SUBJECT_RESOURCE.getString(emailType.getSubjectKey());
   }
 

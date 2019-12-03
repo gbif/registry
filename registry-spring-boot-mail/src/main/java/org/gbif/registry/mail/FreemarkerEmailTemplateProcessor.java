@@ -32,9 +32,23 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
       "/email");
   }
 
-  public BaseEmailModel buildEmail(EmailType emailType, String emailAddress, Object templateDataModel, @Nullable Locale locale)
+  /**
+   * Build a {@link BaseEmailModel} from
+   *
+   * @param emailType         template type (new user, reset password or welcome)
+   * @param emailAddress      email address
+   * @param templateDataModel source data
+   * @param locale            if null is provided {@link #DEFAULT_LOCALE} will be used
+   * @param subjectParams     computable params for subject message formatting
+   * @return email model to send
+   */
+  public BaseEmailModel buildEmail(EmailType emailType,
+                                   String emailAddress,
+                                   Object templateDataModel,
+                                   @Nullable Locale locale,
+                                   String... subjectParams)
     throws IOException, TemplateException {
-    return buildEmail(emailType, emailAddress, templateDataModel, locale, null);
+    return buildEmail(emailType, emailAddress, templateDataModel, locale, null, subjectParams);
   }
 
   /**
@@ -44,13 +58,16 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * @param emailAddress      email address
    * @param templateDataModel source data
    * @param locale            if null is provided {@link #DEFAULT_LOCALE} will be used
+   * @param ccAddresses       carbon copy addresses
+   * @param subjectParams     computable params for subject message formatting
    * @return email model to send
    */
   public BaseEmailModel buildEmail(EmailType emailType,
                                    String emailAddress,
                                    Object templateDataModel,
                                    @Nullable Locale locale,
-                                   List<String> ccAddresses)
+                                   List<String> ccAddresses,
+                                   String... subjectParams)
     throws IOException, TemplateException {
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
@@ -61,7 +78,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
     // Prepare the E-Mail body text
     StringWriter contentBuffer = new StringWriter();
     FREEMARKER_CONFIG.getTemplate(getEmailDataProvider().getTemplate(emailLocale, emailType)).process(templateDataModel, contentBuffer);
-    return new BaseEmailModel(emailAddress, getEmailDataProvider().getSubject(emailLocale, emailType), contentBuffer.toString(), ccAddresses);
+    return new BaseEmailModel(emailAddress, getEmailDataProvider().getSubject(emailLocale, emailType, subjectParams), contentBuffer.toString(), ccAddresses);
   }
 
   public abstract EmailDataProvider getEmailDataProvider();

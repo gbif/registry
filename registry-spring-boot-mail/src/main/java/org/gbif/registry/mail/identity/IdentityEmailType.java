@@ -5,7 +5,7 @@ import org.gbif.registry.mail.EmailType;
 /**
  * Type of emails related to 'identity' stuff like: welcome email, create new account and reset password.
  */
-public enum  IdentityEmailType implements EmailType {
+public enum IdentityEmailType implements EmailType {
 
   /**
    * Email 'Account was created, please confirm it'.
