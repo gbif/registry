@@ -1,10 +1,10 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;

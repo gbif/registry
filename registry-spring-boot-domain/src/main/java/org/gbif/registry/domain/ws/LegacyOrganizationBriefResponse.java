@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;

@@ -1,6 +1,6 @@
 package org.gbif.registry.processor;
 
-import org.gbif.registry.ws.annotation.ParamName;
+import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;

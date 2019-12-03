@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;

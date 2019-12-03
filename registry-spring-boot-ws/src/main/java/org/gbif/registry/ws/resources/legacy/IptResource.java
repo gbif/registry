@@ -10,10 +10,10 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.ws.model.IptEntityResponse;
-import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.model.LegacyInstallation;
-import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.registry.domain.ws.IptEntityResponse;
+import org.gbif.registry.domain.ws.LegacyDataset;
+import org.gbif.registry.domain.ws.LegacyInstallation;
+import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
+import static org.gbif.registry.domain.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service requests coming from IPT installations, previously handled by the GBRDS.

@@ -1,7 +1,7 @@
 package org.gbif.registry.utils.cucumber;
 
 import io.cucumber.datatable.TableEntryTransformer;
-import org.gbif.registry.ws.model.LegacyOrganizationResponse;
+import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 
 import java.util.Map;
 

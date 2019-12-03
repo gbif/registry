@@ -150,7 +150,7 @@
   </select>
 
   <!-- Append ordering by title, omitting deleted entities. No paging, instead all organizations included in response -->
-  <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.ws.model.LegacyOrganizationBriefResponse">
+  <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse">
     SELECT <include refid="LEGACY_ORGANIZATION_BRIEF_FIELDS"/>
     FROM organization o
     WHERE o.deleted IS NULL

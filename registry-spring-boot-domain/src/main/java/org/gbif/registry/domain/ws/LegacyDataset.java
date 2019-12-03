@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.model;
+package org.gbif.registry.domain.ws;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -15,9 +15,9 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.registry.ws.annotation.ParamName;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
-import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.registry.domain.ws.annotation.ParamName;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

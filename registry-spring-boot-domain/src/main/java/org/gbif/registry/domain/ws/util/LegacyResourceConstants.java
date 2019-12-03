@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.util;
+package org.gbif.registry.domain.ws.util;
 
 /**
  * Class containing constant values used across legacy resources, in answering legacy web service requests (GBRDS/IPT).
