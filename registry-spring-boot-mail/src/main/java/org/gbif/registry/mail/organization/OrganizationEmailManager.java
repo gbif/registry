@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.surety;
+package org.gbif.registry.mail.organization;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.StringUtils;
@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.domain.ws.surety.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,7 +34,7 @@ import java.util.UUID;
  * - generate the body of the email
  */
 @Service
-class OrganizationEmailManager {
+public class OrganizationEmailManager {
 
   // TODO: 2019-08-22 move to ConfigurationProperties
   @Value("${organization.surety.helpdesk.email}")
@@ -56,7 +57,7 @@ class OrganizationEmailManager {
   /**
    * @param emailTemplateProcessors configured EmailTemplateProcessor
    */
-  OrganizationEmailManager(@Qualifier("organizationEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors) {
+  public OrganizationEmailManager(@Qualifier("organizationEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors) {
     Objects.requireNonNull(emailTemplateProcessors, "emailTemplateProcessors shall be provided");
     this.emailTemplateProcessors = emailTemplateProcessors;
   }
@@ -70,7 +71,7 @@ class OrganizationEmailManager {
    * @param endorsingNode
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
-  BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
+  public BaseEmailModel generateOrganizationEndorsementEmailModel(Organization newOrganization,
                                                            Person nodeManager,
                                                            UUID confirmationKey,
                                                            Node endorsingNode) throws IOException {
@@ -116,7 +117,7 @@ class OrganizationEmailManager {
    * @param endorsingNode
    * @return the list of {@link BaseEmailModel} to send.
    */
-  List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
+  public List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
     URL organizationUrl = generateOrganizationUrl(newOrganization.getKey());
 

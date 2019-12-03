@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="" type="org.gbif.registry.ws.surety.OrganizationTemplateDataModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.domain.ws.surety.OrganizationTemplateDataModel" -->
 <p>Dear ${name},</p>
 
 <#if !hasReachableNodeManager()><p><i>Warning: ${endorsingNode.title} doesn't have a NodeManager with email address. Therefore, the email was only sent to Helpdesk.</i></p></#if>

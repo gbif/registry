@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.registry.directory.DirectoryRegistryMapping;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -38,7 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Qualifier("organizationEmailEndorsementService")
 @Service
-class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
+public class OrganizationEmailEndorsementService implements OrganizationEndorsementService<UUID> {
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailEndorsementService.class);
 
@@ -49,7 +50,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   private final NodeService directoryNodeService;
   private final ChallengeCodeManager<UUID> challengeCodeManager;
   private final OrganizationEmailManager emailTemplateManager;
-  private final EmailSender emailManager;
+  private final EmailSender emailSender;
 
   public OrganizationEmailEndorsementService(MapperServiceLocator mapperServiceLocator,
                                              ParticipantService participantService,
@@ -57,7 +58,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
                                              PersonService personService,
                                              ChallengeCodeManager<UUID> challengeCodeManager,
                                              OrganizationEmailManager emailTemplateManager,
-                                             @Qualifier("emailSender") EmailSender emailManager) {
+                                             EmailSender emailSender) {
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.participantService = participantService;
@@ -65,7 +66,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
     this.personService = personService;
     this.challengeCodeManager = challengeCodeManager;
     this.emailTemplateManager = emailTemplateManager;
-    this.emailManager = emailManager;
+    this.emailSender = emailSender;
   }
 
   /**
@@ -76,13 +77,13 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
   public void onNewOrganization(Organization newOrganization) {
     ChallengeCode challengeCode = challengeCodeManager.create(newOrganization.getKey());
 
-    //try to get the node manager
+    // try to get the node manager
     Node endorsingNode = nodeMapper.get(newOrganization.getEndorsingNodeKey());
     Optional<Person> nodeManager = getNodeContact(endorsingNode);
     try {
       BaseEmailModel emailModel = emailTemplateManager.generateOrganizationEndorsementEmailModel(
         newOrganization, nodeManager.orElse(null), challengeCode.getCode(), endorsingNode);
-      emailManager.send(emailModel);
+      emailSender.send(emailModel);
     } catch (IOException ex) {
       LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
         "Error while trying to generate email on new organization created:" + newOrganization.getKey(), ex);
@@ -112,7 +113,7 @@ class OrganizationEmailEndorsementService implements OrganizationEndorsementServ
       Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
       try {
         List<BaseEmailModel> emailModel = emailTemplateManager.generateOrganizationEndorsedEmailModel(organization, endorsingNode);
-        emailModel.forEach(emailManager::send);
+        emailModel.forEach(emailSender::send);
       } catch (IOException ex) {
         LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
           "Error while trying to generate email on organization confirmed: " + organizationKey, ex);
