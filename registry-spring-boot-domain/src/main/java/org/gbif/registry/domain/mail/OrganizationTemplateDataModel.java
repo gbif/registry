@@ -1,8 +1,7 @@
-package org.gbif.registry.domain.ws.surety;
+package org.gbif.registry.domain.mail;
 
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.registry.domain.mail.BaseTemplateDataModel;
 
 import javax.annotation.Nullable;
 import java.net.URL;
