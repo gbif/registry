@@ -1,7 +1,6 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
-import org.gbif.registry.mail.EmailSender;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;

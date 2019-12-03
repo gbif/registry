@@ -1,4 +1,4 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail;
 
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.Retriever;
