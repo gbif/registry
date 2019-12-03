@@ -39,7 +39,7 @@ import static org.gbif.registry.identity.model.UserModelMutationResult.withSingl
  * - emails are stored as provided (the case is preserved) but are queried in lowercase
  */
 @Service
-class IdentityServiceImpl implements IdentityService {
+public class IdentityServiceImpl implements IdentityService {
 
   private final UserMapper userMapper;
   private final UserSuretyDelegate userSuretyDelegate;

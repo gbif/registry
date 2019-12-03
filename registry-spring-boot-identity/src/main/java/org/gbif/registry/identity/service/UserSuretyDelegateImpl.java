@@ -20,7 +20,7 @@ import java.util.UUID;
  * @see UserSuretyDelegate
  */
 @Service
-class UserSuretyDelegateImpl implements UserSuretyDelegate {
+public class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserSuretyDelegateImpl.class);
 

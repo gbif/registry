@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-class NetworkEntityProvider {
+public class NetworkEntityProvider {
 
   static final Map<String, Class<? extends NetworkEntity>> ENTITIES = new HashMap<>();
 

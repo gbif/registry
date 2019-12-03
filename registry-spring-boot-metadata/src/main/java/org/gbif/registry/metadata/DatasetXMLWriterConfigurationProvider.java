@@ -14,7 +14,7 @@ import java.text.ChoiceFormat;
  * Configuration provider for XML based dataset writer.
  * Currently providing Freemarker configuration.
  */
-class DatasetXMLWriterConfigurationProvider {
+public class DatasetXMLWriterConfigurationProvider {
 
   public static final String FM_UTILS_NAME = "fmUtil";
   private static final String TEMPLATE_PATH = "/";
