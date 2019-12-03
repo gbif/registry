@@ -1,8 +1,11 @@
-package org.gbif.registry.surety.email;
+package org.gbif.registry.mail.util;
 
 import com.google.common.base.Splitter;
+import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
@@ -14,13 +17,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public final class RegistryEmailUtils {
+public class RegistryMailUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RegistryEmailUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RegistryMailUtils.class);
 
   private static final Splitter EMAIL_SPLITTER = Splitter.on(';').omitEmptyStrings().trimResults();
+  public static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
 
-  private RegistryEmailUtils() {
+  private RegistryMailUtils() {
   }
 
   /**
@@ -41,7 +45,7 @@ public final class RegistryEmailUtils {
    */
   public static Set<Address> toInternetAddresses(String strEmails) {
     return StreamSupport.stream(EMAIL_SPLITTER.split(strEmails).spliterator(), false)
-      .map(RegistryEmailUtils::toAddress)
+      .map(RegistryMailUtils::toAddress)
       .flatMap(address -> address.map(Stream::of).orElseGet(Stream::empty))
       .collect(Collectors.toSet());
   }
@@ -52,7 +56,7 @@ public final class RegistryEmailUtils {
   public static Address[] getUnitedBccArray(Set<Address> bccAddressesFromConfig, BaseEmailModel emailModel) {
     Set<Address> combinedBccAddresses = new HashSet<>(bccAddressesFromConfig);
     Optional.ofNullable(emailModel.getCcAddress())
-      .ifPresent(ccList -> ccList.forEach(cc -> RegistryEmailUtils.toAddress(cc).ifPresent(combinedBccAddresses::add)));
-    return combinedBccAddresses.toArray(new Address[combinedBccAddresses.size()]);
+      .ifPresent(ccList -> ccList.forEach(cc -> RegistryMailUtils.toAddress(cc).ifPresent(combinedBccAddresses::add)));
+    return combinedBccAddresses.toArray(new Address[0]);
   }
 }

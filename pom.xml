@@ -48,6 +48,7 @@
     <module>registry-spring-boot-domain</module>
     <module>registry-spring-boot-ws-client</module>
     <module>registry-spring-boot-integration-tests</module>
+    <module>registry-spring-boot-mail</module>
   </modules>
 
   <properties>
