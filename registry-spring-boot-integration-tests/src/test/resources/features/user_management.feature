@@ -27,7 +27,7 @@ Feature: User management functionality
     Then response status should be 403
 
   Scenario: Create user which already exist fails with Unprocessable Entity 422
-    When create existing user "USER" with password "welcome" by APP role "gbif.app.it"
+    When create existing user "registry_user" with password "welcome" by APP role "gbif.app.it"
     Then response status should be 422
     And create user response contains error information "USER_ALREADY_EXIST"
 
@@ -37,9 +37,9 @@ Feature: User management functionality
     And create user response contains error information "PASSWORD_LENGTH_VIOLATION"
 
   Scenario: Get user
-    When get user by "USER"
+    When get user by "registry_user"
     Then response status should be 200
-    And returned user "USER" is valid
+    And returned user "registry_user" is valid
 
   Scenario: Get use by system settings
     When get user by system settings "100_tacos=100$" by admin
@@ -68,10 +68,11 @@ Feature: User management functionality
     When login with user "user_update_password" and password "newpass"
     Then response status should be 200
 
+  @UpdateUserByApp
   Scenario Outline: Update user with valid values by APP role
-    When update user "ADMIN" with new <property> "<newValue>" by APP role "gbif.app.it"
+    When update user "registry_admin" with new <property> "<newValue>" by APP role "gbif.app.it"
     Then response status should be <status>
-    And <property> of user "ADMIN" was updated with new value "<newValue>"
+    And <property> of user "registry_admin" was updated with new value "<newValue>"
 
     Scenarios:
       | property  | newValue | status |
@@ -79,10 +80,10 @@ Feature: User management functionality
       | lastName  | Smith    | 204    |
 
   Scenario Outline: Update user with valid values by admin
-    Given user which is admin with credentials "ADMIN" and "welcome"
-    When update user "ADMIN" with new <property> "<newValue>" by admin "ADMIN"
+    Given user which is admin with credentials "registry_admin" and "welcome"
+    When update user "registry_admin" with new <property> "<newValue>" by admin "registry_admin"
     Then response status should be <status>
-    And <property> of user "ADMIN" was updated with new value "<newValue>"
+    And <property> of user "registry_admin" was updated with new value "<newValue>"
 
     Scenarios:
       | property  | newValue | status |
@@ -90,24 +91,24 @@ Feature: User management functionality
       | lastName  | White    | 204    |
 
   Scenario: Update user with wrong email by APP role
-    When update user "ADMIN" with new email "user@mailinator.com" by APP role "gbif.app.it"
+    When update user "registry_admin" with new email "user@mailinator.com" by APP role "gbif.app.it"
     Then response status should be 422
     And response should be "EMAIL_ALREADY_IN_USE"
 
   Scenario: Editor rights
-    Given user which is admin with credentials "ADMIN" and "welcome"
-    And user which is user with credentials "USER" and "welcome"
-    When "ADMIN" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "USER"
+    Given user which is admin with credentials "registry_admin" and "welcome"
+    And user which is user with credentials "registry_user" and "welcome"
+    When "registry_admin" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "registry_user"
     Then response status should be 201
-    When "ADMIN" gets user "USER" rights
+    When "registry_admin" gets user "registry_user" rights
     Then response status should be 200
     And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
-    When "USER" gets user "USER" rights
+    When "registry_user" gets user "registry_user" rights
     Then response status should be 200
     And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
-    When "ADMIN" deletes user "USER" right "8b207f7a-fd9c-4992-8193-ca56948fa679"
+    When "registry_admin" deletes user "registry_user" right "8b207f7a-fd9c-4992-8193-ca56948fa679"
     Then response status should be 204
-    When "ADMIN" gets user "USER" rights
+    When "registry_admin" gets user "registry_user" rights
     Then response status should be 200
     And response is ""
 
@@ -117,11 +118,11 @@ Feature: User management functionality
     Then response status should be <status>
 
     Scenarios:
-      | username        | performer | password | role  | status | comment                                   |
-      | notexistinguser | ADMIN     | welcome  | admin | 404    | User does not exist                       |
-      | USER            | USER      | welcome  | user  | 403    | Not an admin user                         |
-      | USER            | ADMIN     | welcome  | admin | 201    | Create one in order to fail the next step |
-      | USER            | ADMIN     | welcome  | admin | 409    | Right already exists                      |
+      | username        | performer      | password | role  | status | comment                                   |
+      | notexistinguser | registry_admin | welcome  | admin | 404    | User does not exist                       |
+      | registry_user   | registry_user  | welcome  | user  | 403    | Not an admin user                         |
+      | registry_user   | registry_admin | welcome  | admin | 201    | Create one in order to fail the next step |
+      | registry_user   | registry_admin | welcome  | admin | 409    | Right already exists                      |
 
   Scenario Outline: Editor rights delete errors: <comment>
     Given user which is <role> with credentials "<performer>" and "<password>"
@@ -129,10 +130,10 @@ Feature: User management functionality
     Then response status should be <status>
 
     Scenarios:
-      | username        | right                                | performer | password | role  | status | comment              |
-      | USER            | e323a550-ad60-408d-88d2-cc1356fc10fb | ADMIN     | welcome  | admin | 404    | Right does not exist |
-      | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | ADMIN     | welcome  | admin | 404    | User does not exist  |
-      | USER            | 8b207f7a-fd9c-4992-8193-ca56948fa679 | USER      | welcome  | user  | 403    | Not an admin user    |
+      | username        | right                                | performer      | password | role  | status | comment              |
+      | registry_user   | e323a550-ad60-408d-88d2-cc1356fc10fb | registry_admin | welcome  | admin | 404    | Right does not exist |
+      | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | registry_admin | welcome  | admin | 404    | User does not exist  |
+      | registry_user   | 8b207f7a-fd9c-4992-8193-ca56948fa679 | registry_user  | welcome  | user  | 403    | Not an admin user    |
 
   Scenario: List roles should have 10 roles
     When perform list roles
@@ -145,7 +146,7 @@ Feature: User management functionality
     Then response status should be 200
     And search users response are
       | key | userName             | firstName | lastName  | email                         | roles |
-      | 2   | USER                 | John      | User      | user@mailinator.com           | USER  |
+      | 2   | registry_user        | John      | User      | user@mailinator.com           | USER  |
       | 6   | user_reset_password  | Tim       | Robertson | user_reset_password@gbif.org  | USER  |
       | 7   | user_update_password | Tim       | Robertson | user_update_password@gbif.org | USER  |
 

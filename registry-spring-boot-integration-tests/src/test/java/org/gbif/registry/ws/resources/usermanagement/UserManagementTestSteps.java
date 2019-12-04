@@ -165,7 +165,7 @@ public class UserManagementTestSteps {
     result = mvc
       .perform(
         delete("/admin/user/{userKey}", gbifUser.getKey())
-          .with(httpBasic("ADMIN", "welcome")));
+          .with(httpBasic("registry_admin", "welcome")));
   }
 
   @Then("response status should be {int}")
@@ -226,7 +226,7 @@ public class UserManagementTestSteps {
     result = mvc
       .perform(
         get("/admin/user/{username}", username)
-          .with(httpBasic("ADMIN", "welcome")));
+          .with(httpBasic("registry_admin", "welcome")));
   }
 
   @Then("returned user {string} is valid")
@@ -242,7 +242,7 @@ public class UserManagementTestSteps {
       .perform(
         get("/admin/user/find")
           .param("my.settings.key", param)
-          .with(httpBasic("ADMIN", "welcome")));
+          .with(httpBasic("registry_admin", "welcome")));
   }
 
   @When("get user by system settings {string} by APP role {string}")
@@ -404,7 +404,7 @@ public class UserManagementTestSteps {
           .param("q", query)
           .param("limit", "20")
           .param("offset", "0")
-          .with(httpBasic("ADMIN", "welcome")));
+          .with(httpBasic("registry_admin", "welcome")));
   }
 
   @Then("create user response contains error information {string}")
