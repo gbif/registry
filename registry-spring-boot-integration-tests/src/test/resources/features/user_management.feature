@@ -27,7 +27,7 @@ Feature: User management functionality
     Then response status should be 403
 
   Scenario: Create user which already exist fails with Unprocessable Entity 422
-    When create existing user "justuser" with password "welcome" by APP role "gbif.app.it"
+    When create existing user "USER" with password "welcome" by APP role "gbif.app.it"
     Then response status should be 422
     And create user response contains error information "USER_ALREADY_EXIST"
 
@@ -37,17 +37,17 @@ Feature: User management functionality
     And create user response contains error information "PASSWORD_LENGTH_VIOLATION"
 
   Scenario: Get user
-    When get user by "justuser"
+    When get user by "USER"
     Then response status should be 200
-    And returned user "justuser" is valid
+    And returned user "USER" is valid
 
   Scenario: Get use by system settings
     When get user by system settings "100_tacos=100$" by admin
     Then response status should be 200
-    And returned user "justadmin" is valid
+    And returned user "ADMIN" is valid
     When get user by system settings "100_tacos=100$" by APP role "gbif.app.it"
     Then response status should be 200
-    And returned user "justadmin" is valid
+    And returned user "ADMIN" is valid
 
   Scenario: Reset password for user
     When reset password for user "user_reset_password" by APP role "gbif.app.it"
@@ -69,9 +69,9 @@ Feature: User management functionality
     Then response status should be 200
 
   Scenario Outline: Update user with valid values by APP role
-    When update user "justadmin" with new <property> "<newValue>" by APP role "gbif.app.it"
+    When update user "ADMIN" with new <property> "<newValue>" by APP role "gbif.app.it"
     Then response status should be <status>
-    And <property> of user "justadmin" was updated with new value "<newValue>"
+    And <property> of user "ADMIN" was updated with new value "<newValue>"
 
     Scenarios:
       | property  | newValue | status |
@@ -79,10 +79,10 @@ Feature: User management functionality
       | lastName  | Smith    | 204    |
 
   Scenario Outline: Update user with valid values by admin
-    Given user which is admin with credentials "justadmin" and "welcome"
-    When update user "justadmin" with new <property> "<newValue>" by admin "justadmin"
+    Given user which is admin with credentials "ADMIN" and "welcome"
+    When update user "ADMIN" with new <property> "<newValue>" by admin "ADMIN"
     Then response status should be <status>
-    And <property> of user "justadmin" was updated with new value "<newValue>"
+    And <property> of user "ADMIN" was updated with new value "<newValue>"
 
     Scenarios:
       | property  | newValue | status |
@@ -90,24 +90,24 @@ Feature: User management functionality
       | lastName  | White    | 204    |
 
   Scenario: Update user with wrong email by APP role
-    When update user "justadmin" with new email "justuser@gbif.org" by APP role "gbif.app.it"
+    When update user "ADMIN" with new email "user@mailinator.com" by APP role "gbif.app.it"
     Then response status should be 422
     And response should be "EMAIL_ALREADY_IN_USE"
 
   Scenario: Editor rights
-    Given user which is admin with credentials "justadmin" and "welcome"
-    And user which is user with credentials "justuser" and "welcome"
-    When "justadmin" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "justuser"
+    Given user which is admin with credentials "ADMIN" and "welcome"
+    And user which is user with credentials "USER" and "welcome"
+    When "ADMIN" adds a right "8b207f7a-fd9c-4992-8193-ca56948fa679" to the user "USER"
     Then response status should be 201
-    When "justadmin" gets user "justuser" rights
+    When "ADMIN" gets user "USER" rights
     Then response status should be 200
     And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
-    When "justuser" gets user "justuser" rights
+    When "USER" gets user "USER" rights
     Then response status should be 200
     And response is "8b207f7a-fd9c-4992-8193-ca56948fa679"
-    When "justadmin" deletes user "justuser" right "8b207f7a-fd9c-4992-8193-ca56948fa679"
+    When "ADMIN" deletes user "USER" right "8b207f7a-fd9c-4992-8193-ca56948fa679"
     Then response status should be 204
-    When "justadmin" gets user "justuser" rights
+    When "ADMIN" gets user "USER" rights
     Then response status should be 200
     And response is ""
 
@@ -118,10 +118,10 @@ Feature: User management functionality
 
     Scenarios:
       | username        | performer | password | role  | status | comment                                   |
-      | notexistinguser | justadmin | welcome  | admin | 404    | User does not exist                       |
-      | justuser        | justuser  | welcome  | user  | 403    | Not an admin user                         |
-      | justuser        | justadmin | welcome  | admin | 201    | Create one in order to fail the next step |
-      | justuser        | justadmin | welcome  | admin | 409    | Right already exists                      |
+      | notexistinguser | ADMIN     | welcome  | admin | 404    | User does not exist                       |
+      | USER            | USER      | welcome  | user  | 403    | Not an admin user                         |
+      | USER            | ADMIN     | welcome  | admin | 201    | Create one in order to fail the next step |
+      | USER            | ADMIN     | welcome  | admin | 409    | Right already exists                      |
 
   Scenario Outline: Editor rights delete errors: <comment>
     Given user which is <role> with credentials "<performer>" and "<password>"
@@ -130,9 +130,9 @@ Feature: User management functionality
 
     Scenarios:
       | username        | right                                | performer | password | role  | status | comment              |
-      | justuser        | e323a550-ad60-408d-88d2-cc1356fc10fb | justadmin | welcome  | admin | 404    | Right does not exist |
-      | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justadmin | welcome  | admin | 404    | User does not exist  |
-      | justuser        | 8b207f7a-fd9c-4992-8193-ca56948fa679 | justuser  | welcome  | user  | 403    | Not an admin user    |
+      | USER            | e323a550-ad60-408d-88d2-cc1356fc10fb | ADMIN     | welcome  | admin | 404    | Right does not exist |
+      | notexistinguser | 8b207f7a-fd9c-4992-8193-ca56948fa679 | ADMIN     | welcome  | admin | 404    | User does not exist  |
+      | USER            | 8b207f7a-fd9c-4992-8193-ca56948fa679 | USER      | welcome  | user  | 403    | Not an admin user    |
 
   Scenario: List roles should have 10 roles
     When perform list roles
@@ -145,7 +145,7 @@ Feature: User management functionality
     Then response status should be 200
     And search users response are
       | key | userName             | firstName | lastName  | email                         | roles |
-      | 2   | justuser             | John      | Doe       | justuser@gbif.org             | USER  |
+      | 2   | USER                 | John      | User      | user@mailinator.com           | USER  |
       | 6   | user_reset_password  | Tim       | Robertson | user_reset_password@gbif.org  | USER  |
       | 7   | user_update_password | Tim       | Robertson | user_update_password@gbif.org | USER  |
 

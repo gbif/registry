@@ -139,7 +139,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -176,7 +176,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         put("/" + entityType + "/{key}", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -240,7 +240,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         delete("/" + entityType + "/{key}", key)
-          .with(httpBasic("justadmin", "welcome")));
+          .with(httpBasic("ADMIN", "welcome")));
   }
 
   @When("list {word} contacts")
@@ -273,7 +273,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/contact", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -285,7 +285,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         delete("/" + entityType + "/{key}/contact/{contactKey}", key, contacts.get(0).getKey())
-          .with(httpBasic("justadmin", "welcome")));
+          .with(httpBasic("ADMIN", "welcome")));
   }
 
   @Then("{word} contact reflects the original one")
@@ -317,7 +317,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/endpoint", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -347,7 +347,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/comment", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -377,7 +377,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/machineTag", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -407,7 +407,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/tag", key)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
