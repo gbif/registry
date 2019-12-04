@@ -134,6 +134,11 @@ public class NetworkEntityTestSteps {
 
   @When("create new {word}")
   public void createEntity(String entityType) throws Exception {
+    createEntity(entityType, "admin", TEST_ADMIN, TEST_PASSWORD);
+  }
+
+  @When("create new {word} by {word} {string} and password {string}")
+  public void createEntity(String entityType, String userType, String username, String password) throws Exception {
     expectedEntity = NetworkEntityProvider.prepare(entityType, UK_NODE_KEY, ORGANIZATION_KEY, INSTALLATION_KEY);
     expectedEntity.setTitle("New entity " + entityType);
     String entityJson = objectMapper.writeValueAsString(expectedEntity);
@@ -141,14 +146,10 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType)
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, password))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
-
-    key =
-      RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
-    expectedEntity.setKey(UUID.fromString(key));
   }
 
   @Then("response status should be {int}")
@@ -413,5 +414,11 @@ public class NetworkEntityTestSteps {
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @Then("{word} key is present in response")
+  public void extractKeyFromResponse(String entityType) throws Exception {
+    key = RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
+    expectedEntity.setKey(UUID.fromString(key));
   }
 }

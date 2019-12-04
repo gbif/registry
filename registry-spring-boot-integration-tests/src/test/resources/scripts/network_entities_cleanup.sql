@@ -31,3 +31,5 @@ DELETE FROM public.node_comment;
 DELETE FROM public.node_machine_tag;
 DELETE FROM public.node_tag;
 DELETE FROM public.node;
+
+DELETE FROM public.editor_rights;

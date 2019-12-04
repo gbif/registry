@@ -5,6 +5,7 @@ Feature: Network entity functionality
   Scenario Outline: CRUD <entity>
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When get <entity> by key
     Then response status should be 200
     And modification and creation dates are present
@@ -33,11 +34,27 @@ Feature: Network entity functionality
       | node         |
       | organization |
 
+  @NetworkEntityCreateExceptions
+  Scenario Outline: Regular user or editor without rights can't create <entity>
+    When create new <entity> by user "registry_user" and password "welcome"
+    Then response status should be 403
+    When create new <entity> by editor "registry_editor" and password "welcome"
+    Then response status should be 403
+
+    Scenarios:
+      | entity       |
+      | installation |
+      | dataset      |
+      | network      |
+      | node         |
+      | organization |
+
   # nodes do not support this functionality
   @NetworkEntityContacts
   Scenario Outline: <entity> contacts
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When list <entity> contacts
     Then response status should be 200
     And <entity> contacts list should contain 0 contacts
@@ -69,6 +86,7 @@ Feature: Network entity functionality
   Scenario Outline: <entity> endpoints
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When list <entity> endpoints
     Then response status should be 200
     And <entity> endpoints list should contain 0 endpoints
@@ -93,6 +111,7 @@ Feature: Network entity functionality
   Scenario Outline: <entity> comments
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When list <entity> comments
     Then response status should be 200
     And <entity> comments list should contain 0 comments
@@ -117,6 +136,7 @@ Feature: Network entity functionality
   Scenario Outline: <entity> machine tags
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When list <entity> machine tags
     Then response status should be 200
     And <entity> machine tags list should contain 0 machine tags
@@ -141,6 +161,7 @@ Feature: Network entity functionality
   Scenario Outline: <entity> tags
     When create new <entity>
     Then response status should be 201
+    And <entity> key is present in response
     When list <entity> tags
     Then response status should be 200
     And <entity> tags list should contain 0 tags
