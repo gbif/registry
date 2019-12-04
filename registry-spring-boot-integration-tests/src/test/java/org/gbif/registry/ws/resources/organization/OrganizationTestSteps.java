@@ -39,9 +39,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -147,7 +149,7 @@ public class OrganizationTestSteps {
       .andExpect(jsonPath("$.results.length()").value(number));
   }
 
-  @When("create a new organization {string} for node {string}")
+  @When("create new organization {string} for node {string}")
   public void createOrganization(String orgName, String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     organization = Organizations.newInstance(nodeKey);
@@ -161,20 +163,17 @@ public class OrganizationTestSteps {
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
-
-    organizationKey =
-      RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
   }
 
   @When("get organization by key")
   public void getOrganizationById() throws Exception {
     result = mvc
       .perform(
-        get("/organization/{key}", organizationKey));
+        get("/organization/{key}", organizationKey))
+    .andDo(print());
 
+    // TODO: 04/12/2019 don't do serialization!
     organization = objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), Organization.class);
-
-    // TODO: 16/10/2019 assertLenientEquals and stuff (see registry's NetworkEntityTest)
   }
 
   @Given("{int} organization\\(s) endorsed for {string}")
@@ -223,7 +222,7 @@ public class OrganizationTestSteps {
           .contentType(MediaType.APPLICATION_JSON));
   }
 
-  @When("create a new organization for {string} with key")
+  @When("create new organization for {string} with key")
   public void createOrganizationWithKey(String nodeName) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     organization = Organizations.newInstance(nodeKey);
@@ -286,8 +285,8 @@ public class OrganizationTestSteps {
     assertEquals(expected, responseBody);
   }
 
-  @When("update organization {string} with new title {string} for node {string}")
-  public void updateOrganization(String orgName, String newTitle, String nodeName) throws Exception {
+  @When("update organization {string} with new title {string}")
+  public void updateOrganization(String orgName, String newTitle) throws Exception {
     modificationDateBeforeUpdate = organization.getModified();
     creationDateBeforeUpdate = organization.getCreated();
     organization.setTitle(newTitle);
@@ -301,6 +300,14 @@ public class OrganizationTestSteps {
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("delete organization {string} by key")
+  public void deleteOrganization(String orgName) throws Exception {
+    result = mvc
+      .perform(
+        delete("/organization/{key}", organizationKey)
+          .with(httpBasic("justadmin", "welcome")));
   }
 
   @Then("title is new {string}")
@@ -336,5 +343,17 @@ public class OrganizationTestSteps {
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @Then("organization key is present in response")
+  public void extractKeyFromResponse() throws Exception {
+    organizationKey =
+      RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
+  }
+
+  @Then("organization is")
+  public void checkOrganization(Map<String, String> expectedOrganization) throws Exception {
+    result
+      .andExpect(jsonPath("$.").value(""));
   }
 }

@@ -6,6 +6,24 @@ Feature: Organization functionality
     Given node 'UK Node' and node 'UK Node 2'
     And seven organizations in 'UK Node'
 
+  @OrganizationCRUD
+  Scenario: CRUD organization
+    When create new organization "New org A" for node "UK Node"
+    Then response status should be 201
+    And organization key is present in response
+    When get organization by key
+    Then response status should be 200
+
+    When update organization "New org A" with new title "New Title"
+    Then response status should be 200
+    When get organization by key
+    Then response status should be 200
+
+    When delete organization "New org A" by key
+    Then response status should be 200
+    When get organization by key
+    Then response status should be 200
+
   Scenario Outline: Organization suggest
     When call suggest organizations with query "<query>"
     Then response status should be 200
@@ -30,26 +48,11 @@ Feature: Organization functionality
       | GERMANY | 1      |
       | FRANCE  | 2      |
 
-    #todo assert organization was properly created (fields)
-  @OrganizationCreateUpdate
-  Scenario: Create an organization
-    When create a new organization "New org A" for node "UK Node"
-    Then response status should be 201
-    When get organization by key
-    Then response status should be 200
-    When update organization "New org A" with new title "New Title" for node "UK Node"
-    Then response status should be 200
-    When get organization by key
-    Then response status should be 200
-    And title is new "New Title"
-    And modification date was updated
-    And modification date is after the creation date
-
   @OrganizationEndorsement
   Scenario: Organization endorsement
     Given 0 organization(s) endorsed for "UK Node 2"
     And 7 organization(s) pending endorsement in total
-    When create a new organization "New org B" for node "UK Node 2"
+    When create new organization "New org B" for node "UK Node 2"
     Then 0 organization(s) endorsed for "UK Node 2"
     And 1 organization(s) pending endorsement for "UK Node 2"
     And 8 organization(s) pending endorsement in total
@@ -60,9 +63,9 @@ Feature: Organization functionality
 
   @OrganizationValidation
   Scenario: Organization can't be created with key present
-    When create a new organization for "UK Node" with key
+    When create new organization for "UK Node" with key
     Then response status should be 422
-    When create a new organization "New org A" for node "UK Node"
+    When create new organization "New org A" for node "UK Node"
     Then response status should be 201
     When update organization with new invalid too short title "A" for node "UK Node"
     Then response status should be 422

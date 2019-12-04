@@ -6,12 +6,12 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-    strict = true,
-    features = {
-        "classpath:features/organization.feature"
-    },
-    glue = "org.gbif.registry.ws.resources.organization",
-    plugin = "pretty"
+  strict = true,
+  features = {
+    "classpath:features/organization.feature"
+  },
+  glue = "org.gbif.registry.ws.resources.organization",
+  plugin = "pretty"
 )
 public class OrganizationIT {
 }
