@@ -41,13 +41,14 @@ Feature: User management functionality
     Then response status should be 200
     And returned user "registry_user" is valid
 
-  Scenario: Get use by system settings
+  @GetUserBySystemSettings
+  Scenario: Get user by system settings
     When get user by system settings "100_tacos=100$" by admin
     Then response status should be 200
-    And returned user "ADMIN" is valid
+    And returned user "registry_admin" is valid
     When get user by system settings "100_tacos=100$" by APP role "gbif.app.it"
     Then response status should be 200
-    And returned user "ADMIN" is valid
+    And returned user "registry_admin" is valid
 
   Scenario: Reset password for user
     When reset password for user "user_reset_password" by APP role "gbif.app.it"
@@ -141,12 +142,13 @@ Feature: User management functionality
     And roles response should be
       | USER | REGISTRY_ADMIN | REGISTRY_EDITOR | DATA_REPO_USER | COL_ADMIN | COL_EDITOR | VOCABULARY_ADMIN | VOCABULARY_EDITOR | GRSCICOLL_ADMIN | GRSCICOLL_EDITOR |
 
+  @SearchUsers
   Scenario: Search users
     When perform search user with query "user"
     Then response status should be 200
     And search users response are
       | key | userName             | firstName | lastName  | email                         | roles |
-      | 2   | registry_user        | John      | User      | user@mailinator.com           | USER  |
       | 6   | user_reset_password  | Tim       | Robertson | user_reset_password@gbif.org  | USER  |
       | 7   | user_update_password | Tim       | Robertson | user_update_password@gbif.org | USER  |
+      | 2   | registry_user        | John      | User      | user@mailinator.com           | USER  |
 
