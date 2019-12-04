@@ -159,7 +159,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         post("/organization")
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -216,7 +216,7 @@ public class OrganizationTestSteps {
     mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -233,7 +233,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         post("/organization")
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -296,7 +296,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -307,7 +307,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         delete("/organization/{key}", organizationKey)
-          .with(httpBasic("justadmin", "welcome")));
+          .with(httpBasic("ADMIN", "welcome")));
   }
 
   @Then("title is new {string}")
@@ -339,7 +339,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("justadmin", "welcome"))
+          .with(httpBasic("ADMIN", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));

@@ -57,11 +57,11 @@ DELETE FROM pipeline_process;
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)
-VALUES (2, 'justuser', 'justuser@gbif.org', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'John',
-        'Doe', '{USER}', '', '', '2019-07-12 09:57:42.629508', null, null, null);
+VALUES (2, 'USER', 'user@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'John',
+        'User', '{USER}', '', '', '2019-07-12 09:57:42.629508', null, null, null);
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)
-VALUES (3, 'justadmin', 'justadmin@gbif.org', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'Joe',
-        'Doe', '{REGISTRY_ADMIN}', '', 'my.settings.key => 100_tacos=100$', '2019-07-12 10:02:03.778207', null, null,
+VALUES (3, 'ADMIN', 'admin@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'Joe',
+        'Admin', '{REGISTRY_ADMIN}', '', 'my.settings.key => 100_tacos=100$', '2019-07-12 10:02:03.778207', null, null,
         null);

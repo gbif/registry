@@ -54,7 +54,7 @@ public class JwtIT {
   // Then try with that token. It should be CREATED and the token should be updated.
   @Test
   public void testWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
-    final String token = login("justadmin", "welcome");
+    final String token = login("ADMIN", "welcome");
 
     // otherwise the service may issue the same token because of the same time (seconds)
     Thread.sleep(1000);
@@ -90,7 +90,7 @@ public class JwtIT {
     jwtConfiguration.setSigningKey("fake");
 
     final JwtIssuanceServiceImpl jwtIssuanceServiceWithWrongConfig = new JwtIssuanceServiceImpl(jwtConfiguration);
-    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("justadmin");
+    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("ADMIN");
 
     mvc
         .perform(
@@ -102,7 +102,7 @@ public class JwtIT {
   // Service expects the ADMIN role. If try with the USER role it should return FORBIDDEN.
   @Test
   public void testWithInsufficientUserRoleShouldReturnStatusForbidden() throws Exception {
-    final String token = login("justuser", "welcome");
+    final String token = login("USER", "welcome");
 
     mvc
         .perform(
@@ -138,7 +138,7 @@ public class JwtIT {
     mvc
         .perform(
             post("/test")
-                .with(httpBasic("justadmin", "welcome")))
+                .with(httpBasic("ADMIN", "welcome")))
         .andExpect(status().isCreated());
   }
 
