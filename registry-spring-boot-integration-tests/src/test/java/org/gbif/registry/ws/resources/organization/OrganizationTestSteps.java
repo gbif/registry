@@ -11,6 +11,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.utils.RegistryITUtils;
+import org.gbif.registry.ws.resources.OrganizationResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -75,6 +76,9 @@ public class OrganizationTestSteps {
   private DataSource ds;
 
   private Connection connection;
+
+  @Autowired
+  private OrganizationResource organizationResource;
 
   @Before("@Organization")
   public void setUp() throws Exception {
@@ -167,13 +171,11 @@ public class OrganizationTestSteps {
 
   @When("get organization by key")
   public void getOrganizationById() throws Exception {
+    assertNotNull("Organization key should be present", organizationKey);
     result = mvc
       .perform(
         get("/organization/{key}", organizationKey))
     .andDo(print());
-
-    // TODO: 04/12/2019 don't do serialization!
-    organization = objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), Organization.class);
   }
 
   @Given("{int} organization\\(s) endorsed for {string}")
@@ -208,7 +210,8 @@ public class OrganizationTestSteps {
 
   @When("endorse organization {string}")
   public void endorseOrganization(String orgName) throws Exception {
-    getOrganizationById();
+    organization = organizationResource.get(UUID.fromString(organizationKey));
+    assertNotNull(organization);
     organization.setEndorsementApproved(true);
 
     String organizationJson = objectMapper.writeValueAsString(organization);
@@ -287,6 +290,8 @@ public class OrganizationTestSteps {
 
   @When("update organization {string} with new title {string}")
   public void updateOrganization(String orgName, String newTitle) throws Exception {
+    organization = organizationResource.get(UUID.fromString(organizationKey));
+    assertNotNull(organization);
     modificationDateBeforeUpdate = organization.getModified();
     creationDateBeforeUpdate = organization.getCreated();
     organization.setTitle(newTitle);
@@ -299,7 +304,8 @@ public class OrganizationTestSteps {
           .with(httpBasic("registry_admin", "welcome"))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
-          .contentType(MediaType.APPLICATION_JSON));
+          .contentType(MediaType.APPLICATION_JSON))
+    .andDo(print());
   }
 
   @When("delete organization {string} by key")
@@ -331,7 +337,8 @@ public class OrganizationTestSteps {
 
   @Then("update organization with new invalid too short title {string} for node {string}")
   public void testUpdateValidationFailing(String orgTitle, String nodeName) throws Exception {
-    getOrganizationById();
+    organization = organizationResource.get(UUID.fromString(organizationKey));
+    assertNotNull(organization);
     organization.setTitle(orgTitle); // should fail as it is too short
 
     String organizationJson = objectMapper.writeValueAsString(organization);
