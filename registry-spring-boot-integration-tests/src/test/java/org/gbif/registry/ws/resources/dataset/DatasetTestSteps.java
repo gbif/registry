@@ -1,0 +1,150 @@
+package org.gbif.registry.ws.resources.dataset;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.utils.Datasets;
+import org.gbif.registry.utils.RegistryITUtils;
+import org.gbif.registry.ws.resources.DatasetResource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.util.Objects;
+import java.util.UUID;
+
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
+  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+public class DatasetTestSteps {
+
+  private MockMvc mvc;
+  private ResultActions result;
+  private UUID datasetKey;
+  private Dataset dataset;
+  private UUID orgKey = UUID.fromString("36107c15-771c-4810-a298-b7558828b8bd");
+  private UUID installationKey = UUID.fromString("2fe63cec-9b23-4974-bab1-9f4118ef7711");
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
+  private DatasetResource datasetResource;
+
+  @Autowired
+  private WebApplicationContext context;
+
+  @Autowired
+  private DataSource ds;
+
+  private Connection connection;
+
+  @Before("@Dataset")
+  public void setUp() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/dataset/dataset_prepare.sql"));
+
+    mvc = MockMvcBuilders
+      .webAppContextSetup(context)
+      .apply(springSecurity())
+      .build();
+  }
+
+  @After("@Dataset")
+  public void tearDown() throws Exception {
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
+
+    connection.close();
+  }
+
+  @When("create new dataset {string} for installation {string} and organization {string}")
+  public void createDataset(String datasetName, String installationName, String orgName) throws Exception {
+    Dataset dataset = Datasets.newInstance(orgKey, installationKey);
+    dataset.setTitle(datasetName);
+
+    String jsonContent = objectMapper.writeValueAsString(dataset);
+
+    result = mvc
+      .perform(
+        post("/dataset")
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .content(jsonContent)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("update dataset {string}")
+  public void updateDataset(String datasetName) throws Exception {
+    dataset = datasetResource.get(datasetKey);
+    assertNotNull(dataset);
+
+    String jsonContent = objectMapper.writeValueAsString(dataset);
+
+    result = mvc
+      .perform(
+        put("/dataset/{key}", datasetKey)
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .content(jsonContent)
+          .accept(MediaType.APPLICATION_JSON)
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
+
+  @When("delete dataset {string} by key")
+  public void deleteDataset(String datasetName) throws Exception {
+    result = mvc
+      .perform(
+        delete("/dataset/{key}", datasetKey)
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
+  }
+
+  @When("get dataset by key")
+  public void getDatasetById() throws Exception {
+    result = mvc
+      .perform(
+        get("/dataset/{key}", datasetKey));
+  }
+
+  @Then("response status should be {int}")
+  public void assertResponseCode(int status) throws Exception {
+    result
+      .andExpect(status().is(status));
+  }
+
+  @Then("dataset key is present in response")
+  public void extractKeyFromResponse() throws Exception {
+    datasetKey =
+      UUID.fromString(RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString()));
+  }
+}
