@@ -54,7 +54,7 @@ public class JwtIT {
   // Then try with that token. It should be CREATED and the token should be updated.
   @Test
   public void testWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
-    final String token = login("ADMIN", "welcome");
+    final String token = login("registry_admin", "welcome");
 
     // otherwise the service may issue the same token because of the same time (seconds)
     Thread.sleep(1000);
@@ -90,7 +90,7 @@ public class JwtIT {
     jwtConfiguration.setSigningKey("fake");
 
     final JwtIssuanceServiceImpl jwtIssuanceServiceWithWrongConfig = new JwtIssuanceServiceImpl(jwtConfiguration);
-    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("ADMIN");
+    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("registry_admin");
 
     mvc
         .perform(
@@ -138,7 +138,7 @@ public class JwtIT {
     mvc
         .perform(
             post("/test")
-                .with(httpBasic("ADMIN", "welcome")))
+                .with(httpBasic("registry_admin", "welcome")))
         .andExpect(status().isCreated());
   }
 
