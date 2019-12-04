@@ -25,10 +25,11 @@ public class TestConstants {
     appKeys.put(IT_APP_KEY2, IT_APP_SECRET2);
   }
 
-  public static final String TEST_ADMIN = "admin";
-  public static final String TEST_EDITOR = "editor";
-  public static final String TEST_USER = "user";
+  public static final String TEST_ADMIN = "registry_admin";
+  public static final String TEST_EDITOR = "registry_editor";
+  public static final String TEST_USER = "registry_user";
   public static final String TEST_GRSCICOLL_ADMIN = "grscicollAdmin";
+  public static final String TEST_PASSWORD = "welcome";
 
   public static final Map<String, UserRole> TEST_USERS_ROLE = Maps.newHashMap();
   static{

@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -163,7 +165,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         post("/organization")
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -219,7 +221,7 @@ public class OrganizationTestSteps {
     mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -236,7 +238,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         post("/organization")
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -301,7 +303,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON))
@@ -313,7 +315,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         delete("/organization/{key}", organizationKey)
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("title is new {string}")
@@ -346,7 +348,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         put("/organization/{key}", organizationKey)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));

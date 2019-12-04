@@ -42,6 +42,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gbif.registry.utils.LenientAssert.assertLenientEquals;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.gbif.registry.ws.resources.networkentity.NetworkEntityProvider.ENTITIES;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -139,7 +141,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -176,7 +178,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         put("/" + entityType + "/{key}", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -240,7 +242,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         delete("/" + entityType + "/{key}", key)
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @When("list {word} contacts")
@@ -273,7 +275,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/contact", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -285,7 +287,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         delete("/" + entityType + "/{key}/contact/{contactKey}", key, contacts.get(0).getKey())
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("{word} contact reflects the original one")
@@ -317,7 +319,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/endpoint", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -347,7 +349,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/comment", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -377,7 +379,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/machineTag", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
@@ -407,7 +409,7 @@ public class NetworkEntityTestSteps {
     result = mvc
       .perform(
         post("/" + entityType + "/{key}/tag", key)
-          .with(httpBasic("registry_admin", "welcome"))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
           .content(entityJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
