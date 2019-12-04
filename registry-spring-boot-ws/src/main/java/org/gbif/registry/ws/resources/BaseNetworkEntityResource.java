@@ -61,8 +61,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,7 +143,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
       boolean allowed = false;
-      for (UUID entityKeyToBeAssessed : owningEntityKeys(entity)) {
+      List<UUID> entityKeys = owningEntityKeys(entity);
+      for (UUID entityKeyToBeAssessed : entityKeys) {
         if (entityKeyToBeAssessed == null) {
           throw new WebApplicationException(HttpStatus.FORBIDDEN);
         }
@@ -767,8 +768,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * If null is returned only admins are allowed to create new entities which is the default.
    */
   protected List<UUID> owningEntityKeys(@NotNull T entity) {
-    LOG.warn("Method not implemented. Entity {} with key {} was not used", entity.getClass(), entity.getKey());
-    return new ArrayList<>();
+    LOG.debug("Entity {} with key {} has no owning entity keys", entity.getClass(), entity.getKey());
+    return Collections.emptyList();
   }
 
   /**

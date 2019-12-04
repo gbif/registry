@@ -3,9 +3,11 @@ package org.gbif.registry.ws.resources.dataset;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.common.IdentityService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.RegistryITUtils;
@@ -64,6 +66,9 @@ public class DatasetTestSteps {
 
   private Connection connection;
 
+  @Autowired
+  private IdentityService identityService;
+
   @Before("@Dataset")
   public void setUp() throws Exception {
     connection = ds.getConnection();
@@ -88,8 +93,19 @@ public class DatasetTestSteps {
     connection.close();
   }
 
+  @Given("user {string} with editor rights on organization {string}")
+  public void addEditorRights(String username, String orgKey) {
+    identityService.addEditorRight(username, UUID.fromString(orgKey));
+  }
+
   @When("create new dataset {string} for installation {string} and organization {string}")
   public void createDataset(String datasetName, String installationName, String orgName) throws Exception {
+    createDataset(datasetName, installationName, orgName, "admin", TEST_ADMIN, TEST_PASSWORD);
+  }
+
+  @When("create new dataset {string} for installation {string} and organization {string} by {word} {string} and password {string}")
+  public void createDataset(String datasetName, String installationName, String orgName,
+                            String userType, String username, String password) throws Exception {
     Dataset dataset = Datasets.newInstance(orgKey, installationKey);
     dataset.setTitle(datasetName);
 
@@ -98,7 +114,7 @@ public class DatasetTestSteps {
     result = mvc
       .perform(
         post("/dataset")
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, password))
           .content(jsonContent)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));

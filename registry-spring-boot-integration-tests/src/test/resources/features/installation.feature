@@ -18,3 +18,9 @@ Feature: Installation functionality
     Then response status should be 200
     When get installation by key
     Then response status should be 200
+
+  @CreateInstallationByEditor
+  Scenario: Editor can create installation if it has rights
+    Given user "registry_editor" with editor rights on organization "36107c15-771c-4810-a298-b7558828b8bd"
+    When create new installation "New org A" for organization "Org" by editor "registry_editor" and password "welcome"
+    Then response status should be 201
