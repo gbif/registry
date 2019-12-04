@@ -16,6 +16,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_ADMIN_PASSWORD;
+import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_ADMIN_USERNAME;
+import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_USER_PASSWORD;
+import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_USER_USERNAME;
 import static org.gbif.ws.util.SecurityConstants.BEARER_SCHEME_PREFIX;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class JwtIT {
@@ -45,26 +49,26 @@ public class JwtIT {
   @Before
   public void setUp() {
     mvc = MockMvcBuilders
-        .webAppContextSetup(context)
-        .apply(springSecurity())
-        .build();
+      .webAppContextSetup(context)
+      .apply(springSecurity())
+      .build();
   }
 
   // Tty to login with valid credentials then extract a token from the response.
   // Then try with that token. It should be CREATED and the token should be updated.
   @Test
   public void testWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
-    final String token = login("registry_admin", "welcome");
+    final String token = login(REGISTRY_ADMIN_USERNAME, REGISTRY_ADMIN_PASSWORD);
 
     // otherwise the service may issue the same token because of the same time (seconds)
     Thread.sleep(1000);
 
     final MvcResult mvcResult = mvc
-        .perform(
-            post("/test")
-                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andExpect(status().isCreated())
-        .andReturn();
+      .perform(
+        post("/test")
+          .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
+      .andExpect(status().isCreated())
+      .andReturn();
 
     final String responseToken = mvcResult.getResponse().getHeader("token");
     assertNotNull(responseToken);
@@ -75,10 +79,10 @@ public class JwtIT {
   @Test
   public void testWithWrongHeaderNameShouldReturnStatusForbidden() throws Exception {
     mvc
-        .perform(
-            post("/test")
-                .header(HttpHeaders.AUTHORIZATION, "beare " + "token"))
-        .andExpect(status().isForbidden());
+      .perform(
+        post("/test")
+          .header(HttpHeaders.AUTHORIZATION, "beare " + "token"))
+      .andExpect(status().isForbidden());
   }
 
   // Try with a wrong signing key. It should be FORBIDDEN.
@@ -90,25 +94,25 @@ public class JwtIT {
     jwtConfiguration.setSigningKey("fake");
 
     final JwtIssuanceServiceImpl jwtIssuanceServiceWithWrongConfig = new JwtIssuanceServiceImpl(jwtConfiguration);
-    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt("registry_admin");
+    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt(REGISTRY_ADMIN_USERNAME);
 
     mvc
-        .perform(
-            post("/test")
-                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andExpect(status().isForbidden());
+      .perform(
+        post("/test")
+          .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
+      .andExpect(status().isForbidden());
   }
 
   // Service expects the ADMIN role. If try with the USER role it should return FORBIDDEN.
   @Test
   public void testWithInsufficientUserRoleShouldReturnStatusForbidden() throws Exception {
-    final String token = login("USER", "welcome");
+    final String token = login(REGISTRY_USER_USERNAME, REGISTRY_USER_PASSWORD);
 
     mvc
-        .perform(
-            post("/test")
-                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andExpect(status().isForbidden());
+      .perform(
+        post("/test")
+          .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
+      .andExpect(status().isForbidden());
   }
 
   // Service expects the valid token. If the token was issued for the unknown user it should return FORBIDDEN.
@@ -117,40 +121,40 @@ public class JwtIT {
     final String token = jwtIssuanceService.generateJwt("fake");
 
     mvc
-        .perform(
-            post("/test")
-                .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
-        .andExpect(status().isForbidden());
+      .perform(
+        post("/test")
+          .header(HttpHeaders.AUTHORIZATION, BEARER_SCHEME_PREFIX + token))
+      .andExpect(status().isForbidden());
   }
 
   // Service expects either Basic auth or JWT. Otherwise it returns FORBIDDEN.
   @Test
   public void testWithNoBasicAndNoJwtShouldReturnStatusForbidden() throws Exception {
     mvc
-        .perform(
-            post("/test"))
-        .andExpect(status().isForbidden());
+      .perform(
+        post("/test"))
+      .andExpect(status().isForbidden());
   }
 
   // Try with valid Basic auth. It should be CREATED.
   @Test
   public void testWithBasicAndNoJwtShouldReturnStatusCreated() throws Exception {
     mvc
-        .perform(
-            post("/test")
-                .with(httpBasic("registry_admin", "welcome")))
-        .andExpect(status().isCreated());
+      .perform(
+        post("/test")
+          .with(httpBasic(REGISTRY_ADMIN_USERNAME, REGISTRY_ADMIN_PASSWORD)))
+      .andExpect(status().isCreated());
   }
 
   private String login(String user, String password) throws Exception {
     // login first (see UserManagementIT)
     ResultActions resultActions = mvc
-        .perform(
-            post("/user/login")
-                .with(httpBasic(user, password))
-                .characterEncoding("utf-8"))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.token").isNotEmpty());
+      .perform(
+        post("/user/login")
+          .with(httpBasic(user, password))
+          .characterEncoding("utf-8"))
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.token").isNotEmpty());
 
     final MvcResult result = resultActions.andReturn();
     final String contentAsString = result.getResponse().getContentAsString();
