@@ -40,6 +40,8 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static org.gbif.registry.utils.Users.prepareUserCreation;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.hamcrest.CoreMatchers.is;
@@ -165,7 +167,7 @@ public class UserManagementTestSteps {
     result = mvc
       .perform(
         delete("/admin/user/{userKey}", gbifUser.getKey())
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("response status should be {int}")
@@ -226,7 +228,7 @@ public class UserManagementTestSteps {
     result = mvc
       .perform(
         get("/admin/user/{username}", username)
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("returned user {string} is valid")
@@ -242,7 +244,7 @@ public class UserManagementTestSteps {
       .perform(
         get("/admin/user/find")
           .param("my.settings.key", param)
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @When("get user by system settings {string} by APP role {string}")
@@ -404,7 +406,7 @@ public class UserManagementTestSteps {
           .param("q", query)
           .param("limit", "20")
           .param("offset", "0")
-          .with(httpBasic("registry_admin", "welcome")));
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("create user response contains error information {string}")

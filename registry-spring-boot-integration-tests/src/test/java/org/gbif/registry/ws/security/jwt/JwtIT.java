@@ -16,10 +16,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_ADMIN_PASSWORD;
-import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_ADMIN_USERNAME;
-import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_USER_PASSWORD;
-import static org.gbif.registry.utils.RegistryITUtils.REGISTRY_USER_USERNAME;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_USER;
 import static org.gbif.ws.util.SecurityConstants.BEARER_SCHEME_PREFIX;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -58,7 +57,7 @@ public class JwtIT {
   // Then try with that token. It should be CREATED and the token should be updated.
   @Test
   public void testWithValidTokenShouldReturnStatusCreatedAndUpdateToken() throws Exception {
-    final String token = login(REGISTRY_ADMIN_USERNAME, REGISTRY_ADMIN_PASSWORD);
+    final String token = login(TEST_ADMIN, TEST_PASSWORD);
 
     // otherwise the service may issue the same token because of the same time (seconds)
     Thread.sleep(1000);
@@ -94,7 +93,7 @@ public class JwtIT {
     jwtConfiguration.setSigningKey("fake");
 
     final JwtIssuanceServiceImpl jwtIssuanceServiceWithWrongConfig = new JwtIssuanceServiceImpl(jwtConfiguration);
-    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt(REGISTRY_ADMIN_USERNAME);
+    final String token = jwtIssuanceServiceWithWrongConfig.generateJwt(TEST_ADMIN);
 
     mvc
       .perform(
@@ -106,7 +105,7 @@ public class JwtIT {
   // Service expects the ADMIN role. If try with the USER role it should return FORBIDDEN.
   @Test
   public void testWithInsufficientUserRoleShouldReturnStatusForbidden() throws Exception {
-    final String token = login(REGISTRY_USER_USERNAME, REGISTRY_USER_PASSWORD);
+    final String token = login(TEST_USER, TEST_PASSWORD);
 
     mvc
       .perform(
@@ -142,7 +141,7 @@ public class JwtIT {
     mvc
       .perform(
         post("/test")
-          .with(httpBasic(REGISTRY_ADMIN_USERNAME, REGISTRY_ADMIN_PASSWORD)))
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)))
       .andExpect(status().isCreated());
   }
 
