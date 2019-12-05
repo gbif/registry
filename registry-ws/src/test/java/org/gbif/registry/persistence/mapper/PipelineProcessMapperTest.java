@@ -146,8 +146,7 @@ public class PipelineProcessMapperTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
-            .setPipelinesVersion("1.0.0");
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     PipelineProcess processRetrieved =
@@ -162,10 +161,10 @@ public class PipelineProcessMapperTest {
     assertEquals(execution.getRerunReason(), executionRetrieved.getRerunReason());
     assertEquals(execution.getRemarks(), executionRetrieved.getRemarks());
     assertEquals(execution.getStepsToRun(), executionRetrieved.getStepsToRun());
-    assertEquals(execution.getPipelinesVersion(), executionRetrieved.getPipelinesVersion());
 
     // compare with the result of the get
-    assertEquals(executionRetrieved, pipelineProcessMapper.getPipelineExecution(execution.getKey()));
+    assertEquals(
+        executionRetrieved, pipelineProcessMapper.getPipelineExecution(execution.getKey()));
   }
 
   @Test
@@ -189,7 +188,9 @@ public class PipelineProcessMapperTest {
             .setFinished(LocalDateTime.now())
             .setMessage("message")
             .setMetrics(Collections.singleton(new MetricInfo("key", "value")))
-            .setCreatedBy(TEST_USER);
+            .setCreatedBy(TEST_USER)
+            .setPipelinesVersion("1.0.0.")
+            .setNumberRecords(10L);
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertTrue(step.getKey() > 0);
 
@@ -225,7 +226,8 @@ public class PipelineProcessMapperTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setState(Status.COMPLETED)
             .setMetrics(Collections.singleton(new MetricInfo("a", "")))
-            .setCreatedBy(TEST_USER);
+            .setCreatedBy(TEST_USER)
+            .setStarted(LocalDateTime.now());
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertTrue(step.getKey() > 0);
 
@@ -277,8 +279,7 @@ public class PipelineProcessMapperTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
-            .setPipelinesVersion("1.0.0");
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
@@ -286,7 +287,8 @@ public class PipelineProcessMapperTest {
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
             .setState(Status.RUNNING)
-            .setCreatedBy(TEST_USER);
+            .setCreatedBy(TEST_USER)
+            .setStarted(LocalDateTime.now());
     pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
 
     // get step
@@ -306,8 +308,7 @@ public class PipelineProcessMapperTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
-            .setPipelinesVersion("1.0.0");
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step

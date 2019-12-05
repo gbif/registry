@@ -185,15 +185,11 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    */
   private Optional<PipelineStep> getLatestSuccessfulStep(
       PipelineProcess pipelineProcess, StepType step) {
-    Optional<PipelineExecution> lastExecution =
-        pipelineProcess.getExecutions().stream()
-            .max(Comparator.comparing(PipelineExecution::getCreated));
-
-    return lastExecution.flatMap(
-        execution ->
-            execution.getSteps().stream()
-                .filter(s -> step.equals(s.getType()))
-                .max(Comparator.comparing(PipelineStep::getStarted)));
+    return pipelineProcess.getExecutions().stream()
+        .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
+        .flatMap(ex -> ex.getSteps().stream())
+        .filter(s -> step.equals(s.getType()))
+        .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
   /**
@@ -279,10 +275,10 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     Objects.requireNonNull(publisher, "No message publisher configured");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
 
-    PipelineProcess status = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+    PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
     // Checks that the pipelines is not in RUNNING state
-    if (getStatus(status) == PipelineStep.Status.RUNNING) {
+    if (getStatus(process) == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
           .setStep(steps)
@@ -295,11 +291,11 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     prioritizeSteps(steps, dataset)
         .forEach(
             stepName ->
-                getLatestSuccessfulStep(status, stepName)
+                getLatestSuccessfulStep(process, stepName)
                     .ifPresent(
                         step -> {
                           try {
-                            Message message = null;
+                            PipelineBasedMessage message = null;
 
                             if (stepName == StepType.INTERPRETED_TO_INDEX
                                 || stepName == StepType.HDFS_VIEW) {
@@ -321,9 +317,19 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
                             }
 
                             if (message != null) {
+                              // create pipelines execution
+                              PipelineExecution execution =
+                                  new PipelineExecution()
+                                      .setCreatedBy(user)
+                                      .setRerunReason(reason)
+                                      .setStepsToRun(new ArrayList<>(steps));
+                              mapper.addPipelineExecution(process.getKey(), execution);
+
+                              message.setExecutionId(execution.getKey());
+                              publisher.send(message);
+
                               responseBuilder.setResponseStatus(
                                   RunPipelineResponse.ResponseStatus.OK);
-                              publisher.send(message);
                             }
 
                           } catch (IOException ex) {
@@ -340,7 +346,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     return OBJECT_MAPPER.readValue(jsonMessage, targetClass);
   }
 
-  private Message createVerbatimMessage(String prefix, String jsonMessage) throws IOException {
+  private PipelineBasedMessage createVerbatimMessage(String prefix, String jsonMessage)
+      throws IOException {
     PipelinesVerbatimMessage message =
         OBJECT_MAPPER.readValue(jsonMessage, PipelinesVerbatimMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
@@ -354,8 +361,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     return message;
   }
 
-  private Message createInterpretedMessage(String prefix, String jsonMessage, StepType stepType)
-      throws IOException {
+  private PipelineBasedMessage createInterpretedMessage(
+      String prefix, String jsonMessage, StepType stepType) throws IOException {
     PipelinesInterpretedMessage message =
         OBJECT_MAPPER.readValue(jsonMessage, PipelinesInterpretedMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
@@ -410,6 +417,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
 
     // TODO: check that execution belongs to the process??
 
+    pipelineStep.setStarted(LocalDateTime.now());
     pipelineStep.setCreatedBy(user);
 
     mapper.addPipelineStep(executionKey, pipelineStep);
