@@ -2,9 +2,9 @@ package org.gbif.registry.ws.client.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.PipelineWorkflow;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsClient;
@@ -31,8 +31,6 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
       new GenericType<PipelineProcess>() {};
   private static final GenericType<PipelineStep> PIPELINE_STEP_TYPE =
       new GenericType<PipelineStep>() {};
-  private static final GenericType<PipelineWorkflow> PIPELINE_WORKFLOW_TYPE =
-      new GenericType<PipelineWorkflow>() {};
 
   @Inject
   public PipelinesHistoryWsClient(
@@ -55,12 +53,16 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
     return get(PIPELINE_PROCESS_TYPE, datasetKey.toString(), String.valueOf(attempt));
   }
 
-  public long createPipelineProcess(UUID datasetKey, int attempt) {
+  public long createOrGetPipelineProcess(UUID datasetKey, int attempt) {
     return post(Long.class, new PipelineProcessParameters(datasetKey, attempt), PROCESS_PATH);
   }
 
-  public long addPipelineStep(long processKey, PipelineStep pipelineStep) {
-    return post(Long.class, pipelineStep, PROCESS_PATH, String.valueOf(processKey));
+  public long addPipelineExecution(long processKey, PipelineExecution pipelineExecution) {
+    return post(Long.class, pipelineExecution, PROCESS_PATH, String.valueOf(processKey));
+  }
+
+  public long addPipelineStep(long processKey, long executionKey, PipelineStep pipelineStep) {
+    return post(Long.class, pipelineStep, PROCESS_PATH, String.valueOf(processKey), String.valueOf(executionKey));
   }
 
   public PipelineStep getPipelineStep(long processkey, long stepKey) {
@@ -75,11 +77,6 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
   public void updatePipelineStepStatusAndMetrics(
       long processKey, long stepKey, PipelineStep.Status status) {
     put(status, PROCESS_PATH, String.valueOf(processKey), STEP_PATH, String.valueOf(stepKey));
-  }
-
-  public PipelineWorkflow getPipelineWorkflow(UUID datasetKey, int attempt) {
-    return get(
-        PIPELINE_WORKFLOW_TYPE, "workflow", String.valueOf(datasetKey), String.valueOf(attempt));
   }
 
   public ClientResponse runAll(String steps, String reason) {
