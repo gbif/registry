@@ -34,11 +34,11 @@
   </sql>
 
   <sql id="EXECUTION_FIELDS_SELECT">
-    key, pipeline_process_key, steps_to_run, created, created_by, pipelines_version, rerun_reason
+    key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason
   </sql>
 
   <sql id="EXECUTION_FIELDS_CREATE">
-    pipeline_process_key, steps_to_run, created, created_by, pipelines_version, rerun_reason
+    pipeline_process_key, steps_to_run, created, created_by, rerun_reason
   </sql>
 
   <sql id="EXECUTION_VALUES_CREATE">
@@ -46,27 +46,30 @@
     #{execution.stepsToRun,jdbcType=ARRAY,typeHandler=StepTypeArrayTypeHandler},
     now(), <!-- created -->
     #{execution.createdBy,jdbcType=VARCHAR},
-    #{execution.pipelinesVersion,jdbcType=VARCHAR},
     #{execution.rerunReason,jdbcType=VARCHAR}
   </sql>
 
   <sql id="STEP_FIELDS_CREATE">
-    type, runner, started, finished, state, message, metrics, created_by, pipeline_execution_key
+    type, runner, started, finished, state, message, metrics, created_by, number_records, pipelines_version,
+    pipeline_execution_key
   </sql>
 
   <sql id="STEP_FIELDS_SELECT">
-    key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key
+    key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, number_records,
+    pipelines_version, pipeline_execution_key
   </sql>
 
   <sql id="STEP_VALUES_CREATE">
     #{step.type,jdbcType=OTHER},
     #{step.runner,jdbcType=OTHER},
-    now(), <!-- started -->
+    #{step.started,jdbcType=OTHER},
     #{step.finished,jdbcType=OTHER},
     #{step.state,jdbcType=OTHER},
     #{step.message,jdbcType=VARCHAR},
     #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
     #{step.createdBy,jdbcType=VARCHAR},
+    #{step.numberRecords,jdbcType=BIGINT},
+    #{step.pipelinesVersion,jdbcType=VARCHAR},
     #{pipelineExecutionKey,jdbcType=BIGINT}
   </sql>
 
@@ -75,7 +78,9 @@
     state = #{step.state,jdbcType=OTHER},
     modified = now(),
     modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
-    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
+    number_records = #{step.numberRecords,jdbcType=BIGINT},
+    pipelines_version = #{step.pipelinesVersion,jdbcType=VARCHAR}
   </sql>
 
   <insert id="createIfNotExists" parameterType="PipelineProcess" useGeneratedKeys="true" keyProperty="key">
@@ -133,7 +138,7 @@
     ORDER BY p.attempt DESC
     LIMIT 1
   </select>
-  <!-- TODO: add execution -->
+
   <select id="list" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
     FROM pipeline_process

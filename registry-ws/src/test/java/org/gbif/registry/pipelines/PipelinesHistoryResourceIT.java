@@ -132,7 +132,6 @@ public class PipelinesHistoryResourceIT {
 
     PipelineExecution execution =
         new PipelineExecution()
-            .setPipelinesVersion("1.0.0")
             .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
             .setRerunReason("rerun")
             .setRemarks("remarks");
@@ -177,7 +176,6 @@ public class PipelinesHistoryResourceIT {
 
     PipelineExecution execution =
         new PipelineExecution()
-            .setPipelinesVersion("1.0.0")
             .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
             .setRerunReason("rerun")
             .setRemarks("remarks");
@@ -213,7 +211,6 @@ public class PipelinesHistoryResourceIT {
 
     PipelineExecution execution =
         new PipelineExecution()
-            .setPipelinesVersion("1.0.0")
             .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
             .setRerunReason("rerun")
             .setRemarks("remarks");
@@ -263,7 +260,6 @@ public class PipelinesHistoryResourceIT {
 
     PipelineExecution execution =
         new PipelineExecution()
-            .setPipelinesVersion("1.0.0")
             .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
             .setRerunReason("rerun")
             .setRemarks("remarks");

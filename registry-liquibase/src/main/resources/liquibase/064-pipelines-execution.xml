@@ -12,7 +12,6 @@
           steps_to_run pipeline_step_type[],
           created timestamp with time zone NOT NULL DEFAULT now(),
           created_by text NOT NULL,
-          pipelines_version text,
           rerun_reason text,
           remarks text
         );
@@ -24,6 +23,8 @@
         ALTER TABLE pipeline_step DROP COLUMN pipeline_process_key;
 
         ALTER TABLE pipeline_step ADD COLUMN number_records bigint;
+
+        ALTER TABLE pipeline_step ADD COLUMN pipelines_version text;
       ]]>
     </sql>
   </changeSet>
