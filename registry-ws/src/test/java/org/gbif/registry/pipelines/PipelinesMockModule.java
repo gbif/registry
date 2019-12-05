@@ -9,7 +9,7 @@ public class PipelinesMockModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(PipelinesHistoryTrackingService.class)
-        .to(PipelinesCoordinatorTrackingServiceImpl.class)
+        .to(DefaultPipelinesHistoryTrackingService.class)
         .in(Scopes.SINGLETON);
     bind(MetricsHandler.class).toInstance(Mockito.mock(MetricsHandler.class));
   }

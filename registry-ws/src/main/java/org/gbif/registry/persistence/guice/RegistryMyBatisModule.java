@@ -27,6 +27,7 @@ import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
+import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.registry.*;
@@ -164,10 +165,12 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("DisciplineArrayTypeHandler").to(DisciplineArrayTypeHandler.class);
       addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
       addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
+      addAlias("StepTypeArrayTypeHandler").to(StepTypeArrayTypeHandler.class);
 
       // pipelines aliases
       addAlias("PipelineProcess").to(PipelineProcess.class);
       addAlias("Step").to(PipelineStep.class);
+      addAlias("PipelineExecution").to(PipelineExecution.class);
       addAlias("MetricInfoTypeHandler").to(MetricInfoTypeHandler.class);
     }
 

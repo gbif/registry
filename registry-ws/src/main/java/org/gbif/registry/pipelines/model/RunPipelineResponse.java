@@ -1,4 +1,4 @@
-package org.gbif.registry.pipelines;
+package org.gbif.registry.pipelines.model;
 
 import org.gbif.api.model.pipelines.StepType;
 
