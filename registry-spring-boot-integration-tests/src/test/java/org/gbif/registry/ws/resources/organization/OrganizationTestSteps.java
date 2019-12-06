@@ -88,7 +88,11 @@ public class OrganizationTestSteps {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/organization/organization_prepare.sql"));
 
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
@@ -102,21 +106,19 @@ public class OrganizationTestSteps {
   @After("@Organization")
   public void tearDown() throws Exception {
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
 
     connection.close();
   }
 
-  @Given("node 'UK Node' and node 'UK Node 2'")
-  public void prepareNode() {
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
+  @Given("node {string} with key {string}")
+  public void prepareNode(String nodeName, String nodeKey) {
+    // see Before organization
   }
 
-  @Given("seven organizations in 'UK Node'")
-  public void prepareOrganizations() {
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_prepare.sql"));
+  @Given("seven organizations for node {string}")
+  public void prepareOrganizations(String nodeName) {
+    // see Before organization
   }
 
   @When("^call suggest organizations with query \"([^\"]*)\"$")

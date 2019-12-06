@@ -3,8 +3,9 @@ Feature: Organization functionality
 
   Background:
     # see scripts/organization
-    Given node 'UK Node' and node 'UK Node 2'
-    And seven organizations in 'UK Node'
+    Given node "UK Node" with key "f698c938-d36a-41ac-8120-c35903e1acb9"
+    And node "UK Node 2" with key "9996f2f2-f71c-4f40-8e69-031917b314e0"
+    And seven organizations for node "UK Node"
 
   @OrganizationCRUD
   Scenario: CRUD organization

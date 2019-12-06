@@ -107,7 +107,7 @@ public class NetworkEntityTestSteps {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/organization/organization_node_prepare.sql"));
     ScriptUtils.executeSqlScript(connection,
@@ -128,7 +128,7 @@ public class NetworkEntityTestSteps {
   public void tearDown() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/organization/organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
     connection.close();
   }
 
