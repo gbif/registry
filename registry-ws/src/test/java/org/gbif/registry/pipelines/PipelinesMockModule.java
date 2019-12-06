@@ -2,7 +2,6 @@ package org.gbif.registry.pipelines;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import org.mockito.Mockito;
 
 public class PipelinesMockModule extends AbstractModule {
 
@@ -14,6 +13,5 @@ public class PipelinesMockModule extends AbstractModule {
     bind(IngestionHistoryService.class)
         .to(DefaultIngestionHistoryService.class)
         .in(Scopes.SINGLETON);
-    bind(MetricsHandler.class).toInstance(Mockito.mock(MetricsHandler.class));
   }
 }

@@ -23,10 +23,8 @@ public class PipelinesModule extends PrivateServiceModule {
     bind(IngestionHistoryService.class)
         .to(DefaultIngestionHistoryService.class)
         .in(Scopes.SINGLETON);
-    bind(MetricsHandler.class).asEagerSingleton();
 
     expose(PipelinesHistoryTrackingService.class);
     expose(IngestionHistoryService.class);
-    expose(MetricsHandler.class);
   }
 }
