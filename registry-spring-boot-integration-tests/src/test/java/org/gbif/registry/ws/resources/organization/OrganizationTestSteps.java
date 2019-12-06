@@ -7,6 +7,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.utils.Organizations;
@@ -82,6 +83,9 @@ public class OrganizationTestSteps {
   @Autowired
   private OrganizationResource organizationResource;
 
+  @Autowired
+  private IdentityService identityService;
+
   @Before("@Organization")
   public void setUp() throws Exception {
     connection = ds.getConnection();
@@ -121,6 +125,11 @@ public class OrganizationTestSteps {
     // see Before organization
   }
 
+  @Given("user {string} with editor rights on node {string}")
+  public void addEditorRights(String username, String nodeKey) {
+    identityService.addEditorRight(username, UUID.fromString(nodeKey));
+  }
+
   @When("^call suggest organizations with query \"([^\"]*)\"$")
   public void callSuggestWithQuery(String query) throws Exception {
     result = mvc
@@ -157,8 +166,8 @@ public class OrganizationTestSteps {
       .andExpect(jsonPath("$.results.length()").value(number));
   }
 
-  @When("create new organization {string} for node {string}")
-  public void createOrganization(String orgName, String nodeName) throws Exception {
+  @When("create new organization {string} for node {string} by {word} {string} and password {string}")
+  public void createOrganization(String orgName, String nodeName, String userType, String username, String password) throws Exception {
     UUID nodeKey = NODE_MAP.get(nodeName);
     organization = Organizations.newInstance(nodeKey);
     organization.setTitle(orgName);
@@ -167,10 +176,15 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         post("/organization")
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, password))
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("create new organization {string} for node {string}")
+  public void createOrganization(String orgName, String nodeName) throws Exception {
+    createOrganization(orgName, nodeName, "admin", TEST_ADMIN, TEST_PASSWORD);
   }
 
   @When("get organization by key")
@@ -179,7 +193,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         get("/organization/{key}", organizationKey))
-    .andDo(print());
+      .andDo(print());
   }
 
   @Given("{int} organization\\(s) endorsed for {string}")
@@ -309,7 +323,7 @@ public class OrganizationTestSteps {
           .content(organizationJson)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON))
-    .andDo(print());
+      .andDo(print());
   }
 
   @When("delete organization {string} by key")

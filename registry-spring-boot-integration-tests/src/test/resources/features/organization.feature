@@ -87,3 +87,9 @@ Feature: Organization functionality
       | f433944a-ad93-4ea8-bad7-68de7348e65a | The ORG  |
       | 180bc881-9c8f-445b-89d9-40cd099cbdc3 | The BGBM |
       | e47e4958-7dee-475b-98c7-07a2d7de8f96 | The BGBM |
+
+  @CreateOrganizationByEditor
+  Scenario: Editor can create organization if it has rights
+    Given user "registry_editor" with editor rights on node "f698c938-d36a-41ac-8120-c35903e1acb9"
+    When create new organization "New org A" for node "UK Node" by editor "registry_editor" and password "welcome"
+    Then response status should be 201
