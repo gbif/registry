@@ -1,30 +1,12 @@
 @NetworkEntity
 Feature: Network entity functionality
 
-  @NetworkEntityCRUD
-  Scenario Outline: CRUD <entity>
-    When create new <entity>
-    Then response status should be 201
-    And <entity> key is present in response
-    When get <entity> by key
-    Then response status should be 200
-    And modification and creation dates are present
-    And <entity> is not marked as deleted
-    And created <entity> reflects the original one
-
-    When update <entity> with new title "New Title"
-    Then response status should be 200
-    When get <entity> by key
-    Then response status should be 200
-    And title is new "New Title"
-    And modification date was updated
-    And modification date is after the creation date
-
-    When delete <entity> by key
-    Then response status should be 200
-    When get <entity> by key
-    Then response status should be 200
-    And deleted <entity> reflects the original one
+  @NetworkEntityCreateExceptions
+  Scenario Outline: Regular user or editor without rights can't create <entity>
+    When create new <entity> by user "registry_user" and password "welcome"
+    Then response status should be 403
+    When create new <entity> by editor "registry_editor" and password "welcome"
+    Then response status should be 403
 
     Scenarios:
       | entity       |
@@ -34,11 +16,13 @@ Feature: Network entity functionality
       | node         |
       | organization |
 
-  @NetworkEntityCreateExceptions
-  Scenario Outline: Regular user or editor without rights can't create <entity>
-    When create new <entity> by user "registry_user" and password "welcome"
+  @NetworkEntityUpdateExceptions
+  Scenario Outline: Regular user or editor without rights can't update <entity>
+    When update <entity> by user "registry_user" and password "welcome"
+      | title | New Title |
     Then response status should be 403
-    When create new <entity> by editor "registry_editor" and password "welcome"
+    When update <entity> by editor "registry_editor" and password "welcome"
+      | title | New Title |
     Then response status should be 403
 
     Scenarios:
