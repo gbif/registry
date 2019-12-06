@@ -13,7 +13,6 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.*;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -435,7 +434,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       long executionKey,
       long pipelineStepKey,
       PipelineStep.Status status,
-      Set<PipelineStep.MetricInfo> metrics,
+      List<PipelineStep.MetricInfo> metrics,
       String user) {
     Objects.requireNonNull(status, "Status can't be null");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
@@ -454,19 +453,27 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       step.setFinished(LocalDateTime.now());
     }
 
-    step.setMetrics(metrics);
-    step.setNumberRecords(
-        metrics.stream()
-            .map(PipelineStep.MetricInfo::getValue)
-            .map(Long::parseLong)
-            .max(Comparator.naturalOrder())
-            .orElse(null));
+    step.setMetrics(new HashSet<>(metrics));
+    step.setNumberRecords(getNumberRecordsFromMetrics(metrics));
 
     // update status and modifying user
     step.setState(status);
     step.setModifiedBy(user);
 
     mapper.updatePipelineStep(step);
+  }
+
+  public Long getNumberRecordsFromMetrics(List<PipelineStep.MetricInfo> metrics) {
+    try {
+      return metrics.stream()
+          .map(PipelineStep.MetricInfo::getValue)
+          .map(Long::parseLong)
+          .max(Comparator.naturalOrder())
+          .orElse(null);
+    } catch (NumberFormatException ex) {
+      LOG.warn("Couldn't get number of records from metrics {}", metrics, ex);
+      return null;
+    }
   }
 
   // Copied from CrawlerCoordinatorServiceImpl
