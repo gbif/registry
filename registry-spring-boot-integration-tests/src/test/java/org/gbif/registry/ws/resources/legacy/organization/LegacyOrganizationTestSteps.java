@@ -67,7 +67,7 @@ public class LegacyOrganizationTestSteps {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/legacyorganization/legacy_organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/legacyorganization/legacy_organization_prepare.sql"));
 
@@ -82,7 +82,7 @@ public class LegacyOrganizationTestSteps {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/legacyorganization/legacy_organization_cleanup.sql"));
+      new ClassPathResource("/scripts/network_entities_cleanup.sql"));
 
     connection.close();
   }
