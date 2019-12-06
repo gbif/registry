@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -77,14 +78,12 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   // MyBatis mapper
   private final PipelineProcessMapper mapper;
   private final DatasetService datasetService;
-  private final MetricsHandler metricsHandler;
 
   @Inject
   public DefaultPipelinesHistoryTrackingService(
-      PipelineProcessMapper mapper, DatasetService datasetService, MetricsHandler metricsHandler) {
+      PipelineProcessMapper mapper, DatasetService datasetService) {
     this.mapper = mapper;
     this.datasetService = datasetService;
-    this.metricsHandler = metricsHandler;
   }
 
   @Override
@@ -182,7 +181,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * @param step to be searched
    * @return optionally, the las step found
    */
-  private Optional<PipelineStep> getLatestSuccessfulStep(
+  @VisibleForTesting
+  Optional<PipelineStep> getLatestSuccessfulStep(
       PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
         .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
