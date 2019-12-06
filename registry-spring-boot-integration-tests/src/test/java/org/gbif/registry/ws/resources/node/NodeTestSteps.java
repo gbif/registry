@@ -64,8 +64,8 @@ public class NodeTestSteps {
   public void tearDown() throws Exception {
   }
 
-  @When("create new node {string}")
-  public void createNode(String nodeName) throws Exception {
+  @When("create new node {string} by {word} {string} and password {string}")
+  public void createNode(String nodeName, String userType, String username, String password) throws Exception {
     Node node = Nodes.newInstance();
     node.setTitle(nodeName);
 
@@ -74,10 +74,15 @@ public class NodeTestSteps {
     result = mvc
       .perform(
         post("/node")
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, password))
           .content(jsonContent)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));
+  }
+
+  @When("create new node {string}")
+  public void createNode(String nodeName) throws Exception {
+    createNode(nodeName, "admin", TEST_ADMIN, TEST_PASSWORD);
   }
 
   @When("update node {string}")

@@ -66,6 +66,11 @@ public class NetworkTestSteps {
 
   @When("create new network {string}")
   public void createNetwork(String networkName) throws Exception {
+    createNetwork(networkName, "admin", TEST_ADMIN, TEST_PASSWORD);
+  }
+
+  @When("create new network {string} by {word} {string} and password {string}")
+  public void createNetwork(String networkName, String userType, String username, String password) throws Exception {
     Network network = Networks.newInstance();
     network.setTitle(networkName);
 
@@ -74,7 +79,7 @@ public class NetworkTestSteps {
     result = mvc
       .perform(
         post("/network")
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, password))
           .content(jsonContent)
           .accept(MediaType.APPLICATION_JSON)
           .contentType(MediaType.APPLICATION_JSON));

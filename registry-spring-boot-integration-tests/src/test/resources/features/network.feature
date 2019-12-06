@@ -18,3 +18,8 @@ Feature: Network functionality
     Then response status should be 200
     When get network by key
     Then response status should be 200
+
+  @EditorCannotCreateNetwork
+  Scenario: Editor is not allowed to create network
+    When create new network "New org A" by editor "registry_editor" and password "welcome"
+    Then response status should be 403

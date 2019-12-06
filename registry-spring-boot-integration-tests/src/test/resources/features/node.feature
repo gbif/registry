@@ -18,3 +18,8 @@ Feature: Node functionality
     Then response status should be 200
     When get node by key
     Then response status should be 200
+
+  @EditorCannotCreateNode
+  Scenario: Editor is not allowed to create node
+    When create new node "New org A" by editor "registry_editor" and password "welcome"
+    Then response status should be 403
