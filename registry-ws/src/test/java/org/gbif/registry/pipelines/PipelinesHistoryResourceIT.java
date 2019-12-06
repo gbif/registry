@@ -2,6 +2,7 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
@@ -146,7 +147,7 @@ public class PipelinesHistoryResourceIT {
     long stepKey = historyWsClient.addPipelineStep(processKey, executionKey, step);
     assertTrue(stepKey > 0);
 
-    PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, stepKey);
+    PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, executionKey, stepKey);
     assertNull(stepCreated.getFinished());
     assertTrue(stepCreated.lenientEquals(step));
   }
@@ -170,7 +171,7 @@ public class PipelinesHistoryResourceIT {
   }
 
   @Test
-  public void updatePipelineStepStatusTest() {
+  public void updatePipelineStepStatusAndMetricsTest() {
     final UUID datasetKey1 = createDataset();
     long processKey = historyWsClient.createOrGetPipelineProcess(datasetKey1, 1);
 
@@ -189,12 +190,18 @@ public class PipelinesHistoryResourceIT {
             .setState(PipelineStep.Status.RUNNING);
     long stepKey = historyWsClient.addPipelineStep(processKey, executionKey, step);
 
+    PipelineStepParameters stepParams =
+        new PipelineStepParameters(
+            PipelineStep.Status.COMPLETED,
+            Collections.singletonList(new PipelineStep.MetricInfo("name", "value")));
     historyWsClient.updatePipelineStepStatusAndMetrics(
-        processKey, stepKey, PipelineStep.Status.COMPLETED);
+        processKey, executionKey, stepKey, stepParams);
 
-    PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, stepKey);
+    PipelineStep stepCreated = historyWsClient.getPipelineStep(processKey, executionKey, stepKey);
     assertEquals(PipelineStep.Status.COMPLETED, stepCreated.getState());
     assertNotNull(stepCreated.getFinished());
+    assertEquals(1, stepCreated.getMetrics().size());
+    assertEquals("value", stepCreated.getMetrics().iterator().next().getValue());
   }
 
   @Test
@@ -248,7 +255,8 @@ public class PipelinesHistoryResourceIT {
 
     // check that the DB was updated again
     process = historyWsClient.getPipelineProcess(datasetKey1, attempt);
-    assertEquals(rerunReason2, process.getExecutions().iterator().next().getRerunReason());
+    assertEquals(2, process.getExecutions().size());
+    process.getExecutions().forEach(e -> assertNotNull(e.getRerunReason()));
   }
 
   @Test
