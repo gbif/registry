@@ -11,6 +11,9 @@ public class PipelinesMockModule extends AbstractModule {
     bind(PipelinesHistoryTrackingService.class)
         .to(DefaultPipelinesHistoryTrackingService.class)
         .in(Scopes.SINGLETON);
+    bind(IngestionHistoryService.class)
+        .to(DefaultIngestionHistoryService.class)
+        .in(Scopes.SINGLETON);
     bind(MetricsHandler.class).toInstance(Mockito.mock(MetricsHandler.class));
   }
 }

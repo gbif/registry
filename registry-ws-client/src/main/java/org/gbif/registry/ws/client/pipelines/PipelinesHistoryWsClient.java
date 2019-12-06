@@ -6,11 +6,13 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.registry.ws.client.guice.RegistryWs;
 import org.gbif.ws.client.BaseWsClient;
 
 import java.util.UUID;
 import javax.annotation.Nullable;
+import javax.ws.rs.core.MediaType;
 
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientResponse;
@@ -22,7 +24,6 @@ import com.sun.jersey.api.client.filter.ClientFilter;
 public class PipelinesHistoryWsClient extends BaseWsClient {
 
   private static final String PROCESS_PATH = "process";
-  private static final String STEP_PATH = "step";
   private static final String RUN_PATH = "run";
 
   private static final GenericType<PagingResponse<PipelineProcess>> PAGING_PIPELINE_PROCESS =
@@ -62,21 +63,32 @@ public class PipelinesHistoryWsClient extends BaseWsClient {
   }
 
   public long addPipelineStep(long processKey, long executionKey, PipelineStep pipelineStep) {
-    return post(Long.class, pipelineStep, PROCESS_PATH, String.valueOf(processKey), String.valueOf(executionKey));
+    return post(
+        Long.class,
+        pipelineStep,
+        PROCESS_PATH,
+        String.valueOf(processKey),
+        String.valueOf(executionKey));
   }
 
-  public PipelineStep getPipelineStep(long processkey, long stepKey) {
+  public PipelineStep getPipelineStep(long processkey, long executionKey, long stepKey) {
     return get(
         PIPELINE_STEP_TYPE,
         PROCESS_PATH,
         String.valueOf(processkey),
-        STEP_PATH,
+        String.valueOf(executionKey),
         String.valueOf(stepKey));
   }
 
   public void updatePipelineStepStatusAndMetrics(
-      long processKey, long stepKey, PipelineStep.Status status) {
-    put(status, PROCESS_PATH, String.valueOf(processKey), STEP_PATH, String.valueOf(stepKey));
+      long processKey, long executionKey, long stepKey, PipelineStepParameters stepParams) {
+    put(
+        ClientResponse.class,
+        stepParams,
+        PROCESS_PATH,
+        String.valueOf(processKey),
+        String.valueOf(executionKey),
+        String.valueOf(stepKey));
   }
 
   public ClientResponse runAll(String steps, String reason) {

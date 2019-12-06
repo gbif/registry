@@ -7,6 +7,7 @@ import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
 import org.gbif.registry.pipelines.model.RunPipelineResponse;
 
@@ -104,31 +105,31 @@ public class PipelinesHistoryResource {
   }
 
   @GET
-  @Path(PROCESS_PATH + "{processKey}/step/{stepKey}")
+  @Path(PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}")
   public PipelineStep getPipelineStep(
-      @PathParam("processKey") long processKey, @PathParam("stepKey") long stepKey) {
+      @PathParam("processKey") long processKey, @PathParam("executionKey") long executionKey, @PathParam("stepKey") long stepKey) {
     return historyTrackingService.getPipelineStep(stepKey);
   }
 
   /** Updates the step status. */
   @PUT
-  @Path(PROCESS_PATH + "{processKey}/{executionKey}/step/{stepKey}")
-  @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+  @Path(PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}")
+  @Consumes({MediaType.APPLICATION_JSON})
   @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
   public void updatePipelineStepStatusAndMetrics(
       @PathParam("processKey") long processKey,
       @PathParam("executionKey") long executionKey,
       @PathParam("stepKey") long stepKey,
-      @Valid @NotNull StepParams stepParams,
+      PipelineStepParameters stepParams,
       @Context SecurityContext security) {
-    // TODO: test with null params
+    Objects.requireNonNull(stepParams, "Pipeline Step parameters are required");
 
     historyTrackingService.updatePipelineStepStatusAndMetrics(
         processKey,
         executionKey,
         stepKey,
-        stepParams.status,
-        stepParams.metrics,
+        stepParams.getStatus(),
+        stepParams.getMetrics(),
         security.getUserPrincipal().getName());
   }
 
@@ -233,29 +234,6 @@ public class PipelinesHistoryResource {
     return Arrays.stream(steps.split(","))
         .map(s -> StepType.valueOf(s.toUpperCase()))
         .collect(Collectors.toSet());
-  }
-
-  private static class StepParams {
-    PipelineStep.Status status;
-    Set<PipelineStep.MetricInfo> metrics;
-
-    // getters and setters needed for jackson
-
-    public PipelineStep.Status getStatus() {
-      return status;
-    }
-
-    public void setStatus(PipelineStep.Status status) {
-      this.status = status;
-    }
-
-    public Set<PipelineStep.MetricInfo> getMetrics() {
-      return metrics;
-    }
-
-    public void setMetrics(Set<PipelineStep.MetricInfo> metrics) {
-      this.metrics = metrics;
-    }
   }
 
   /** Encapsulates the params to pass in the body for the runAll method. */
