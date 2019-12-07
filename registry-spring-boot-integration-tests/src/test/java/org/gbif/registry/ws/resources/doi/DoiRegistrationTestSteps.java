@@ -71,7 +71,7 @@ public class DoiRegistrationTestSteps {
 
     result = mvc
       .perform(
-        post("/doi/gen/{type}", doiType)
+        post("/doi", doiType)
           .content(jsonContent)
           .contentType(MediaType.APPLICATION_JSON));
   }
