@@ -131,6 +131,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   }
 
   private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
+    checkIsUserAuthenticated();
     try {
       preFilter.accept(doiRegistration);
       // registration contains a DOI already
@@ -195,7 +196,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   private void checkIsUserAuthenticated() {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || authentication.getPrincipal() == null)
+    if (authentication == null || authentication.getName() == null)
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
   }
 }

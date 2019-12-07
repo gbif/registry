@@ -24,7 +24,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertFalse;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -56,7 +58,8 @@ public class DoiRegistrationTestSteps {
     result = mvc
       .perform(
         post("/doi/gen/{type}", doiType)
-          .contentType(MediaType.APPLICATION_JSON));
+          .contentType(MediaType.APPLICATION_JSON)
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @When("register DOI of type {string}")
