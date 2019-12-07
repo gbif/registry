@@ -13,11 +13,11 @@ Feature: DOI registration functionality
       | DATA_PACKAGE |
 
   Scenario Outline: register <type> DOI
-    When register DOI of type "<type>"
+    When register DOI of type "<type>" for entity with key "<key>"
     Then response status should be 201
 
     Scenarios:
-      | type         |
-      | DATASET      |
-      | DOWNLOAD     |
-      | DATA_PACKAGE |
+      | type         | key                                  |
+      | DATASET      | 17d12c7f-12a6-4910-aca2-11b6247d937d |
+      | DOWNLOAD     | 0000251-150304104939900              |
+      | DATA_PACKAGE |                                      |

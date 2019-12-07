@@ -62,13 +62,17 @@ public class DoiRegistrationTestSteps {
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
-  @When("register DOI of type {string}")
-  public void registerDoi(String doiType) throws Exception {
+  @When("register DOI of type {string} for entity with key {string}")
+  public void registerDoi(String doiType, String key) throws Exception {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
       .withMetadata(testMetadata())
       .build();
+
+    if (!"DATA_PACKAGE".equals(doiType)) {
+      data.setKey(key);
+    }
 
     String jsonContent = objectMapper.writeValueAsString(data);
 
@@ -76,7 +80,8 @@ public class DoiRegistrationTestSteps {
       .perform(
         post("/doi", doiType)
           .content(jsonContent)
-          .contentType(MediaType.APPLICATION_JSON));
+          .contentType(MediaType.APPLICATION_JSON)
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
   @Then("response status should be {int}")
