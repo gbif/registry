@@ -81,7 +81,10 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
     // add pipeline info
     PipelineProcess pipelineProcess =
         pipelineProcessMapper.getByDatasetAndAttempt(datasetKey, attempt);
-    ingestionProcess.setPipelineExecutions(pipelineProcess.getExecutions());
+    // the process may not exist if that attempt never reached pipelines (e.g.: it was aborted before)
+    if (pipelineProcess != null) {
+      ingestionProcess.setPipelineExecutions(pipelineProcess.getExecutions());
+    }
 
     return ingestionProcess;
   }
