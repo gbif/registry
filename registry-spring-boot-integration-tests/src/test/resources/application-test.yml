@@ -11,6 +11,8 @@ mail:
   devemail:
     address: gbifregistry@mailinator.com
     enabled: @mail.devemail.enabled@
+message:
+  enabled: false
 
 # urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
 identity:
