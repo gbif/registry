@@ -1,7 +1,9 @@
 package org.gbif.registry.ws.resources.doi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.common.DOI;
@@ -16,20 +18,26 @@ import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertFalse;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -51,12 +59,37 @@ public class DoiRegistrationTestSteps {
   @Autowired
   private ObjectMapper objectMapper;
 
+  @Autowired
+  private DataSource ds;
+
+  private Connection connection;
+
   @Before("@DoiRegistration")
   public void setUp() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/doi/doi_cleanup.sql"));
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/doi/doi_prepare.sql"));
+
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
+  }
+
+  @After("@DoiRegistration")
+  public void cleanAfterUserCrud() {
+    Objects.requireNonNull(connection, "Connection must not be null");
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/doi/doi_cleanup.sql"));
+  }
+
+  @Given("existing DOI {string} with status {string}")
+  public void prepareDoi(String doi, String doiStatus) {
+    // prepared by scripts in @Before
   }
 
   @When("generate new DOI of type {string}")
@@ -68,12 +101,13 @@ public class DoiRegistrationTestSteps {
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
-  @When("register DOI of type {string} for entity with key {string} and metadata parameters")
-  public void registerDoi(String doiType, String key, Map<String, String> params) throws Exception {
+  @When("register DOI {string} of type {string} for entity with key {string} and metadata parameters")
+  public void registerDoi(String doiStr, String doiType, String key, Map<String, String> params) throws Exception {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
       .withMetadata(testMetadata(params))
+      .withDoi(new DOI(doiStr))
       .build();
 
     if (!"DATA_PACKAGE".equals(doiType)) {
@@ -90,12 +124,18 @@ public class DoiRegistrationTestSteps {
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
-  @When("update DOI of type {string} for entity with key {string} and metadata parameters")
-  public void updateDoi(String doiType, String key, Map<String, String> params) throws Exception {
+  @When("register DOI of type {string} for entity with key {string} and metadata parameters")
+  public void registerDoi(String doiType, String key, Map<String, String> params) throws Exception {
+    registerDoi(null, doiType, key, params);
+  }
+
+  @When("update DOI {string} of type {string} for entity with key {string} and metadata parameters")
+  public void updateDoi(String doiStr, String doiType, String key, Map<String, String> params) throws Exception {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
       .withMetadata(testMetadata(params))
+      .withDoi(new DOI(doiStr))
       .build();
 
     if (!"DATA_PACKAGE".equals(doiType)) {
@@ -110,6 +150,19 @@ public class DoiRegistrationTestSteps {
           .content(jsonContent)
           .contentType(MediaType.APPLICATION_JSON)
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
+  }
+
+  @When("update DOI of type {string} for entity with key {string} and metadata parameters")
+  public void updateDoi(String doiType, String key, Map<String, String> params) throws Exception {
+    updateDoi(null, doiType, key, params);
+  }
+
+  @When("delete DOI of type {string}")
+  public void deleteDoi(String doiType) throws Exception {
+    result = mvc
+      .perform(
+        delete("/doi/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix())
+      );
   }
 
   @When("get DOI")
