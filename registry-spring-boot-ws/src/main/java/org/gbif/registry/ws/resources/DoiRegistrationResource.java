@@ -116,18 +116,19 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public DOI update(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, existingDoiRegistration ->
-      Optional.ofNullable(existingDoiRegistration.getDoi())
-        .flatMap(doi -> Optional.ofNullable(doiPersistenceService.get(doi)))
-        .ifPresent(doiData -> {
-        // if DOI is not NEW throw an exception
-        if (DoiStatus.DELETED == doiData.getStatus()) {
-          throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
+      // Update the DOI
+      Optional.ofNullable(existingDoiRegistration.getDoi()).ifPresent(
+        doi -> {
+          Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
+            // if DOI is not NEW throw an exception
+            if (DoiStatus.DELETED == doiData.getStatus()) {
+              throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
+            }
+          });
+          doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
         }
-        doiPersistenceService.update(
-          doiRegistration.getDoi(),
-          doiPersistenceService.get(doiRegistration.getDoi()),
-          doiRegistration.getMetadata());
-      }));
+      )
+    );
   }
 
   private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
