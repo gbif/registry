@@ -255,7 +255,7 @@ public class PipelinesHistoryResourceIT {
 
     // check that the DB was updated again
     process = historyWsClient.getPipelineProcess(datasetKey1, attempt);
-    assertEquals(2, process.getExecutions().size());
+    assertEquals(3, process.getExecutions().size());
     process.getExecutions().forEach(e -> assertNotNull(e.getRerunReason()));
   }
 
