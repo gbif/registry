@@ -9,7 +9,7 @@
         CREATE TABLE pipeline_execution (
           key bigserial NOT NULL PRIMARY KEY,
           pipeline_process_key bigint NOT NULL REFERENCES pipeline_process (key) ON DELETE CASCADE,
-          steps_to_run pipeline_step_type[],
+          steps_to_run text[],
           created timestamp with time zone NOT NULL DEFAULT now(),
           created_by text NOT NULL,
           rerun_reason text,
