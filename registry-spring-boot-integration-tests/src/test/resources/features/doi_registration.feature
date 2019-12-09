@@ -2,7 +2,7 @@
 Feature: DOI functionality
 
   Scenario Outline: generate <type> DOI
-    When generate new DOI of type "<type>"
+    When generate new DOI of type "<type>" by admin
     Then response status should be 201
     And DOI is returned
 
@@ -35,14 +35,40 @@ Feature: DOI functionality
       | DOWNLOAD     | 0000251-150304104939900              |
       | DATA_PACKAGE |                                      |
 
-  Scenario: create existing registered DOI should be Bad Request 400
+  Scenario: register existing registered DOI should be Bad Request 400
     Given existing DOI "10.21373/test_registered_doi" with status "REGISTERED"
-    When register DOI "10.21373/test_registered_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters
+    When register DOI "10.21373/test_registered_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by admin
       | title | New DOI title |
     Then response status should be 400
 
+  Scenario: register existing new DOI should update DOI instead
+    Given existing DOI "10.21373/test_new_doi" with status "NEW"
+    When register DOI "10.21373/test_new_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by admin
+      | title | New DOI title |
+    Then response status should be 201
+
   Scenario: update existing deleted DOI should be Bad Request 400
     Given existing DOI "10.21373/test_deleted_doi" with status "DELETED"
-    When update DOI "10.21373/test_deleted_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters
+    When update DOI "10.21373/test_deleted_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by admin
       | title | Updated DOI title |
     Then response status should be 400
+
+  Scenario: update existing DOI with DOI present in request
+    Given existing DOI "10.21373/test_registered_doi" with status "REGISTERED"
+    When update DOI "10.21373/test_registered_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by admin
+      | title | Updated DOI title |
+    Then response status should be 200
+
+  Scenario: get not existing DOI should be Not Found 404
+    When get DOI "10.21373/not_existing"
+    Then response status should be 404
+
+  Scenario: register or update by unauthorized user should be 401 Unauthorized
+    When generate new DOI of type "DATA_PACKAGE" by unauthorized
+    Then response status should be 401
+    When register DOI "10.21373/test_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by unauthorized
+      | title | New DOI title |
+    Then response status should be 401
+    When update DOI "10.21373/test_doi" of type "DATA_PACKAGE" for entity with key "" and metadata parameters by unauthorized
+      | title | Updated DOI title |
+    Then response status should be 401

@@ -24,6 +24,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -81,10 +82,12 @@ public class DoiRegistrationTestSteps {
   }
 
   @After("@DoiRegistration")
-  public void cleanAfterUserCrud() {
+  public void cleanAfterUserCrud() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/doi/doi_cleanup.sql"));
+
+    connection.close();
   }
 
   @Given("existing DOI {string} with status {string}")
@@ -92,48 +95,25 @@ public class DoiRegistrationTestSteps {
     // prepared by scripts in @Before
   }
 
-  @When("generate new DOI of type {string}")
-  public void changePassword(String doiType) throws Exception {
-    result = mvc
-      .perform(
-        post("/doi/gen/{type}", doiType)
-          .contentType(MediaType.APPLICATION_JSON)
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
-  }
+  @When("generate new DOI of type {string} by {word}")
+  public void changePassword(String doiType, String userType) throws Exception {
+    MockHttpServletRequestBuilder requestBuilder = post("/doi/gen/{type}", doiType)
+        .contentType(MediaType.APPLICATION_JSON);
 
-  @When("register DOI {string} of type {string} for entity with key {string} and metadata parameters")
-  public void registerDoi(String doiStr, String doiType, String key, Map<String, String> params) throws Exception {
-    DoiRegistration data = DoiRegistration.builder()
-      .withType(DoiType.valueOf(doiType))
-      .withUser(TEST_ADMIN)
-      .withMetadata(testMetadata(params))
-      .build();
-
-    if (doiStr != null) {
-      data.setDoi(new DOI(doiStr));
+    if (userType.equals("admin")) {
+      requestBuilder.with(httpBasic(TEST_ADMIN, TEST_PASSWORD));
     }
 
-    if (!"DATA_PACKAGE".equals(doiType)) {
-      data.setKey(key);
-    }
-
-    String jsonContent = objectMapper.writeValueAsString(data);
-
-    result = mvc
-      .perform(
-        post("/doi", doiType)
-          .content(jsonContent)
-          .contentType(MediaType.APPLICATION_JSON)
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
+    result = mvc.perform(requestBuilder);
   }
 
   @When("register DOI of type {string} for entity with key {string} and metadata parameters")
   public void registerDoi(String doiType, String key, Map<String, String> params) throws Exception {
-    registerDoi(null, doiType, key, params);
+    registerDoi(null, doiType, key, "admin", params);
   }
 
-  @When("update DOI {string} of type {string} for entity with key {string} and metadata parameters")
-  public void updateDoi(String doiStr, String doiType, String key, Map<String, String> params) throws Exception {
+  @When("register DOI {string} of type {string} for entity with key {string} and metadata parameters by {word}")
+  public void registerDoi(String doiStr, String doiType, String key, String userType, Map<String, String> params) throws Exception {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
@@ -150,17 +130,49 @@ public class DoiRegistrationTestSteps {
 
     String jsonContent = objectMapper.writeValueAsString(data);
 
-    result = mvc
-      .perform(
-        put("/doi", doiType)
-          .content(jsonContent)
-          .contentType(MediaType.APPLICATION_JSON)
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
+    MockHttpServletRequestBuilder requestBuilder = post("/doi", doiType)
+      .content(jsonContent)
+      .contentType(MediaType.APPLICATION_JSON);
+
+    if (userType.equals("admin")) {
+      requestBuilder.with(httpBasic(TEST_ADMIN, TEST_PASSWORD));
+    }
+
+    result = mvc.perform(requestBuilder);
   }
 
   @When("update DOI of type {string} for entity with key {string} and metadata parameters")
   public void updateDoi(String doiType, String key, Map<String, String> params) throws Exception {
-    updateDoi(null, doiType, key, params);
+    updateDoi(null, doiType, key, "admin", params);
+  }
+
+  @When("update DOI {string} of type {string} for entity with key {string} and metadata parameters by {word}")
+  public void updateDoi(String doiStr, String doiType, String key, String userType, Map<String, String> params) throws Exception {
+    DoiRegistration data = DoiRegistration.builder()
+      .withType(DoiType.valueOf(doiType))
+      .withUser(TEST_ADMIN)
+      .withMetadata(testMetadata(params))
+      .build();
+
+    if (doiStr != null) {
+      data.setDoi(new DOI(doiStr));
+    }
+
+    if (!"DATA_PACKAGE".equals(doiType)) {
+      data.setKey(key);
+    }
+
+    String jsonContent = objectMapper.writeValueAsString(data);
+
+    MockHttpServletRequestBuilder requestBuilder = put("/doi", doiType)
+      .content(jsonContent)
+      .contentType(MediaType.APPLICATION_JSON);
+
+    if (userType.equals("admin")) {
+      requestBuilder.with(httpBasic(TEST_ADMIN, TEST_PASSWORD));
+    }
+
+    result = mvc.perform(requestBuilder);
   }
 
   @When("delete DOI of type {string}")
@@ -173,6 +185,16 @@ public class DoiRegistrationTestSteps {
 
   @When("get DOI")
   public void getDoi() throws Exception {
+    result = mvc
+      .perform(
+        get("/doi/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix())
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
+
+  @When("get DOI {string}")
+  public void getDoi(String doiStr) throws Exception {
+    DOI doi = doiStr != null ? new DOI(doiStr) : this.doi;
     result = mvc
       .perform(
         get("/doi/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix())
