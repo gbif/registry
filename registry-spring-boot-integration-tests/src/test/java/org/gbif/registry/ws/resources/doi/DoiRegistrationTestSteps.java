@@ -107,8 +107,11 @@ public class DoiRegistrationTestSteps {
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
       .withMetadata(testMetadata(params))
-      .withDoi(new DOI(doiStr))
       .build();
+
+    if (doiStr != null) {
+      data.setDoi(new DOI(doiStr));
+    }
 
     if (!"DATA_PACKAGE".equals(doiType)) {
       data.setKey(key);
@@ -135,8 +138,11 @@ public class DoiRegistrationTestSteps {
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
       .withMetadata(testMetadata(params))
-      .withDoi(new DOI(doiStr))
       .build();
+
+    if (doiStr != null) {
+      data.setDoi(new DOI(doiStr));
+    }
 
     if (!"DATA_PACKAGE".equals(doiType)) {
       data.setKey(key);
