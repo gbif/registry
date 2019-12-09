@@ -12,9 +12,18 @@ Feature: DOI registration functionality
       | DOWNLOAD     |
       | DATA_PACKAGE |
 
+  @DoiCRUD
   Scenario Outline: register <type> DOI
-    When register DOI of type "<type>" for entity with key "<key>"
+    When register DOI of type "<type>" for entity with key "<key>" and metadata parameters
+      | title | New DOI title |
     Then response status should be 201
+    And DOI is returned
+    When get DOI
+    Then response status should be 200
+
+    When update DOI of type "<type>" for entity with key "<key>" and metadata parameters
+      | title | Updated DOI title |
+    Then response status should be 200
 
     Scenarios:
       | type         | key                                  |
