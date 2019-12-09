@@ -88,7 +88,6 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @NullToNotFound
   @Override
   public DOI register(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, doiRegistrationToRegister ->
@@ -112,7 +111,6 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @NullToNotFound
   @Override
   public DOI update(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, existingDoiRegistration ->
