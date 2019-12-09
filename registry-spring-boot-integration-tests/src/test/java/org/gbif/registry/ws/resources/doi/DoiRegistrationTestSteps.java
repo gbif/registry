@@ -23,12 +23,17 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Map;
+
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertFalse;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
@@ -38,6 +43,7 @@ public class DoiRegistrationTestSteps {
 
   private ResultActions result;
   private MockMvc mvc;
+  private DOI doi;
 
   @Autowired
   private WebApplicationContext context;
@@ -62,12 +68,12 @@ public class DoiRegistrationTestSteps {
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
-  @When("register DOI of type {string} for entity with key {string}")
-  public void registerDoi(String doiType, String key) throws Exception {
+  @When("register DOI of type {string} for entity with key {string} and metadata parameters")
+  public void registerDoi(String doiType, String key, Map<String, String> params) throws Exception {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
-      .withMetadata(testMetadata())
+      .withMetadata(testMetadata(params))
       .build();
 
     if (!"DATA_PACKAGE".equals(doiType)) {
@@ -84,6 +90,37 @@ public class DoiRegistrationTestSteps {
           .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
   }
 
+  @When("update DOI of type {string} for entity with key {string} and metadata parameters")
+  public void updateDoi(String doiType, String key, Map<String, String> params) throws Exception {
+    DoiRegistration data = DoiRegistration.builder()
+      .withType(DoiType.valueOf(doiType))
+      .withUser(TEST_ADMIN)
+      .withMetadata(testMetadata(params))
+      .build();
+
+    if (!"DATA_PACKAGE".equals(doiType)) {
+      data.setKey(key);
+    }
+
+    String jsonContent = objectMapper.writeValueAsString(data);
+
+    result = mvc
+      .perform(
+        put("/doi", doiType)
+          .content(jsonContent)
+          .contentType(MediaType.APPLICATION_JSON)
+          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD)));
+  }
+
+  @When("get DOI")
+  public void getDoi() throws Exception {
+    result = mvc
+      .perform(
+        get("/doi/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix())
+          .contentType(MediaType.APPLICATION_JSON))
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -92,14 +129,15 @@ public class DoiRegistrationTestSteps {
 
   @Then("DOI is returned")
   public void assertDoiWasReturned() throws Exception {
-    String doi = RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
-    assertFalse(doi.isEmpty());
+    String doiStr = RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString());
+    doi = new DOI(doiStr);
+    assertFalse(doiStr.isEmpty());
   }
 
   /**
    * Create a test DataCiteMetadata instance.
    */
-  public String testMetadata() {
+  private String testMetadata(Map<String, String> params) {
     try {
       ObjectFactory of = new ObjectFactory();
       DataCiteMetadata res = of.createDataCiteMetadata();
@@ -115,6 +153,7 @@ public class DoiRegistrationTestSteps {
       DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
       DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
       title.setValue("TEST Tile");
+      title.setValue(params.get("title"));
       titles.getTitle().add(title);
       res.setTitles(titles);
 

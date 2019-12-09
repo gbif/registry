@@ -96,12 +96,13 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       // Persist the DOI
       Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
         doi -> {
-          Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
-            // if DOI is not NEW throw an exception
-            if (DoiStatus.NEW != doiData.getStatus()) {
-              throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Doi already exists"));
-            }
-          });
+          Optional.ofNullable(doiPersistenceService.get(doi))
+            .ifPresent(doiData -> {
+              // if DOI is not NEW throw an exception
+              if (DoiStatus.NEW != doiData.getStatus()) {
+                throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Doi already exists"));
+              }
+            });
           doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
         }
       )
@@ -119,12 +120,13 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       // Update the DOI
       Optional.ofNullable(existingDoiRegistration.getDoi()).ifPresent(
         doi -> {
-          Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> {
-            // if DOI is not NEW throw an exception
-            if (DoiStatus.DELETED == doiData.getStatus()) {
-              throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
-            }
-          });
+          Optional.ofNullable(doiPersistenceService.get(doi))
+            .ifPresent(doiData -> {
+              // if DOI is not NEW throw an exception
+              if (DoiStatus.DELETED == doiData.getStatus()) {
+                throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DOI does not exist"));
+              }
+            });
           doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
         }
       )
