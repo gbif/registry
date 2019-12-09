@@ -78,7 +78,6 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    * Deletes an existent DOI.
    */
   @DeleteMapping("{prefix}/{suffix}")
-  @NullToNotFound
   @Override
   public void delete(@PathVariable String prefix, @PathVariable String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
