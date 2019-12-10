@@ -80,7 +80,7 @@
     #{license,jdbcType=OTHER},
     <choose>
       <when test="request.format.name().equals('SQL')"> #{request.sql,jdbcType=VARCHAR},</when>
-      <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=PredicateTypeHandler},</otherwise>
+      <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler},</otherwise>
     </choose>
     #{status,jdbcType=OTHER},
     #{downloadLink,jdbcType=VARCHAR},
