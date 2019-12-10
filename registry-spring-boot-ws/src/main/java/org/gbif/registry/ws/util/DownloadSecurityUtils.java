@@ -39,7 +39,8 @@ public final class DownloadSecurityUtils {
    * Checks if the user has the ADMIN_ROLE or is the same user in the current context.
    */
   private static boolean isUserNotAuthorizedInContext(Authentication authentication, String user) {
-    return (authentication != null && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+    return (authentication != null && authentication.getName() !=null
+      && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
       && !authentication.getName().equals(user));
   }
 
