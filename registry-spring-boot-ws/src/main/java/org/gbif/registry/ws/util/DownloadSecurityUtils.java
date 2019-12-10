@@ -39,9 +39,15 @@ public final class DownloadSecurityUtils {
    * Checks if the user has the ADMIN_ROLE or is the same user in the current context.
    */
   private static boolean isUserNotAuthorizedInContext(Authentication authentication, String user) {
-    return (authentication != null && authentication.getName() !=null
-      && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-      && !authentication.getName().equals(user));
+    if (authentication == null || authentication.getName() == null) {
+      return true;
+    }
+
+    if (authentication.getName().equals(user)) {
+      return false;
+    }
+
+    return !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE);
   }
 
   /**
@@ -49,7 +55,7 @@ public final class DownloadSecurityUtils {
    */
   public static void clearSensitiveData(Authentication authentication, Download download) {
     if (download != null
-        && isUserNotAuthorizedInContext(authentication, download.getRequest().getCreator())) {
+      && isUserNotAuthorizedInContext(authentication, download.getRequest().getCreator())) {
       download.getRequest().setNotificationAddresses(null);
       download.getRequest().setCreator(null);
     }
