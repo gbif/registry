@@ -16,7 +16,7 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 /**
  * Class that exposes common functions used by services that expose data about occurrence downloads.
  */
-public class DownloadSecurityUtils {
+public final class DownloadSecurityUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(DownloadSecurityUtils.class);
 
@@ -29,7 +29,7 @@ public class DownloadSecurityUtils {
    */
   public static void checkUserIsInSecurityContext(String user, Authentication authentication) {
     // A null securityContext means that the class is executed locally
-    if (!isUserAuthorizedInContext(authentication, user)) {
+    if (isUserNotAuthorizedInContext(authentication, user)) {
       LOG.warn("Unauthorized access detected, authenticated use, requested user {}", user);
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
@@ -38,17 +38,17 @@ public class DownloadSecurityUtils {
   /**
    * Checks if the user has the ADMIN_ROLE or is the same user in the current context.
    */
-  public static boolean isUserAuthorizedInContext(Authentication authentication, String user) {
-    return (authentication == null || SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || (authentication.getPrincipal() != null && authentication.getName().equals(user)));
+  private static boolean isUserNotAuthorizedInContext(Authentication authentication, String user) {
+    return (authentication != null && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+      && !authentication.getName().equals(user));
   }
 
   /**
    * Remove data that shouldn't be publicly exposed.
    */
   public static void clearSensitiveData(Authentication authentication, Download download) {
-    if (download != null && download.getRequest() != null
-        && !isUserAuthorizedInContext(authentication, download.getRequest().getCreator())) {
+    if (download != null
+        && isUserNotAuthorizedInContext(authentication, download.getRequest().getCreator())) {
       download.getRequest().setNotificationAddresses(null);
       download.getRequest().setCreator(null);
     }
