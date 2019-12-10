@@ -102,9 +102,20 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public Download get(@NotNull @PathVariable("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
-    if (download == null && DOI.isParsable(key)) { //maybe it's a DOI?
-      download = occurrenceDownloadMapper.getByDOI(new DOI(key));
+
+    if (download != null) { // the user can request a non-existing download
+      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      clearSensitiveData(authentication, download);
     }
+    return download;
+  }
+
+  @GetMapping("{prefix}/{suffix}")
+  @Nullable
+  @NullToNotFound
+  public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
+    Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
+
     if (download != null) { // the user can request a non-existing download
       final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       clearSensitiveData(authentication, download);
