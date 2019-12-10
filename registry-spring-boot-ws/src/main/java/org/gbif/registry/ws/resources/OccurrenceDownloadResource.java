@@ -97,7 +97,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{key}")
-  @Nullable
   @NullToNotFound
   @Override
   public Download get(@NotNull @PathVariable("key") String key) {
@@ -111,7 +110,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{prefix}/{suffix}")
-  @Nullable
   @NullToNotFound
   public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
     Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
@@ -129,8 +127,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping
   @Secured(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(Pageable page,
-                                       @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+  public PagingResponse<Download> list(
+    Pageable page,
+    @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     if (status == null || status.isEmpty()) {
       return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
@@ -140,8 +139,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @GetMapping("user/{user}")
   @NullToNotFound
-  public PagingResponse<Download> listByUser(@NotNull @PathVariable String user, Pageable page,
-                                             @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+  public PagingResponse<Download> listByUser(
+    @NotNull @PathVariable String user,
+    Pageable page,
+    @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
     return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user, status),
@@ -165,8 +166,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("{key}/datasets")
   @Override
   @NullToNotFound
-  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@NotNull @PathVariable("key") String downloadKey,
-                                                                          Pageable page) {
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
+    @NotNull @PathVariable("key") String downloadKey,
+    Pageable page) {
     Download download = get(downloadKey);
     if (download != null) {
       List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
@@ -181,18 +183,21 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void createUsages(@NotNull @PathVariable("key") String downloadKey,
-                           @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
+  public void createUsages(
+    @NotNull @PathVariable("key") String downloadKey,
+    @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
-      .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+      .forEachRemaining(batch -> datasetOccurrenceDownloadMapper
+        .createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
   @Override
   @NullToNotFound
-  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(@Nullable @PartialDate Date fromDate,
-                                                                    @Nullable @PartialDate Date toDate,
-                                                                    @Nullable Country userCountry) {
+  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
+    @Nullable @PartialDate Date fromDate,
+    @Nullable @PartialDate Date toDate,
+    @Nullable Country userCountry) {
     return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
       Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
@@ -200,10 +205,11 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
   @NullToNotFound
-  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(@Nullable @PartialDate Date fromDate,
-                                                                        @Nullable @PartialDate Date toDate,
-                                                                        @Nullable Country publishingCountry,
-                                                                        @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
+  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
+    @Nullable @PartialDate Date fromDate,
+    @Nullable @PartialDate Date toDate,
+    @Nullable Country publishingCountry,
+    @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
     return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
       Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
       datasetKey));
@@ -214,7 +220,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
    */
   private Map<Integer, Map<Integer, Long>> groupByYear(List<Facet.Count> counts) {
     Map<Integer, Map<Integer, Long>> yearsGrouping = new TreeMap<>();
-    counts.forEach(count -> yearsGrouping.computeIfAbsent(Integer.valueOf(count.getName().substring(0, 4)), year -> new TreeMap<>()).put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
+    counts.forEach(count -> yearsGrouping.computeIfAbsent(
+      Integer.valueOf(count.getName().substring(0, 4)),
+      year -> new TreeMap<>())
+      .put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
     return yearsGrouping;
   }
 }
