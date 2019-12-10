@@ -23,6 +23,9 @@ public interface OccurrenceDownloadRetrofitClient {
   @GET("occurrence/download/{key}")
   Call<Download> get(@Path("key") String key);
 
+  @GET("occurrence/download/{prefix}/{suffix}")
+  Call<Download> getByDoi(@Path("prefix") String prefix, @Path("suffix") String suffix);
+
   @GET("occurrence/download")
   Call<PagingResponse<Download>> list(@Query("status") List<String> status,
                                       @Query("limit") int limit,

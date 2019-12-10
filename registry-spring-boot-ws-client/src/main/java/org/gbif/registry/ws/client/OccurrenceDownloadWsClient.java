@@ -22,10 +22,6 @@ import java.util.stream.Collectors;
 
 import static org.gbif.registry.ws.client.SyncCall.syncCallWithResponse;
 
-// TODO: 25/09/2019 implement BaseNetworkEntityWsClient and its sub clients (Network and so on)
-// TODO: 25/09/2019 test all the clients (elastic part should be done first?). There are possible deser problems
-// TODO: 25/09/2019 check response first, not just return response.body()
-// TODO: 25/09/2019 ensure produce/consume are ok (Accept/Content-Type)
 public class OccurrenceDownloadWsClient
     implements OccurrenceDownloadService {
 
@@ -41,7 +37,17 @@ public class OccurrenceDownloadWsClient
     if (key == null) {
       throw new IllegalArgumentException("Key cannot be null");
     }
-    final Response<Download> response = syncCallWithResponse(client.get(key));
+
+    final Response<Download> response;
+
+    // DOI?
+    if (key.contains("/")) {
+      int slashPosition = key.indexOf('/');
+      response = syncCallWithResponse(client.getByDoi(key.substring(0, slashPosition), key.substring(slashPosition + 1)));
+    } else { // otherwise should be regular key
+      response = syncCallWithResponse(client.get(key));
+    }
+
     return response.body();
   }
 
