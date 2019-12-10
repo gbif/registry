@@ -8,7 +8,14 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.api.model.common.DOI;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.ObjectFactory;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
@@ -98,7 +105,7 @@ public class DoiRegistrationTestSteps {
   @When("generate new DOI of type {string} by {word}")
   public void changePassword(String doiType, String userType) throws Exception {
     MockHttpServletRequestBuilder requestBuilder = post("/doi/gen/{type}", doiType)
-        .contentType(MediaType.APPLICATION_JSON);
+      .contentType(MediaType.APPLICATION_JSON);
 
     if (userType.equals("admin")) {
       requestBuilder.with(httpBasic(TEST_ADMIN, TEST_PASSWORD));
@@ -117,7 +124,7 @@ public class DoiRegistrationTestSteps {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
-      .withMetadata(testMetadata(params))
+      .withMetadata(testMetadata(params, doiStr))
       .build();
 
     if (doiStr != null) {
@@ -151,7 +158,7 @@ public class DoiRegistrationTestSteps {
     DoiRegistration data = DoiRegistration.builder()
       .withType(DoiType.valueOf(doiType))
       .withUser(TEST_ADMIN)
-      .withMetadata(testMetadata(params))
+      .withMetadata(testMetadata(params, doiStr))
       .build();
 
     if (doiStr != null) {
@@ -218,34 +225,53 @@ public class DoiRegistrationTestSteps {
   /**
    * Create a test DataCiteMetadata instance.
    */
-  private String testMetadata(Map<String, String> params) {
+  private String testMetadata(Map<String, String> params, String doiStr) {
     try {
-      ObjectFactory of = new ObjectFactory();
-      DataCiteMetadata res = of.createDataCiteMetadata();
+      DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
-      DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
-      DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
-      DataCiteMetadata.Creators.Creator.CreatorName name = of.createDataCiteMetadataCreatorsCreatorCreatorName();
-      name.setValue(TEST_ADMIN);
-      creator.setCreatorName(name);
-      creators.getCreator().add(creator);
-      res.setCreators(creators);
+      builder.withCreators(
+        Creators.builder()
+          .addCreator(
+            Creator.builder()
+              .withCreatorName(
+                CreatorName.builder()
+                  .withValue(params.getOrDefault("creator", TEST_ADMIN))
+                  .build())
+              .build())
+          .build());
 
-      DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
-      DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
-      title.setValue("TEST Tile");
-      title.setValue(params.get("title"));
-      titles.getTitle().add(title);
-      res.setTitles(titles);
+      builder.withTitles(
+        Titles.builder()
+          .addTitle(
+            Title.builder()
+              .withValue(params.getOrDefault("title", "TEST Title"))
+              .build())
+          .build());
 
-      res.setPublicationYear("2017");
-      DataCiteMetadata.Publisher publisher = of.createDataCiteMetadataPublisher();
-      publisher.setValue(TEST_ADMIN);
-      res.setPublisher(publisher);
-      DataCiteMetadata.ResourceType resourceType = of.createDataCiteMetadataResourceType();
-      resourceType.setResourceTypeGeneral(ResourceType.DATASET);
-      res.setResourceType(resourceType);
-      return DataCiteValidator.toXml(new DOI(DOI.TEST_PREFIX, "1"), res);
+      builder.withPublicationYear(params.getOrDefault("publicationYear", "2019"));
+
+      builder.withPublisher(
+        Publisher.builder()
+          .withValue(params.getOrDefault("publisher", TEST_ADMIN))
+          .build());
+
+      builder.withResourceType(
+        DataCiteMetadata.ResourceType.builder()
+          .withResourceTypeGeneral(ResourceType.DATASET)
+          .build());
+
+      builder.withAlternateIdentifiers(
+        AlternateIdentifiers.builder()
+          .addAlternateIdentifier(
+            AlternateIdentifier.builder()
+              .withValue(params.getOrDefault("alternateIdentifier", "0000364-150202100118378"))
+              .withAlternateIdentifierType(params.getOrDefault("alternateIdentifierType", "GBIF"))
+              .build())
+          .build());
+
+      DataCiteMetadata metadata = builder.build();
+
+      return DataCiteValidator.toXml(doiStr != null ? new DOI(doiStr) : new DOI(DOI.TEST_PREFIX, "1"), metadata);
     } catch (InvalidMetadataException ex) {
       throw new RuntimeException(ex);
     }
