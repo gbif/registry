@@ -182,8 +182,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * @return optionally, the las step found
    */
   @VisibleForTesting
-  Optional<PipelineStep> getLatestSuccessfulStep(
-      PipelineProcess pipelineProcess, StepType step) {
+  Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
         .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
         .flatMap(ex -> ex.getSteps().stream())
@@ -210,7 +209,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
             .orElseThrow(
                 () ->
                     new IllegalStateException(
-                        "Couldn't fina las execution for process: " + pipelineProcess));
+                        "Couldn't find las execution for process: " + pipelineProcess));
 
     // Collects the latest steps per type.
     Set<PipelineStep.Status> statuses = new HashSet<>();
@@ -287,57 +286,60 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     // Performs the messaging and updates the status onces the message has been sent
     RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
     Dataset dataset = datasetService.get(datasetKey);
-    prioritizeSteps(steps, dataset)
-        .forEach(
-            stepName ->
-                getLatestSuccessfulStep(process, stepName)
-                    .ifPresent(
-                        step -> {
-                          try {
-                            PipelineBasedMessage message = null;
+    for (StepType stepName : prioritizeSteps(steps, dataset)) {
+      Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
 
-                            if (stepName == StepType.INTERPRETED_TO_INDEX
-                                || stepName == StepType.HDFS_VIEW) {
-                              message =
-                                  createInterpretedMessage(prefix, step.getMessage(), stepName);
-                            } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
-                              message = createVerbatimMessage(prefix, step.getMessage());
-                            } else if (stepName == StepType.DWCA_TO_VERBATIM) {
-                              message =
-                                  createMessage(step.getMessage(), PipelinesDwcaMessage.class);
-                            } else if (stepName == StepType.ABCD_TO_VERBATIM) {
-                              message =
-                                  createMessage(step.getMessage(), PipelinesAbcdMessage.class);
-                            } else if (stepName == StepType.XML_TO_VERBATIM) {
-                              message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
-                            } else {
-                              responseBuilder.setResponseStatus(
-                                  RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP);
-                            }
+      if (!latestStepOpt.isPresent()) {
+        continue;
+      }
 
-                            if (message != null) {
-                              // create pipelines execution
-                              PipelineExecution execution =
-                                  new PipelineExecution()
-                                      .setCreatedBy(user)
-                                      .setRerunReason(reason)
-                                      .setStepsToRun(new ArrayList<>(steps));
-                              mapper.addPipelineExecution(process.getKey(), execution);
+      PipelineStep step = latestStepOpt.get();
 
-                              message.setExecutionId(execution.getKey());
-                              publisher.send(message);
+      try {
+        PipelineBasedMessage message = null;
 
-                              responseBuilder.setResponseStatus(
-                                  RunPipelineResponse.ResponseStatus.OK);
-                            }
+        if (stepName == StepType.INTERPRETED_TO_INDEX || stepName == StepType.HDFS_VIEW) {
+          message = createInterpretedMessage(prefix, step.getMessage(), stepName);
+        } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
+          message = createVerbatimMessage(prefix, step.getMessage());
+        } else if (stepName == StepType.DWCA_TO_VERBATIM) {
+          message = createMessage(step.getMessage(), PipelinesDwcaMessage.class);
+        } else if (stepName == StepType.ABCD_TO_VERBATIM) {
+          message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
+        } else if (stepName == StepType.XML_TO_VERBATIM) {
+          message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
+        } else {
+          return responseBuilder
+              .setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP)
+              .build();
+        }
 
-                          } catch (IOException ex) {
-                            LOG.error("Error reading message", ex);
-                            throw Throwables.propagate(ex);
-                          }
-                        }));
+        if (message == null) {
+          return responseBuilder
+              .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+              .build();
+        }
 
-    return responseBuilder.build();
+        // create pipelines execution
+        PipelineExecution execution =
+            new PipelineExecution()
+                .setCreatedBy(user)
+                .setRerunReason(reason)
+                .setStepsToRun(new ArrayList<>(steps));
+        mapper.addPipelineExecution(process.getKey(), execution);
+        message.setExecutionId(execution.getKey());
+
+        // send message
+        publisher.send(message);
+
+        return responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK).build();
+      } catch (IOException ex) {
+        LOG.error("Error reading message", ex);
+        throw Throwables.propagate(ex);
+      }
+    }
+
+    return responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR).build();
   }
 
   private <T extends PipelineBasedMessage> T createMessage(String jsonMessage, Class<T> targetClass)
