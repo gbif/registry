@@ -77,7 +77,7 @@ public class PipelinesHistoryResource {
         params.getDatasetKey(), params.getAttempt(), security.getUserPrincipal().getName());
   }
 
-  /** Adds a new pipeline step. */
+  /** Adds a new pipeline execution. */
   @POST
   @Path(PROCESS_PATH + "{processKey}")
   @Consumes(MediaType.APPLICATION_JSON)
