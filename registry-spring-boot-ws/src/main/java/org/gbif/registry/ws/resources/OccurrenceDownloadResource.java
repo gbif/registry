@@ -138,7 +138,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("user/{user}")
-  @NullToNotFound
+  @Override
   public PagingResponse<Download> listByUser(
     @NotNull @PathVariable String user,
     Pageable page,
@@ -165,7 +165,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @GetMapping("{key}/datasets")
   @Override
-  @NullToNotFound
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
     @NotNull @PathVariable("key") String downloadKey,
     Pageable page) {
@@ -192,8 +191,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
-  @Override
   @NullToNotFound
+  @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
     @Nullable @PartialDate Date fromDate,
     @Nullable @PartialDate Date toDate,
@@ -203,8 +202,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("statistics/downloadedRecordsByDataset")
-  @Override
   @NullToNotFound
+  @Override
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
     @Nullable @PartialDate Date fromDate,
     @Nullable @PartialDate Date toDate,
