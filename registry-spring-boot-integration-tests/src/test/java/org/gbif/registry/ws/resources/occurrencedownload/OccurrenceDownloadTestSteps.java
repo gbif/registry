@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.resources.occurrencedownload;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -26,8 +27,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
+import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryDateFormat;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -100,10 +104,26 @@ public class OccurrenceDownloadTestSteps {
       .andExpect(status().is(status));
   }
 
-  // TODO: 10/12/2019 complete assertions
   @Then("download assertions passed")
-  public void checkGetDownloadResponse() throws Exception {
-    result.andExpect(jsonPath("$.license").value("UNSPECIFIED"));
+  public void checkGetDownloadResponse(DataTable dataTable) throws Exception {
+    for (Map<String, String> params : dataTable.asMaps()) {
+      result
+        .andExpect(jsonPath("$.key").value(download.getKey()))
+        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
+        .andExpect(jsonPath("$.request.predicate.type").value(params.get("predicateType")))
+        .andExpect(jsonPath("$.request.predicate.key").value(params.get("predicateKey")))
+        .andExpect(jsonPath("$.request.predicate.value").value(params.get("predicateValue")))
+        .andExpect(jsonPath("$.request.sendNotification").value(params.get("sendNotification")))
+        .andExpect(jsonPath("$.request.format").value(params.get("format")))
+        .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
+        .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
+        .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
+        .andExpect(jsonPath("$.status").value(params.get("status")))
+        .andExpect(jsonPath("$.downloadLink").value(params.get("downloadLink")))
+        .andExpect(jsonPath("$.size").value(params.get("size")))
+        .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
+        .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
+    }
   }
 
   /**
