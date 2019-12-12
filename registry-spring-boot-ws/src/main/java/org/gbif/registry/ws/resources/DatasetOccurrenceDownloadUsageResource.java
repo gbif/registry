@@ -5,7 +5,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
-import org.gbif.ws.annotation.NullToNotFound;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,8 +23,7 @@ import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData
  */
 @RestController
 @RequestMapping(value = "occurrence/download/dataset",
-  produces = MediaType.APPLICATION_JSON_VALUE,
-  consumes = MediaType.APPLICATION_JSON_VALUE)
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrenceDownloadUsageService {
 
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
@@ -35,7 +33,6 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
   }
 
   @GetMapping("/{datasetKey}")
-  @NullToNotFound
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(@PathVariable UUID datasetKey, Pageable page) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
