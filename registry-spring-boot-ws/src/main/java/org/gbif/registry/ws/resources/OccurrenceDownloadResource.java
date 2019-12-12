@@ -60,7 +60,6 @@ import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData
  */
 @RestController
 @RequestMapping(value = "occurrence/download",
-  consumes = MediaType.APPLICATION_JSON_VALUE,
   produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
@@ -85,7 +84,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     this.identityService = identityService;
   }
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
@@ -149,7 +148,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
-  @PutMapping("{key}")
+  @PutMapping(value = "{key}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Override
   public void update(@RequestBody @NotNull Download download) {
@@ -178,7 +178,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     throw new NotFoundException();
   }
 
-  @PostMapping("{key}/datasets")
+  @PostMapping(value = "{key}/datasets",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
