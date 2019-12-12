@@ -32,6 +32,7 @@ import org.gbif.ws.annotation.Trim;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,7 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
-@RequestMapping("installation")
+@RequestMapping(value = "installation",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstallationResource
   extends BaseNetworkEntityResource<Installation>
   implements InstallationService, MetasyncHistoryService {
@@ -197,7 +199,8 @@ public class InstallationResource
     return featureCollection.toString();
   }
 
-  @PostMapping("{installationKey}/metasync")
+  @PostMapping(value = "{installationKey}/metasync",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)

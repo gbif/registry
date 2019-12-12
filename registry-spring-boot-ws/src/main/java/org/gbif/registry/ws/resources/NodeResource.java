@@ -24,6 +24,7 @@ import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,7 +42,8 @@ import java.util.UUID;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
-@RequestMapping("node")
+@RequestMapping(value = "node",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class NodeResource
   extends BaseNetworkEntityResource<Node>
   implements NodeService {

@@ -13,6 +13,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,8 @@ import java.util.UUID;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
 @RestController
-@RequestMapping("network")
+@RequestMapping(value = "network",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class NetworkResource
   extends BaseNetworkEntityResource<Network>
   implements NetworkService {
