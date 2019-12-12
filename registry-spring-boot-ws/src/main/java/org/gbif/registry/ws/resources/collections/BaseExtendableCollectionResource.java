@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Nullable;
@@ -59,6 +60,7 @@ import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
  *
  * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
  */
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class BaseExtendableCollectionResource<T extends CollectionEntity & Taggable & Identifiable & Contactable>
   extends BaseCrudResource<T>
   implements TagService, IdentifierService, ContactService {
@@ -183,7 +185,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     }
   }
 
-  @PostMapping(value = "{key}/contact", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+  @PostMapping(value = "{key}/contact",
+    consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
@@ -216,7 +219,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     return contactableMapper.listContacts(key);
   }
 
-  @PostMapping("{key}/identifier")
+  @PostMapping(value = "{key}/identifier",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey,
@@ -250,7 +254,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     return identifiableMapper.listIdentifiers(key);
   }
 
-  @PostMapping("{key}/tag")
+  @PostMapping(value = "{key}/tag",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public int addTag(@PathVariable("key") @NotNull UUID entityKey,

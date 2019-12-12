@@ -88,8 +88,7 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
  *
  * @param <T> The type of resource that is under CRUD
  */
-@RequestMapping(path = "/",
-  produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseNetworkEntityResource.class);
