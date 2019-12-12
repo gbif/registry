@@ -12,6 +12,7 @@ import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,9 @@ public class OccurrenceDownloadTestSteps {
   @Autowired
   private ObjectMapper objectMapper;
 
+  @Autowired
+  private OccurrenceDownloadService occurrenceDownloadService;
+
   @Before("@OccurrenceDownload")
   public void setUp() throws Exception {
     mvc = MockMvcBuilders
@@ -93,8 +97,15 @@ public class OccurrenceDownloadTestSteps {
   public void getDownload() throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{key}", download.getKey())
-          .contentType(MediaType.APPLICATION_JSON))
+        get("/occurrence/download/{key}", download.getKey()))
+      .andDo(print());
+  }
+
+  @When("get download by doi")
+  public void getDownloadByDoi() throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()))
       .andDo(print());
   }
 
@@ -124,6 +135,11 @@ public class OccurrenceDownloadTestSteps {
         .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
         .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
     }
+  }
+
+  @Then("extract doi from download")
+  public void extractDoiFromDownload() {
+    doi = occurrenceDownloadService.get(this.download.getKey()).getDoi();
   }
 
   /**
