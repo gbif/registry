@@ -10,7 +10,10 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Optional;
 
 public class RequestObject extends HttpServletRequestWrapper {
 
@@ -65,5 +68,35 @@ public class RequestObject extends HttpServletRequestWrapper {
 
   public HttpHeaders getHttpHeaders() {
     return httpHeaders;
+  }
+
+  public void addHeader(String name, String value) {
+    httpHeaders.add(name, value);
+  }
+
+  @Override
+  public String getHeader(String name) {
+    String headerValue = super.getHeader(name);
+    if (httpHeaders.containsKey(name)) {
+      return httpHeaders.getFirst(name);
+    }
+    return headerValue;
+  }
+
+  @Override
+  public Enumeration<String> getHeaderNames() {
+    List<String> names = Collections.list(super.getHeaderNames());
+    names.addAll(httpHeaders.keySet());
+    return Collections.enumeration(names);
+  }
+
+  @Override
+  public Enumeration<String> getHeaders(String name) {
+    List<String> values = Collections.list(super.getHeaders(name));
+    if (httpHeaders.containsKey(name)) {
+      Optional.ofNullable(httpHeaders.get(name))
+        .ifPresent(values::addAll);
+    }
+    return Collections.enumeration(values);
   }
 }
