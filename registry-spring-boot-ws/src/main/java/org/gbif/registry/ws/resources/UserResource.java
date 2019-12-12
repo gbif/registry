@@ -9,6 +9,7 @@ import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -23,7 +24,8 @@ import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifSc
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
 
-@RequestMapping("user")
+@RequestMapping(value = "user",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController
 public class UserResource {
 
@@ -90,7 +92,8 @@ public class UserResource {
    * Allows a user to change its own password.
    */
   @Secured({USER_ROLE})
-  @PutMapping("changePassword")
+  @PutMapping(value = "changePassword",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity changePassword(@RequestBody AuthenticationDataParameters authenticationDataParameters,
                                        Authentication authentication) {
     // the user shall be authenticated using basic auth scheme

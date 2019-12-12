@@ -75,7 +75,8 @@ import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
  * See {@link AppIdentityFilter}.
  */
 @RestController
-@RequestMapping("/admin/user")
+@RequestMapping(value = "/admin/user",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserManagementResource {
 
   //filters roles that are deprecated
@@ -105,8 +106,8 @@ public class UserManagementResource {
    *
    * @return the {@link UserAdminView} or null
    */
-  @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/{username}")
+  @Secured({ADMIN_ROLE, APP_ROLE})
   public UserAdminView getUser(@PathVariable String username) {
     GbifUser user = identityService.get(username);
     if (user == null) {
@@ -115,8 +116,8 @@ public class UserManagementResource {
     return new UserAdminView(user, identityService.hasPendingConfirmation(user.getKey()));
   }
 
-  @Secured({ADMIN_ROLE, APP_ROLE})
   @GetMapping("/find")
+  @Secured({ADMIN_ROLE, APP_ROLE})
   public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> systemSettings) {
     GbifUser user = null;
     Iterator<Map.Entry<String, String>> it = systemSettings.entrySet().iterator();
@@ -135,8 +136,8 @@ public class UserManagementResource {
   /**
    * Creates a new user. (only available to the portal backend).
    */
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
-  @PostMapping
   public ResponseEntity<UserModelMutationResult> create(@RequestBody UserCreation user) {
     int returnStatusCode = HttpStatus.CREATED.value();
     UserModelMutationResult result = identityService.create(
@@ -156,8 +157,9 @@ public class UserManagementResource {
    * If this is required/wanted, it would go in {@link UserResource} to only accept the role USER and ensure
    * a user can only update its own data.
    */
+  @PutMapping(value = "/{username}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, APP_ROLE})
-  @PutMapping("/{username}")
   public ResponseEntity<UserModelMutationResult> update(
     @PathVariable String username,
     @RequestBody UserUpdate userUpdate,
@@ -198,8 +200,9 @@ public class UserManagementResource {
    * @param confirmationKeyParameter confirmation key (UUID)
    * @return logged user data
    */
+  @PostMapping(value = "/confirm",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(USER_ROLE)
-  @PostMapping("/confirm")
   @Transactional
   public ResponseEntity<LoggedUser> confirmChallengeCode(
     Authentication authentication,
@@ -224,7 +227,8 @@ public class UserManagementResource {
    * Relax content-type to wildcard to allow angularjs.
    */
   @Secured(ADMIN_ROLE)
-  @DeleteMapping(value = "/{userKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "/{userKey}",
+    consumes = MediaType.ALL_VALUE)
   public ResponseEntity<Void> delete(@PathVariable int userKey) {
     identityService.delete(userKey);
     return ResponseEntity.noContent().build();
@@ -236,7 +240,8 @@ public class UserManagementResource {
    */
   @GetMapping("/search")
   @Secured(ADMIN_ROLE)
-  public PagingResponse<GbifUser> search(@Nullable @RequestParam(value = "q", required = false) String query, Pageable page) {
+  public PagingResponse<GbifUser> search(@Nullable @RequestParam(value = "q", required = false) String query,
+                                         Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q = Optional.ofNullable(query)
       .map(v -> Strings.nullToEmpty(CharMatcher.whitespace().trimFrom(v)))
@@ -249,9 +254,10 @@ public class UserManagementResource {
    * The username is expected to be present in the security context (authenticated by appkey).
    * This method will always return 204 No Content.
    */
-  @Secured(USER_ROLE)
   @PostMapping("/resetPassword")
-  public ResponseEntity<Void> resetPassword(Authentication authentication, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+  @Secured(USER_ROLE)
+  public ResponseEntity<Void> resetPassword(Authentication authentication,
+                                            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
 
@@ -268,8 +274,9 @@ public class UserManagementResource {
    * Updates the user password only if the token presented is valid for the user account.
    * The username is expected to be present in the security context (authenticated by appkey).
    */
+  @PostMapping(value = "/updatePassword",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(USER_ROLE)
-  @PostMapping("/updatePassword")
   @Transactional
   public ResponseEntity<LoggedUser> updatePassword(
     Authentication authentication,
@@ -299,8 +306,8 @@ public class UserManagementResource {
    *
    * @param confirmationKey To check
    */
-  @Secured(USER_ROLE)
   @GetMapping("/confirmationKeyValid")
+  @Secured(USER_ROLE)
   public ResponseEntity<Void> tokenValidityCheck(
     Authentication authentication,
     @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
@@ -321,8 +328,8 @@ public class UserManagementResource {
   /**
    * List the editor rights for a user.
    */
-  @Secured({ADMIN_ROLE, USER_ROLE})
   @GetMapping("/{username}/editorRight")
+  @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<UUID>> editorRights(@PathVariable String username,
                                                  Authentication authentication) {
     // Non-admin users can only see their own entry.
@@ -346,8 +353,9 @@ public class UserManagementResource {
   /**
    * Add an entity right for a user.
    */
+  @PostMapping(value = "/{username}/editorRight",
+    consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   @Secured({ADMIN_ROLE})
-  @PostMapping(value = "/{username}/editorRight", consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<UUID> addEditorRight(@PathVariable String username, @RequestBody String strKey) {
 
     final UUID key = UUID.fromString(strKey);
@@ -369,8 +377,8 @@ public class UserManagementResource {
   /**
    * Delete an entity right for a user.
    */
-  @Secured(ADMIN_ROLE)
   @DeleteMapping("/{username}/editorRight/{key}")
+  @Secured(ADMIN_ROLE)
   public ResponseEntity<Void> deleteEditorRight(@PathVariable String username, @PathVariable UUID key) {
 
     // Ensure user exists
