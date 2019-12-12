@@ -32,7 +32,6 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  */
 @RestController
 @RequestMapping(value = GRSCICOLL_PATH + "/institution",
-    consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
     implements InstitutionService {

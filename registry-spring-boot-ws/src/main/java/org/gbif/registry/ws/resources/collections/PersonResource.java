@@ -14,11 +14,11 @@ import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +34,8 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 @RestController
-@RequestMapping("/grscicoll/person")
+@RequestMapping(value = "/grscicoll/person",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCrudResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
@@ -54,7 +55,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   @Override
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public UUID create(@NotNull @Validated({PrePersist.class, Default.class}) @RequestBody Person person) {
+  public UUID create(@NotNull @Validated({PrePersist.class, Default.class}) Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {

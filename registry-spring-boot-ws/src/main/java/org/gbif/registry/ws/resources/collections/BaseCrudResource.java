@@ -8,6 +8,7 @@ import org.gbif.registry.persistence.mapper.collections.CrudMapper;
 import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -31,6 +33,7 @@ import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 /**
  * Base class to implement the CRUD methods of a {@link CollectionEntity}.
  */
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class BaseCrudResource<T extends CollectionEntity> implements CrudService<T> {
 
   private final CrudMapper<T> crudMapper;
@@ -46,7 +49,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     this.objectClass = objectClass;
   }
 
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
@@ -85,7 +88,8 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
     return crudMapper.get(key);
   }
 
-  @PutMapping("{key}")
+  @PutMapping(value = "{key}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {

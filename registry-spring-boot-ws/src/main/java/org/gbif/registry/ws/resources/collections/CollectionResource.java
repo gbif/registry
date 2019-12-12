@@ -34,7 +34,8 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 @RequestMapping(value = GRSCICOLL_PATH + "/collection",
     consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
-public class CollectionResource extends BaseExtendableCollectionResource<Collection> implements CollectionService {
+public class CollectionResource extends BaseExtendableCollectionResource<Collection>
+  implements CollectionService {
 
   private final CollectionMapper collectionMapper;
 
