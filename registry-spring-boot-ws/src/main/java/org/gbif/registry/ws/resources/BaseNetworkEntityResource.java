@@ -89,7 +89,6 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
  * @param <T> The type of resource that is under CRUD
  */
 @RequestMapping(path = "/",
-  consumes = MediaType.APPLICATION_JSON_VALUE,
   produces = MediaType.APPLICATION_JSON_VALUE)
 public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
 
@@ -133,7 +132,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param entity entity that extends NetworkEntity
    * @return key of entity created
    */
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -177,7 +176,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param key key of entity to delete
    */
-  @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
   public void delete(@NotNull @PathVariable UUID key,
@@ -193,24 +193,25 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
   }
 
-  @Override
   @Transactional
+  @Override
   public void delete(UUID key) {
     T objectToDelete = get(key);
     mapper.delete(key);
     eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
+  @GetMapping(value = "{key}")
   @NullToNotFound
   @Nullable
-  @GetMapping(value = "{key}")
   @Override
   public T get(@NotNull @PathVariable UUID key) {
     return mapper.get(key);
   }
 
   // we do a post not get cause we expect large numbers of keys to be sent
-  @PostMapping("titles")
+  @PostMapping(value = "titles",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public Map<UUID, String> getTitles(@RequestBody Collection<UUID> keys) {
     Map<UUID, String> titles = Maps.newHashMap();
@@ -256,7 +257,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param key    key of entity to update
    * @param entity entity that extends NetworkEntity
    */
-  @PutMapping(value = "{key}")
+  @PutMapping(value = "{key}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -285,7 +287,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param comment         Comment to add
    * @return key of Comment created
    */
-  @PostMapping(value = "{key}/comment")
+  @PostMapping(value = "{key}/comment",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
@@ -311,7 +314,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete comment from
    * @param commentKey      key of Comment to delete
    */
-  @DeleteMapping(value = "{key}/comment/{commentKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/comment/{commentKey}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey,
@@ -334,7 +338,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param machineTag      MachineTag to add
    * @return key of MachineTag created
    */
-  @PostMapping(value = "{key}/machineTag")
+  @PostMapping(value = "{key}/machineTag",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   public int addMachineTag(@PathVariable("key") UUID targetEntityKey,
@@ -448,7 +453,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * It was added because of an ambiguity problem.
    * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
    */
-  @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/machineTag/{parameter}",
+    consumes = MediaType.ALL_VALUE)
   public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
                                 @PathVariable String parameter,
                                 Authentication authentication) {
@@ -475,7 +481,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag of a particular name in a namespace.
    * Ensures that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}",
+    consumes = MediaType.ALL_VALUE)
   public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
                                 @PathVariable String namespace,
                                 @PathVariable String name,
@@ -503,7 +510,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @SuppressWarnings("unchecked")
-  @GetMapping(value = "{key}/machineTag")
+  @GetMapping("{key}/machineTag")
   @Override
   public List<MachineTag> listMachineTags(@PathVariable("key") UUID targetEntityKey) {
     return mapper.listMachineTags(targetEntityKey);
@@ -526,7 +533,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param tag             Tag to add
    * @return key of Tag created
    */
-  @PostMapping(value = "{key}/tag")
+  @PostMapping(value = "{key}/tag",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addTag(@PathVariable("key") UUID targetEntityKey,
                     @RequestBody @NotNull Tag tag,
@@ -557,7 +565,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Tag from
    * @param tagKey          key of Tag to delete
    */
-  @DeleteMapping(value = "{key}/tag/{tagKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/tag/{tagKey}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteTag(@PathVariable("key") UUID targetEntityKey,
@@ -585,7 +594,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param authentication  SecurityContext (security related information)
    * @return key of Contact created
    */
-  @PostMapping("{key}/contact")
+  @PostMapping(value = "{key}/contact",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
@@ -613,7 +623,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param contactKey      key of Contact to update
    * @param contact         updated Contact
    */
-  @PutMapping("{key}/contact/{contactKey}")
+  @PutMapping(value = "{key}/contact/{contactKey}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -641,7 +652,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Contact from
    * @param contactKey      key of Contact to delete
    */
-  @DeleteMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/contact/{contactKey}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(@PathVariable("key") UUID targetEntityKey,
@@ -664,7 +676,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param endpoint        Endpoint to add
    * @return key of Endpoint created
    */
-  @PostMapping("{key}/endpoint")
+  @PostMapping(value = "{key}/endpoint",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -694,7 +707,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Endpoint from
    * @param endpointKey     key of Endpoint to delete
    */
-  @DeleteMapping(value = "{key}/endpoint/{endpointKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/endpoint/{endpointKey}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey,
                              @PathVariable int endpointKey,
@@ -723,7 +737,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param identifier      Identifier to add
    * @return key of Identifier created
    */
-  @PostMapping("{key}/identifier")
+  @PostMapping(value = "{key}/identifier",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -748,7 +763,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Identifier from
    * @param identifierKey   key of Identifier to delete
    */
-  @DeleteMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/identifier/{identifierKey}",
+    consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey,

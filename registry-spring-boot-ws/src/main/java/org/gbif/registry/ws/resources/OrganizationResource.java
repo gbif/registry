@@ -62,7 +62,8 @@ import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 @RestController
-@RequestMapping("organization")
+@RequestMapping(value = "organization",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrganizationResource
   extends BaseNetworkEntityResource<Organization>
   implements OrganizationService {
@@ -103,7 +104,7 @@ public class OrganizationResource
   @Override
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) Organization organization,
                      Authentication authentication) {
     organization.setPassword(generatePassword());
@@ -145,7 +146,8 @@ public class OrganizationResource
     return password.toString();
   }
 
-  @PutMapping("{key}")
+  @PutMapping(value = "{key}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -306,7 +308,8 @@ public class OrganizationResource
   /**
    * Confirm the endorsement of an organization.
    */
-  @PostMapping("{key}/endorsement")
+  @PostMapping(value = "{key}/endorsement",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
     @PathVariable("key") UUID organizationKey,

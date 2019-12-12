@@ -114,7 +114,8 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 @RestController
-@RequestMapping("dataset")
+@RequestMapping(value = "dataset",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetResource
   extends BaseNetworkEntityResource<Dataset>
   implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
@@ -383,7 +384,8 @@ public class DatasetResource
     return null;
   }
 
-  @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
+  @PostMapping(value = "{key}/document",
+    consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, HttpServletRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -903,7 +905,8 @@ public class DatasetResource
    */
   @PostMapping("crawlall")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawlAll(@RequestParam(value = "platform", required = false) String platform, @Nullable CrawlAllParams crawlAllParams) {
+  public void crawlAll(@RequestParam(value = "platform", required = false) String platform,
+                       @Nullable CrawlAllParams crawlAllParams) {
     CompletableFuture.runAsync(
       () ->
         doOnAllOccurrenceDatasets(
@@ -934,7 +937,8 @@ public class DatasetResource
     }
   }
 
-  @PostMapping("{datasetKey}/process")
+  @PostMapping(value = "{datasetKey}/process",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
@@ -962,7 +966,8 @@ public class DatasetResource
     datasetProcessStatusMapper.create(datasetProcessStatus);
   }
 
-  @PutMapping("{datasetKey}/process/{attempt}")
+  @PutMapping(value = "{datasetKey}/process/{attempt}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
