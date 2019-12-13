@@ -6,6 +6,10 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.converters.DateConverter;
+import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
@@ -34,7 +38,6 @@ import java.util.UUID;
 
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryDateFormat;
-import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -43,6 +46,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 @SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -81,6 +85,19 @@ public class OccurrenceDownloadTestSteps {
     this.download = download;
   }
 
+  @Given("download with invalid parameters")
+  public void prepareInvalidParamsDownload(DataTable dataTable) throws Exception {
+    DateTimeConverter dateConverter = new DateConverter(null);
+    dateConverter.setPatterns(new String[] {"dd-MM-yyyy"});
+    ConvertUtils.register(dateConverter, Date.class);
+
+    for (Map<String, String> params : dataTable.asMaps()) {
+      for (Map.Entry<String, String> entry : params.entrySet()) {
+        BeanUtils.setProperty(download, entry.getKey(), "null".equals(entry.getValue()) ? null : entry.getValue());
+      }
+    }
+  }
+
   @Given("null predicate download")
   public void prepareNullPredicateDownload() {
     Download download = getTestInstanceDownload();
@@ -107,14 +124,14 @@ public class OccurrenceDownloadTestSteps {
     this.download = download;
   }
 
-  @When("create download")
-  public void createDownload() throws Exception {
+  @When("create download by {word} {string}")
+  public void createDownload(String userRole, String username) throws Exception {
     String stringContent = objectMapper.writeValueAsString(download);
 
     result = mvc
       .perform(
         post("/occurrence/download")
-          .with(httpBasic(TEST_ADMIN, TEST_PASSWORD))
+          .with(httpBasic(username, TEST_PASSWORD))
           .contentType(MediaType.APPLICATION_JSON)
           .content(stringContent))
       .andDo(print());
@@ -227,6 +244,16 @@ public class OccurrenceDownloadTestSteps {
   @Then("extract doi from download")
   public void extractDoiFromDownload() {
     doi = occurrenceDownloadService.get(this.download.getKey()).getDoi();
+  }
+
+  @Then("download creation error response is")
+  public void checkDownloadCreationErrorResponse(DataTable dataTable) throws Exception {
+    int iteration = 0;
+    for (Map<String, String> params : dataTable.asMaps()) {
+      for (Map.Entry<String, String> entry : params.entrySet()) {
+        result.andExpect(xpath(String.format("/ul/li[%d]", ++iteration)).string(entry.getValue()));
+      }
+    }
   }
 
   /**
