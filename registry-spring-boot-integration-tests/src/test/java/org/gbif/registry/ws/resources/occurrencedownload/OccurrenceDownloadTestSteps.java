@@ -2,6 +2,7 @@ package org.gbif.registry.ws.resources.occurrencedownload;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -22,18 +23,26 @@ import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
@@ -67,28 +76,54 @@ public class OccurrenceDownloadTestSteps {
   @Autowired
   private OccurrenceDownloadService occurrenceDownloadService;
 
+  @Autowired
+  private DataSource ds;
+
+  private Connection connection;
+
   @Before("@OccurrenceDownload")
   public void setUp() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
   }
 
+  @Before("@OccurrenceDownloadList")
+  public void prepareDataForList() throws Exception {
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_list_prepare.sql"));
+  }
+
+  @After("@OccurrenceDownload")
+  public void tearDown() throws Exception {
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_cleanup.sql"));
+
+    connection.close();
+  }
+
   @Given("equals predicate download")
   public void prepareEqualsPredicateDownload() {
+    this.download = getTestInstancePredicateDownload();
+  }
+
+  private Download getTestInstancePredicateDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(
       new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
         TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
         true, DownloadFormat.DWCA));
-    this.download = download;
+    return download;
   }
 
   @Given("download with invalid parameters")
   public void prepareInvalidParamsDownload(DataTable dataTable) throws Exception {
     DateTimeConverter dateConverter = new DateConverter(null);
-    dateConverter.setPatterns(new String[] {"dd-MM-yyyy"});
+    dateConverter.setPatterns(new String[]{"dd-MM-yyyy"});
     ConvertUtils.register(dateConverter, Date.class);
 
     for (Map<String, String> params : dataTable.asMaps()) {
@@ -110,10 +145,14 @@ public class OccurrenceDownloadTestSteps {
 
   @Given("sql download")
   public void prepareSqlDownload() {
+    this.download = getTestInstanceSqlDownload();
+  }
+
+  private Download getTestInstanceSqlDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(new SqlDownloadRequest("SELECT datasetKey FROM occurrence", TestConstants.TEST_ADMIN,
       Collections.singleton("downloadtest@gbif.org"), true));
-    this.download = download;
+    return download;
   }
 
   @Given("null sql download")
@@ -122,6 +161,16 @@ public class OccurrenceDownloadTestSteps {
     download.setRequest(new SqlDownloadRequest(null, TestConstants.TEST_ADMIN,
       Collections.singleton("downloadtest@gbif.org"), true));
     this.download = download;
+  }
+
+  @Given("{int} predicate downloads")
+  public void preparePredicateDownloadsForList(int numberOfDownloads) throws Exception {
+    // prepared by scripts in @Before
+  }
+
+  @Given("{int} sql downloads")
+  public void prepareSqlDownloadsForList(int numberOfDownloads) throws Exception {
+    // prepared by scripts in @Before
   }
 
   @When("create download by {word} {string}")
@@ -150,6 +199,22 @@ public class OccurrenceDownloadTestSteps {
     result = mvc
       .perform(
         get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()))
+      .andDo(print());
+  }
+
+  @When("list downloads by {word} {string}")
+  public void listDownloads(String userRole, String username) throws Exception {
+    listDownloads(userRole, username, new HashMap<>());
+  }
+
+  @When("list downloads by {word} {string} with query params")
+  public void listDownloads(String userRole, String username, Map<String, List<String>> params) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download")
+          .with(httpBasic(username, TEST_PASSWORD))
+          .params(new LinkedMultiValueMap<>(params))
+      )
       .andDo(print());
   }
 
@@ -254,6 +319,11 @@ public class OccurrenceDownloadTestSteps {
         result.andExpect(xpath(String.format("/ul/li[%d]", ++iteration)).string(entry.getValue()));
       }
     }
+  }
+
+  @Then("{int} downloads in occurrence downloads list response")
+  public void checkOccurrenceDownloadList(int numberOrRecords) throws Exception {
+    result.andExpect(jsonPath("$.count").value(6));
   }
 
   /**
