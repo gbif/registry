@@ -130,9 +130,15 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Pageable page,
     @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     if (status == null || status.isEmpty()) {
-      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
+      return new PagingResponse<>(
+        page,
+        (long) occurrenceDownloadMapper.count(),
+        occurrenceDownloadMapper.list(page));
     } else {
-      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByStatus(status), occurrenceDownloadMapper.listByStatus(page, status));
+      return new PagingResponse<>(
+        page,
+        (long) occurrenceDownloadMapper.countByStatus(status),
+        occurrenceDownloadMapper.listByStatus(page, status));
     }
   }
 
@@ -198,8 +204,13 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @Nullable @PartialDate Date fromDate,
     @Nullable @PartialDate Date toDate,
     @Nullable Country userCountry) {
-    return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
-      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
+    return groupByYear(
+      occurrenceDownloadMapper.getDownloadsByUserCountry(
+        fromDate,
+        toDate,
+        Optional.ofNullable(userCountry)
+          .map(Country::getIso2LetterCode)
+          .orElse(null)));
   }
 
   @GetMapping("statistics/downloadedRecordsByDataset")
@@ -210,9 +221,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @Nullable @PartialDate Date toDate,
     @Nullable Country publishingCountry,
     @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
-    return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
-      Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-      datasetKey));
+    return groupByYear(
+      occurrenceDownloadMapper.getDownloadedRecordsByDataset(
+        fromDate,
+        toDate,
+        Optional.ofNullable(publishingCountry)
+          .map(Country::getIso2LetterCode)
+          .orElse(null),
+        datasetKey));
   }
 
   /**

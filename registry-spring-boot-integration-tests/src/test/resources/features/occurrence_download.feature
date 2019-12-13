@@ -65,3 +65,15 @@ Feature: Occurrence Download functionality
     And download creation error response is
       | created                                      | key                                          | modified                                      | request                                          | status                                          |
       | Validation of [created] failed: must be null | Validation of [key] failed: must not be null | Validation of [modified] failed: must be null | Validation of [request] failed: must not be null | Validation of [status] failed: must not be null |
+
+  @OccurrenceDownloadList
+  Scenario: list occurrence downloads
+    Given 3 predicate downloads
+    And 3 sql downloads
+    When list downloads by admin "registry_admin"
+    Then response status should be 200
+    And 6 downloads in occurrence downloads list response
+
+  Scenario: only admin is allowed to list occurrence downloads
+    When list downloads by user "registry_user"
+    Then response status should be 403
