@@ -8,14 +8,32 @@ Feature: Occurrence Download functionality
     And extract doi from download
     When get download
     Then response status should be 200
-    And equals predicate download assertions passed
-      | license     | predicateType | predicateKey | predicateValue | sendNotification | format | status    | downloadLink | size | totalRecords | numberDatasets |
-      | UNSPECIFIED | equals        | TAXON_KEY    | 212            | true             | DWCA   | PREPARING | testUrl      | 0    | 0            | 0              |
+    And predicate download assertions passed
+      | license                  | UNSPECIFIED |
+      | request.predicate.type   | equals      |
+      | request.predicate.key    | TAXON_KEY   |
+      | request.predicate.value  | 212         |
+      | request.sendNotification | true        |
+      | request.format           | DWCA        |
+      | status                   | PREPARING   |
+      | downloadLink             | testUrl     |
+      | size                     | 0           |
+      | totalRecords             | 0           |
+      | numberDatasets           | 0           |
     When get download by doi
     Then response status should be 200
-    And equals predicate download assertions passed
-      | license     | predicateType | predicateKey | predicateValue | sendNotification | format | status    | downloadLink | size | totalRecords | numberDatasets |
-      | UNSPECIFIED | equals        | TAXON_KEY    | 212            | true             | DWCA   | PREPARING | testUrl      | 0    | 0            | 0              |
+    And predicate download assertions passed
+      | license                  | UNSPECIFIED |
+      | request.predicate.type   | equals      |
+      | request.predicate.key    | TAXON_KEY   |
+      | request.predicate.value  | 212         |
+      | request.sendNotification | true        |
+      | request.format           | DWCA        |
+      | status                   | PREPARING   |
+      | downloadLink             | testUrl     |
+      | size                     | 0           |
+      | totalRecords             | 0           |
+      | numberDatasets           | 0           |
 
   Scenario: create and get null predicate download
     Given null predicate download
@@ -24,9 +42,15 @@ Feature: Occurrence Download functionality
     And extract doi from download
     When get download
     Then response status should be 200
-    And null predicate download assertions passed
-      | license     | sendNotification | format | status    | downloadLink | size | totalRecords | numberDatasets |
-      | UNSPECIFIED | true             | DWCA   | PREPARING | testUrl      | 0    | 0            | 0              |
+    And predicate download assertions passed
+      | license                  | UNSPECIFIED |
+      | request.sendNotification | true        |
+      | request.format           | DWCA        |
+      | status                   | PREPARING   |
+      | downloadLink             | testUrl     |
+      | size                     | 0           |
+      | totalRecords             | 0           |
+      | numberDatasets           | 0           |
 
   Scenario: create and get sql download
     Given sql download
@@ -36,8 +60,15 @@ Feature: Occurrence Download functionality
     When get download
     Then response status should be 200
     And sql download assertions passed
-      | license     | sql                               | sendNotification | format | status    | downloadLink | size | totalRecords | numberDatasets |
-      | UNSPECIFIED | SELECT datasetKey FROM occurrence | true             | SQL    | PREPARING | testUrl      | 0    | 0            | 0              |
+      | license                  | UNSPECIFIED                       |
+      | request.sql              | SELECT datasetKey FROM occurrence |
+      | request.sendNotification | true                              |
+      | request.format           | SQL                               |
+      | status                   | PREPARING                         |
+      | downloadLink             | testUrl                           |
+      | size                     | 0                                 |
+      | totalRecords             | 0                                 |
+      | numberDatasets           | 0                                 |
 
   Scenario: create and get null sql download
     Given sql download
@@ -46,9 +77,15 @@ Feature: Occurrence Download functionality
     And extract doi from download
     When get download
     Then response status should be 200
-    And null sql download assertions passed
-      | license     | sendNotification | format | status    | downloadLink | size | totalRecords | numberDatasets |
-      | UNSPECIFIED | true             | SQL    | PREPARING | testUrl      | 0    | 0            | 0              |
+    And sql download assertions passed
+      | license                  | UNSPECIFIED |
+      | request.sendNotification | true        |
+      | request.format           | SQL         |
+      | status                   | PREPARING   |
+      | downloadLink             | testUrl     |
+      | size                     | 0           |
+      | totalRecords             | 0           |
+      | numberDatasets           | 0           |
 
   Scenario: only admin is allowed to create occurrence download
     Given equals predicate download
@@ -73,6 +110,11 @@ Feature: Occurrence Download functionality
     When list downloads by admin "registry_admin"
     Then response status should be 200
     And 6 downloads in occurrence downloads list response
+
+    When list downloads by admin "registry_admin" with query params
+      | status | PREPARING,RUNNING,SUSPENDED |
+    Then response status should be 200
+    And 5 downloads in occurrence downloads list response
 
   Scenario: only admin is allowed to list occurrence downloads
     When list downloads by user "registry_user"
