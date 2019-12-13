@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.Comparator;
+
 @ControllerAdvice
 public class ValidationExceptionMapper {
 
@@ -22,15 +24,21 @@ public class ValidationExceptionMapper {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity toResponse(MethodArgumentNotValidException exception) {
     LOG.error(exception.getMessage(), exception);
-    ImmutableList.Builder<String> b = ImmutableList.builder();
-    exception.getBindingResult().getAllErrors().forEach(error -> {
-      LOG.debug("Validation of [{}] failed: {}",
-        ((FieldError) error).getField(), error.getDefaultMessage());
-      b.add(String.format("Validation of [%s] failed: %s",
-        ((FieldError) error).getField(), error.getDefaultMessage()));
-    });
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    exception.getBindingResult()
+      .getAllErrors()
+      .stream()
+      .map(error -> ((FieldError) error))
+      .sorted(Comparator.comparing(FieldError::getField, Comparator.naturalOrder()))
+      .forEach(error -> {
+        LOG.debug("Validation of [{}] failed: {}", error.getField(), error.getDefaultMessage());
+
+        builder.add(String.format("Validation of [%s] failed: %s", error.getField(), error.getDefaultMessage()));
+      });
+
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
       .contentType(MediaType.TEXT_PLAIN)
-      .body("<ul><li>" + Joiner.on("</li><li>").join(b.build()) + "</li></ul>");
+      .body("<ul><li>" + Joiner.on("</li><li>").join(builder.build()) + "</li></ul>");
   }
 }
