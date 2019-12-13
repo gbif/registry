@@ -37,7 +37,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -114,9 +114,12 @@ public class OccurrenceDownloadTestSteps {
   private Download getTestInstancePredicateDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(
-      new PredicateDownloadRequest(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
-        TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
-        true, DownloadFormat.DWCA));
+      new PredicateDownloadRequest(
+        new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
+        TestConstants.TEST_ADMIN,
+        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+        true,
+        DownloadFormat.DWCA));
     return download;
   }
 
@@ -137,9 +140,12 @@ public class OccurrenceDownloadTestSteps {
   public void prepareNullPredicateDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(
-      new PredicateDownloadRequest(null,
-        TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
-        true, DownloadFormat.DWCA));
+      new PredicateDownloadRequest(
+        null,
+        TestConstants.TEST_ADMIN,
+        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+        true,
+        DownloadFormat.DWCA));
     this.download = download;
   }
 
@@ -150,16 +156,24 @@ public class OccurrenceDownloadTestSteps {
 
   private Download getTestInstanceSqlDownload() {
     Download download = getTestInstanceDownload();
-    download.setRequest(new SqlDownloadRequest("SELECT datasetKey FROM occurrence", TestConstants.TEST_ADMIN,
-      Collections.singleton("downloadtest@gbif.org"), true));
+    download.setRequest(
+      new SqlDownloadRequest(
+        "SELECT datasetKey FROM occurrence",
+        TestConstants.TEST_ADMIN,
+        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+        true));
     return download;
   }
 
   @Given("null sql download")
   public void prepareNullSqlDownload() {
     Download download = getTestInstanceDownload();
-    download.setRequest(new SqlDownloadRequest(null, TestConstants.TEST_ADMIN,
-      Collections.singleton("downloadtest@gbif.org"), true));
+    download.setRequest(
+      new SqlDownloadRequest(
+        null,
+        TestConstants.TEST_ADMIN,
+        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+        true));
     this.download = download;
   }
 
@@ -224,85 +238,20 @@ public class OccurrenceDownloadTestSteps {
       .andExpect(status().is(status));
   }
 
-  @Then("equals predicate download assertions passed")
-  public void checkGetDownloadResponse(DataTable dataTable) throws Exception {
-    for (Map<String, String> params : dataTable.asMaps()) {
-      result
-        .andExpect(jsonPath("$.key").value(download.getKey()))
-        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-        .andExpect(jsonPath("$.request.predicate.type").value(params.get("predicateType")))
-        .andExpect(jsonPath("$.request.predicate.key").value(params.get("predicateKey")))
-        .andExpect(jsonPath("$.request.predicate.value").value(params.get("predicateValue")))
-        .andExpect(jsonPath("$.request.sendNotification").value(params.get("sendNotification")))
-        .andExpect(jsonPath("$.request.format").value(params.get("format")))
-        .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.status").value(params.get("status")))
-        .andExpect(jsonPath("$.downloadLink").value(params.get("downloadLink")))
-        .andExpect(jsonPath("$.size").value(params.get("size")))
-        .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
-        .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
-    }
-  }
+  @Then("{word} download assertions passed")
+  public void checkGetDownloadResponse(String downloadType, Map<String, String> params) throws Exception {
+    result
+      .andExpect(jsonPath("$.key").value(download.getKey()))
+      .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
+      .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
+      .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
+      .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
+      // sensitive information is not present
+      .andExpect(jsonPath("$.request.creator").doesNotExist())
+      .andExpect(jsonPath("$.request.notificationAddresses").doesNotExist());
 
-  @Then("null predicate download assertions passed")
-  public void checkGetNullPredicateDownloadResponse(DataTable dataTable) throws Exception {
-    for (Map<String, String> params : dataTable.asMaps()) {
-      result
-        .andExpect(jsonPath("$.key").value(download.getKey()))
-        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-        .andExpect(jsonPath("$.request.sendNotification").value(params.get("sendNotification")))
-        .andExpect(jsonPath("$.request.format").value(params.get("format")))
-        .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.status").value(params.get("status")))
-        .andExpect(jsonPath("$.downloadLink").value(params.get("downloadLink")))
-        .andExpect(jsonPath("$.size").value(params.get("size")))
-        .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
-        .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
-    }
-  }
-
-  @Then("sql download assertions passed")
-  public void checkGetSqlDownloadResponse(DataTable dataTable) throws Exception {
-    for (Map<String, String> params : dataTable.asMaps()) {
-      result
-        .andExpect(jsonPath("$.license").value(params.get("license")))
-        .andExpect(jsonPath("$.key").value(download.getKey()))
-        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-        .andExpect(jsonPath("$.request.sql").value(params.get("sql")))
-        .andExpect(jsonPath("$.request.sendNotification").value(params.get("sendNotification")))
-        .andExpect(jsonPath("$.request.format").value(params.get("format")))
-        .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.status").value(params.get("status")))
-        .andExpect(jsonPath("$.downloadLink").value(params.get("downloadLink")))
-        .andExpect(jsonPath("$.size").value(params.get("size")))
-        .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
-        .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
-    }
-  }
-
-  @Then("null sql download assertions passed")
-  public void checkGetNullSqlDownloadResponse(DataTable dataTable) throws Exception {
-    for (Map<String, String> params : dataTable.asMaps()) {
-      result
-        .andExpect(jsonPath("$.license").value(params.get("license")))
-        .andExpect(jsonPath("$.key").value(download.getKey()))
-        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-        .andExpect(jsonPath("$.request.sendNotification").value(params.get("sendNotification")))
-        .andExpect(jsonPath("$.request.format").value(params.get("format")))
-        .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
-        .andExpect(jsonPath("$.status").value(params.get("status")))
-        .andExpect(jsonPath("$.downloadLink").value(params.get("downloadLink")))
-        .andExpect(jsonPath("$.size").value(params.get("size")))
-        .andExpect(jsonPath("$.totalRecords").value(params.get("totalRecords")))
-        .andExpect(jsonPath("$.numberDatasets").value(params.get("numberDatasets")));
+    for (Map.Entry<String, String> entry : params.entrySet()) {
+      result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
     }
   }
 
@@ -323,7 +272,7 @@ public class OccurrenceDownloadTestSteps {
 
   @Then("{int} downloads in occurrence downloads list response")
   public void checkOccurrenceDownloadList(int numberOrRecords) throws Exception {
-    result.andExpect(jsonPath("$.count").value(6));
+    result.andExpect(jsonPath("$.count").value(numberOrRecords));
   }
 
   /**

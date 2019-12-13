@@ -31,6 +31,6 @@ VALUES ('20c7c079-e91a-4cd9-9428-383dd008a47e', 'SELECT datasetKey FROM occurren
 INSERT INTO public.occurrence_download (key, filter, status, download_link, notification_addresses, created_by, created,
                                         modified, size, total_records, send_notification, doi, format, license,
                                         erase_after)
-VALUES ('af6093d6-4c57-4b1f-8e3d-ebd84692f8f7', 'SELECT datasetKey FROM occurrence', 'PREPARING', 'testUrl',
+VALUES ('af6093d6-4c57-4b1f-8e3d-ebd84692f8f7', 'SELECT datasetKey FROM occurrence', 'CANCELLED', 'testUrl',
         'downloadtest@gbif.org', 'admin', '2019-12-13 13:13:39.133348', '2019-12-13 13:13:39.133348', 0, 0, true,
         '10.21373/dl.wxa5kp', 'SQL', 'UNSPECIFIED', '2020-06-13 13:13:39.126000');

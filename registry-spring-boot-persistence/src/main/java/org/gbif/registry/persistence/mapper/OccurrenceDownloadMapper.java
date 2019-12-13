@@ -16,7 +16,6 @@ import java.util.UUID;
 /**
  * Mapper that perform operations on occurrence downloads.
  */
-// TODO: 27/08/2019 test xml mapper (association request notificationAddressesAsString)
 @Repository
 public interface OccurrenceDownloadMapper {
 
@@ -32,13 +31,17 @@ public interface OccurrenceDownloadMapper {
 
   int count();
 
-  List<Download> listByStatus(@Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
+  List<Download> listByStatus(@Nullable @Param("page") Pageable page,
+                              @Param("status") Set<Download.Status> status);
 
   int countByStatus(@Param("status") Set<Download.Status> status);
 
-  List<Download> listByUser(@Param("creator") String creator, @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
+  List<Download> listByUser(@Param("creator") String creator,
+                            @Nullable @Param("page") Pageable page,
+                            @Param("status") Set<Download.Status> status);
 
-  int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
+  int countByUser(@Param("creator") String creator,
+                  @Param("status") Set<Download.Status> status);
 
   List<Facet.Count> getDownloadsByUserCountry(@Nullable @Param("fromDate") Date fromDate,
                                               @Nullable @Param("toDate") Date toDate,
