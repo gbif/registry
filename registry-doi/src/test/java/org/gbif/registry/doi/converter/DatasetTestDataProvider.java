@@ -1,6 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -14,13 +13,9 @@ import org.gbif.api.vocabulary.License;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
+import com.google.common.collect.Lists;
 
 class DatasetTestDataProvider {
 
