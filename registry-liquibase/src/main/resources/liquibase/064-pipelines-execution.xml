@@ -22,6 +22,8 @@
 
         ALTER TABLE pipeline_step DROP COLUMN pipeline_process_key;
 
+        ALTER TABLE pipeline_step DROP COLUMN rerun_reason;
+
         ALTER TABLE pipeline_step ADD COLUMN number_records bigint;
 
         ALTER TABLE pipeline_step ADD COLUMN pipelines_version text;
