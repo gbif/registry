@@ -3,7 +3,7 @@ Feature: Occurrence Download functionality
 
   Scenario: create and get equals predicate download
     Given equals predicate download
-    When create download by admin "registry_admin"
+    When create download using admin "registry_admin"
     Then response status should be 201
     And extract doi from download
     When get download
@@ -37,7 +37,7 @@ Feature: Occurrence Download functionality
 
   Scenario: create and get null predicate download
     Given null predicate download
-    When create download by admin "registry_admin"
+    When create download using admin "registry_admin"
     Then response status should be 201
     And extract doi from download
     When get download
@@ -54,7 +54,7 @@ Feature: Occurrence Download functionality
 
   Scenario: create and get sql download
     Given sql download
-    When create download by admin "registry_admin"
+    When create download using admin "registry_admin"
     Then response status should be 201
     And extract doi from download
     When get download
@@ -72,7 +72,7 @@ Feature: Occurrence Download functionality
 
   Scenario: create and get null sql download
     Given sql download
-    When create download by admin "registry_admin"
+    When create download using admin "registry_admin"
     Then response status should be 201
     And extract doi from download
     When get download
@@ -89,7 +89,7 @@ Feature: Occurrence Download functionality
 
   Scenario: only admin is allowed to create occurrence download
     Given equals predicate download
-    When create download by user "registry_user"
+    When create download using user "registry_user"
     Then response status should be 403
 
   Scenario: create occurrence download with invalid parameters is not allowed
@@ -97,7 +97,7 @@ Feature: Occurrence Download functionality
     And download with invalid parameters
       | key  | request | status | created    | modified   |
       | null | null    | null   | 13-12-2019 | 13-12-2019 |
-    When create download by admin "registry_admin"
+    When create download using admin "registry_admin"
     Then response status should be 422
     And download creation error response is
       | created                                      | key                                          | modified                                      | request                                          | status                                          |
@@ -107,15 +107,35 @@ Feature: Occurrence Download functionality
   Scenario: list occurrence downloads
     Given 3 predicate downloads
     And 3 sql downloads
-    When list downloads by admin "registry_admin"
+    When list downloads using admin "registry_admin"
     Then response status should be 200
     And 6 downloads in occurrence downloads list response
 
-    When list downloads by admin "registry_admin" with query params
+    When list downloads using admin "registry_admin" with query params
       | status | PREPARING,RUNNING,SUSPENDED |
     Then response status should be 200
     And 5 downloads in occurrence downloads list response
 
   Scenario: only admin is allowed to list occurrence downloads
-    When list downloads by user "registry_user"
+    When list downloads using user "registry_user"
     Then response status should be 403
+
+  @OccurrenceDownloadList
+  Scenario: list occurrence downloads by admin
+    Given 3 predicate downloads
+    And 3 sql downloads
+    When list downloads by user "WS TEST" using admin "registry_admin"
+    Then response status should be 200
+    And 3 downloads in occurrence downloads list response
+
+  @OccurrenceDownloadList
+  Scenario: list occurrence downloads by user using the same user as user param
+    When list downloads by user "registry_user" using user "registry_user" with query params
+      | status | PREPARING,RUNNING,SUSPENDED |
+    Then response status should be 200
+    And 2 downloads in occurrence downloads list response
+
+  @OccurrenceDownloadList
+  Scenario: list occurrence downloads by user using user which does not match user param
+    When list downloads by user "WS TEST" using user "registry_user"
+    Then response status should be 401
