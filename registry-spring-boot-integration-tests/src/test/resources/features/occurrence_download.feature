@@ -160,3 +160,9 @@ Feature: Occurrence Download functionality
     When update occurrence download "2393d6f0-cd3f-4395-94ea-0d3389fabeee" using user "registry_user" with values
       | status | RUNNING |
     Then response status should be 401
+
+  @DownloadUserStatistic
+  Scenario: get download statistic by user country
+    When get download statistic using user "registry_user" with params
+      | userCountry  | DK   |
+    Then response status should be 200
