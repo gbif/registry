@@ -1,5 +1,10 @@
 package org.gbif.registry;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.ConvertUtilsBean;
+import org.apache.commons.beanutils.converters.DateConverter;
+import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
@@ -11,6 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
+
+import java.util.Date;
 
 @TestConfiguration
 @EnableAutoConfiguration
@@ -33,5 +40,27 @@ public class RegistryIntegrationTestsConfiguration {
   @ConditionalOnProperty(value = "message.enabled", havingValue = "false")
   public MessagePublisher messagePublisher() {
     return new MessagePublisherStub();
+  }
+
+  @Bean
+  public BeanUtilsBean beanUtilsBean() {
+    DateTimeConverter dateConverter = new DateConverter(null);
+    dateConverter.setPatterns(new String[]{"dd-MM-yyyy"});
+    ConvertUtils.register(dateConverter, Date.class);
+
+    ConvertUtilsBean convertUtilsBean = new ConvertUtilsBean() {
+      @Override
+      public Object convert(String value, Class clazz) {
+        if (clazz.isEnum()) {
+          return Enum.valueOf(clazz, value);
+        } else {
+          return super.convert(value, clazz);
+        }
+      }
+    };
+
+    convertUtilsBean.register(dateConverter, Date.class);
+
+    return new BeanUtilsBean(convertUtilsBean);
   }
 }
