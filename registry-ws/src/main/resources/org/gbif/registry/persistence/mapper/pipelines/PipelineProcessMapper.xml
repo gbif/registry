@@ -143,7 +143,6 @@
   <select id="list" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
     FROM pipeline_process p
-    LEFT JOIN pipeline_execution e on e.pipeline_process_key = p.key
     <where>
       <if test="datasetKey != null">
         p.dataset_key = #{datasetKey, jdbcType=OTHER}
@@ -152,7 +151,7 @@
         AND p.attempt = #{attempt, jdbcType=INTEGER}
       </if>
     </where>
-    ORDER BY e.created DESC NULLS LAST
+    ORDER BY p.created DESC
     <if test="page != null">
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
