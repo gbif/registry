@@ -8,6 +8,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
@@ -52,6 +53,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,21 +83,21 @@ public class OccurrenceDownloadTestSteps {
 
   private Connection connection;
 
+  @Autowired
+  private BeanUtilsBean beanUtils;
+
   @Before("@OccurrenceDownload")
   public void setUp() throws Exception {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_list_prepare.sql"));
+
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
       .apply(springSecurity())
       .build();
-  }
-
-  @Before("@OccurrenceDownloadList")
-  public void prepareDataForList() throws Exception {
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_list_prepare.sql"));
   }
 
   @After("@OccurrenceDownload")
@@ -177,13 +179,8 @@ public class OccurrenceDownloadTestSteps {
     this.download = download;
   }
 
-  @Given("{int} predicate downloads")
-  public void preparePredicateDownloadsForList(int numberOfDownloads) throws Exception {
-    // prepared by scripts in @Before
-  }
-
-  @Given("{int} sql downloads")
-  public void prepareSqlDownloadsForList(int numberOfDownloads) throws Exception {
+  @Given("{int} occurrence downloads")
+  public void preparePredicateDownloadsForList(int numberOfDownloads, DataTable dataTable) {
     // prepared by scripts in @Before
   }
 
@@ -202,9 +199,14 @@ public class OccurrenceDownloadTestSteps {
 
   @When("get download")
   public void getDownload() throws Exception {
+    getDownload(download.getKey());
+  }
+
+  @When("get download {string}")
+  public void getDownload(String downloadKey) throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{key}", download.getKey()))
+        get("/occurrence/download/{key}", downloadKey))
       .andDo(print());
   }
 
@@ -248,6 +250,26 @@ public class OccurrenceDownloadTestSteps {
       .andDo(print());
   }
 
+  @When("update occurrence download {string} using {word} {string} with values")
+  public void updateDownload(String downloadKey, String userRole, String username, Map<String, String> params) throws Exception {
+    download = occurrenceDownloadService.get(downloadKey);
+
+    for (Map.Entry<String, String> entry : params.entrySet()) {
+      beanUtils.setProperty(download, entry.getKey(), entry.getValue());
+    }
+
+    String content = objectMapper.writeValueAsString(download);
+
+    result = mvc
+      .perform(
+        put("/occurrence/download/{key}", downloadKey)
+          .with(httpBasic(username, TEST_PASSWORD))
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+      )
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
     result
@@ -255,7 +277,12 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @Then("{word} download assertions passed")
-  public void checkGetDownloadResponse(String downloadType, Map<String, String> params) throws Exception {
+  public void checkDownloadResponse(String downloadType, Map<String, String> params) throws Exception {
+    checkDownloadResponse(params);
+  }
+
+  @Then("download assertions passed")
+  public void checkDownloadResponse(Map<String, String> params) throws Exception {
     result
       .andExpect(jsonPath("$.key").value(download.getKey()))
       .andExpect(jsonPath("$.doi").value(isDownloadDoi()))

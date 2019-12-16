@@ -1,6 +1,16 @@
 @OccurrenceDownload
 Feature: Occurrence Download functionality
 
+  Background:
+    Given 6 occurrence downloads
+      | key                                  | format | createdBy     | status    |
+      | ba40b279-7fef-43ab-a0c7-95d4ae2ffaf5 | DWCA   | registry_user | PREPARING |
+      | 2393d6f0-cd3f-4395-94ea-0d3389fabeee | DWCA   | WS TEST       | PREPARING |
+      | 8b84c7b5-d1e8-4f86-8934-8b6c3298046d | DWCA   | WS TEST       | PREPARING |
+      | c277534e-3576-4203-b26c-2ffbe18f61be | SQL    | WS TEST       | PREPARING |
+      | 20c7c079-e91a-4cd9-9428-383dd008a47e | SQL    | registry_user | PREPARING |
+      | af6093d6-4c57-4b1f-8e3d-ebd84692f8f7 | SQL    | registry_user | CANCELLED |
+
   Scenario: create and get equals predicate download
     Given equals predicate download
     When create download using admin "registry_admin"
@@ -103,54 +113,50 @@ Feature: Occurrence Download functionality
       | created                                      | key                                          | modified                                      | request                                          | status                                          |
       | Validation of [created] failed: must be null | Validation of [key] failed: must not be null | Validation of [modified] failed: must be null | Validation of [request] failed: must not be null | Validation of [status] failed: must not be null |
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads
-    Given 3 predicate downloads
-    And 3 sql downloads
     When list downloads using admin "registry_admin"
     Then response status should be 200
     And 6 downloads in occurrence downloads list response
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by status
-    Given 3 predicate downloads
-    And 3 sql downloads
     When list downloads using admin "registry_admin" with query params
       | status | PREPARING,RUNNING,SUSPENDED |
     Then response status should be 200
     And 5 downloads in occurrence downloads list response
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by user
-    Given 3 predicate downloads
-    And 3 sql downloads
     When list downloads by user "registry_user" using user "registry_user"
     Then response status should be 200
     And 3 downloads in occurrence downloads list response
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by user and status
-    Given 3 predicate downloads
-    And 3 sql downloads
     When list downloads by user "registry_user" using user "registry_user" with query params
       | status | PREPARING,RUNNING,SUSPENDED |
     Then response status should be 200
     And 2 downloads in occurrence downloads list response
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by user
-    Given 3 predicate downloads
-    And 3 sql downloads
     When list downloads by user "WS TEST" using user "registry_admin"
     Then response status should be 200
     And 3 downloads in occurrence downloads list response
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by user using user which does not match user param should be Unauthorized 401
     When list downloads by user "WS TEST" using user "registry_user"
     Then response status should be 401
 
-  @OccurrenceDownloadList
   Scenario: list occurrence downloads by non admin user should be Forbidden 403
     When list downloads using user "registry_user"
     Then response status should be 403
+
+  Scenario: update occurrence download
+    When update occurrence download "ba40b279-7fef-43ab-a0c7-95d4ae2ffaf5" using user "registry_user" with values
+      | status | RUNNING |
+    Then response status should be 200
+    When get download "ba40b279-7fef-43ab-a0c7-95d4ae2ffaf5"
+    Then download assertions passed
+      | status | RUNNING |
+
+  Scenario: update occurrence download by user using user which does not match download's creator should be Unauthorized 401
+    When update occurrence download "2393d6f0-cd3f-4395-94ea-0d3389fabeee" using user "registry_user" with values
+      | status | RUNNING |
+    Then response status should be 401

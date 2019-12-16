@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
   },
   glue = {"org.gbif.registry.ws.resources.occurrencedownload", "org.gbif.registry.utils.cucumber"},
   plugin = "pretty"
-  ,tags = "@OccurrenceDownloadList"
 )
 public class OccurrenceDownloadIT {
 }
