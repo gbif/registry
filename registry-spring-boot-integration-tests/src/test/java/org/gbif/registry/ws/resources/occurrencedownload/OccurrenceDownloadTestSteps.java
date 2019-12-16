@@ -100,8 +100,17 @@ public class OccurrenceDownloadTestSteps {
       .build();
   }
 
+  @Before("@DownloadUserStatistic")
+  public void prepareUserStatistic() {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_user_statistic_prepare.sql"));
+  }
+
   @After("@OccurrenceDownload")
   public void tearDown() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/occurrencedownload/occurrence_download_cleanup.sql"));
 
@@ -266,6 +275,17 @@ public class OccurrenceDownloadTestSteps {
           .with(httpBasic(username, TEST_PASSWORD))
           .content(content)
           .contentType(MediaType.APPLICATION_JSON)
+      )
+      .andDo(print());
+  }
+
+  @When("get download statistic using {word} {string} with params")
+  public void getDownloadStatisticByCountry(String userType, String username, Map<String, List<String>> requestParams) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/statistics/downloadsByUserCountry")
+          .with(httpBasic(username, TEST_PASSWORD))
+          .params(new LinkedMultiValueMap<>(requestParams))
       )
       .andDo(print());
   }
