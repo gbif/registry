@@ -200,7 +200,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
-  @NullToNotFound
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
     @Nullable @PartialDate Date fromDate,
@@ -216,7 +215,6 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("statistics/downloadedRecordsByDataset")
-  @NullToNotFound
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
     @Nullable @PartialDate Date fromDate,
@@ -238,10 +236,19 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
    */
   private Map<Integer, Map<Integer, Long>> groupByYear(List<Facet.Count> counts) {
     Map<Integer, Map<Integer, Long>> yearsGrouping = new TreeMap<>();
-    counts.forEach(count -> yearsGrouping.computeIfAbsent(
-      Integer.valueOf(count.getName().substring(0, 4)),
-      year -> new TreeMap<>())
-      .put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
+    counts
+      .forEach(count ->
+        yearsGrouping
+          .computeIfAbsent(getYearFromFacetCount(count), year -> new TreeMap<>())
+          .put(getMonthFromFacetCount(count), count.getCount()));
     return yearsGrouping;
+  }
+
+  private Integer getYearFromFacetCount(Facet.Count count) {
+    return Integer.valueOf(count.getName().substring(0, 4));
+  }
+
+  private Integer getMonthFromFacetCount(Facet.Count count) {
+    return Integer.valueOf(count.getName().substring(5));
   }
 }

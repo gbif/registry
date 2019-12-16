@@ -35,8 +35,8 @@ public class PartialDateHandlerMethodArgumentResolver implements HandlerMethodAr
     final String paramName = parameter.getParameter().getName();
     final String paramValue = webRequest.getParameter(paramName);
     return Optional.ofNullable(paramValue)
-        .map(value -> tryDateParse(value, paramName))
-        .orElse(null);
+      .map(value -> tryDateParse(value, paramName))
+      .orElse(null);
   }
 
   /**
@@ -65,6 +65,6 @@ public class PartialDateHandlerMethodArgumentResolver implements HandlerMethodAr
       }
     }
     throw new WebApplicationException(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body("Unaccepted parameter value " + paramName + ":" + dateValue));
+      .body("Unaccepted parameter value " + paramName + ":" + dateValue));
   }
 }
