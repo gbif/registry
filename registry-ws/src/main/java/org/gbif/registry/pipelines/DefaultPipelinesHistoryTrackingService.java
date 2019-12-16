@@ -239,8 +239,6 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
 
-    statuses.sort(PipelineProcess.PIPELINE_PROCESS_BY_LATEST_EXEUCTION_ASC.reversed());
-
     // add needed fields for the view
     statuses.forEach(this::setDatasetTitle);
 
