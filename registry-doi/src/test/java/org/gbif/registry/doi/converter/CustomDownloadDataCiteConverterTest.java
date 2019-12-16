@@ -1,10 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.template.Configuration;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -13,10 +8,6 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.utils.file.tabular.TabularDataFileReader;
 import org.gbif.utils.file.tabular.TabularFiles;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xmlunit.matchers.CompareMatcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +20,18 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.template.Configuration;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmlunit.matchers.CompareMatcher;
+
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
