@@ -239,6 +239,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     long count = mapper.count(null, null);
     List<PipelineProcess> statuses = mapper.list(null, null, pageable);
 
+    statuses.sort(PipelineProcess.PIPELINE_PROCESS_BY_LATEST_EXEUCTION_ASC.reversed());
+
     // add needed fields for the view
     statuses.forEach(this::setDatasetTitle);
 
@@ -322,6 +324,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
           .setSteps(steps)
           .setStepsFailed(steps)
           .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+          .setMessage("No steps found. Probably there is no steps of this type in the DB")
           .build();
     }
 
@@ -349,7 +352,9 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     RunPipelineResponse.Builder responseBuilder =
         RunPipelineResponse.builder().setStepsFailed(stepsFailed);
     if (stepsFailed.size() == steps.size()) {
-      responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR);
+      responseBuilder
+          .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+          .setMessage("All steps failed when publishing the messages");
     } else {
       responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
     }
