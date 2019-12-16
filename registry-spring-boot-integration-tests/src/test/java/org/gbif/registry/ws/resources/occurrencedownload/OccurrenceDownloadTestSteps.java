@@ -187,7 +187,7 @@ public class OccurrenceDownloadTestSteps {
     // prepared by scripts in @Before
   }
 
-  @When("create download by {word} {string}")
+  @When("create download using {word} {string}")
   public void createDownload(String userRole, String username) throws Exception {
     String stringContent = objectMapper.writeValueAsString(download);
 
@@ -216,16 +216,32 @@ public class OccurrenceDownloadTestSteps {
       .andDo(print());
   }
 
-  @When("list downloads by {word} {string}")
+  @When("list downloads using {word} {string}")
   public void listDownloads(String userRole, String username) throws Exception {
     listDownloads(userRole, username, new HashMap<>());
   }
 
-  @When("list downloads by {word} {string} with query params")
+  @When("list downloads using {word} {string} with query params")
   public void listDownloads(String userRole, String username, Map<String, List<String>> params) throws Exception {
     result = mvc
       .perform(
         get("/occurrence/download")
+          .with(httpBasic(username, TEST_PASSWORD))
+          .params(new LinkedMultiValueMap<>(params))
+      )
+      .andDo(print());
+  }
+
+  @When("list downloads by user {string} using {word} {string}")
+  public void listDownloadsByUser(String userParam, String userRole, String username) throws Exception {
+    listDownloadsByUser(userParam, userRole, username, new HashMap<>());
+  }
+
+  @When("list downloads by user {string} using {word} {string} with query params")
+  public void listDownloadsByUser(String userParam, String userRole, String username, Map<String, List<String>> params) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/user/{user}", userParam)
           .with(httpBasic(username, TEST_PASSWORD))
           .params(new LinkedMultiValueMap<>(params))
       )

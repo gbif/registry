@@ -150,7 +150,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
-    return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user, status),
+    return new PagingResponse<>(
+      page,
+      (long) occurrenceDownloadMapper.countByUser(user, status),
       occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
