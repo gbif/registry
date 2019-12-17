@@ -195,8 +195,11 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @NotNull @PathVariable("key") String downloadKey,
     @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
-      .forEachRemaining(batch -> datasetOccurrenceDownloadMapper
-        .createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+      .forEachRemaining(batch ->
+        datasetOccurrenceDownloadMapper.createUsages(
+          downloadKey,
+          batch.stream()
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
   @GetMapping("statistics/downloadsByUserCountry")

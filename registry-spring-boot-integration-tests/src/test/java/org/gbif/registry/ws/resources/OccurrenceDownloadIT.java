@@ -9,7 +9,8 @@ import org.junit.runner.RunWith;
   strict = true,
   features = {
     "classpath:features/occurrence_download.feature",
-    "classpath:features/occurrence_download_statistic.feature"
+    "classpath:features/occurrence_download_statistic.feature",
+    "classpath:features/occurrence_download_usage.feature"
   },
   glue = {
     "org.gbif.registry.ws.resources.occurrencedownload",
