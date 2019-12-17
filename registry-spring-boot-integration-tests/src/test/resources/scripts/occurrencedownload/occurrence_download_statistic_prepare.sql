@@ -45,10 +45,13 @@ VALUES ('4348adaa-d744-4241-92a0-ebf9d55eb9bb', null, null, '2fe63cec-9b23-4974-
 
 INSERT INTO public.download_statistics (year_month, publishing_organization_country, dataset_key, total_records,
                                         number_downloads)
-VALUES ('2019-12-16 23:06:18.993000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 10, 10);
+VALUES ('2017-01-16 23:06:18.993000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 10, 10);
 INSERT INTO public.download_statistics (year_month, publishing_organization_country, dataset_key, total_records,
                                         number_downloads)
-VALUES ('2019-12-16 23:07:58.624000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 20, 20);
+VALUES ('2018-05-16 23:06:18.993000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 20, 20);
+INSERT INTO public.download_statistics (year_month, publishing_organization_country, dataset_key, total_records,
+                                        number_downloads)
+VALUES ('2018-06-16 23:07:58.624000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 21, 21);
 INSERT INTO public.download_statistics (year_month, publishing_organization_country, dataset_key, total_records,
                                         number_downloads)
 VALUES ('2019-12-16 23:08:18.943000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 30, 30);

@@ -306,6 +306,17 @@ public class OccurrenceDownloadTestSteps {
       .andDo(print());
   }
 
+  @When("get downloaded records by dataset using {word} {string} with params")
+  public void getDownloadedRecordsByDataset(String userType, String username, Map<String, List<String>> requestParams) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/statistics/downloadedRecordsByDataset")
+          .with(httpBasic(username, TEST_PASSWORD))
+          .params(new LinkedMultiValueMap<>(requestParams))
+      )
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
     result
