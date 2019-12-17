@@ -49,6 +49,7 @@ import java.util.UUID;
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryDateFormat;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -101,11 +102,17 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @Before("@DownloadUserStatistic")
-  public void prepareUserStatistic() {
+  public void prepareUserStatistic() throws Exception {
+    connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_user_statistic_prepare.sql"));
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_prepare.sql"));
+
+    mvc = MockMvcBuilders
+      .webAppContextSetup(context)
+      .apply(springSecurity())
+      .build();
   }
 
   @After("@OccurrenceDownload")
@@ -115,6 +122,14 @@ public class OccurrenceDownloadTestSteps {
       new ClassPathResource("/scripts/occurrencedownload/occurrence_download_cleanup.sql"));
 
     connection.close();
+  }
+
+  @After("@DownloadUserStatistic")
+  public void cleanUserStatistic() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
   }
 
   @Given("equals predicate download")
@@ -190,6 +205,7 @@ public class OccurrenceDownloadTestSteps {
 
   @Given("{int} occurrence downloads")
   public void preparePredicateDownloadsForList(int numberOfDownloads, DataTable dataTable) {
+    assertEquals(numberOfDownloads, dataTable.asMaps().size());
     // prepared by scripts in @Before
   }
 
@@ -336,6 +352,14 @@ public class OccurrenceDownloadTestSteps {
   @Then("{int} downloads in occurrence downloads list response")
   public void checkOccurrenceDownloadList(int numberOrRecords) throws Exception {
     result.andExpect(jsonPath("$.count").value(numberOrRecords));
+  }
+
+  @Then("assert statistic response")
+  public void checkStatisticResponse(List<Map<String, String>> expectedData) throws Exception {
+    for (Map<String, String> expected : expectedData) {
+      result
+        .andExpect(jsonPath("$." + expected.get("year.month")).value(expected.get("value")));
+    }
   }
 
   /**
