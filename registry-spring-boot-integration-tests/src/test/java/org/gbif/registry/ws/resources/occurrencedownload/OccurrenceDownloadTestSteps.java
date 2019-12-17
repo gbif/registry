@@ -41,6 +41,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -306,6 +307,11 @@ public class OccurrenceDownloadTestSteps {
       .andDo(print());
   }
 
+  @When("get download statistic using {word} {string} without params")
+  public void getDownloadStatisticByCountry(String userType, String username) throws Exception {
+    getDownloadStatisticByCountry(userType, username, new LinkedHashMap<>());
+  }
+
   @When("get downloaded records by dataset using {word} {string} with params")
   public void getDownloadedRecordsByDataset(String userType, String username, Map<String, List<String>> requestParams) throws Exception {
     result = mvc
@@ -315,6 +321,11 @@ public class OccurrenceDownloadTestSteps {
           .params(new LinkedMultiValueMap<>(requestParams))
       )
       .andDo(print());
+  }
+
+  @When("get downloaded records by dataset using {word} {string} without params")
+  public void getDownloadedRecordsByDataset(String userType, String username) throws Exception {
+    getDownloadedRecordsByDataset(userType, username, new LinkedHashMap<>());
   }
 
   @Then("response status should be {int}")
@@ -365,8 +376,9 @@ public class OccurrenceDownloadTestSteps {
     result.andExpect(jsonPath("$.count").value(numberOrRecords));
   }
 
-  @Then("assert statistic response")
-  public void checkStatisticResponse(List<Map<String, String>> expectedData) throws Exception {
+  @Then("response contains statistics for {int} years")
+  public void checkStatisticResponse(int expectedYears, List<Map<String, String>> expectedData) throws Exception {
+    result.andExpect(jsonPath("$.length()").value(expectedYears));
     for (Map<String, String> expected : expectedData) {
       result
         .andExpect(jsonPath("$." + expected.get("year.month")).value(expected.get("value")));
