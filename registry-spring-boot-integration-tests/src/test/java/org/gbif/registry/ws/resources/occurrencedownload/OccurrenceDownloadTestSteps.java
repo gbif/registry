@@ -108,7 +108,23 @@ public class OccurrenceDownloadTestSteps {
     Objects.requireNonNull(connection, "Connection must not be null");
 
     ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
+    ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_prepare.sql"));
+
+    mvc = MockMvcBuilders
+      .webAppContextSetup(context)
+      .apply(springSecurity())
+      .build();
+  }
+
+  @Before("@OccurrenceDownloadUsage")
+  public void prepareDownloadUsage() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_prepare.sql"));
 
     mvc = MockMvcBuilders
       .webAppContextSetup(context)
@@ -131,6 +147,14 @@ public class OccurrenceDownloadTestSteps {
 
     ScriptUtils.executeSqlScript(connection,
       new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
+  }
+
+  @After("@OccurrenceDownloadUsage")
+  public void cleanDownloadUsage() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(connection,
+      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_clean.sql"));
   }
 
   @Given("equals predicate download")
@@ -204,9 +228,15 @@ public class OccurrenceDownloadTestSteps {
     this.download = download;
   }
 
-  @Given("{int} occurrence downloads")
+  @Given("{int} occurrence download(s)")
   public void preparePredicateDownloadsForList(int numberOfDownloads, DataTable dataTable) {
     assertEquals(numberOfDownloads, dataTable.asMaps().size());
+    // prepared by scripts in @Before
+  }
+
+  @Given("{int} dataset(s)")
+  public void prepareDatasets(int numberOfDatasets, DataTable dataTable) {
+    assertEquals(numberOfDatasets, dataTable.asMaps().size());
     // prepared by scripts in @Before
   }
 
@@ -328,6 +358,33 @@ public class OccurrenceDownloadTestSteps {
     getDownloadedRecordsByDataset(userType, username, new LinkedHashMap<>());
   }
 
+  @When("create occurrence download usage for download {string} using {word} {string} with citations")
+  public void createOccurrenceDownloadUsage(String downloadKey, String userType, String username, Map<String, String> citations) throws Exception {
+    // values must be numbers not strings
+    Map<String, Long> mappedCitations = new HashMap<>();
+    for (String key : citations.keySet()) {
+      mappedCitations.put(key, Long.valueOf(citations.get(key)));
+    }
+    String stringContent = objectMapper.writeValueAsString(mappedCitations);
+
+    result = mvc
+      .perform(
+        post("/occurrence/download/{key}/datasets", downloadKey)
+          .with(httpBasic(username, TEST_PASSWORD))
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(stringContent))
+      .andDo(print());
+  }
+
+  @When("list dataset usages for download {string} using {word} {string}")
+  public void listUsages(String downloadKey, String userType, String username) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/{key}/datasets", downloadKey)
+      )
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
     result
@@ -368,6 +425,7 @@ public class OccurrenceDownloadTestSteps {
       for (Map.Entry<String, String> entry : params.entrySet()) {
         result.andExpect(xpath(String.format("/ul/li[%d]", ++iteration)).string(entry.getValue()));
       }
+      iteration = 0;
     }
   }
 
@@ -382,6 +440,18 @@ public class OccurrenceDownloadTestSteps {
     for (Map<String, String> expected : expectedData) {
       result
         .andExpect(jsonPath("$." + expected.get("year.month")).value(expected.get("value")));
+    }
+  }
+
+  @Then("occurrence downloads usage list of {int} elements is")
+  public void checkDownloadUsageResponse(int expectedNumberOfElements, DataTable dataTable) throws Exception {
+    result.andExpect(jsonPath("$.count").value(expectedNumberOfElements));
+    int iteration = 0;
+    for (Map<String, String> params : dataTable.asMaps()) {
+      for (Map.Entry<String, String> entry : params.entrySet()) {
+        result.andExpect(jsonPath(String.format("$.results[%d].%s", iteration, entry.getKey())).value(entry.getValue()));
+      }
+      iteration++;
     }
   }
 
