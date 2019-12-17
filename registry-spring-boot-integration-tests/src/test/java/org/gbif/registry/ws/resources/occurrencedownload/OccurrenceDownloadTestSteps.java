@@ -56,7 +56,6 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
@@ -249,8 +248,7 @@ public class OccurrenceDownloadTestSteps {
         post("/occurrence/download")
           .with(httpBasic(username, TEST_PASSWORD))
           .contentType(MediaType.APPLICATION_JSON)
-          .content(stringContent))
-      .andDo(print());
+          .content(stringContent));
   }
 
   @When("get download")
@@ -262,16 +260,14 @@ public class OccurrenceDownloadTestSteps {
   public void getDownload(String downloadKey) throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{key}", downloadKey))
-      .andDo(print());
+        get("/occurrence/download/{key}", downloadKey));
   }
 
   @When("get download by doi")
   public void getDownloadByDoi() throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()))
-      .andDo(print());
+        get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()));
   }
 
   @When("list downloads using {word} {string}")
@@ -285,9 +281,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download")
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(params))
-      )
-      .andDo(print());
+          .params(new LinkedMultiValueMap<>(params)));
   }
 
   @When("list downloads by user {string} using {word} {string}")
@@ -301,9 +295,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download/user/{user}", userParam)
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(params))
-      )
-      .andDo(print());
+          .params(new LinkedMultiValueMap<>(params)));
   }
 
   @When("update occurrence download {string} using {word} {string} with values")
@@ -321,9 +313,7 @@ public class OccurrenceDownloadTestSteps {
         put("/occurrence/download/{key}", downloadKey)
           .with(httpBasic(username, TEST_PASSWORD))
           .content(content)
-          .contentType(MediaType.APPLICATION_JSON)
-      )
-      .andDo(print());
+          .contentType(MediaType.APPLICATION_JSON));
   }
 
   @When("get download statistic using {word} {string} with params")
@@ -332,9 +322,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download/statistics/downloadsByUserCountry")
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams))
-      )
-      .andDo(print());
+          .params(new LinkedMultiValueMap<>(requestParams)));
   }
 
   @When("get download statistic using {word} {string} without params")
@@ -348,9 +336,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download/statistics/downloadedRecordsByDataset")
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams))
-      )
-      .andDo(print());
+          .params(new LinkedMultiValueMap<>(requestParams)));
   }
 
   @When("get downloaded records by dataset using {word} {string} without params")
@@ -372,17 +358,14 @@ public class OccurrenceDownloadTestSteps {
         post("/occurrence/download/{key}/datasets", downloadKey)
           .with(httpBasic(username, TEST_PASSWORD))
           .contentType(MediaType.APPLICATION_JSON)
-          .content(stringContent))
-      .andDo(print());
+          .content(stringContent));
   }
 
   @When("list dataset usages for download {string} using {word} {string}")
   public void listUsages(String downloadKey, String userType, String username) throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{key}/datasets", downloadKey)
-      )
-      .andDo(print());
+        get("/occurrence/download/{key}/datasets", downloadKey));
   }
 
   @Then("response status should be {int}")

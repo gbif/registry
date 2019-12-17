@@ -193,7 +193,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public void createUsages(
     @NotNull @PathVariable("key") String downloadKey,
-    @RequestBody @NotNull @Validated({PrePersist.class, Default.class}) Map<UUID, Long> datasetCitations) {
+    @RequestBody @NotNull Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
       .forEachRemaining(batch ->
         datasetOccurrenceDownloadMapper.createUsages(
