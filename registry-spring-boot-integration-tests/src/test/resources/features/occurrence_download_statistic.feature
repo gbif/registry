@@ -21,7 +21,8 @@ Feature: Occurrence download statistics functionality
       | 2017.1     | 10    |
       | 2018.5     | 20    |
       | 2018.6     | 21    |
-      | 2019.12    | 10    |
+      | 2019.11    | 10    |
+      | 2019.12    | 30    |
 
   Scenario: get downloaded records by dataset
     When get downloaded records by dataset using user "registry_user" with params
@@ -44,4 +45,5 @@ Feature: Occurrence download statistics functionality
       | 2017.1     | 10    |
       | 2018.5     | 20    |
       | 2018.6     | 21    |
+      | 2019.11    | 10    |
       | 2019.12    | 30    |

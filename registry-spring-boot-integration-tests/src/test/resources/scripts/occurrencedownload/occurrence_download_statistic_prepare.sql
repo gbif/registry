@@ -57,7 +57,7 @@ INSERT INTO public.download_statistics (year_month, publishing_organization_coun
 VALUES ('2019-12-16 23:08:18.943000', 'DK', 'd82273f6-9738-48a5-a639-2086f9c49d18', 30, 30);
 INSERT INTO public.download_statistics (year_month, publishing_organization_country, dataset_key, total_records,
                                         number_downloads)
-VALUES ('2019-12-16 23:08:41.188000', 'NO', '4348adaa-d744-4241-92a0-ebf9d55eb9bb', 10, 10);
+VALUES ('2019-11-16 23:08:41.188000', 'NO', '4348adaa-d744-4241-92a0-ebf9d55eb9bb', 10, 10);
 
 
 
@@ -75,4 +75,4 @@ INSERT INTO public.download_user_statistics (year_month, user_country, total_rec
 VALUES ('2019-12-16 23:08:18.943000', 'DK', 30, 30);
 INSERT INTO public.download_user_statistics (year_month, user_country, total_records,
                                              number_downloads)
-VALUES ('2019-12-16 23:08:41.188000', 'NO', 10, 10);
+VALUES ('2019-11-16 23:08:41.188000', 'NO', 10, 10);
