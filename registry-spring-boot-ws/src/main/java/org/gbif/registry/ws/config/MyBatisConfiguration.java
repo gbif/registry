@@ -15,6 +15,7 @@ import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
+import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.registry.Citation;
@@ -48,6 +49,7 @@ import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -116,9 +118,11 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("DisciplineArrayTypeHandler", DisciplineArrayTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("PreservationTypeArrayTypeHandler", PreservationTypeArrayTypeHandler.class);
+      configuration.getTypeAliasRegistry().registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
+      configuration.getTypeAliasRegistry().registerAlias("PipelineExecution", PipelineExecution.class);
       configuration.getTypeAliasRegistry().registerAlias("MetricInfoTypeHandler", MetricInfoTypeHandler.class);
     };
   }
