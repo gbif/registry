@@ -9,6 +9,7 @@ import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
 import org.gbif.registry.pipelines.model.RunPipelineResponse;
 import org.springframework.http.HttpStatus;
@@ -20,16 +21,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -117,8 +118,9 @@ public class PipelinesHistoryResource {
       processKey, executionKey, pipelineStep, authentication.getName());
   }
 
-  @GetMapping(PROCESS_PATH + "{processKey}/step/{stepKey}")
+  @GetMapping(PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}")
   public PipelineStep getPipelineStep(@PathVariable("processKey") long processKey,
+                                      @PathVariable("executionKey") long executionKey,
                                       @PathVariable("stepKey") long stepKey) {
     return historyTrackingService.getPipelineStep(stepKey);
   }
@@ -126,23 +128,23 @@ public class PipelinesHistoryResource {
   /**
    * Updates the step status.
    */
-  @PutMapping(value = PROCESS_PATH + "{processKey}/{executionKey}/step/{stepKey}",
+  @PutMapping(value = PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}",
     consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void updatePipelineStepStatusAndMetrics(
     @PathVariable("processKey") long processKey,
     @PathVariable("executionKey") long executionKey,
     @PathVariable("stepKey") long stepKey,
-    @Valid @NotNull StepParams stepParams,
+    @RequestBody PipelineStepParameters stepParams,
     Authentication authentication) {
-    // TODO: test with null params
+    Objects.requireNonNull(stepParams, "Pipeline Step parameters are required");
 
     historyTrackingService.updatePipelineStepStatusAndMetrics(
       processKey,
       executionKey,
       stepKey,
-      stepParams.status,
-      stepParams.metrics,
+      stepParams.getStatus(),
+      stepParams.getMetrics(),
       authentication.getName());
   }
 
@@ -156,7 +158,7 @@ public class PipelinesHistoryResource {
     @RequestParam("steps") String steps,
     @RequestParam("reason") String reason,
     Authentication authentication,
-    @Nullable RunAllParams runAllParams) {
+    @Nullable @RequestBody RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
@@ -254,29 +256,6 @@ public class PipelinesHistoryResource {
     return Arrays.stream(steps.split(","))
       .map(s -> StepType.valueOf(s.toUpperCase()))
       .collect(Collectors.toSet());
-  }
-
-  private static class StepParams {
-    PipelineStep.Status status;
-    Set<PipelineStep.MetricInfo> metrics;
-
-    // getters and setters needed for jackson
-
-    public PipelineStep.Status getStatus() {
-      return status;
-    }
-
-    public void setStatus(PipelineStep.Status status) {
-      this.status = status;
-    }
-
-    public Set<PipelineStep.MetricInfo> getMetrics() {
-      return metrics;
-    }
-
-    public void setMetrics(Set<PipelineStep.MetricInfo> metrics) {
-      this.metrics = metrics;
-    }
   }
 
   /**

@@ -131,6 +131,6 @@ public interface PipelinesHistoryTrackingService {
     long executionKey,
     long pipelineStepKey,
     PipelineStep.Status status,
-    Set<PipelineStep.MetricInfo> metrics,
+    List<PipelineStep.MetricInfo> metrics,
     String user);
 }
