@@ -40,3 +40,8 @@ Feature: Enumeration functionality
     And element number 0 is
       | id       | ZERO_COORDINATE |
       | severity | WARNING         |
+
+  Scenario: get inventory of the enumeration supported
+    When get enumeration inventory
+    Then response status should be 200
+    And element number 0 is "AccessionStatus"
