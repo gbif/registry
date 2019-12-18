@@ -66,5 +66,6 @@
   <include file="liquibase/060-add-sql-download-format.xml"/>
   <include file="liquibase/061-moved-fulltext-address-to-collections.xml" />
   <include file="liquibase/062-add-earthcape-installation-type.xml" />
-<!--  <include file="liquibase/063-pipelines-process.xml" />-->
+  <include file="liquibase/063-pipelines-process.xml" />
+  <include file="liquibase/064-pipelines-execution.xml" />
 </databaseChangeLog>

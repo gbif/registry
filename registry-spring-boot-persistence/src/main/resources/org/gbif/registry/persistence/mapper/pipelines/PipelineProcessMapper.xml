@@ -4,6 +4,12 @@
 
   <resultMap id="PIPELINES_PROCESS_MAP" type="org.gbif.api.model.pipelines.PipelineProcess" autoMapping="true">
     <id property="key" column="key"/>
+    <collection property="executions" column="key" select="listExecutions"/>
+  </resultMap>
+
+  <resultMap id="EXECUTION_MAP" type="org.gbif.api.model.pipelines.PipelineExecution" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="stepsToRun" column="steps_to_run" typeHandler="org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler"/>
     <collection property="steps" column="key" select="listSteps"/>
   </resultMap>
 
@@ -27,12 +33,29 @@
     #{createdBy,jdbcType=VARCHAR}
   </sql>
 
+  <sql id="EXECUTION_FIELDS_SELECT">
+    key, pipeline_process_key, steps_to_run, created, created_by, pipelines_version, rerun_reason
+  </sql>
+
+  <sql id="EXECUTION_FIELDS_CREATE">
+    pipeline_process_key, steps_to_run, created, created_by, pipelines_version, rerun_reason
+  </sql>
+
+  <sql id="EXECUTION_VALUES_CREATE">
+    #{pipelinesProcessKey,jdbcType=BIGINT},
+    #{execution.stepsToRun,jdbcType=ARRAY,typeHandler=StepTypeArrayTypeHandler},
+    now(), <!-- created -->
+    #{execution.createdBy,jdbcType=VARCHAR},
+    #{execution.pipelinesVersion,jdbcType=VARCHAR},
+    #{execution.rerunReason,jdbcType=VARCHAR}
+  </sql>
+
   <sql id="STEP_FIELDS_CREATE">
-    type, runner, started, finished, state, message, metrics, rerun_reason, created_by, pipeline_process_key
+    type, runner, started, finished, state, message, metrics, created_by, pipeline_execution_key
   </sql>
 
   <sql id="STEP_FIELDS_SELECT">
-    key, type, runner, started, finished, state, message, metrics, rerun_reason, created_by, modified, modified_by, pipeline_process_key
+    key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key
   </sql>
 
   <sql id="STEP_VALUES_CREATE">
@@ -42,26 +65,42 @@
     #{step.finished,jdbcType=OTHER},
     #{step.state,jdbcType=OTHER},
     #{step.message,jdbcType=VARCHAR},
-    #{step.metrics,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler}::hstore,
-    #{step.rerunReason,jdbcType=VARCHAR},
+    #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
     #{step.createdBy,jdbcType=VARCHAR},
-    #{pipelinesProcessKey,jdbcType=BIGINT}
+    #{pipelineExecutionKey,jdbcType=BIGINT}
   </sql>
 
   <sql id="STEP_UPDATE">
     finished = #{step.finished,jdbcType=OTHER},
     state = #{step.state,jdbcType=OTHER},
-    rerun_reason = #{step.rerunReason,jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
-    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler}::hstore
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
   </sql>
 
-  <insert id="create" parameterType="org.gbif.api.model.pipelines.PipelineProcess" useGeneratedKeys="true" keyProperty="key">
+  <insert id="createIfNotExists" parameterType="org.gbif.api.model.pipelines.PipelineProcess" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO pipeline_process(<include refid="PIPELINE_PROCESS_FIELDS_CREATE"/>)
     VALUES (<include refid="PIPELINES_PROCESS_VALUES_CREATE"/>)
     ON CONFLICT(dataset_key, attempt) DO UPDATE SET dataset_key = EXCLUDED.dataset_key
   </insert>
+
+  <insert id="addPipelineExecution" useGeneratedKeys="true" keyProperty="execution.key">
+    INSERT INTO pipeline_execution(<include refid="EXECUTION_FIELDS_CREATE"/>)
+    VALUES (<include refid="EXECUTION_VALUES_CREATE"/>)
+  </insert>
+
+  <select id="getPipelineExecution" resultMap="EXECUTION_MAP">
+    SELECT <include refid="EXECUTION_FIELDS_SELECT"/>
+    FROM pipeline_execution
+    WHERE key = #{key,jdbcType=BIGINT}
+  </select>
+
+  <select id="listExecutions" resultMap="EXECUTION_MAP">
+    SELECT <include refid="EXECUTION_FIELDS_SELECT"/>
+    FROM pipeline_execution
+    WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
+    ORDER BY created DESC
+  </select>
 
   <insert id="addPipelineStep" useGeneratedKeys="true" keyProperty="step.key">
     INSERT INTO pipeline_step(<include refid="STEP_FIELDS_CREATE"/>)
@@ -71,7 +110,7 @@
   <select id="listSteps" resultMap="STEP_MAP">
     SELECT <include refid="STEP_FIELDS_SELECT"/>
     FROM pipeline_step
-    WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
+    WHERE pipeline_execution_key = #{key,jdbcType=BIGINT}
     ORDER BY started DESC
   </select>
 
@@ -94,7 +133,7 @@
     ORDER BY p.attempt DESC
     LIMIT 1
   </select>
-
+  <!-- TODO: add execution -->
   <select id="list" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
     FROM pipeline_process

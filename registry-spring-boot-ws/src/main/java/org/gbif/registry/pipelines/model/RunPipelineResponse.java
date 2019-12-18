@@ -1,4 +1,4 @@
-package org.gbif.registry.pipelines;
+package org.gbif.registry.pipelines.model;
 
 import org.gbif.api.model.pipelines.StepType;
 
@@ -76,7 +76,7 @@ public class RunPipelineResponse {
   public static Builder builder(RunPipelineResponse runPipelineResponse) {
     Builder builder = new Builder();
     return builder.setStep(runPipelineResponse.steps)
-        .setResponseStatus(runPipelineResponse.responseStatus);
+      .setResponseStatus(runPipelineResponse.responseStatus);
   }
 
   /**
