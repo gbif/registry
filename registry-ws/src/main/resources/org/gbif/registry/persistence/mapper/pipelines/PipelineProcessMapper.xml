@@ -157,6 +157,16 @@
     </if>
   </select>
 
+  <select id="getPipelineProcessesByDatasetAndAttempts" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process p
+    WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER}
+      AND p.attempt IN
+      <foreach collection="attempts" item="key" separator="," open="(" close=")">
+        #{key}
+      </foreach>
+  </select>
+
   <select id="count" resultType="Long">
     SELECT COUNT(*)
     FROM pipeline_process

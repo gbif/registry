@@ -14,7 +14,9 @@ import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
@@ -351,6 +353,24 @@ public class PipelineProcessMapperTest {
     pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(3).setCreatedBy(TEST_USER));
     assertEquals(3, pipelineProcessMapper.getLastAttempt(uuid1).get().intValue());
+  }
+
+  @Test
+  public void getPipelineProcessesByDatasetAndAttemptsTest() {
+    // insert processes
+    UUID datasetKey = insertDataset();
+    PipelineProcess p1 =
+      new PipelineProcess().setDatasetKey(datasetKey).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p1);
+    PipelineProcess p2 =
+      new PipelineProcess().setDatasetKey(datasetKey).setAttempt(2).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p2);
+
+    List<PipelineProcess>
+      processes = pipelineProcessMapper.getPipelineProcessesByDatasetAndAttempts(datasetKey, Arrays.asList(1, 2));
+    assertEquals(2, processes.size());
+    assertTrue(processes.contains(new PipelineProcess().setDatasetKey(datasetKey).setAttempt(1)));
+    assertTrue(processes.contains(new PipelineProcess().setDatasetKey(datasetKey).setAttempt(2)));
   }
 
   private UUID insertDataset() {
