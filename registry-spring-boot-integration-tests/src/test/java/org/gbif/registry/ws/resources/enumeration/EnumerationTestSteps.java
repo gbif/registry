@@ -13,9 +13,12 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Map;
+
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
@@ -48,10 +51,29 @@ public class EnumerationTestSteps {
       .andDo(print());
   }
 
+  @When("get {word} enumeration")
+  public void getCountryEnum(String enumType) throws Exception {
+    result = mvc
+      .perform(
+        get("/enumeration/" + enumType))
+      .andDo(print());
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
       .andExpect(status().is(status));
   }
-}
 
+  @Then("element number {int} is {string}")
+  public void assertOneElementOfArrayEnumResponse(int elementNumber, String elementValue) throws Exception {
+    result.andExpect(jsonPath(String.format("$.[%d]", elementNumber)).value(elementValue));
+  }
+
+  @Then("element number {int} is")
+  public void assertOneElementOfArrayEnumResponse(int elementNumber, Map<String, String> params) throws Exception {
+    for (Map.Entry<String, String> entry : params.entrySet()) {
+      result.andExpect(jsonPath(String.format("$[%d].%s", elementNumber, entry.getKey())).value(entry.getValue()));
+    }
+  }
+}
