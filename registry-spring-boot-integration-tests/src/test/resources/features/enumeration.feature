@@ -5,6 +5,9 @@ Feature: Enumeration functionality
     When get enumeration basic "Language"
     Then response status should be 200
     And element number 0 is "abk"
+    When get enumeration basic "Extension"
+    Then response status should be 200
+    And element number 0 is "AUDUBON"
 
   Scenario: get country enumeration
     When get country enumeration
@@ -30,3 +33,10 @@ Feature: Enumeration functionality
     When get license enumeration
     Then response status should be 200
     And element number 0 is "http://creativecommons.org/publicdomain/zero/1.0/legalcode"
+
+  Scenario: get interpretation remark enumeration
+    When get interpretationRemark enumeration
+    Then response status should be 200
+    And element number 0 is
+      | id       | ZERO_COORDINATE |
+      | severity | WARNING         |
