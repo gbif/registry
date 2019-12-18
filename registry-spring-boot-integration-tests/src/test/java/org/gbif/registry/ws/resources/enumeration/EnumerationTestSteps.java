@@ -17,7 +17,6 @@ import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,20 +42,25 @@ public class EnumerationTestSteps {
       .build();
   }
 
+  @When("get enumeration inventory")
+  public void getInventory() throws Exception {
+    result = mvc
+      .perform(
+        get("/enumeration/basic"));
+  }
+
   @When("get enumeration basic {string}")
   public void getEnum(String enumName) throws Exception {
     result = mvc
       .perform(
-        get("/enumeration/basic/{name}", enumName))
-      .andDo(print());
+        get("/enumeration/basic/{name}", enumName));
   }
 
   @When("get {word} enumeration")
   public void getCountryEnum(String enumType) throws Exception {
     result = mvc
       .perform(
-        get("/enumeration/" + enumType))
-      .andDo(print());
+        get("/enumeration/" + enumType));
   }
 
   @Then("response status should be {int}")
