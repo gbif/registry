@@ -361,11 +361,20 @@ public class OccurrenceDownloadTestSteps {
           .content(stringContent));
   }
 
+  @When("list dataset usages by dataset {string} using {word} {string}")
+  public void listUsagesByDataset(String datasetKey, String userType, String username) throws Exception {
+    result = mvc
+      .perform(
+        get("/occurrence/download/dataset/{datasetKey}", datasetKey)
+          .with(httpBasic(username, TEST_PASSWORD)));
+  }
+
   @When("list dataset usages for download {string} using {word} {string}")
   public void listUsages(String downloadKey, String userType, String username) throws Exception {
     result = mvc
       .perform(
-        get("/occurrence/download/{key}/datasets", downloadKey));
+        get("/occurrence/download/{key}/datasets", downloadKey)
+          .with(httpBasic(username, TEST_PASSWORD)));
   }
 
   @Then("response status should be {int}")

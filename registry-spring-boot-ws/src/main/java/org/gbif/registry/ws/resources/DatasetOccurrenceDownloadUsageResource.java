@@ -38,6 +38,9 @@ public class DatasetOccurrenceDownloadUsageResource implements DatasetOccurrence
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDataset(datasetKey, page);
     clearSensitiveData(authentication, usages);
-    return new PagingResponse<>(page, (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
+    return new PagingResponse<>(
+      page,
+      (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey),
+      usages);
   }
 }
