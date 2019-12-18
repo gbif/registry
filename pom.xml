@@ -61,7 +61,7 @@
     <gbif-common.version>0.40</gbif-common.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
-    <gbif-postal-service.version>0.42-jackson2</gbif-postal-service.version>
+    <gbif-postal-service.version>0.44.1-jackson2</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
     <gbif-api.version>0.103.2-jackson2</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
