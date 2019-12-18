@@ -42,6 +42,7 @@ import static java.util.stream.Collectors.toList;
  * based clients. This has no Java client, since Java clients have access to the Enums directly.
  * Reflection can be used to generate the inventory of enumerations.
  */
+@SuppressWarnings("UnstableApiUsage")
 @RestController
 @RequestMapping(value = "enumeration",
   produces = MediaType.APPLICATION_JSON_VALUE)
@@ -70,6 +71,7 @@ public class EnumerationResource {
       .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   //Only includes InterpretationRemark that are NOT deprecated
+  @SuppressWarnings("Convert2MethodRef")
   private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
     Stream.concat(
       Arrays.stream(OccurrenceIssue.values()),
@@ -117,7 +119,7 @@ public class EnumerationResource {
 
     } catch (Exception e) {
       LOG.error("Unable to read the classpath for enumerations", e);
-      return ImmutableMap.<String, Enum<?>[]>of(); // empty
+      return ImmutableMap.of(); // empty
     }
   }
 
@@ -138,7 +140,7 @@ public class EnumerationResource {
   }
 
   /**
-   * @return list of 'deserialised' License enums: uses License URL or just the enum name if no URL exists
+   * @return list of 'deserialized' License enums: uses License URL or just the enum name if no URL exists
    */
   @GetMapping("license")
   public List<String> listLicenses() {
@@ -170,7 +172,7 @@ public class EnumerationResource {
    */
   @GetMapping("basic/{name}")
   @NullToNotFound
-  public Enum<?>[] getEnumeration(@PathVariable("name") @NotNull String name) {
+  public Object getEnumeration(@PathVariable("name") @NotNull String name) {
     return PATH_MAPPING.getOrDefault(name, null);
   }
 
