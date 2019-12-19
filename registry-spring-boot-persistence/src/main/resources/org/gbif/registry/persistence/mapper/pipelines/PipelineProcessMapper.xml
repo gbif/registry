@@ -34,11 +34,11 @@
   </sql>
 
   <sql id="EXECUTION_FIELDS_SELECT">
-    key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason
+    key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks
   </sql>
 
   <sql id="EXECUTION_FIELDS_CREATE">
-    pipeline_process_key, steps_to_run, created, created_by, rerun_reason
+    pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks
   </sql>
 
   <sql id="EXECUTION_VALUES_CREATE">
@@ -46,7 +46,8 @@
     #{execution.stepsToRun,jdbcType=ARRAY,typeHandler=StepTypeArrayTypeHandler},
     now(), <!-- created -->
     #{execution.createdBy,jdbcType=VARCHAR},
-    #{execution.rerunReason,jdbcType=VARCHAR}
+    #{execution.rerunReason,jdbcType=VARCHAR},
+    #{execution.remarks,jdbcType=VARCHAR}
   </sql>
 
   <sql id="STEP_FIELDS_CREATE">
