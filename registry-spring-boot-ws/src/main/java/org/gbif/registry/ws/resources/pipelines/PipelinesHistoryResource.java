@@ -43,7 +43,8 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
  * Pipelines History service.
  */
 @RestController
-@RequestMapping(value = "pipelines/history", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "pipelines/history",
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class PipelinesHistoryResource {
 
   private static final String PROCESS_PATH = "process/";
@@ -84,7 +85,7 @@ public class PipelinesHistoryResource {
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long createPipelineProcess(
-    PipelineProcessParameters params, Authentication authentication) {
+    @RequestBody PipelineProcessParameters params, Authentication authentication) {
     return historyTrackingService.createOrGet(
       params.getDatasetKey(), params.getAttempt(), authentication.getName());
   }
@@ -97,7 +98,7 @@ public class PipelinesHistoryResource {
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long addPipelineExecution(
     @PathVariable("processKey") long processKey,
-    PipelineExecution pipelineExecution,
+    @RequestBody PipelineExecution pipelineExecution,
     Authentication authentication) {
     return historyTrackingService.addPipelineExecution(
       processKey, pipelineExecution, authentication.getName());
@@ -112,7 +113,7 @@ public class PipelinesHistoryResource {
   public long addPipelineStep(
     @PathVariable("processKey") long processKey,
     @PathVariable("executionKey") long executionKey,
-    PipelineStep pipelineStep,
+    @RequestBody PipelineStep pipelineStep,
     Authentication authentication) {
     return historyTrackingService.addPipelineStep(
       processKey, executionKey, pipelineStep, authentication.getName());
