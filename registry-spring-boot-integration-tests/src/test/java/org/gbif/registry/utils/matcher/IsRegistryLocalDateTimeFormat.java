@@ -12,7 +12,7 @@ import java.time.temporal.ChronoField;
 public class IsRegistryLocalDateTimeFormat extends TypeSafeMatcher<String> {
 
   private static final DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
-    .appendPattern("yyyy-MM-dd HH:mm:ss")
+    .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
     .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
     .toFormatter();
 
