@@ -52,14 +52,14 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
   @Override
   public PagingResponse<IngestionProcess> ingestionHistory(UUID datasetKey, Pageable pageable) {
     // get datasets process statuses
-    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
-
-    if (count == 0) {
-      return new PagingResponse<>(pageable, count);
-    }
-
     List<DatasetProcessStatus> datasetProcessStatuses =
         datasetProcessStatusMapper.listByDataset(datasetKey, pageable);
+
+    if (datasetProcessStatuses.isEmpty()) {
+      return new PagingResponse<>(pageable, 0L);
+    }
+
+    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
 
     // get all attempts retrieved from the DB
     List<Integer> attempts =
