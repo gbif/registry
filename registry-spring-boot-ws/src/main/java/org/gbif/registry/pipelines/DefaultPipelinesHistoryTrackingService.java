@@ -306,7 +306,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
         .build();
     }
 
-    // Performs the messaging and updates the status once the message has been sent
+    // Performs the messaging and updates the status onces the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
@@ -359,17 +359,19 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
 
     // send messages
     Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
-    stepsToSend.forEach((key, message) -> {
-      message.setExecutionId(execution.getKey());
-      try {
-        publisher.send(message);
-      } catch (IOException ex) {
-        LOG.warn("Error sending message", ex);
-        stepsFailed.add(key);
-      }
-    });
+    stepsToSend.forEach(
+      (key, message) -> {
+        message.setExecutionId(execution.getKey());
+        try {
+          publisher.send(message);
+        } catch (IOException ex) {
+          LOG.warn("Error sending message", ex);
+          stepsFailed.add(key);
+        }
+      });
 
-    RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStepsFailed(stepsFailed);
+    RunPipelineResponse.Builder responseBuilder =
+      RunPipelineResponse.builder().setStepsFailed(stepsFailed);
     if (stepsFailed.size() == steps.size()) {
       responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR);
     } else {
@@ -492,7 +494,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     }
 
     step.setMetrics(new HashSet<>(metrics));
-    step.setNumberRecords(getNumberRecordsFromMetrics(metrics));
+    step.setNumberRecords(getNumberRecordsFromMetrics(metrics, step.getType()));
 
     // update status and modifying user
     step.setState(status);
@@ -501,8 +503,22 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     mapper.updatePipelineStep(step);
   }
 
-  public Long getNumberRecordsFromMetrics(List<PipelineStep.MetricInfo> metrics) {
+  public Long getNumberRecordsFromMetrics(
+    List<PipelineStep.MetricInfo> metrics, StepType stepType) {
     try {
+      if (stepType == StepType.VERBATIM_TO_INTERPRETED) {
+        Optional<Long> numberRecords =
+          metrics.stream()
+            .filter(m -> m.getName().equals("basicRecordsCountAttempted"))
+            .findFirst()
+            .map(PipelineStep.MetricInfo::getValue)
+            .map(Long::parseLong);
+
+        if (numberRecords.isPresent()) {
+          return numberRecords.get();
+        }
+      }
+
       return metrics.stream()
         .map(PipelineStep.MetricInfo::getValue)
         .map(Long::parseLong)
