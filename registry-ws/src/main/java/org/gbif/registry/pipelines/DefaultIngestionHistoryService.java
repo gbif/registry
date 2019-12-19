@@ -54,12 +54,11 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
     // get datasets process statuses
     List<DatasetProcessStatus> datasetProcessStatuses =
         datasetProcessStatusMapper.listByDataset(datasetKey, pageable);
+    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
 
     if (datasetProcessStatuses.isEmpty()) {
-      return new PagingResponse<>(pageable, 0L);
+      return new PagingResponse<>(pageable, count);
     }
-
-    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
 
     // get all attempts retrieved from the DB
     List<Integer> attempts =
