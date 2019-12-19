@@ -7,12 +7,14 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-public class IsRegistryDateFormat extends TypeSafeMatcher<String> {
+public class IsRegistryOffsetDateTimeFormat extends TypeSafeMatcher<String> {
+
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   @Override
   protected boolean matchesSafely(String s) {
     try {
-      OffsetDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+      OffsetDateTime.parse(s, FORMATTER);
       return true;
     } catch (DateTimeParseException e) {
       return false;

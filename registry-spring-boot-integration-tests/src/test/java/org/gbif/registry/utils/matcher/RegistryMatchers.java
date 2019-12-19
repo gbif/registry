@@ -12,7 +12,11 @@ public class RegistryMatchers {
     return new IsDownloadDoi();
   }
 
-  public static Matcher<String> isRegistryDateFormat() {
-    return new IsRegistryDateFormat();
+  public static Matcher<String> isRegistryOffsetDateTimeFormat() {
+    return new IsRegistryOffsetDateTimeFormat();
+  }
+
+  public static Matcher<String> isRegistryLocalDateTimeFormat() {
+    return new IsRegistryLocalDateTimeFormat();
   }
 }
