@@ -43,15 +43,15 @@ Feature: User functionality
     And change password response contains error information "PASSWORD_LENGTH_VIOLATION"
 
   Scenario Outline: Login by <state> APP role
-    Given <state> request with <body> and sign
-    When "<state>" login by APP role
+    Given <state> request with <body> body and sign
+    When <state> login by APP role
     Then response status should be <status>
     And <state> request verifications passed
 
     Scenarios:
       | state   | body    | status |
-      | invalid | no body | 403    |
-      | valid   | body    | 201    |
+      | invalid | absent  | 403    |
+      | valid   | present | 201    |
 
   Scenario: Get current user for existing user "user_12" should be successful
     When perform whoami request for user "user_12" with password "welcome"
