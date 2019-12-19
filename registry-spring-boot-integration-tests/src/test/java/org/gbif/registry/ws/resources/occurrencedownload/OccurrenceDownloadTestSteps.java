@@ -48,7 +48,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
-import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryDateFormat;
+import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryOffsetDateTimeFormat;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -393,9 +393,9 @@ public class OccurrenceDownloadTestSteps {
     result
       .andExpect(jsonPath("$.key").value(download.getKey()))
       .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-      .andExpect(jsonPath("$.created").value(isRegistryDateFormat()))
-      .andExpect(jsonPath("$.modified").value(isRegistryDateFormat()))
-      .andExpect(jsonPath("$.eraseAfter").value(isRegistryDateFormat()))
+      .andExpect(jsonPath("$.created").value(isRegistryOffsetDateTimeFormat()))
+      .andExpect(jsonPath("$.modified").value(isRegistryOffsetDateTimeFormat()))
+      .andExpect(jsonPath("$.eraseAfter").value(isRegistryOffsetDateTimeFormat()))
       // sensitive information is not present
       .andExpect(jsonPath("$.request.creator").doesNotExist())
       .andExpect(jsonPath("$.request.notificationAddresses").doesNotExist());
