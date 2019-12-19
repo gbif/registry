@@ -167,7 +167,7 @@ public class UserTestSteps {
           .content(objectMapper.writeValueAsString(params))
           .contentType(MediaType.APPLICATION_JSON)
           .with(httpBasic(login, oldPassword)))
-    .andDo(print());
+      .andDo(print());
   }
 
   @When("login {string} with old password {string}")
@@ -180,37 +180,35 @@ public class UserTestSteps {
     login("GET", login, newPassword);
   }
 
-  @SuppressWarnings("unchecked")
-  @Given("invalid request with no body and sign")
-  public void prepareInvalidRequestAndSign() {
-    rawRequestMock = mock(HttpServletRequest.class);
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  @Given("{word} request with {word} body and sign")
+  public void prepareInvalidRequestAndSign(String state, String dataPresence) throws Exception {
+    if ("invalid".equals(state)) {
+      rawRequestMock = mock(HttpServletRequest.class);
 
-    final Enumeration enumeration = new StringTokenizer("Content-Type x-gbif-user");
-    when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
-    when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
-    when(rawRequestMock.getHeader(SecurityConstants.HEADER_GBIF_USER)).thenReturn("fake");
+      final Enumeration enumeration = new StringTokenizer("Content-Type x-gbif-user");
+      when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
+      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
+      when(rawRequestMock.getHeader(SecurityConstants.HEADER_GBIF_USER)).thenReturn("fake");
 
-    requestObject = new RequestObject(rawRequestMock);
+      requestObject = new RequestObject(rawRequestMock);
+    } else {
+      final TestResource.TestRequest requestToSign = new TestResource.TestRequest("test");
+      final byte[] contentToSign = objectMapper.writeValueAsBytes(requestToSign);
+
+      rawRequestMock = mock(HttpServletRequest.class);
+      when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
+      when(rawRequestMock.getRequestURI()).thenReturn("/test/app2");
+      when(rawRequestMock.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(contentToSign)));
+      final Enumeration enumeration = new StringTokenizer("Content-Type");
+      when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
+      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
+
+      requestObject = gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
+    }
   }
 
-  @SuppressWarnings("unchecked")
-  @Given("valid request with body and sign")
-  public void prepareValidRequestAndSign() throws Exception {
-    final TestResource.TestRequest requestToSign = new TestResource.TestRequest("test");
-    final byte[] contentToSign = objectMapper.writeValueAsBytes(requestToSign);
-
-    rawRequestMock = mock(HttpServletRequest.class);
-    when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
-    when(rawRequestMock.getRequestURI()).thenReturn("/test/app2");
-    when(rawRequestMock.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(contentToSign)));
-    final Enumeration enumeration = new StringTokenizer("Content-Type");
-    when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
-    when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
-
-    requestObject = gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
-  }
-
-  @When("{string} login by APP role")
+  @When("{word} login by APP role")
   public void loginByAppRole(String state) throws Exception {
     if ("invalid".equals(state)) {
       result = mvc
@@ -227,19 +225,18 @@ public class UserTestSteps {
     }
   }
 
-  @Then("invalid request verifications passed")
-  public void invalidRequestVerifications() {
-    verify(rawRequestMock).getHeaderNames();
-    verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
-    verify(rawRequestMock).getHeader(SecurityConstants.HEADER_GBIF_USER);
-  }
-
-  @Then("valid request verifications passed")
-  public void validRequestVerifications() {
-    verify(rawRequestMock).getMethod();
-    verify(rawRequestMock, atLeastOnce()).getRequestURI();
-    verify(rawRequestMock).getHeaderNames();
-    verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
+  @Then("{word} request verifications passed")
+  public void invalidRequestVerifications(String state) {
+    if ("invalid".equals(state)) {
+      verify(rawRequestMock).getHeaderNames();
+      verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
+      verify(rawRequestMock).getHeader(SecurityConstants.HEADER_GBIF_USER);
+    } else {
+      verify(rawRequestMock).getMethod();
+      verify(rawRequestMock, atLeastOnce()).getRequestURI();
+      verify(rawRequestMock).getHeaderNames();
+      verify(rawRequestMock).getHeader(HttpHeaders.CONTENT_TYPE);
+    }
   }
 
   @When("perform whoami request for user {string} with password {string}")
