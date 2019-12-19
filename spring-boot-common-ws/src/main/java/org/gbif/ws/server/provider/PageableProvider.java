@@ -55,7 +55,7 @@ public class PageableProvider implements ContextProvider<Pageable> {
               getFirst(params, PARAM_LIMIT), DEFAULT_PARAM_LIMIT);
           limit = DEFAULT_PARAM_LIMIT;
         } else if (limit > LIMIT_CAP) {
-          LOG.info("Limit parameter too high. Use maximum {}", LIMIT_CAP);
+          LOG.debug("Limit parameter too high. Use maximum {}", LIMIT_CAP);
           limit = LIMIT_CAP;
         }
       } catch (NumberFormatException e) {
