@@ -23,7 +23,7 @@ public class StepTypeArrayTypeHandler extends BaseTypeHandler<List<StepType>> {
   public void setNonNullParameter(
     PreparedStatement ps, int i, List<StepType> parameter, JdbcType jdbcType)
     throws SQLException {
-    Array array = ps.getConnection().createArrayOf("pipeline_step_type", parameter.toArray());
+    Array array = ps.getConnection().createArrayOf("text", parameter.toArray());
     ps.setArray(i, array);
   }
 
