@@ -2,6 +2,7 @@ package org.gbif.registry.pipelines.model;
 
 import org.gbif.api.model.pipelines.StepType;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -24,12 +25,15 @@ public class RunPipelineResponse {
 
   private final Set<StepType> steps;
 
+  private final Set<StepType> stepsFailed;
+
   private final String message;
 
-  public RunPipelineResponse(ResponseStatus responseStatus, Set<StepType> steps, String message) {
+  public RunPipelineResponse(ResponseStatus responseStatus, Set<StepType> steps, Set<StepType> stepsFailed, String message) {
     this.responseStatus = responseStatus;
     this.steps = steps;
     this.message = message;
+    this.stepsFailed = stepsFailed;
   }
 
   /**
@@ -50,17 +54,24 @@ public class RunPipelineResponse {
     return message;
   }
 
+  public Set<StepType> getStepsFailed() {
+    return stepsFailed;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     RunPipelineResponse that = (RunPipelineResponse) o;
-    return responseStatus == that.responseStatus && steps.equals(that.steps) && message.equals(that.message);
+    return responseStatus == that.responseStatus
+      && steps.equals(that.steps)
+      && stepsFailed.equals(that.stepsFailed)
+      && message.equals(that.message);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(responseStatus, steps, message);
+    return Objects.hash(responseStatus, steps, stepsFailed, message);
   }
 
   /**
@@ -75,7 +86,7 @@ public class RunPipelineResponse {
    */
   public static Builder builder(RunPipelineResponse runPipelineResponse) {
     Builder builder = new Builder();
-    return builder.setStep(runPipelineResponse.steps)
+    return builder.setSteps(runPipelineResponse.steps)
       .setResponseStatus(runPipelineResponse.responseStatus);
   }
 
@@ -85,7 +96,8 @@ public class RunPipelineResponse {
   public static class Builder {
 
     private ResponseStatus responseStatus;
-    private Set<StepType> step;
+    private Set<StepType> steps;
+    private Set<StepType> stepsFailed;
     private String message;
 
     public Builder setResponseStatus(ResponseStatus responseStatus) {
@@ -93,8 +105,29 @@ public class RunPipelineResponse {
       return this;
     }
 
-    public Builder setStep(Set<StepType> step) {
-      this.step = step;
+    public Builder setSteps(Set<StepType> steps) {
+      this.steps = steps;
+      return this;
+    }
+
+    public Builder addStep(StepType step) {
+      if (this.steps == null) {
+        this.steps = new HashSet<>();
+      }
+      this.steps.add(step);
+      return this;
+    }
+
+    public Builder setStepsFailed(Set<StepType> stepsFailed) {
+      this.stepsFailed = stepsFailed;
+      return this;
+    }
+
+    public Builder addStepFailed(StepType stepFailed) {
+      if (this.stepsFailed == null) {
+        this.stepsFailed = new HashSet<>();
+      }
+      this.stepsFailed.add(stepFailed);
       return this;
     }
 
@@ -104,7 +137,7 @@ public class RunPipelineResponse {
     }
 
     public RunPipelineResponse build() {
-      return new RunPipelineResponse(responseStatus, step, message);
+      return new RunPipelineResponse(responseStatus, steps, stepsFailed, message);
     }
   }
 }
