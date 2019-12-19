@@ -90,7 +90,7 @@ public class PipelinesHistoryResource {
   }
 
   /**
-   * Adds a new pipeline step.
+   * Adds a new pipeline execution.
    */
   @PostMapping(value = PROCESS_PATH + "{processKey}",
     consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -154,7 +154,7 @@ public class PipelinesHistoryResource {
   @PostMapping(value = RUN_PATH,
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity runAll(
+  public ResponseEntity<RunPipelineResponse> runAll(
     @RequestParam("steps") String steps,
     @RequestParam("reason") String reason,
     Authentication authentication,
@@ -175,7 +175,7 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity runPipelineAttempt(
+  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
     @PathVariable("datasetKey") UUID datasetKey,
     @RequestParam("steps") String steps,
     @RequestParam("reason") String reason,
@@ -197,7 +197,7 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}/{attempt}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity runPipelineAttempt(
+  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
     @PathVariable("datasetKey") UUID datasetKey,
     @PathVariable("attempt") int attempt,
     @RequestParam("steps") String steps,
@@ -219,7 +219,7 @@ public class PipelinesHistoryResource {
   /**
    * Transforms a {@link RunPipelineResponse} into a {@link ResponseEntity}.
    */
-  private static ResponseEntity toHttpResponse(RunPipelineResponse runPipelineResponse) {
+  private static ResponseEntity<RunPipelineResponse> toHttpResponse(RunPipelineResponse runPipelineResponse) {
     if (runPipelineResponse.getResponseStatus()
       == RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(runPipelineResponse);
@@ -235,7 +235,7 @@ public class PipelinesHistoryResource {
     return ResponseEntity.ok().body(runPipelineResponse);
   }
 
-  private Optional<ResponseEntity> checkRunInputParams(String steps, String reason) {
+  private Optional<ResponseEntity<RunPipelineResponse>> checkRunInputParams(String steps, String reason) {
     if (Strings.isNullOrEmpty(steps) || Strings.isNullOrEmpty(reason)) {
       return Optional.of(
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
