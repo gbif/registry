@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -94,17 +95,14 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   // MyBatis mapper
   private final PipelineProcessMapper mapper;
   private final DatasetService datasetService;
-  private final MetricsHandler metricsHandler;
 
   public DefaultPipelinesHistoryTrackingService(
     @Autowired(required = false) MessagePublisher publisher,
     PipelineProcessMapper mapper,
-    @Lazy DatasetService datasetService,
-    MetricsHandler metricsHandler) {
+    @Lazy DatasetService datasetService) {
     this.publisher = publisher;
     this.mapper = mapper;
     this.datasetService = datasetService;
-    this.metricsHandler = metricsHandler;
   }
 
   @Override
@@ -204,7 +202,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * @param step            to be searched
    * @return optionally, the las step found
    */
-  private Optional<PipelineStep> getLatestSuccessfulStep(
+  @VisibleForTesting
+  Optional<PipelineStep> getLatestSuccessfulStep(
     PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
       .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
