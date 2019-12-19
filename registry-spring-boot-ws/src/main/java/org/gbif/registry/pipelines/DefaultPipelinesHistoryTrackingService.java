@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import org.gbif.api.model.common.paging.Pageable;
@@ -45,8 +44,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -191,7 +192,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
 
     return RunPipelineResponse.builder()
       .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
-      .setStep(steps)
+      .setSteps(steps)
       .build();
   }
 
@@ -301,13 +302,14 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     if (getStatus(process) == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
-        .setStep(steps)
+        .setSteps(steps)
         .build();
     }
 
     // Performs the messaging and updates the status once the message has been sent
-    RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStep(steps);
     Dataset dataset = datasetService.get(datasetKey);
+
+    Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
       Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
 
@@ -316,7 +318,6 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       }
 
       PipelineStep step = latestStepOpt.get();
-
       try {
         PipelineBasedMessage message = null;
 
@@ -330,38 +331,52 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
           message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
         } else if (stepName == StepType.XML_TO_VERBATIM) {
           message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
-        } else {
-          return responseBuilder
-            .setResponseStatus(RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP)
-            .build();
         }
 
-        if (message == null) {
-          return responseBuilder
-            .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
-            .build();
+        if (message != null) {
+          stepsToSend.put(stepName, message);
         }
-
-        // create pipelines execution
-        PipelineExecution execution =
-          new PipelineExecution()
-            .setCreatedBy(user)
-            .setRerunReason(reason)
-            .setStepsToRun(new ArrayList<>(steps));
-        mapper.addPipelineExecution(process.getKey(), execution);
-        message.setExecutionId(execution.getKey());
-
-        // send message
-        publisher.send(message);
-
-        return responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK).build();
       } catch (IOException ex) {
-        LOG.error("Error reading message", ex);
-        throw Throwables.propagate(ex);
+        LOG.warn("Error reading message", ex);
       }
     }
 
-    return responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR).build();
+    if (stepsToSend.isEmpty()) {
+      return RunPipelineResponse.builder()
+        .setSteps(steps)
+        .setStepsFailed(steps)
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+        .build();
+    }
+
+    // create pipelines execution
+    PipelineExecution execution =
+      new PipelineExecution()
+        .setCreatedBy(user)
+        .setRerunReason(reason)
+        .setStepsToRun(new ArrayList<>(steps));
+    mapper.addPipelineExecution(process.getKey(), execution);
+
+    // send messages
+    Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
+    stepsToSend.forEach((key, message) -> {
+      message.setExecutionId(execution.getKey());
+      try {
+        publisher.send(message);
+      } catch (IOException ex) {
+        LOG.warn("Error sending message", ex);
+        stepsFailed.add(key);
+      }
+    });
+
+    RunPipelineResponse.Builder responseBuilder = RunPipelineResponse.builder().setStepsFailed(stepsFailed);
+    if (stepsFailed.size() == steps.size()) {
+      responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR);
+    } else {
+      responseBuilder.setResponseStatus(RunPipelineResponse.ResponseStatus.OK);
+    }
+
+    return responseBuilder.build();
   }
 
   private <T extends PipelineBasedMessage> T createMessage(String jsonMessage, Class<T> targetClass)
