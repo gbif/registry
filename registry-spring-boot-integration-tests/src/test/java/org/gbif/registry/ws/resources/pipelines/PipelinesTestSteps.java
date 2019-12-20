@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.resources.pipelines;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -30,6 +31,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,8 +81,13 @@ public class PipelinesTestSteps {
     connection.close();
   }
 
-  @Given("dataset {string} with key {string}")
-  public void prepareDataset(String datasetName, String datasetKey) {
+  @Given("datasets")
+  public void prepareDatasets(DataTable dataTable) {
+    // prepared by scripts in @Before
+  }
+
+  @Given("pipeline processes")
+  public void preparePipelineProcesses(DataTable dataTable) {
     // prepared by scripts in @Before
   }
 
@@ -101,7 +109,29 @@ public class PipelinesTestSteps {
     result = mvc
       .perform(
         get("/pipelines/history/{datasetKey}/{attempt}", datasetKey, attempt)
-      );
+      )
+      .andDo(print())
+    ;
+  }
+
+  @When("history pipeline process")
+  public void historyPipelineProcess() throws Exception {
+    result = mvc
+      .perform(
+        get("/pipelines/history")
+      )
+      .andDo(print())
+    ;
+  }
+
+  @When("history pipeline process by datasetKey {string}")
+  public void historyPipelineProcess(String datasetKey) throws Exception {
+    result = mvc
+      .perform(
+        get("/pipelines/history/{datasetKey}", datasetKey)
+      )
+      .andDo(print())
+    ;
   }
 
   @Then("response status should be {int}")
@@ -116,5 +146,17 @@ public class PipelinesTestSteps {
     for (Map.Entry<String, String> entry : expectedData.entrySet()) {
       result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
     }
+  }
+
+  @Then("pipeline process is empty")
+  public void assertPipelineProcessEmpty() throws Exception {
+    result.andExpect(content().string(""));
+  }
+
+  @Then("pipeline process history contains {int} entity")
+  public void assertHistory(int count) throws Exception {
+    result
+      .andExpect(jsonPath("$.count").value(count))
+      .andExpect(jsonPath("$.endOfRecords").value(true));
   }
 }
