@@ -65,7 +65,7 @@ public class PipelinesHistoryResource {
   }
 
   /**
-   * Lists teh history of a dataset.
+   * Lists the history of a dataset.
    */
   @GetMapping("{datasetKey}")
   public PagingResponse<PipelineProcess> history(@PathVariable("datasetKey") UUID datasetKey,

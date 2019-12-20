@@ -11,6 +11,12 @@ Feature: pipelines functionality
       | 20  | d82273f6-9738-48a5-a639-2086f9c49d18 | 1       |
       | 21  | d82273f6-9738-48a5-a639-2086f9c49d18 | 2       |
       | 22  | d82273f6-9738-48a5-a639-2086f9c49d18 | 3       |
+    And pipeline execution
+      | key | processKey |
+      | 11  | 20         |
+    And pipeline step
+      | key | executionKey | state   |
+      | 9   | 11           | RUNNING |
 
   Scenario: create and get pipeline process
     When create pipeline process using admin "registry_admin" with params
@@ -73,11 +79,7 @@ Feature: pipelines functionality
     Then response status should be 403
 
   Scenario: add pipeline step without privileges will cause Forbidden 403
-    When add pipeline execution for process 20 using admin "registry_admin"
-      | stepsToRun       | rerunReason | remarks |
-      | DWCA_TO_VERBATIM | rerun       | remarks |
-    Then response status should be 201
-    And extract executionKey
+    Given pipeline execution with key 11
     When add pipeline step for process 20 and current execution using user "registry_user"
       | message | runner     | type             | state   |
       | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
