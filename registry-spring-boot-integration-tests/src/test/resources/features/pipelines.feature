@@ -57,7 +57,7 @@ Feature: pipelines functionality
       | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
     Then response status should be 201
     And extract stepKey
-    When get pipeline step fro process 20 and current execution
+    When get pipeline step by stepKey for process 20 and current execution
     Then response status should be 200
     And pipeline step is
       | type      | ABCD_TO_VERBATIM |
@@ -65,3 +65,20 @@ Feature: pipelines functionality
       | state     | RUNNING          |
       | message   | message          |
       | createdBy | registry_admin   |
+
+  Scenario: add pipeline execution without privileges will cause Forbidden 403
+    When add pipeline execution for process 20 using user "registry_user"
+      | stepsToRun       | rerunReason | remarks |
+      | DWCA_TO_VERBATIM | rerun       | remarks |
+    Then response status should be 403
+
+  Scenario: add pipeline step without privileges will cause Forbidden 403
+    When add pipeline execution for process 20 using admin "registry_admin"
+      | stepsToRun       | rerunReason | remarks |
+      | DWCA_TO_VERBATIM | rerun       | remarks |
+    Then response status should be 201
+    And extract executionKey
+    When add pipeline step for process 20 and current execution using user "registry_user"
+      | message | runner     | type             | state   |
+      | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
+    Then response status should be 403
