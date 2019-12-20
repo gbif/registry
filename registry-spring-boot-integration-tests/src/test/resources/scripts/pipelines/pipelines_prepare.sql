@@ -39,3 +39,8 @@ VALUES ('4348adaa-d744-4241-92a0-ebf9d55eb9bb', null, null, '2fe63cec-9b23-4974-
         null, null, false, 'WS TEST', 'WS TEST', '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,
         '''dataset'':2,8 ''descript'':5 ''occurr'':4 ''registry2'':3 ''test'':1,7 ''www.homepage.com'':9',
         '10.21373/cba', 'UNSPECIFIED', null, null);
+
+
+INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (20, 'd82273f6-9738-48a5-a639-2086f9c49d18', 1, '2019-12-20 09:22:33.137140', 'WS TEST');
+INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (21, 'd82273f6-9738-48a5-a639-2086f9c49d18', 2, '2019-12-20 09:22:33.177763', 'WS TEST');
+INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (22, 'd82273f6-9738-48a5-a639-2086f9c49d18', 3, '2019-12-20 09:22:33.188937', 'WS TEST');
