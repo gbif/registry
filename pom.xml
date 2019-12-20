@@ -67,6 +67,7 @@
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>
+    <commons-io.version>2.5</commons-io.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <jjwt.version>0.9.1</jjwt.version>
     <guava.version>23.0</guava.version>
@@ -310,6 +311,11 @@
         <groupId>commons-validator</groupId>
         <artifactId>commons-validator</artifactId>
         <version>${commons-validator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
