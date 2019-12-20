@@ -7,6 +7,8 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,8 @@ public class PipelinesTestSteps {
 
   private ResultActions result;
   private MockMvc mvc;
+  private int executionKey;
+  private int stepKey;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -134,6 +138,46 @@ public class PipelinesTestSteps {
     ;
   }
 
+  @When("add pipeline execution for process {int} using {word} {string}")
+  public void addPipelineExecution(int processKey, String userType, String username, PipelineExecution pipelineExecution) throws Exception {
+    String content = objectMapper.writeValueAsString(pipelineExecution);
+
+    result = mvc
+      .perform(
+        post("/pipelines/history/process/{processKey}", processKey)
+          .with(httpBasic(username, TEST_PASSWORD))
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+      )
+      .andDo(print())
+    ;
+  }
+
+  @When("add pipeline step for process {int} and current execution using {word} {string}")
+  public void addPipelineStep(int processKey, String userType, String username, PipelineStep pipelineStep) throws Exception {
+    String content = objectMapper.writeValueAsString(pipelineStep);
+
+    result = mvc
+      .perform(
+        post("/pipelines/history/process/{processKey}/{executionKey}", processKey, executionKey)
+          .with(httpBasic(username, TEST_PASSWORD))
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+      )
+      .andDo(print())
+    ;
+  }
+
+  @When("get pipeline step fro process {int} and current execution")
+  public void historyPipelineProcess(int processKey) throws Exception {
+    result = mvc
+      .perform(
+        get("/pipelines/history/process/{processKey}/{executionKey}/{stepKey}", processKey, executionKey, stepKey)
+      )
+      .andDo(print())
+    ;
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -158,5 +202,25 @@ public class PipelinesTestSteps {
     result
       .andExpect(jsonPath("$.count").value(count))
       .andExpect(jsonPath("$.endOfRecords").value(true));
+  }
+
+  @Then("extract executionKey")
+  public void extractExecutionKey() throws Exception {
+    String contentAsString = result.andReturn().getResponse().getContentAsString();
+    executionKey = Integer.parseInt(contentAsString);
+  }
+
+  @Then("extract stepKey")
+  public void extractStepKey() throws Exception {
+    String contentAsString = result.andReturn().getResponse().getContentAsString();
+    stepKey = Integer.parseInt(contentAsString);
+  }
+
+  @Then("pipeline step is")
+  public void assertPipelineStepResponse(Map<String, String> expectedData) throws Exception {
+    result.andExpect(jsonPath("$.started").value(isRegistryLocalDateTimeFormat()));
+    for (Map.Entry<String, String> entry : expectedData.entrySet()) {
+      result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
+    }
   }
 }
