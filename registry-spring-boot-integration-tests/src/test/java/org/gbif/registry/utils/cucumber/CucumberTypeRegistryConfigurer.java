@@ -7,6 +7,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -43,5 +44,6 @@ public class CucumberTypeRegistryConfigurer implements TypeRegistryConfigurer {
     typeRegistry.defineDataTableType(new DataTableType(PipelineProcessParameters.class, new PipelineProcessParametersTableEntryTransformer()));
     typeRegistry.defineDataTableType(new DataTableType(PipelineExecution.class, new PipelineExecutionTableEntryTransformer()));
     typeRegistry.defineDataTableType(new DataTableType(PipelineStep.class, new PipelineStepTableEntryTransformer()));
+    typeRegistry.defineDataTableType(new DataTableType(PipelineStepParameters.class, new PipelineStepParametersTableEntryTransformer()));
   }
 }

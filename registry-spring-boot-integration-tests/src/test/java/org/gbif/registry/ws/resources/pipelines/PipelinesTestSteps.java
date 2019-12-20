@@ -10,6 +10,7 @@ import io.cucumber.java.en.When;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +34,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,7 @@ public class PipelinesTestSteps {
 
   private ResultActions result;
   private MockMvc mvc;
+  private int processKey;
   private int executionKey;
   private int stepKey;
 
@@ -105,9 +108,19 @@ public class PipelinesTestSteps {
     // prepared by scripts in @Before
   }
 
+  @Given("pipeline process with key {int}")
+  public void setProcessKey(int processKey) {
+    this.processKey = processKey;
+  }
+
   @Given("pipeline execution with key {int}")
   public void setExecutionKey(int executionKey) {
     this.executionKey = executionKey;
+  }
+
+  @Given("pipeline step with key {int}")
+  public void setStepKey(int stepKey) {
+    this.stepKey = stepKey;
   }
 
   @When("create pipeline process using {word} {string} with params")
@@ -193,6 +206,21 @@ public class PipelinesTestSteps {
     ;
   }
 
+  @When("update pipeline step status and metrics using {word} {string}")
+  public void updatePipelineStep(String userType, String username, PipelineStepParameters pipelineStepParameters) throws Exception {
+    String content = objectMapper.writeValueAsString(pipelineStepParameters);
+
+    result = mvc
+      .perform(
+        put("/pipelines/history/process/{processKey}/{executionKey}/{stepKey}", processKey, executionKey, stepKey)
+          .with(httpBasic(username, TEST_PASSWORD))
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+      )
+      .andDo(print())
+    ;
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -237,5 +265,11 @@ public class PipelinesTestSteps {
     for (Map.Entry<String, String> entry : expectedData.entrySet()) {
       result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
     }
+  }
+
+  @Then("finished and modified dates are present")
+  public void assertField() throws Exception {
+    result.andExpect(jsonPath("$.finished").value(isRegistryLocalDateTimeFormat()));
+    result.andExpect(jsonPath("$.modified").value(isRegistryLocalDateTimeFormat()));
   }
 }
