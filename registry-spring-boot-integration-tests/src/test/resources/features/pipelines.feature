@@ -84,3 +84,24 @@ Feature: pipelines functionality
       | message | runner     | type             | state   |
       | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
     Then response status should be 403
+
+  Scenario: update pipeline step status and metrics
+    Given pipeline process with key 20
+    And pipeline execution with key 11
+    And pipeline step with key 9
+    When update pipeline step status and metrics using admin "registry_admin"
+      | status    | metrics         |
+      | COMPLETED | metricName=>100 |
+    Then response status should be 200
+    When get pipeline step by stepKey for process 20 and current execution
+    Then response status should be 200
+    And pipeline step is
+      | type             | ABCD_TO_VERBATIM |
+      | runner           | STANDALONE       |
+      | message          | message          |
+      | createdBy        | WS TEST          |
+      | metrics[0].name  | metricName       |
+      | metrics[0].value | 100              |
+      | state            | COMPLETED        |
+      | modifiedBy       | registry_admin   |
+    And finished and modified dates are present
