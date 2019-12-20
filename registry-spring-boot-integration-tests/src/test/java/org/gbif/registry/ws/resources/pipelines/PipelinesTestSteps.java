@@ -168,7 +168,7 @@ public class PipelinesTestSteps {
     ;
   }
 
-  @When("get pipeline step fro process {int} and current execution")
+  @When("get pipeline step by stepKey for process {int} and current execution")
   public void historyPipelineProcess(int processKey) throws Exception {
     result = mvc
       .perform(
