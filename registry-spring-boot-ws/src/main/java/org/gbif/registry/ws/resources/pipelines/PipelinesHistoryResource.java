@@ -68,7 +68,8 @@ public class PipelinesHistoryResource {
    * Lists teh history of a dataset.
    */
   @GetMapping("{datasetKey}")
-  public PagingResponse<PipelineProcess> history(@PathVariable("datasetKey") UUID datasetKey, Pageable pageable) {
+  public PagingResponse<PipelineProcess> history(@PathVariable("datasetKey") UUID datasetKey,
+                                                 Pageable pageable) {
     return historyTrackingService.history(datasetKey, pageable);
   }
 
@@ -84,10 +85,12 @@ public class PipelinesHistoryResource {
   @PostMapping(value = PROCESS_PATH,
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public long createPipelineProcess(
-    @RequestBody PipelineProcessParameters params, Authentication authentication) {
+  public long createPipelineProcess(@RequestBody PipelineProcessParameters params,
+                                    Authentication authentication) {
     return historyTrackingService.createOrGet(
-      params.getDatasetKey(), params.getAttempt(), authentication.getName());
+      params.getDatasetKey(),
+      params.getAttempt(),
+      authentication.getName());
   }
 
   /**
@@ -96,12 +99,13 @@ public class PipelinesHistoryResource {
   @PostMapping(value = PROCESS_PATH + "{processKey}",
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public long addPipelineExecution(
-    @PathVariable("processKey") long processKey,
-    @RequestBody PipelineExecution pipelineExecution,
-    Authentication authentication) {
+  public long addPipelineExecution(@PathVariable("processKey") long processKey,
+                                   @RequestBody PipelineExecution pipelineExecution,
+                                   Authentication authentication) {
     return historyTrackingService.addPipelineExecution(
-      processKey, pipelineExecution, authentication.getName());
+      processKey,
+      pipelineExecution,
+      authentication.getName());
   }
 
   /**
@@ -110,13 +114,15 @@ public class PipelinesHistoryResource {
   @PostMapping(value = PROCESS_PATH + "{processKey}/{executionKey}",
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public long addPipelineStep(
-    @PathVariable("processKey") long processKey,
-    @PathVariable("executionKey") long executionKey,
-    @RequestBody PipelineStep pipelineStep,
-    Authentication authentication) {
+  public long addPipelineStep(@PathVariable("processKey") long processKey,
+                              @PathVariable("executionKey") long executionKey,
+                              @RequestBody PipelineStep pipelineStep,
+                              Authentication authentication) {
     return historyTrackingService.addPipelineStep(
-      processKey, executionKey, pipelineStep, authentication.getName());
+      processKey,
+      executionKey,
+      pipelineStep,
+      authentication.getName());
   }
 
   @GetMapping(PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}")
@@ -132,11 +138,10 @@ public class PipelinesHistoryResource {
   @PutMapping(value = PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}",
     consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updatePipelineStepStatusAndMetrics(
-    @PathVariable("processKey") long processKey,
-    @PathVariable("executionKey") long executionKey,
-    @PathVariable("stepKey") long stepKey,
-    @RequestBody PipelineStepParameters stepParams,
+  public void updatePipelineStepStatusAndMetrics(@PathVariable("processKey") long processKey,
+                                                 @PathVariable("executionKey") long executionKey,
+                                                 @PathVariable("stepKey") long stepKey,
+                                                 @RequestBody PipelineStepParameters stepParams,
     Authentication authentication) {
     Objects.requireNonNull(stepParams, "Pipeline Step parameters are required");
 
@@ -155,11 +160,10 @@ public class PipelinesHistoryResource {
   @PostMapping(value = RUN_PATH,
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runAll(
-    @RequestParam("steps") String steps,
-    @RequestParam("reason") String reason,
-    Authentication authentication,
-    @Nullable @RequestBody RunAllParams runAllParams) {
+  public ResponseEntity<RunPipelineResponse> runAll(@RequestParam("steps") String steps,
+                                                    @RequestParam("reason") String reason,
+                                                    Authentication authentication,
+                                                    @Nullable @RequestBody RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
@@ -176,11 +180,10 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
-    @PathVariable("datasetKey") UUID datasetKey,
-    @RequestParam("steps") String steps,
-    @RequestParam("reason") String reason,
-    Authentication authentication) {
+  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
+                                                                @RequestParam("steps") String steps,
+                                                                @RequestParam("reason") String reason,
+                                                                Authentication authentication) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
@@ -198,12 +201,11 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}/{attempt}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
-    @PathVariable("datasetKey") UUID datasetKey,
-    @PathVariable("attempt") int attempt,
-    @RequestParam("steps") String steps,
-    @RequestParam("reason") String reason,
-    Authentication authentication) {
+  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(@PathVariable("datasetKey") UUID datasetKey,
+                                                                @PathVariable("attempt") int attempt,
+                                                                @RequestParam("steps") String steps,
+                                                                @RequestParam("reason") String reason,
+                                                                Authentication authentication) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
