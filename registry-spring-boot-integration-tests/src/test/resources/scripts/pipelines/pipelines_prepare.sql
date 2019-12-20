@@ -44,3 +44,7 @@ VALUES ('4348adaa-d744-4241-92a0-ebf9d55eb9bb', null, null, '2fe63cec-9b23-4974-
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (20, 'd82273f6-9738-48a5-a639-2086f9c49d18', 1, '2019-12-20 09:22:33.137140', 'WS TEST');
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (21, 'd82273f6-9738-48a5-a639-2086f9c49d18', 2, '2019-12-20 09:22:33.177763', 'WS TEST');
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (22, 'd82273f6-9738-48a5-a639-2086f9c49d18', 3, '2019-12-20 09:22:33.188937', 'WS TEST');
+
+INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks) VALUES (11, 20, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
+INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key, number_records, pipelines_version)
+VALUES (9, 'ABCD_TO_VERBATIM', 'STANDALONE', '2019-12-20 13:45:20.167000', null, 'RUNNING', 'message', '', 'WS TEST', null, null, 11, null, null);

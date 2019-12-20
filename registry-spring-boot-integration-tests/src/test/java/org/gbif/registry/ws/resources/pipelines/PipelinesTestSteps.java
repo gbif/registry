@@ -95,6 +95,21 @@ public class PipelinesTestSteps {
     // prepared by scripts in @Before
   }
 
+  @Given("pipeline execution")
+  public void preparePipelineExecution(DataTable dataTable) {
+    // prepared by scripts in @Before
+  }
+
+  @Given("pipeline step")
+  public void preparePipelineStep(DataTable dataTable) {
+    // prepared by scripts in @Before
+  }
+
+  @Given("pipeline execution with key {int}")
+  public void setExecutionKey(int executionKey) {
+    this.executionKey = executionKey;
+  }
+
   @When("create pipeline process using {word} {string} with params")
   public void createPipelineProcess(String userType, String username, PipelineProcessParameters parameters) throws Exception {
     String content = objectMapper.writeValueAsString(parameters);
