@@ -306,4 +306,11 @@ public class PipelinesTestSteps {
       result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
     }
   }
+
+  @Then("error response is")
+  public void assertErrorResponse(Map<String, String> expectedData) throws Exception {
+    for (Map.Entry<String, String> entry : expectedData.entrySet()) {
+      result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
+    }
+  }
 }

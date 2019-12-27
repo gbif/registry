@@ -147,3 +147,24 @@ Feature: pipelines functionality
       | executions[0].rerunReason   | test reason 2                        |
       | executions[0].stepsToRun[0] | DWCA_TO_VERBATIM                     |
       | executions[0].createdBy     | registry_admin                       |
+
+  Scenario: run pipeline attempt without required params 'steps' and/or 'reason' causes Bad Request 400
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
+      | steps | DWCA_TO_VERBATIM |
+    Then response status should be 400
+    And error response is
+      | message | Steps and reason parameters are required |
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
+      | reason | test reason 2 |
+    Then response status should be 400
+    And error response is
+      | message | Steps and reason parameters are required |
+
+  Scenario: run pipeline attempt without privileges will cause Forbidden 403
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using user "registry_user" with params
+      | steps  | DWCA_TO_VERBATIM |
+      | reason | test reason 2    |
+    Then response status should be 403
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" using user "registry_user" with params
+      | steps  | DWCA_TO_VERBATIM |
+      | reason | test reason 2    |
