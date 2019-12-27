@@ -235,6 +235,18 @@ public class PipelinesTestSteps {
     ;
   }
 
+  @When("run pipeline attempt for dataset with key {string} using {word} {string} with params")
+  public void runPipelineAttempt(String datasetKey, String userType, String username, Map<String, List<String>> params) throws Exception {
+    result = mvc
+      .perform(
+        post("/pipelines/history/run/{datasetKey}", datasetKey)
+          .params(new LinkedMultiValueMap<>(params))
+          .with(httpBasic(username, TEST_PASSWORD))
+      )
+      .andDo(print())
+    ;
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
