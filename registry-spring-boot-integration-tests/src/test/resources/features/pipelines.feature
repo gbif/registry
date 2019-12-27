@@ -107,3 +107,23 @@ Feature: pipelines functionality
       | state            | COMPLETED        |
       | modifiedBy       | registry_admin   |
     And finished and modified dates are present
+
+  Scenario: run pipeline attempt
+    Given pipeline process with key 2
+    And pipeline execution with key 12
+    And pipeline step with key 102
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 2 using admin "registry_admin" with params
+      | steps  | DWCA_TO_VERBATIM |
+      | reason | test reason      |
+    Then response status should be 201
+    And run pipeline response is
+      | responseStatus | OK |
+    When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 2
+    Then response status should be 200
+    And pipeline process is
+      | datasetKey                  | d82273f6-9738-48a5-a639-2086f9c49d18 |
+      | attempt                     | 2                                    |
+      | createdBy                   | WS TEST                              |
+      | executions[0].rerunReason   | test reason                          |
+      | executions[0].stepsToRun[0] | DWCA_TO_VERBATIM                     |
+      | executions[0].createdBy     | registry_admin                       |
