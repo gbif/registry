@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -29,8 +29,8 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.registry.domain.pipelines.RunPipelineResponse;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
-import org.gbif.registry.pipelines.model.RunPipelineResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,8 +107,11 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public RunPipelineResponse runLastAttempt(
-    UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix) {
+  public RunPipelineResponse runLastAttempt(UUID datasetKey,
+                                            Set<StepType> steps,
+                                            String reason,
+                                            String user,
+                                            String prefix) {
     int lastAttempt =
       mapper
         .getLastAttempt(datasetKey)
@@ -181,8 +184,10 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public RunPipelineResponse runLastAttempt(
-    Set<StepType> steps, String reason, String user, List<UUID> datasetsToExclude) {
+  public RunPipelineResponse runLastAttempt(Set<StepType> steps,
+                                            String reason,
+                                            String user,
+                                            List<UUID> datasetsToExclude) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
       () ->
@@ -204,8 +209,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * @return optionally, the las step found
    */
   @VisibleForTesting
-  Optional<PipelineStep> getLatestSuccessfulStep(
-    PipelineProcess pipelineProcess, StepType step) {
+  Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
       .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
       .flatMap(ex -> ex.getSteps().stream())
@@ -283,18 +287,17 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public RunPipelineResponse runPipelineAttempt(
-    UUID datasetKey,
-    int attempt,
-    Set<StepType> steps,
-    String reason,
-    String user,
-    String prefix) {
+  public RunPipelineResponse runPipelineAttempt(UUID datasetKey,
+                                                int attempt,
+                                                Set<StepType> steps,
+                                                String reason,
+                                                String user,
+                                                String prefix) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
     Objects.requireNonNull(publisher, "No message publisher configured");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
+    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
@@ -425,7 +428,9 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public long createOrGet(UUID datasetKey, int attempt, String creator) {
+  public long createOrGet(UUID datasetKey,
+                          int attempt,
+                          String creator) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(creator, "Creator can't be null");
 
@@ -439,10 +444,11 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public long addPipelineExecution(
-    long pipelineProcessKey, PipelineExecution pipelineExecution, String creator) {
+  public long addPipelineExecution(long pipelineProcessKey,
+                                   PipelineExecution pipelineExecution,
+                                   String creator) {
     Objects.requireNonNull(pipelineExecution, "pipelineExecution can't be null");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(creator), "creator can't be null");
+    Preconditions.checkArgument(StringUtils.isNotEmpty(creator), "creator can't be null");
 
     pipelineExecution.setCreatedBy(creator);
 
@@ -452,10 +458,12 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public long addPipelineStep(
-    long pipelineProcessKey, long executionKey, PipelineStep pipelineStep, String user) {
+  public long addPipelineStep(long pipelineProcessKey,
+                              long executionKey,
+                              PipelineStep pipelineStep,
+                              String user) {
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
+    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
     // TODO: check that execution belongs to the process??
 
@@ -472,15 +480,14 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   }
 
   @Override
-  public void updatePipelineStepStatusAndMetrics(
-    long processKey,
-    long executionKey,
-    long pipelineStepKey,
-    PipelineStep.Status status,
-    List<PipelineStep.MetricInfo> metrics,
-    String user) {
+  public void updatePipelineStepStatusAndMetrics(long processKey,
+                                                 long executionKey,
+                                                 long pipelineStepKey,
+                                                 PipelineStep.Status status,
+                                                 List<PipelineStep.MetricInfo> metrics,
+                                                 String user) {
     Objects.requireNonNull(status, "Status can't be null");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(user), "user can't be null");
+    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
     // fetch entities
     PipelineProcess process = mapper.get(processKey);

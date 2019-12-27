@@ -2,8 +2,8 @@ package org.gbif.registry.ws.resources.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.registry.domain.pipelines.IngestionProcess;
 import org.gbif.registry.pipelines.IngestionHistoryService;
-import org.gbif.registry.pipelines.model.IngestionProcess;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

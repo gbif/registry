@@ -6,9 +6,9 @@ import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.registry.domain.pipelines.IngestionProcess;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
-import org.gbif.registry.pipelines.model.IngestionProcess;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

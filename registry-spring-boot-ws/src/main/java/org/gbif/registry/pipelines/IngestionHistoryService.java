@@ -2,7 +2,7 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.registry.pipelines.model.IngestionProcess;
+import org.gbif.registry.domain.pipelines.IngestionProcess;
 
 import java.util.UUID;
 
