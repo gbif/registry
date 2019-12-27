@@ -8,15 +8,17 @@ Feature: pipelines functionality
       | 4348adaa-d744-4241-92a0-ebf9d55eb9bb | Test Dataset Registry 2 |
     And pipeline processes
       | key | datasetKey                           | attempt |
-      | 20  | d82273f6-9738-48a5-a639-2086f9c49d18 | 1       |
-      | 21  | d82273f6-9738-48a5-a639-2086f9c49d18 | 2       |
-      | 22  | d82273f6-9738-48a5-a639-2086f9c49d18 | 3       |
+      | 1   | d82273f6-9738-48a5-a639-2086f9c49d18 | 1       |
+      | 2   | d82273f6-9738-48a5-a639-2086f9c49d18 | 2       |
+      | 3   | d82273f6-9738-48a5-a639-2086f9c49d18 | 3       |
     And pipeline execution
       | key | processKey |
-      | 11  | 20         |
+      | 11  | 1          |
+      | 12  | 2          |
     And pipeline step
-      | key | executionKey | state   |
-      | 9   | 11           | RUNNING |
+      | key | executionKey | state     | type             |
+      | 101 | 11           | RUNNING   | ABCD_TO_VERBATIM |
+      | 102 | 12           | COMPLETED | DWCA_TO_VERBATIM |
 
   Scenario: create and get pipeline process
     When create pipeline process using admin "registry_admin" with params
@@ -53,17 +55,17 @@ Feature: pipelines functionality
     And pipeline process history contains 0 entity
 
   Scenario: add and get pipeline step
-    When add pipeline execution for process 20 using admin "registry_admin"
+    When add pipeline execution for process 1 using admin "registry_admin"
       | stepsToRun       | rerunReason | remarks |
       | DWCA_TO_VERBATIM | rerun       | remarks |
     Then response status should be 201
     And extract executionKey
-    When add pipeline step for process 20 and current execution using admin "registry_admin"
+    When add pipeline step for process 1 and current execution using admin "registry_admin"
       | message | runner     | type             | state   |
       | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
     Then response status should be 201
     And extract stepKey
-    When get pipeline step by stepKey for process 20 and current execution
+    When get pipeline step by stepKey for process 1 and current execution
     Then response status should be 200
     And pipeline step is
       | type      | ABCD_TO_VERBATIM |
@@ -73,27 +75,27 @@ Feature: pipelines functionality
       | createdBy | registry_admin   |
 
   Scenario: add pipeline execution without privileges will cause Forbidden 403
-    When add pipeline execution for process 20 using user "registry_user"
+    When add pipeline execution for process 1 using user "registry_user"
       | stepsToRun       | rerunReason | remarks |
       | DWCA_TO_VERBATIM | rerun       | remarks |
     Then response status should be 403
 
   Scenario: add pipeline step without privileges will cause Forbidden 403
     Given pipeline execution with key 11
-    When add pipeline step for process 20 and current execution using user "registry_user"
+    When add pipeline step for process 1 and current execution using user "registry_user"
       | message | runner     | type             | state   |
       | message | STANDALONE | ABCD_TO_VERBATIM | RUNNING |
     Then response status should be 403
 
   Scenario: update pipeline step status and metrics
-    Given pipeline process with key 20
+    Given pipeline process with key 1
     And pipeline execution with key 11
-    And pipeline step with key 9
+    And pipeline step with key 101
     When update pipeline step status and metrics using admin "registry_admin"
       | status    | metrics         |
       | COMPLETED | metricName=>100 |
     Then response status should be 200
-    When get pipeline step by stepKey for process 20 and current execution
+    When get pipeline step by stepKey for process 1 and current execution
     Then response status should be 200
     And pipeline step is
       | type             | ABCD_TO_VERBATIM |
