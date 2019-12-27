@@ -1,7 +1,7 @@
 package org.gbif.registry.ws.resources.pipelines;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -10,8 +10,8 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
+import org.gbif.registry.domain.pipelines.RunPipelineResponse;
 import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
-import org.gbif.registry.pipelines.model.RunPipelineResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -142,7 +142,7 @@ public class PipelinesHistoryResource {
                                                  @PathVariable("executionKey") long executionKey,
                                                  @PathVariable("stepKey") long stepKey,
                                                  @RequestBody PipelineStepParameters stepParams,
-    Authentication authentication) {
+                                                 Authentication authentication) {
     Objects.requireNonNull(stepParams, "Pipeline Step parameters are required");
 
     historyTrackingService.updatePipelineStepStatusAndMetrics(
@@ -223,15 +223,11 @@ public class PipelinesHistoryResource {
    * Transforms a {@link RunPipelineResponse} into a {@link ResponseEntity}.
    */
   private static ResponseEntity<RunPipelineResponse> toHttpResponse(RunPipelineResponse runPipelineResponse) {
-    if (runPipelineResponse.getResponseStatus()
-      == RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED) {
+    if (runPipelineResponse.getResponseStatus() == RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(runPipelineResponse);
-    } else if (runPipelineResponse.getResponseStatus()
-      == RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP) {
+    } else if (runPipelineResponse.getResponseStatus() == RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP) {
       return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(runPipelineResponse);
-    } else if (runPipelineResponse.getResponseStatus()
-      == RunPipelineResponse.ResponseStatus.ERROR) {
-
+    } else if (runPipelineResponse.getResponseStatus() == RunPipelineResponse.ResponseStatus.ERROR) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(runPipelineResponse);
     }
 
@@ -239,7 +235,7 @@ public class PipelinesHistoryResource {
   }
 
   private Optional<ResponseEntity<RunPipelineResponse>> checkRunInputParams(String steps, String reason) {
-    if (Strings.isNullOrEmpty(steps) || Strings.isNullOrEmpty(reason)) {
+    if (StringUtils.isAnyEmpty(steps, reason)) {
       return Optional.of(
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(
@@ -255,7 +251,7 @@ public class PipelinesHistoryResource {
    * Parse steps argument.
    */
   private Set<StepType> parseSteps(String steps) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(steps));
+    Preconditions.checkArgument(StringUtils.isNotEmpty(steps));
     return Arrays.stream(steps.split(","))
       .map(s -> StepType.valueOf(s.toUpperCase()))
       .collect(Collectors.toSet());

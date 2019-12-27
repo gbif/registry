@@ -1,4 +1,4 @@
-package org.gbif.registry.pipelines.model;
+package org.gbif.registry.domain.pipelines;
 
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.pipelines.PipelineExecution;
