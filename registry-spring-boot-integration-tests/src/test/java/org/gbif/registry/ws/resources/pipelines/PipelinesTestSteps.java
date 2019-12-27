@@ -21,10 +21,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -221,6 +223,18 @@ public class PipelinesTestSteps {
     ;
   }
 
+  @When("run pipeline attempt for dataset with key {string} and attempt {int} using {word} {string} with params")
+  public void runPipelineAttempt(String datasetKey, int attempt, String userType, String username, Map<String, List<String>> params) throws Exception {
+    result = mvc
+      .perform(
+        post("/pipelines/history/run/{datasetKey}/{attempt}", datasetKey, attempt)
+          .params(new LinkedMultiValueMap<>(params))
+          .with(httpBasic(username, TEST_PASSWORD))
+      )
+      .andDo(print())
+    ;
+  }
+
   @Then("response status should be {int}")
   public void assertResponseCode(int status) throws Exception {
     result
@@ -268,8 +282,16 @@ public class PipelinesTestSteps {
   }
 
   @Then("finished and modified dates are present")
-  public void assertField() throws Exception {
+  public void assertDates() throws Exception {
     result.andExpect(jsonPath("$.finished").value(isRegistryLocalDateTimeFormat()));
     result.andExpect(jsonPath("$.modified").value(isRegistryLocalDateTimeFormat()));
+  }
+
+  @Then("run pipeline response is")
+  public void assertRunPipelineResponse(Map<String, String> expectedData) throws Exception {
+    result.andExpect(jsonPath("$.stepsFailed").isEmpty());
+    for (Map.Entry<String, String> entry : expectedData.entrySet()) {
+      result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
+    }
   }
 }
