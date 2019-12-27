@@ -52,7 +52,7 @@ INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, m
 VALUES (101, 'ABCD_TO_VERBATIM', 'STANDALONE', '2019-12-20 13:45:20.167000', null, 'RUNNING', 'message', '', 'WS TEST', null, null, 11, null, null);
 
 INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks)
-VALUES (12, 2, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
+VALUES (12, 3, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
 
 INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key, number_records, pipelines_version)
 VALUES (102, 'DWCA_TO_VERBATIM', 'STANDALONE', '2019-12-27 09:42:14.519000', null, 'COMPLETED', '{"datasetUuid":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","datasetType":"SAMPLING_EVENT","source":"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data","attempt":109,"validationReport":{"datasetKey":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","occurrenceReport":{"checkedRecords":11961,"uniqueTriplets":0,"allRecordsChecked":true,"recordsWithInvalidTriplets":11961,"uniqueOccurrenceIds":11961,"recordsMissingOccurrenceId":0,"invalidationReason":null,"valid":true},"genericReport":{"checkedRecords":1630,"allRecordsChecked":true,"duplicateIds":[],"rowNumbersMissingId":[],"invalidationReason":null,"valid":true},"invalidationReason":null,"valid":true},"pipelineSteps":["DWCA_TO_VERBATIM","HDFS_VIEW","VERBATIM_TO_INTERPRETED","INTERPRETED_TO_INDEX"],"endpointType":"DWC_ARCHIVE","platform":"ALL"}', '', 'WS TEST', null, null, 12, null, null);

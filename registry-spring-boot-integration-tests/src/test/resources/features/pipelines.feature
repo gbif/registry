@@ -14,7 +14,7 @@ Feature: pipelines functionality
     And pipeline execution
       | key | processKey |
       | 11  | 1          |
-      | 12  | 2          |
+      | 12  | 3          |
     And pipeline step
       | key | executionKey | state     | type             |
       | 101 | 11           | RUNNING   | ABCD_TO_VERBATIM |
@@ -108,22 +108,42 @@ Feature: pipelines functionality
       | modifiedBy       | registry_admin   |
     And finished and modified dates are present
 
-  Scenario: run pipeline attempt
-    Given pipeline process with key 2
+  Scenario: run pipeline attempt by dataset key and attempt
+    Given pipeline process with key 3
     And pipeline execution with key 12
     And pipeline step with key 102
-    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 2 using admin "registry_admin" with params
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
       | steps  | DWCA_TO_VERBATIM |
       | reason | test reason      |
     Then response status should be 201
     And run pipeline response is
       | responseStatus | OK |
-    When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 2
+    When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3
     Then response status should be 200
     And pipeline process is
       | datasetKey                  | d82273f6-9738-48a5-a639-2086f9c49d18 |
-      | attempt                     | 2                                    |
+      | attempt                     | 3                                    |
       | createdBy                   | WS TEST                              |
       | executions[0].rerunReason   | test reason                          |
+      | executions[0].stepsToRun[0] | DWCA_TO_VERBATIM                     |
+      | executions[0].createdBy     | registry_admin                       |
+
+  Scenario: run pipeline attempt by dataset key
+    Given pipeline process with key 3
+    And pipeline execution with key 12
+    And pipeline step with key 102
+    When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" using admin "registry_admin" with params
+      | steps  | DWCA_TO_VERBATIM |
+      | reason | test reason 2    |
+    Then response status should be 201
+    And run pipeline response is
+      | responseStatus | OK |
+    When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3
+    Then response status should be 200
+    And pipeline process is
+      | datasetKey                  | d82273f6-9738-48a5-a639-2086f9c49d18 |
+      | attempt                     | 3                                    |
+      | createdBy                   | WS TEST                              |
+      | executions[0].rerunReason   | test reason 2                        |
       | executions[0].stepsToRun[0] | DWCA_TO_VERBATIM                     |
       | executions[0].createdBy     | registry_admin                       |
