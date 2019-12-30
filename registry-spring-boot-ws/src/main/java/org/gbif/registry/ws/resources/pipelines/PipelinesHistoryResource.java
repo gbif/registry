@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -163,7 +162,7 @@ public class PipelinesHistoryResource {
   public ResponseEntity<RunPipelineResponse> runAll(@RequestParam(value = "steps", required = false) String steps,
                                                     @RequestParam(value = "reason", required = false) String reason,
                                                     Authentication authentication,
-                                                    @Nullable @RequestBody RunAllParams runAllParams) {
+                                                    @RequestBody RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
@@ -172,7 +171,9 @@ public class PipelinesHistoryResource {
               parseSteps(steps),
               reason,
               authentication.getName(),
-              runAllParams != null ? runAllParams.datasetsToExclude : null)));
+              runAllParams.datasetsToExclude)
+          )
+      );
   }
 
   /**
