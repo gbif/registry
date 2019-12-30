@@ -26,6 +26,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -299,18 +301,15 @@ public class PipelinesTestSteps {
     result.andExpect(jsonPath("$.modified").value(isRegistryLocalDateTimeFormat()));
   }
 
-  @Then("run pipeline response is")
+  @Then("response is")
   public void assertRunPipelineResponse(Map<String, String> expectedData) throws Exception {
-    result.andExpect(jsonPath("$.stepsFailed").isEmpty());
     for (Map.Entry<String, String> entry : expectedData.entrySet()) {
       result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
     }
   }
 
-  @Then("error response is")
-  public void assertErrorResponse(Map<String, String> expectedData) throws Exception {
-    for (Map.Entry<String, String> entry : expectedData.entrySet()) {
-      result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
-    }
+  @Then("{string} is empty")
+  public void assertFieldIsEmpty(String field) throws Exception {
+    result.andExpect(jsonPath("$." + field).isEmpty());
   }
 }
