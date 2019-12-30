@@ -1,6 +1,8 @@
 package org.gbif.registry.ws.resources.pipelines;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -243,6 +245,35 @@ public class PipelinesTestSteps {
       .perform(
         post("/pipelines/history/run/{datasetKey}", datasetKey)
           .params(new LinkedMultiValueMap<>(params))
+          .with(httpBasic(username, TEST_PASSWORD))
+      )
+      .andDo(print())
+    ;
+  }
+
+  @When("run all using {word} {string} with params")
+  public void runAll(String userType, String username, Map<String, List<String>> params) throws Exception {
+    // make request body of 'datasetsToExclude'
+    ObjectNode objectNode = objectMapper.createObjectNode();
+    ArrayNode arrayNode = objectNode.putArray("datasetsToExclude");
+    Arrays.stream(
+      params.get("datasetsToExclude")
+        .get(0)
+        .split(","))
+      .forEach(arrayNode::add);
+
+    String content = objectMapper.writeValueAsString(objectNode);
+
+    // exclude 'datasetsToExclude' from query params
+    Map<String, List<String>> modifiedParams = new HashMap<>(params);
+    modifiedParams.remove("datasetsToExclude");
+
+    result = mvc
+      .perform(
+        post("/pipelines/history/run/")
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON_UTF8)
+          .params(new LinkedMultiValueMap<>(modifiedParams))
           .with(httpBasic(username, TEST_PASSWORD))
       )
       .andDo(print())
