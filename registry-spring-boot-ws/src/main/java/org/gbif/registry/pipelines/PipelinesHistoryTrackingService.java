@@ -47,9 +47,10 @@ public interface PipelinesHistoryTrackingService {
   /**
    * Executes the last crawl attempt for all datasets.
    *
-   * @param steps  steps to be executed
-   * @param reason textual justification of why it has to be re-executed
-   * @param user   the user who is running the attempt
+   * @param steps             steps to be executed
+   * @param reason            textual justification of why it has to be re-executed
+   * @param user              the user who is running the attempt
+   * @param datasetsToExclude excluded dataset keys
    * @return the response of the execution request
    */
   RunPipelineResponse runLastAttempt(
@@ -93,7 +94,14 @@ public interface PipelinesHistoryTrackingService {
    */
   long createOrGet(UUID datasetKey, int attempt, String creator);
 
-  // TODO: doc
+  /**
+   * Adds/persists the information of a pipeline execution.
+   *
+   * @param pipelineProcessKey sequential identifier of a pipeline process
+   * @param pipelineExecution  pipeline execution data
+   * @param creator            the user who is adding the step
+   * @return the key of the PipelineExecution created
+   */
   long addPipelineExecution(long pipelineProcessKey, PipelineExecution pipelineExecution, String creator);
 
   /**
