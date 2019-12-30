@@ -39,20 +39,34 @@ VALUES ('4348adaa-d744-4241-92a0-ebf9d55eb9bb', null, null, '2fe63cec-9b23-4974-
         null, null, false, 'WS TEST', 'WS TEST', '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,
         '''dataset'':2,8 ''descript'':5 ''occurr'':4 ''registry2'':3 ''test'':1,7 ''www.homepage.com'':9',
         '10.21373/cba', 'UNSPECIFIED', null, null);
+INSERT INTO public.dataset (key, parent_dataset_key, duplicate_of_dataset_key, installation_key,
+                            publishing_organization_key, external, type, sub_type, title, alias, abbreviation,
+                            description, language, homepage, logo_url, citation, citation_identifier, rights,
+                            locked_for_auto_update, created_by, modified_by, created, modified, deleted,
+                            fulltext_search, doi, license, maintenance_update_frequency, version)
+VALUES ('7c57400d-1ee7-449b-a152-aefed2f70a2c', null, null, '2fe63cec-9b23-4974-bab1-9f4118ef7711',
+        '36107c15-771c-4810-a298-b7558828b8bd', false, 'OCCURRENCE', null, 'Test Dataset Registry 3', null, null,
+        'Description of Test Dataset 3', 'en', 'http://www.homepage.com', 'http://www.logo.com/2', 'Citation stuff',
+        null, null, false, 'WS TEST', 'WS TEST', '2019-11-12 08:49:53.062721', '2019-11-12 08:49:53.062721', null,
+        '''dataset'':2,8 ''descript'':5 ''occurr'':4 ''registry2'':3 ''test'':1,7 ''www.homepage.com'':9',
+        '10.21373/dcb', 'UNSPECIFIED', null, null);
 
 
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (1, 'd82273f6-9738-48a5-a639-2086f9c49d18', 1, '2019-12-20 09:22:33.137140', 'WS TEST');
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (2, 'd82273f6-9738-48a5-a639-2086f9c49d18', 2, '2019-12-20 09:22:33.177763', 'WS TEST');
 INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (3, 'd82273f6-9738-48a5-a639-2086f9c49d18', 3, '2019-12-20 09:22:33.188937', 'WS TEST');
+INSERT INTO public.pipeline_process (key, dataset_key, attempt, created, created_by) VALUES (4, '7c57400d-1ee7-449b-a152-aefed2f70a2c', 1, '2019-12-20 09:22:33.137140', 'WS TEST');
 
 INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks)
 VALUES (11, 1, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
+INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks)
+VALUES (12, 3, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
+INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks)
+VALUES (13, 4, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
 
 INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key, number_records, pipelines_version)
 VALUES (101, 'ABCD_TO_VERBATIM', 'STANDALONE', '2019-12-20 13:45:20.167000', null, 'RUNNING', 'message', '', 'WS TEST', null, null, 11, null, null);
-
-INSERT INTO public.pipeline_execution (key, pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks)
-VALUES (12, 3, '{DWCA_TO_VERBATIM}', '2019-12-20 13:45:20.141051', 'WS TEST', 'rerun', 'remarks');
-
 INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key, number_records, pipelines_version)
-VALUES (102, 'DWCA_TO_VERBATIM', 'STANDALONE', '2019-12-27 09:42:14.519000', null, 'COMPLETED', '{"datasetUuid":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","datasetType":"SAMPLING_EVENT","source":"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data","attempt":109,"validationReport":{"datasetKey":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","occurrenceReport":{"checkedRecords":11961,"uniqueTriplets":0,"allRecordsChecked":true,"recordsWithInvalidTriplets":11961,"uniqueOccurrenceIds":11961,"recordsMissingOccurrenceId":0,"invalidationReason":null,"valid":true},"genericReport":{"checkedRecords":1630,"allRecordsChecked":true,"duplicateIds":[],"rowNumbersMissingId":[],"invalidationReason":null,"valid":true},"invalidationReason":null,"valid":true},"pipelineSteps":["DWCA_TO_VERBATIM","HDFS_VIEW","VERBATIM_TO_INTERPRETED","INTERPRETED_TO_INDEX"],"endpointType":"DWC_ARCHIVE","platform":"ALL"}', '', 'WS TEST', null, null, 12, null, null);
+VALUES (102, 'DWCA_TO_VERBATIM', 'STANDALONE', '2019-12-27 09:42:14.519000', null, 'COMPLETED', '{"datasetUuid":"d82273f6-9738-48a5-a639-2086f9c49d18","datasetType":"OCCURRENCE","source":"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data","attempt":109,"validationReport":{"datasetKey":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","occurrenceReport":{"checkedRecords":11961,"uniqueTriplets":0,"allRecordsChecked":true,"recordsWithInvalidTriplets":11961,"uniqueOccurrenceIds":11961,"recordsMissingOccurrenceId":0,"invalidationReason":null,"valid":true},"genericReport":{"checkedRecords":1630,"allRecordsChecked":true,"duplicateIds":[],"rowNumbersMissingId":[],"invalidationReason":null,"valid":true},"invalidationReason":null,"valid":true},"pipelineSteps":["DWCA_TO_VERBATIM","HDFS_VIEW","VERBATIM_TO_INTERPRETED","INTERPRETED_TO_INDEX"],"endpointType":"DWC_ARCHIVE","platform":"ALL"}', '', 'WS TEST', null, null, 12, null, null);
+INSERT INTO public.pipeline_step (key, type, runner, started, finished, state, message, metrics, created_by, modified, modified_by, pipeline_execution_key, number_records, pipelines_version)
+VALUES (103, 'DWCA_TO_VERBATIM', 'STANDALONE', '2019-12-27 09:42:14.519000', null, 'COMPLETED', '{"datasetUuid":"4348adaa-d744-4241-92a0-ebf9d55eb9bb","datasetType":"OCCURRENCE","source":"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data","attempt":109,"validationReport":{"datasetKey":"418a6571-b6c1-4db0-b90e-8f36bde4c80e","occurrenceReport":{"checkedRecords":11961,"uniqueTriplets":0,"allRecordsChecked":true,"recordsWithInvalidTriplets":11961,"uniqueOccurrenceIds":11961,"recordsMissingOccurrenceId":0,"invalidationReason":null,"valid":true},"genericReport":{"checkedRecords":1630,"allRecordsChecked":true,"duplicateIds":[],"rowNumbersMissingId":[],"invalidationReason":null,"valid":true},"invalidationReason":null,"valid":true},"pipelineSteps":["DWCA_TO_VERBATIM","HDFS_VIEW","VERBATIM_TO_INTERPRETED","INTERPRETED_TO_INDEX"],"endpointType":"DWC_ARCHIVE","platform":"ALL"}', '', 'WS TEST', null, null, 13, null, null);
