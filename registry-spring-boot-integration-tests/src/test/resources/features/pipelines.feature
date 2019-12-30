@@ -6,19 +6,23 @@ Feature: pipelines functionality
       | key                                  | name                    |
       | d82273f6-9738-48a5-a639-2086f9c49d18 | Test Dataset Registry   |
       | 4348adaa-d744-4241-92a0-ebf9d55eb9bb | Test Dataset Registry 2 |
+      | 7c57400d-1ee7-449b-a152-aefed2f70a2c | Test Dataset Registry 3 |
     And pipeline processes
       | key | datasetKey                           | attempt |
       | 1   | d82273f6-9738-48a5-a639-2086f9c49d18 | 1       |
       | 2   | d82273f6-9738-48a5-a639-2086f9c49d18 | 2       |
       | 3   | d82273f6-9738-48a5-a639-2086f9c49d18 | 3       |
+      | 4   | 7c57400d-1ee7-449b-a152-aefed2f70a2c | 1       |
     And pipeline execution
       | key | processKey |
       | 11  | 1          |
       | 12  | 3          |
+      | 13  | 4          |
     And pipeline step
       | key | executionKey | state     | type             |
       | 101 | 11           | RUNNING   | ABCD_TO_VERBATIM |
       | 102 | 12           | COMPLETED | DWCA_TO_VERBATIM |
+      | 103 | 13           | COMPLETED | DWCA_TO_VERBATIM |
 
   Scenario: create and get pipeline process
     When create pipeline process using admin "registry_admin" with params
@@ -46,7 +50,7 @@ Feature: pipelines functionality
   Scenario: history pipeline process
     When history pipeline process
     Then response status should be 200
-    And pipeline process history contains 3 entity
+    And pipeline process history contains 4 entity
     When history pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18"
     Then response status should be 200
     And pipeline process history contains 3 entity
