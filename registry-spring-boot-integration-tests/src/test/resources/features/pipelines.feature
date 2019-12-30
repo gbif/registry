@@ -120,8 +120,9 @@ Feature: pipelines functionality
       | steps  | DWCA_TO_VERBATIM |
       | reason | test reason      |
     Then response status should be 201
-    And run pipeline response is
+    And response is
       | responseStatus | OK |
+    And "stepsFailed" is empty
     When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3
     Then response status should be 200
     And pipeline process is
@@ -140,8 +141,9 @@ Feature: pipelines functionality
       | steps  | DWCA_TO_VERBATIM |
       | reason | test reason 2    |
     Then response status should be 201
-    And run pipeline response is
+    And response is
       | responseStatus | OK |
+    And "stepsFailed" is empty
     When get pipeline process by datasetKey "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3
     Then response status should be 200
     And pipeline process is
@@ -156,12 +158,12 @@ Feature: pipelines functionality
     When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
       | steps | DWCA_TO_VERBATIM |
     Then response status should be 400
-    And error response is
+    And response is
       | message | Steps and reason parameters are required |
     When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
       | reason | test reason 2 |
     Then response status should be 400
-    And error response is
+    And response is
       | message | Steps and reason parameters are required |
 
   Scenario: run pipeline attempt without privileges will cause Forbidden 403
