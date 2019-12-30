@@ -55,6 +55,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import static org.gbif.registry.ws.util.PredicateUtils.not;
+
 /**
  * Service that allows to re-run pipeline steps on an specific attempt.
  */
@@ -125,24 +127,22 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   /**
    * Utility method to run batch jobs on all dataset elements
    */
-  private void doOnAllDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
+  private void doOnAllDatasets(Consumer<UUID> onDataset, List<UUID> datasetsToExclude) {
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
 
     PagingResponse<Dataset> response;
     do {
       response = datasetService.list(pagingRequest);
       response.getResults().stream()
-        .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
+        .map(Dataset::getKey)
+        .filter(not(datasetsToExclude::contains))
         .forEach(
-          d -> {
+          datasetKey -> {
             try {
-              LOG.info("trying to rerun dataset {}", d.getKey());
-              onDataset.accept(d);
+              LOG.info("trying to rerun dataset {}", datasetKey);
+              onDataset.accept(datasetKey);
             } catch (Exception ex) {
-              LOG.error(
-                "Error processing dataset {} while rerunning all datasets: {}",
-                d.getKey(),
-                ex.getMessage());
+              LOG.error("Error processing dataset {} while rerunning all datasets: {}", datasetKey, ex.getMessage());
             }
           });
       pagingRequest.addOffset(response.getResults().size());
@@ -192,7 +192,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
     CompletableFuture.runAsync(
       () ->
         doOnAllDatasets(
-          dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix),
+          datasetKey -> runLastAttempt(datasetKey, steps, reason, user, prefix),
           datasetsToExclude));
 
     return RunPipelineResponse.builder()
