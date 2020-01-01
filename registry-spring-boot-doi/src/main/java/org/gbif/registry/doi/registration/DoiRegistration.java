@@ -1,7 +1,5 @@
 package org.gbif.registry.doi.registration;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import org.gbif.api.model.common.DOI;
@@ -15,8 +13,6 @@ import javax.annotation.Nullable;
  */
 public class DoiRegistration {
 
-  @JsonSerialize(using = DOI.Jackson2Serializer.class)
-  @JsonDeserialize(using = DOI.Jackson2Deserializer.class)
   @Nullable
   private DOI doi;
 
@@ -33,7 +29,6 @@ public class DoiRegistration {
    * Default constructor.
    */
   public DoiRegistration() {
-
   }
 
   /**
