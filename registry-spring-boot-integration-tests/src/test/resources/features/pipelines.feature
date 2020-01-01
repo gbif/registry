@@ -112,13 +112,13 @@ Feature: pipelines functionality
       | modifiedBy       | registry_admin   |
     And finished and modified dates are present
 
-  Scenario: run pipeline attempt by dataset key and attempt
+  Scenario Outline: run pipeline attempt by dataset key and attempt, step <stepType>
     Given pipeline process with key 3
     And pipeline execution with key 12
     And pipeline step with key 102
     When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" and attempt 3 using admin "registry_admin" with params
-      | steps  | DWCA_TO_VERBATIM |
-      | reason | test reason      |
+      | steps  | <stepType>  |
+      | reason | test reason |
     Then response status should be 201
     And response is
       | responseStatus | OK |
@@ -130,8 +130,17 @@ Feature: pipelines functionality
       | attempt                     | 3                                    |
       | createdBy                   | WS TEST                              |
       | executions[0].rerunReason   | test reason                          |
-      | executions[0].stepsToRun[0] | DWCA_TO_VERBATIM                     |
+      | executions[0].stepsToRun[0] | <stepType>                           |
       | executions[0].createdBy     | registry_admin                       |
+
+    Scenarios:
+      | stepType                |
+      | DWCA_TO_VERBATIM        |
+      | XML_TO_VERBATIM         |
+      | ABCD_TO_VERBATIM        |
+      | VERBATIM_TO_INTERPRETED |
+      | INTERPRETED_TO_INDEX    |
+      | HDFS_VIEW               |
 
   Scenario: run pipeline attempt by dataset key
     Given pipeline process with key 3
