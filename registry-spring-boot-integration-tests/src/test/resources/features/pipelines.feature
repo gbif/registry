@@ -183,12 +183,20 @@ Feature: pipelines functionality
     When run pipeline attempt for dataset with key "d82273f6-9738-48a5-a639-2086f9c49d18" using user "registry_user" with params
       | steps  | DWCA_TO_VERBATIM |
       | reason | test reason 2    |
+    Then response status should be 403
 
   Scenario: run all
-    When run all using user "registry_admin" with params
+    When run all using admin "registry_admin" with params
       | steps             | DWCA_TO_VERBATIM                                                          |
       | reason            | run all reason                                                            |
       | datasetsToExclude | d82273f6-9738-48a5-a639-2086f9c49d18,00000000-d744-4241-92a0-ebf9d55eb9bb |
     Then response status should be 201
     And response is
       | responseStatus | OK |
+
+  Scenario: run all without privileges will cause Forbidden 403
+    When run all using user "registry_user" with params
+      | steps             | DWCA_TO_VERBATIM                                                          |
+      | reason            | run all reason                                                            |
+      | datasetsToExclude | d82273f6-9738-48a5-a639-2086f9c49d18,00000000-d744-4241-92a0-ebf9d55eb9bb |
+    Then response status should be 403
