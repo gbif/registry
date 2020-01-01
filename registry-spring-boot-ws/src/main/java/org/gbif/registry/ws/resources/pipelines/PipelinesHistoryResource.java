@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -155,6 +156,8 @@ public class PipelinesHistoryResource {
 
   /**
    * Runs the last attempt for all datasets.
+   * Parameters 'steps' and 'reason' are required, but they will be validated in PipelinesHistoryResource#checkRunInputParams
+   * so here they are specified as optional fields.
    */
   @PostMapping(value = RUN_PATH,
     consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -162,7 +165,7 @@ public class PipelinesHistoryResource {
   public ResponseEntity<RunPipelineResponse> runAll(@RequestParam(value = "steps", required = false) String steps,
                                                     @RequestParam(value = "reason", required = false) String reason,
                                                     Authentication authentication,
-                                                    @RequestBody RunAllParams runAllParams) {
+                                                    @RequestBody(required = false) RunAllParams runAllParams) {
     return checkRunInputParams(steps, reason)
       .orElseGet(
         () ->
@@ -171,13 +174,15 @@ public class PipelinesHistoryResource {
               parseSteps(steps),
               reason,
               authentication.getName(),
-              runAllParams.datasetsToExclude)
+              runAllParams != null ? runAllParams.datasetsToExclude : Collections.emptyList())
           )
       );
   }
 
   /**
    * Restart last failed pipelines step for a dataset.
+   * Parameters 'steps' and 'reason' are required, but they will be validated in PipelinesHistoryResource#checkRunInputParams
+   * so here they are specified as optional fields.
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -199,6 +204,8 @@ public class PipelinesHistoryResource {
 
   /**
    * Re-run a pipeline step.
+   * Parameters 'steps' and 'reason' are required, but they will be validated in PipelinesHistoryResource#checkRunInputParams
+   * so here they are specified as optional fields.
    */
   @PostMapping(value = RUN_PATH + "{datasetKey}/{attempt}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
