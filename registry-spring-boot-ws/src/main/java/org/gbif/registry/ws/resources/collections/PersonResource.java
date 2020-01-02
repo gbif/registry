@@ -43,9 +43,9 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
   private final EventManager eventManager;
 
   public PersonResource(
-      PersonMapper personMapper,
-      AddressMapper addressMapper,
-      EventManager eventManager) {
+    PersonMapper personMapper,
+    AddressMapper addressMapper,
+    EventManager eventManager) {
     super(personMapper, eventManager, Person.class);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
@@ -79,7 +79,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     if (oldPerson.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
       checkArgument(person.getDeleted() == null,
-          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+        "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // not allowed to delete when updating
       checkArgument(person.getDeleted() == null, "Can't delete an entity when updating");
@@ -89,7 +89,7 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     if (person.getMailingAddress() != null) {
       if (oldPerson.getMailingAddress() == null) {
         checkArgument(person.getMailingAddress().getKey() == null,
-            "Unable to create an address which already has a key");
+          "Unable to create an address which already has a key");
         addressMapper.create(person.getMailingAddress());
       } else {
         addressMapper.update(person.getMailingAddress());

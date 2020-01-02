@@ -32,8 +32,8 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  */
 @RestController
 @RequestMapping(value = GRSCICOLL_PATH + "/collection",
-    consumes = MediaType.APPLICATION_JSON_VALUE,
-    produces = MediaType.APPLICATION_JSON_VALUE)
+  consumes = MediaType.APPLICATION_JSON_VALUE,
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource extends BaseExtendableCollectionResource<Collection>
   implements CollectionService {
 
@@ -46,7 +46,7 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
                             EventManager eventManager,
                             WithMyBatis withMyBatis) {
     super(collectionMapper, addressMapper, collectionMapper, tagMapper, collectionMapper, identifierMapper,
-        collectionMapper, eventManager, Collection.class, withMyBatis);
+      collectionMapper, eventManager, Collection.class, withMyBatis);
     this.collectionMapper = collectionMapper;
   }
 

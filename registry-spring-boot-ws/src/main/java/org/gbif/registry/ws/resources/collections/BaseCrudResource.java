@@ -41,9 +41,9 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   private final Class<T> objectClass;
 
   protected BaseCrudResource(
-      CrudMapper<T> crudMapper,
-      EventManager eventManager,
-      Class<T> objectClass) {
+    CrudMapper<T> crudMapper,
+    EventManager eventManager,
+    Class<T> objectClass) {
     this.crudMapper = crudMapper;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
@@ -95,7 +95,7 @@ public abstract class BaseCrudResource<T extends CollectionEntity> implements Cr
   public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
-        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
+      key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(authentication.getName());
     update(entity);
   }

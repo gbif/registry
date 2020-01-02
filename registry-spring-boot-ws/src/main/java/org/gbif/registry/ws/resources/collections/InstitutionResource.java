@@ -32,9 +32,9 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  */
 @RestController
 @RequestMapping(value = GRSCICOLL_PATH + "/institution",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+  produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
-    implements InstitutionService {
+  implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
 
@@ -45,7 +45,7 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
                              EventManager eventManager,
                              WithMyBatis withMyBatis) {
     super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper,
-        eventManager, Institution.class, withMyBatis);
+      eventManager, Institution.class, withMyBatis);
     this.institutionMapper = institutionMapper;
   }
 
