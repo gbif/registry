@@ -138,7 +138,7 @@ public class UserManagementResource {
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
-  public ResponseEntity<UserModelMutationResult> create(@RequestBody UserCreation user) {
+  public ResponseEntity<UserModelMutationResult> create(@RequestBody @NotNull UserCreation user) {
     int returnStatusCode = HttpStatus.CREATED.value();
     UserModelMutationResult result = identityService.create(
       UserUpdateRulesManager.applyCreate(user), user.getPassword());
@@ -160,11 +160,9 @@ public class UserManagementResource {
   @PutMapping(value = "/{username}",
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, APP_ROLE})
-  public ResponseEntity<UserModelMutationResult> update(
-    @PathVariable String username,
-    @RequestBody UserUpdate userUpdate,
-    Authentication authentication) {
-
+  public ResponseEntity<UserModelMutationResult> update(@PathVariable String username,
+                                                        @RequestBody @NotNull UserUpdate userUpdate,
+                                                        Authentication authentication) {
     ResponseEntity<UserModelMutationResult> response = ResponseEntity.noContent().build();
     //ensure the key used to access the update is actually the one of the user represented by the UserUpdate
     GbifUser currentUser = identityService.get(username);
@@ -207,7 +205,7 @@ public class UserManagementResource {
   public ResponseEntity<LoggedUser> confirmChallengeCode(
     Authentication authentication,
     @RequestHeader("Authorization") String authHeader,
-    @NotNull @Valid @RequestBody ConfirmationKeyParameter confirmationKeyParameter) {
+    @RequestBody @NotNull @Valid ConfirmationKeyParameter confirmationKeyParameter) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
@@ -281,7 +279,7 @@ public class UserManagementResource {
   public ResponseEntity<LoggedUser> updatePassword(
     Authentication authentication,
     @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
-    @RequestBody AuthenticationDataParameters authenticationDataParameters) {
+    @RequestBody @NotNull AuthenticationDataParameters authenticationDataParameters) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(authentication, authHeader, appKeyWhitelist);
@@ -289,8 +287,11 @@ public class UserManagementResource {
     String username = authentication.getName();
     GbifUser user = identityService.get(username);
 
-    UserModelMutationResult updatePasswordMutationResult = identityService.updatePassword(user.getKey(),
-      authenticationDataParameters.getPassword(), authenticationDataParameters.getChallengeCode());
+    UserModelMutationResult updatePasswordMutationResult =
+      identityService.updatePassword(
+        user.getKey(),
+        authenticationDataParameters.getPassword(),
+        authenticationDataParameters.getChallengeCode());
 
     if (updatePasswordMutationResult.containsError()) {
       throw new UpdatePasswordException(updatePasswordMutationResult);
@@ -356,7 +357,8 @@ public class UserManagementResource {
   @PostMapping(value = "/{username}/editorRight",
     consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
   @Secured({ADMIN_ROLE})
-  public ResponseEntity<UUID> addEditorRight(@PathVariable String username, @RequestBody String strKey) {
+  public ResponseEntity<UUID> addEditorRight(@PathVariable String username,
+                                             @RequestBody @NotNull String strKey) {
 
     final UUID key = UUID.fromString(strKey);
 

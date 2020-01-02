@@ -212,7 +212,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @PostMapping(value = "titles",
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public Map<UUID, String> getTitles(@RequestBody Collection<UUID> keys) {
+  public Map<UUID, String> getTitles(@RequestBody @NotNull Collection<UUID> keys) {
     Map<UUID, String> titles = Maps.newHashMap();
     for (UUID key : keys) {
       titles.put(key, mapper.title(key));

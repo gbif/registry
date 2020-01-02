@@ -89,7 +89,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI register(@RequestBody DoiRegistration doiRegistration) {
+  public DOI register(@RequestBody @NotNull DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, doiRegistrationToRegister ->
       // Persist the DOI
       Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
@@ -112,7 +112,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI update(@RequestBody DoiRegistration doiRegistration) {
+  public DOI update(@RequestBody @NotNull DoiRegistration doiRegistration) {
     return createOrUpdate(doiRegistration, existingDoiRegistration ->
       // Update the DOI
       Optional.ofNullable(existingDoiRegistration.getDoi()).ifPresent(
