@@ -34,16 +34,16 @@ public class IdentifierResolverResource {
   // resolve only the following ones: grbio.org, biocol.org, grscicoll.org, usfsc.grscicoll.org
   // url may start with an environment string (env or uat)
   private static final Pattern PATTERN =
-      Pattern.compile("(dev\\.|uat\\.)*(grbio\\.org|biocol\\.org.*|grscicoll\\.org.*|usfsc\\.grscicoll\\.org.*)");
+    Pattern.compile("(dev\\.|uat\\.)*(grbio\\.org|biocol\\.org.*|grscicoll\\.org.*|usfsc\\.grscicoll\\.org.*)");
 
   private final String grscicollPortalUrl;
   private final CollectionMapper collectionMapper;
   private final InstitutionMapper institutionMapper;
 
   public IdentifierResolverResource(
-      @Value("${grscicoll.portal.url}") String grscicollPortalUrl,
-      CollectionMapper collectionMapper,
-      InstitutionMapper institutionMapper) {
+    @Value("${grscicoll.portal.url}") String grscicollPortalUrl,
+    CollectionMapper collectionMapper,
+    InstitutionMapper institutionMapper) {
     this.collectionMapper = collectionMapper;
     this.grscicollPortalUrl = grscicollPortalUrl;
     this.institutionMapper = institutionMapper;
@@ -70,7 +70,7 @@ public class IdentifierResolverResource {
     Optional<String> entityPath = findEntityPath(identifier);
 
     return entityPath.map(path -> ResponseEntity.status(HttpStatus.SEE_OTHER).location(URI.create(grscicollPortalUrl + path)).<Void>build())
-        .orElse(ResponseEntity.notFound().build());
+      .orElse(ResponseEntity.notFound().build());
   }
 
   private Optional<String> findEntityPath(String identifier) {
