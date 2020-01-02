@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -85,7 +85,7 @@ public class PipelinesHistoryResource {
   @PostMapping(value = PROCESS_PATH,
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public long createPipelineProcess(@RequestBody PipelineProcessParameters params,
+  public long createPipelineProcess(@RequestBody @NotNull PipelineProcessParameters params,
                                     Authentication authentication) {
     return historyTrackingService.createOrGet(
       params.getDatasetKey(),
@@ -100,7 +100,7 @@ public class PipelinesHistoryResource {
     consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long addPipelineExecution(@PathVariable("processKey") long processKey,
-                                   @RequestBody PipelineExecution pipelineExecution,
+                                   @RequestBody @NotNull PipelineExecution pipelineExecution,
                                    Authentication authentication) {
     return historyTrackingService.addPipelineExecution(
       processKey,
@@ -116,7 +116,7 @@ public class PipelinesHistoryResource {
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long addPipelineStep(@PathVariable("processKey") long processKey,
                               @PathVariable("executionKey") long executionKey,
-                              @RequestBody PipelineStep pipelineStep,
+                              @RequestBody @NotNull PipelineStep pipelineStep,
                               Authentication authentication) {
     return historyTrackingService.addPipelineStep(
       processKey,
@@ -141,10 +141,8 @@ public class PipelinesHistoryResource {
   public void updatePipelineStepStatusAndMetrics(@PathVariable("processKey") long processKey,
                                                  @PathVariable("executionKey") long executionKey,
                                                  @PathVariable("stepKey") long stepKey,
-                                                 @RequestBody PipelineStepParameters stepParams,
+                                                 @RequestBody @NotNull PipelineStepParameters stepParams,
                                                  Authentication authentication) {
-    Objects.requireNonNull(stepParams, "Pipeline Step parameters are required");
-
     historyTrackingService.updatePipelineStepStatusAndMetrics(
       processKey,
       executionKey,

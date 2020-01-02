@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
+
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
@@ -94,8 +96,9 @@ public class UserResource {
   @Secured({USER_ROLE})
   @PutMapping(value = "changePassword",
     consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity changePassword(@RequestBody AuthenticationDataParameters authenticationDataParameters,
-                                       Authentication authentication) {
+  public ResponseEntity<UserModelMutationResult> changePassword(
+    @RequestBody @NotNull AuthenticationDataParameters authenticationDataParameters,
+    Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
