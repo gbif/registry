@@ -73,6 +73,16 @@ public class InstitutionTestSteps {
     connection.close();
   }
 
+  @Given("{int} addresses")
+  public void givenAddresses(int number, DataTable dataTable) {
+    // See Before Institution
+  }
+
+  @Given("{int} contacts")
+  public void givenContacts(int number, DataTable dataTable) {
+    // See Before Institution
+  }
+
   @Given("{int} institutions")
   public void givenInstitutions(int number, DataTable dataTable) {
     // See Before Institution
@@ -97,11 +107,22 @@ public class InstitutionTestSteps {
       .andDo(print());
   }
 
-  @When("list institutions")
-  public void listInstitutions() throws Exception {
+  @When("list institutions by query {string}")
+  public void listInstitutionsByQuery(String query) throws Exception {
     result = mvc
       .perform(
         get("/grscicoll/institution")
+        .param("q", query)
+      )
+      .andDo(print());
+  }
+
+  @When("list institutions by contact {string}")
+  public void listInstitutionsByContact(String contact) throws Exception {
+    result = mvc
+      .perform(
+        get("/grscicoll/institution")
+          .param("contact", contact)
       )
       .andDo(print());
   }

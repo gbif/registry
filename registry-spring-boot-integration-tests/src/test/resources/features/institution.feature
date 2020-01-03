@@ -2,11 +2,19 @@
 Feature: Institution functionality
 
   Background:
-    Given 2 institutions
-      | key                                  | code | name              | deleted |
-      | b40143bf-c810-4e67-b998-2936cef72bb3 | II   | Institution name  | false   |
-      | 4c7db8e8-23ac-4392-824f-82e17dd19cc8 | II2  | Institution name2 | false   |
-      | 0082dba6-9669-414e-925e-183d7a136554 | code | deleted           | true    |
+    Given 2 addresses
+      | key | address               | city          |
+      | 1   | Universitetsparken 15 | Copenhagen    |
+      | 2   | Roskildevej 32        | Frederiksberg |
+    Given 2 contacts
+      | key                                  | firstName | lastName |
+      | 9ed62e2a-9288-4516-ad3d-2ffc5e019cb7 | John      | Doe      |
+      | e5f16af3-6fb7-4cb0-826b-733d1a4a5e36 | Joseph    | Doe      |
+    Given 3 institutions
+      | key                                  | code | name              | addressKey | contactKey                           | deleted |
+      | b40143bf-c810-4e67-b998-2936cef72bb3 | II   | Institution name  | 1          | 9ed62e2a-9288-4516-ad3d-2ffc5e019cb7 | false   |
+      | 4c7db8e8-23ac-4392-824f-82e17dd19cc8 | II2  | Institution name2 | 2          | e5f16af3-6fb7-4cb0-826b-733d1a4a5e36 | false   |
+      | 0082dba6-9669-414e-925e-183d7a136554 | code | deleted           |            |                                      | true    |
 
   Scenario Outline: suggest institutions
     When call suggest institutions with query "<query>"
@@ -20,10 +28,27 @@ Feature: Institution functionality
       | II2         | 1      | code |
       | name2       | 1      | name |
 
-  Scenario: list institutions without parameters
-    When list institutions
+  Scenario Outline: list institutions by query
+    When list institutions by query "<query>"
     Then response status should be 200
-    And 2 institution(s) in response
+    And <number> institution(s) in response
+
+    Scenarios:
+      | query  | number |
+      |        | 2      |
+      | Copenh | 1      |
+      | wrong  | 0      |
+
+  Scenario Outline: list institutions by contact
+    When list institutions by contact "<contact>"
+    Then response status should be 200
+    And <number> institution(s) in response
+
+    Scenarios:
+      | contact                              | number | comment                  |
+      | 9ed62e2a-9288-4516-ad3d-2ffc5e019cb7 | 1      | John Doe's contact key   |
+      | e5f16af3-6fb7-4cb0-826b-733d1a4a5e36 | 1      | Joseph Doe's contact key |
+      | 0082dba6-9669-414e-925e-183d7a136554 | 0      | Arbitrary UUID           |
 
   Scenario: list deleted institutions
     When list deleted institutions
