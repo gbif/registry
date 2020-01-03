@@ -10,7 +10,10 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/institution.feature"
   },
-  glue = "org.gbif.registry.ws.resources.collections.institution",
+  glue = {
+    "org.gbif.registry.ws.resources.collections.institution",
+    "org.gbif.registry.utils.cucumber"
+  },
   plugin = "pretty"
 )
 public class InstitutionIT {

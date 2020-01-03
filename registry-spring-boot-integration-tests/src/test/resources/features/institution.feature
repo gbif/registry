@@ -16,6 +16,40 @@ Feature: Institution functionality
       | 4c7db8e8-23ac-4392-824f-82e17dd19cc8 | II2  | Institution name2 | 2          | e5f16af3-6fb7-4cb0-826b-733d1a4a5e36 | false   |
       | 0082dba6-9669-414e-925e-183d7a136554 | code | deleted           |            |                                      | true    |
 
+  @InstitutionCRUD
+  Scenario: CRUD institution
+    Given institution
+      | code | name            | description       | homepage     |
+      | CODE | New institution | dummy description | http://dummy |
+    And institution address
+      | address               | city       | province | postalCode | country |
+      | Universitetsparken 15 | Copenhagen | Capital  | 2100       | DENMARK |
+    And institution mailing address
+      | address               | city       | province | postalCode | country |
+      | Universitetsparken 15 | Copenhagen | Capital  | 2100       | DENMARK |
+    And institution tags
+      | value    |
+      | tagValue |
+    And institution identifiers
+      | identifierType | identifier                           |
+      | UUID           | c4930a2c-3d3a-4d47-b65b-8347c42bf0a3 |
+    When create institution "New institution" using admin "registry_admin"
+    Then response status should be 201
+    And institution key is present in response
+    When get institution by key
+    Then response status should be 200
+
+    When update institution "New institution" using admin "registry_admin"
+      | description | new dummy description |
+    Then response status should be 200
+    When get institution by key
+    Then response status should be 200
+
+    When delete institution "New institution" using admin "registry_admin"
+    Then response status should be 200
+    When get institution by key
+    Then response status should be 200
+
   Scenario Outline: suggest institutions
     When call suggest institutions with query "<query>"
     Then response status should be 200
