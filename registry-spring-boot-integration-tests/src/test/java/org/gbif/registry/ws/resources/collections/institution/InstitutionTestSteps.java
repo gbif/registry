@@ -7,10 +7,17 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Tag;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.utils.RegistryITUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,13 +27,18 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +58,11 @@ public class InstitutionTestSteps {
   @Autowired
   private DataSource ds;
   private Connection connection;
+  @Autowired
+  private InstitutionService institutionService;
+
+  private Institution institution;
+  private UUID institutionKey;
 
   @Before("@Institution")
   public void setUp() throws Exception {
@@ -88,6 +105,31 @@ public class InstitutionTestSteps {
     // See Before Institution
   }
 
+  @Given("institution")
+  public void givenInstitution(Institution institution) {
+    this.institution = institution;
+  }
+
+  @Given("institution address")
+  public void givenInstitutionAddress(Address address) {
+    institution.setAddress(address);
+  }
+
+  @Given("institution mailing address")
+  public void givenInstitutionMailingAddress(Address mailingAddress) {
+    institution.setMailingAddress(mailingAddress);
+  }
+
+  @Given("institution tags")
+  public void givenInstitutionTags(List<Tag> tags) {
+    institution.setTags(tags);
+  }
+
+  @Given("institution identifiers")
+  public void givenInstitutionIdentifiers(List<Identifier> identifiers) {
+    institution.setIdentifiers(identifiers);
+  }
+
   @When("call suggest institutions with query {string}")
   public void suggestInstitutions(String query) throws Exception {
     result = mvc
@@ -128,11 +170,49 @@ public class InstitutionTestSteps {
   }
 
   @When("delete institution {string} using {word} {string}")
-  public void deleteInstitution(String key, String userType, String username) throws Exception {
+  public void deleteInstitution(String institutionName, String userType, String username) throws Exception {
     result = mvc
       .perform(
-        delete("/grscicoll/institution/{key}", key)
+        delete("/grscicoll/institution/{key}", institutionKey)
         .with(httpBasic(username, TEST_PASSWORD))
+      )
+      .andDo(print());
+  }
+
+  @When("create institution {string} using {word} {string}")
+  public void createInstitution(String institutionName, String userType, String username) throws Exception {
+    String content = objectMapper.writeValueAsString(institution);
+
+    result = mvc
+      .perform(
+        post("/grscicoll/institution")
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+          .with(httpBasic(username, TEST_PASSWORD))
+      )
+      .andDo(print());
+  }
+
+  @When("get institution by key")
+  public void getInstitution() throws Exception {
+    institution = institutionService.get(institutionKey);
+    result = mvc
+      .perform(
+        get("/grscicoll/institution/{key}", institutionKey)
+      )
+      .andDo(print());
+  }
+
+  @When("update institution {string} using {word} {string}")
+  public void updateInstitution(String institutionName, String userType, String username, Map<String, String> params) throws Exception {
+    String content = objectMapper.writeValueAsString(institution);
+
+    result = mvc
+      .perform(
+        put("/grscicoll/institution/{key}", institutionKey)
+          .content(content)
+          .contentType(MediaType.APPLICATION_JSON)
+          .with(httpBasic(username, TEST_PASSWORD))
       )
       .andDo(print());
   }
@@ -155,5 +235,11 @@ public class InstitutionTestSteps {
     result
       .andExpect(jsonPath("$.endOfRecords").value(true))
       .andExpect(jsonPath("$.results.length()").value(expected));
+  }
+
+  @Then("institution key is present in response")
+  public void extractKeyFromResponse() throws Exception {
+    institutionKey =
+      UUID.fromString(RegistryITUtils.removeQuotes(result.andReturn().getResponse().getContentAsString()));
   }
 }
