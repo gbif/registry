@@ -14,7 +14,6 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
-import org.gbif.service.exception.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +82,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
       try {
         doiPersistenceService.create(doi, type);
         return doi;
-      } catch (PersistenceException e) {
+      } catch (Exception e) {
         // might have hit a unique constraint, try another doi
         LOG.debug("Exception: {}. Random {} DOI {} existed. Try another one", type, doi, e.getMessage());
       }

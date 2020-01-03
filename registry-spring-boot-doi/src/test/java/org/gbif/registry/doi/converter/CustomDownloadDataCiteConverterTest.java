@@ -1,6 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
@@ -24,6 +23,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
@@ -98,10 +98,10 @@ public class CustomDownloadDataCiteConverterTest {
    */
   private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException, ParseException {
     File csv = FileUtils.getClasspathFile("customdownload/usedDatasets.txt");
-    List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
+    List<DatasetOccurrenceDownloadUsage> usages = new ArrayList<>();
 
     try (TabularDataFileReader<List<String>> reader = TabularFiles.newTabularFileReader(
-            Files.newBufferedReader(csv.toPath(), StandardCharsets.UTF_8), '\t', true)) {
+      Files.newBufferedReader(csv.toPath(), StandardCharsets.UTF_8), '\t', true)) {
       List<String> rec = reader.read();
       while (rec != null) {
         DatasetOccurrenceDownloadUsage usage = new DatasetOccurrenceDownloadUsage();

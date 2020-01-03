@@ -1,6 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -14,6 +13,7 @@ import org.gbif.api.vocabulary.License;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -96,7 +96,7 @@ public class DatasetTestDataProvider {
 
     dataset.setDoi(doi);
     dataset.setDescription("some description");
-    List<GeospatialCoverage> geos = Lists.newArrayList();
+    List<GeospatialCoverage> geos = new ArrayList<>();
     dataset.setGeographicCoverages(geos);
     GeospatialCoverage g1 = new GeospatialCoverage();
     geos.add(g1);
