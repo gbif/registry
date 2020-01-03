@@ -1,8 +1,10 @@
 package org.gbif.registry.ws.resources.collections.institution;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
@@ -20,7 +22,10 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Objects;
 
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,12 +73,45 @@ public class InstitutionTestSteps {
     connection.close();
   }
 
-  @When("call suggest institutions with query {string} by {word}")
-  public void suggestInstitutions(String query, String type) throws Exception {
+  @Given("{int} institutions")
+  public void givenInstitutions(int number, DataTable dataTable) {
+    // See Before Institution
+  }
+
+  @When("call suggest institutions with query {string}")
+  public void suggestInstitutions(String query) throws Exception {
     result = mvc
       .perform(
         get("/grscicoll/institution/suggest")
           .param("q", query)
+      )
+      .andDo(print());
+  }
+
+  @When("list deleted institutions")
+  public void listDeletedInstitutions() throws Exception {
+    result = mvc
+      .perform(
+        get("/grscicoll/institution/deleted")
+      )
+      .andDo(print());
+  }
+
+  @When("list institutions")
+  public void listInstitutions() throws Exception {
+    result = mvc
+      .perform(
+        get("/grscicoll/institution")
+      )
+      .andDo(print());
+  }
+
+  @When("delete institution {string} using {word} {string}")
+  public void deleteInstitution(String key, String userType, String username) throws Exception {
+    result = mvc
+      .perform(
+        delete("/grscicoll/institution/{key}", key)
+        .with(httpBasic(username, TEST_PASSWORD))
       )
       .andDo(print());
   }
@@ -89,5 +127,12 @@ public class InstitutionTestSteps {
     result
       .andExpect(jsonPath("$").isArray())
       .andExpect(jsonPath("$.length()").value(suggestedNumber));
+  }
+
+  @Then("{int} institution\\(s) in response")
+  public void assertInstitutionListResponse(int expected) throws Exception {
+    result
+      .andExpect(jsonPath("$.endOfRecords").value(true))
+      .andExpect(jsonPath("$.results.length()").value(expected));
   }
 }
