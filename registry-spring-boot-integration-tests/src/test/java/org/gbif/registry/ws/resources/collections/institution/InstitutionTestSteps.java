@@ -26,7 +26,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
+import java.net.URI;
 import java.sql.Connection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -105,29 +107,45 @@ public class InstitutionTestSteps {
     // See Before Institution
   }
 
-  @Given("institution")
+  @Given("new institution")
   public void givenInstitution(Institution institution) {
     this.institution = institution;
   }
 
-  @Given("institution address")
+  @Given("new institution address")
   public void givenInstitutionAddress(Address address) {
     institution.setAddress(address);
   }
 
-  @Given("institution mailing address")
+  @Given("new institution mailing address")
   public void givenInstitutionMailingAddress(Address mailingAddress) {
     institution.setMailingAddress(mailingAddress);
   }
 
-  @Given("institution tags")
+  @Given("new institution tags")
   public void givenInstitutionTags(List<Tag> tags) {
     institution.setTags(tags);
   }
 
-  @Given("institution identifiers")
+  @Given("new institution identifiers")
   public void givenInstitutionIdentifiers(List<Identifier> identifiers) {
     institution.setIdentifiers(identifiers);
+  }
+
+  @Given("new arbitrary valid institution {string}")
+  public void prepareArbitraryInstitution(String institutionName) {
+    institution = new Institution();
+    institution.setCode("ABC");
+    institution.setName(institutionName);
+    institution.setDescription("fake institution for IT");
+    institution.setHomepage(URI.create("https://www.gbif.org/"));
+    institution.setAdditionalNames(Collections.emptyList());
+  }
+
+  @Given("institution {string} with key {string}")
+  public void prepareInstitutionKey(String institutionName, String institutionKey) {
+    this.institutionKey = UUID.fromString(institutionKey);
+    this.institution = institutionService.get(this.institutionKey);
   }
 
   @When("call suggest institutions with query {string}")
