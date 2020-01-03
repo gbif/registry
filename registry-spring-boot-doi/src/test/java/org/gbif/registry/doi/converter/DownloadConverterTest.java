@@ -1,6 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import org.gbif.api.model.common.DOI;
@@ -14,6 +13,7 @@ import org.junit.Test;
 import org.xmlunit.matchers.CompareMatcher;
 
 import java.net.URI;
+import java.util.Arrays;
 
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage1;
@@ -45,7 +45,7 @@ public class DownloadConverterTest {
     final String expected = getXmlMetadataFromFile("metadata/metadata-download.xml");
 
     // when
-    DataCiteMetadata metadata = DownloadConverter.convert(download, user, Lists.newArrayList(du1, du2), tl);
+    DataCiteMetadata metadata = DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl);
     String actualXmlMetadata = DataCiteValidator.toXml(download.getDoi(), metadata);
 
     // then
