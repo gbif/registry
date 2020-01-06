@@ -78,7 +78,7 @@ Feature: Institution functionality
       | institution | 2      | name |
       | II          | 2      | code |
       | II2         | 1      | code |
-      | name2       | 1      | name |
+      | First       | 1      | name |
 
   Scenario Outline: list institutions by query
     When list institutions by query "<query>"
