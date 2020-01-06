@@ -1,8 +1,5 @@
 package org.gbif.registry.doi.converter;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
@@ -10,17 +7,21 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookup;
-import org.gbif.utils.file.FileUtils;
-import org.junit.Test;
-import org.xmlunit.matchers.CompareMatcher;
 
 import java.net.URI;
+
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
+import org.junit.Test;
+import org.xmlunit.matchers.CompareMatcher;
 
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage1;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage2;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDownload;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareUser;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;

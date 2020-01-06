@@ -1,10 +1,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
@@ -17,7 +14,9 @@ import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
@@ -33,7 +32,7 @@ import static org.gbif.api.model.pipelines.PipelineStep.Status;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class PipelineProcessMapperTest {
@@ -90,7 +89,7 @@ public class PipelineProcessMapperTest {
         new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
 
     // insert in the DB
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
     assertTrue(process.getKey() > 0);
 
     // get by key
@@ -106,7 +105,7 @@ public class PipelineProcessMapperTest {
         new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
 
     // insert in the DB
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
     assertTrue(process.getKey() > 0);
 
     // get process inserted
@@ -114,7 +113,7 @@ public class PipelineProcessMapperTest {
         pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
     assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
-    assertTrue(process.getSteps().isEmpty());
+    assertTrue(process.getExecutions().isEmpty());
   }
 
   @Test
@@ -125,15 +124,12 @@ public class PipelineProcessMapperTest {
 
     PipelineProcess process =
         new PipelineProcess().setDatasetKey(datasetKey).setAttempt(attempt).setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
 
     // insert another process with the same datasetKey and attempt
     PipelineProcess duplicate =
-        new PipelineProcess()
-            .setDatasetKey(datasetKey)
-            .setAttempt(attempt)
-            .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(duplicate);
+        new PipelineProcess().setDatasetKey(datasetKey).setAttempt(attempt).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(duplicate);
 
     assertEquals(process.getKey(), duplicate.getKey());
     assertEquals(datasetKey, duplicate.getDatasetKey());
@@ -141,11 +137,48 @@ public class PipelineProcessMapperTest {
   }
 
   @Test
+  public void addExecutionTest() {
+    // insert one process
+    PipelineProcess process =
+        new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(process);
+
+    // add an execution
+    PipelineExecution execution =
+        new PipelineExecution()
+            .setCreatedBy(TEST_USER)
+            .setRerunReason("rerun")
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+    pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
+
+    PipelineProcess processRetrieved =
+        pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
+    assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
+    assertEquals(process.getAttempt(), processRetrieved.getAttempt());
+    assertEquals(1, processRetrieved.getExecutions().size());
+
+    PipelineExecution executionRetrieved = processRetrieved.getExecutions().iterator().next();
+    assertNotNull(executionRetrieved.getCreated());
+    assertEquals(execution.getCreatedBy(), executionRetrieved.getCreatedBy());
+    assertEquals(execution.getRerunReason(), executionRetrieved.getRerunReason());
+    assertEquals(execution.getRemarks(), executionRetrieved.getRemarks());
+    assertEquals(execution.getStepsToRun(), executionRetrieved.getStepsToRun());
+
+    // compare with the result of the get
+    assertEquals(
+        executionRetrieved, pipelineProcessMapper.getPipelineExecution(execution.getKey()));
+  }
+
+  @Test
   public void addStepTest() {
     // insert one process
     PipelineProcess process =
         new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
+
+    // add an execution
+    PipelineExecution execution = new PipelineExecution().setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
     PipelineStep step =
@@ -157,8 +190,10 @@ public class PipelineProcessMapperTest {
             .setFinished(LocalDateTime.now())
             .setMessage("message")
             .setMetrics(Collections.singleton(new MetricInfo("key", "value")))
-            .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.addPipelineStep(process.getKey(), step);
+            .setCreatedBy(TEST_USER)
+            .setPipelinesVersion("1.0.0.")
+            .setNumberRecords(10L);
+    pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertTrue(step.getKey() > 0);
 
     // assert results
@@ -166,31 +201,44 @@ public class PipelineProcessMapperTest {
         pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
     assertEquals(process.getDatasetKey(), processRetrieved.getDatasetKey());
     assertEquals(process.getAttempt(), processRetrieved.getAttempt());
-    assertEquals(1, processRetrieved.getSteps().size());
-    assertTrue(step.lenientEquals(processRetrieved.getSteps().iterator().next()));
+
+    PipelineExecution executionRetrieved = processRetrieved.getExecutions().iterator().next();
+    assertNotNull(executionRetrieved.getCreated());
+    assertEquals(execution.getCreatedBy(), executionRetrieved.getCreatedBy());
+    assertEquals(1, executionRetrieved.getSteps().size());
+
+    PipelineStep stepRetrieved = executionRetrieved.getSteps().iterator().next();
+    assertTrue(step.lenientEquals(stepRetrieved));
   }
 
   @Test
   public void addStepWithEmptyMetricsTest() {
     // insert one process
     PipelineProcess process =
-      new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+        new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(process);
+
+    // add an execution
+    PipelineExecution execution = new PipelineExecution().setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
     PipelineStep step =
-      new PipelineStep()
-        .setType(StepType.ABCD_TO_VERBATIM)
-        .setState(Status.COMPLETED)
-        .setMetrics(Collections.singleton(new MetricInfo("a", "")))
-        .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.addPipelineStep(process.getKey(), step);
+        new PipelineStep()
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setState(Status.COMPLETED)
+            .setMetrics(Collections.singleton(new MetricInfo("a", "")))
+            .setCreatedBy(TEST_USER)
+            .setStarted(LocalDateTime.now());
+    pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertTrue(step.getKey() > 0);
 
     // assert results
     PipelineProcess processRetrieved =
-      pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
-    assertTrue(step.lenientEquals(processRetrieved.getSteps().iterator().next()));
+        pipelineProcessMapper.getByDatasetAndAttempt(process.getDatasetKey(), process.getAttempt());
+    assertTrue(
+        step.lenientEquals(
+            processRetrieved.getExecutions().iterator().next().getSteps().iterator().next()));
   }
 
   @Test
@@ -198,11 +246,11 @@ public class PipelineProcessMapperTest {
     // insert some processes
     final UUID uuid1 = insertDataset();
     final UUID uuid2 = insertDataset();
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(1).setCreatedBy(TEST_USER));
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(2).setCreatedBy(TEST_USER));
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid2).setAttempt(1).setCreatedBy(TEST_USER));
 
     // list processes
@@ -226,15 +274,24 @@ public class PipelineProcessMapperTest {
     // insert one process
     PipelineProcess process =
         new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
+
+    // add an execution
+    PipelineExecution execution =
+        new PipelineExecution()
+            .setCreatedBy(TEST_USER)
+            .setRerunReason("rerun")
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+    pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
     PipelineStep step =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
             .setState(Status.RUNNING)
-            .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.addPipelineStep(process.getKey(), step);
+            .setCreatedBy(TEST_USER)
+            .setStarted(LocalDateTime.now());
+    pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
 
     // get step
     PipelineStep stepRetrieved = pipelineProcessMapper.getPipelineStep(step.getKey());
@@ -246,7 +303,15 @@ public class PipelineProcessMapperTest {
     // insert one process
     PipelineProcess process =
         new PipelineProcess().setDatasetKey(insertDataset()).setAttempt(1).setCreatedBy(TEST_USER);
-    pipelineProcessMapper.create(process);
+    pipelineProcessMapper.createIfNotExists(process);
+
+    // add an execution
+    PipelineExecution execution =
+        new PipelineExecution()
+            .setCreatedBy(TEST_USER)
+            .setRerunReason("rerun")
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+    pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
     PipelineStep step =
@@ -255,14 +320,13 @@ public class PipelineProcessMapperTest {
             .setStarted(LocalDateTime.now())
             .setState(Status.RUNNING)
             .setCreatedBy(TEST_USER);
-    pipelineProcessMapper.addPipelineStep(process.getKey(), step);
+    pipelineProcessMapper.addPipelineStep(execution.getKey(), step);
     assertEquals(Status.RUNNING, pipelineProcessMapper.getPipelineStep(step.getKey()).getState());
 
     // change step state
     step.setFinished(LocalDateTime.now().plusHours(1));
     step.setState(Status.COMPLETED);
     step.setModifiedBy(UPDATER_USER);
-    step.setRerunReason("reason");
     step.setMetrics(Collections.singleton(new MetricInfo("name", "val")));
 
     pipelineProcessMapper.updatePipelineStep(step);
@@ -277,18 +341,36 @@ public class PipelineProcessMapperTest {
     assertFalse(pipelineProcessMapper.getLastAttempt(uuid1).isPresent());
 
     // insert some processes
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(1).setCreatedBy(TEST_USER));
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(2).setCreatedBy(TEST_USER));
 
     // get last attempt
     assertEquals(2, pipelineProcessMapper.getLastAttempt(uuid1).get().intValue());
 
     // add new attempt
-    pipelineProcessMapper.create(
+    pipelineProcessMapper.createIfNotExists(
         new PipelineProcess().setDatasetKey(uuid1).setAttempt(3).setCreatedBy(TEST_USER));
     assertEquals(3, pipelineProcessMapper.getLastAttempt(uuid1).get().intValue());
+  }
+
+  @Test
+  public void getPipelineProcessesByDatasetAndAttemptsTest() {
+    // insert processes
+    UUID datasetKey = insertDataset();
+    PipelineProcess p1 =
+      new PipelineProcess().setDatasetKey(datasetKey).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p1);
+    PipelineProcess p2 =
+      new PipelineProcess().setDatasetKey(datasetKey).setAttempt(2).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p2);
+
+    List<PipelineProcess>
+      processes = pipelineProcessMapper.getPipelineProcessesByDatasetAndAttempts(datasetKey, Arrays.asList(1, 2));
+    assertEquals(2, processes.size());
+    assertTrue(processes.contains(new PipelineProcess().setDatasetKey(datasetKey).setAttempt(1)));
+    assertTrue(processes.contains(new PipelineProcess().setDatasetKey(datasetKey).setAttempt(2)));
   }
 
   private UUID insertDataset() {

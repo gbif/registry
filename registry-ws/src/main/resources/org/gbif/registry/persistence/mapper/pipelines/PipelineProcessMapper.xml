@@ -4,6 +4,12 @@
 
   <resultMap id="PIPELINES_PROCESS_MAP" type="PipelineProcess" autoMapping="true">
     <id property="key" column="key"/>
+    <collection property="executions" column="key" select="listExecutions"/>
+  </resultMap>
+
+  <resultMap id="EXECUTION_MAP" type="PipelineExecution" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="stepsToRun" column="steps_to_run" typeHandler="StepTypeArrayTypeHandler"/>
     <collection property="steps" column="key" select="listSteps"/>
   </resultMap>
 
@@ -17,7 +23,7 @@
   </sql>
 
   <sql id="PIPELINE_PROCESS_FIELDS_SELECT">
-    key, dataset_key, attempt, created, created_by
+    p.key, p.dataset_key, p.attempt, p.created, p.created_by
   </sql>
 
   <sql id="PIPELINES_PROCESS_VALUES_CREATE">
@@ -27,41 +33,80 @@
     #{createdBy,jdbcType=VARCHAR}
   </sql>
 
+  <sql id="EXECUTION_FIELDS_SELECT">
+    e.key, e.pipeline_process_key, e.steps_to_run, e.created, e.created_by, e.rerun_reason, e.remarks
+  </sql>
+
+  <sql id="EXECUTION_FIELDS_CREATE">
+    pipeline_process_key, steps_to_run, created, created_by, rerun_reason, remarks
+  </sql>
+
+  <sql id="EXECUTION_VALUES_CREATE">
+    #{pipelinesProcessKey,jdbcType=BIGINT},
+    #{execution.stepsToRun,jdbcType=ARRAY,typeHandler=StepTypeArrayTypeHandler},
+    now(), <!-- created -->
+    #{execution.createdBy,jdbcType=VARCHAR},
+    #{execution.rerunReason,jdbcType=VARCHAR},
+    #{execution.remarks,jdbcType=VARCHAR}
+  </sql>
+
   <sql id="STEP_FIELDS_CREATE">
-    type, runner, started, finished, state, message, metrics, rerun_reason, created_by, pipeline_process_key
+    type, runner, started, finished, state, message, metrics, created_by, number_records, pipelines_version,
+    pipeline_execution_key
   </sql>
 
   <sql id="STEP_FIELDS_SELECT">
-    key, type, runner, started, finished, state, message, metrics, rerun_reason, created_by, modified, modified_by, pipeline_process_key
+    s.key, s.type, s.runner, s.started, s.finished, s.state, s.message, s.metrics, s.created_by, s.modified, s.modified_by,
+    s.number_records, s.pipelines_version, s.pipeline_execution_key
   </sql>
 
   <sql id="STEP_VALUES_CREATE">
     #{step.type,jdbcType=OTHER},
     #{step.runner,jdbcType=OTHER},
-    now(), <!-- started -->
+    #{step.started,jdbcType=OTHER},
     #{step.finished,jdbcType=OTHER},
     #{step.state,jdbcType=OTHER},
     #{step.message,jdbcType=VARCHAR},
     #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
-    #{step.rerunReason,jdbcType=VARCHAR},
     #{step.createdBy,jdbcType=VARCHAR},
-    #{pipelinesProcessKey,jdbcType=BIGINT}
+    #{step.numberRecords,jdbcType=BIGINT},
+    #{step.pipelinesVersion,jdbcType=VARCHAR},
+    #{pipelineExecutionKey,jdbcType=BIGINT}
   </sql>
 
   <sql id="STEP_UPDATE">
     finished = #{step.finished,jdbcType=OTHER},
     state = #{step.state,jdbcType=OTHER},
-    rerun_reason = #{step.rerunReason,jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
-    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore
+    metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
+    number_records = #{step.numberRecords,jdbcType=BIGINT},
+    pipelines_version = #{step.pipelinesVersion,jdbcType=VARCHAR}
   </sql>
 
-  <insert id="create" parameterType="PipelineProcess" useGeneratedKeys="true" keyProperty="key">
+  <insert id="createIfNotExists" parameterType="PipelineProcess" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO pipeline_process(<include refid="PIPELINE_PROCESS_FIELDS_CREATE"/>)
     VALUES (<include refid="PIPELINES_PROCESS_VALUES_CREATE"/>)
     ON CONFLICT(dataset_key, attempt) DO UPDATE SET dataset_key = EXCLUDED.dataset_key
   </insert>
+
+  <insert id="addPipelineExecution" useGeneratedKeys="true" keyProperty="execution.key">
+    INSERT INTO pipeline_execution(<include refid="EXECUTION_FIELDS_CREATE"/>)
+    VALUES (<include refid="EXECUTION_VALUES_CREATE"/>)
+  </insert>
+
+  <select id="getPipelineExecution" resultMap="EXECUTION_MAP">
+    SELECT <include refid="EXECUTION_FIELDS_SELECT"/>
+    FROM pipeline_execution e
+    WHERE e.key = #{key,jdbcType=BIGINT}
+  </select>
+
+  <select id="listExecutions" resultMap="EXECUTION_MAP">
+    SELECT <include refid="EXECUTION_FIELDS_SELECT"/>
+    FROM pipeline_execution e
+    WHERE e.pipeline_process_key = #{key,jdbcType=BIGINT}
+    ORDER BY e.created DESC
+  </select>
 
   <insert id="addPipelineStep" useGeneratedKeys="true" keyProperty="step.key">
     INSERT INTO pipeline_step(<include refid="STEP_FIELDS_CREATE"/>)
@@ -70,21 +115,21 @@
 
   <select id="listSteps" resultMap="STEP_MAP">
     SELECT <include refid="STEP_FIELDS_SELECT"/>
-    FROM pipeline_step
-    WHERE pipeline_process_key = #{key,jdbcType=BIGINT}
-    ORDER BY started DESC
+    FROM pipeline_step s
+    WHERE s.pipeline_execution_key = #{key,jdbcType=BIGINT}
+    ORDER BY s.started DESC
   </select>
 
   <select id="getByDatasetAndAttempt" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
-    FROM pipeline_process
-    WHERE dataset_key = #{datasetKey, jdbcType=OTHER} AND attempt = #{attempt, jdbcType=INTEGER}
+    FROM pipeline_process p
+    WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER} AND p.attempt = #{attempt, jdbcType=INTEGER}
   </select>
 
   <select id="get" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
-    FROM pipeline_process
-    WHERE key = #{key,jdbcType=BIGINT}
+    FROM pipeline_process p
+    WHERE p.key = #{key,jdbcType=BIGINT}
   </select>
 
   <select id="getLastAttempt" resultType="Integer">
@@ -97,19 +142,29 @@
 
   <select id="list" resultMap="PIPELINES_PROCESS_MAP">
     SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
-    FROM pipeline_process
+    FROM pipeline_process p
     <where>
       <if test="datasetKey != null">
-        dataset_key = #{datasetKey, jdbcType=OTHER}
+        p.dataset_key = #{datasetKey, jdbcType=OTHER}
       </if>
       <if test="attempt != null">
-        AND attempt = #{attempt, jdbcType=INTEGER}
+        AND p.attempt = #{attempt, jdbcType=INTEGER}
       </if>
     </where>
-    ORDER BY created DESC
+    ORDER BY p.created DESC
     <if test="page != null">
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
+  </select>
+
+  <select id="getPipelineProcessesByDatasetAndAttempts" resultMap="PIPELINES_PROCESS_MAP">
+    SELECT <include refid="PIPELINE_PROCESS_FIELDS_SELECT"/>
+    FROM pipeline_process p
+    WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER}
+      AND p.attempt IN
+      <foreach collection="attempts" item="key" separator="," open="(" close=")">
+        #{key}
+      </foreach>
   </select>
 
   <select id="count" resultType="Long">
@@ -127,8 +182,8 @@
 
   <select id="getPipelineStep" resultMap="STEP_MAP">
     SELECT <include refid="STEP_FIELDS_SELECT"/>
-    FROM pipeline_step
-    WHERE key = #{key,jdbcType=BIGINT}
+    FROM pipeline_step s
+    WHERE s.key = #{key,jdbcType=BIGINT}
   </select>
 
   <update id="updatePipelineStep">

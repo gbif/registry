@@ -1,8 +1,6 @@
 package org.gbif.registry.pipelines.guice;
 
-import org.gbif.registry.pipelines.MetricsHandler;
-import org.gbif.registry.pipelines.PipelinesCoordinatorTrackingServiceImpl;
-import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
+import org.gbif.registry.pipelines.*;
 import org.gbif.service.guice.PrivateServiceModule;
 
 import java.util.Properties;
@@ -20,12 +18,13 @@ public class PipelinesModule extends PrivateServiceModule {
   @Override
   protected void configureService() {
     bind(PipelinesHistoryTrackingService.class)
-        .to(PipelinesCoordinatorTrackingServiceImpl.class)
+        .to(DefaultPipelinesHistoryTrackingService.class)
         .in(Scopes.SINGLETON);
-    bind(MetricsHandler.class).asEagerSingleton();
+    bind(IngestionHistoryService.class)
+        .to(DefaultIngestionHistoryService.class)
+        .in(Scopes.SINGLETON);
 
     expose(PipelinesHistoryTrackingService.class);
-    expose(MetricsHandler.class);
+    expose(IngestionHistoryService.class);
   }
-
 }
