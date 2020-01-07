@@ -40,7 +40,6 @@
 
     <module>registry-spring-boot-ws</module>
     <module>registry-spring-boot-doi</module>
-    <module>registry-spring-boot-cli</module>
     <module>registry-spring-boot-metadata</module>
     <module>registry-spring-boot-persistence</module>
     <module>registry-spring-boot-surety</module>
