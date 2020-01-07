@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>2.2.2.RELEASE</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-spring-boot-parent</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <name>GBIF Registry</name>
   <description>GBIF Registry project (Spring Boot)</description>
 
@@ -20,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/registry-spring-boot.git</connection>
     <url>https://github.com/gbif/registry-spring-boot</url>
     <developerConnection>scm:git:git@github.com:gbif/registry-spring-boot.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>registry-spring-boot-parent-1.0</tag>
   </scm>
 
   <licenses>
@@ -119,14 +118,14 @@
     <greenmail.version>1.5.5</greenmail.version>
     <cucumber.version>4.8.0</cucumber.version>
 
-    <datacite.api.base.url/>
-    <datacite.user/>
-    <datacite.password/>
+    <datacite.api.base.url />
+    <datacite.user />
+    <datacite.password />
 
-    <mail.host/>
-    <mail.username/>
-    <mail.password/>
-    <mail.port/>
+    <mail.host />
+    <mail.username />
+    <mail.password />
+    <mail.port />
 
     <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
