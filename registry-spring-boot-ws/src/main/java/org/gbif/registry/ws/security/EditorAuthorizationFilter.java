@@ -23,7 +23,7 @@ import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotEdito
 
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be passed.
- * First of all any resource method is required to have the role included in the RolesAllowed annotation.
+ * First of all any resource method is required to have the role included in the Secured or RolesAllowed annotation.
  * Secondly this request filter needs to be passed for POST/PUT/DELETE requests that act on existing and UUID identified
  * main registry entities such as dataset, organization, node, installation and network.
  * <p>
