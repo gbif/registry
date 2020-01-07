@@ -56,6 +56,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
@@ -239,6 +240,18 @@ public class OccurrenceDownloadTestSteps {
     // prepared by scripts in @Before
   }
 
+  @Given("{int} download statistic record(s)")
+  public void prepareDownloadStatistic(int numberOfObjects, DataTable dataTable) {
+    assertEquals(numberOfObjects, dataTable.asMaps().size());
+    // prepared by scripts in @Before
+  }
+
+  @Given("{int} download user statistic record(s)")
+  public void prepareDownloadUserStatistic(int numberOfObjects, DataTable dataTable) {
+    assertEquals(numberOfObjects, dataTable.asMaps().size());
+    // prepared by scripts in @Before
+  }
+
   @When("create download using {word} {string}")
   public void createDownload(String userRole, String username) throws Exception {
     String stringContent = objectMapper.writeValueAsString(download);
@@ -322,7 +335,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download/statistics/downloadsByUserCountry")
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams)));
+          .params(new LinkedMultiValueMap<>(requestParams))).andDo(print());
   }
 
   @When("get download statistic using {word} {string} without params")
@@ -336,7 +349,7 @@ public class OccurrenceDownloadTestSteps {
       .perform(
         get("/occurrence/download/statistics/downloadedRecordsByDataset")
           .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams)));
+          .params(new LinkedMultiValueMap<>(requestParams))).andDo(print());
   }
 
   @When("get downloaded records by dataset using {word} {string} without params")
@@ -426,8 +439,8 @@ public class OccurrenceDownloadTestSteps {
     result.andExpect(jsonPath("$.count").value(numberOrRecords));
   }
 
-  @Then("response contains statistics for {int} years")
-  public void checkStatisticResponse(int expectedYears, List<Map<String, String>> expectedData) throws Exception {
+  @Then("response contains {int} records for {int} years")
+  public void checkStatisticResponse(int numberOfRecords, int expectedYears, List<Map<String, String>> expectedData) throws Exception {
     result.andExpect(jsonPath("$.length()").value(expectedYears));
     for (Map<String, String> expected : expectedData) {
       result

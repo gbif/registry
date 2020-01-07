@@ -156,7 +156,7 @@ public class OrganizationTestSteps {
     result = mvc
       .perform(
         get("/organization")
-          .param("country", country.getIso2LetterCode()));
+          .param("country", country.getIso2LetterCode())).andDo(print());
   }
 
   @Then("{int} organization\\(s) should be listed")
