@@ -17,9 +17,9 @@
   <description>GBIF Registry project (Spring Boot)</description>
 
   <scm>
-    <connection>scm:git:git@github.com:gbif/registry.git</connection>
-    <url>https://github.com/gbif/registry</url>
-    <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
+    <connection>scm:git:git@github.com:gbif/registry-spring-boot.git</connection>
+    <url>https://github.com/gbif/registry-spring-boot</url>
+    <developerConnection>scm:git:git@github.com:gbif/registry-spring-boot.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
