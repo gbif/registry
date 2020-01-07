@@ -55,6 +55,8 @@
     <java.version>1.8</java.version>
     <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
 
+    <spring-cloud-zookeeper.version>2.1.1.RELEASE</spring-cloud-zookeeper.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
     <commons-digester.version>3.2</commons-digester.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
     <gbif-doi.version>2.7</gbif-doi.version>
@@ -117,6 +119,34 @@
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter</artifactId>
         <version>${mybatis-spring-boot-starter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+        <version>${spring-cloud-zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-archaius</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-netflix-core</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
+        <version>${spring-cloud-zookeeper.version}</version>
       </dependency>
 
       <!-- GBIF dependencies -->
@@ -264,6 +294,17 @@
       </dependency>
 
       <!-- Third party dependencies -->
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>
         <artifactId>mybatis</artifactId>
