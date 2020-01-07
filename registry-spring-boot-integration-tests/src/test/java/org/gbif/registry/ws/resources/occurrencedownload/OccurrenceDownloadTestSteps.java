@@ -435,6 +435,11 @@ public class OccurrenceDownloadTestSteps {
     }
   }
 
+  @Then("occurrence downloads usage list contains {int} elements")
+  public void checkDownloadUsageResponse(int expectedNumberOfElements) throws Exception {
+    result.andExpect(jsonPath("$.count").value(expectedNumberOfElements));
+  }
+
   @Then("occurrence downloads usage list of {int} elements is")
   public void checkDownloadUsageResponse(int expectedNumberOfElements, DataTable dataTable) throws Exception {
     result.andExpect(jsonPath("$.count").value(expectedNumberOfElements));
