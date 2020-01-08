@@ -5,6 +5,8 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="COLLECTION_MAP" type="SciCollection" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="contentTypes" column="content_type" typeHandler="CollectionContentTypeArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
@@ -15,15 +17,15 @@
   </resultMap>
 
   <sql id="COLLECTION_WRITE_FIELDS">
-    key, code, name, description, content_type, active, personal_collection, doi, homepage, catalog_url, api_url,
+    key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
-    created_by, modified_by, created, modified
+    created_by, modified_by, created, modified, index_herbariorum_record
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
-    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.homepage,
+    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
-    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted
+    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -35,6 +37,8 @@
     #{active,jdbcType=BOOLEAN},
     #{personalCollection,jdbcType=BOOLEAN},
     #{doi,jdbcType=VARCHAR},
+    #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
@@ -46,7 +50,8 @@
     #{createdBy,jdbcType=VARCHAR},
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
-    now() <!-- modified -->
+    now(), <!-- modified -->
+    #{indexHerbariorumRecord,jdbcType=BOOLEAN}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -57,6 +62,8 @@
     active = #{active,jdbcType=BOOLEAN},
     personal_collection = #{personalCollection,jdbcType=BOOLEAN},
     doi = #{doi,jdbcType=VARCHAR},
+    email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
@@ -67,7 +74,8 @@
     address_key = #{address.key,jdbcType=INTEGER},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
-    deleted = null <!-- if we're updating it can't be deleted -->
+    deleted = null, <!-- if we're updating it can't be deleted -->
+    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN}
   </sql>
 
   <sql id="FULLTEXT_SEARCH">

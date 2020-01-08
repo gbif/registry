@@ -13,6 +13,7 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -75,6 +76,9 @@ public class CollectionMapperTest {
     collection.setName("NAME");
     collection.setCreatedBy("test");
     collection.setModifiedBy("test");
+    collection.setEmail(Collections.singletonList("test@test.com"));
+    collection.setPhone(Collections.singletonList("1234"));
+    collection.setIndexHerbariorumRecord(true);
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
@@ -97,6 +101,11 @@ public class CollectionMapperTest {
     assertEquals(AccessionStatus.INSTITUTIONAL, collectionStored.getAccessionStatus());
     assertEquals(2, collectionStored.getPreservationTypes().size());
     assertTrue(collectionStored.getPreservationTypes().contains(PreservationType.SAMPLE_CRYOPRESERVED));
+    assertEquals(1, collectionStored.getEmail().size());
+    assertTrue(collectionStored.getEmail().contains("test@test.com"));
+    assertEquals(1, collectionStored.getPhone().size());
+    assertTrue(collectionStored.getPhone().contains("1234"));
+    assertTrue(collectionStored.isIndexHerbariorumRecord());
 
     // assert address
     assertNotNull(collectionStored.getAddress().getKey());

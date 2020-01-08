@@ -84,7 +84,7 @@
     <commons-validator.version>1.5.1</commons-validator.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.102</gbif-api.version>
+    <gbif-api.version>0.103-SNAPSHOT</gbif-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>

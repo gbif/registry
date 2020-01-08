@@ -13,6 +13,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -80,6 +81,8 @@ public class InstitutionMapperTest {
     List<Discipline> disciplines = new ArrayList<>();
     disciplines.add(Discipline.AGRICULTURAL_ANIMAL_SCIENCE);
     institution.setDisciplines(disciplines);
+    institution.setEmail(Collections.singletonList("test@test.com"));
+    institution.setPhone(Collections.singletonList("1234"));
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -106,6 +109,10 @@ public class InstitutionMapperTest {
     assertTrue(institutionStored.getDisciplines().contains(Discipline.AGRICULTURAL_ANIMAL_SCIENCE));
     assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
     assertTrue(institutionStored.isActive());
+    assertEquals(1, institutionStored.getEmail().size());
+    assertTrue(institutionStored.getEmail().contains("test@test.com"));
+    assertEquals(1, institutionStored.getPhone().size());
+    assertTrue(institutionStored.getPhone().contains("1234"));
 
     // assert address
     assertNotNull(institutionStored.getAddress().getKey());

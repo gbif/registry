@@ -5,6 +5,8 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="INSTITUTION_MAP" type="Institution" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
@@ -15,14 +17,14 @@
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
-    key, code, name, description, type, active, homepage, catalog_url, api_url, institutional_governance, discipline,
+    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
     created_by, modified_by, created, modified
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
-    i.key, i.code, i.name, i.description, i.type, i.active, i.homepage, i.catalog_url, i.api_url,
+    i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
@@ -36,6 +38,8 @@
     #{description,jdbcType=VARCHAR},
     #{type,jdbcType=OTHER},
     #{active,jdbcType=BOOLEAN},
+    #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
@@ -65,6 +69,8 @@
     description = #{description,jdbcType=VARCHAR},
     type = #{type,jdbcType=OTHER},
     active = #{active,jdbcType=BOOLEAN},
+    email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
