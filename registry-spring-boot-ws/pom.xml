@@ -130,6 +130,14 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>repackage</id>
+            <configuration>
+              <classifier>exec</classifier>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
           <mainClass>org.gbif.registry.RegistryWsApplication</mainClass>
           <addResources>false</addResources>
