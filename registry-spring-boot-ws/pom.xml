@@ -132,7 +132,8 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <mainClass>org.gbif.registry.RegistryWsApplication</mainClass>
-          <classifier>exec</classifier>
+          <addResources>false</addResources>
+          <folders>conf/</folders>
         </configuration>
       </plugin>
 
