@@ -32,8 +32,8 @@ public class PartialDateHandlerMethodArgumentResolver implements HandlerMethodAr
 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-    final String paramName = parameter.getParameter().getName();
-    final String paramValue = webRequest.getParameter(paramName);
+    final String paramName = parameter.getParameterName();
+    final String paramValue = paramName != null ? webRequest.getParameter(paramName) : null;
     return Optional.ofNullable(paramValue)
       .map(value -> tryDateParse(value, paramName))
       .orElse(null);

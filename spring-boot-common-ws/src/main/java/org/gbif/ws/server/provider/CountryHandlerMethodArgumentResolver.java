@@ -17,8 +17,8 @@ public class CountryHandlerMethodArgumentResolver implements HandlerMethodArgume
 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-    final String paramName = parameter.getParameter().getName();
-    final String countryCode = webRequest.getParameter(paramName);
+    final String paramName = parameter.getParameterName();
+    final String countryCode = paramName != null ? webRequest.getParameter(paramName) : null;
     Country result = Country.fromIsoCode(countryCode);
 
     if (result == null) {
