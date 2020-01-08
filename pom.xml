@@ -754,51 +754,6 @@
     </pluginManagement>
   </build>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>${maven-project-info-reports-plugin.version}</version>
-        <configuration>
-          <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-        <version>${maven-jxr-plugin.version}</version>
-        <reportSets>
-          <reportSet>
-            <id>aggregate</id>
-            <inherited>false</inherited>
-            <reports>
-              <report>aggregate</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
-        <configuration>
-          <includeDependencySources>true</includeDependencySources>
-          <dependencySourceIncludes>
-            <!-- include ONLY dependencies I control -->
-            <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
-          </dependencySourceIncludes>
-          <failOnError>false</failOnError>
-          <docfilessubdirs>true</docfilessubdirs>
-          <quiet>true</quiet>
-          <linksource>true</linksource>
-          <show>public</show>
-          <aggregate>false</aggregate>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-
   <profiles>
     <!-- automatically used by the release plugin -->
     <profile>
