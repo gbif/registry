@@ -128,6 +128,17 @@
 
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <!-- This is where the exclusion occurs -->
+            <exclude>**/application.properties</exclude>
+            <exclude>**/bootstrap.yml</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <executions>
@@ -135,6 +146,7 @@
             <id>repackage</id>
             <configuration>
               <classifier>exec</classifier>
+              <addResources>false</addResources>
             </configuration>
           </execution>
         </executions>
