@@ -4,6 +4,9 @@ api:
   root:
     url: http://api.gbif.org/v1/
 
+portal:
+  url: https://www.gbif-dev.org
+
 #Mail Properties
 mail:
   cc: @mail.cc@
@@ -24,7 +27,7 @@ identity:
 
 organization:
   surety:
-    helpdessk:
+    helpdesk:
       email: @mail.helpdesk@
     mail:
       enable: false
@@ -60,6 +63,7 @@ appkeys:
 # d7dddbf4-2cf0-4f39-9b2a-bb099caae36c is the GBIF Backbone Taxonomy
 # comma separated list of UUID
 doi:
+  prefix: 10.21373
   dataset:
     parentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
