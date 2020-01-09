@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-spring-boot-parent</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4-SNAPSHOT</version>
   <name>GBIF Registry</name>
   <description>GBIF Registry project (Spring Boot)</description>
 
@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/registry-spring-boot.git</connection>
     <url>https://github.com/gbif/registry-spring-boot</url>
     <developerConnection>scm:git:git@github.com:gbif/registry-spring-boot.git</developerConnection>
-    <tag>registry-spring-boot-parent-1.0.3</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <licenses>
