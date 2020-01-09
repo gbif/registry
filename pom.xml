@@ -118,6 +118,9 @@
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
     <mybatis.version>3.5.0</mybatis.version>
+    <logback.version>1.2.3</logback.version>
+    <janino.version>2.5.10</janino.version>
+    <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <!--    <postgresql.version>42.2.8</postgresql.version>-->
     <xmlunit.version>2.6.3</xmlunit.version>
     <greenmail.version>1.5.5</greenmail.version>
@@ -450,6 +453,27 @@
         <version>${okio.version}</version>
         <scope>runtime</scope>
       </dependency>
+      <dependency>
+        <groupId>janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-logback-encoder.version}</version>
+      </dependency>
+
 
       <!-- Test dependencies -->
       <dependency>
