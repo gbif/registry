@@ -93,7 +93,7 @@
 
     <release.tagNameBase>${project.artifactId}</release.tagNameBase>
 
-    <spring-cloud-zookeeper.version>2.1.1.RELEASE</spring-cloud-zookeeper.version>
+    <spring-cloud-zookeeper.version>2.2.0.RELEASE</spring-cloud-zookeeper.version>
     <zookeeper.version>3.4.14</zookeeper.version>
     <commons-digester.version>3.2</commons-digester.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
