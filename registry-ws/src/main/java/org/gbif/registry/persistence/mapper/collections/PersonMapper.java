@@ -3,6 +3,7 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
+import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +14,7 @@ import org.apache.ibatis.annotations.Param;
 /**
  * Mapper for {@link Person} entities.
  */
-public interface PersonMapper extends CrudMapper<Person> {
+public interface PersonMapper extends CrudMapper<Person>, IdentifiableMapper {
 
   List<Person> list(@Nullable @Param("institutionKey") UUID institutionKey,
                     @Nullable @Param("collectionKey") UUID collectionKey,

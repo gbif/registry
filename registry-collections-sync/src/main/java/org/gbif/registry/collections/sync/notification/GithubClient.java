@@ -2,10 +2,6 @@ package org.gbif.registry.collections.sync.notification;
 
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
 
-import java.util.List;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -37,21 +33,12 @@ public class GithubClient {
     return new GithubClient(grSciCollWsUrl, user, password);
   }
 
-  public void createIssue(String title, String body, List<String> asignees, List<String> labels) {
-    syncCall(api.createIssue(new Issue(title, body, asignees, labels)));
+  public void createIssue(Issue issue) {
+    syncCall(api.createIssue(issue));
   }
 
   private interface API {
     @POST("issues")
     Call<Void> createIssue(@Body Issue issue);
-  }
-
-  @Data
-  @AllArgsConstructor
-  private static class Issue {
-    private String title;
-    private String body;
-    private List<String> asignees;
-    private List<String> labels;
   }
 }

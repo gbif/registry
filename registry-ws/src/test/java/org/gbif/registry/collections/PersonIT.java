@@ -6,15 +6,20 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.registry.ws.resources.collections.PersonResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -49,6 +54,7 @@ public class PersonIT extends CrudTest<Person> {
   private final PersonService personService;
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
+  private final IdentifierService identifierService;
 
   @Parameters
   public static Iterable<Object[]> data() {
@@ -66,12 +72,14 @@ public class PersonIT extends CrudTest<Person> {
     PersonService personService,
     InstitutionService institutionService,
     CollectionService collectionService,
+    IdentifierService identifierService,
     @Nullable SimplePrincipalProvider pp
   ) {
     super(personService, pp);
     this.personService = personService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
+    this.identifierService = identifierService;
   }
 
   @Test
@@ -84,6 +92,11 @@ public class PersonIT extends CrudTest<Person> {
     mailingAddress.setCountry(Country.AFGHANISTAN);
     person.setMailingAddress(mailingAddress);
 
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("id");
+    identifier.setType(IdentifierType.IH_IRN);
+    person.setIdentifiers(Arrays.asList(identifier));
+
     UUID key = personService.create(person);
     Person personSaved = personService.get(key);
 
@@ -92,6 +105,30 @@ public class PersonIT extends CrudTest<Person> {
     assertEquals("mailing", personSaved.getMailingAddress().getAddress());
     assertEquals("city", personSaved.getMailingAddress().getCity());
     assertEquals(Country.AFGHANISTAN, personSaved.getMailingAddress().getCountry());
+    assertEquals(1, personSaved.getIdentifiers().size());
+    assertEquals("id", personSaved.getIdentifiers().get(0).getIdentifier());
+    assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
+  }
+
+  @Test
+  public void identifiersTest() {
+    Person person = newEntity();
+    UUID key = personService.create(person);
+
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("identifier");
+    identifier.setType(IdentifierType.LSID);
+
+    Integer identifierKey = identifierService.addIdentifier(key, identifier);
+
+    List<Identifier> identifiers = identifierService.listIdentifiers(key);
+    assertEquals(1, identifiers.size());
+    assertEquals(identifierKey, identifiers.get(0).getKey());
+    assertEquals("identifier", identifiers.get(0).getIdentifier());
+    assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
+
+    identifierService.deleteIdentifier(key, identifierKey);
+    assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
   @Test

@@ -6,6 +6,7 @@
   <resultMap id="COLLECTION_PERSON_MAP" type="CollectionPerson" autoMapping="true">
     <id property="key" column="key"/>
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
+    <collection property="identifiers" column="key" select="listIdentifiers"/>
   </resultMap>
 
   <sql id="PERSON_WRITE_FIELDS">
@@ -139,6 +140,37 @@
     SELECT count(*)
     FROM collection_person
     WHERE deleted IS NOT NULL
+  </select>
+
+  <!-- IDENTIFIERS -->
+  <insert id="addIdentifier">
+    INSERT INTO collection_person_identifier(collection_person_key,identifier_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{identifierKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listIdentifiers" resultType="Identifier">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    FROM identifier INNER JOIN collection_person_identifier ON identifier_key = key
+    WHERE collection_person_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of identifier to trigger cascade delete of the join table -->
+  <delete id="deleteIdentifier">
+    DELETE FROM identifier USING collection_person_identifier
+    WHERE
+    identifier_key = identifier.key AND
+    collection_person_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+  </delete>
+
+  <select id="findByIdentifier" resultType="java.util.UUID">
+    SELECT cpi.collection_person_key
+    FROM collection_person_identifier cpi
+    INNER JOIN identifier i ON i."key" = cpi.identifier_key
+    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
 
   <!-- Simple suggest -->

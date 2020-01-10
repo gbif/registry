@@ -8,15 +8,16 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 import static org.gbif.registry.collections.sync.http.SyncCall.syncCall;
 
 /** Lightweight IndexHerbariorum client. */
-public class IndexHerbariorumClient {
+public class IHHttpClient {
 
   private final API api;
 
-  private IndexHerbariorumClient(String ihWsUrl) {
+  private IHHttpClient(String ihWsUrl) {
     Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(ihWsUrl)
@@ -25,29 +26,37 @@ public class IndexHerbariorumClient {
     api = retrofit.create(API.class);
   }
 
-  public static IndexHerbariorumClient create(String ihWsUrl) {
-    return new IndexHerbariorumClient(ihWsUrl);
+  public static IHHttpClient create(String ihWsUrl) {
+    return new IHHttpClient(ihWsUrl);
   }
 
   @SneakyThrows
-  public List<IhInstitution> getInstitutions() {
+  public List<IHInstitution> getInstitutions() {
     return syncCall(api.listInstitutions()).getData();
+  }
+
+  @SneakyThrows
+  public List<IHStaff> getStaffByInstitution(String institutionCode) {
+    return syncCall(api.listStaff(institutionCode)).getData();
   }
 
   private interface API {
     @GET("institutions")
     Call<InstitutionWrapper> listInstitutions();
+
+    @GET("staff/search")
+    Call<StaffWrapper> listStaff(@Query("code") String institutionCode);
   }
 
   @Data
   private static class InstitutionWrapper {
-    private Meta meta;
-    private List<IhInstitution> data;
+    private IHMetadata meta;
+    private List<IHInstitution> data;
+  }
 
-    @Data
-    private static class Meta {
-      private int hits;
-      private int code;
-    }
+  @Data
+  private static class StaffWrapper {
+    private IHMetadata meta;
+    private List<IHStaff> data;
   }
 }

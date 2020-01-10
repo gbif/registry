@@ -2,6 +2,7 @@ package org.gbif.registry.collections.sync.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
@@ -26,11 +27,11 @@ import retrofit2.http.*;
 import static org.gbif.registry.collections.sync.http.SyncCall.syncCall;
 
 /** A lightweight GRSciColl client. */
-public class GrSciCollClient {
+public class GrSciCollHttpClient {
 
   private final API api;
 
-  private GrSciCollClient(String grSciCollWsUrl, String user, String password) {
+  private GrSciCollHttpClient(String grSciCollWsUrl, String user, String password) {
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule module = new SimpleModule();
     module.addDeserializer(Country.class, new IsoDeserializer());
@@ -48,8 +49,8 @@ public class GrSciCollClient {
     api = retrofit.create(API.class);
   }
 
-  public static GrSciCollClient create(String grSciCollWsUrl, String user, String password) {
-    return new GrSciCollClient(grSciCollWsUrl, user, password);
+  public static GrSciCollHttpClient create(String grSciCollWsUrl, String user, String password) {
+    return new GrSciCollHttpClient(grSciCollWsUrl, user, password);
   }
 
   /** Returns all institutions in GrSciCol. */
@@ -69,6 +70,14 @@ public class GrSciCollClient {
     return result;
   }
 
+  public void createInstitution(Institution institution) {
+    syncCall(api.createInstitution(institution));
+  }
+
+  public void updateInstitution(Institution institution) {
+    syncCall(api.updateInstitution(institution.getKey(), institution));
+  }
+
   /** Returns all institutions in GrSciCol. */
   @SneakyThrows
   public List<Collection> getCollections() {
@@ -84,6 +93,22 @@ public class GrSciCollClient {
     }
 
     return result;
+  }
+
+  public void updateCollection(Collection collection) {
+    syncCall(api.updateCollection(collection.getKey(), collection));
+  }
+
+  public void createPerson(Person person) {
+    syncCall(api.createPerson(person));
+  }
+
+  public void updatePerson(Person person) {
+    syncCall(api.updatePerson(person.getKey(), person));
+  }
+
+  public void deletePerson(Person person) {
+    syncCall(api.deletePerson(person.getKey()));
   }
 
   private interface API {
@@ -103,6 +128,15 @@ public class GrSciCollClient {
 
     @PUT("collection/{key}")
     Call<Void> updateCollection(@Path("key") UUID key, @Body Collection collection);
+
+    @POST("person")
+    Call<UUID> createPerson(@Body Person person);
+
+    @PUT("person/{key}")
+    Call<Void> updatePerson(@Path("key") UUID key, @Body Person person);
+
+    @DELETE("person/{key}")
+    Call<Void> deletePerson(@Path("key") UUID key);
   }
 
   /** Adapter necessary for retrofit due to versioning. */
