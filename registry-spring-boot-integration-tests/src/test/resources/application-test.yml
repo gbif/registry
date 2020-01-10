@@ -73,6 +73,16 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
+# Solr (tmp embedded)
+solr:
+  dataset:
+    type: EMBEDDED
+    home: /tmp/solrregistry
+    collection: dataset
+    delete: true
+  indexing:
+    threads: 2
+
 spring:
   # DB connection
   datasource:
