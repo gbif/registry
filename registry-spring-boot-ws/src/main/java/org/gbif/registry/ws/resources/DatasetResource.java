@@ -160,7 +160,7 @@ public class DatasetResource
 
   public DatasetResource(MapperServiceLocator mapperServiceLocator,
                          EventManager eventManager,
-                         @Qualifier("datasetSearchServiceStub") DatasetSearchService searchService,
+                         @Qualifier("datasetSearchService") DatasetSearchService searchService,
                          EditorAuthorizationService userAuthService,
                          DoiGenerator doiGenerator,
                          DataCiteDoiHandlerStrategy doiHandlingStrategy,
