@@ -51,9 +51,9 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     http
       .httpBasic().disable()
-      .addFilterAfter(context.getBean(RequestHeaderParamUpdateFilter.class), LogoutFilter.class)
-      .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), RequestHeaderParamUpdateFilter.class)
-      .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
+      .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
+      .addFilterAfter(context.getBean(RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
+      .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
       .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
       .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
       .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
