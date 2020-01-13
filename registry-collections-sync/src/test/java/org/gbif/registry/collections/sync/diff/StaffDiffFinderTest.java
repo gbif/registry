@@ -67,11 +67,9 @@ public class StaffDiffFinderTest {
 
   @Test
   public void outdatedIHConflictTest() {
-    IHStaff outdatedStaff =
-        IHStaff.builder()
-            .irn(IRN_TEST)
-            .dateModified("2018-01-01")
-            .build();
+    IHStaff outdatedStaff = new IHStaff();
+    outdatedStaff.setIrn(IRN_TEST);
+    outdatedStaff.setDateModified("2018-01-01");
 
     Person upToDatePerson = new Person();
     upToDatePerson.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
@@ -86,7 +84,8 @@ public class StaffDiffFinderTest {
 
   @Test
   public void multipleMatchesWithIrnConflictTest() {
-    IHStaff s = IHStaff.builder().irn(IRN_TEST).build();
+    IHStaff s = new IHStaff();
+    s.setIrn(IRN_TEST);
 
     Person p1 = new Person();
     p1.setEmail("aa@aa.com");
@@ -104,7 +103,10 @@ public class StaffDiffFinderTest {
 
   @Test
   public void multipleMatchesWithFieldsConflictTest() {
-    IHStaff s = IHStaff.builder().irn(IRN_TEST).firstName("Name").lastName("Last").build();
+    IHStaff s = new IHStaff();
+    s.setIrn(IRN_TEST);
+    s.setFirstName("Name");
+    s.setLastName("Last");
 
     Person p1 = new Person();
     p1.setFirstName("Name Last");
@@ -114,7 +116,7 @@ public class StaffDiffFinderTest {
     p2.setLastName("Last");
 
     DiffResult.StaffDiffResult result =
-      StaffDiffFinder.syncStaff(Collections.singletonList(s), Arrays.asList(p1, p2));
+        StaffDiffFinder.syncStaff(Collections.singletonList(s), Arrays.asList(p1, p2));
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -131,22 +133,23 @@ public class StaffDiffFinderTest {
     mailingAddress.setCountry(Country.UNITED_STATES);
     p.setMailingAddress(mailingAddress);
 
-    IHStaff s =
-        IHStaff.builder()
-            .code("UARK")
-            .lastName("Gentry")
-            .middleName("L.")
-            .firstName("Johnnie")
-            .position("Professor Emeritus")
-            .address(
-                IHStaff.Address.builder()
-                    .street("")
-                    .city("Fayetteville")
-                    .state("Arkansas")
-                    .country("U.S.A.")
-                    .build())
-            .contact(IHStaff.Contact.builder().email("gentry@uark.edu").build())
-            .build();
+    IHStaff s = new IHStaff();
+    s.setCode("UARK");
+    s.setLastName("Gentry");
+    s.setMiddleName("L.");
+    s.setFirstName("Johnnie");
+    s.setPosition("Professor Emeritus");
+
+    IHStaff.Address address = new IHStaff.Address();
+    address.setStreet("");
+    address.setCity("Fayetteville");
+    address.setState("Arkansas");
+    address.setCountry("U.S.A.");
+    s.setAddress(address);
+
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setEmail("gentry@uark.edu");
+    s.setContact(contact);
 
     return TestStaff.builder().person(p).ihStaff(s).build();
   }
@@ -156,11 +159,11 @@ public class StaffDiffFinderTest {
     p.setEmail("foo@foo.com");
     p.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
-    IHStaff s =
-        IHStaff.builder()
-            .irn(IRN_TEST)
-            .contact(IHStaff.Contact.builder().email("foo@foo.com").build())
-            .build();
+    IHStaff s = new IHStaff();
+    s.setIrn(IRN_TEST);
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setEmail("foo@foo.com");
+    s.setContact(contact);
 
     return TestStaff.builder().person(p).ihStaff(s).build();
   }
@@ -172,24 +175,25 @@ public class StaffDiffFinderTest {
   }
 
   private TestStaff createTestStaffToCreate() {
-    IHStaff s =
-        IHStaff.builder()
-            .code("UARK")
-            .lastName("Ogle")
-            .middleName("D.")
-            .firstName("Jennifer")
-            .position("Collections Manager")
-            .address(
-                IHStaff.Address.builder()
-                    .street("")
-                    .city("Fayetteville")
-                    .state("AR")
-                    .country("U.S.A.")
-                    .zipCode("72701")
-                    .build())
-            .contact(
-                IHStaff.Contact.builder().phone("[1] 479 575 4372").email("jogle@uark.edu").build())
-            .build();
+    IHStaff s = new IHStaff();
+    s.setCode("UARK");
+    s.setLastName("Ogle");
+    s.setMiddleName("D.");
+    s.setFirstName("Jennifer");
+    s.setPosition("Collections Manager");
+
+    IHStaff.Address address = new IHStaff.Address();
+    address.setStreet("");
+    address.setCity("Fayetteville");
+    address.setState("AR");
+    address.setCountry("U.S.A.");
+    address.setZipCode("72701");
+    s.setAddress(address);
+
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setPhone("[1] 479 575 4372");
+    contact.setEmail("jogle@uark.edu");
+    s.setContact(contact);
 
     return TestStaff.builder().ihStaff(s).build();
   }

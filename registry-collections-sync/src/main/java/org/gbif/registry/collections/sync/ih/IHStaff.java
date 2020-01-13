@@ -5,7 +5,6 @@ import lombok.Data;
 
 /** Models an Index Herbariorum staff. */
 @Data
-@Builder
 public class IHStaff {
 
   private String irn;
@@ -22,7 +21,6 @@ public class IHStaff {
   private String dateModified;
 
   @Data
-  @Builder
   public static class Address {
     private String street;
     private String city;
@@ -32,7 +30,6 @@ public class IHStaff {
   }
 
   @Data
-  @Builder
   public static class Contact {
     private String phone;
     private String email;

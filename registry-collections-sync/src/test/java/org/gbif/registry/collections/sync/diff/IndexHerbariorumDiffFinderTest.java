@@ -125,8 +125,9 @@ public class IndexHerbariorumDiffFinderTest {
 
   @Test
   public void outdatedInstitutionConflictTest() {
-    IHInstitution outdatedIh =
-        IHInstitution.builder().irn(IRN_TEST).dateModified("2018-01-01").build();
+    IHInstitution outdatedIh = new IHInstitution();
+    outdatedIh.setIrn(IRN_TEST);
+    outdatedIh.setDateModified("2018-01-01");
 
     Institution upToDateInstitution = new Institution();
     upToDateInstitution.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
@@ -146,8 +147,9 @@ public class IndexHerbariorumDiffFinderTest {
 
   @Test
   public void outdatedCollectionConflictTest() {
-    IHInstitution outdatedIh =
-        IHInstitution.builder().irn(IRN_TEST).dateModified("2018-01-01").build();
+    IHInstitution outdatedIh = new IHInstitution();
+    outdatedIh.setIrn(IRN_TEST);
+    outdatedIh.setDateModified("2018-01-01");
 
     Collection upToDateCollection = new Collection();
     upToDateCollection.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
@@ -167,8 +169,12 @@ public class IndexHerbariorumDiffFinderTest {
 
   @Test
   public void multipleMatchesConflictTest() {
-    IHInstitution ih1 = IHInstitution.builder().irn(IRN_TEST).code("A").build();
-    IHInstitution ih2 = IHInstitution.builder().irn(IRN_TEST_2).code("B").build();
+    IHInstitution ih1 = new IHInstitution();
+    ih1.setIrn(IRN_TEST);
+    ih1.setCode("A");
+    IHInstitution ih2 = new IHInstitution();
+    ih2.setIrn(IRN_TEST_2);
+    ih2.setCode("B");
 
     Institution i1 = new Institution();
     i1.setCode("i1");
@@ -194,8 +200,10 @@ public class IndexHerbariorumDiffFinderTest {
   }
 
   private TestEntity createInstitutionToCreate() {
-    IHInstitution ih =
-        IHInstitution.builder().code("foo").organization("foo").specimenTotal(1000).build();
+    IHInstitution ih = new IHInstitution();
+    ih.setCode("foo");
+    ih.setOrganization("foo");
+    ih.setSpecimenTotal(1000);
 
     return TestEntity.builder().ihInstitution(ih).build();
   }
@@ -208,13 +216,11 @@ public class IndexHerbariorumDiffFinderTest {
     i.setNumberSpecimens(1000);
     i.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST)));
 
-    IHInstitution ih =
-        IHInstitution.builder()
-            .irn(IRN_TEST)
-            .code("bar")
-            .organization("bar")
-            .specimenTotal(1000)
-            .build();
+    IHInstitution ih = new IHInstitution();
+    ih.setIrn(IRN_TEST);
+    ih.setCode("bar");
+    ih.setOrganization("bar");
+    ih.setSpecimenTotal(1000);
 
     return TestEntity.builder().entity(i).ihInstitution(ih).build();
   }
@@ -235,22 +241,27 @@ public class IndexHerbariorumDiffFinderTest {
     address.setCountry(Country.UNITED_STATES);
     i.setMailingAddress(address);
 
-    IHInstitution ih =
-        IHInstitution.builder()
-            .irn(IRN_TEST_2)
-            .code("UARK")
-            .organization("University of Arkansas")
-            .specimenTotal(1000)
-            .address(
-                IHInstitution.Address.builder()
-                    .physicalCity("FAYETTEVILLE")
-                    .physicalCountry("U.S.A.")
-                    .postalCity("FAYETTEVILLE")
-                    .postalCountry("U.S.A.")
-                    .build())
-            .location(IHInstitution.Location.builder().lat(30d).lon(-80d).build())
-            .contact(IHInstitution.Contact.builder().email("uark@uark.com").build())
-            .build();
+    IHInstitution ih = new IHInstitution();
+    ih.setIrn(IRN_TEST_2);
+    ih.setCode("UARK");
+    ih.setOrganization("University of Arkansas");
+    ih.setSpecimenTotal(1000);
+
+    IHInstitution.Address ihAddress = new IHInstitution.Address();
+    ihAddress.setPhysicalCity("FAYETTEVILLE");
+    ihAddress.setPhysicalCountry("U.S.A.");
+    ihAddress.setPostalCity("FAYETTEVILLE");
+    ihAddress.setPostalCountry("U.S.A.");
+    ih.setAddress(ihAddress);
+
+    IHInstitution.Location location = new IHInstitution.Location();
+    location.setLat(30d);
+    location.setLon(-80d);
+    ih.setLocation(location);
+
+    IHInstitution.Contact contact = new IHInstitution.Contact();
+    contact.setEmail("uark@uark.com");
+    ih.setContact(contact);
 
     return TestEntity.builder().entity(i).ihInstitution(ih).build();
   }
@@ -262,12 +273,12 @@ public class IndexHerbariorumDiffFinderTest {
     c.setEmail(Collections.singletonList("aa@aa.com"));
     c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST)));
 
-    IHInstitution ih =
-        IHInstitution.builder()
-            .irn(IRN_TEST)
-            .code("A")
-            .contact(IHInstitution.Contact.builder().email("aa@aa.com").build())
-            .build();
+    IHInstitution ih = new IHInstitution();
+    ih.setIrn(IRN_TEST);
+    ih.setCode("A");
+    IHInstitution.Contact contact = new IHInstitution.Contact();
+    contact.setEmail("aa@aa.com");
+    ih.setContact(contact);
 
     return TestEntity.builder().entity(c).ihInstitution(ih).build();
   }
@@ -278,12 +289,14 @@ public class IndexHerbariorumDiffFinderTest {
     c.setEmail(Collections.singletonList("bb@bb.com"));
     c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST_2)));
 
-    IHInstitution ih =
-        IHInstitution.builder()
-            .irn(IRN_TEST_2)
-            .code("A")
-            .contact(IHInstitution.Contact.builder().email("bb@bb.com").phone("12345").build())
-            .build();
+    IHInstitution ih = new IHInstitution();
+    ih.setIrn(IRN_TEST_2);
+    ih.setCode("A");
+
+    IHInstitution.Contact contact = new IHInstitution.Contact();
+    contact.setEmail("bb@bb.com");
+    contact.setPhone("12345");
+    ih.setContact(contact);
 
     return TestEntity.builder().entity(c).ihInstitution(ih).build();
   }
