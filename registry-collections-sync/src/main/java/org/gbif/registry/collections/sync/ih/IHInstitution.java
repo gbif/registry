@@ -1,9 +1,11 @@
 package org.gbif.registry.collections.sync.ih;
 
+import lombok.Builder;
 import lombok.Data;
 
 /** Models an Index Herbariorum institution. */
 @Data
+@Builder
 public class IHInstitution {
 
   private String irn;
@@ -18,6 +20,7 @@ public class IHInstitution {
   private String dateModified;
 
   @Data
+  @Builder
   public static class Address {
     private String physicalStreet;
     private String physicalCity;
@@ -32,6 +35,7 @@ public class IHInstitution {
   }
 
   @Data
+  @Builder
   public static class Contact {
     private String phone;
     private String email;
@@ -39,6 +43,7 @@ public class IHInstitution {
   }
 
   @Data
+  @Builder
   public static class Location {
     private Double lat;
     private Double lon;
