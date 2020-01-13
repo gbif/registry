@@ -44,6 +44,10 @@ public class RequestHeaderParamUpdateFilter extends GenericFilterBean {
 
       // update language headers
       processLanguage(httpRequestWrapper);
+
+      filterChain.doFilter(httpRequestWrapper, servletResponse);
+    } else {
+      filterChain.doFilter(servletRequest, servletResponse);
     }
   }
 
