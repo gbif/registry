@@ -2,7 +2,6 @@ package org.gbif.ws.server.filter;
 
 import com.google.common.base.Strings;
 import org.gbif.ws.server.RequestObject;
-import org.gbif.ws.util.ExtraMediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
@@ -39,9 +38,6 @@ public class RequestHeaderParamUpdateFilter extends GenericFilterBean {
     if (servletRequest instanceof HttpServletRequest) {
       httpRequestWrapper = new RequestObject(((HttpServletRequest) servletRequest));
 
-      // update media type for JSONP request
-      processJsonp(httpRequestWrapper);
-
       // update language headers
       processLanguage(httpRequestWrapper);
 
@@ -56,14 +52,6 @@ public class RequestHeaderParamUpdateFilter extends GenericFilterBean {
     if (!language.isEmpty()) {
       // overwrite http language
       request.addHeader(HttpHeaders.ACCEPT_LANGUAGE, language.toLowerCase());
-    }
-  }
-
-  private static void processJsonp(RequestObject request) {
-    String callback = Strings.nullToEmpty(request.getParameter("callback")).trim();
-    if (!callback.isEmpty()) {
-      // this is a jsonp request - force content type to javascript
-      request.addHeader(HttpHeaders.ACCEPT, ExtraMediaTypes.APPLICATION_JAVASCRIPT);
     }
   }
 }
