@@ -1,5 +1,9 @@
 package org.gbif.registry.collections.sync.ih;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Date;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -14,4 +18,10 @@ public class IHUtils {
     return "gbif:ih:irn:" + irn;
   }
 
+  public static boolean isIHOutdated(String ihModified, Date modified) {
+    return modified != null
+        && modified
+            .toInstant()
+            .isAfter(LocalDate.parse(ihModified).atStartOfDay().toInstant(ZoneOffset.UTC));
+  }
 }

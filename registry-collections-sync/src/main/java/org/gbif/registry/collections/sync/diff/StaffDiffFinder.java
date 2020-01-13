@@ -1,8 +1,8 @@
 package org.gbif.registry.collections.sync.diff;
 
-import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.ih.IHStaff;
+import org.gbif.registry.collections.sync.ih.IHUtils;
 import org.gbif.registry.collections.sync.notification.Issue;
 
 import java.util.*;
@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -25,76 +26,117 @@ class StaffDiffFinder {
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
   private static final Function<IHStaff, String> CONCAT_IH_NAME =
-      s ->
-          WHITESPACE
-              .matcher(s.getFirstName() + s.getMiddleName() + s.getLastName())
-              .replaceAll(EMPTY);
+      s -> {
+        StringBuilder fullNameBuilder = new StringBuilder();
+        if (!Strings.isNullOrEmpty(s.getFirstName())) {
+          fullNameBuilder.append(s.getFirstName());
+        }
+        if (!Strings.isNullOrEmpty(s.getMiddleName())) {
+          fullNameBuilder.append(s.getMiddleName());
+        }
+        if (!Strings.isNullOrEmpty(s.getLastName())) {
+          fullNameBuilder.append(s.getLastName());
+        }
+
+        String fullName = fullNameBuilder.toString();
+
+        if (Strings.isNullOrEmpty(fullName)) {
+          return null;
+        }
+
+        return WHITESPACE.matcher(fullName).replaceAll(EMPTY);
+      };
 
   private static final Function<Person, String> CONCAT_PERSON_NAME =
-      p -> WHITESPACE.matcher(p.getFirstName() + p.getLastName()).replaceAll(EMPTY);
+      p -> {
+        StringBuilder fullNameBuilder = new StringBuilder();
+        if (!Strings.isNullOrEmpty(p.getFirstName())) {
+          fullNameBuilder.append(p.getFirstName());
+        }
+        if (!Strings.isNullOrEmpty(p.getLastName())) {
+          fullNameBuilder.append(p.getLastName());
+        }
 
-  public static StaffDiffResult syncStaff(List<IHStaff> ihStaffList, Contactable entity) {
+        String fullName = fullNameBuilder.toString();
 
-    StaffDiffResult.Builder syncResult = new StaffDiffResult.Builder();
+        if (Strings.isNullOrEmpty(fullName)) {
+          return null;
+        }
+
+        return WHITESPACE.matcher(fullName).replaceAll(EMPTY);
+      };
+
+  public static StaffDiffResult syncStaff(
+      List<IHStaff> ihStaffList, List<Person> grSciCollContacts) {
+
+    StaffDiffResult.StaffDiffResultBuilder diffResult = StaffDiffResult.builder();
 
     // copy the persons to another list to be able to remove the ones that have a match
     List<Person> personsCopy =
-        entity.getContacts() != null ? new ArrayList<>(entity.getContacts()) : new ArrayList<>();
+        grSciCollContacts != null ? new ArrayList<>(grSciCollContacts) : new ArrayList<>();
 
     for (IHStaff ihStaff : ihStaffList) {
       // try to find a match in the GrSciColl contacts
-      Optional<List<Person>> matchesOpt = match(ihStaff, personsCopy);
+      Optional<Set<Person>> matchesOpt = match(ihStaff, personsCopy);
 
       if (!matchesOpt.isPresent()) {
         // if there is no match we create a new person
         Person person = EntityConverter.createPerson().fromIHStaff(ihStaff).convert();
-        syncResult.personToCreate(person);
+        diffResult.personToCreate(person);
         continue;
       }
 
-      List<Person> matches = matchesOpt.get();
+      Set<Person> matches = matchesOpt.get();
       if (matches.size() > 1) {
         // conflict
         personsCopy.removeAll(matches);
-        syncResult.conflict(Issue.createMultipleStaffIssue(matches, ihStaff));
+        diffResult.conflict(Issue.createMultipleStaffIssue(matches, ihStaff));
       } else if (matches.size() == 1) {
-        Person existing = matches.get(0);
+        Person existing = matches.iterator().next();
+        personsCopy.remove(existing);
+
+        if (IHUtils.isIHOutdated(ihStaff.getDateModified(), existing.getModified())) {
+          // add issue
+          diffResult.conflict(Issue.createOutdatedIHStaffIssue(existing, ihStaff));
+          continue;
+        }
+
         Person person =
             EntityConverter.createPerson().fromIHStaff(ihStaff).withExisting(existing).convert();
         if (!person.lenientEquals(existing)) {
-          syncResult.personToUpdate(new DiffResult.PersonDiffResult(existing, person));
+          diffResult.personToUpdate(new DiffResult.PersonDiffResult(existing, person));
         } else {
-          syncResult.personNoChange(person);
+          diffResult.personNoChange(person);
         }
       }
     }
 
     // remove the GrSciColl persons that don't exist in IH
-    personsCopy.forEach(syncResult::personToDelete);
+    personsCopy.forEach(diffResult::personToDelete);
 
-    return syncResult.build();
+    return diffResult.build();
   }
 
-  private static Optional<List<Person>> match(IHStaff ihStaff, List<Person> grSciCollPersons) {
+  private static Optional<Set<Person>> match(IHStaff ihStaff, List<Person> grSciCollPersons) {
     // try to find a match by using the IRN identifiers
     String irn = encodeIRN(ihStaff.getIrn());
-    List<Person> irnMatches =
+    Set<Person> irnMatches =
         grSciCollPersons.stream()
             .filter(
                 p ->
                     p.getIdentifiers().stream()
                         .anyMatch(i -> Objects.equals(irn, i.getIdentifier())))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
     if (!irnMatches.isEmpty()) {
       return Optional.of(irnMatches);
     }
 
     // no irn matches, we try to match with the fields
-    return matchWithFields(ihStaff, grSciCollPersons).map(Collections::singletonList);
+    return matchWithFields(ihStaff, grSciCollPersons);
   }
 
-  private static Optional<Person> matchWithFields(IHStaff ihStaff, List<Person> persons) {
+  private static Optional<Set<Person>> matchWithFields(IHStaff ihStaff, List<Person> persons) {
     if (persons.isEmpty()) {
       return Optional.empty();
     }
@@ -102,15 +144,20 @@ class StaffDiffFinder {
     StaffNormalized ihStaffNorm = buildIHStaffNormalized(ihStaff);
 
     int maxScore = 0;
-    Person bestMatch = null;
+    Set<Person> bestMatches = new HashSet<>();
     for (Person person : persons) {
       StaffNormalized personNorm = buildGrSciCollPersonNormalized(person);
-      if (getEqualityScore(ihStaffNorm, personNorm) > maxScore) {
-        bestMatch = person;
+      int equalityScore = getEqualityScore(ihStaffNorm, personNorm);
+      if (equalityScore > maxScore) {
+        bestMatches.clear();
+        bestMatches.add(person);
+        maxScore = equalityScore;
+      } else if (equalityScore > 0 && equalityScore == maxScore) {
+        bestMatches.add(person);
       }
     }
 
-    return Optional.ofNullable(bestMatch);
+    return bestMatches.isEmpty() ? Optional.empty() : Optional.of(bestMatches);
   }
 
   private static StaffNormalized buildIHStaffNormalized(IHStaff ihStaff) {
@@ -161,35 +208,40 @@ class StaffDiffFinder {
 
   private static int getEqualityScore(StaffNormalized s1, StaffNormalized s2) {
     int score = 0;
+    if (Objects.equals(s1.fullName, s2.fullName)) {
+      score += 4;
+    }
+    if (Objects.equals(s1.email, s2.email)) {
+      score += 4;
+    }
 
-    if (s1.fullName.equals(s2.fullName)) {
-      score += 4;
+    // at least the name or the email should match
+    if (score == 0) {
+      return score;
     }
-    if (s1.email.equals(s2.email)) {
-      score += 4;
-    }
-    if (s1.phone.equals(s2.phone)) {
+
+    if (Objects.equals(s1.phone, s2.phone)) {
       score += 3;
     }
-    if (s1.country.equals(s2.country)) {
+    if (Objects.equals(s1.country, s2.country)) {
       score += 3;
     }
-    if (s1.city.equals(s2.city)) {
+    if (Objects.equals(s1.city, s2.city)) {
       score += 2;
     }
-    if (s1.position.equals(s2.position)) {
+    if (Objects.equals(s1.position, s2.position)) {
       score += 2;
     }
-    if (s1.fax.equals(s2.fax)) {
+    if (Objects.equals(s1.fax, s2.fax)) {
       score += 1;
     }
-    if (s1.street.equals(s2.street)) {
+    if (Objects.equals(s1.street, s2.street)) {
       score += 1;
     }
-    if (s1.state.equals(s2.state)) {
+    if (Objects.equals(s1.state, s2.state)) {
       score += 1;
     }
-    if (s1.zipCode.equals(s2.zipCode)) {
+    if (Objects.equals(s1.zipCode, s2.zipCode)) {
       score += 1;
     }
 

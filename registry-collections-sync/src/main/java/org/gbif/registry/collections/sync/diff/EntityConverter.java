@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.AccessLevel;
@@ -169,7 +170,7 @@ public class EntityConverter {
         }
       }
 
-      person.setFirstName(ihStaff.getFirstName() + " " + ihStaff.getMiddleName());
+      person.setFirstName(buildFirstName());
       person.setLastName(ihStaff.getLastName());
       person.setPosition(ihStaff.getPosition());
 
@@ -192,6 +193,23 @@ public class EntityConverter {
       addIdentifierIfNotExists(person, encodeIRN(ihStaff.getIrn()));
 
       return person;
+    }
+
+    private String buildFirstName() {
+      StringBuilder firstNameBuilder = new StringBuilder();
+      if (!Strings.isNullOrEmpty(ihStaff.getFirstName())) {
+        firstNameBuilder.append(ihStaff.getFirstName()).append(" ");
+      }
+      if (!Strings.isNullOrEmpty(ihStaff.getMiddleName())) {
+        firstNameBuilder.append(ihStaff.getMiddleName());
+      }
+
+      String firstName = firstNameBuilder.toString();
+      if (Strings.isNullOrEmpty(firstName)) {
+        return null;
+      }
+
+      return firstName.trim();
     }
   }
 

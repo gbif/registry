@@ -19,10 +19,10 @@ public class IHHttpClient {
 
   private IHHttpClient(String ihWsUrl) {
     Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(ihWsUrl)
-            .addConverterFactory(JacksonConverterFactory.create())
-            .build();
+      new Retrofit.Builder()
+        .baseUrl(ihWsUrl)
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build();
     api = retrofit.create(API.class);
   }
 

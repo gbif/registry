@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.Singular;
 
 @Data
-@Builder(builderClassName = "Builder")
+@Builder
 public class DiffResult {
 
   @Singular(value = "institutionNoChange")
@@ -51,7 +51,7 @@ public class DiffResult {
 
   @Data
   @AllArgsConstructor
-  @lombok.Builder(builderClassName = "Builder")
+  @Builder
   public static class InstitutionDiffResult {
     private Institution oldInstitution;
     private Institution newInstitution;
@@ -64,7 +64,7 @@ public class DiffResult {
 
   @Data
   @AllArgsConstructor
-  @lombok.Builder(builderClassName = "Builder")
+  @Builder
   public static class CollectionDiffResult {
     private Collection oldCollection;
     private Collection newCollection;
@@ -76,7 +76,7 @@ public class DiffResult {
   }
 
   @Data
-  @lombok.Builder(builderClassName = "Builder")
+  @Builder
   public static class StaffDiffResult {
     @Singular(value = "personNoChange")
     private List<Person> personsNoChange;

@@ -9,6 +9,7 @@ import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,18 +33,23 @@ public class Issue {
   private List<String> asignees;
   private List<String> labels;
 
+  public static Issue createOutdatedIHStaffIssue(Person grSciCollPerson, IHStaff ihStaff) {
+    return createOutdatedIHEntityIssue(grSciCollPerson, ihStaff.toString(), "staff");
+  }
+
   public static Issue createOutdatedIHInstitutionIssue(
       Institution grSciCollInstitution, IHInstitution ihInstitution) {
-    return createOutdatedIHEntityIssue(grSciCollInstitution, ihInstitution, "institution");
+    return createOutdatedIHEntityIssue(
+        grSciCollInstitution, ihInstitution.toString(), "institution");
   }
 
   public static Issue createOutdatedIHCollectionIssue(
       Collection grSciCollCollection, IHInstitution ihInstitution) {
-    return createOutdatedIHEntityIssue(grSciCollCollection, ihInstitution, "collection");
+    return createOutdatedIHEntityIssue(grSciCollCollection, ihInstitution.toString(), "collection");
   }
 
   private static Issue createOutdatedIHEntityIssue(
-      CollectionEntity grSciCollEntity, IHInstitution ihInstitution, final String entityType) {
+      CollectionEntity grSciCollEntity, String ihEntityAsString, final String entityType) {
 
     // create body
     StringBuilder body = new StringBuilder();
@@ -51,7 +57,7 @@ public class Issue {
         .append(entityType)
         .append(":")
         .append(NEW_LINE)
-        .append(ihInstitution)
+        .append(ihEntityAsString)
         .append(NEW_LINE)
         .append("has a more up-to-date entity in GrSciColl:")
         .append(NEW_LINE)
@@ -80,7 +86,7 @@ public class Issue {
     return new Issue(STAFF_CONFLICT_TITLE, body.toString(), DEFAULT_ASSIGNEES, DEFAULT_LABELS);
   }
 
-  public static Issue createMultipleStaffIssue(List<Person> persons, IHStaff ihStaff) {
+  public static Issue createMultipleStaffIssue(Set<Person> persons, IHStaff ihStaff) {
     // create body
     StringBuilder body = new StringBuilder();
     body.append("The IH staff: \n")

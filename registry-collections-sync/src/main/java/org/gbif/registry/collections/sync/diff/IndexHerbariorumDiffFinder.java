@@ -8,18 +8,22 @@ import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 import org.gbif.registry.collections.sync.notification.Issue;
 
-import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.registry.collections.sync.diff.DiffResult.Builder;
 import static org.gbif.registry.collections.sync.diff.DiffResult.CollectionDiffResult;
 import static org.gbif.registry.collections.sync.diff.DiffResult.InstitutionDiffResult;
 import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
+import static org.gbif.registry.collections.sync.ih.IHUtils.isIHOutdated;
 
 /**
  * A synchronization utility that will ensure GRSciColl is up to date with IndexHerbariorum. This
@@ -39,29 +43,31 @@ import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
  * and IH staff to resolve the differences.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IndexHerbariorumDiffFinder {
 
   public static DiffResult syncIH(
       List<IHInstitution> ihInstitutions,
-      Function<String, List<IHStaff>> ihStaffSupplier,
+      Function<String, List<IHStaff>> ihStaffFetcher,
       List<Institution> institutions,
       List<Collection> collections) {
 
-    Builder syncResult = new Builder();
+    DiffResult.DiffResultBuilder diffResult = DiffResult.builder();
     List<Institution> institutionsCopy = new ArrayList<>(institutions);
     List<Collection> collectionsCopy = new ArrayList<>(collections);
     for (IHInstitution ihInstitution : ihInstitutions) {
 
       // locate potential matches in GrSciColl
-      Match match = findMatches(institutions, collections, encodeIRN(ihInstitution.getIrn()));
+      Match match =
+          findMatches(institutionsCopy, collectionsCopy, encodeIRN(ihInstitution.getIrn()));
 
       if (match.onlyOneInstitutionMatch()) {
         Institution existing = match.institutions.iterator().next();
         institutionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution, existing.getModified())) {
+        if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
           // add issue
-          syncResult.institutionConflict(
+          diffResult.institutionConflict(
               Issue.createOutdatedIHInstitutionIssue(existing, ihInstitution));
           continue;
         }
@@ -73,28 +79,30 @@ public class IndexHerbariorumDiffFinder {
                 .withExisting(existing)
                 .convert();
 
-        InstitutionDiffResult.Builder diffBuilder = new InstitutionDiffResult.Builder();
+        InstitutionDiffResult.InstitutionDiffResultBuilder diffBuilder =
+            InstitutionDiffResult.builder();
         if (!institution.lenientEquals(existing)) {
           diffBuilder.newInstitution(institution).oldInstitution(existing);
         }
 
         // look for differences in staff
         diffBuilder.staffDiffResult(
-            StaffDiffFinder.syncStaff(ihStaffSupplier.apply(ihInstitution.getCode()), institution));
+            StaffDiffFinder.syncStaff(
+                ihStaffFetcher.apply(ihInstitution.getCode()), institution.getContacts()));
 
         InstitutionDiffResult diff = diffBuilder.build();
         if (diff.isEmpty()) {
-          syncResult.institutionNoChange(existing);
+          diffResult.institutionNoChange(existing);
         } else {
-          syncResult.institutionToUpdate(diff);
+          diffResult.institutionToUpdate(diff);
         }
 
       } else if (match.onlyOneCollectionMatch()) {
         Collection existing = match.collections.iterator().next();
         collectionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution, existing.getModified())) {
-          syncResult.collectionConflict(
+        if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
+          diffResult.collectionConflict(
               Issue.createOutdatedIHCollectionIssue(existing, ihInstitution));
           continue;
         }
@@ -106,20 +114,22 @@ public class IndexHerbariorumDiffFinder {
                 .withExisting(existing)
                 .convert();
 
-        CollectionDiffResult.Builder diffBuilder = new CollectionDiffResult.Builder();
+        CollectionDiffResult.CollectionDiffResultBuilder diffBuilder =
+            CollectionDiffResult.builder();
         if (!collection.lenientEquals(existing)) {
           diffBuilder.newCollection(collection).oldCollection(existing);
         }
 
         // look for differences in staff
         diffBuilder.staffDiffResult(
-            StaffDiffFinder.syncStaff(ihStaffSupplier.apply(ihInstitution.getCode()), collection));
+            StaffDiffFinder.syncStaff(
+                ihStaffFetcher.apply(ihInstitution.getCode()), collection.getContacts()));
 
         CollectionDiffResult diff = diffBuilder.build();
         if (diff.isEmpty()) {
-          syncResult.collectionNoChange(existing);
+          diffResult.collectionNoChange(existing);
         } else {
-          syncResult.collectionToUpdate(diff);
+          diffResult.collectionToUpdate(diff);
         }
 
       } else if (match.noMatches()) {
@@ -128,16 +138,16 @@ public class IndexHerbariorumDiffFinder {
             EntityConverter.createInstitution().fromIHInstitution(ihInstitution).convert();
 
         institution.setContacts(
-            ihStaffSupplier.apply(ihInstitution.getCode()).stream()
+            ihStaffFetcher.apply(ihInstitution.getCode()).stream()
                 .map(s -> EntityConverter.createPerson().fromIHStaff(s).convert())
                 .collect(Collectors.toList()));
 
         log.info("Creating new institution: {}", institution.getName());
-        syncResult.institutionToCreate(institution);
+        diffResult.institutionToCreate(institution);
 
       } else {
         // Conflict that needs resolved manually
-        syncResult.conflict(Issue.createConflict(match.getAllMatches(), ihInstitution));
+        diffResult.conflict(Issue.createConflict(match.getAllMatches(), ihInstitution));
         log.info(
             "Conflict. {} institutions and {} collections are candidate matches in registry: ",
             ihInstitution.getOrganization());
@@ -147,11 +157,7 @@ public class IndexHerbariorumDiffFinder {
       }
     }
 
-    return syncResult.build();
-  }
-
-  private static boolean isIHOutdated(IHInstitution ihInstitution, Date modified) {
-    return modified.toInstant().isAfter(Instant.parse(ihInstitution.getDateModified()));
+    return diffResult.build();
   }
 
   /** Filters the source to only those having the given ID. */
