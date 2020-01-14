@@ -8,7 +8,7 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.query.TitleLookupService;
+import org.gbif.occurrence.query.TitleLookupService;
 import org.junit.Test;
 import org.xmlunit.matchers.CompareMatcher;
 

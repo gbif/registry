@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
-import org.gbif.api.model.registry.Dataset;
+import org.gbif.occurrence.query.TitleLookupService;
+import org.gbif.occurrence.query.TitleLookupServiceFactory;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDataset;
@@ -25,22 +26,21 @@ import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.gbif.registry.processor.ParamNameProcessor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
-import org.gbif.ws.mixin.LicenseMixin;
+import org.gbif.ws.mixin.Mixins;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
@@ -52,6 +52,9 @@ import java.util.Optional;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+  @Value("${api.root.url}")
+  private String apiRoot;
 
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
@@ -121,7 +124,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // Enforce use of ISO-8601 format dates (http://wiki.fasterxml.com/JacksonFAQDateHandling)
     objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-    objectMapper.addMixIn(Dataset.class, LicenseMixin.class);
+    Mixins.getPredefinedMixins().forEach(objectMapper::addMixIn);
 
     return objectMapper;
   }
@@ -155,6 +158,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   @Bean
+  public TitleLookupService titleLookupService() {
+    return TitleLookupServiceFactory.getInstance(apiRoot);
+  }
+
+  @Bean
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(
@@ -164,15 +172,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
       LegacyDataset.class, LegacyDatasetResponse.class, LegacyDatasetResponseListWrapper.class,
       IptEntityResponse.class, ErrorResponse.class);
     return marshaller;
-  }
-
-  @Bean
-  public RestTemplate titleLookupRestTemplate() {
-    final RestTemplate restTemplate = new RestTemplate();
-    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-    converter.setObjectMapper(registryObjectMapper());
-    restTemplate.getMessageConverters().add(0, converter);
-
-    return restTemplate;
   }
 }

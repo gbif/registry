@@ -14,7 +14,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
-import org.gbif.query.TitleLookupService;
+import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.doi.converter.DatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;

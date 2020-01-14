@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
     "org.gbif.ws.server.aspect",
     "org.gbif.ws.server.filter",
     "org.gbif.ws.security",
-    "org.gbif.query",
     "org.gbif.registry"},
   exclude = {
     SolrAutoConfiguration.class,

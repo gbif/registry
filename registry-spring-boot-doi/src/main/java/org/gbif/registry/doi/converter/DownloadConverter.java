@@ -39,8 +39,8 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.query.HumanPredicateBuilder;
-import org.gbif.query.TitleLookupService;
+import org.gbif.occurrence.query.HumanPredicateBuilder;
+import org.gbif.occurrence.query.TitleLookupService;
 
 import javax.xml.bind.JAXBException;
 import java.net.URI;
