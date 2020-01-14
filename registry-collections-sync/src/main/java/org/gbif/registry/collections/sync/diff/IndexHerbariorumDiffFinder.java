@@ -63,6 +63,7 @@ public class IndexHerbariorumDiffFinder {
 
       if (match.onlyOneInstitutionMatch()) {
         Institution existing = match.institutions.iterator().next();
+        log.info("Institution {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
         institutionsCopy.remove(existing);
 
         if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
@@ -86,6 +87,7 @@ public class IndexHerbariorumDiffFinder {
         }
 
         // look for differences in staff
+        log.info("Calling IH WS to get staff from institution {}", ihInstitution.getCode());
         diffBuilder.staffDiffResult(
             StaffDiffFinder.syncStaff(
                 ihStaffFetcher.apply(ihInstitution.getCode()), institution.getContacts()));
@@ -99,6 +101,7 @@ public class IndexHerbariorumDiffFinder {
 
       } else if (match.onlyOneCollectionMatch()) {
         Collection existing = match.collections.iterator().next();
+        log.info("Collection {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
         collectionsCopy.remove(existing);
 
         if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
@@ -133,6 +136,7 @@ public class IndexHerbariorumDiffFinder {
         }
 
       } else if (match.noMatches()) {
+        log.info("New institution to create for IH: {}", ihInstitution.getCode());
         // create institution
         Institution institution =
             EntityConverter.createInstitution().fromIHInstitution(ihInstitution).convert();
@@ -142,16 +146,17 @@ public class IndexHerbariorumDiffFinder {
                 .map(s -> EntityConverter.createPerson().fromIHStaff(s).convert())
                 .collect(Collectors.toList()));
 
-        log.info("Creating new institution: {}", institution.getName());
         diffResult.institutionToCreate(institution);
 
       } else {
         // Conflict that needs resolved manually
-        diffResult.conflict(Issue.createConflict(match.getAllMatches(), ihInstitution));
         log.info(
-            "Conflict. {} institutions and {} collections are candidate matches in registry: ",
+            "Conflict. {} institutions and {} collections are candidate matches in registry for {}: ",
+            match.institutions,
+            match.collections,
             ihInstitution.getOrganization());
 
+        diffResult.conflict(Issue.createConflict(match.getAllMatches(), ihInstitution));
         institutionsCopy.removeAll(match.institutions);
         collectionsCopy.removeAll(match.collections);
       }

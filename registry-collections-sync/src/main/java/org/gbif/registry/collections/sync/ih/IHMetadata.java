@@ -7,4 +7,5 @@ import lombok.Data;
 public class IHMetadata {
   private int hits;
   private int code;
+  private String message;
 }

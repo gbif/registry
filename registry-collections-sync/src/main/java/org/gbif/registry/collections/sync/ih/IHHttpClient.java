@@ -1,8 +1,12 @@
 package org.gbif.registry.collections.sync.ih;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.SneakyThrows;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -18,11 +22,13 @@ public class IHHttpClient {
   private final API api;
 
   private IHHttpClient(String ihWsUrl) {
+    Objects.requireNonNull(ihWsUrl);
+
     Retrofit retrofit =
-      new Retrofit.Builder()
-        .baseUrl(ihWsUrl)
-        .addConverterFactory(JacksonConverterFactory.create())
-        .build();
+        new Retrofit.Builder()
+            .baseUrl(ihWsUrl)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .build();
     api = retrofit.create(API.class);
   }
 
@@ -57,6 +63,7 @@ public class IHHttpClient {
   @Data
   private static class StaffWrapper {
     private IHMetadata meta;
-    private List<IHStaff> data;
+    @Singular
+    private List<IHStaff> data = new ArrayList<>();
   }
 }

@@ -1,6 +1,9 @@
 package org.gbif.registry.collections.sync.notification;
 
+import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
+
+import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
@@ -17,6 +20,10 @@ public class GithubClient {
   private final API api;
 
   private GithubClient(String githubWsUrl, String user, String password) {
+    Objects.requireNonNull(githubWsUrl);
+    Objects.requireNonNull(user);
+    Objects.requireNonNull(password);
+
     OkHttpClient okHttpClient =
         new OkHttpClient.Builder().addInterceptor(new BasicAuthInterceptor(user, password)).build();
 
@@ -31,6 +38,14 @@ public class GithubClient {
 
   public static GithubClient create(String grSciCollWsUrl, String user, String password) {
     return new GithubClient(grSciCollWsUrl, user, password);
+  }
+
+  public static GithubClient create(SyncConfig syncConfig) {
+    if (syncConfig.isIgnoreConflicts()) {
+      return null;
+    }
+    return new GithubClient(
+        syncConfig.getGithubWsUrl(), syncConfig.getGithubUser(), syncConfig.getGithubPassword());
   }
 
   public void createIssue(Issue issue) {

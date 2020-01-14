@@ -5,11 +5,13 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -32,17 +34,22 @@ public class GrSciCollHttpClient {
   private final API api;
 
   private GrSciCollHttpClient(String grSciCollWsUrl, String user, String password) {
+    Objects.requireNonNull(grSciCollWsUrl);
+
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule module = new SimpleModule();
     module.addDeserializer(Country.class, new IsoDeserializer());
     mapper.registerModule(module);
 
-    OkHttpClient okHttpClient =
-        new OkHttpClient.Builder().addInterceptor(new BasicAuthInterceptor(user, password)).build();
+    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
+
+    if (user != null && password != null) {
+      okHttpClientBuilder.addInterceptor(new BasicAuthInterceptor(user, password)).build();
+    }
 
     Retrofit retrofit =
         new Retrofit.Builder()
-            .client(okHttpClient)
+            .client(okHttpClientBuilder.build())
             .baseUrl(grSciCollWsUrl)
             .addConverterFactory(JacksonConverterFactory.create(mapper))
             .build();
@@ -51,6 +58,20 @@ public class GrSciCollHttpClient {
 
   public static GrSciCollHttpClient create(String grSciCollWsUrl, String user, String password) {
     return new GrSciCollHttpClient(grSciCollWsUrl, user, password);
+  }
+
+  public static GrSciCollHttpClient create(String grSciCollWsUrl) {
+    return new GrSciCollHttpClient(grSciCollWsUrl, null, null);
+  }
+
+  public static GrSciCollHttpClient create(SyncConfig syncConfig) {
+    if (syncConfig.isDryRun()) {
+      return new GrSciCollHttpClient(syncConfig.getRegistryWsUrl(), null, null);
+    }
+    return new GrSciCollHttpClient(
+        syncConfig.getRegistryWsUrl(),
+        syncConfig.getRegistryWsUser(),
+        syncConfig.getRegistryWsPassword());
   }
 
   /** Returns all institutions in GrSciCol. */

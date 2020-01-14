@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -31,6 +32,7 @@ import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EntityConverter {
 
+  private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
   private static final Map<String, Country> TITLE_LOOKUP =
       Maps.uniqueIndex(Lists.newArrayList(Country.values()), Country::getTitle);
 
@@ -254,7 +256,23 @@ public class EntityConverter {
   private static URI getIhHomepage(IHInstitution ih) {
     URI homepage = null;
     if (ih.getContact() != null && ih.getContact().getWebUrl() != null) {
-      homepage = URI.create(ih.getContact().getWebUrl());
+      // when there are multiple URLs we try to get the first one
+      String webUrl = ih.getContact().getWebUrl();
+      if (webUrl.contains(",")) {
+        webUrl = ih.getContact().getWebUrl().split(",")[0];
+      } else if (webUrl.contains(";")) {
+        webUrl = ih.getContact().getWebUrl().split(";")[0];
+      }
+
+      // we try to clean the URL...
+      webUrl = WHITESPACE.matcher(webUrl).replaceAll(" ");
+
+      try {
+        homepage = URI.create(webUrl);
+      } catch (Exception ex) {
+        log.warn(
+            "Couldn't parse the contact webUrl {} for IH institution {}", webUrl, ih.getCode());
+      }
     }
     return homepage;
   }
