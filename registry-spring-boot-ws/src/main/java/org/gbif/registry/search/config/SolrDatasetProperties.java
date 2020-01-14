@@ -8,17 +8,17 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "solr.dataset")
 public class SolrDatasetProperties {
 
-  private SolrServerType type;
+  private SolrServerType serverType;
   private String home;
   private String collection;
   private Boolean delete;
 
-  public SolrServerType getType() {
-    return type;
+  public SolrServerType getServerType() {
+    return serverType;
   }
 
-  public void setType(SolrServerType serverType) {
-    this.type = serverType;
+  public void setServerType(SolrServerType serverType) {
+    this.serverType = serverType;
   }
 
   public String getHome() {

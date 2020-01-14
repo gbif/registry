@@ -76,7 +76,7 @@ mybatis:
 # Solr (tmp embedded)
 solr:
   dataset:
-    type: EMBEDDED
+    serverType: EMBEDDED
     home: /tmp/solrregistry
     collection: dataset
     delete: true
