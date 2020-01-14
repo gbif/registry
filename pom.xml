@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-spring-boot-parent</artifactId>
-  <version>1.0.4-SNAPSHOT</version>
+  <version>1.1.1-SNAPSHOT</version>
   <name>GBIF Registry</name>
   <description>GBIF Registry project (Spring Boot)</description>
 
