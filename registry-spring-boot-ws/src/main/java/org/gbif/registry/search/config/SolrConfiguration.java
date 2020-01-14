@@ -13,7 +13,7 @@ public class SolrConfiguration {
 
   public SolrConfiguration(SolrDatasetProperties solrProperties) {
     cfg = new SolrConfig();
-    cfg.setServerType(solrProperties.getType());
+    cfg.setServerType(solrProperties.getServerType());
     cfg.setServerHome(solrProperties.getHome());
     cfg.setCollection(solrProperties.getCollection());
     // TODO: 10/01/2020 idField was not found in configuration files

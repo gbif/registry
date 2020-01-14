@@ -43,7 +43,7 @@
       "type": "java.lang.String"
     },
     {
-      "name": "solr.dataset.server.type",
+      "name": "solr.dataset.serverType",
       "type": "org.gbif.common.search.solr.SolrServerType",
       "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
       "sourceMethod": "getType()"
