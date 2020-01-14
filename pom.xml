@@ -70,7 +70,6 @@
 
   <modules>
     <module>spring-boot-common-ws</module>
-    <module>spring-boot-download-query-tools</module>
 
     <module>registry-spring-boot-ws</module>
     <module>registry-spring-boot-doi</module>
@@ -103,9 +102,10 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>
+    <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.44.3-jackson2</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
-    <gbif-api.version>0.103.5-jackson2</gbif-api.version>
+    <gbif-api.version>0.103.8-jackson2</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <solr.version>5.4.1</solr.version>
@@ -272,11 +272,6 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>spring-boot-download-query-tools</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
@@ -376,6 +371,11 @@
             <artifactId>guice</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>download-query-tools</artifactId>
+        <version>${gbif-download-query-tools.version}</version>
       </dependency>
 
       <!-- Third party dependencies -->

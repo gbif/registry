@@ -90,8 +90,8 @@
       <artifactId>spring-boot-common-ws</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>spring-boot-download-query-tools</artifactId>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>download-query-tools</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.directory</groupId>
