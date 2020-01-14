@@ -340,7 +340,13 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
         (key, message) -> {
           message.setExecutionId(execution.getKey());
           try {
-            publisher.send(message);
+            if (message instanceof PipelinesInterpretedMessage || message instanceof PipelinesVerbatimMessage) {
+              String nextMessageClassName = message.getClass().getSimpleName();
+              String messagePayload = message.toString();
+              publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+            } else {
+              publisher.send(message);
+            }
           } catch (IOException ex) {
             LOG.warn("Error sending message", ex);
             stepsFailed.add(key);
