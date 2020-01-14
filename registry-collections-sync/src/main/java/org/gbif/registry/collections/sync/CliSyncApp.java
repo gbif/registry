@@ -170,6 +170,7 @@ public class CliSyncApp {
       writer.write(title);
       writer.newLine();
       writer.write(SECTION_SEPARATOR);
+      writer.newLine();
     }
 
     private static void printSubsectionTitle(BufferedWriter writer, String title)
@@ -177,18 +178,21 @@ public class CliSyncApp {
       writer.write(title);
       writer.newLine();
       writer.write(SUBSECTION_SEPARATOR);
+      writer.newLine();
     }
 
     private static <T> void printSection(BufferedWriter writer, String title, List<T> collection)
         throws IOException {
       printSectionTitle(writer, title);
       printCollection(writer, collection);
+      writer.newLine();
     }
 
     private static <T> void printSubsection(BufferedWriter writer, String title, List<T> collection)
         throws IOException {
       printSubsectionTitle(writer, title);
       printCollection(writer, collection);
+      writer.newLine();
     }
 
     private static void printStaffDiffResult(BufferedWriter writer, StaffDiffResult staffDiffResult)

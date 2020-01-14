@@ -2,6 +2,7 @@ package org.gbif.registry.collections.sync;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import com.beust.jcommander.JCommander;
@@ -32,6 +33,7 @@ public class SyncConfig {
   private boolean saveResultsToFile;
   private boolean dryRun;
   private boolean ignoreConflicts;
+  private List<String> ghIssuesAssignees;
 
   public static Optional<SyncConfig> getConfig(String[] args) throws IOException {
     // parse args

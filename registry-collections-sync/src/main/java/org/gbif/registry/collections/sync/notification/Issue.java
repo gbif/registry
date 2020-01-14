@@ -7,14 +7,16 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class Issue {
 
@@ -22,11 +24,8 @@ public class Issue {
   private static final String STAFF_CONFLICT_TITLE =
       "Multiple GrSciColl persons associated to the same IH staff";
   private static final String NEW_LINE = "\n";
-
-  // TODO: check what assignees to put
-  private static final List<String> DEFAULT_ASSIGNEES = Arrays.asList("asturcon");
-  // TODO: check what labels to put
-  private static final List<String> DEFAULT_LABELS = Arrays.asList("GrSciColl-IH conflict");
+  private static final List<String> DEFAULT_LABELS =
+      Collections.singletonList("GrSciColl-IH conflict");
 
   private String title;
   private String body;
@@ -65,11 +64,11 @@ public class Issue {
         .append(
             "Please check which one should remain and sync them in both systems. Remember to sync the associated staff too.");
 
-    return new Issue(
-        String.format(IH_OUTDATED_TITLE, entityType),
-        body.toString(),
-        DEFAULT_ASSIGNEES,
-        DEFAULT_LABELS);
+    return Issue.builder()
+        .title(String.format(IH_OUTDATED_TITLE, entityType))
+        .body(body.toString())
+        .labels(DEFAULT_LABELS)
+        .build();
   }
 
   public static Issue createConflict(List<CollectionEntity> entities, IHInstitution ihInstitution) {
@@ -83,7 +82,11 @@ public class Issue {
     body.append(
         "A IH institution should be associated to only one GrSciColl entity. Please resolve the conflict.");
 
-    return new Issue(STAFF_CONFLICT_TITLE, body.toString(), DEFAULT_ASSIGNEES, DEFAULT_LABELS);
+    return Issue.builder()
+        .title(STAFF_CONFLICT_TITLE)
+        .body(body.toString())
+        .labels(DEFAULT_LABELS)
+        .build();
   }
 
   public static Issue createMultipleStaffIssue(Set<Person> persons, IHStaff ihStaff) {
@@ -97,6 +100,10 @@ public class Issue {
     body.append(
         "A IH staff should be associated to only one GrSciColl person. Please resolve the conflict.");
 
-    return new Issue(STAFF_CONFLICT_TITLE, body.toString(), DEFAULT_ASSIGNEES, DEFAULT_LABELS);
+    return Issue.builder()
+        .title(STAFF_CONFLICT_TITLE)
+        .body(body.toString())
+        .labels(DEFAULT_LABELS)
+        .build();
   }
 }

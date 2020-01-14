@@ -3,6 +3,7 @@ package org.gbif.registry.collections.sync.notification;
 import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
 
+import java.util.List;
 import java.util.Objects;
 
 import okhttp3.OkHttpClient;
@@ -18,8 +19,9 @@ import static org.gbif.registry.collections.sync.http.SyncCall.syncCall;
 public class GithubClient {
 
   private final API api;
+  private final List<String> assignees;
 
-  private GithubClient(String githubWsUrl, String user, String password) {
+  private GithubClient(String githubWsUrl, String user, String password, List<String> assignees) {
     Objects.requireNonNull(githubWsUrl);
     Objects.requireNonNull(user);
     Objects.requireNonNull(password);
@@ -34,10 +36,11 @@ public class GithubClient {
             .addConverterFactory(JacksonConverterFactory.create())
             .build();
     api = retrofit.create(API.class);
+    this.assignees = assignees;
   }
 
   public static GithubClient create(String grSciCollWsUrl, String user, String password) {
-    return new GithubClient(grSciCollWsUrl, user, password);
+    return new GithubClient(grSciCollWsUrl, user, password, null);
   }
 
   public static GithubClient create(SyncConfig syncConfig) {
@@ -45,10 +48,18 @@ public class GithubClient {
       return null;
     }
     return new GithubClient(
-        syncConfig.getGithubWsUrl(), syncConfig.getGithubUser(), syncConfig.getGithubPassword());
+        syncConfig.getGithubWsUrl(),
+        syncConfig.getGithubUser(),
+        syncConfig.getGithubPassword(),
+        syncConfig.getGhIssuesAssignees());
   }
 
   public void createIssue(Issue issue) {
+    if (assignees != null && !assignees.isEmpty()) {
+      // we use the assignees from the config if they were set
+      issue.setAsignees(assignees);
+    }
+
     syncCall(api.createIssue(issue));
   }
 
