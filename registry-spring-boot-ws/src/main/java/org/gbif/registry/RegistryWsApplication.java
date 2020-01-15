@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
     "org.gbif.ws.server.interceptor",
     "org.gbif.ws.server.aspect",
     "org.gbif.ws.server.filter",
+    "org.gbif.ws.server.advice",
     "org.gbif.ws.security",
     "org.gbif.registry"},
   exclude = {
