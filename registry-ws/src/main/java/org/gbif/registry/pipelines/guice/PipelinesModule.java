@@ -20,8 +20,6 @@ public class PipelinesModule extends PrivateServiceModule {
 
   private static final String PREFIX = "pipelines.";
 
-  public static final String THREAD_POOL_SIZE = PREFIX + "do.all.threads";
-
   public PipelinesModule(Properties properties) {
     super(PREFIX, properties);
   }
@@ -42,7 +40,7 @@ public class PipelinesModule extends PrivateServiceModule {
   /** To use several threads when we run doAll from history and send messages in queues  */
   @Provides
   @Singleton
-  private ExecutorService provideExecutorService(@Named(THREAD_POOL_SIZE) Integer threadPoolSize) {
+  private ExecutorService provideExecutorService(@Named("do.all.threads") Integer threadPoolSize) {
     return Optional.ofNullable(threadPoolSize)
       .map(Executors::newFixedThreadPool)
       .orElse(Executors.newSingleThreadExecutor());
