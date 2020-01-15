@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -78,11 +79,14 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   private final PipelineProcessMapper mapper;
   private final DatasetService datasetService;
 
+  private final ExecutorService executorService;
+
   @Inject
   public DefaultPipelinesHistoryTrackingService(
-      PipelineProcessMapper mapper, DatasetService datasetService) {
+      PipelineProcessMapper mapper, DatasetService datasetService, ExecutorService executorService) {
     this.mapper = mapper;
     this.datasetService = datasetService;
+    this.executorService = executorService;
   }
 
   @Override
@@ -100,25 +104,23 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
 
   /** Utility method to run batch jobs on all dataset elements */
   private void doOnAllDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
-    PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
 
+    Consumer<Dataset> rerunFn = d -> {
+      try {
+        LOG.info("trying to rerun dataset {}", d.getKey());
+        onDataset.accept(d);
+      } catch (Exception ex) {
+        LOG.error("Error processing dataset {} while rerunning all datasets: {}", d.getKey(), ex.getMessage());
+      }
+    };
+
+    PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
     PagingResponse<Dataset> response;
     do {
       response = datasetService.list(pagingRequest);
       response.getResults().stream()
-          .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
-          .forEach(
-              d -> {
-                try {
-                  LOG.info("trying to rerun dataset {}", d.getKey());
-                  onDataset.accept(d);
-                } catch (Exception ex) {
-                  LOG.error(
-                      "Error processing dataset {} while rerunning all datasets: {}",
-                      d.getKey(),
-                      ex.getMessage());
-                }
-              });
+        .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
+        .forEach(d -> CompletableFuture.runAsync(() -> rerunFn.accept(d), executorService));
       pagingRequest.addOffset(response.getResults().size());
     } while (!response.isEndOfRecords());
   }
@@ -165,7 +167,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
         () ->
             doOnAllDatasets(
                 dataset -> runLastAttempt(dataset.getKey(), steps, reason, user, prefix),
-                datasetsToExclude));
+                datasetsToExclude),
+      executorService);
 
     return RunPipelineResponse.builder()
         .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
