@@ -106,7 +106,7 @@
     <gbif-postal-service.version>0.44.3-jackson2</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
     <gbif-api.version>0.103.8-jackson2</gbif-api.version>
-    <gbif-directory.version>0.11</gbif-directory.version>
+    <gbif-directory.version>0.15</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <solr.version>5.4.1</solr.version>
     <commons-validator.version>1.5.1</commons-validator.version>
