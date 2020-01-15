@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -16,7 +15,7 @@ public class SyncConfigTest {
   @Test
   public void loadConfigTest() throws IOException {
     String path = getClass().getClassLoader().getResource(CONFIG_TEST_PATH).getPath();
-    SyncConfig config = SyncConfig.getConfig(new String[] {"--config", path}).orElse(null);
+    SyncConfig config = SyncConfig.fromFileName(path).orElse(null);
 
     assertNotNull(config);
     assertNotNull(config.getRegistryWsUrl());
