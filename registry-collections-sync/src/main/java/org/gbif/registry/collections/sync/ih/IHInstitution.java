@@ -1,9 +1,6 @@
 package org.gbif.registry.collections.sync.ih;
 
-import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /** Models an Index Herbariorum institution. */
 @Data

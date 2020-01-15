@@ -20,7 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.junit.Test;
 
-import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

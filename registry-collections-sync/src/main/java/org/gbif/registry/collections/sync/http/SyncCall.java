@@ -32,7 +32,7 @@ public class SyncCall {
   public static <T> T syncCall(Call<T> call) {
     try {
       Response<T> response = call.execute();
-      if (response.isSuccessful() && response.body() != null) {
+      if (response.isSuccessful()) {
         return response.body();
       }
       LOG.error("Service responded with an error {}", response);

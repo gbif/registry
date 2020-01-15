@@ -2,7 +2,6 @@ package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.ih.IHUtils;
 import org.gbif.registry.collections.sync.notification.Issue;
 
 import java.util.*;
@@ -17,7 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.registry.collections.sync.diff.DiffResult.StaffDiffResult;
-import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class StaffDiffFinder {
@@ -95,7 +94,7 @@ class StaffDiffFinder {
         Person existing = matches.iterator().next();
         personsCopy.remove(existing);
 
-        if (IHUtils.isIHOutdated(ihStaff.getDateModified(), existing.getModified())) {
+        if (Utils.isIHOutdated(ihStaff.getDateModified(), existing)) {
           // add issue
           diffResult.conflict(Issue.createOutdatedIHStaffIssue(existing, ihStaff));
           continue;

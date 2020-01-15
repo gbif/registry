@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 
-import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
 /** Converts IH insitutions to the GrSciColl entities {@link Institution} and {@link Collection}. */
 @Slf4j

@@ -1,6 +1,7 @@
 package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.notification.Issue;
@@ -23,7 +24,7 @@ public class DiffResult {
   private List<Institution> institutionsToCreate;
 
   @Singular(value = "institutionToUpdate")
-  private List<InstitutionDiffResult> institutionsToUpdate;
+  private List<UpdateDiffResult<Institution>> institutionsToUpdate;
 
   @Singular(value = "institutionConflict")
   private List<Issue> institutionConflicts;
@@ -32,13 +33,16 @@ public class DiffResult {
   private List<Collection> collectionsNoChange;
 
   @Singular(value = "collectionToUpdate")
-  private List<CollectionDiffResult> collectionsToUpdate;
+  private List<UpdateDiffResult<Collection>> collectionsToUpdate;
 
   @Singular(value = "collectionConflict")
   private List<Issue> collectionConflicts;
 
   @Singular(value = "conflict")
   private List<Issue> conflicts;
+
+  @Singular(value = "action")
+  private List<FailedAction> failedActions;
 
   public boolean isEmpty() {
     return institutionsNoChange.isEmpty()
@@ -52,26 +56,13 @@ public class DiffResult {
   @Data
   @AllArgsConstructor
   @Builder
-  public static class InstitutionDiffResult {
-    private Institution oldInstitution;
-    private Institution newInstitution;
+  public static class UpdateDiffResult<T extends CollectionEntity> {
+    private T oldEntity;
+    private T newEntity;
     private StaffDiffResult staffDiffResult;
 
     public boolean isEmpty() {
-      return oldInstitution == null && newInstitution == null && staffDiffResult.isEmpty();
-    }
-  }
-
-  @Data
-  @AllArgsConstructor
-  @Builder
-  public static class CollectionDiffResult {
-    private Collection oldCollection;
-    private Collection newCollection;
-    private StaffDiffResult staffDiffResult;
-
-    public boolean isEmpty() {
-      return oldCollection == null && newCollection == null && staffDiffResult.isEmpty();
+      return oldEntity == null && newEntity == null && staffDiffResult.isEmpty();
     }
   }
 
@@ -107,5 +98,12 @@ public class DiffResult {
   public static class PersonDiffResult {
     private Person oldPerson;
     private Person newPerson;
+  }
+
+  @Data
+  @AllArgsConstructor
+  public static class FailedAction {
+    private Object entity;
+    private String message;
   }
 }

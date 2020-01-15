@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -35,23 +33,50 @@ public class SyncConfig {
   private boolean ignoreConflicts;
   private List<String> ghIssuesAssignees;
 
-  public static Optional<SyncConfig> getConfig(String[] args) throws IOException {
-    // parse args
-    Params params = new Params();
-    JCommander.newBuilder().addObject(params).build().parse(args);
-
-    String configFileName = params.confPath;
+  public static Optional<SyncConfig> fromFileName(String configFileName) {
     if (Strings.isNullOrEmpty(configFileName)) {
       log.error("No config file provided");
       return Optional.empty();
     }
 
     File configFile = new File(configFileName);
-    return Optional.ofNullable(YAML_READER.readValue(configFile));
-  }
+    SyncConfig config = null;
+    try {
+      config = YAML_READER.readValue(configFile);
+    } catch (IOException e) {
+      log.error("Couldn't load config from file {}", configFileName);
+      return Optional.empty();
+    }
 
-  private static class Params {
-    @Parameter(names = {"--config", "-c"})
-    private String confPath;
+    if (config == null) {
+      return Optional.empty();
+    }
+
+    // do some checks
+    if (Strings.isNullOrEmpty(config.getRegistryWsUrl())
+        || Strings.isNullOrEmpty(config.getIhWsUrl())) {
+      throw new IllegalArgumentException("Registry and IH WS URLs are required");
+    }
+
+    if (!config.isIgnoreConflicts()
+        && (Strings.isNullOrEmpty(config.getGithubUser())
+            || Strings.isNullOrEmpty(config.getGithubPassword()))) {
+      throw new IllegalArgumentException(
+          "Github credentials are required if we are not ignoring conflicts.");
+    }
+
+    if (!config.isIgnoreConflicts()
+        && (config.getGhIssuesAssignees() == null || config.getGhIssuesAssignees().isEmpty())) {
+      throw new IllegalArgumentException("Github assignees are required.");
+    }
+
+    if (!config.isDryRun()
+        && (Strings.isNullOrEmpty(config.getRegistryWsUser())
+            || Strings.isNullOrEmpty(config.getRegistryWsPassword()))) {
+      throw new IllegalArgumentException(
+          "Registry WS credentials are required if we are not doing a dry run");
+    }
+
+    return Optional.of(config);
   }
 }

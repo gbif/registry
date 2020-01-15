@@ -57,7 +57,7 @@ public class GithubClient {
   public void createIssue(Issue issue) {
     if (assignees != null && !assignees.isEmpty()) {
       // we use the assignees from the config if they were set
-      issue.setAsignees(assignees);
+      issue.setAssignees(assignees);
     }
 
     syncCall(api.createIssue(issue));

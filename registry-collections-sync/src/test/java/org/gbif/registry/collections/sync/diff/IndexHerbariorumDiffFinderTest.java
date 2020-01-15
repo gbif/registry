@@ -10,7 +10,6 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.ih.IHUtils;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -27,7 +26,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.junit.Test;
 
-import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -77,10 +76,10 @@ public class IndexHerbariorumDiffFinderTest {
     assertFalse(grSciCollInstitutions.contains(result.getInstitutionsToCreate().get(0)));
     assertEquals(institutionNoChange.entity, result.getInstitutionsNoChange().get(0));
     assertNotEquals(
-        result.getInstitutionsToUpdate().get(0).getNewInstitution(),
-        result.getInstitutionsToUpdate().get(0).getOldInstitution());
+        result.getInstitutionsToUpdate().get(0).getNewEntity(),
+        result.getInstitutionsToUpdate().get(0).getOldEntity());
     assertTrue(
-        result.getInstitutionsToUpdate().get(0).getNewInstitution().isIndexHerbariorumRecord());
+        result.getInstitutionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
   }
 
   @Test
@@ -117,10 +116,10 @@ public class IndexHerbariorumDiffFinderTest {
 
     assertEquals(collectionsNoChange.entity, result.getCollectionsNoChange().get(0));
     assertNotEquals(
-        result.getCollectionsToUpdate().get(0).getNewCollection(),
-        result.getCollectionsToUpdate().get(0).getOldCollection());
+        result.getCollectionsToUpdate().get(0).getNewEntity(),
+        result.getCollectionsToUpdate().get(0).getOldEntity());
     assertTrue(
-        result.getCollectionsToUpdate().get(0).getNewCollection().isIndexHerbariorumRecord());
+        result.getCollectionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
   }
 
   @Test
@@ -214,7 +213,7 @@ public class IndexHerbariorumDiffFinderTest {
     i.setName("bar");
     i.setIndexHerbariorumRecord(true);
     i.setNumberSpecimens(1000);
-    i.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST)));
+    i.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, Utils.encodeIRN(IRN_TEST)));
 
     IHInstitution ih = new IHInstitution();
     ih.setIrn(IRN_TEST);
@@ -233,7 +232,7 @@ public class IndexHerbariorumDiffFinderTest {
     i.setIndexHerbariorumRecord(false);
     i.setLatitude(new BigDecimal("36.0424"));
     i.setLongitude(new BigDecimal("-94.1624"));
-    i.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST_2)));
+    i.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, Utils.encodeIRN(IRN_TEST_2)));
 
     Address address = new Address();
     address.setCity("FAYETTEVILLE");
@@ -271,7 +270,7 @@ public class IndexHerbariorumDiffFinderTest {
     c.setCode("A");
     c.setIndexHerbariorumRecord(true);
     c.setEmail(Collections.singletonList("aa@aa.com"));
-    c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST)));
+    c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, Utils.encodeIRN(IRN_TEST)));
 
     IHInstitution ih = new IHInstitution();
     ih.setIrn(IRN_TEST);
@@ -287,7 +286,7 @@ public class IndexHerbariorumDiffFinderTest {
     Collection c = new Collection();
     c.setCode("B");
     c.setEmail(Collections.singletonList("bb@bb.com"));
-    c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, IHUtils.encodeIRN(IRN_TEST_2)));
+    c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, Utils.encodeIRN(IRN_TEST_2)));
 
     IHInstitution ih = new IHInstitution();
     ih.setIrn(IRN_TEST_2);

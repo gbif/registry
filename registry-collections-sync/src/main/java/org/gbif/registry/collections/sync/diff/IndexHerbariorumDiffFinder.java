@@ -20,10 +20,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.registry.collections.sync.diff.DiffResult.CollectionDiffResult;
-import static org.gbif.registry.collections.sync.diff.DiffResult.InstitutionDiffResult;
-import static org.gbif.registry.collections.sync.ih.IHUtils.encodeIRN;
-import static org.gbif.registry.collections.sync.ih.IHUtils.isIHOutdated;
+import static org.gbif.registry.collections.sync.diff.DiffResult.UpdateDiffResult;
+import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
 
 /**
  * A synchronization utility that will ensure GRSciColl is up to date with IndexHerbariorum. This
@@ -66,7 +65,7 @@ public class IndexHerbariorumDiffFinder {
         log.info("Institution {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
         institutionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
+        if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
           // add issue
           diffResult.institutionConflict(
               Issue.createOutdatedIHInstitutionIssue(existing, ihInstitution));
@@ -80,23 +79,23 @@ public class IndexHerbariorumDiffFinder {
                 .withExisting(existing)
                 .convert();
 
-        InstitutionDiffResult.InstitutionDiffResultBuilder diffBuilder =
-            InstitutionDiffResult.builder();
+        UpdateDiffResult.UpdateDiffResultBuilder<Institution> updateDiffBuilder =
+            UpdateDiffResult.builder();
         if (!institution.lenientEquals(existing)) {
-          diffBuilder.newInstitution(institution).oldInstitution(existing);
+          updateDiffBuilder.newEntity(institution).oldEntity(existing);
         }
 
         // look for differences in staff
         log.info("Calling IH WS to get staff from institution {}", ihInstitution.getCode());
-        diffBuilder.staffDiffResult(
+        updateDiffBuilder.staffDiffResult(
             StaffDiffFinder.syncStaff(
                 ihStaffFetcher.apply(ihInstitution.getCode()), institution.getContacts()));
 
-        InstitutionDiffResult diff = diffBuilder.build();
-        if (diff.isEmpty()) {
+        UpdateDiffResult<Institution> updateDiff = updateDiffBuilder.build();
+        if (updateDiff.isEmpty()) {
           diffResult.institutionNoChange(existing);
         } else {
-          diffResult.institutionToUpdate(diff);
+          diffResult.institutionToUpdate(updateDiff);
         }
 
       } else if (match.onlyOneCollectionMatch()) {
@@ -104,7 +103,7 @@ public class IndexHerbariorumDiffFinder {
         log.info("Collection {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
         collectionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution.getDateModified(), existing.getModified())) {
+        if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
           diffResult.collectionConflict(
               Issue.createOutdatedIHCollectionIssue(existing, ihInstitution));
           continue;
@@ -117,22 +116,22 @@ public class IndexHerbariorumDiffFinder {
                 .withExisting(existing)
                 .convert();
 
-        CollectionDiffResult.CollectionDiffResultBuilder diffBuilder =
-            CollectionDiffResult.builder();
+        UpdateDiffResult.UpdateDiffResultBuilder<Collection> updateDiffBuilder =
+            UpdateDiffResult.builder();
         if (!collection.lenientEquals(existing)) {
-          diffBuilder.newCollection(collection).oldCollection(existing);
+          updateDiffBuilder.newEntity(collection).oldEntity(existing);
         }
 
         // look for differences in staff
-        diffBuilder.staffDiffResult(
+        updateDiffBuilder.staffDiffResult(
             StaffDiffFinder.syncStaff(
                 ihStaffFetcher.apply(ihInstitution.getCode()), collection.getContacts()));
 
-        CollectionDiffResult diff = diffBuilder.build();
-        if (diff.isEmpty()) {
+        UpdateDiffResult<Collection> updateDiff = updateDiffBuilder.build();
+        if (updateDiff.isEmpty()) {
           diffResult.collectionNoChange(existing);
         } else {
-          diffResult.collectionToUpdate(diff);
+          diffResult.collectionToUpdate(updateDiff);
         }
 
       } else if (match.noMatches()) {
@@ -179,7 +178,7 @@ public class IndexHerbariorumDiffFinder {
         CompletableFuture.supplyAsync(() -> filterById(institutions, irn));
     CompletableFuture<Set<Collection>> matchedCollectionsFuture =
         CompletableFuture.supplyAsync(() -> filterById(collections, irn));
-    CompletableFuture.allOf(matchedInstitutionsFuture, matchedCollectionsFuture);
+    CompletableFuture.allOf(matchedInstitutionsFuture, matchedCollectionsFuture).join();
 
     Match match = new Match();
     match.institutions = matchedInstitutionsFuture.join();

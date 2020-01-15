@@ -24,6 +24,5 @@ public class SyncConfigTest {
     assertTrue(config.isSaveResultsToFile());
     assertTrue(config.isDryRun());
     assertTrue(config.isIgnoreConflicts());
-    assertEquals(2, config.getGhIssuesAssignees().size());
   }
 }
