@@ -8,6 +8,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.Executors;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,7 +28,7 @@ public class PipelinesHistoryTrackingServiceTest {
   @Test
   public void getLatestSuccesfulStepTest() {
     DefaultPipelinesHistoryTrackingService trackingService =
-        new DefaultPipelinesHistoryTrackingService(pipelineProcessMapper, datasetService);
+        new DefaultPipelinesHistoryTrackingService(pipelineProcessMapper, datasetService, Executors.newSingleThreadExecutor());
 
     PipelineProcess process = new PipelineProcess();
     PipelineExecution execution = new PipelineExecution().setCreated(LocalDateTime.now());
