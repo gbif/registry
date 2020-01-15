@@ -20,7 +20,7 @@ public class PipelinesModule extends PrivateServiceModule {
 
   private static final String PREFIX = "pipelines.";
 
-  private static final String THREAD_POOL_SIZE = PREFIX + "do.all.threads";
+  public static final String THREAD_POOL_SIZE = PREFIX + "do.all.threads";
 
   public PipelinesModule(Properties properties) {
     super(PREFIX, properties);
