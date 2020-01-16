@@ -69,8 +69,6 @@
   </repositories>
 
   <modules>
-    <module>spring-boot-common-ws</module>
-
     <module>registry-spring-boot-ws</module>
     <module>registry-spring-boot-doi</module>
     <module>registry-spring-boot-metadata</module>
@@ -257,11 +255,6 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-identity</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>spring-boot-common-ws</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
