@@ -18,8 +18,8 @@
 
     <!-- GBIF dependencies -->
     <dependency>
-      <groupId>org.gbif.registry</groupId>
-      <artifactId>spring-boot-common-ws</artifactId>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-ws</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>

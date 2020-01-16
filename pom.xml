@@ -99,6 +99,7 @@
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <jettison.version>1.3.7</jettison.version>
     <gbif-common.version>0.40</gbif-common.version>
+    <gbif-common-ws.version>0.49-sb</gbif-common-ws.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-common-search.version>0.33</gbif-common-search.version>
@@ -332,6 +333,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-ws</artifactId>
+        <version>${gbif-common-ws.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.common</groupId>
