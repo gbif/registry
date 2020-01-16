@@ -44,14 +44,14 @@ public class GithubClient {
   }
 
   public static GithubClient create(SyncConfig syncConfig) {
-    if (syncConfig.isIgnoreConflicts()) {
+    if (syncConfig.isIgnoreConflicts() || syncConfig.getNotification() == null) {
       return null;
     }
     return new GithubClient(
-        syncConfig.getGithubWsUrl(),
-        syncConfig.getGithubUser(),
-        syncConfig.getGithubPassword(),
-        syncConfig.getGhIssuesAssignees());
+        syncConfig.getNotification().getGithubWsUrl(),
+        syncConfig.getNotification().getGithubUser(),
+        syncConfig.getNotification().getGithubPassword(),
+        syncConfig.getNotification().getGhIssuesAssignees());
   }
 
   public void createIssue(Issue issue) {

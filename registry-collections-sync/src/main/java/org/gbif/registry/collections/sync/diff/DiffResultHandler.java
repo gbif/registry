@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.registry.collections.sync.diff.DiffResult.FailedAction;
 import static org.gbif.registry.collections.sync.diff.DiffResult.PersonDiffResult;
 import static org.gbif.registry.collections.sync.diff.DiffResult.StaffDiffResult;
-import static org.gbif.registry.collections.sync.diff.DiffResult.UpdateDiffResult;
+import static org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 
 /**
  * Handles the results stored in a {@link org.gbif.registry.collections.sync.diff.DiffResult}. This
@@ -106,7 +106,7 @@ public class DiffResultHandler {
   }
 
   private <T extends CollectionEntity> List<FailedAction> executeGrSciCollUpdateAction(
-      List<UpdateDiffResult<T>> diffs, Consumer<T> updateAction) {
+    List<EntityDiffResult<T>> diffs, Consumer<T> updateAction) {
     List<FailedAction> fails = new ArrayList<>();
     if (config.isDryRun()) {
       log.debug("Dry run enabled. Ignoring update.");

@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import lombok.SneakyThrows;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -75,7 +74,6 @@ public class GrSciCollHttpClient {
   }
 
   /** Returns all institutions in GrSciCol. */
-  @SneakyThrows
   public List<Institution> getInstitutions() {
     List<Institution> result = new ArrayList<>();
 
@@ -100,7 +98,6 @@ public class GrSciCollHttpClient {
   }
 
   /** Returns all institutions in GrSciCol. */
-  @SneakyThrows
   public List<Collection> getCollections() {
     List<Collection> result = new ArrayList<>();
 

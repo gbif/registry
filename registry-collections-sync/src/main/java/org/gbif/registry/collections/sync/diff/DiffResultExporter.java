@@ -2,7 +2,7 @@ package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.registry.collections.sync.diff.DiffResult.UpdateDiffResult;
+import org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -65,7 +65,7 @@ public class DiffResultExporter {
       printSection(writer, "Institutions to Create", diffResult.getInstitutionsToCreate());
       printSectionTitle(
           writer, "Institutions to Update: " + diffResult.getInstitutionsToUpdate().size());
-      for (UpdateDiffResult<Institution> diff : diffResult.getInstitutionsToUpdate()) {
+      for (EntityDiffResult<Institution> diff : diffResult.getInstitutionsToUpdate()) {
         writer.write(LINE_STARTER);
         printWithNewLineAfter(writer, "UPDATE DIFF:");
         printWithNewLineAfter(writer, SIMPLE_INDENT + "OLD: " + diff.getOldEntity());
@@ -77,7 +77,7 @@ public class DiffResultExporter {
       // Collections
       printSection(writer, "Collections No Change", diffResult.getCollectionsNoChange());
       printSectionTitle(writer, "Collections to Update: " + diffResult.getCollectionsToUpdate());
-      for (UpdateDiffResult<Collection> diff : diffResult.getCollectionsToUpdate()) {
+      for (EntityDiffResult<Collection> diff : diffResult.getCollectionsToUpdate()) {
         writer.write(LINE_STARTER);
         printWithNewLineAfter(writer, "UPDATE DIFF:");
         printWithNewLineAfter(writer, SIMPLE_INDENT + "OLD: " + diff.getOldEntity());

@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
-import lombok.SneakyThrows;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -36,14 +33,16 @@ public class IHHttpClient {
     return new IHHttpClient(ihWsUrl);
   }
 
-  @SneakyThrows
   public List<IHInstitution> getInstitutions() {
     return syncCall(api.listInstitutions()).getData();
   }
 
-  @SneakyThrows
   public List<IHStaff> getStaffByInstitution(String institutionCode) {
     return syncCall(api.listStaff(institutionCode)).getData();
+  }
+
+  public List<String> getCountries() {
+    return syncCall(api.listCountries()).getData();
   }
 
   private interface API {
@@ -52,6 +51,9 @@ public class IHHttpClient {
 
     @GET("staff/search")
     Call<StaffWrapper> listStaff(@Query("code") String institutionCode);
+
+    @GET("countries")
+    Call<CountryWrapper> listCountries();
   }
 
   @Data
@@ -63,7 +65,12 @@ public class IHHttpClient {
   @Data
   private static class StaffWrapper {
     private IHMetadata meta;
-    @Singular
     private List<IHStaff> data = new ArrayList<>();
+  }
+
+  @Data
+  private static class CountryWrapper {
+    private IHMetadata meta;
+    private List<String> data = new ArrayList<>();
   }
 }

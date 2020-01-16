@@ -6,6 +6,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.collections.sync.ih.IHStaff;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
@@ -29,6 +31,9 @@ import static org.junit.Assert.assertNotEquals;
 /** Tests the {@link] StaffDiffFinder}. */
 public class StaffDiffFinderTest {
 
+  private static final IssueFactory DEFAULT_ISSUE_FACTORY = IssueFactory.fromDefaults();
+  private static final EntityConverter ENTITY_CONVERTER =
+      EntityConverter.from(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"));
   private static final String IRN_TEST = "1";
 
   @Test
@@ -51,7 +56,9 @@ public class StaffDiffFinderTest {
             .map(TestStaff::getPerson)
             .collect(Collectors.toList());
 
-    DiffResult.StaffDiffResult result = StaffDiffFinder.syncStaff(ihStaff, grSciCollPersons);
+    DiffResult.StaffDiffResult result =
+        StaffDiffFinder.syncStaff(
+            ihStaff, grSciCollPersons, ENTITY_CONVERTER, DEFAULT_ISSUE_FACTORY);
     assertEquals(1, result.getPersonsToCreate().size());
     assertEquals(1, result.getPersonsToUpdate().size());
     assertEquals(1, result.getPersonsNoChange().size());
@@ -72,12 +79,16 @@ public class StaffDiffFinderTest {
     outdatedStaff.setDateModified("2018-01-01");
 
     Person upToDatePerson = new Person();
+    upToDatePerson.setKey(UUID.randomUUID());
     upToDatePerson.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
     upToDatePerson.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     DiffResult.StaffDiffResult result =
         StaffDiffFinder.syncStaff(
-            Collections.singletonList(outdatedStaff), Collections.singletonList(upToDatePerson));
+            Collections.singletonList(outdatedStaff),
+            Collections.singletonList(upToDatePerson),
+            ENTITY_CONVERTER,
+            DEFAULT_ISSUE_FACTORY);
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -88,15 +99,21 @@ public class StaffDiffFinderTest {
     s.setIrn(IRN_TEST);
 
     Person p1 = new Person();
+    p1.setKey(UUID.randomUUID());
     p1.setEmail("aa@aa.com");
     p1.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     Person p2 = new Person();
+    p2.setKey(UUID.randomUUID());
     p2.setEmail("bb@bb.com");
     p2.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(Collections.singletonList(s), Arrays.asList(p1, p2));
+        StaffDiffFinder.syncStaff(
+            Collections.singletonList(s),
+            Arrays.asList(p1, p2),
+            ENTITY_CONVERTER,
+            DEFAULT_ISSUE_FACTORY);
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -109,20 +126,27 @@ public class StaffDiffFinderTest {
     s.setLastName("Last");
 
     Person p1 = new Person();
+    p1.setKey(UUID.randomUUID());
     p1.setFirstName("Name Last");
 
     Person p2 = new Person();
+    p2.setKey(UUID.randomUUID());
     p2.setFirstName("Name");
     p2.setLastName("Last");
 
     DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(Collections.singletonList(s), Arrays.asList(p1, p2));
+        StaffDiffFinder.syncStaff(
+            Collections.singletonList(s),
+            Arrays.asList(p1, p2),
+            ENTITY_CONVERTER,
+            DEFAULT_ISSUE_FACTORY);
 
     assertEquals(1, result.getConflicts().size());
   }
 
   private TestStaff createTestStaffToUpdate() {
     Person p = new Person();
+    p.setKey(UUID.randomUUID());
     p.setFirstName("Johnnie L. Gentry");
     p.setPosition("Director");
     p.setPhone("[1] 479/575-4372");
@@ -156,6 +180,7 @@ public class StaffDiffFinderTest {
 
   private TestStaff createTestStaffNoChange() {
     Person p = new Person();
+    p.setKey(UUID.randomUUID());
     p.setEmail("foo@foo.com");
     p.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
@@ -170,6 +195,7 @@ public class StaffDiffFinderTest {
 
   private TestStaff createTestStaffToDelete() {
     Person p = new Person();
+    p.setKey(UUID.randomUUID());
     p.setFirstName("extra person");
     return TestStaff.builder().person(p).build();
   }

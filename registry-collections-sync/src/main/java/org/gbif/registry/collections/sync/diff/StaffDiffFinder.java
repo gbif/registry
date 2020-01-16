@@ -2,7 +2,7 @@ package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.Issue;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -66,7 +66,10 @@ class StaffDiffFinder {
       };
 
   public static StaffDiffResult syncStaff(
-      List<IHStaff> ihStaffList, List<Person> grSciCollContacts) {
+      List<IHStaff> ihStaffList,
+      List<Person> grSciCollContacts,
+      EntityConverter entityConverter,
+      IssueFactory issueFactory) {
 
     StaffDiffResult.StaffDiffResultBuilder diffResult = StaffDiffResult.builder();
 
@@ -80,7 +83,7 @@ class StaffDiffFinder {
 
       if (!matchesOpt.isPresent()) {
         // if there is no match we create a new person
-        Person person = EntityConverter.createPerson().fromIHStaff(ihStaff).convert();
+        Person person = entityConverter.convertToPerson(ihStaff);
         diffResult.personToCreate(person);
         continue;
       }
@@ -89,19 +92,18 @@ class StaffDiffFinder {
       if (matches.size() > 1) {
         // conflict
         personsCopy.removeAll(matches);
-        diffResult.conflict(Issue.createMultipleStaffIssue(matches, ihStaff));
+        diffResult.conflict(issueFactory.createMultipleStaffIssue(matches, ihStaff));
       } else if (matches.size() == 1) {
         Person existing = matches.iterator().next();
         personsCopy.remove(existing);
 
         if (Utils.isIHOutdated(ihStaff.getDateModified(), existing)) {
           // add issue
-          diffResult.conflict(Issue.createOutdatedIHStaffIssue(existing, ihStaff));
+          diffResult.conflict(issueFactory.createOutdatedIHStaffIssue(existing, ihStaff));
           continue;
         }
 
-        Person person =
-            EntityConverter.createPerson().fromIHStaff(ihStaff).withExisting(existing).convert();
+        Person person = entityConverter.convertToPerson(ihStaff, existing);
         if (!person.lenientEquals(existing)) {
           diffResult.personToUpdate(new DiffResult.PersonDiffResult(existing, person));
         } else {

@@ -1,5 +1,6 @@
 package org.gbif.registry.collections.sync.diff;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
@@ -11,17 +12,13 @@ import org.gbif.registry.collections.sync.ih.IHStaff;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -29,190 +26,184 @@ import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
 /** Converts IH insitutions to the GrSciColl entities {@link Institution} and {@link Collection}. */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EntityConverter {
 
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
-  private static final Map<String, Country> TITLE_LOOKUP =
-      Maps.uniqueIndex(Lists.newArrayList(Country.values()), Country::getTitle);
+  private static final Map<String, Country> COUNTRY_LOOKUP = new HashMap<>();
 
-  public static InstitutionConverter createInstitution() {
-    return new InstitutionConverter();
-  }
+  private EntityConverter(List<String> countries) {
+    matchCountries(countries);
 
-  public static CollectionConverter createCollection() {
-    return new CollectionConverter();
-  }
-
-  public static PersonConverter createPerson() {
-    return new PersonConverter();
-  }
-
-  /** Converts an IH institution to a GrSciColl {@link Institution}. */
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class InstitutionConverter {
-
-    private IHInstitution ihInstitution;
-    private Institution existing;
-
-    public InstitutionConverter fromIHInstitution(IHInstitution ihInstitution) {
-      this.ihInstitution = ihInstitution;
-      return this;
-    }
-
-    public InstitutionConverter withExisting(Institution existing) {
-      this.existing = existing;
-      return this;
-    }
-
-    public Institution convert() {
-      Institution institution = new Institution();
-
-      if (existing != null) {
-        try {
-          BeanUtils.copyProperties(institution, existing);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          log.warn("Couldn't copy institution properties from bean: {}", existing);
-        }
-      }
-
-      institution.setName(ihInstitution.getOrganization());
-      institution.setCode(ihInstitution.getCode());
-      institution.setIndexHerbariorumRecord(true);
-      institution.setNumberSpecimens(Math.toIntExact(ihInstitution.getSpecimenTotal()));
-      institution.setLatitude(
-          ihInstitution.getLocation() != null
-              ? BigDecimal.valueOf(ihInstitution.getLocation().getLat())
-              : null);
-      institution.setLongitude(
-          ihInstitution.getLocation() != null
-              ? BigDecimal.valueOf(ihInstitution.getLocation().getLon())
-              : null);
-
-      setAddress(institution, ihInstitution);
-      institution.setEmail(getIhEmails(ihInstitution));
-      institution.setPhone(getIhPhones(ihInstitution));
-      institution.setHomepage(getIhHomepage(ihInstitution));
-
-      addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()));
-
-      return institution;
+    if (COUNTRY_LOOKUP.size() != countries.size()) {
+      log.warn("We couldn't match all the countries to our enum");
     }
   }
 
-  /** Converts an IH institution to a GrSciColl {@link Collection}. */
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class CollectionConverter {
-
-    private IHInstitution ihInstitution;
-    private Collection existing;
-
-    public CollectionConverter fromIHInstitution(IHInstitution ihInstitution) {
-      this.ihInstitution = ihInstitution;
-      return this;
-    }
-
-    public CollectionConverter withExisting(Collection existing) {
-      this.existing = existing;
-      return this;
-    }
-
-    public Collection convert() {
-      Collection collection = new Collection();
-
-      if (existing != null) {
-        try {
-          BeanUtils.copyProperties(collection, existing);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          log.warn("Couldn't copy collection properties from bean: {}", existing);
-        }
-      }
-
-      collection.setName(ihInstitution.getOrganization());
-      collection.setCode(ihInstitution.getCode());
-      collection.setIndexHerbariorumRecord(true);
-
-      setAddress(collection, ihInstitution);
-
-      collection.setEmail(getIhEmails(ihInstitution));
-      collection.setPhone(getIhPhones(ihInstitution));
-      collection.setHomepage(getIhHomepage(ihInstitution));
-
-      addIdentifierIfNotExists(collection, encodeIRN(ihInstitution.getIrn()));
-
-      return collection;
-    }
+  public static EntityConverter from(List<String> countries) {
+    return new EntityConverter(countries);
   }
 
-  /** Converts an IH staff to a GrSciColl {@link org.gbif.api.model.collections.Person}. */
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class PersonConverter {
+  @VisibleForTesting
+  void matchCountries(List<String> countries) {
+    Map<String, Country> titleLookup =
+        Maps.uniqueIndex(Lists.newArrayList(Country.values()), Country::getTitle);
 
-    private IHStaff ihStaff;
-    private Person existing;
+    countries.forEach(
+        c -> {
+          Country country = titleLookup.get(c);
 
-    public PersonConverter fromIHStaff(IHStaff ihStaff) {
-      this.ihStaff = ihStaff;
-      return this;
+          if (c.equalsIgnoreCase("U.K.") || c.equalsIgnoreCase("UK")) {
+            country = Country.UNITED_KINGDOM;
+          }
+          if (country == null) {
+            country = Country.fromIsoCode(c);
+          }
+          if (country == null) {
+            country = Country.fromIsoCode(c.replaceAll("\\.", ""));
+          }
+          if (country == null && c.contains(",")) {
+            country = titleLookup.get(c.split(",")[0]);
+          }
+          if (country == null) {
+            country =
+                Arrays.stream(Country.values())
+                    .filter(v -> c.contains(v.getTitle()))
+                    .findFirst()
+                    .orElse(null);
+          }
+          if (country == null) {
+            country =
+                Arrays.stream(Country.values())
+                    .filter(v -> v.getTitle().contains(c))
+                    .findFirst()
+                    .orElse(null);
+          }
+
+          if (country != null) {
+            COUNTRY_LOOKUP.put(c, country);
+          }
+        });
+  }
+
+  public Institution convertToInstitution(IHInstitution ihInstitution) {
+    return convertToInstitution(ihInstitution, null);
+  }
+
+  public Institution convertToInstitution(IHInstitution ihInstitution, Institution existing) {
+    Institution institution = new Institution();
+
+    if (existing != null) {
+      try {
+        BeanUtils.copyProperties(institution, existing);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        log.warn("Couldn't copy institution properties from bean: {}", existing);
+      }
     }
 
-    public PersonConverter withExisting(Person existing) {
-      this.existing = existing;
-      return this;
+    institution.setName(ihInstitution.getOrganization());
+    institution.setCode(ihInstitution.getCode());
+    institution.setIndexHerbariorumRecord(true);
+    institution.setNumberSpecimens(Math.toIntExact(ihInstitution.getSpecimenTotal()));
+    institution.setLatitude(
+        ihInstitution.getLocation() != null
+            ? BigDecimal.valueOf(ihInstitution.getLocation().getLat())
+            : null);
+    institution.setLongitude(
+        ihInstitution.getLocation() != null
+            ? BigDecimal.valueOf(ihInstitution.getLocation().getLon())
+            : null);
+
+    setAddress(institution, ihInstitution);
+    institution.setEmail(getIhEmails(ihInstitution));
+    institution.setPhone(getIhPhones(ihInstitution));
+    institution.setHomepage(getIhHomepage(ihInstitution));
+
+    addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()));
+
+    return institution;
+  }
+
+  public Collection convertToCollection(IHInstitution ihInstitution, Collection existing) {
+    Collection collection = new Collection();
+
+    if (existing != null) {
+      try {
+        BeanUtils.copyProperties(collection, existing);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        log.warn("Couldn't copy collection properties from bean: {}", existing);
+      }
     }
 
-    public Person convert() {
-      Person person = new Person();
+    collection.setName(ihInstitution.getOrganization());
+    collection.setCode(ihInstitution.getCode());
+    collection.setIndexHerbariorumRecord(true);
 
-      if (existing != null) {
-        try {
-          BeanUtils.copyProperties(person, existing);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-          log.warn("Couldn't copy person properties from bean: {}", existing);
-        }
+    setAddress(collection, ihInstitution);
+
+    collection.setEmail(getIhEmails(ihInstitution));
+    collection.setPhone(getIhPhones(ihInstitution));
+    collection.setHomepage(getIhHomepage(ihInstitution));
+
+    addIdentifierIfNotExists(collection, encodeIRN(ihInstitution.getIrn()));
+
+    return collection;
+  }
+
+  public Person convertToPerson(IHStaff ihStaff) {
+    return convertToPerson(ihStaff, null);
+  }
+
+  public Person convertToPerson(IHStaff ihStaff, Person existing) {
+    Person person = new Person();
+
+    if (existing != null) {
+      try {
+        BeanUtils.copyProperties(person, existing);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        log.warn("Couldn't copy person properties from bean: {}", existing);
       }
-
-      person.setFirstName(buildFirstName());
-      person.setLastName(ihStaff.getLastName());
-      person.setPosition(ihStaff.getPosition());
-
-      if (ihStaff.getContact() != null) {
-        person.setEmail(ihStaff.getContact().getEmail());
-        person.setPhone(ihStaff.getContact().getPhone());
-        person.setFax(ihStaff.getContact().getFax());
-      }
-
-      if (ihStaff.getAddress() != null) {
-        Address mailingAddress = new Address();
-        mailingAddress.setAddress(ihStaff.getAddress().getStreet());
-        mailingAddress.setCity(ihStaff.getAddress().getCity());
-        mailingAddress.setProvince(ihStaff.getAddress().getState());
-        mailingAddress.setPostalCode(ihStaff.getAddress().getZipCode());
-        mailingAddress.setCountry(TITLE_LOOKUP.get(ihStaff.getAddress().getCountry()));
-        person.setMailingAddress(mailingAddress);
-      }
-
-      addIdentifierIfNotExists(person, encodeIRN(ihStaff.getIrn()));
-
-      return person;
     }
 
-    private String buildFirstName() {
-      StringBuilder firstNameBuilder = new StringBuilder();
-      if (!Strings.isNullOrEmpty(ihStaff.getFirstName())) {
-        firstNameBuilder.append(ihStaff.getFirstName()).append(" ");
-      }
-      if (!Strings.isNullOrEmpty(ihStaff.getMiddleName())) {
-        firstNameBuilder.append(ihStaff.getMiddleName());
-      }
+    person.setFirstName(buildFirstName(ihStaff));
+    person.setLastName(ihStaff.getLastName());
+    person.setPosition(ihStaff.getPosition());
 
-      String firstName = firstNameBuilder.toString();
-      if (Strings.isNullOrEmpty(firstName)) {
-        return null;
-      }
-
-      return firstName.trim();
+    if (ihStaff.getContact() != null) {
+      person.setEmail(ihStaff.getContact().getEmail());
+      person.setPhone(ihStaff.getContact().getPhone());
+      person.setFax(ihStaff.getContact().getFax());
     }
+
+    if (ihStaff.getAddress() != null) {
+      Address mailingAddress = new Address();
+      mailingAddress.setAddress(ihStaff.getAddress().getStreet());
+      mailingAddress.setCity(ihStaff.getAddress().getCity());
+      mailingAddress.setProvince(ihStaff.getAddress().getState());
+      mailingAddress.setPostalCode(ihStaff.getAddress().getZipCode());
+      mailingAddress.setCountry(COUNTRY_LOOKUP.get(ihStaff.getAddress().getCountry()));
+      person.setMailingAddress(mailingAddress);
+    }
+
+    addIdentifierIfNotExists(person, encodeIRN(ihStaff.getIrn()));
+
+    return person;
+  }
+
+  private String buildFirstName(IHStaff ihStaff) {
+    StringBuilder firstNameBuilder = new StringBuilder();
+    if (!Strings.isNullOrEmpty(ihStaff.getFirstName())) {
+      firstNameBuilder.append(ihStaff.getFirstName()).append(" ");
+    }
+    if (!Strings.isNullOrEmpty(ihStaff.getMiddleName())) {
+      firstNameBuilder.append(ihStaff.getMiddleName());
+    }
+
+    String firstName = firstNameBuilder.toString();
+    if (Strings.isNullOrEmpty(firstName)) {
+      return null;
+    }
+
+    return firstName.trim();
   }
 
   private static void setAddress(Contactable contactable, IHInstitution ih) {
@@ -224,14 +215,14 @@ public class EntityConverter {
       physicalAddress.setCity(ih.getAddress().getPhysicalCity());
       physicalAddress.setProvince(ih.getAddress().getPhysicalState());
       physicalAddress.setPostalCode(ih.getAddress().getPhysicalZipCode());
-      physicalAddress.setCountry(TITLE_LOOKUP.get(ih.getAddress().getPhysicalCountry()));
+      physicalAddress.setCountry(COUNTRY_LOOKUP.get(ih.getAddress().getPhysicalCountry()));
 
       mailingAddress = new Address();
       mailingAddress.setAddress(ih.getAddress().getPostalStreet());
       mailingAddress.setCity(ih.getAddress().getPostalCity());
       mailingAddress.setProvince(ih.getAddress().getPostalState());
       mailingAddress.setPostalCode(ih.getAddress().getPostalZipCode());
-      mailingAddress.setCountry(TITLE_LOOKUP.get(ih.getAddress().getPostalCountry()));
+      mailingAddress.setCountry(COUNTRY_LOOKUP.get(ih.getAddress().getPostalCountry()));
     }
     contactable.setAddress(physicalAddress);
     contactable.setMailingAddress(mailingAddress);

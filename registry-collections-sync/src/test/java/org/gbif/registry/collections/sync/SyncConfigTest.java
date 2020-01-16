@@ -1,7 +1,5 @@
 package org.gbif.registry.collections.sync;
 
-import java.io.IOException;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -13,7 +11,7 @@ public class SyncConfigTest {
   private static final String CONFIG_TEST_PATH = "sync-config.yaml";
 
   @Test
-  public void loadConfigTest() throws IOException {
+  public void loadConfigTest() {
     String path = getClass().getClassLoader().getResource(CONFIG_TEST_PATH).getPath();
     SyncConfig config = SyncConfig.fromFileName(path).orElse(null);
 
@@ -23,5 +21,6 @@ public class SyncConfigTest {
     assertTrue(config.isSaveResultsToFile());
     assertTrue(config.isDryRun());
     assertTrue(config.isIgnoreConflicts());
+    assertNotNull(config.getNotification());
   }
 }

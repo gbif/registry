@@ -10,6 +10,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -18,6 +19,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,10 @@ public class IndexHerbariorumDiffFinderTest {
   private static final String IRN_TEST = "1";
   private static final String IRN_TEST_2 = "2";
 
+  private static final IssueFactory DEFAULT_ISSUE_FACTORY = IssueFactory.fromDefaults();
   private static final Function<String, List<IHStaff>> EMPTY_STAFF = (p) -> Collections.emptyList();
+  private static final EntityConverter ENTITY_CONVERTER =
+      EntityConverter.from(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"));
 
   @Test
   public void syncInstitutionsTest() {
@@ -62,8 +67,14 @@ public class IndexHerbariorumDiffFinderTest {
             .collect(Collectors.toList());
 
     DiffResult result =
-        IndexHerbariorumDiffFinder.syncIH(
-            ihInstitutions, EMPTY_STAFF, grSciCollInstitutions, Collections.emptyList());
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(ihInstitutions)
+            .ihStaffFetcher(EMPTY_STAFF)
+            .institutions(grSciCollInstitutions)
+            .issueFactory(DEFAULT_ISSUE_FACTORY)
+            .entityConverter(ENTITY_CONVERTER)
+            .build()
+            .find();
 
     assertEquals(1, result.getInstitutionsToCreate().size());
     assertEquals(1, result.getInstitutionsNoChange().size());
@@ -78,8 +89,7 @@ public class IndexHerbariorumDiffFinderTest {
     assertNotEquals(
         result.getInstitutionsToUpdate().get(0).getNewEntity(),
         result.getInstitutionsToUpdate().get(0).getOldEntity());
-    assertTrue(
-        result.getInstitutionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
+    assertTrue(result.getInstitutionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
   }
 
   @Test
@@ -101,11 +111,14 @@ public class IndexHerbariorumDiffFinderTest {
             .collect(Collectors.toList());
 
     DiffResult result =
-        IndexHerbariorumDiffFinder.syncIH(
-            ihInstitutions,
-            (p) -> Collections.emptyList(),
-            Collections.emptyList(),
-            grSciCollCollections);
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(ihInstitutions)
+            .ihStaffFetcher(EMPTY_STAFF)
+            .collections(grSciCollCollections)
+            .issueFactory(DEFAULT_ISSUE_FACTORY)
+            .entityConverter(ENTITY_CONVERTER)
+            .build()
+            .find();
 
     assertEquals(1, result.getCollectionsNoChange().size());
     assertEquals(1, result.getCollectionsToUpdate().size());
@@ -118,8 +131,7 @@ public class IndexHerbariorumDiffFinderTest {
     assertNotEquals(
         result.getCollectionsToUpdate().get(0).getNewEntity(),
         result.getCollectionsToUpdate().get(0).getOldEntity());
-    assertTrue(
-        result.getCollectionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
+    assertTrue(result.getCollectionsToUpdate().get(0).getNewEntity().isIndexHerbariorumRecord());
   }
 
   @Test
@@ -129,17 +141,21 @@ public class IndexHerbariorumDiffFinderTest {
     outdatedIh.setDateModified("2018-01-01");
 
     Institution upToDateInstitution = new Institution();
+    upToDateInstitution.setKey(UUID.randomUUID());
     upToDateInstitution.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
     upToDateInstitution
         .getIdentifiers()
         .add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     DiffResult result =
-        IndexHerbariorumDiffFinder.syncIH(
-            Collections.singletonList(outdatedIh),
-            EMPTY_STAFF,
-            Collections.singletonList(upToDateInstitution),
-            Collections.emptyList());
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(Collections.singletonList(outdatedIh))
+            .ihStaffFetcher(EMPTY_STAFF)
+            .institutions(Collections.singletonList(upToDateInstitution))
+            .issueFactory(DEFAULT_ISSUE_FACTORY)
+            .entityConverter(ENTITY_CONVERTER)
+            .build()
+            .find();
 
     assertEquals(1, result.getInstitutionConflicts().size());
   }
@@ -151,17 +167,21 @@ public class IndexHerbariorumDiffFinderTest {
     outdatedIh.setDateModified("2018-01-01");
 
     Collection upToDateCollection = new Collection();
+    upToDateCollection.setKey(UUID.randomUUID());
     upToDateCollection.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
     upToDateCollection
         .getIdentifiers()
         .add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     DiffResult result =
-        IndexHerbariorumDiffFinder.syncIH(
-            Collections.singletonList(outdatedIh),
-            EMPTY_STAFF,
-            Collections.emptyList(),
-            Collections.singletonList(upToDateCollection));
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(Collections.singletonList(outdatedIh))
+            .ihStaffFetcher(EMPTY_STAFF)
+            .collections(Collections.singletonList(upToDateCollection))
+            .issueFactory(DEFAULT_ISSUE_FACTORY)
+            .entityConverter(ENTITY_CONVERTER)
+            .build()
+            .find();
 
     assertEquals(1, result.getCollectionConflicts().size());
   }
@@ -176,24 +196,35 @@ public class IndexHerbariorumDiffFinderTest {
     ih2.setCode("B");
 
     Institution i1 = new Institution();
+    i1.setKey(UUID.randomUUID());
     i1.setCode("i1");
     i1.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     Institution i2 = new Institution();
+    i2.setKey(UUID.randomUUID());
     i2.setCode("i2");
     i2.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
     Collection c1 = new Collection();
+    c1.setKey(UUID.randomUUID());
     c1.setCode("c1");
     c1.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST_2)));
 
     Collection c2 = new Collection();
+    c2.setKey(UUID.randomUUID());
     c2.setCode("c2");
     c2.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST_2)));
 
     DiffResult result =
-        IndexHerbariorumDiffFinder.syncIH(
-            Arrays.asList(ih1, ih2), EMPTY_STAFF, Arrays.asList(i1, i2), Arrays.asList(c1, c2));
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(Arrays.asList(ih1, ih2))
+            .ihStaffFetcher(EMPTY_STAFF)
+            .institutions(Arrays.asList(i1, i2))
+            .collections(Arrays.asList(c1, c2))
+            .issueFactory(DEFAULT_ISSUE_FACTORY)
+            .entityConverter(ENTITY_CONVERTER)
+            .build()
+            .find();
 
     assertEquals(2, result.getConflicts().size());
   }
@@ -209,6 +240,7 @@ public class IndexHerbariorumDiffFinderTest {
 
   private TestEntity createInstitutionNoChange() {
     Institution i = new Institution();
+    i.setKey(UUID.randomUUID());
     i.setCode("bar");
     i.setName("bar");
     i.setIndexHerbariorumRecord(true);
@@ -226,6 +258,7 @@ public class IndexHerbariorumDiffFinderTest {
 
   private TestEntity createInstitutionToUpdate() {
     Institution i = new Institution();
+    i.setKey(UUID.randomUUID());
     i.setCode("UARK");
     i.setName("University of Arkansas OLD");
     i.setType(InstitutionType.HERBARIUM);
@@ -267,6 +300,7 @@ public class IndexHerbariorumDiffFinderTest {
 
   private TestEntity createCollectionNoChange() {
     Collection c = new Collection();
+    c.setKey(UUID.randomUUID());
     c.setCode("A");
     c.setIndexHerbariorumRecord(true);
     c.setEmail(Collections.singletonList("aa@aa.com"));
@@ -284,6 +318,7 @@ public class IndexHerbariorumDiffFinderTest {
 
   private TestEntity createCollectionToUpdate() {
     Collection c = new Collection();
+    c.setKey(UUID.randomUUID());
     c.setCode("B");
     c.setEmail(Collections.singletonList("bb@bb.com"));
     c.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, Utils.encodeIRN(IRN_TEST_2)));

@@ -25,13 +25,21 @@ public class SyncConfig {
   private String registryWsUser;
   private String registryWsPassword;
   private String ihWsUrl;
-  private String githubWsUrl;
-  private String githubUser;
-  private String githubPassword;
+  private NotificationConfig notification;
   private boolean saveResultsToFile;
   private boolean dryRun;
   private boolean ignoreConflicts;
-  private List<String> ghIssuesAssignees;
+
+  @Getter
+  @Setter
+  public static class NotificationConfig {
+    private String githubWsUrl;
+    private String githubUser;
+    private String githubPassword;
+    private String ihPortalUrl;
+    private String registryPortalUrl;
+    private List<String> ghIssuesAssignees;
+  }
 
   public static Optional<SyncConfig> fromFileName(String configFileName) {
     if (Strings.isNullOrEmpty(configFileName)) {
@@ -52,22 +60,30 @@ public class SyncConfig {
       return Optional.empty();
     }
 
-    // do some checks
+    // do some checks for required fields
     if (Strings.isNullOrEmpty(config.getRegistryWsUrl())
         || Strings.isNullOrEmpty(config.getIhWsUrl())) {
       throw new IllegalArgumentException("Registry and IH WS URLs are required");
     }
 
-    if (!config.isIgnoreConflicts()
-        && (Strings.isNullOrEmpty(config.getGithubUser())
-            || Strings.isNullOrEmpty(config.getGithubPassword()))) {
-      throw new IllegalArgumentException(
-          "Github credentials are required if we are not ignoring conflicts.");
-    }
+    if (!config.isIgnoreConflicts()) {
+      if (config.getNotification() == null) {
+        throw new IllegalArgumentException("Notification config is required");
+      }
 
-    if (!config.isIgnoreConflicts()
-        && (config.getGhIssuesAssignees() == null || config.getGhIssuesAssignees().isEmpty())) {
-      throw new IllegalArgumentException("Github assignees are required.");
+      if (Strings.isNullOrEmpty(config.getNotification().getGithubUser())
+          || Strings.isNullOrEmpty(config.getNotification().getGithubPassword())) {
+        throw new IllegalArgumentException(
+            "Github credentials are required if we are not ignoring conflicts.");
+      }
+      if (config.getNotification().getGhIssuesAssignees() == null
+          || config.getNotification().getGhIssuesAssignees().isEmpty()) {
+        throw new IllegalArgumentException("Github assignees are required.");
+      }
+      if (Strings.isNullOrEmpty(config.getNotification().registryPortalUrl)
+          || Strings.isNullOrEmpty(config.getNotification().ihPortalUrl)) {
+        throw new IllegalArgumentException("Portal URLs are required");
+      }
     }
 
     if (!config.isDryRun()

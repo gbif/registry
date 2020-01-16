@@ -24,7 +24,7 @@ public class DiffResult {
   private List<Institution> institutionsToCreate;
 
   @Singular(value = "institutionToUpdate")
-  private List<UpdateDiffResult<Institution>> institutionsToUpdate;
+  private List<EntityDiffResult<Institution>> institutionsToUpdate;
 
   @Singular(value = "institutionConflict")
   private List<Issue> institutionConflicts;
@@ -33,7 +33,7 @@ public class DiffResult {
   private List<Collection> collectionsNoChange;
 
   @Singular(value = "collectionToUpdate")
-  private List<UpdateDiffResult<Collection>> collectionsToUpdate;
+  private List<EntityDiffResult<Collection>> collectionsToUpdate;
 
   @Singular(value = "collectionConflict")
   private List<Issue> collectionConflicts;
@@ -56,7 +56,7 @@ public class DiffResult {
   @Data
   @AllArgsConstructor
   @Builder
-  public static class UpdateDiffResult<T extends CollectionEntity> {
+  public static class EntityDiffResult<T extends CollectionEntity> {
     private T oldEntity;
     private T newEntity;
     private StaffDiffResult staffDiffResult;

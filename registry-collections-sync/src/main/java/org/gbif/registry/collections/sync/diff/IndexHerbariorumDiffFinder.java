@@ -2,11 +2,13 @@ package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.Issue;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +18,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.registry.collections.sync.diff.DiffResult.UpdateDiffResult;
+import static org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
 
@@ -42,18 +44,23 @@ import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
  * and IH staff to resolve the differences.
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class IndexHerbariorumDiffFinder {
 
-  public static DiffResult syncIH(
-      List<IHInstitution> ihInstitutions,
-      Function<String, List<IHStaff>> ihStaffFetcher,
-      List<Institution> institutions,
-      List<Collection> collections) {
+  @NonNull private List<IHInstitution> ihInstitutions;
+  @NonNull private Function<String, List<IHStaff>> ihStaffFetcher;
+  private List<Institution> institutions;
+  private List<Collection> collections;
+  @NonNull private EntityConverter entityConverter;
+  @NonNull private IssueFactory issueFactory;
 
+  public DiffResult find() {
     DiffResult.DiffResultBuilder diffResult = DiffResult.builder();
-    List<Institution> institutionsCopy = new ArrayList<>(institutions);
-    List<Collection> collectionsCopy = new ArrayList<>(collections);
+    List<Institution> institutionsCopy =
+        institutions != null ? new ArrayList<>(institutions) : new ArrayList<>();
+    List<Collection> collectionsCopy =
+        collections != null ? new ArrayList<>(collections) : new ArrayList<>();
+
     for (IHInstitution ihInstitution : ihInstitutions) {
 
       // locate potential matches in GrSciColl
@@ -68,36 +75,20 @@ public class IndexHerbariorumDiffFinder {
         if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
           // add issue
           diffResult.institutionConflict(
-              Issue.createOutdatedIHInstitutionIssue(existing, ihInstitution));
+              issueFactory.createOutdatedIHInstitutionIssue(existing, ihInstitution));
           continue;
         }
 
         // we look for differences between entities
-        Institution institution =
-            EntityConverter.createInstitution()
-                .fromIHInstitution(ihInstitution)
-                .withExisting(existing)
-                .convert();
+        Institution institution = entityConverter.convertToInstitution(ihInstitution, existing);
+        EntityDiffResult<Institution> entityDiff =
+            checkEntityDiff(ihInstitution, institution, existing);
 
-        UpdateDiffResult.UpdateDiffResultBuilder<Institution> updateDiffBuilder =
-            UpdateDiffResult.builder();
-        if (!institution.lenientEquals(existing)) {
-          updateDiffBuilder.newEntity(institution).oldEntity(existing);
-        }
-
-        // look for differences in staff
-        log.info("Calling IH WS to get staff from institution {}", ihInstitution.getCode());
-        updateDiffBuilder.staffDiffResult(
-            StaffDiffFinder.syncStaff(
-                ihStaffFetcher.apply(ihInstitution.getCode()), institution.getContacts()));
-
-        UpdateDiffResult<Institution> updateDiff = updateDiffBuilder.build();
-        if (updateDiff.isEmpty()) {
+        if (entityDiff.isEmpty()) {
           diffResult.institutionNoChange(existing);
         } else {
-          diffResult.institutionToUpdate(updateDiff);
+          diffResult.institutionToUpdate(entityDiff);
         }
-
       } else if (match.onlyOneCollectionMatch()) {
         Collection existing = match.collections.iterator().next();
         log.info("Collection {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
@@ -105,44 +96,28 @@ public class IndexHerbariorumDiffFinder {
 
         if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
           diffResult.collectionConflict(
-              Issue.createOutdatedIHCollectionIssue(existing, ihInstitution));
+              issueFactory.createOutdatedIHInstitutionIssue(existing, ihInstitution));
           continue;
         }
 
         // we look for differences between entities
-        Collection collection =
-            EntityConverter.createCollection()
-                .fromIHInstitution(ihInstitution)
-                .withExisting(existing)
-                .convert();
+        Collection collection = entityConverter.convertToCollection(ihInstitution, existing);
+        EntityDiffResult<Collection> entityDiff =
+            checkEntityDiff(ihInstitution, collection, existing);
 
-        UpdateDiffResult.UpdateDiffResultBuilder<Collection> updateDiffBuilder =
-            UpdateDiffResult.builder();
-        if (!collection.lenientEquals(existing)) {
-          updateDiffBuilder.newEntity(collection).oldEntity(existing);
-        }
-
-        // look for differences in staff
-        updateDiffBuilder.staffDiffResult(
-            StaffDiffFinder.syncStaff(
-                ihStaffFetcher.apply(ihInstitution.getCode()), collection.getContacts()));
-
-        UpdateDiffResult<Collection> updateDiff = updateDiffBuilder.build();
-        if (updateDiff.isEmpty()) {
+        if (entityDiff.isEmpty()) {
           diffResult.collectionNoChange(existing);
         } else {
-          diffResult.collectionToUpdate(updateDiff);
+          diffResult.collectionToUpdate(entityDiff);
         }
-
       } else if (match.noMatches()) {
         log.info("New institution to create for IH: {}", ihInstitution.getCode());
         // create institution
-        Institution institution =
-            EntityConverter.createInstitution().fromIHInstitution(ihInstitution).convert();
+        Institution institution = entityConverter.convertToInstitution(ihInstitution);
 
         institution.setContacts(
             ihStaffFetcher.apply(ihInstitution.getCode()).stream()
-                .map(s -> EntityConverter.createPerson().fromIHStaff(s).convert())
+                .map(entityConverter::convertToPerson)
                 .collect(Collectors.toList()));
 
         diffResult.institutionToCreate(institution);
@@ -155,7 +130,7 @@ public class IndexHerbariorumDiffFinder {
             match.collections,
             ihInstitution.getOrganization());
 
-        diffResult.conflict(Issue.createConflict(match.getAllMatches(), ihInstitution));
+        diffResult.conflict(issueFactory.createConflict(match.getAllMatches(), ihInstitution));
         institutionsCopy.removeAll(match.institutions);
         collectionsCopy.removeAll(match.collections);
       }
@@ -165,14 +140,34 @@ public class IndexHerbariorumDiffFinder {
   }
 
   /** Filters the source to only those having the given ID. */
-  private static <T extends Identifiable> Set<T> filterById(List<T> source, String id) {
+  private <T extends Identifiable> Set<T> filterById(List<T> source, String id) {
     return source.stream()
         .filter(
             o -> o.getIdentifiers().stream().anyMatch(i -> Objects.equals(id, i.getIdentifier())))
         .collect(Collectors.toSet());
   }
 
-  private static Match findMatches(
+  private <T extends CollectionEntity & LenientEquals<T> & Contactable>
+      EntityDiffResult<T> checkEntityDiff(IHInstitution ihInstitution, T newEntity, T existing) {
+
+    EntityDiffResult.EntityDiffResultBuilder<T> updateDiffBuilder = EntityDiffResult.builder();
+    if (!newEntity.lenientEquals(existing)) {
+      updateDiffBuilder.newEntity(newEntity).oldEntity(existing);
+    }
+
+    // look for differences in staff
+    log.info("Syncing staff for IH institution {}", ihInstitution.getCode());
+    updateDiffBuilder.staffDiffResult(
+        StaffDiffFinder.syncStaff(
+            ihStaffFetcher.apply(ihInstitution.getCode()),
+            existing.getContacts(),
+            entityConverter,
+            issueFactory));
+
+    return updateDiffBuilder.build();
+  }
+
+  private Match findMatches(
       List<Institution> institutions, List<Collection> collections, String irn) {
     CompletableFuture<Set<Institution>> matchedInstitutionsFuture =
         CompletableFuture.supplyAsync(() -> filterById(institutions, irn));

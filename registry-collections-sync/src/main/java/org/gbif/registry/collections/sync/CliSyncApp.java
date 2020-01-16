@@ -2,14 +2,12 @@ package org.gbif.registry.collections.sync;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.registry.collections.sync.diff.DiffResult;
-import org.gbif.registry.collections.sync.diff.DiffResultExporter;
-import org.gbif.registry.collections.sync.diff.DiffResultHandler;
-import org.gbif.registry.collections.sync.diff.IndexHerbariorumDiffFinder;
+import org.gbif.registry.collections.sync.diff.*;
 import org.gbif.registry.collections.sync.grscicoll.GrSciCollHttpClient;
 import org.gbif.registry.collections.sync.ih.IHHttpClient;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.notification.GithubClient;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -56,8 +54,17 @@ public class CliSyncApp {
 
     // look for differences
     DiffResult diffResult =
-        IndexHerbariorumDiffFinder.syncIH(
-            ihInstitutions, ihHttpClient::getStaffByInstitution, institutions, collections);
+        IndexHerbariorumDiffFinder.builder()
+            .ihInstitutions(ihInstitutions)
+            .ihStaffFetcher(ihHttpClient::getStaffByInstitution)
+            .institutions(institutions)
+            .collections(collections)
+            .entityConverter(EntityConverter.from(ihHttpClient.getCountries()))
+            .issueFactory(IssueFactory.fromConfig(config.getNotification()))
+            .build()
+            .find();
+
+    log.info("Diff result: {}", diffResult);
 
     // handle results
     List<FailedAction> fails =
@@ -71,8 +78,6 @@ public class CliSyncApp {
 
     // add fails to result
     diffResult.setFailedActions(fails);
-
-    log.info("Diff result: {}", diffResult);
 
     // save results to a file
     if (config.isSaveResultsToFile()) {
