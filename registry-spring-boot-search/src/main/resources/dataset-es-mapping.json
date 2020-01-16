@@ -142,8 +142,7 @@
       "created": {"type": "date"},
       "modified": {"type": "date"},
       "deleted": {"type": "date"},
-      "pubDate": {"type": "date"},
-      "all": {"type": "text"}
+      "pubDate": {"type": "date"}
     }
 }
 }

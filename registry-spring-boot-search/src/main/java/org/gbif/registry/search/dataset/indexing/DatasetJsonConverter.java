@@ -71,6 +71,7 @@ public class DatasetJsonConverter {
     consumers.add(this::addTitles);
     consumers.add(this::addRecordCounts);
     consumers.add(this::enumTransforms);
+    consumers.add(this::addCountryContinent);
     occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
     nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
   }
