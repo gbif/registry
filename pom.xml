@@ -82,6 +82,7 @@
     <module>registry-spring-boot-ws-client</module>
     <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-mail</module>
+    <module>registry-spring-boot-search</module>
   </modules>
 
   <properties>
@@ -106,7 +107,7 @@
     <gbif-common-search.version>0.33</gbif-common-search.version>
     <gbif-postal-service.version>0.44.3-jackson2</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
-    <gbif-api.version>0.103.5-jackson2</gbif-api.version>
+    <gbif-api.version>0.103.9-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <solr.version>5.4.1</solr.version>
@@ -116,13 +117,22 @@
     <jjwt.version>0.9.1</jjwt.version>
     <guava.version>23.0</guava.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
-    <retrofit.version>2.5.0</retrofit.version>
+    <retrofit.version>2.7.1</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
     <mybatis.version>3.5.0</mybatis.version>
     <logback.version>1.2.3</logback.version>
     <janino.version>2.5.10</janino.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
+    <!-- es version -->
+    <elasticsearch.version>6.5.4</elasticsearch.version>
+
+    <!-- Caching -->
+    <cache2k.version>1.2.0.Final</cache2k.version>
+
+    <!-- Tools-->
+    <lombok.version>1.18.10</lombok.version>
+
     <!--    <postgresql.version>42.2.8</postgresql.version>-->
     <xmlunit.version>2.6.3</xmlunit.version>
     <greenmail.version>1.5.5</greenmail.version>
@@ -180,6 +190,14 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Tools -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
       <!-- Spring dependencies -->
       <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
@@ -579,6 +597,46 @@
             <artifactId>hadoop-common</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <!-- ES -->
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId> org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId> org.elasticsearch</groupId>
+        <artifactId>elasticsearch-core</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId> org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client-sniffer</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+
+
+      <!-- Caching -->
+      <dependency>
+        <groupId>org.cache2k</groupId>
+        <artifactId>cache2k-jcache</artifactId>
+        <version>${cache2k.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.cache2k</groupId>
+        <artifactId>cache2k-api</artifactId>
+        <version>${cache2k.version}</version>
       </dependency>
 
       <!-- Test dependencies -->
