@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -32,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +53,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static org.gbif.registry.ws.util.PredicateUtils.not;
@@ -78,20 +82,23 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * The messagePublisher can be optional.
    */
   private final MessagePublisher publisher;
-
-  // MyBatis mapper
   private final PipelineProcessMapper mapper;
   private final DatasetService datasetService;
+  private final ExecutorService executorService;
 
   public DefaultPipelinesHistoryTrackingService(
     @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
     @Autowired(required = false) MessagePublisher publisher,
     PipelineProcessMapper mapper,
-    @Lazy DatasetService datasetService) {
+    @Lazy DatasetService datasetService,
+    @Value("${pipelines.doAllThreads}") Integer threadPoolSize) {
     this.objectMapper = objectMapper;
     this.publisher = publisher;
     this.mapper = mapper;
     this.datasetService = datasetService;
+    this.executorService = Optional.ofNullable(threadPoolSize)
+      .map(Executors::newFixedThreadPool)
+      .orElse(Executors.newSingleThreadExecutor());
   }
 
   @Override
@@ -114,6 +121,15 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
    * Utility method to run batch jobs on all dataset elements
    */
   private void doOnAllDatasets(Consumer<UUID> onDataset, List<UUID> datasetsToExclude) {
+    Consumer<UUID> rerunFn = datasetKey -> {
+      try {
+        LOG.info("trying to rerun dataset {}", datasetKey);
+        onDataset.accept(datasetKey);
+      } catch (Exception ex) {
+        LOG.error("Error processing dataset {} while rerunning all datasets: {}", datasetKey, ex.getMessage());
+      }
+    };
+
     PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
 
     PagingResponse<Dataset> response;
@@ -122,15 +138,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       response.getResults().stream()
         .map(Dataset::getKey)
         .filter(not(datasetsToExclude::contains))
-        .forEach(
-          datasetKey -> {
-            try {
-              LOG.info("trying to rerun dataset {}", datasetKey);
-              onDataset.accept(datasetKey);
-            } catch (Exception ex) {
-              LOG.error("Error processing dataset {} while rerunning all datasets: {}", datasetKey, ex.getMessage());
-            }
-          });
+        .forEach(datasetKey -> CompletableFuture.runAsync(() -> rerunFn.accept(datasetKey), executorService));
       pagingRequest.addOffset(response.getResults().size());
     } while (!response.isEndOfRecords());
   }
@@ -179,7 +187,8 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       () ->
         doOnAllDatasets(
           datasetKey -> runLastAttempt(datasetKey, steps, reason, user, prefix),
-          datasetsToExclude));
+          datasetsToExclude),
+      executorService);
 
     return RunPipelineResponse.builder()
       .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
@@ -353,7 +362,13 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       (key, message) -> {
         message.setExecutionId(execution.getKey());
         try {
-          publisher.send(message);
+          if (message instanceof PipelinesInterpretedMessage || message instanceof PipelinesVerbatimMessage) {
+            String nextMessageClassName = message.getClass().getSimpleName();
+            String messagePayload = message.toString();
+            publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+          } else {
+            publisher.send(message);
+          }
         } catch (IOException ex) {
           LOG.warn("Error sending message", ex);
           stepsFailed.add(key);
