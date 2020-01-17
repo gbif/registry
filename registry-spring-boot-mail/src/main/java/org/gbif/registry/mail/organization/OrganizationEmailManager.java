@@ -12,6 +12,7 @@ import org.gbif.registry.domain.mail.OrganizationPasswordReminderTemplateDataMod
 import org.gbif.registry.domain.mail.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
+import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,6 @@ import java.util.UUID;
 @Service
 public class OrganizationEmailManager {
 
-  // TODO: 2019-08-22 move to ConfigurationProperties, add disable\enable functionality
   @Value("${organization.surety.helpdesk.email}")
   private String helpdeskEmail;
 
@@ -51,25 +51,19 @@ public class OrganizationEmailManager {
   @Value("${organization.surety.mail.urlTemplate.organization}")
   private String organizationUrlTemplate;
 
-  @Value("${mail.devemail.enabled}")
-  private boolean useDevEmail;
-
-  @Value("${mail.devemail.address}")
-  private String devEmail;
-
-  @Value("#{'${mail.cc}'.split('[,;]+')}")
-  private List<String> ccEmail;
-
   private final EmailTemplateProcessor emailTemplateProcessors;
+  private final MailConfigurationProperties mailConfigProperties;
 
   private static final String HELPDESK_NAME = "Helpdesk";
 
   /**
    * @param emailTemplateProcessors configured EmailTemplateProcessor
    */
-  public OrganizationEmailManager(@Qualifier("organizationEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors) {
+  public OrganizationEmailManager(@Qualifier("organizationEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors,
+                                  MailConfigurationProperties mailConfigProperties) {
     Objects.requireNonNull(emailTemplateProcessors, "emailTemplateProcessors shall be provided");
     this.emailTemplateProcessors = emailTemplateProcessors;
+    this.mailConfigProperties = mailConfigProperties;
   }
 
   /**
@@ -167,13 +161,14 @@ public class OrganizationEmailManager {
         organization,
         contact,
         emailAddress,
-        ccEmail);
+        mailConfigProperties.getCc());
     try {
       // if true, send mails to disposable email address service
-      if (useDevEmail) {
+      if (mailConfigProperties.getDevemail().getEnabled()) {
         baseEmailModel = emailTemplateProcessors.buildEmail(
           OrganizationEmailType.PASSWORD_REMINDER,
-          devEmail, templateDataModel,
+          mailConfigProperties.getDevemail().getAddress(),
+          templateDataModel,
           Locale.ENGLISH,
           organization.getTitle());
       } else {
@@ -182,7 +177,7 @@ public class OrganizationEmailManager {
           emailAddress,
           templateDataModel,
           Locale.ENGLISH,
-          ccEmail,
+          mailConfigProperties.getCc(),
           organization.getTitle());
       }
     } catch (TemplateException tEx) {
