@@ -27,10 +27,9 @@ identity:
 
 organization:
   surety:
-    helpdesk:
-      email: @mail.helpdesk@
     mail:
-      enable: false
+      enabled: false
+      helpdesk: @mail.helpdesk@
       urlTemplate:
         organization: https://www.demo.gbif-dev.org/publisher/{0}
         confirmOrganization: https://demo.gbif-dev.org/organization/confirm?key={0}&code={1}
