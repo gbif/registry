@@ -39,8 +39,8 @@ public class EntityConverter {
     COUNTRY_MANUAL_MAPPINGS.put("Alderney", Country.UNITED_KINGDOM);
     COUNTRY_MANUAL_MAPPINGS.put("Congo Republic (Congo-Brazzaville)", Country.CONGO);
     COUNTRY_MANUAL_MAPPINGS.put("Republic of Congo-Brazzaville", Country.CONGO);
-    COUNTRY_MANUAL_MAPPINGS.put("Democratic Republic of the Congo", Country.CONGO_DEMOCRATIC_REPUBLIC);
-    COUNTRY_MANUAL_MAPPINGS.put("Czech Republic", Country.CZECH_REPUBLIC);
+    COUNTRY_MANUAL_MAPPINGS.put(
+        "Democratic Republic of the Congo", Country.CONGO_DEMOCRATIC_REPUBLIC);
     COUNTRY_MANUAL_MAPPINGS.put("Italia", Country.ITALY);
     COUNTRY_MANUAL_MAPPINGS.put("Ivory Coast", Country.CÔTE_DIVOIRE);
     COUNTRY_MANUAL_MAPPINGS.put("Laos", Country.LAO);
@@ -48,8 +48,6 @@ public class EntityConverter {
     COUNTRY_MANUAL_MAPPINGS.put("Republic of South Korea", Country.KOREA_SOUTH);
     COUNTRY_MANUAL_MAPPINGS.put("São Tomé e Príncipe", Country.SAO_TOME_PRINCIPE);
     COUNTRY_MANUAL_MAPPINGS.put("Slovak Republic", Country.SLOVAKIA);
-    COUNTRY_MANUAL_MAPPINGS.put("Swaziland", Country.SWAZILAND);
-    COUNTRY_MANUAL_MAPPINGS.put("Vietnam", Country.VIETNAM);
   }
 
   private EntityConverter(List<String> countries) {
@@ -99,6 +97,13 @@ public class EntityConverter {
             country =
                 Arrays.stream(Country.values())
                     .filter(v -> v.getTitle().contains(c))
+                    .findFirst()
+                    .orElse(null);
+          }
+          if (country == null) {
+            country =
+                Arrays.stream(Country.values())
+                    .filter(v -> v.name().replaceAll("_", " ").equalsIgnoreCase(c))
                     .findFirst()
                     .orElse(null);
           }
