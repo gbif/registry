@@ -2,15 +2,8 @@
   "properties": [
     {
       "name": "mail.devemail.enabled",
-      "type": "java.lang.Boolean"
-    },
-    {
-      "name": "mail.smtp.host",
-      "type": "java.lang.String"
-    },
-    {
-      "name": "mail.smtp.port",
-      "type": "java.lang.Integer"
+      "type": "java.lang.Boolean",
+      "defaultValue": false
     },
     {
       "name": "mail.devemail.address",
@@ -18,17 +11,15 @@
     },
     {
       "name": "mail.cc",
-      "type": "java.lang.String",
-      "defaultValue": ""
+      "type": "java.util.List",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties",
+      "sourceMethod": "getCc()"
     },
     {
       "name": "mail.bcc",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "mail.from",
-      "type": "java.lang.String"
+      "type": "java.util.List",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties",
+      "sourceMethod": "getBcc()"
     },
     {
       "name": "jwt.signingKey",

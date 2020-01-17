@@ -1,11 +1,11 @@
 package org.gbif.registry.mail;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,6 @@ import javax.mail.internet.MimeMessage;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Allows to send {@link BaseEmailModel}
@@ -29,13 +28,12 @@ public class EmailSenderImpl implements EmailSender {
 
   private static final String HTML_CONTENT_TYPE = "text/html; charset=UTF-8";
 
-  @Value("#{'${mail.bcc}'.split('[,;]+')}")
-  private List<String> bcc;
-
   private final JavaMailSender mailSender;
+  private final MailConfigurationProperties mailConfigProperties;
 
-  public EmailSenderImpl(JavaMailSender mailSender) {
+  public EmailSenderImpl(JavaMailSender mailSender, MailConfigurationProperties mailConfigProperties) {
     this.mailSender = mailSender;
+    this.mailConfigProperties = mailConfigProperties;
   }
 
   /**
@@ -55,7 +53,7 @@ public class EmailSenderImpl implements EmailSender {
             msg.setRecipients(Message.RecipientType.CC,
               RegistryMailUtils.toInternetAddresses(emailModel.getCcAddress()).toArray(new Address[0]));
             msg.setRecipients(Message.RecipientType.BCC,
-              RegistryMailUtils.toInternetAddresses(bcc).toArray(new Address[0]));
+              RegistryMailUtils.toInternetAddresses(mailConfigProperties.getBcc()).toArray(new Address[0]));
             msg.setSubject(emailModel.getSubject());
             msg.setSentDate(new Date());
             msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
