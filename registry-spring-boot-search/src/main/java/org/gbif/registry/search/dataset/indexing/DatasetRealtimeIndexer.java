@@ -13,15 +13,19 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @AllArgsConstructor
+@Component
 public class DatasetRealtimeIndexer {
 
+  @Autowired
   private final RestHighLevelClient restHighLevelClient;
 
+  @Autowired
   private final DatasetJsonConverter datasetJsonConverter;
-
 
   /**
    * Creates or Updates asynchronously an existing dataset in ElasticSearch.
