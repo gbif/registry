@@ -76,7 +76,7 @@ public class DiffResultExporter {
 
       // Collections
       printSection(writer, "Collections No Change", diffResult.getCollectionsNoChange());
-      printSectionTitle(writer, "Collections to Update: " + diffResult.getCollectionsToUpdate());
+      printSectionTitle(writer, "Collections to Update: " + diffResult.getCollectionsToUpdate().size());
       for (EntityDiffResult<Collection> diff : diffResult.getCollectionsToUpdate()) {
         writer.write(LINE_STARTER);
         printWithNewLineAfter(writer, "UPDATE DIFF:");

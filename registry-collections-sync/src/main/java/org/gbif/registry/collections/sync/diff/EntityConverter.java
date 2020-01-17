@@ -303,11 +303,13 @@ public class EntityConverter {
 
   private static String getFirstString(String stringList) {
     if (stringList.contains(",")) {
-      return stringList.split(",")[0];
-    } else if (stringList.contains(";")) {
-      return stringList.split(";")[0];
-    } else if (stringList.contains("\n")) {
-      return stringList.split("\n")[0];
+      return stringList.split(",")[0].trim();
+    }
+    if (stringList.contains(";")) {
+      return stringList.split(";")[0].trim();
+    }
+    if (stringList.contains("\n")) {
+      return stringList.split("\n")[0].trim();
     }
     return stringList;
   }
