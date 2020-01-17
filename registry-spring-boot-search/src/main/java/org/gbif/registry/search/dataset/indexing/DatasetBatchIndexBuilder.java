@@ -3,9 +3,11 @@ package org.gbif.registry.search.dataset.indexing;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,29 +19,43 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 /**
  * A builder that will clear and build a new dataset index by paging over the given service.
  */
 @SpringBootApplication
 @Slf4j
-public class DatasetBatchIndexBuilder implements CommandLineRunner{
+@EnableConfigurationProperties
+@Component
+public class DatasetBatchIndexBuilder implements CommandLineRunner {
 
   // controls how many results we request while paging over the WS
   private static final int PAGE_SIZE = 100;
+
+  @Autowired
+  private GbifWsClient gbifWsClient;
+
+  @Autowired
+  private EsClient esClient;
+
+  @Autowired
+  private DatasetJsonConverter datasetJsonConverter;
 
   /**
    * Pages over all datasets and adds them to ElasticSearch.
@@ -48,18 +64,15 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner{
   public void run(String... args)  {
       log.info("Building a new Dataset index");
       Stopwatch stopwatch = Stopwatch.createStarted();
-      GbifWsClient gbifWsClient = GbifWsClient.create(args[0]);
-      EsClient esClient = new EsClient(args[1].split(","));
       String indexName  = "dataset_" + new Date().getTime();
       esClient.createIndex(indexName, IndexingConstants.DATASET_RECORD_TYPE, IndexingConstants.DEFAULT_INDEXING_SETTINGS, IndexingConstants.MAPPING_FILE);
 
       ExecutorService executor = Executors.newWorkStealingPool();
 
       List<CompletableFuture<BulkResponse>> jobs = new ArrayList<>();
-      DatasetJsonConverter datasetJsonConverter = DatasetJsonConverter.create(gbifWsClient);
 
       onAllDatasets(gbifWsClient, pagingResponse ->
-        jobs.add(CompletableFuture.supplyAsync(() -> index(pagingResponse, datasetJsonConverter,indexName,esClient),
+        jobs.add(CompletableFuture.supplyAsync(() -> index(pagingResponse, datasetJsonConverter, indexName, esClient),
                                                executor)));
 
       CompletableFuture.allOf(jobs.toArray(new CompletableFuture[]{}));
@@ -72,9 +85,13 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner{
       log.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
-  @SneakyThrows
-  private BulkResponse index(PagingResponse<Dataset> pagingResponse, DatasetJsonConverter datasetJsonConverter, String indexName, EsClient esClient) {
+  @Bean("apiMapper")
+  ObjectMapper objectMapper() {
+    return JacksonObjectMapper.get();
+  }
 
+  private BulkResponse index(PagingResponse<Dataset> pagingResponse, DatasetJsonConverter datasetJsonConverter, String indexName, EsClient esClient) {
+    try {
       BulkRequest bulkRequest = new BulkRequest();
       pagingResponse.getResults().forEach(dataset -> {
         ObjectNode jsonNode = datasetJsonConverter.convert(dataset);
@@ -87,6 +104,10 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner{
       // Batching updates to Es proves quicker with batches of 100 - 1000 showing similar performance
       log.info("Indexing {} datasets until at offset {}", pagingResponse.getLimit(), pagingResponse.getOffset());
       return esClient.bulk(bulkRequest);
+    } catch (Exception ex) {
+      log.error("Error indexing page", ex);
+      throw new RuntimeException(ex);
+    }
   }
 
   private static void onAllDatasets(GbifWsClient gbifWsClient, Consumer<PagingResponse<Dataset>> responseConsumer) {
@@ -98,6 +119,7 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner{
       response.setEndOfRecords(pagingResponse.isEndOfRecords());
       responseConsumer.accept(pagingResponse);
       page.nextPage();
+      return;
     } while (!response.isEndOfRecords());
 
   }

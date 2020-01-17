@@ -4,12 +4,8 @@ import org.gbif.api.model.checklistbank.DatasetMetrics;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.common.search.FacetedSearchRequest;
-import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.common.search.SearchRequest;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -21,35 +17,33 @@ import org.gbif.api.model.registry.Organization;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.AbstractMap;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import lombok.SneakyThrows;
+import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.*;
+import static org.gbif.registry.search.dataset.indexing.ws.SearchParameterProvider.getParameterFromFacetedRequest;
 
 /**
  * Retrofit {@link GbifApiService} client.
  */
+@Component
 public class GbifWsClient {
 
   //Uses a cache for installations to avoid too many external calls
@@ -65,22 +59,26 @@ public class GbifWsClient {
   private final GbifApiService gbifApiService;
 
 
-  private GbifWsClient(GbifApiService gbifApiService) {
-    this.gbifApiService = gbifApiService;
-  }
-
   /**
    * Factory method, only need the api base url.
    * @param apiBaseUrl GBIF Api base url, for example: https://api.gbif-dev.orf/v1/ .
    */
-  public static GbifWsClient create(String apiBaseUrl) {
-    ObjectMapper objectMapper = JacksonObjectMapper.get();
+  @Autowired
+  public GbifWsClient(@Value("${gbifApiBaseUrl}") String apiBaseUrl, @Qualifier("apiMapper") ObjectMapper objectMapper) {
+
+    OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+      .connectTimeout(2, TimeUnit.MINUTES)
+      .readTimeout(5, TimeUnit.MINUTES)
+      .writeTimeout(1, TimeUnit.MINUTES)
+      .build();
     Retrofit retrofit = new Retrofit.Builder()
       .baseUrl(apiBaseUrl)
       .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+      .client(okHttpClient)
       .build();
-    return new GbifWsClient(retrofit.create(GbifApiService.class));
+    gbifApiService = retrofit.create(GbifApiService.class);
   }
+
 
   public PagingResponse<Dataset> listDatasets(PagingRequest pagingRequest) {
     Map<String,String> params = new HashMap<>();
@@ -130,107 +128,14 @@ public class GbifWsClient {
   }
 
   public SearchResponse<NameUsage, NameUsageSearchParameter> speciesSearch(NameUsageSearchRequest searchRequest) {
-    return syncCallWithResponse(gbifApiService.speciesSearch(getParameterFromSearchRequest(searchRequest))).body();
+    return syncCallWithResponse(gbifApiService.speciesSearch(getParameterFromFacetedRequest(searchRequest))).body();
   }
 
   public SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(OccurrenceSearchRequest searchRequest) {
-    return syncCallWithResponse(gbifApiService.occurrenceSearch(getParameterFromSearchRequest(searchRequest))).body();
+    return syncCallWithResponse(gbifApiService.occurrenceSearch(getParameterFromFacetedRequest(searchRequest))).body();
   }
 
-  protected <P extends SearchParameter,R extends FacetedSearchRequest<P>> ProxyRetrofitQueryMap getParameterFromRequest(@Nullable R searchRequest) {
-    // The searchRequest is transformed in a parameter map
-    ProxyRetrofitQueryMap parameters = getParameterFromRequest(searchRequest);
 
-    if (searchRequest != null) {
-      parameters.put(PARAM_FACET_MULTISELECT, Boolean.toString(searchRequest.isMultiSelectFacets()));
-      if (searchRequest.getFacetMinCount() != null) {
-        parameters.put(PARAM_FACET_MINCOUNT, Integer.toString(searchRequest.getFacetMinCount()));
-      }
-      if (searchRequest.getFacetLimit() != null) {
-        parameters.put(PARAM_FACET_LIMIT, Integer.toString(searchRequest.getFacetLimit()));
-      }
-      if (searchRequest.getFacetOffset() != null) {
-        parameters.put(PARAM_FACET_OFFSET, Integer.toString(searchRequest.getFacetOffset()));
-      }
-      if (searchRequest.getFacets() != null) {
-        for (P facet : searchRequest.getFacets()) {
-          parameters.put(PARAM_FACET, facet.name());
-          Pageable facetPage = searchRequest.getFacetPage(facet);
-          if (facetPage != null) {
-            parameters.put(facet.name() + '.' + PARAM_FACET_OFFSET, Long.toString(facetPage.getOffset()));
-            parameters.put(facet.name() + '.' + PARAM_FACET_LIMIT, Long.toString(facetPage.getLimit()));
-          }
-        }
-      }
-    }
-
-    return parameters;
-  }
-
-  protected <P extends SearchParameter> ProxyRetrofitQueryMap getParameterFromSearchRequest(@Nullable SearchRequest<P> searchRequest) {
-
-    // The searchRequest is transformed in a parameter map
-    ProxyRetrofitQueryMap parameters = new ProxyRetrofitQueryMap();
-
-    if (searchRequest == null) {
-      parameters.put(PARAM_QUERY_STRING, DEFAULT_SEARCH_PARAM_VALUE);
-
-    } else {
-      String searchParamValue = searchRequest.getQ();
-      if (Strings.isNullOrEmpty(searchParamValue)) {
-        searchParamValue = DEFAULT_SEARCH_PARAM_VALUE;
-      }
-      parameters.put(PARAM_QUERY_STRING, searchParamValue);
-      parameters.put(PARAM_HIGHLIGHT, Boolean.toString(searchRequest.isHighlight()));
-      parameters.put(PARAM_SPELLCHECK, Boolean.toString(searchRequest.isSpellCheck()));
-      parameters.put(PARAM_SPELLCHECK_COUNT,Integer.toString(searchRequest.getSpellCheckCount()));
-
-      Multimap<P, String> requestParameters = searchRequest.getParameters();
-      if (requestParameters != null) {
-        for (P param : requestParameters.keySet()) {
-          parameters.put(param.name(), Lists.newArrayList(requestParameters.get(param)));
-        }
-      }
-    }
-    return parameters;
-  }
-
-  public class ProxyRetrofitQueryMap extends HashMap<String, Object> {
-    public ProxyRetrofitQueryMap() {
-      super(new HashMap<>());
-    }
-
-    @Override
-    public Set<Entry<String, Object>> entrySet() {
-      Set<Entry<String, Object>> originSet = super.entrySet();
-      Set<Entry<String, Object>> newSet = new HashSet<>();
-
-      for (Entry<String, Object> entry : originSet) {
-        String entryKey = entry.getKey();
-        if (entryKey == null) {
-          throw new IllegalArgumentException("Query map contained null key.");
-        }
-        Object entryValue = entry.getValue();
-        if (entryValue == null) {
-          throw new IllegalArgumentException(
-            "Query map contained null value for key '" + entryKey + "'.");
-        }
-        else if(entryValue instanceof List) {
-          for(Object arrayValue:(List)entryValue)  {
-            if (arrayValue != null) { // Skip null values
-              Entry<String, Object> newEntry = new AbstractMap.SimpleEntry<>(entryKey, arrayValue);
-              newSet.add(newEntry);
-            }
-          }
-        }
-        else {
-          Entry<String, Object> newEntry = new AbstractMap.SimpleEntry<>(entryKey, entryValue);
-          newSet.add(newEntry);
-        }
-      }
-      return newSet;
-    }
-  }
 
   /**
    * Performs a synchronous call to {@link Call} instance.

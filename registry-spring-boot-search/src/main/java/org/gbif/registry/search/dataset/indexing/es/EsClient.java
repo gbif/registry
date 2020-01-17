@@ -24,16 +24,21 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Generic ElasticSearch wrapper client to encapsulate indexing and admin operations.
  */
+@Component
 public class EsClient implements Closeable {
 
   private RestHighLevelClient restHighLevelClient;
 
-  public EsClient(String...hosts) {
-    restHighLevelClient = provideEsClient(hosts);
+  @Autowired
+  public EsClient(@Value("${esHosts}") String hosts) {
+    restHighLevelClient = provideEsClient(hosts.split(","));
   }
 
   /**
@@ -96,7 +101,7 @@ public class EsClient implements Closeable {
   /**
    * Creates ElasticSearch client using default connection settings.
    */
-  public static RestHighLevelClient provideEsClient(String...hostsUrl) {
+  public static RestHighLevelClient provideEsClient(String[]hostsUrl) {
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
     int i = 0;
     for (String host : hostsUrl) {
