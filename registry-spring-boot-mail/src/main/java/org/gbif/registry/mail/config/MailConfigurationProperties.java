@@ -39,4 +39,27 @@ public class MailConfigurationProperties {
   public void setBcc(List<String> bcc) {
     this.bcc = bcc;
   }
+
+  public static class DevemailProperties {
+
+    private Boolean enabled = Boolean.FALSE;
+
+    private String address;
+
+    public Boolean getEnabled() {
+      return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+      this.enabled = enabled;
+    }
+
+    public String getAddress() {
+      return address;
+    }
+
+    public void setAddress(String address) {
+      this.address = address;
+    }
+  }
 }

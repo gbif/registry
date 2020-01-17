@@ -13,8 +13,8 @@ import org.gbif.registry.domain.mail.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
+import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -39,20 +39,9 @@ import java.util.UUID;
 @Service
 public class OrganizationEmailManager {
 
-  @Value("${organization.surety.helpdesk.email}")
-  private String helpdeskEmail;
-
-  @Value("${organization.surety.mail.enable}")
-  private boolean isEmailEnabled;
-
-  @Value("${organization.surety.mail.urlTemplate.confirmOrganization}")
-  private String endorsementUrlTemplate;
-
-  @Value("${organization.surety.mail.urlTemplate.organization}")
-  private String organizationUrlTemplate;
-
   private final EmailTemplateProcessor emailTemplateProcessors;
   private final MailConfigurationProperties mailConfigProperties;
+  private final OrganizationSuretyMailConfigurationProperties organizationMailConfigProperties;
 
   private static final String HELPDESK_NAME = "Helpdesk";
 
@@ -60,10 +49,12 @@ public class OrganizationEmailManager {
    * @param emailTemplateProcessors configured EmailTemplateProcessor
    */
   public OrganizationEmailManager(@Qualifier("organizationEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors,
-                                  MailConfigurationProperties mailConfigProperties) {
+                                  MailConfigurationProperties mailConfigProperties,
+                                  OrganizationSuretyMailConfigurationProperties organizationMailConfigProperties) {
     Objects.requireNonNull(emailTemplateProcessors, "emailTemplateProcessors shall be provided");
     this.emailTemplateProcessors = emailTemplateProcessors;
     this.mailConfigProperties = mailConfigProperties;
+    this.organizationMailConfigProperties = organizationMailConfigProperties;
   }
 
   /**
@@ -86,7 +77,7 @@ public class OrganizationEmailManager {
     Optional<String> nodeManagerEmailAddress = Optional.ofNullable(nodeManager).map(Person::getEmail);
 
     String name = HELPDESK_NAME;
-    String emailAddress = helpdeskEmail;
+    String emailAddress = organizationMailConfigProperties.getHelpdesk();
     // do we have an email to contact the node manager ?
     if (nodeManagerEmailAddress.isPresent()) {
       name = Optional.ofNullable(StringUtils.trimToNull(
@@ -102,11 +93,14 @@ public class OrganizationEmailManager {
       OrganizationTemplateDataModel templateDataModel = OrganizationTemplateDataModel
         .buildEndorsementModel(name, endorsementUrl, newOrganization, endorsingNode, nodeManagerEmailAddress.isPresent());
 
-      baseEmailModel = emailTemplateProcessors.buildEmail(OrganizationEmailType.NEW_ORGANIZATION, emailAddress, templateDataModel, Locale.ENGLISH,
+      baseEmailModel = emailTemplateProcessors.buildEmail(
+        OrganizationEmailType.NEW_ORGANIZATION,
+        emailAddress, templateDataModel,
+        Locale.ENGLISH,
         //CC helpdesk unless we are sending the email to helpdesk
         Optional.ofNullable(emailAddress)
-          .filter(e -> !e.equals(helpdeskEmail))
-          .map(e -> Collections.singletonList(helpdeskEmail)).orElse(null));
+          .filter(e -> !e.equals(organizationMailConfigProperties.getHelpdesk()))
+          .map(e -> Collections.singletonList(organizationMailConfigProperties.getHelpdesk())).orElse(null));
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
@@ -121,7 +115,8 @@ public class OrganizationEmailManager {
    * @param endorsingNode
    * @return the list of {@link BaseEmailModel} to send.
    */
-  public List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization, Node endorsingNode) throws IOException {
+  public List<BaseEmailModel> generateOrganizationEndorsedEmailModel(Organization newOrganization,
+                                                                     Node endorsingNode) throws IOException {
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
     URL organizationUrl = generateOrganizationUrl(newOrganization.getKey());
 
@@ -129,7 +124,12 @@ public class OrganizationEmailManager {
       buildEndorsedModel(HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
 
     try {
-      baseEmailModelList.add(emailTemplateProcessors.buildEmail(OrganizationEmailType.ENDORSEMENT_CONFIRMATION, helpdeskEmail, templateDataModel, Locale.ENGLISH));
+      baseEmailModelList.add(
+        emailTemplateProcessors.buildEmail(
+          OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
+          organizationMailConfigProperties.getHelpdesk(),
+          templateDataModel,
+          Locale.ENGLISH));
 
       Optional<Contact> pointOfContact = newOrganization.getContacts()
         .stream()
@@ -144,7 +144,12 @@ public class OrganizationEmailManager {
         templateDataModel = OrganizationTemplateDataModel.
           buildEndorsedModel(pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
             newOrganization, organizationUrl, endorsingNode);
-        baseEmailModelList.add(emailTemplateProcessors.buildEmail(OrganizationEmailType.ENDORSEMENT_CONFIRMATION, pointOfContactEmail.get(), templateDataModel, Locale.ENGLISH));
+        baseEmailModelList.add(
+          emailTemplateProcessors.buildEmail(
+            OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
+            pointOfContactEmail.get(),
+            templateDataModel,
+            Locale.ENGLISH));
       }
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
@@ -152,7 +157,9 @@ public class OrganizationEmailManager {
     return baseEmailModelList;
   }
 
-  public BaseEmailModel generateOrganizationPasswordReminderEmailModel(Organization organization, Contact contact, String emailAddress) throws IOException {
+  public BaseEmailModel generateOrganizationPasswordReminderEmailModel(Organization organization,
+                                                                       Contact contact,
+                                                                       String emailAddress) throws IOException {
     BaseEmailModel baseEmailModel;
     OrganizationPasswordReminderTemplateDataModel templateDataModel =
       new OrganizationPasswordReminderTemplateDataModel(
@@ -191,13 +198,20 @@ public class OrganizationEmailManager {
    * Generates (from a url template) the URL to visit an organization page.
    */
   private URL generateOrganizationUrl(UUID organizationKey) throws MalformedURLException {
-    return new URL(MessageFormat.format(organizationUrlTemplate, organizationKey.toString()));
+    return new URL(
+      MessageFormat.format(
+        organizationMailConfigProperties.getUrlTemplate().getOrganization(),
+        organizationKey.toString()));
   }
 
   /**
    * Generates (from a url template) the URL to visit in order to endorse an organization.
    */
   private URL generateEndorsementUrl(UUID organizationKey, UUID confirmationKey) throws MalformedURLException {
-    return new URL(MessageFormat.format(endorsementUrlTemplate, organizationKey.toString(), confirmationKey.toString()));
+    return new URL(
+      MessageFormat.format(
+        organizationMailConfigProperties.getUrlTemplate().getConfirmOrganization(),
+        organizationKey.toString(),
+        confirmationKey.toString()));
   }
 }
