@@ -8,6 +8,7 @@ import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -20,9 +21,7 @@ public class IssueFactory {
 
   private static final String IH_OUTDATED_TITLE = "The IH %s with IRN %s is outdated";
   private static final String ENTITY_CONFLICT_TITLE =
-      "IH institution with IRN %s matches with multiple GrSciColl entities";
-  private static final String STAFF_CONFLICT_TITLE =
-      "IH staff with IRN %s matches with multiple GrSciColl person";
+      "IH %s with IRN %s matches with multiple GrSciColl entities";
   private static final String NEW_LINE = "\n";
   private static final String CODE_SEPARATOR = "```";
   private static final List<String> DEFAULT_LABELS =
@@ -98,11 +97,14 @@ public class IssueFactory {
             createLink(grSciCollEntity.getKey().toString(), getRegistryEntityType(grSciCollEntity)))
         .append(" in GrSciColl:")
         .append(formatEntity(grSciCollEntity.toString()))
-        .append(
-            "Please check which one should remain and sync them in both systems. Remember to sync the associated staff too.");
+        .append("Please check which one should remain and sync them in both systems.");
+
+    if (entityType != EntityType.IH_STAFF) {
+      body.append(" Remember to sync the associated staff too.");
+    }
 
     return Issue.builder()
-        .title(String.format(IH_OUTDATED_TITLE, entityType, irn))
+        .title(String.format(IH_OUTDATED_TITLE, entityType.title, irn))
         .body(body.toString())
         .assignees(config.getGhIssuesAssignees())
         .labels(DEFAULT_LABELS)
@@ -110,42 +112,37 @@ public class IssueFactory {
   }
 
   public Issue createConflict(List<CollectionEntity> entities, IHInstitution ihInstitution) {
+    return createConflict(
+        entities, ihInstitution.getIrn(), ihInstitution.toString(), EntityType.IH_INSTITUTION);
+  }
+
+  public Issue createStaffConflict(Set<Person> persons, IHStaff ihStaff) {
+    return createConflict(
+        persons != null ? new ArrayList<>(persons) : Collections.emptyList(),
+        ihStaff.getIrn(),
+        ihStaff.toString(),
+        EntityType.IH_STAFF);
+  }
+
+  private Issue createConflict(
+      List<CollectionEntity> entities, String irn, String entityAsString, EntityType ihEntityType) {
     // create body
     StringBuilder body = new StringBuilder();
     body.append("The IH ")
-        .append(createLink(ihInstitution.getIrn(), EntityType.IH_INSTITUTION))
+        .append(createLink(irn, ihEntityType))
         .append(":")
-        .append(formatEntity(ihInstitution.toString()))
+        .append(formatEntity(entityAsString))
         .append("have multiple candidates in GrSciColl: " + NEW_LINE);
     entities.forEach(
-        e -> {
-          body.append(createLink(e.getKey().toString(), getRegistryEntityType(e)));
-          body.append(formatEntity(e.toString()));
-        });
-    body.append(
-        "A IH institution should be associated to only one GrSciColl entity. Please resolve the conflict.");
+        e ->
+            body.append(createLink(e.getKey().toString(), getRegistryEntityType(e), true))
+                .append(formatEntity(e.toString())));
+    body.append("A IH ")
+        .append(ihEntityType.title)
+        .append(" should be associated to only one GrSciColl entity. Please resolve the conflict.");
 
     return Issue.builder()
-        .title(String.format(ENTITY_CONFLICT_TITLE, ihInstitution.getIrn()))
-        .body(body.toString())
-        .assignees(config.getGhIssuesAssignees())
-        .labels(DEFAULT_LABELS)
-        .build();
-  }
-
-  public Issue createMultipleStaffIssue(Set<Person> persons, IHStaff ihStaff) {
-    // create body
-    StringBuilder body = new StringBuilder();
-    body.append("The IH staff: ")
-        .append(formatEntity(ihStaff.toString()))
-        .append("is associated to all the following GrSciColl persons: ")
-        .append(NEW_LINE);
-    persons.forEach(p -> body.append(formatEntity(p.toString())));
-    body.append(
-        "A IH staff should be associated to only one GrSciColl person. Please resolve the conflict.");
-
-    return Issue.builder()
-        .title(String.format(STAFF_CONFLICT_TITLE, ihStaff.getIrn()))
+        .title(String.format(ENTITY_CONFLICT_TITLE, ihEntityType.title, irn))
         .body(body.toString())
         .assignees(config.getGhIssuesAssignees())
         .labels(DEFAULT_LABELS)
@@ -157,7 +154,11 @@ public class IssueFactory {
   }
 
   private String createLink(String id, EntityType entityType) {
-    String linkTemplate = null;
+    return createLink(id, entityType, false);
+  }
+
+  private String createLink(String id, EntityType entityType, boolean omitText) {
+    String linkTemplate;
     if (entityType == EntityType.IH_INSTITUTION) {
       linkTemplate = ihInstitutionLink;
     } else if (entityType == EntityType.IH_STAFF) {
@@ -171,8 +172,9 @@ public class IssueFactory {
     }
 
     URI uri = URI.create(String.format(linkTemplate, id));
+    String text = omitText ? uri.toString() : entityType.title;
 
-    return "[" + entityType.name().toLowerCase() + "](" + uri.toString() + ")";
+    return "[" + text + "](" + uri.toString() + ")";
   }
 
   private EntityType getRegistryEntityType(CollectionEntity entity) {
@@ -186,10 +188,16 @@ public class IssueFactory {
   }
 
   private enum EntityType {
-    IH_INSTITUTION,
-    IH_STAFF,
-    INSTITUTION,
-    COLLECTION,
-    PERSON;
+    IH_INSTITUTION("institution"),
+    IH_STAFF("staff"),
+    INSTITUTION("institution"),
+    COLLECTION("collection"),
+    PERSON("person");
+
+    String title;
+
+    EntityType(String title) {
+      this.title = title;
+    }
   }
 }

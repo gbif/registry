@@ -71,17 +71,18 @@ public class SyncConfig {
         throw new IllegalArgumentException("Notification config is required");
       }
 
+      if (!config.getNotification().getGithubWsUrl().endsWith("/")) {
+        throw new IllegalArgumentException(
+          "Github API URL must finish with a /.");
+      }
+
       if (Strings.isNullOrEmpty(config.getNotification().getGithubUser())
           || Strings.isNullOrEmpty(config.getNotification().getGithubPassword())) {
         throw new IllegalArgumentException(
             "Github credentials are required if we are not ignoring conflicts.");
       }
-      if (config.getNotification().getGhIssuesAssignees() == null
-          || config.getNotification().getGhIssuesAssignees().isEmpty()) {
-        throw new IllegalArgumentException("Github assignees are required.");
-      }
-      if (Strings.isNullOrEmpty(config.getNotification().registryPortalUrl)
-          || Strings.isNullOrEmpty(config.getNotification().ihPortalUrl)) {
+      if (Strings.isNullOrEmpty(config.getNotification().getRegistryPortalUrl())
+          || Strings.isNullOrEmpty(config.getNotification().getIhPortalUrl())) {
         throw new IllegalArgumentException("Portal URLs are required");
       }
     }

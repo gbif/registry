@@ -11,10 +11,7 @@ import org.gbif.registry.collections.sync.notification.IssueFactory;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
@@ -27,8 +24,9 @@ import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
-/** Tests the {@link] StaffDiffFinder}. */
+/** Tests the {@link StaffDiffFinder}. */
 public class StaffDiffFinderTest {
 
   private static final IssueFactory DEFAULT_ISSUE_FACTORY = IssueFactory.fromDefaults();
@@ -144,13 +142,86 @@ public class StaffDiffFinderTest {
     assertEquals(1, result.getConflicts().size());
   }
 
+  @Test
+  public void matchWithFieldsTest() {
+    // IH Staff
+    IHStaff s = new IHStaff();
+    s.setFirstName("First");
+    s.setMiddleName("M.");
+    s.setLastName("Last");
+    s.setPosition("Manager");
+
+    IHStaff.Address ihAddress = new IHStaff.Address();
+    ihAddress.setStreet("");
+    ihAddress.setCity("Fayetteville");
+    ihAddress.setState("AR");
+    ihAddress.setCountry("U.S.A.");
+    ihAddress.setZipCode("72701");
+    s.setAddress(ihAddress);
+
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setPhone("[1] 479 575 4372");
+    contact.setEmail("a@a.com");
+    s.setContact(contact);
+
+    // GrSciColl persons
+    Person p1 = new Person();
+    p1.setFirstName("First M.");
+    p1.setEmail("a@a.com");
+
+    Person p2 = new Person();
+    p2.setPosition("Manager");
+    Address address = new Address();
+    address.setCountry(Country.UNITED_STATES);
+    p2.setMailingAddress(address);
+
+    // When
+    Set<Person> persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+
+    // Expect
+    assertEquals(1, persons.size());
+    assertTrue(persons.contains(p1));
+
+    // GrSciColl persons
+    p1 = new Person();
+    p1.setFirstName("First");
+
+    p2 = new Person();
+    p2.setPosition("Manager");
+    address = new Address();
+    address.setCountry(Country.UNITED_STATES);
+    p2.setMailingAddress(address);
+
+    // When
+    persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+
+    // Expect
+    assertEquals(1, persons.size());
+    assertTrue(persons.contains(p1));
+
+    // GrSciColl persons
+    p1 = new Person();
+    p1.setFirstName("Fir");
+    p1.setPosition("Manager");
+
+    p2 = new Person();
+    p2.setLastName("Last");
+
+    // When
+    persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+
+    // Expect
+    assertEquals(1, persons.size());
+    assertTrue(persons.contains(p2));
+  }
+
   private TestStaff createTestStaffToUpdate() {
     Person p = new Person();
     p.setKey(UUID.randomUUID());
-    p.setFirstName("Johnnie L. Gentry");
+    p.setFirstName("First M. Last");
     p.setPosition("Director");
     p.setPhone("[1] 479/575-4372");
-    p.setEmail("gentry@uark.edu");
+    p.setEmail("a@uark.edu");
     Address mailingAddress = new Address();
     mailingAddress.setCity("FAYETTEVILLE");
     mailingAddress.setProvince("Arkansas");
@@ -159,9 +230,9 @@ public class StaffDiffFinderTest {
 
     IHStaff s = new IHStaff();
     s.setCode("UARK");
-    s.setLastName("Gentry");
-    s.setMiddleName("L.");
-    s.setFirstName("Johnnie");
+    s.setLastName("Last");
+    s.setMiddleName("M.");
+    s.setFirstName("First");
     s.setPosition("Professor Emeritus");
 
     IHStaff.Address address = new IHStaff.Address();
@@ -172,7 +243,7 @@ public class StaffDiffFinderTest {
     s.setAddress(address);
 
     IHStaff.Contact contact = new IHStaff.Contact();
-    contact.setEmail("gentry@uark.edu");
+    contact.setEmail("a@uark.edu");
     s.setContact(contact);
 
     return TestStaff.builder().person(p).ihStaff(s).build();
@@ -203,9 +274,9 @@ public class StaffDiffFinderTest {
   private TestStaff createTestStaffToCreate() {
     IHStaff s = new IHStaff();
     s.setCode("UARK");
-    s.setLastName("Ogle");
-    s.setMiddleName("D.");
-    s.setFirstName("Jennifer");
+    s.setLastName("Last");
+    s.setMiddleName("M.");
+    s.setFirstName("First");
     s.setPosition("Collections Manager");
 
     IHStaff.Address address = new IHStaff.Address();
@@ -218,7 +289,7 @@ public class StaffDiffFinderTest {
 
     IHStaff.Contact contact = new IHStaff.Contact();
     contact.setPhone("[1] 479 575 4372");
-    contact.setEmail("jogle@uark.edu");
+    contact.setEmail("a@uark.edu");
     s.setContact(contact);
 
     return TestStaff.builder().ihStaff(s).build();

@@ -39,8 +39,8 @@ public class GithubClient {
     this.assignees = assignees;
   }
 
-  public static GithubClient create(String grSciCollWsUrl, String user, String password) {
-    return new GithubClient(grSciCollWsUrl, user, password, null);
+  public static GithubClient create(String githubWsUrl, String user, String password) {
+    return new GithubClient(githubWsUrl, user, password, null);
   }
 
   public static GithubClient create(SyncConfig syncConfig) {

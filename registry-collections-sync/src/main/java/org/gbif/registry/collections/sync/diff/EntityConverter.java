@@ -29,12 +29,33 @@ import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 public class EntityConverter {
 
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
-  private static final Map<String, Country> COUNTRY_LOOKUP = new HashMap<>();
+  private static final Map<String, Country> COUNTRY_MANUAL_MAPPINGS = new HashMap<>();
+  private final Map<String, Country> countryLookup;
+
+  static {
+    COUNTRY_MANUAL_MAPPINGS.put("U.K.", Country.UNITED_KINGDOM);
+    COUNTRY_MANUAL_MAPPINGS.put("UK", Country.UNITED_KINGDOM);
+    COUNTRY_MANUAL_MAPPINGS.put("Scotland", Country.UNITED_KINGDOM);
+    COUNTRY_MANUAL_MAPPINGS.put("Alderney", Country.UNITED_KINGDOM);
+    COUNTRY_MANUAL_MAPPINGS.put("Congo Republic (Congo-Brazzaville)", Country.CONGO);
+    COUNTRY_MANUAL_MAPPINGS.put("Republic of Congo-Brazzaville", Country.CONGO);
+    COUNTRY_MANUAL_MAPPINGS.put("Democratic Republic of the Congo", Country.CONGO_DEMOCRATIC_REPUBLIC);
+    COUNTRY_MANUAL_MAPPINGS.put("Czech Republic", Country.CZECH_REPUBLIC);
+    COUNTRY_MANUAL_MAPPINGS.put("Italia", Country.ITALY);
+    COUNTRY_MANUAL_MAPPINGS.put("Ivory Coast", Country.CÔTE_DIVOIRE);
+    COUNTRY_MANUAL_MAPPINGS.put("Laos", Country.LAO);
+    COUNTRY_MANUAL_MAPPINGS.put("Republic of Korea", Country.KOREA_SOUTH);
+    COUNTRY_MANUAL_MAPPINGS.put("Republic of South Korea", Country.KOREA_SOUTH);
+    COUNTRY_MANUAL_MAPPINGS.put("São Tomé e Príncipe", Country.SAO_TOME_PRINCIPE);
+    COUNTRY_MANUAL_MAPPINGS.put("Slovak Republic", Country.SLOVAKIA);
+    COUNTRY_MANUAL_MAPPINGS.put("Swaziland", Country.SWAZILAND);
+    COUNTRY_MANUAL_MAPPINGS.put("Vietnam", Country.VIETNAM);
+  }
 
   private EntityConverter(List<String> countries) {
-    matchCountries(countries);
+    countryLookup = mapCountries(countries);
 
-    if (COUNTRY_LOOKUP.size() != countries.size()) {
+    if (countryLookup.size() != countries.size()) {
       log.warn("We couldn't match all the countries to our enum");
     }
   }
@@ -44,17 +65,20 @@ public class EntityConverter {
   }
 
   @VisibleForTesting
-  void matchCountries(List<String> countries) {
+  static Map<String, Country> mapCountries(List<String> countries) {
+    // build map with the titles of the Country enum
     Map<String, Country> titleLookup =
         Maps.uniqueIndex(Lists.newArrayList(Country.values()), Country::getTitle);
+
+    Map<String, Country> mappings = new HashMap<>();
 
     countries.forEach(
         c -> {
           Country country = titleLookup.get(c);
 
-          if (c.equalsIgnoreCase("U.K.") || c.equalsIgnoreCase("UK")) {
-            country = Country.UNITED_KINGDOM;
-          }
+          // we first try manual mappings
+          country = COUNTRY_MANUAL_MAPPINGS.get(c);
+
           if (country == null) {
             country = Country.fromIsoCode(c);
           }
@@ -80,9 +104,15 @@ public class EntityConverter {
           }
 
           if (country != null) {
-            COUNTRY_LOOKUP.put(c, country);
+            mappings.put(c, country);
           }
         });
+
+    return mappings;
+  }
+
+  public Country matchCountry(String country) {
+    return countryLookup.get(country);
   }
 
   public Institution convertToInstitution(IHInstitution ihInstitution) {
@@ -169,9 +199,9 @@ public class EntityConverter {
     person.setPosition(ihStaff.getPosition());
 
     if (ihStaff.getContact() != null) {
-      person.setEmail(ihStaff.getContact().getEmail());
-      person.setPhone(ihStaff.getContact().getPhone());
-      person.setFax(ihStaff.getContact().getFax());
+      person.setEmail(getFirstString(ihStaff.getContact().getEmail()));
+      person.setPhone(getFirstString(ihStaff.getContact().getPhone()));
+      person.setFax(getFirstString(ihStaff.getContact().getFax()));
     }
 
     if (ihStaff.getAddress() != null) {
@@ -180,7 +210,7 @@ public class EntityConverter {
       mailingAddress.setCity(ihStaff.getAddress().getCity());
       mailingAddress.setProvince(ihStaff.getAddress().getState());
       mailingAddress.setPostalCode(ihStaff.getAddress().getZipCode());
-      mailingAddress.setCountry(COUNTRY_LOOKUP.get(ihStaff.getAddress().getCountry()));
+      mailingAddress.setCountry(countryLookup.get(ihStaff.getAddress().getCountry()));
       person.setMailingAddress(mailingAddress);
     }
 
@@ -206,7 +236,7 @@ public class EntityConverter {
     return firstName.trim();
   }
 
-  private static void setAddress(Contactable contactable, IHInstitution ih) {
+  private void setAddress(Contactable contactable, IHInstitution ih) {
     Address physicalAddress = null;
     Address mailingAddress = null;
     if (ih.getAddress() != null) {
@@ -215,45 +245,43 @@ public class EntityConverter {
       physicalAddress.setCity(ih.getAddress().getPhysicalCity());
       physicalAddress.setProvince(ih.getAddress().getPhysicalState());
       physicalAddress.setPostalCode(ih.getAddress().getPhysicalZipCode());
-      physicalAddress.setCountry(COUNTRY_LOOKUP.get(ih.getAddress().getPhysicalCountry()));
+      physicalAddress.setCountry(countryLookup.get(ih.getAddress().getPhysicalCountry()));
 
       mailingAddress = new Address();
       mailingAddress.setAddress(ih.getAddress().getPostalStreet());
       mailingAddress.setCity(ih.getAddress().getPostalCity());
       mailingAddress.setProvince(ih.getAddress().getPostalState());
       mailingAddress.setPostalCode(ih.getAddress().getPostalZipCode());
-      mailingAddress.setCountry(COUNTRY_LOOKUP.get(ih.getAddress().getPostalCountry()));
+      mailingAddress.setCountry(countryLookup.get(ih.getAddress().getPostalCountry()));
     }
     contactable.setAddress(physicalAddress);
     contactable.setMailingAddress(mailingAddress);
   }
 
   private static List<String> getIhEmails(IHInstitution ih) {
-    List<String> emails = null;
     if (ih.getContact() != null && ih.getContact().getEmail() != null) {
-      emails = Arrays.asList(ih.getContact().getEmail().split("\n"));
+      return parseStringList(ih.getContact().getEmail());
     }
-    return emails;
+    return Collections.emptyList();
   }
 
   private static List<String> getIhPhones(IHInstitution ih) {
-    List<String> phones = null;
     if (ih.getContact() != null && ih.getContact().getPhone() != null) {
-      phones = Arrays.asList(ih.getContact().getPhone().split("\n"));
+      return parseStringList(ih.getContact().getPhone());
     }
-    return phones;
+    return Collections.emptyList();
+  }
+
+  private static List<String> parseStringList(String stringList) {
+    String listNormalized = stringList.replaceAll("\n", ",");
+    return Arrays.asList(listNormalized.split(","));
   }
 
   private static URI getIhHomepage(IHInstitution ih) {
     URI homepage = null;
     if (ih.getContact() != null && ih.getContact().getWebUrl() != null) {
       // when there are multiple URLs we try to get the first one
-      String webUrl = ih.getContact().getWebUrl();
-      if (webUrl.contains(",")) {
-        webUrl = ih.getContact().getWebUrl().split(",")[0];
-      } else if (webUrl.contains(";")) {
-        webUrl = ih.getContact().getWebUrl().split(";")[0];
-      }
+      String webUrl = getFirstString(ih.getContact().getWebUrl());
 
       // we try to clean the URL...
       webUrl = WHITESPACE.matcher(webUrl).replaceAll(" ");
@@ -266,6 +294,17 @@ public class EntityConverter {
       }
     }
     return homepage;
+  }
+
+  private static String getFirstString(String stringList) {
+    if (stringList.contains(",")) {
+      return stringList.split(",")[0];
+    } else if (stringList.contains(";")) {
+      return stringList.split(";")[0];
+    } else if (stringList.contains("\n")) {
+      return stringList.split("\n")[0];
+    }
+    return stringList;
   }
 
   private static void addIdentifierIfNotExists(Identifiable entity, String irn) {

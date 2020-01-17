@@ -1,14 +1,17 @@
 package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -46,6 +49,25 @@ class StaffDiffFinder {
         return WHITESPACE.matcher(fullName).replaceAll(EMPTY);
       };
 
+  private static final Function<IHStaff, String> CONCAT_IH_FIRST_NAME =
+      s -> {
+        StringBuilder firstNameBuilder = new StringBuilder();
+        if (!Strings.isNullOrEmpty(s.getFirstName())) {
+          firstNameBuilder.append(s.getFirstName());
+        }
+        if (!Strings.isNullOrEmpty(s.getMiddleName())) {
+          firstNameBuilder.append(s.getMiddleName());
+        }
+
+        String firstName = firstNameBuilder.toString();
+
+        if (Strings.isNullOrEmpty(firstName)) {
+          return null;
+        }
+
+        return firstName.trim();
+      };
+
   private static final Function<Person, String> CONCAT_PERSON_NAME =
       p -> {
         StringBuilder fullNameBuilder = new StringBuilder();
@@ -53,7 +75,7 @@ class StaffDiffFinder {
           fullNameBuilder.append(p.getFirstName());
         }
         if (!Strings.isNullOrEmpty(p.getLastName())) {
-          fullNameBuilder.append(p.getLastName());
+          fullNameBuilder.append(" " + p.getLastName());
         }
 
         String fullName = fullNameBuilder.toString();
@@ -79,21 +101,21 @@ class StaffDiffFinder {
 
     for (IHStaff ihStaff : ihStaffList) {
       // try to find a match in the GrSciColl contacts
-      Optional<Set<Person>> matchesOpt = match(ihStaff, personsCopy);
+      Set<Person> matches = match(ihStaff, personsCopy, entityConverter);
 
-      if (!matchesOpt.isPresent()) {
+      if (matches.isEmpty()) {
         // if there is no match we create a new person
         Person person = entityConverter.convertToPerson(ihStaff);
         diffResult.personToCreate(person);
         continue;
       }
 
-      Set<Person> matches = matchesOpt.get();
       if (matches.size() > 1) {
         // conflict
         personsCopy.removeAll(matches);
-        diffResult.conflict(issueFactory.createMultipleStaffIssue(matches, ihStaff));
-      } else if (matches.size() == 1) {
+        diffResult.conflict(issueFactory.createStaffConflict(matches, ihStaff));
+      } else {
+        // there is one match
         Person existing = matches.iterator().next();
         personsCopy.remove(existing);
 
@@ -118,7 +140,8 @@ class StaffDiffFinder {
     return diffResult.build();
   }
 
-  private static Optional<Set<Person>> match(IHStaff ihStaff, List<Person> grSciCollPersons) {
+  private static Set<Person> match(
+      IHStaff ihStaff, List<Person> grSciCollPersons, EntityConverter entityConverter) {
     // try to find a match by using the IRN identifiers
     String irn = encodeIRN(ihStaff.getIrn());
     Set<Person> irnMatches =
@@ -130,19 +153,21 @@ class StaffDiffFinder {
             .collect(Collectors.toSet());
 
     if (!irnMatches.isEmpty()) {
-      return Optional.of(irnMatches);
+      return irnMatches;
     }
 
     // no irn matches, we try to match with the fields
-    return matchWithFields(ihStaff, grSciCollPersons);
+    return matchWithFields(ihStaff, grSciCollPersons, entityConverter);
   }
 
-  private static Optional<Set<Person>> matchWithFields(IHStaff ihStaff, List<Person> persons) {
+  @VisibleForTesting
+  static Set<Person> matchWithFields(
+      IHStaff ihStaff, List<Person> persons, EntityConverter entityConverter) {
     if (persons.isEmpty()) {
-      return Optional.empty();
+      return Collections.emptySet();
     }
 
-    StaffNormalized ihStaffNorm = buildIHStaffNormalized(ihStaff);
+    StaffNormalized ihStaffNorm = buildIHStaffNormalized(ihStaff, entityConverter);
 
     int maxScore = 0;
     Set<Person> bestMatches = new HashSet<>();
@@ -158,13 +183,16 @@ class StaffDiffFinder {
       }
     }
 
-    return bestMatches.isEmpty() ? Optional.empty() : Optional.of(bestMatches);
+    return bestMatches;
   }
 
-  private static StaffNormalized buildIHStaffNormalized(IHStaff ihStaff) {
+  private static StaffNormalized buildIHStaffNormalized(
+      IHStaff ihStaff, EntityConverter entityConverter) {
     StaffNormalized.StaffNormalizedBuilder ihBuilder =
         StaffNormalized.builder()
             .fullName(CONCAT_IH_NAME.apply(ihStaff))
+            .firstName(CONCAT_IH_FIRST_NAME.apply(ihStaff))
+            .lastName(ihStaff.getLastName())
             .position(ihStaff.getPosition());
 
     if (ihStaff.getContact() != null) {
@@ -180,7 +208,7 @@ class StaffDiffFinder {
           .city(ihStaff.getAddress().getCity())
           .state(ihStaff.getAddress().getState())
           .zipCode(ihStaff.getAddress().getZipCode())
-          .country(ihStaff.getAddress().getCountry());
+          .country(entityConverter.matchCountry(ihStaff.getAddress().getCountry()));
     }
 
     return ihBuilder.build();
@@ -190,6 +218,8 @@ class StaffDiffFinder {
     StaffNormalized.StaffNormalizedBuilder personBuilder =
         StaffNormalized.builder()
             .fullName(CONCAT_PERSON_NAME.apply(person))
+            .firstName(person.getFirstName())
+            .lastName(person.getLastName())
             .position(person.getPosition())
             .email(person.getEmail())
             .phone(person.getPhone())
@@ -201,18 +231,47 @@ class StaffDiffFinder {
           .city(person.getMailingAddress().getCity())
           .state(person.getMailingAddress().getProvince())
           .zipCode(person.getMailingAddress().getPostalCode())
-          .country(person.getMailingAddress().getPostalCode());
+          .country(person.getMailingAddress().getCountry());
     }
 
     return personBuilder.build();
   }
 
-  private static int getEqualityScore(StaffNormalized s1, StaffNormalized s2) {
+  private static int getEqualityScore(StaffNormalized staff1, StaffNormalized staff2) {
     int score = 0;
-    if (Objects.equals(s1.fullName, s2.fullName)) {
+
+    BiPredicate<String, String> compareStrings =
+        (s1, s2) -> {
+          if (!Strings.isNullOrEmpty(s1) && !Strings.isNullOrEmpty(s2)) {
+            return s1.equalsIgnoreCase(s2);
+          }
+          return false;
+        };
+
+    BiPredicate<String, String> compareNamePartially =
+        (s1, s2) -> {
+          if (!Strings.isNullOrEmpty(s1) && !Strings.isNullOrEmpty(s2)) {
+            return s1.startsWith(s2) || s2.startsWith(s1);
+          }
+          return false;
+        };
+
+    if (compareStrings.test(staff1.fullName, staff2.fullName)) {
+      score += 10;
+    }
+    if (compareStrings.test(staff1.email, staff2.email)) {
+      score += 10;
+    }
+    if (compareStrings.test(staff1.firstName, staff2.firstName)) {
+      score += 5;
+    }
+    if (compareStrings.test(staff1.lastName, staff2.lastName)) {
+      score += 5;
+    }
+    if (compareNamePartially.test(staff1.firstName, staff2.firstName)) {
       score += 4;
     }
-    if (Objects.equals(s1.email, s2.email)) {
+    if (compareNamePartially.test(staff1.lastName, staff2.lastName)) {
       score += 4;
     }
 
@@ -221,28 +280,28 @@ class StaffDiffFinder {
       return score;
     }
 
-    if (Objects.equals(s1.phone, s2.phone)) {
+    if (compareStrings.test(staff1.phone, staff2.phone)) {
       score += 3;
     }
-    if (Objects.equals(s1.country, s2.country)) {
+    if (staff1.country == staff2.country) {
       score += 3;
     }
-    if (Objects.equals(s1.city, s2.city)) {
+    if (compareStrings.test(staff1.city, staff2.city)) {
       score += 2;
     }
-    if (Objects.equals(s1.position, s2.position)) {
+    if (compareStrings.test(staff1.position, staff2.position)) {
       score += 2;
     }
-    if (Objects.equals(s1.fax, s2.fax)) {
+    if (compareStrings.test(staff1.fax, staff2.fax)) {
       score += 1;
     }
-    if (Objects.equals(s1.street, s2.street)) {
+    if (compareStrings.test(staff1.street, staff2.street)) {
       score += 1;
     }
-    if (Objects.equals(s1.state, s2.state)) {
+    if (compareStrings.test(staff1.state, staff2.state)) {
       score += 1;
     }
-    if (Objects.equals(s1.zipCode, s2.zipCode)) {
+    if (compareStrings.test(staff1.zipCode, staff2.zipCode)) {
       score += 1;
     }
 
@@ -254,6 +313,8 @@ class StaffDiffFinder {
   @Builder
   private static class StaffNormalized {
     private String fullName;
+    private String firstName;
+    private String lastName;
     private String email;
     private String phone;
     private String fax;
@@ -262,6 +323,6 @@ class StaffDiffFinder {
     private String city;
     private String state;
     private String zipCode;
-    private String country;
+    private Country country;
   }
 }
