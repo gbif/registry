@@ -25,7 +25,6 @@ import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
@@ -135,7 +134,6 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("Download").to(Download.class);
       addAlias("DownloadRequest").to(DownloadRequest.class);
       addAlias("PredicateDownloadRequest").to(PredicateDownloadRequest.class);
-      addAlias("SqlDownloadRequest").to(SqlDownloadRequest.class);
       addAlias("DatasetOccurrenceDownload").to(DatasetOccurrenceDownloadUsage.class);
       addAlias("DatasetProcessStatus").to(DatasetProcessStatus.class);
       addAlias("CrawlJob").to(CrawlJob.class);

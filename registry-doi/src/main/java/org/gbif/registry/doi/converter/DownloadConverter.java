@@ -7,9 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -310,8 +308,7 @@ public final class DownloadConverter {
    */
   private static String getFilterQuery(Download d, TitleLookup titleLookup) {
     try {
-      return d.getRequest().getFormat().equals(DownloadFormat.SQL) ? ((SqlDownloadRequest) d.getRequest()).getSql()
-        : new HumanPredicateBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
+      return new HumanPredicateBuilder(titleLookup).humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
     } catch (Exception e) {
       return "(Query is too complex. Can be viewed on the landing page)";
     }
