@@ -223,8 +223,8 @@ public class OccurrenceDownloadIT {
     int resultSize = downloads.getResults().size();
     long numberOfPredicateDownloads = downloads.getResults().stream().filter(d -> d.getRequest() instanceof PredicateDownloadRequest).count();
     //All numbers are compare to 2 different values because this each run twice: one for the WS and once for the MyBatis layer
-    assertTrue("A total of 6 or 12 records must be returned", resultSize == 6 || resultSize == 12);
-    assertTrue("A total of 3 or 6 PredicateDownloads must be returned", numberOfPredicateDownloads == 3L || numberOfPredicateDownloads == 6L);
+    assertEquals("A total of 12 records must be returned", 6, resultSize);
+    assertEquals("A total of 3 PredicateDownloads must be returned", 3L, numberOfPredicateDownloads);
   }
 
   /**
