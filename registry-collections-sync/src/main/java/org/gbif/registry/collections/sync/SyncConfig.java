@@ -2,6 +2,7 @@ package org.gbif.registry.collections.sync;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,12 +48,12 @@ public class SyncConfig {
       return Optional.empty();
     }
 
-    File configFile = new File(configFileName);
-    SyncConfig config = null;
+    File configFile = Paths.get(configFileName).toFile();
+    SyncConfig config;
     try {
       config = YAML_READER.readValue(configFile);
     } catch (IOException e) {
-      log.error("Couldn't load config from file {}", configFileName);
+      log.error("Couldn't load config from file {}", configFileName, e);
       return Optional.empty();
     }
 
