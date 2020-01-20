@@ -1,0 +1,5 @@
+registryWsUrl: http://api.gbif-dev.org/v1/grscicoll/
+ihWsUrl: http://sweetgum.nybg.org/science/api/v1/
+saveResultsToFile: true
+dryRun: true
+sendNotifications: false
