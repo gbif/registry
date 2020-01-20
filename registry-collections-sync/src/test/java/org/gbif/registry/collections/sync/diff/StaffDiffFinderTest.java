@@ -6,7 +6,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
@@ -29,9 +28,11 @@ import static org.junit.Assert.assertTrue;
 /** Tests the {@link StaffDiffFinder}. */
 public class StaffDiffFinderTest {
 
-  private static final IssueFactory DEFAULT_ISSUE_FACTORY = IssueFactory.fromDefaults();
   private static final EntityConverter ENTITY_CONVERTER =
-      EntityConverter.from(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"));
+      EntityConverter.builder()
+          .countries(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"))
+          .creationUser("test-user")
+          .build();
   private static final String IRN_TEST = "1";
 
   @Test
@@ -55,8 +56,7 @@ public class StaffDiffFinderTest {
             .collect(Collectors.toList());
 
     DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(
-            ihStaff, grSciCollPersons, ENTITY_CONVERTER, DEFAULT_ISSUE_FACTORY);
+        StaffDiffFinder.syncStaff(ihStaff, grSciCollPersons, ENTITY_CONVERTER);
     assertEquals(1, result.getPersonsToCreate().size());
     assertEquals(1, result.getPersonsToUpdate().size());
     assertEquals(1, result.getPersonsNoChange().size());
@@ -85,8 +85,7 @@ public class StaffDiffFinderTest {
         StaffDiffFinder.syncStaff(
             Collections.singletonList(outdatedStaff),
             Collections.singletonList(upToDatePerson),
-            ENTITY_CONVERTER,
-            DEFAULT_ISSUE_FACTORY);
+            ENTITY_CONVERTER);
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -108,10 +107,7 @@ public class StaffDiffFinderTest {
 
     DiffResult.StaffDiffResult result =
         StaffDiffFinder.syncStaff(
-            Collections.singletonList(s),
-            Arrays.asList(p1, p2),
-            ENTITY_CONVERTER,
-            DEFAULT_ISSUE_FACTORY);
+            Collections.singletonList(s), Arrays.asList(p1, p2), ENTITY_CONVERTER);
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -134,10 +130,7 @@ public class StaffDiffFinderTest {
 
     DiffResult.StaffDiffResult result =
         StaffDiffFinder.syncStaff(
-            Collections.singletonList(s),
-            Arrays.asList(p1, p2),
-            ENTITY_CONVERTER,
-            DEFAULT_ISSUE_FACTORY);
+            Collections.singletonList(s), Arrays.asList(p1, p2), ENTITY_CONVERTER);
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -176,7 +169,8 @@ public class StaffDiffFinderTest {
     p2.setMailingAddress(address);
 
     // When
-    Set<Person> persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    Set<Person> persons =
+        StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
 
     // Expect
     assertEquals(1, persons.size());

@@ -6,8 +6,6 @@ import org.gbif.registry.collections.sync.diff.*;
 import org.gbif.registry.collections.sync.grscicoll.GrSciCollHttpClient;
 import org.gbif.registry.collections.sync.ih.IHHttpClient;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
-import org.gbif.registry.collections.sync.notification.GithubClient;
-import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -52,19 +50,24 @@ public class CliSyncApp {
     List<Institution> institutions = institutionsFuture.join();
     List<Collection> collections = collectionsFuture.join();
 
+    // create an entity converter to use in the diff finder process
+    EntityConverter entityConverter =
+        EntityConverter.builder()
+            .countries(ihHttpClient.getCountries())
+            .creationUser(config.getRegistryWsUser())
+            .build();
+
     // look for differences
+    log.info("Looking for differences");
     DiffResult diffResult =
         IndexHerbariorumDiffFinder.builder()
             .ihInstitutions(ihInstitutions)
             .ihStaffFetcher(ihHttpClient::getStaffByInstitution)
             .institutions(institutions)
             .collections(collections)
-            .entityConverter(EntityConverter.from(ihHttpClient.getCountries()))
-            .issueFactory(IssueFactory.fromConfig(config.getNotification()))
+            .entityConverter(entityConverter)
             .build()
             .find();
-
-    log.info("Diff result: {}", diffResult);
 
     // handle results
     List<FailedAction> fails =
@@ -72,12 +75,14 @@ public class CliSyncApp {
             .diffResult(diffResult)
             .config(config)
             .grSciCollHttpClient(grSciCollHttpClient)
-            .githubClient(GithubClient.create(config))
             .build()
             .handle();
 
     // add fails to result
+    log.info("{} operations failed updating the registry", fails.size());
     diffResult.setFailedActions(fails);
+
+    log.info("Diff result: {}", diffResult);
 
     // save results to a file
     if (config.isSaveResultsToFile()) {

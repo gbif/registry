@@ -30,7 +30,10 @@ public class EntityConverterTest {
 
   private static final String IRN_TEST = "1";
   private static final EntityConverter entityConverter =
-      EntityConverter.from(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"));
+      EntityConverter.builder()
+          .countries(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"))
+          .creationUser("test-user")
+          .build();
 
   @Test
   public void institutionConversionFromExistingTest() {
@@ -262,7 +265,7 @@ public class EntityConverterTest {
     IHInstitution.Contact contact = new IHInstitution.Contact();
     contact.setEmail("uark@uark.com\nuark2@uark.com");
     contact.setPhone("123,456\n789");
-    contact.setWebUrl("http://www.a.com;http://www.b.com");
+    contact.setWebUrl("http://www. a.com;http://www.b.com");
     ih.setContact(contact);
     return ih;
   }

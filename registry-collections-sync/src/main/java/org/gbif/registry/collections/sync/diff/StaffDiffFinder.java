@@ -3,7 +3,6 @@ package org.gbif.registry.collections.sync.diff;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -75,7 +74,7 @@ class StaffDiffFinder {
           fullNameBuilder.append(p.getFirstName());
         }
         if (!Strings.isNullOrEmpty(p.getLastName())) {
-          fullNameBuilder.append(" " + p.getLastName());
+          fullNameBuilder.append(" ").append(p.getLastName());
         }
 
         String fullName = fullNameBuilder.toString();
@@ -88,20 +87,13 @@ class StaffDiffFinder {
       };
 
   public static StaffDiffResult syncStaff(
-      List<IHStaff> ihStaffList,
-      List<Person> grSciCollContacts,
-      EntityConverter entityConverter,
-      IssueFactory issueFactory) {
+      List<IHStaff> ihStaffList, List<Person> persons, EntityConverter entityConverter) {
 
     StaffDiffResult.StaffDiffResultBuilder diffResult = StaffDiffResult.builder();
 
-    // copy the persons to another list to be able to remove the ones that have a match
-    List<Person> personsCopy =
-        grSciCollContacts != null ? new ArrayList<>(grSciCollContacts) : new ArrayList<>();
-
     for (IHStaff ihStaff : ihStaffList) {
       // try to find a match in the GrSciColl contacts
-      Set<Person> matches = match(ihStaff, personsCopy, entityConverter);
+      Set<Person> matches = match(ihStaff, persons, entityConverter);
 
       if (matches.isEmpty()) {
         // if there is no match we create a new person
@@ -112,16 +104,16 @@ class StaffDiffFinder {
 
       if (matches.size() > 1) {
         // conflict
-        personsCopy.removeAll(matches);
-        diffResult.conflict(issueFactory.createStaffConflict(matches, ihStaff));
+        persons.removeAll(matches);
+        diffResult.conflict(new DiffResult.Conflict<>(ihStaff, new ArrayList<>(matches)));
       } else {
         // there is one match
         Person existing = matches.iterator().next();
-        personsCopy.remove(existing);
+        persons.remove(existing);
 
-        if (Utils.isIHOutdated(ihStaff.getDateModified(), existing)) {
+        if (Utils.isIHOutdated(ihStaff, existing)) {
           // add issue
-          diffResult.conflict(issueFactory.createOutdatedIHStaffIssue(existing, ihStaff));
+          diffResult.outdatedStaff(new DiffResult.IHOutdated<>(ihStaff, existing));
           continue;
         }
 
@@ -135,7 +127,7 @@ class StaffDiffFinder {
     }
 
     // remove the GrSciColl persons that don't exist in IH
-    personsCopy.forEach(diffResult::personToDelete);
+    persons.forEach(diffResult::personToDelete);
 
     return diffResult.build();
   }

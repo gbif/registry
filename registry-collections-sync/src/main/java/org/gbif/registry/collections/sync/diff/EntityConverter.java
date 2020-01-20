@@ -19,6 +19,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -28,9 +29,10 @@ import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 @Slf4j
 public class EntityConverter {
 
-  private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
+  private static final Pattern WHITESPACE = Pattern.compile("[\\s+]");
   private static final Map<String, Country> COUNTRY_MANUAL_MAPPINGS = new HashMap<>();
   private final Map<String, Country> countryLookup;
+  private String creationUser;
 
   static {
     COUNTRY_MANUAL_MAPPINGS.put("U.K.", Country.UNITED_KINGDOM);
@@ -50,16 +52,14 @@ public class EntityConverter {
     COUNTRY_MANUAL_MAPPINGS.put("Slovak Republic", Country.SLOVAKIA);
   }
 
-  private EntityConverter(List<String> countries) {
+  @Builder
+  private EntityConverter(List<String> countries, String creationUser) {
+    this.creationUser = creationUser;
     countryLookup = mapCountries(countries);
 
     if (countryLookup.size() != countries.size()) {
       log.warn("We couldn't match all the countries to our enum");
     }
-  }
-
-  public static EntityConverter from(List<String> countries) {
-    return new EntityConverter(countries);
   }
 
   @VisibleForTesting
@@ -151,9 +151,9 @@ public class EntityConverter {
     setAddress(institution, ihInstitution);
     institution.setEmail(getIhEmails(ihInstitution));
     institution.setPhone(getIhPhones(ihInstitution));
-    institution.setHomepage(getIhHomepage(ihInstitution));
+    getIhHomepage(ihInstitution).ifPresent(institution::setHomepage);
 
-    addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()));
+    addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()), creationUser);
 
     return institution;
   }
@@ -177,9 +177,9 @@ public class EntityConverter {
 
     collection.setEmail(getIhEmails(ihInstitution));
     collection.setPhone(getIhPhones(ihInstitution));
-    collection.setHomepage(getIhHomepage(ihInstitution));
+    getIhHomepage(ihInstitution).ifPresent(collection::setHomepage);
 
-    addIdentifierIfNotExists(collection, encodeIRN(ihInstitution.getIrn()));
+    addIdentifierIfNotExists(collection, encodeIRN(ihInstitution.getIrn()), creationUser);
 
     return collection;
   }
@@ -199,32 +199,42 @@ public class EntityConverter {
       }
     }
 
-    person.setFirstName(buildFirstName(ihStaff));
-    person.setLastName(ihStaff.getLastName());
-    person.setPosition(ihStaff.getPosition());
+    buildFirstName(ihStaff).ifPresent(person::setFirstName);
+    getStringValue(ihStaff.getLastName()).ifPresent(person::setLastName);
+    getStringValue(ihStaff.getPosition()).ifPresent(person::setPosition);
 
     if (ihStaff.getContact() != null) {
-      person.setEmail(getFirstString(ihStaff.getContact().getEmail()));
-      person.setPhone(getFirstString(ihStaff.getContact().getPhone()));
-      person.setFax(getFirstString(ihStaff.getContact().getFax()));
+      getFirstString(ihStaff.getContact().getEmail()).ifPresent(person::setEmail);
+      getFirstString(ihStaff.getContact().getPhone()).ifPresent(person::setPhone);
+      getFirstString(ihStaff.getContact().getFax()).ifPresent(person::setFax);
     }
 
     if (ihStaff.getAddress() != null) {
       Address mailingAddress = new Address();
-      mailingAddress.setAddress(ihStaff.getAddress().getStreet());
-      mailingAddress.setCity(ihStaff.getAddress().getCity());
-      mailingAddress.setProvince(ihStaff.getAddress().getState());
-      mailingAddress.setPostalCode(ihStaff.getAddress().getZipCode());
-      mailingAddress.setCountry(countryLookup.get(ihStaff.getAddress().getCountry()));
+      getStringValue(ihStaff.getAddress().getStreet()).ifPresent(mailingAddress::setAddress);
+      getStringValue(ihStaff.getAddress().getCity()).ifPresent(mailingAddress::setCity);
+      getStringValue(ihStaff.getAddress().getState()).ifPresent(mailingAddress::setProvince);
+      getStringValue(ihStaff.getAddress().getZipCode()).ifPresent(mailingAddress::setPostalCode);
+
+      Country mailingAddressCountry = countryLookup.get(ihStaff.getAddress().getCountry());
+      if (mailingAddressCountry == null) {
+        mailingAddress.setCountry(mailingAddressCountry);
+      } else {
+        log.warn(
+            "Country not found for {} and IH staff {}",
+            ihStaff.getAddress().getCountry(),
+            ihStaff.getIrn());
+      }
+
       person.setMailingAddress(mailingAddress);
     }
 
-    addIdentifierIfNotExists(person, encodeIRN(ihStaff.getIrn()));
+    addIdentifierIfNotExists(person, encodeIRN(ihStaff.getIrn()), creationUser);
 
     return person;
   }
 
-  private String buildFirstName(IHStaff ihStaff) {
+  private Optional<String> buildFirstName(IHStaff ihStaff) {
     StringBuilder firstNameBuilder = new StringBuilder();
     if (!Strings.isNullOrEmpty(ihStaff.getFirstName())) {
       firstNameBuilder.append(ihStaff.getFirstName()).append(" ");
@@ -235,10 +245,10 @@ public class EntityConverter {
 
     String firstName = firstNameBuilder.toString();
     if (Strings.isNullOrEmpty(firstName)) {
-      return null;
+      return Optional.empty();
     }
 
-    return firstName.trim();
+    return Optional.of(firstName.trim());
   }
 
   private void setAddress(Contactable contactable, IHInstitution ih) {
@@ -246,18 +256,37 @@ public class EntityConverter {
     Address mailingAddress = null;
     if (ih.getAddress() != null) {
       physicalAddress = new Address();
-      physicalAddress.setAddress(ih.getAddress().getPhysicalStreet());
-      physicalAddress.setCity(ih.getAddress().getPhysicalCity());
-      physicalAddress.setProvince(ih.getAddress().getPhysicalState());
-      physicalAddress.setPostalCode(ih.getAddress().getPhysicalZipCode());
-      physicalAddress.setCountry(countryLookup.get(ih.getAddress().getPhysicalCountry()));
+      getStringValue(ih.getAddress().getPhysicalStreet()).ifPresent(physicalAddress::setAddress);
+      getStringValue(ih.getAddress().getPhysicalCity()).ifPresent(physicalAddress::setCity);
+      getStringValue(ih.getAddress().getPhysicalState()).ifPresent(physicalAddress::setProvince);
+      getStringValue(ih.getAddress().getPhysicalZipCode())
+          .ifPresent(physicalAddress::setPostalCode);
+
+      Country physicalAddressCountry = countryLookup.get(ih.getAddress().getPhysicalCountry());
+      if (physicalAddressCountry != null) {
+        physicalAddress.setCountry(physicalAddressCountry);
+      } else {
+        log.warn(
+            "Country not found for {} and IH institution {}",
+            ih.getAddress().getPhysicalCountry(),
+            ih.getIrn());
+      }
 
       mailingAddress = new Address();
-      mailingAddress.setAddress(ih.getAddress().getPostalStreet());
-      mailingAddress.setCity(ih.getAddress().getPostalCity());
-      mailingAddress.setProvince(ih.getAddress().getPostalState());
-      mailingAddress.setPostalCode(ih.getAddress().getPostalZipCode());
-      mailingAddress.setCountry(countryLookup.get(ih.getAddress().getPostalCountry()));
+      getStringValue(ih.getAddress().getPostalStreet()).ifPresent(mailingAddress::setAddress);
+      getStringValue(ih.getAddress().getPostalCity()).ifPresent(mailingAddress::setCity);
+      getStringValue(ih.getAddress().getPostalState()).ifPresent(mailingAddress::setProvince);
+      getStringValue(ih.getAddress().getPostalZipCode()).ifPresent(mailingAddress::setPostalCode);
+
+      Country mailingAddressCountry = countryLookup.get(ih.getAddress().getPostalCountry());
+      if (mailingAddressCountry != null) {
+        mailingAddress.setCountry(mailingAddressCountry);
+      } else {
+        log.warn(
+            "Country not found for {} and IH institution {}",
+            ih.getAddress().getPhysicalCountry(),
+            ih.getIrn());
+      }
     }
     contactable.setAddress(physicalAddress);
     contactable.setMailingAddress(mailingAddress);
@@ -282,47 +311,66 @@ public class EntityConverter {
     return Arrays.asList(listNormalized.split(","));
   }
 
-  private static URI getIhHomepage(IHInstitution ih) {
-    URI homepage = null;
-    if (ih.getContact() != null && ih.getContact().getWebUrl() != null) {
-      // when there are multiple URLs we try to get the first one
-      String webUrl = getFirstString(ih.getContact().getWebUrl());
-
-      // we try to clean the URL...
-      webUrl = WHITESPACE.matcher(webUrl).replaceAll(" ");
-
-      try {
-        homepage = URI.create(webUrl);
-      } catch (Exception ex) {
-        log.warn(
-            "Couldn't parse the contact webUrl {} for IH institution {}", webUrl, ih.getCode());
-      }
+  private static Optional<URI> getIhHomepage(IHInstitution ih) {
+    if (ih.getContact() == null || ih.getContact().getWebUrl() == null) {
+      return Optional.empty();
     }
-    return homepage;
+    // when there are multiple URLs we try to get the first one
+    Optional<String> webUrlOpt = getFirstString(ih.getContact().getWebUrl());
+
+    if (!webUrlOpt.isPresent()) {
+      return Optional.empty();
+    }
+
+    // we try to clean the URL...
+    String webUrl = WHITESPACE.matcher(webUrlOpt.get()).replaceAll("");
+
+    try {
+      return Optional.of(URI.create(webUrl));
+    } catch (Exception ex) {
+      log.warn("Couldn't parse the contact webUrl {} for IH institution {}", webUrl, ih.getCode());
+      return Optional.empty();
+    }
   }
 
-  private static String getFirstString(String stringList) {
+  private static Optional<String> getFirstString(String stringList) {
+    if (Strings.isNullOrEmpty(stringList)) {
+      return Optional.empty();
+    }
+
+    String firstValue = null;
     if (stringList.contains(",")) {
-      return stringList.split(",")[0].trim();
+      firstValue = stringList.split(",")[0];
+    } else if (stringList.contains(";")) {
+      firstValue = stringList.split(";")[0];
+    } else if (stringList.contains("\n")) {
+      firstValue = stringList.split("\n")[0];
     }
-    if (stringList.contains(";")) {
-      return stringList.split(";")[0].trim();
+
+    if (Strings.isNullOrEmpty(firstValue)) {
+      return Optional.empty();
     }
-    if (stringList.contains("\n")) {
-      return stringList.split("\n")[0].trim();
-    }
-    return stringList;
+
+    return Optional.of(firstValue.trim());
   }
 
-  private static void addIdentifierIfNotExists(Identifiable entity, String irn) {
+  private static void addIdentifierIfNotExists(Identifiable entity, String irn, String user) {
     if (!containsIrnAsIdentifier(entity, irn)) {
       // add identifier
       Identifier ihIdentifier = new Identifier(IdentifierType.IH_IRN, irn);
+      ihIdentifier.setCreatedBy(user);
       entity.getIdentifiers().add(ihIdentifier);
     }
   }
 
   private static boolean containsIrnAsIdentifier(Identifiable entity, String irn) {
     return entity.getIdentifiers().stream().anyMatch(i -> Objects.equals(irn, i.getIdentifier()));
+  }
+
+  private static Optional<String> getStringValue(String value) {
+    if (Strings.isNullOrEmpty(value)) {
+      return Optional.empty();
+    }
+    return Optional.of(value);
   }
 }

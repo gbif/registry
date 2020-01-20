@@ -6,15 +6,11 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.IssueFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,30 +48,26 @@ public class IndexHerbariorumDiffFinder {
   private List<Institution> institutions;
   private List<Collection> collections;
   @NonNull private EntityConverter entityConverter;
-  @NonNull private IssueFactory issueFactory;
 
   public DiffResult find() {
     DiffResult.DiffResultBuilder diffResult = DiffResult.builder();
-    List<Institution> institutionsCopy =
-        institutions != null ? new ArrayList<>(institutions) : new ArrayList<>();
-    List<Collection> collectionsCopy =
-        collections != null ? new ArrayList<>(collections) : new ArrayList<>();
+
+    // map the GrSciColl entities by their IH IRN
+    Map<String, List<Institution>> institutionsByIrn = mapByIrn(institutions);
+    Map<String, List<Collection>> collectionsByIrn = mapByIrn(collections);
 
     for (IHInstitution ihInstitution : ihInstitutions) {
 
       // locate potential matches in GrSciColl
       Match match =
-          findMatches(institutionsCopy, collectionsCopy, encodeIRN(ihInstitution.getIrn()));
+          findMatches(institutionsByIrn, collectionsByIrn, encodeIRN(ihInstitution.getIrn()));
 
       if (match.onlyOneInstitutionMatch()) {
         Institution existing = match.institutions.iterator().next();
         log.info("Institution {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
-        institutionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
-          // add issue
-          diffResult.institutionConflict(
-              issueFactory.createOutdatedIHInstitutionIssue(existing, ihInstitution));
+        if (isIHOutdated(ihInstitution, existing)) {
+          diffResult.outdatedInstitution(new DiffResult.IHOutdated<>(ihInstitution, existing));
           continue;
         }
 
@@ -92,11 +84,9 @@ public class IndexHerbariorumDiffFinder {
       } else if (match.onlyOneCollectionMatch()) {
         Collection existing = match.collections.iterator().next();
         log.info("Collection {} matched with IH {}", existing.getKey(), ihInstitution.getCode());
-        collectionsCopy.remove(existing);
 
-        if (isIHOutdated(ihInstitution.getDateModified(), existing)) {
-          diffResult.collectionConflict(
-              issueFactory.createOutdatedIHInstitutionIssue(existing, ihInstitution));
+        if (isIHOutdated(ihInstitution, existing)) {
+          diffResult.outdatedInstitution(new DiffResult.IHOutdated<>(ihInstitution, existing));
           continue;
         }
 
@@ -130,21 +120,28 @@ public class IndexHerbariorumDiffFinder {
             match.collections,
             ihInstitution.getOrganization());
 
-        diffResult.conflict(issueFactory.createConflict(match.getAllMatches(), ihInstitution));
-        institutionsCopy.removeAll(match.institutions);
-        collectionsCopy.removeAll(match.collections);
+        diffResult.conflict(new DiffResult.Conflict<>(ihInstitution, match.getAllMatches()));
       }
     }
 
     return diffResult.build();
   }
 
-  /** Filters the source to only those having the given ID. */
-  private <T extends Identifiable> Set<T> filterById(List<T> source, String id) {
-    return source.stream()
-        .filter(
-            o -> o.getIdentifiers().stream().anyMatch(i -> Objects.equals(id, i.getIdentifier())))
-        .collect(Collectors.toSet());
+  private <T extends CollectionEntity & Identifiable> Map<String, List<T>> mapByIrn(
+      List<T> entities) {
+    Map<String, List<T>> mapByIrn = new HashMap<>();
+    entities.forEach(
+        o ->
+            o.getIdentifiers().stream()
+                // TODO: use the enum when deployed
+                                .filter(i -> i.getIdentifier().startsWith("gbif:ih:irn:"))
+//                .filter(i -> i.getType() == IdentifierType.IH_IRN)
+                .forEach(
+                    i ->
+                        mapByIrn
+                            .computeIfAbsent(i.getIdentifier(), s -> new ArrayList<>())
+                            .add(o)));
+    return mapByIrn;
   }
 
   private <T extends CollectionEntity & LenientEquals<T> & Contactable>
@@ -157,27 +154,25 @@ public class IndexHerbariorumDiffFinder {
 
     // look for differences in staff
     log.info("Syncing staff for IH institution {}", ihInstitution.getCode());
-    updateDiffBuilder.staffDiffResult(
+    DiffResult.StaffDiffResult staffDiffResult =
         StaffDiffFinder.syncStaff(
-            ihStaffFetcher.apply(ihInstitution.getCode()),
-            existing.getContacts(),
-            entityConverter,
-            issueFactory));
+            ihStaffFetcher.apply(ihInstitution.getCode()), existing.getContacts(), entityConverter);
+    updateDiffBuilder.staffDiffResult(staffDiffResult);
 
     return updateDiffBuilder.build();
   }
 
   private Match findMatches(
-      List<Institution> institutions, List<Collection> collections, String irn) {
-    CompletableFuture<Set<Institution>> matchedInstitutionsFuture =
-        CompletableFuture.supplyAsync(() -> filterById(institutions, irn));
-    CompletableFuture<Set<Collection>> matchedCollectionsFuture =
-        CompletableFuture.supplyAsync(() -> filterById(collections, irn));
-    CompletableFuture.allOf(matchedInstitutionsFuture, matchedCollectionsFuture).join();
-
+      Map<String, List<Institution>> institutions,
+      Map<String, List<Collection>> collections,
+      String irn) {
     Match match = new Match();
-    match.institutions = matchedInstitutionsFuture.join();
-    match.collections = matchedCollectionsFuture.join();
+    List<Institution> institutionsMatched = institutions.get(irn);
+    List<Collection> collectionsMatched = collections.get(irn);
+    match.institutions =
+        institutionsMatched != null ? new HashSet<>(institutionsMatched) : Collections.emptySet();
+    match.collections =
+        collectionsMatched != null ? new HashSet<>(collectionsMatched) : Collections.emptySet();
 
     return match;
   }

@@ -1,11 +1,10 @@
 package org.gbif.registry.collections.sync.ih;
 
-import lombok.Builder;
 import lombok.Data;
 
 /** Models an Index Herbariorum staff. */
 @Data
-public class IHStaff {
+public class IHStaff implements IHEntity {
 
   private String irn;
   private String code;

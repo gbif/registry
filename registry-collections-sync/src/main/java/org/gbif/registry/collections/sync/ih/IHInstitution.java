@@ -4,7 +4,7 @@ import lombok.Data;
 
 /** Models an Index Herbariorum institution. */
 @Data
-public class IHInstitution {
+public class IHInstitution implements IHEntity {
 
   private String irn;
   private String organization;

@@ -28,7 +28,7 @@ public class SyncConfig {
   private NotificationConfig notification;
   private boolean saveResultsToFile;
   private boolean dryRun;
-  private boolean ignoreConflicts;
+  private boolean sendNotifications;
 
   @Getter
   @Setter
@@ -66,7 +66,14 @@ public class SyncConfig {
       throw new IllegalArgumentException("Registry and IH WS URLs are required");
     }
 
-    if (!config.isIgnoreConflicts()) {
+    if (!config.isDryRun()
+        && (Strings.isNullOrEmpty(config.getRegistryWsUser())
+            || Strings.isNullOrEmpty(config.getRegistryWsPassword()))) {
+      throw new IllegalArgumentException(
+        "Registry WS credentials are required if we are not doing a dry run");
+    }
+
+    if (config.isSendNotifications()) {
       if (config.getNotification() == null) {
         throw new IllegalArgumentException("Notification config is required");
       }
@@ -85,13 +92,6 @@ public class SyncConfig {
           || Strings.isNullOrEmpty(config.getNotification().getIhPortalUrl())) {
         throw new IllegalArgumentException("Portal URLs are required");
       }
-    }
-
-    if (!config.isDryRun()
-        && (Strings.isNullOrEmpty(config.getRegistryWsUser())
-            || Strings.isNullOrEmpty(config.getRegistryWsPassword()))) {
-      throw new IllegalArgumentException(
-          "Registry WS credentials are required if we are not doing a dry run");
     }
 
     return Optional.of(config);

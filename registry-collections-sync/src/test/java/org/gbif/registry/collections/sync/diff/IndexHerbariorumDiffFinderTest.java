@@ -10,7 +10,6 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
-import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -41,10 +40,12 @@ public class IndexHerbariorumDiffFinderTest {
   private static final String IRN_TEST = "1";
   private static final String IRN_TEST_2 = "2";
 
-  private static final IssueFactory DEFAULT_ISSUE_FACTORY = IssueFactory.fromDefaults();
   private static final Function<String, List<IHStaff>> EMPTY_STAFF = (p) -> Collections.emptyList();
   private static final EntityConverter ENTITY_CONVERTER =
-      EntityConverter.from(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"));
+      EntityConverter.builder()
+          .countries(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"))
+          .creationUser("test-user")
+          .build();
 
   @Test
   public void syncInstitutionsTest() {
@@ -71,7 +72,6 @@ public class IndexHerbariorumDiffFinderTest {
             .ihInstitutions(ihInstitutions)
             .ihStaffFetcher(EMPTY_STAFF)
             .institutions(grSciCollInstitutions)
-            .issueFactory(DEFAULT_ISSUE_FACTORY)
             .entityConverter(ENTITY_CONVERTER)
             .build()
             .find();
@@ -79,10 +79,9 @@ public class IndexHerbariorumDiffFinderTest {
     assertEquals(1, result.getInstitutionsToCreate().size());
     assertEquals(1, result.getInstitutionsNoChange().size());
     assertEquals(1, result.getInstitutionsToUpdate().size());
-    assertTrue(result.getInstitutionConflicts().isEmpty());
+    assertTrue(result.getOutdatedIHInstitutions().isEmpty());
     assertTrue(result.getCollectionsToUpdate().isEmpty());
     assertTrue(result.getCollectionsNoChange().isEmpty());
-    assertTrue(result.getCollectionConflicts().isEmpty());
 
     assertFalse(grSciCollInstitutions.contains(result.getInstitutionsToCreate().get(0)));
     assertEquals(institutionNoChange.entity, result.getInstitutionsNoChange().get(0));
@@ -115,14 +114,13 @@ public class IndexHerbariorumDiffFinderTest {
             .ihInstitutions(ihInstitutions)
             .ihStaffFetcher(EMPTY_STAFF)
             .collections(grSciCollCollections)
-            .issueFactory(DEFAULT_ISSUE_FACTORY)
             .entityConverter(ENTITY_CONVERTER)
             .build()
             .find();
 
     assertEquals(1, result.getCollectionsNoChange().size());
     assertEquals(1, result.getCollectionsToUpdate().size());
-    assertTrue(result.getCollectionConflicts().isEmpty());
+    assertTrue(result.getOutdatedIHInstitutions().isEmpty());
     assertTrue(result.getInstitutionsToUpdate().isEmpty());
     assertTrue(result.getInstitutionsNoChange().isEmpty());
     assertTrue(result.getInstitutionsToCreate().isEmpty());
@@ -152,12 +150,11 @@ public class IndexHerbariorumDiffFinderTest {
             .ihInstitutions(Collections.singletonList(outdatedIh))
             .ihStaffFetcher(EMPTY_STAFF)
             .institutions(Collections.singletonList(upToDateInstitution))
-            .issueFactory(DEFAULT_ISSUE_FACTORY)
             .entityConverter(ENTITY_CONVERTER)
             .build()
             .find();
 
-    assertEquals(1, result.getInstitutionConflicts().size());
+    assertEquals(1, result.getOutdatedIHInstitutions().size());
   }
 
   @Test
@@ -178,12 +175,11 @@ public class IndexHerbariorumDiffFinderTest {
             .ihInstitutions(Collections.singletonList(outdatedIh))
             .ihStaffFetcher(EMPTY_STAFF)
             .collections(Collections.singletonList(upToDateCollection))
-            .issueFactory(DEFAULT_ISSUE_FACTORY)
             .entityConverter(ENTITY_CONVERTER)
             .build()
             .find();
 
-    assertEquals(1, result.getCollectionConflicts().size());
+    assertEquals(1, result.getOutdatedIHInstitutions().size());
   }
 
   @Test
@@ -221,7 +217,6 @@ public class IndexHerbariorumDiffFinderTest {
             .ihStaffFetcher(EMPTY_STAFF)
             .institutions(Arrays.asList(i1, i2))
             .collections(Arrays.asList(c1, c2))
-            .issueFactory(DEFAULT_ISSUE_FACTORY)
             .entityConverter(ENTITY_CONVERTER)
             .build()
             .find();

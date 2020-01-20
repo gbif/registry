@@ -20,7 +20,6 @@ public class SyncConfigTest {
     assertNotNull(config.getIhWsUrl());
     assertTrue(config.isSaveResultsToFile());
     assertTrue(config.isDryRun());
-    assertTrue(config.isIgnoreConflicts());
     assertNotNull(config.getNotification());
   }
 }

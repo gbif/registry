@@ -1,6 +1,7 @@
 package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.registry.collections.sync.ih.IHEntity;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -24,18 +25,18 @@ public class Utils {
   /**
    * Checks if a {@link CollectionEntity} is more up to date than a IH entity based in the modified
    * date. We don't take into account the GrSciColl modifications made during the initial migration.
-   *
-   * @param ihModifiedDate
-   * @param grSciCollEntity
-   * @return
    */
-  public static boolean isIHOutdated(String ihModifiedDate, CollectionEntity grSciCollEntity) {
+  public static boolean isIHOutdated(IHEntity ihEntity, CollectionEntity grSciCollEntity) {
     return grSciCollEntity != null
         && grSciCollEntity.getModified() != null
         && !GRSCICOLL_MIGRATION_USER.equals(grSciCollEntity.getModifiedBy())
+        && ihEntity != null
         && grSciCollEntity
             .getModified()
             .toInstant()
-            .isAfter(LocalDate.parse(ihModifiedDate).atStartOfDay().toInstant(ZoneOffset.UTC));
+            .isAfter(
+                LocalDate.parse(ihEntity.getDateModified())
+                    .atStartOfDay()
+                    .toInstant(ZoneOffset.UTC));
   }
 }

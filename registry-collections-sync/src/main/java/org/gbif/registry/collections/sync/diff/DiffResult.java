@@ -4,7 +4,9 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
-import org.gbif.registry.collections.sync.notification.Issue;
+import org.gbif.registry.collections.sync.ih.IHEntity;
+import org.gbif.registry.collections.sync.ih.IHInstitution;
+import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.util.List;
 
@@ -26,32 +28,20 @@ public class DiffResult {
   @Singular(value = "institutionToUpdate")
   private List<EntityDiffResult<Institution>> institutionsToUpdate;
 
-  @Singular(value = "institutionConflict")
-  private List<Issue> institutionConflicts;
-
   @Singular(value = "collectionNoChange")
   private List<Collection> collectionsNoChange;
 
   @Singular(value = "collectionToUpdate")
   private List<EntityDiffResult<Collection>> collectionsToUpdate;
 
-  @Singular(value = "collectionConflict")
-  private List<Issue> collectionConflicts;
+  @Singular(value = "outdatedInstitution")
+  private List<IHOutdated<IHInstitution, CollectionEntity>> outdatedIHInstitutions;
 
   @Singular(value = "conflict")
-  private List<Issue> conflicts;
+  private List<Conflict<IHInstitution, CollectionEntity>> conflicts;
 
   @Singular(value = "action")
   private List<FailedAction> failedActions;
-
-  public boolean isEmpty() {
-    return institutionsNoChange.isEmpty()
-        && institutionsToCreate.isEmpty()
-        && institutionsToUpdate.isEmpty()
-        && collectionsNoChange.isEmpty()
-        && collectionsToUpdate.isEmpty()
-        && conflicts.isEmpty();
-  }
 
   @Data
   @AllArgsConstructor
@@ -81,14 +71,18 @@ public class DiffResult {
     @Singular(value = "personToDelete")
     private List<Person> personsToDelete;
 
+    @Singular(value = "outdatedStaff")
+    private List<IHOutdated<IHStaff, Person>> outdatedStaff;
+
     @Singular(value = "conflict")
-    private List<Issue> conflicts;
+    private List<Conflict<IHStaff, Person>> conflicts;
 
     public boolean isEmpty() {
       return personsNoChange.isEmpty()
           && personsToCreate.isEmpty()
           && personsToUpdate.isEmpty()
           && personsToDelete.isEmpty()
+          && outdatedStaff.isEmpty()
           && conflicts.isEmpty();
     }
   }
@@ -105,5 +99,19 @@ public class DiffResult {
   public static class FailedAction {
     private Object entity;
     private String message;
+  }
+
+  @Data
+  @AllArgsConstructor
+  public static class IHOutdated<T extends IHEntity, R extends CollectionEntity> {
+    private T ihEntity;
+    private R grSciCollEntity;
+  }
+
+  @Data
+  @AllArgsConstructor
+  public static class Conflict<T extends IHEntity, R extends CollectionEntity> {
+    private T ihEntity;
+    private List<R> grSciCollEntities;
   }
 }

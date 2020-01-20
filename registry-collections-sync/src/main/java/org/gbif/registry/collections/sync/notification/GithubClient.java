@@ -44,9 +44,8 @@ public class GithubClient {
   }
 
   public static GithubClient create(SyncConfig syncConfig) {
-    if (syncConfig.isIgnoreConflicts() || syncConfig.getNotification() == null) {
-      return null;
-    }
+    Objects.requireNonNull(syncConfig);
+    Objects.requireNonNull(syncConfig.getNotification());
     return new GithubClient(
         syncConfig.getNotification().getGithubWsUrl(),
         syncConfig.getNotification().getGithubUser(),

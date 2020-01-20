@@ -5,36 +5,53 @@ import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.grscicoll.GrSciCollHttpClient;
 import org.gbif.registry.collections.sync.notification.GithubClient;
 import org.gbif.registry.collections.sync.notification.Issue;
+import org.gbif.registry.collections.sync.notification.IssueFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 import static org.gbif.registry.collections.sync.diff.DiffResult.FailedAction;
 import static org.gbif.registry.collections.sync.diff.DiffResult.PersonDiffResult;
 import static org.gbif.registry.collections.sync.diff.DiffResult.StaffDiffResult;
-import static org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 
 /**
  * Handles the results stored in a {@link org.gbif.registry.collections.sync.diff.DiffResult}. This
  * class is responsible to make the necessary updates in GrSciColl and notify the existing
  * conflicts.
  */
-@Builder
 @Slf4j
 public class DiffResultHandler {
-  private SyncConfig config;
-  private DiffResult diffResult;
-  private GrSciCollHttpClient grSciCollHttpClient;
-  private GithubClient githubClient;
+  private final DiffResult diffResult;
+  private final SyncConfig config;
+  private final GrSciCollHttpClient grSciCollHttpClient;
+  private final IssueFactory issueFactory;
+  @Nullable private GithubClient githubClient;
+
+  @Builder
+  private DiffResultHandler(
+      DiffResult diffResult, SyncConfig config, GrSciCollHttpClient grSciCollHttpClient) {
+    this.diffResult = Objects.requireNonNull(diffResult);
+    this.config = Objects.requireNonNull(config);
+    this.grSciCollHttpClient = Objects.requireNonNull(grSciCollHttpClient);
+
+    if (config.isSendNotifications()) {
+      this.githubClient = GithubClient.create(config);
+    }
+
+    this.issueFactory = IssueFactory.fromConfig(config.getNotification());
+  }
 
   public List<FailedAction> handle() {
-    if (config.isDryRun() && config.isIgnoreConflicts()) {
+    if (config.isDryRun() && !config.isSendNotifications()) {
       log.info("Skipping results handler. Dry run and ignore conflicts are both set to true.");
       return Collections.emptyList();
     }
@@ -43,20 +60,46 @@ public class DiffResultHandler {
     fails.addAll(
         executeGrSciCollAction(
             diffResult.getInstitutionsToCreate(),
-            e -> grSciCollHttpClient.createInstitution(e),
+            grSciCollHttpClient::createInstitution,
             ActionType.CREATE));
     fails.addAll(
         executeGrSciCollUpdateAction(
-            diffResult.getInstitutionsToUpdate(), e -> grSciCollHttpClient.updateInstitution(e)));
+            diffResult.getInstitutionsToUpdate(), grSciCollHttpClient::updateInstitution));
     fails.addAll(
         executeGrSciCollUpdateAction(
-            diffResult.getCollectionsToUpdate(), e -> grSciCollHttpClient.updateCollection(e)));
+            diffResult.getCollectionsToUpdate(), grSciCollHttpClient::updateCollection));
+    fails.addAll(createInstitutionIssues());
 
-    if (!config.isIgnoreConflicts()) {
-      fails.addAll(executeConflictAction(diffResult.getInstitutionConflicts()));
-      fails.addAll(executeConflictAction(diffResult.getCollectionConflicts()));
-      fails.addAll(executeConflictAction(diffResult.getConflicts()));
+    if (!fails.isEmpty() && config.isSendNotifications()) {
+      // create issue
+      githubClient.createIssue(issueFactory.createFailsNotification(fails));
     }
+
+    return fails;
+  }
+
+  private List<FailedAction> createInstitutionIssues() {
+    List<FailedAction> fails = new ArrayList<>();
+    if (!config.isSendNotifications()) {
+      log.debug("Ignore conflicts flag enabled. Ignoring conflict.");
+      return fails;
+    }
+
+    List<Issue> issues =
+        diffResult.getOutdatedIHInstitutions().stream()
+            .map(
+                o ->
+                    issueFactory.createOutdatedIHInstitutionIssue(
+                        o.getGrSciCollEntity(), o.getIhEntity()))
+            .collect(Collectors.toList());
+
+    issues.addAll(
+        diffResult.getConflicts().stream()
+            .map(c -> issueFactory.createConflict(c.getGrSciCollEntities(), c.getIhEntity()))
+            .collect(Collectors.toList()));
+
+    issues.forEach(
+        i -> fails.addAll(executeAndStoreFail(githubClient::createIssue, i, ActionType.CREATE)));
 
     return fails;
   }
@@ -65,32 +108,44 @@ public class DiffResultHandler {
     List<FailedAction> fails = new ArrayList<>();
     fails.addAll(
         executeGrSciCollAction(
-            s.getPersonsToCreate(), e -> grSciCollHttpClient.createPerson(e), ActionType.CREATE));
+            s.getPersonsToCreate(), grSciCollHttpClient::createPerson, ActionType.CREATE));
     fails.addAll(
         executeGrSciCollAction(
-            s.getPersonsToDelete(), e -> grSciCollHttpClient.deletePerson(e), ActionType.DELETE));
+            s.getPersonsToDelete(), grSciCollHttpClient::deletePerson, ActionType.DELETE));
     fails.addAll(
         executeGrSciCollAction(
             s.getPersonsToUpdate().stream()
                 .map(PersonDiffResult::getNewPerson)
                 .collect(Collectors.toList()),
-            e -> grSciCollHttpClient.updatePerson(e),
+            grSciCollHttpClient::updatePerson,
             ActionType.UPDATE));
-    fails.addAll(executeConflictAction(s.getConflicts()));
+    fails.addAll(createStaffIssues(s));
 
     return fails;
   }
 
-  private List<FailedAction> executeConflictAction(List<Issue> issues) {
+  private List<FailedAction> createStaffIssues(StaffDiffResult staffDiffResult) {
     List<FailedAction> fails = new ArrayList<>();
-    if (config.isIgnoreConflicts()) {
+    if (!config.isSendNotifications()) {
       log.debug("Ignore conflicts flag enabled. Ignoring conflict.");
       return fails;
     }
+
+    List<Issue> issues =
+        staffDiffResult.getOutdatedStaff().stream()
+            .map(
+                o ->
+                    issueFactory.createOutdatedIHStaffIssue(
+                        o.getGrSciCollEntity(), o.getIhEntity()))
+            .collect(Collectors.toList());
+
+    issues.addAll(
+        staffDiffResult.getConflicts().stream()
+            .map(c -> issueFactory.createStaffConflict(c.getGrSciCollEntities(), c.getIhEntity()))
+            .collect(Collectors.toList()));
+
     issues.forEach(
-        i ->
-            fails.addAll(
-                executeAndStoreFail(e -> githubClient.createIssue(e), i, ActionType.CREATE)));
+        i -> fails.addAll(executeAndStoreFail(githubClient::createIssue, i, ActionType.CREATE)));
     return fails;
   }
 
@@ -106,7 +161,7 @@ public class DiffResultHandler {
   }
 
   private <T extends CollectionEntity> List<FailedAction> executeGrSciCollUpdateAction(
-    List<EntityDiffResult<T>> diffs, Consumer<T> updateAction) {
+      List<EntityDiffResult<T>> diffs, Consumer<T> updateAction) {
     List<FailedAction> fails = new ArrayList<>();
     if (config.isDryRun()) {
       log.debug("Dry run enabled. Ignoring update.");
@@ -117,16 +172,6 @@ public class DiffResultHandler {
         d -> {
           fails.addAll(executeAndStoreFail(updateAction, d.getNewEntity(), ActionType.UPDATE));
           fails.addAll(handleStaffDiff(d.getStaffDiffResult()));
-
-          if (!config.isIgnoreConflicts()) {
-            d.getStaffDiffResult()
-                .getConflicts()
-                .forEach(
-                    c ->
-                        fails.addAll(
-                            executeAndStoreFail(
-                                i -> githubClient.createIssue(i), c, ActionType.CREATE)));
-          }
         });
 
     return fails;
@@ -135,24 +180,21 @@ public class DiffResultHandler {
   private <T> List<FailedAction> executeAndStoreFail(
       Consumer<T> action, T entity, ActionType actionType) {
     List<FailedAction> fails = new ArrayList<>();
-    boolean success = executeSilently(() -> action.accept(entity));
-    if (!success) {
+
+    try {
+      action.accept(entity);
+    } catch (Exception ex) {
       fails.add(
           new FailedAction(
-              entity, entity.getClass().getSimpleName() + " " + actionType.name() + " failed"));
+              entity,
+              entity.getClass().getSimpleName()
+                  + " "
+                  + actionType.name()
+                  + " failed: "
+                  + ex.getMessage()));
     }
 
     return fails;
-  }
-
-  private boolean executeSilently(Runnable runnable) {
-    try {
-      runnable.run();
-      return true;
-    } catch (Exception ex) {
-      log.error("Error updating GrSciColl from IH sync", ex);
-      return false;
-    }
   }
 
   private enum ActionType {

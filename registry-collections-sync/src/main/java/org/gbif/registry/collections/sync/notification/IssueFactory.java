@@ -4,14 +4,14 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.registry.collections.sync.diff.DiffResult;
+import org.gbif.registry.collections.sync.ih.IHEntity;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static org.gbif.registry.collections.sync.SyncConfig.NotificationConfig;
@@ -22,10 +22,11 @@ public class IssueFactory {
   private static final String IH_OUTDATED_TITLE = "The IH %s with IRN %s is outdated";
   private static final String ENTITY_CONFLICT_TITLE =
       "IH %s with IRN %s matches with multiple GrSciColl entities";
+  private static final String FAILS_TITLE =
+      "Some operations have failed updating the registry in the IH sync";
   private static final String NEW_LINE = "\n";
   private static final String CODE_SEPARATOR = "```";
-  private static final List<String> DEFAULT_LABELS =
-      Collections.singletonList("GrSciColl-IH conflict");
+  private static final List<String> DEFAULT_LABELS = Collections.singletonList("GrSciColl-IH sync");
 
   private static final UnaryOperator<String> PORTAL_URL_NORMALIZER =
       url -> {
@@ -71,8 +72,8 @@ public class IssueFactory {
         grSciCollPerson, ihStaff.getIrn(), ihStaff.toString(), EntityType.IH_STAFF);
   }
 
-  public Issue createOutdatedIHInstitutionIssue(
-      CollectionEntity grSciCollEntity, IHInstitution ihInstitution) {
+  public <T extends IHEntity> Issue createOutdatedIHInstitutionIssue(
+      CollectionEntity grSciCollEntity, T ihInstitution) {
     return createOutdatedIHEntityIssue(
         grSciCollEntity,
         ihInstitution.getIrn(),
@@ -112,45 +113,69 @@ public class IssueFactory {
   }
 
   public Issue createConflict(List<CollectionEntity> entities, IHInstitution ihInstitution) {
-    return createConflict(
-        entities, ihInstitution.getIrn(), ihInstitution.toString(), EntityType.IH_INSTITUTION);
+    return createConflict(entities, ihInstitution, EntityType.IH_INSTITUTION);
   }
 
-  public Issue createStaffConflict(Set<Person> persons, IHStaff ihStaff) {
-    return createConflict(
-        persons != null ? new ArrayList<>(persons) : Collections.emptyList(),
-        ihStaff.getIrn(),
-        ihStaff.toString(),
-        EntityType.IH_STAFF);
+  public Issue createStaffConflict(List<Person> persons, IHStaff ihStaff) {
+    return createConflict(persons, ihStaff, EntityType.IH_STAFF);
   }
 
-  private Issue createConflict(
-      List<CollectionEntity> entities, String irn, String entityAsString, EntityType ihEntityType) {
+  private <T extends CollectionEntity> Issue createConflict(
+      List<T> entities, IHEntity ihEntity, EntityType ihEntityType) {
     // create body
     StringBuilder body = new StringBuilder();
     body.append("The IH ")
-        .append(createLink(irn, ihEntityType))
+        .append(createLink(ihEntity.getIrn(), ihEntityType))
         .append(":")
-        .append(formatEntity(entityAsString))
+        .append(formatEntity(ihEntity))
         .append("have multiple candidates in GrSciColl: " + NEW_LINE);
     entities.forEach(
         e ->
             body.append(createLink(e.getKey().toString(), getRegistryEntityType(e), true))
-                .append(formatEntity(e.toString())));
+                .append(formatEntity(e)));
     body.append("A IH ")
         .append(ihEntityType.title)
         .append(" should be associated to only one GrSciColl entity. Please resolve the conflict.");
 
     return Issue.builder()
-        .title(String.format(ENTITY_CONFLICT_TITLE, ihEntityType.title, irn))
+        .title(String.format(ENTITY_CONFLICT_TITLE, ihEntityType.title, ihEntity.getIrn()))
         .body(body.toString())
         .assignees(config.getGhIssuesAssignees())
         .labels(DEFAULT_LABELS)
         .build();
   }
 
-  private String formatEntity(String entity) {
-    return NEW_LINE + CODE_SEPARATOR + NEW_LINE + entity + NEW_LINE + CODE_SEPARATOR + NEW_LINE;
+  public Issue createFailsNotification(List<DiffResult.FailedAction> fails) {
+    // create body
+    StringBuilder body = new StringBuilder();
+    body.append(
+        "The next operations have failed when updating the registry with the IH data. Please check them: ");
+
+    fails.forEach(
+        f ->
+            body.append(NEW_LINE)
+                .append("Error: ")
+                .append(f.getMessage())
+                .append(NEW_LINE)
+                .append("Entity: ")
+                .append(f.getEntity()));
+
+    return Issue.builder()
+        .title(FAILS_TITLE)
+        .body(body.toString())
+        .assignees(config.getGhIssuesAssignees())
+        .labels(DEFAULT_LABELS)
+        .build();
+  }
+
+  private String formatEntity(Object entity) {
+    return NEW_LINE
+        + CODE_SEPARATOR
+        + NEW_LINE
+        + entity.toString()
+        + NEW_LINE
+        + CODE_SEPARATOR
+        + NEW_LINE;
   }
 
   private String createLink(String id, EntityType entityType) {
