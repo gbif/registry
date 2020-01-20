@@ -1,8 +1,9 @@
-package org.gbif.registry.search.dataset.search;
+package org.gbif.registry.search.dataset.search.common;
 
+import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchConstants;
+import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 
@@ -53,15 +54,14 @@ import org.locationtech.jts.io.WKTReader;
 import static org.gbif.api.util.SearchTypeValidator.isRange;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.*;
 
-public class EsSearchRequestBuilder {
+public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private static final int MAX_SIZE_TERMS_AGGS = 1200000;
   private static final IntUnaryOperator DEFAULT_SHARD_SIZE = size -> (size * 2) + 50000;
 
   private EsSearchRequestBuilder() {}
 
-  public static SearchRequest buildSearchRequest(
-    OccurrenceSearchRequest searchRequest, boolean facetsEnabled, String index) {
+  public static <P extends SearchParameter> SearchRequest buildSearchRequest(FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
 
     SearchRequest esRequest = new SearchRequest();
     esRequest.indices(index);
@@ -82,7 +82,7 @@ public class EsSearchRequestBuilder {
     }
 
     // group params
-    GroupedParams groupedParams = groupParameters(searchRequest);
+    GroupedParams<P> groupedParams = groupParameters(searchRequest);
 
     // add query
     buildQuery(groupedParams.queryParams, searchRequest.getQ())
@@ -98,12 +98,11 @@ public class EsSearchRequestBuilder {
     return esRequest;
   }
 
-  public static Optional<QueryBuilder> buildQueryNode(OccurrenceSearchRequest searchRequest) {
+  public static <P extends SearchParameter> Optional<QueryBuilder> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
     return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
   }
 
-  static SearchRequest buildSuggestQuery(
-    String prefix, OccurrenceSearchParameter parameter, Integer limit, String index) {
+  public static <P extends SearchParameter> SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {
     SearchRequest request = new SearchRequest();
     request.indices(index);
 
@@ -128,8 +127,7 @@ public class EsSearchRequestBuilder {
     return request;
   }
 
-  private static Optional<QueryBuilder> buildQuery(
-    Multimap<OccurrenceSearchParameter, String> params, String qParam) {
+  private static <P extends SearchParameter> Optional<QueryBuilder> buildQuery(Multimap<P, String> params, String qParam) {
     // create bool node
     BoolQueryBuilder bool = QueryBuilders.boolQuery();
 
@@ -145,7 +143,7 @@ public class EsSearchRequestBuilder {
         shouldGeometry
             .should()
             .addAll(
-                params.get(OccurrenceSearchParameter.GEOMETRY).stream()
+                params.get((P)OccurrenceSearchParameter.GEOMETRY).stream()
                     .map(EsSearchRequestBuilder::buildGeoShapeQuery)
                     .collect(Collectors.toList()));
         bool.filter().add(shouldGeometry);
@@ -158,9 +156,7 @@ public class EsSearchRequestBuilder {
                   .filter(e -> Objects.nonNull(SEARCH_TO_ES_MAPPING.get(e.getKey())))
                   .flatMap(
                       e ->
-                          buildTermQuery(
-                              e.getValue(), e.getKey(), SEARCH_TO_ES_MAPPING.get(e.getKey()))
-                              .stream())
+                          buildTermQuery(e.getValue(), e.getKey(), SEARCH_TO_ES_MAPPING.get(e.getKey())).stream())
                   .collect(Collectors.toList()));
     }
 
@@ -168,8 +164,8 @@ public class EsSearchRequestBuilder {
   }
 
   @VisibleForTesting
-  static GroupedParams groupParameters(OccurrenceSearchRequest searchRequest) {
-    GroupedParams groupedParams = new GroupedParams();
+  static <P extends SearchParameter> GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
+    GroupedParams groupedParams = new GroupedParams<P>();
 
     if (!searchRequest.isMultiSelectFacets()
         || searchRequest.getFacets() == null
@@ -196,8 +192,7 @@ public class EsSearchRequestBuilder {
     return groupedParams;
   }
 
-  private static Optional<QueryBuilder> buildPostFilter(
-      Multimap<OccurrenceSearchParameter, String> postFilterParams) {
+  private static <P extends SearchParameter> Optional<QueryBuilder> buildPostFilter(Multimap<P, String> postFilterParams) {
     if (postFilterParams == null || postFilterParams.isEmpty()) {
       return Optional.empty();
     }
@@ -216,28 +211,21 @@ public class EsSearchRequestBuilder {
     return Optional.of(bool);
   }
 
-  private static Optional<List<AggregationBuilder>> buildAggs(
-      OccurrenceSearchRequest searchRequest,
-      Multimap<OccurrenceSearchParameter, String> postFilterParams,
-      boolean facetsEnabled) {
-    if (!facetsEnabled
-        || searchRequest.getFacets() == null
-        || searchRequest.getFacets().isEmpty()) {
+  private static <P extends SearchParameter> Optional<List<AggregationBuilder>> buildAggs(FacetedSearchRequest<P> searchRequest,
+                                                                                          Multimap<P, String> postFilterParams,
+                                                                                          boolean facetsEnabled) {
+    if (!facetsEnabled || searchRequest.getFacets() == null || searchRequest.getFacets().isEmpty()) {
       return Optional.empty();
     }
 
-    if (searchRequest.isMultiSelectFacets()
-        && postFilterParams != null
-        && !postFilterParams.isEmpty()) {
+    if (searchRequest.isMultiSelectFacets() && postFilterParams != null && !postFilterParams.isEmpty()) {
       return Optional.of(buildFacetsMultiselect(searchRequest, postFilterParams));
     }
 
     return Optional.of(buildFacets(searchRequest));
   }
 
-  private static List<AggregationBuilder> buildFacetsMultiselect(
-      OccurrenceSearchRequest searchRequest,
-      Multimap<OccurrenceSearchParameter, String> postFilterParams) {
+  private static <P extends SearchParameter> List<AggregationBuilder> buildFacetsMultiselect(FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
 
     if (searchRequest.getFacets().size() == 1) {
       // same case as normal facets
@@ -284,7 +272,7 @@ public class EsSearchRequestBuilder {
         .collect(Collectors.toList());
   }
 
-  private static List<AggregationBuilder> buildFacets(OccurrenceSearchRequest searchRequest) {
+  private static <P extends SearchParameter> List<AggregationBuilder> buildFacets(FacetedSearchRequest<P> searchRequest) {
     return searchRequest.getFacets().stream()
         .filter(p -> SEARCH_TO_ES_MAPPING.get(p) != null)
         .map(
@@ -342,7 +330,7 @@ public class EsSearchRequestBuilder {
    * Mapping parameter values into know values for Enums. Non-enum parameter values are passed using
    * its raw value.
    */
-  private static String parseParamValue(String value, OccurrenceSearchParameter parameter) {
+  private static <P extends SearchParameter> String parseParamValue(String value, P parameter) {
     if (Enum.class.isAssignableFrom(parameter.type())
         && !Country.class.isAssignableFrom(parameter.type())) {
       return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
@@ -355,8 +343,7 @@ public class EsSearchRequestBuilder {
     return value;
   }
 
-  private static List<QueryBuilder> buildTermQuery(
-    Collection<String> values, OccurrenceSearchParameter param, String esField) {
+  private static <P extends SearchParameter> List<QueryBuilder> buildTermQuery(Collection<String> values, P param, String esField) {
     List<QueryBuilder> queries = new ArrayList<>();
 
     // collect queries for each value
@@ -485,8 +472,8 @@ public class EsSearchRequestBuilder {
   }
 
   @VisibleForTesting
-  static class GroupedParams {
-    Multimap<OccurrenceSearchParameter, String> postFilterParams;
-    Multimap<OccurrenceSearchParameter, String> queryParams;
+  static class GroupedParams<P extends SearchParameter> {
+    Multimap<P, String> postFilterParams;
+    Multimap<P, String> queryParams;
   }
 }

@@ -77,7 +77,7 @@ public class EsQueryUtils {
       + "[yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss XXX][yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mm:ss]"
       + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]");
 
-  static final Function<String, Date> STRING_TO_DATE =
+  public static final Function<String, Date> STRING_TO_DATE =
     dateAsString -> {
       if (Strings.isNullOrEmpty(dateAsString)) {
         return null;
@@ -178,7 +178,7 @@ public class EsQueryUtils {
       return builder.build();
     };
 
-  public static final ImmutableMap<DatasetSearchParameter, String> SEARCH_TO_ES_MAPPING = ImmutableMap.<DatasetSearchParameter,String>builder()
+  public static final ImmutableMap<? extends SearchParameter, String> SEARCH_TO_ES_MAPPING = ImmutableMap.<DatasetSearchParameter,String>builder()
     .put(DatasetSearchParameter.TAXON_KEY, "taxonKey")
     .put(DatasetSearchParameter.CONTINENT, "continent")
     .put(DatasetSearchParameter.COUNTRY, "country")
@@ -214,11 +214,11 @@ public class EsQueryUtils {
       "created",
       "pubDate");
 
-  public static final Map<String, DatasetSearchParameter> ES_TO_SEARCH_MAPPING =
+  public static final Map<String, SearchParameter> ES_TO_SEARCH_MAPPING =
     new HashMap<>(SEARCH_TO_ES_MAPPING.size());
 
   static {
-    for (Map.Entry<DatasetSearchParameter, String> paramField :
+    for (Map.Entry<? extends SearchParameter, String> paramField :
       SEARCH_TO_ES_MAPPING.entrySet()) {
       ES_TO_SEARCH_MAPPING.put(paramField.getValue(), paramField.getKey());
     }
