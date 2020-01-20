@@ -21,9 +21,6 @@
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <discriminator javaType="string" column="format">
-        <case value="SQL" resultType="org.gbif.api.model.occurrence.SqlDownloadRequest">
-          <result property="sql" column="filter" />
-        </case>
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="PredicateTypeHandler" />
         </case>
