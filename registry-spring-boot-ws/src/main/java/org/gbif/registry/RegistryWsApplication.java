@@ -4,12 +4,15 @@ import org.gbif.registry.search.dataset.indexing.DatasetBatchIndexBuilder;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {ElasticsearchAutoConfiguration.class,
+  ElasticSearchRestHealthContributorAutoConfiguration.class})
 @MapperScan("org.gbif.registry.persistence.mapper")
 @EnableConfigurationProperties
 @ComponentScan( basePackages = {

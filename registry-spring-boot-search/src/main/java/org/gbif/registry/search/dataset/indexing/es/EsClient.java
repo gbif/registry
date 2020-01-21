@@ -26,6 +26,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -115,6 +116,11 @@ public class EsClient implements Closeable {
     }
 
     return new RestHighLevelClient(RestClient.builder(hosts));
+  }
+
+  @Bean
+  public RestHighLevelClient provideRestHighLevelClient(@Value("${esHosts}") String hosts) {
+    return provideEsClient(hosts.split(","));
   }
 
   @Override
