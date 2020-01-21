@@ -1,13 +1,18 @@
 @Enumeration
 Feature: Enumeration functionality
 
-  Scenario: get enumeration basic
-    When get enumeration basic "Language"
+  Scenario Outline: get enumeration basic <enumeration>
+    When get enumeration basic "<enumeration>"
     Then response status should be 200
-    And element number 0 is "abk"
-    When get enumeration basic "Extension"
-    Then response status should be 200
-    And element number 0 is "AUDUBON"
+    And element number 0 is "<expected>"
+
+    Scenarios:
+      | enumeration      | expected                   |
+      | Country          | AF                         |
+      | ContactType      | TECHNICAL_POINT_OF_CONTACT |
+      | InstallationType | IPT_INSTALLATION           |
+      | Language         | abk                        |
+      | Extension        | AUDUBON                    |
 
   Scenario: get country enumeration
     When get country enumeration

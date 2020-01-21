@@ -1,36 +1,6 @@
 {
   "properties": [
     {
-      "name": "mail.devemail.enabled",
-      "type": "java.lang.Boolean"
-    },
-    {
-      "name": "mail.smtp.host",
-      "type": "java.lang.String"
-    },
-    {
-      "name": "mail.smtp.port",
-      "type": "java.lang.Integer"
-    },
-    {
-      "name": "mail.devemail.address",
-      "type": "java.lang.String"
-    },
-    {
-      "name": "mail.cc",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "mail.bcc",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "mail.from",
-      "type": "java.lang.String"
-    },
-    {
       "name": "jwt.signingKey",
       "type": "java.lang.String"
     },
@@ -41,6 +11,36 @@
     {
       "name": "jwt.issuer",
       "type": "java.lang.String"
+    },
+    {
+      "name": "solr.dataset.serverType",
+      "type": "org.gbif.common.search.solr.SolrServerType",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getType()"
+    },
+    {
+      "name": "solr.dataset.home",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getHome()"
+    },
+    {
+      "name": "solr.dataset.collection",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getCollection()"
+    },
+    {
+      "name": "solr.dataset.delete",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getDelete()"
+    },
+    {
+      "name": "solr.indexing.threads",
+      "type": "java.lang.Integer",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getThreads()"
     }
   ]
 }

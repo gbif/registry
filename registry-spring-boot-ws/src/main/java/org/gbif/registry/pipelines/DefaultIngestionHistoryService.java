@@ -7,6 +7,7 @@ import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.domain.pipelines.IngestionProcess;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.springframework.stereotype.Service;
@@ -21,15 +22,15 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
 
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final PipelineProcessMapper pipelineProcessMapper;
-  private final DatasetService datasetService;
+  private final DatasetMapper datasetMapper;
 
   public DefaultIngestionHistoryService(
     DatasetProcessStatusMapper datasetProcessStatusMapper,
     PipelineProcessMapper pipelineProcessMapper,
-    DatasetService datasetService) {
+    DatasetMapper datasetMapper) {
     this.datasetProcessStatusMapper = datasetProcessStatusMapper;
     this.pipelineProcessMapper = pipelineProcessMapper;
-    this.datasetService = datasetService;
+    this.datasetMapper = datasetMapper;
   }
 
   @Override
@@ -73,7 +74,7 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
         .setAttempt(attempt)
         .setCrawlInfo(datasetProcessStatus);
 
-    Dataset dataset = datasetService.get(datasetKey);
+    Dataset dataset = datasetMapper.get(datasetKey);
     if (dataset != null) {
       ingestionProcess.setDatasetTitle(dataset.getTitle());
     }

@@ -7,6 +7,7 @@ import org.gbif.registry.ws.security.jwt.JwtRequestFilter;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.HttpServletRequestWrapperFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
+import org.gbif.ws.server.filter.RequestHeaderParamUpdateFilter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +52,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     http
       .httpBasic().disable()
       .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
-      .addFilterAfter(context.getBean(IdentityFilter.class), HttpServletRequestWrapperFilter.class)
+      .addFilterAfter(context.getBean(RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
+      .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
       .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
       .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
       .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)

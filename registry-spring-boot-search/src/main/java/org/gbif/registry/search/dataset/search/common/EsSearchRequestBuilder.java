@@ -59,9 +59,13 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   private static final int MAX_SIZE_TERMS_AGGS = 1200000;
   private static final IntUnaryOperator DEFAULT_SHARD_SIZE = size -> (size * 2) + 50000;
 
-  private EsSearchRequestBuilder() {}
+  private final EsFieldParameterMapper<P> parameterMapper;
 
-  public static <P extends SearchParameter> SearchRequest buildSearchRequest(FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
+  public EsSearchRequestBuilder(EsFieldParameterMapper<P> parameterMapper) {
+    this.parameterMapper = parameterMapper;
+  }
+
+  public SearchRequest buildSearchRequest(FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
 
     SearchRequest esRequest = new SearchRequest();
     esRequest.indices(index);
@@ -98,18 +102,18 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return esRequest;
   }
 
-  public static <P extends SearchParameter> Optional<QueryBuilder> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
+  public Optional<QueryBuilder> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
     return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
   }
 
-  public static <P extends SearchParameter> SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {
+  public SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {
     SearchRequest request = new SearchRequest();
     request.indices(index);
 
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     request.source(searchSourceBuilder);
 
-    String esField = SEARCH_TO_ES_MAPPING.get(parameter);
+    String esField = parameterMapper.get(parameter);
 
     // create suggest query
     searchSourceBuilder.suggest(
@@ -127,7 +131,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return request;
   }
 
-  private static <P extends SearchParameter> Optional<QueryBuilder> buildQuery(Multimap<P, String> params, String qParam) {
+  private Optional<QueryBuilder> buildQuery(Multimap<P, String> params, String qParam) {
     // create bool node
     BoolQueryBuilder bool = QueryBuilders.boolQuery();
 
@@ -153,10 +157,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       bool.filter()
           .addAll(
               params.asMap().entrySet().stream()
-                  .filter(e -> Objects.nonNull(SEARCH_TO_ES_MAPPING.get(e.getKey())))
+                  .filter(e -> Objects.nonNull(parameterMapper.get(e.getKey())))
                   .flatMap(
                       e ->
-                          buildTermQuery(e.getValue(), e.getKey(), SEARCH_TO_ES_MAPPING.get(e.getKey())).stream())
+                          buildTermQuery(e.getValue(), e.getKey(), parameterMapper.get(e.getKey())).stream())
                   .collect(Collectors.toList()));
     }
 
@@ -164,7 +168,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   @VisibleForTesting
-  static <P extends SearchParameter> GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
+  GroupedParams groupParameters(FacetedSearchRequest<P> searchRequest) {
     GroupedParams groupedParams = new GroupedParams<P>();
 
     if (!searchRequest.isMultiSelectFacets()
@@ -192,7 +196,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return groupedParams;
   }
 
-  private static <P extends SearchParameter> Optional<QueryBuilder> buildPostFilter(Multimap<P, String> postFilterParams) {
+  private Optional<QueryBuilder> buildPostFilter(Multimap<P, String> postFilterParams) {
     if (postFilterParams == null || postFilterParams.isEmpty()) {
       return Optional.empty();
     }
@@ -204,14 +208,14 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                 .flatMap(
                     e ->
                         buildTermQuery(
-                            e.getValue(), e.getKey(), SEARCH_TO_ES_MAPPING.get(e.getKey()))
+                            e.getValue(), e.getKey(), parameterMapper.get(e.getKey()))
                             .stream())
                 .collect(Collectors.toList()));
 
     return Optional.of(bool);
   }
 
-  private static <P extends SearchParameter> Optional<List<AggregationBuilder>> buildAggs(FacetedSearchRequest<P> searchRequest,
+  private Optional<List<AggregationBuilder>> buildAggs(FacetedSearchRequest<P> searchRequest,
                                                                                           Multimap<P, String> postFilterParams,
                                                                                           boolean facetsEnabled) {
     if (!facetsEnabled || searchRequest.getFacets() == null || searchRequest.getFacets().isEmpty()) {
@@ -225,7 +229,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return Optional.of(buildFacets(searchRequest));
   }
 
-  private static <P extends SearchParameter> List<AggregationBuilder> buildFacetsMultiselect(FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
+  private List<AggregationBuilder> buildFacetsMultiselect(FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
 
     if (searchRequest.getFacets().size() == 1) {
       // same case as normal facets
@@ -233,7 +237,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     }
 
     return searchRequest.getFacets().stream()
-        .filter(p -> SEARCH_TO_ES_MAPPING.get(p) != null)
+        .filter(p -> parameterMapper.get(p) != null)
         .map(
             facetParam -> {
 
@@ -248,12 +252,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                                   buildTermQuery(
                                       e.getValue(),
                                       e.getKey(),
-                                      SEARCH_TO_ES_MAPPING.get(e.getKey()))
+                                      parameterMapper.get(e.getKey()))
                                       .stream())
                           .collect(Collectors.toList()));
 
               // add filter to the aggs
-              String esField = SEARCH_TO_ES_MAPPING.get(facetParam);
+              String esField = parameterMapper.get(facetParam);
               FilterAggregationBuilder filterAggs =
                   AggregationBuilders.filter(esField, bool);
 
@@ -272,12 +276,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
         .collect(Collectors.toList());
   }
 
-  private static <P extends SearchParameter> List<AggregationBuilder> buildFacets(FacetedSearchRequest<P> searchRequest) {
+  private List<AggregationBuilder> buildFacets(FacetedSearchRequest<P> searchRequest) {
     return searchRequest.getFacets().stream()
-        .filter(p -> SEARCH_TO_ES_MAPPING.get(p) != null)
+        .filter(p -> parameterMapper.get(p) != null)
         .map(
             facetParam -> {
-              String esField = SEARCH_TO_ES_MAPPING.get(facetParam);
+              String esField = parameterMapper.get(facetParam);
               return buildTermsAggs(
                   esField,
                   esField,
@@ -330,7 +334,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
    * Mapping parameter values into know values for Enums. Non-enum parameter values are passed using
    * its raw value.
    */
-  private static <P extends SearchParameter> String parseParamValue(String value, P parameter) {
+  private String parseParamValue(String value, P parameter) {
     if (Enum.class.isAssignableFrom(parameter.type())
         && !Country.class.isAssignableFrom(parameter.type())) {
       return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
@@ -343,7 +347,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return value;
   }
 
-  private static <P extends SearchParameter> List<QueryBuilder> buildTermQuery(Collection<String> values, P param, String esField) {
+  private List<QueryBuilder> buildTermQuery(Collection<String> values, P param, String esField) {
     List<QueryBuilder> queries = new ArrayList<>();
 
     // collect queries for each value

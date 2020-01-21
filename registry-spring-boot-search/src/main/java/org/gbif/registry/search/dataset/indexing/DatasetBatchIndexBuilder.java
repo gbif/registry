@@ -3,11 +3,9 @@ package org.gbif.registry.search.dataset.indexing;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +30,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -85,11 +81,6 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner {
       log.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
-  @Bean("apiMapper")
-  ObjectMapper objectMapper() {
-    return JacksonObjectMapper.get();
-  }
-
   private BulkResponse index(PagingResponse<Dataset> pagingResponse, DatasetJsonConverter datasetJsonConverter, String indexName, EsClient esClient) {
     try {
       BulkRequest bulkRequest = new BulkRequest();
@@ -119,7 +110,6 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner {
       response.setEndOfRecords(pagingResponse.isEndOfRecords());
       responseConsumer.accept(pagingResponse);
       page.nextPage();
-      return;
     } while (!response.isEndOfRecords());
 
   }

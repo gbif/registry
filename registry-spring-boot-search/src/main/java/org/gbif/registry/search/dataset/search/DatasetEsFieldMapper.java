@@ -23,6 +23,7 @@ public class DatasetEsFieldMapper implements EsFieldParameterMapper<DatasetSearc
     .put(DatasetSearchParameter.RECORD_COUNT,"occurrenceCount")
     .put(DatasetSearchParameter.SUBTYPE, "subtype")
     .put(DatasetSearchParameter.TYPE, "type")
+    .put(DatasetSearchParameter.DATASET_TITLE, "title")
     .build();
 
 

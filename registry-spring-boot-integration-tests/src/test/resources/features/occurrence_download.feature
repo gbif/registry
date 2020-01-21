@@ -19,7 +19,7 @@ Feature: Occurrence Download functionality
     When get download
     Then response status should be 200
     And predicate download assertions passed
-      | license                  | UNSPECIFIED |
+      | license                  | unspecified |
       | request.predicate.type   | equals      |
       | request.predicate.key    | TAXON_KEY   |
       | request.predicate.value  | 212         |
@@ -33,7 +33,7 @@ Feature: Occurrence Download functionality
     When get download by doi
     Then response status should be 200
     And predicate download assertions passed
-      | license                  | UNSPECIFIED |
+      | license                  | unspecified |
       | request.predicate.type   | equals      |
       | request.predicate.key    | TAXON_KEY   |
       | request.predicate.value  | 212         |
@@ -53,7 +53,7 @@ Feature: Occurrence Download functionality
     When get download
     Then response status should be 200
     And predicate download assertions passed
-      | license                  | UNSPECIFIED |
+      | license                  | unspecified |
       | request.sendNotification | true        |
       | request.format           | DWCA        |
       | status                   | PREPARING   |
@@ -70,7 +70,7 @@ Feature: Occurrence Download functionality
     When get download
     Then response status should be 200
     And sql download assertions passed
-      | license                  | UNSPECIFIED                       |
+      | license                  | unspecified                       |
       | request.sql              | SELECT datasetKey FROM occurrence |
       | request.sendNotification | true                              |
       | request.format           | SQL                               |
@@ -88,7 +88,7 @@ Feature: Occurrence Download functionality
     When get download
     Then response status should be 200
     And sql download assertions passed
-      | license                  | UNSPECIFIED |
+      | license                  | unspecified |
       | request.sendNotification | true        |
       | request.format           | SQL         |
       | status                   | PREPARING   |
