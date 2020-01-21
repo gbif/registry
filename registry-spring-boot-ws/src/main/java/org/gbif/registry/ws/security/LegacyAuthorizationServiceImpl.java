@@ -5,10 +5,10 @@ import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
@@ -37,14 +37,14 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   private static final Splitter COLON_SPLITTER = Splitter.on(":").limit(2);
 
   private final OrganizationService organizationService;
-  private final DatasetService datasetService;
+  private final DatasetMapper datasetMapper;
   private final InstallationService installationService;
 
   public LegacyAuthorizationServiceImpl(OrganizationService organizationService,
-                                        DatasetService datasetService,
+                                        DatasetMapper datasetMapper,
                                         InstallationService installationService) {
     this.organizationService = organizationService;
-    this.datasetService = datasetService;
+    this.datasetMapper = datasetMapper;
     this.installationService = installationService;
   }
 
@@ -159,7 +159,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     Dataset dataset;
 
     try {
-      dataset = datasetService.get(datasetKey);
+      dataset = datasetMapper.get(datasetKey);
     } catch (NotFoundException e) {
       LOG.error("Dataset with key={} does not exist", datasetKey);
       return false;

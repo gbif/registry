@@ -178,24 +178,6 @@ public class EsQueryUtils {
       return builder.build();
     };
 
-  public static final ImmutableMap<? extends SearchParameter, String> SEARCH_TO_ES_MAPPING = ImmutableMap.<DatasetSearchParameter,String>builder()
-    .put(DatasetSearchParameter.TAXON_KEY, "taxonKey")
-    .put(DatasetSearchParameter.CONTINENT, "continent")
-    .put(DatasetSearchParameter.COUNTRY, "country")
-    .put(DatasetSearchParameter.PUBLISHING_COUNTRY, "publishingCountry")
-    .put(DatasetSearchParameter.YEAR, "year")
-    .put(DatasetSearchParameter.DECADE, "decade")
-    .put(DatasetSearchParameter.HOSTING_ORG, "hostingOrganizationKey")
-    .put(DatasetSearchParameter.KEYWORD, "keyword")
-    .put(DatasetSearchParameter.LICENSE, "license")
-    .put(DatasetSearchParameter.MODIFIED_DATE, "modified")
-    .put(DatasetSearchParameter.PROJECT_ID, "project.identifier")
-    .put(DatasetSearchParameter.PUBLISHING_ORG, "publishingOrganizationKey")
-    .put(DatasetSearchParameter.RECORD_COUNT,"occurrenceCount")
-    .put(DatasetSearchParameter.SUBTYPE, "subtype")
-    .put(DatasetSearchParameter.TYPE, "type")
-    .build();
-
   public static final Map<String, Integer> CARDINALITIES =
     ImmutableMap.<String, Integer>builder()
       .put("license", License.values().length)
@@ -213,16 +195,6 @@ public class EsQueryUtils {
       "modified",
       "created",
       "pubDate");
-
-  public static final Map<String, SearchParameter> ES_TO_SEARCH_MAPPING =
-    new HashMap<>(SEARCH_TO_ES_MAPPING.size());
-
-  static {
-    for (Map.Entry<? extends SearchParameter, String> paramField :
-      SEARCH_TO_ES_MAPPING.entrySet()) {
-      ES_TO_SEARCH_MAPPING.put(paramField.getValue(), paramField.getKey());
-    }
-  }
 
   public static <P extends SearchParameter> int extractFacetLimit(FacetedSearchRequest<P> request, P facet) {
     return Optional.ofNullable(request.getFacetPage(facet))

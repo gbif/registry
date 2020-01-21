@@ -1,9 +1,6 @@
 package org.gbif.registry.pipelines;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -34,6 +31,7 @@ import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -69,27 +67,13 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   // Used to iterate over all datasets
   private static final int PAGE_SIZE = 200;
 
-  // Used to read serialized messages stored in the data base as strings.
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  static {
-    OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    // determines whether encountering of unknown properties (ones that do not map to a property,
-    // and there is no
-    // "any setter" or handler that can handle it) should result in a failure (throwing a
-    // JsonMappingException) or not.
-    OBJECT_MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-    // Enforce use of ISO-8601 format dates (http://wiki.fasterxml.com/JacksonFAQDateHandling)
-    OBJECT_MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-  }
-
   private static final Comparator<Endpoint> ENDPOINT_COMPARATOR =
     Ordering.compound(
       Lists.newArrayList(
         Collections.reverseOrder(new EndpointPriorityComparator()),
         EndpointCreatedComparator.INSTANCE));
 
+  private ObjectMapper objectMapper;
   /**
    * The messagePublisher can be optional.
    */
@@ -100,9 +84,11 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   private final DatasetService datasetService;
 
   public DefaultPipelinesHistoryTrackingService(
+    @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
     @Autowired(required = false) MessagePublisher publisher,
     PipelineProcessMapper mapper,
     @Lazy DatasetService datasetService) {
+    this.objectMapper = objectMapper;
     this.publisher = publisher;
     this.mapper = mapper;
     this.datasetService = datasetService;
@@ -389,12 +375,12 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
 
   private <T extends PipelineBasedMessage> T createMessage(String jsonMessage, Class<T> targetClass)
     throws IOException {
-    return OBJECT_MAPPER.readValue(jsonMessage, targetClass);
+    return objectMapper.readValue(jsonMessage, targetClass);
   }
 
   private PipelineBasedMessage createVerbatimMessage(String prefix, String jsonMessage) throws IOException {
     PipelinesVerbatimMessage message =
-      OBJECT_MAPPER.readValue(jsonMessage, PipelinesVerbatimMessage.class);
+      objectMapper.readValue(jsonMessage, PipelinesVerbatimMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     message.setPipelineSteps(
       new HashSet<>(
@@ -409,7 +395,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   private PipelineBasedMessage createInterpretedMessage(String prefix, String jsonMessage, StepType stepType)
     throws IOException {
     PipelinesInterpretedMessage message =
-      OBJECT_MAPPER.readValue(jsonMessage, PipelinesInterpretedMessage.class);
+      objectMapper.readValue(jsonMessage, PipelinesInterpretedMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     message.setOnlyForStep(stepType.name());
     message.setPipelineSteps(Collections.singleton(stepType.name()));

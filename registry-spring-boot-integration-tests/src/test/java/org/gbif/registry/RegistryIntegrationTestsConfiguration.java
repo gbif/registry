@@ -21,8 +21,13 @@ import java.util.Date;
 
 @TestConfiguration
 @EnableAutoConfiguration
-@ComponentScan(basePackages = {"org.gbif.ws.server.interceptor",
-  "org.gbif.ws.server.filter", "org.gbif.ws.security", "org.gbif.query", "org.gbif.registry"})
+@ComponentScan(basePackages = {
+  "org.gbif.ws.server.interceptor",
+  "org.gbif.ws.server.filter",
+  "org.gbif.ws.security",
+  "org.gbif.registry",
+  "org.gbif.registry.ws.security",
+})
 @PropertySource("classpath:application-test.yml")
 public class RegistryIntegrationTestsConfiguration {
 

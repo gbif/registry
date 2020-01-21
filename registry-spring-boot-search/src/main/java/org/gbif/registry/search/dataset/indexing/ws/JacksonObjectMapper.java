@@ -6,9 +6,10 @@ import org.gbif.api.vocabulary.License;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import lombok.experimental.UtilityClass;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
-@UtilityClass
+@Component
 public class JacksonObjectMapper {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -24,6 +25,12 @@ public class JacksonObjectMapper {
 
   public static ObjectMapper get() {
     return OBJECT_MAPPER;
+  }
+
+
+  @Bean("apiMapper")
+  ObjectMapper objectMapper() {
+    return JacksonObjectMapper.get();
   }
 
 }
