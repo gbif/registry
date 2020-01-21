@@ -60,12 +60,21 @@ public class PersonIT extends CrudTest<Person> {
   public static Iterable<Object[]> data() {
     final Injector client = webserviceClient();
     final Injector webservice = webservice();
-    return ImmutableList.<Object[]>of(new Object[] {webservice.getInstance(PersonResource.class),
-                                        webservice.getInstance(InstitutionResource.class), webservice.getInstance(CollectionResource.class), null},
-                                      new Object[] {client.getInstance(PersonService.class),
-                                        client.getInstance(InstitutionService.class),
-                                        client.getInstance(CollectionService.class),
-                                        client.getInstance(SimplePrincipalProvider.class)});
+    return ImmutableList.<Object[]>of(
+        new Object[] {
+          webservice.getInstance(PersonResource.class),
+          webservice.getInstance(InstitutionResource.class),
+          webservice.getInstance(CollectionResource.class),
+          webservice.getInstance(PersonResource.class),
+          null
+        },
+        new Object[] {
+          client.getInstance(PersonService.class),
+          client.getInstance(InstitutionService.class),
+          client.getInstance(CollectionService.class),
+          client.getInstance(PersonService.class),
+          client.getInstance(SimplePrincipalProvider.class)
+        });
   }
 
   public PersonIT(

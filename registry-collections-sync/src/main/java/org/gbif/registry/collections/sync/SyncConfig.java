@@ -71,7 +71,7 @@ public class SyncConfig {
         && (Strings.isNullOrEmpty(config.getRegistryWsUser())
             || Strings.isNullOrEmpty(config.getRegistryWsPassword()))) {
       throw new IllegalArgumentException(
-        "Registry WS credentials are required if we are not doing a dry run");
+          "Registry WS credentials are required if we are not doing a dry run");
     }
 
     if (config.isSendNotifications()) {
@@ -80,8 +80,7 @@ public class SyncConfig {
       }
 
       if (!config.getNotification().getGithubWsUrl().endsWith("/")) {
-        throw new IllegalArgumentException(
-          "Github API URL must finish with a /.");
+        throw new IllegalArgumentException("Github API URL must finish with a /.");
       }
 
       if (Strings.isNullOrEmpty(config.getNotification().getGithubUser())
@@ -89,6 +88,7 @@ public class SyncConfig {
         throw new IllegalArgumentException(
             "Github credentials are required if we are not ignoring conflicts.");
       }
+
       if (Strings.isNullOrEmpty(config.getNotification().getRegistryPortalUrl())
           || Strings.isNullOrEmpty(config.getNotification().getIhPortalUrl())) {
         throw new IllegalArgumentException("Portal URLs are required");

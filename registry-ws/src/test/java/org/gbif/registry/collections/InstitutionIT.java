@@ -35,7 +35,6 @@ import static org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class InstitutionIT extends BaseCollectionTest<Institution> {
 
-  private static final String CODE = "code";
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
   private static final URI HOMEPAGE = URI.create("http://dummy");
@@ -90,24 +89,26 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     Institution institution3 = newEntity();
     UUID key3 = institutionService.create(institution3);
 
-    PagingResponse<Institution> response = institutionService.list(null, null, PAGE.apply(5, 0L));
+    PagingResponse<Institution> response = institutionService.list(null, null, null, null, PAGE.apply(5, 0L));
     assertEquals(3, response.getResults().size());
 
     institutionService.delete(key3);
 
-    response = institutionService.list(null, null, PAGE.apply(5, 0L));
+    response = institutionService.list(null, null, null, null, PAGE.apply(5, 0L));
     assertEquals(2, response.getResults().size());
 
-    response = institutionService.list(null, null, PAGE.apply(1, 0L));
+    response = institutionService.list(null, null, null, null, PAGE.apply(1, 0L));
     assertEquals(1, response.getResults().size());
 
-    response = institutionService.list(null, null, PAGE.apply(0, 0L));
+    response = institutionService.list(null, null, null, null, PAGE.apply(0, 0L));
     assertEquals(0, response.getResults().size());
   }
 
   @Test
-  public void listQueryTest() {
+  public void listTest() {
     Institution institution1 = newEntity();
+    institution1.setCode("c1");
+    institution1.setName("n1");
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -115,6 +116,8 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     UUID key1 = institutionService.create(institution1);
 
     Institution institution2 = newEntity();
+    institution2.setCode("c2");
+    institution2.setName("n2");
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -122,36 +125,43 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     UUID key2 = institutionService.create(institution2);
 
     Pageable page = PAGE.apply(5, 0L);
-    PagingResponse<Institution> response = institutionService.list("dummy", null, page);
+    PagingResponse<Institution> response = institutionService.list("dummy", null, null, null, page);
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = institutionService.list("", null, page);
+    response = institutionService.list("", null, null, null,page);
     assertEquals(2, response.getResults().size());
 
-    response = institutionService.list("city", null, page);
+    response = institutionService.list("city", null, null, null,page);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = institutionService.list("city2", null, page);
+    response = institutionService.list("city2", null, null, null,page);
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(2, institutionService.list("c", null, page).getResults().size());
-    assertEquals(2, institutionService.list("dum add", null, page).getResults().size());
-    assertEquals(0, institutionService.list("<", null, page).getResults().size());
-    assertEquals(0, institutionService.list("\"<\"", null, page).getResults().size());
-    assertEquals(2, institutionService.list(null, null, page).getResults().size());
-    assertEquals(2, institutionService.list("  ", null, page).getResults().size());
+    // code and name params
+    assertEquals(1, institutionService.list(null, null, "c1", null, page).getResults().size());
+    assertEquals(1, institutionService.list(null, null, null, "n2", page).getResults().size());
+    assertEquals(1, institutionService.list(null, null, "c1", "n1", page).getResults().size());
+    assertEquals(0, institutionService.list(null, null, "c2", "n1", page).getResults().size());
+
+    // query param
+    assertEquals(2, institutionService.list("c", null, null, null, page).getResults().size());
+    assertEquals(2, institutionService.list("dum add", null, null, null, page).getResults().size());
+    assertEquals(0, institutionService.list("<", null, null, null, page).getResults().size());
+    assertEquals(0, institutionService.list("\"<\"", null, null, null, page).getResults().size());
+    assertEquals(2, institutionService.list(null, null, null, null, page).getResults().size());
+    assertEquals(2, institutionService.list("  ", null, null, null, page).getResults().size());
 
     // update address
     institution2 = institutionService.get(key2);
     institution2.getAddress().setCity("city3");
     institutionService.update(institution2);
-    assertEquals(1, institutionService.list("city3", null, page).getResults().size());
+    assertEquals(1, institutionService.list("city3", null, null, null, page).getResults().size());
 
     institutionService.delete(key2);
-    assertEquals(0, institutionService.list("city3", null, page).getResults().size());
+    assertEquals(0, institutionService.list("city3", null, null, null, page).getResults().size());
   }
 
   @Test
@@ -177,18 +187,18 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
     institutionService.addContact(instutionKey1, personKey2);
     institutionService.addContact(instutionKey2, personKey2);
 
-    assertEquals(1, institutionService.list(null, personKey1, PAGE.apply(5, 0L)).getResults().size());
-    assertEquals(2, institutionService.list(null, personKey2, PAGE.apply(5, 0L)).getResults().size());
-    assertEquals(0, institutionService.list(null, UUID.randomUUID(), PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(1, institutionService.list(null, personKey1, null, null,PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(2, institutionService.list(null, personKey2, null, null,PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(0, institutionService.list(null, UUID.randomUUID(), null, null,PAGE.apply(5, 0L)).getResults().size());
 
     institutionService.removeContact(instutionKey1, personKey2);
-    assertEquals(1, institutionService.list(null, personKey2, PAGE.apply(5, 0L)).getResults().size());
+    assertEquals(1, institutionService.list(null, personKey2, null, null,PAGE.apply(5, 0L)).getResults().size());
   }
 
   @Override
   protected Institution newEntity() {
     Institution institution = new Institution();
-    institution.setCode(CODE);
+    institution.setCode(UUID.randomUUID().toString());
     institution.setName(NAME);
     institution.setDescription(DESCRIPTION);
     institution.setHomepage(HOMEPAGE);
@@ -198,7 +208,6 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
 
   @Override
   protected void assertNewEntity(Institution institution) {
-    assertEquals(CODE, institution.getCode());
     assertEquals(NAME, institution.getName());
     assertEquals(DESCRIPTION, institution.getDescription());
     assertEquals(HOMEPAGE, institution.getHomepage());
@@ -265,5 +274,33 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
 
     institutionService.delete(key2);
     assertEquals(2, institutionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void createDuplicatedInstitution() {
+    Institution institution1 = newEntity();
+    institution1.setCode("code1");
+    institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode("code1");
+
+    institutionService.create(institution2);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void updateDuplicatedInstitution() {
+    Institution institution1 = newEntity();
+    institution1.setCode("code1");
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode("code2");
+    institutionService.create(institution2);
+
+    Institution institution1nUpdated = institutionService.get(key1);
+    institution1nUpdated.setCode("code2");
+
+    institutionService.update(institution1nUpdated);
   }
 }

@@ -84,6 +84,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   public UUID create(@Valid @NotNull T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
+    checkUniqueness(entity);
+
     if (entity.getAddress() != null) {
       checkArgument(entity.getAddress().getKey() == null, "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
@@ -134,6 +136,8 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
       // not allowed to delete when updating
       checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
     }
+
+    checkUniquenessInUpdate(entityOld, entity);
 
     // update mailing address
     updateAddress(entity.getMailingAddress(), entityOld.getMailingAddress());
@@ -293,4 +297,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   public List<Tag> listTags(@PathParam("key") @NotNull UUID key, @QueryParam("owner") @Nullable String owner) {
     return WithMyBatis.listTags(taggableMapper, key, owner);
   }
+
+  abstract void checkUniqueness(T entity);
+  abstract void checkUniquenessInUpdate(T oldEntity, T newEntity);
 }

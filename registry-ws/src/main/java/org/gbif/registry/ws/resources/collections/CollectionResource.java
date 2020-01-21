@@ -14,15 +14,12 @@ import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -51,15 +48,31 @@ public class CollectionResource extends BaseExtendableCollectionResource<Collect
     this.collectionMapper = collectionMapper;
   }
 
+  @Override
+  void checkUniqueness(Collection entity) {
+    // check if the code is unique
+    Preconditions.checkArgument(
+        !collectionMapper.codeExists(entity.getCode()), "The collection code already exists");
+  }
+
+  @Override
+  void checkUniquenessInUpdate(Collection oldEntity, Collection newEntity) {
+    if (!oldEntity.getCode().equals(newEntity.getCode())) {
+      checkUniqueness(newEntity);
+    }
+  }
+
   @GET
   public PagingResponse<Collection> list(@Nullable @QueryParam("q") String query,
                                          @Nullable @QueryParam("institution") UUID institutionKey,
                                          @Nullable @QueryParam("contact") UUID contactKey,
+                                         @Nullable @QueryParam("code") String code,
+                                         @Nullable @QueryParam("name") String name,
                                          @Nullable @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = collectionMapper.count(institutionKey, contactKey, query);
-    return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, page));
+    long total = collectionMapper.count(institutionKey, contactKey, code, name, query);
+    return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, code, name, page));
   }
 
   @GET

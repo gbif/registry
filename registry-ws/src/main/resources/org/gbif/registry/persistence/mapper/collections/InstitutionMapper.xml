@@ -162,6 +162,12 @@
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
     </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -180,6 +186,12 @@
     WHERE i.deleted IS NULL
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
     </if>
   </select>
 

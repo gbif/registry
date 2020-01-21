@@ -21,11 +21,15 @@ public interface CollectionMapper
   List<Collection> list(@Nullable @Param("institutionKey") UUID institutionKey,
                         @Nullable @Param("contactKey") UUID contactKey,
                         @Nullable @Param("query") String query,
+                        @Nullable @Param("code") String code,
+                        @Nullable @Param("name") String name,
                         @Nullable @Param("page") Pageable page);
 
   long count(@Nullable @Param("institutionKey") UUID institutionKey,
              @Nullable @Param("contactKey") UUID contactKey,
-             @Nullable @Param("query") String query);
+             @Nullable @Param("query") String query,
+             @Nullable @Param("code") String code,
+             @Nullable @Param("name") String name);
 
   /**
    * A simple suggest by title service.

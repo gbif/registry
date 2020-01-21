@@ -14,15 +14,12 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -51,14 +48,29 @@ public class InstitutionResource extends BaseExtendableCollectionResource<Instit
     this.institutionMapper = institutionMapper;
   }
 
+  @Override
+  void checkUniqueness(Institution entity) {
+    Preconditions.checkArgument(
+        !institutionMapper.codeExists(entity.getCode()), "The institution code already exists");
+  }
+
+  @Override
+  void checkUniquenessInUpdate(Institution oldEntity, Institution newEntity) {
+    if (!oldEntity.getCode().equals(newEntity.getCode())) {
+      checkUniqueness(newEntity);
+    }
+  }
+
   @GET
   public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query,
                                           @Nullable @QueryParam("contact") UUID contactKey,
+                                          @Nullable @QueryParam("code") String code,
+                                          @Nullable @QueryParam("name") String name,
                                           @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = institutionMapper.count(query, contactKey);
-    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
+    long total = institutionMapper.count(query, contactKey, code, name);
+    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, code, name, page));
   }
 
   @GET

@@ -19,9 +19,15 @@ public interface InstitutionMapper extends CrudMapper<Institution>, ContactableM
 
   List<Institution> list(@Nullable @Param("query") String query,
                          @Nullable @Param("contactKey") UUID contactKey,
+                         @Nullable @Param("code") String code,
+                         @Nullable @Param("name") String name,
                          @Nullable @Param("page") Pageable page);
 
-  long count(@Nullable @Param("query") String query, @Nullable @Param("contactKey") UUID contactKey);
+  long count(
+      @Nullable @Param("query") String query,
+      @Nullable @Param("contactKey") UUID contactKey,
+      @Nullable @Param("code") String code,
+      @Nullable @Param("name") String name);
 
   /**
    * A simple suggest by title service.

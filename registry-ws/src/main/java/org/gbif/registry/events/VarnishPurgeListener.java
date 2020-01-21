@@ -224,14 +224,14 @@ public class VarnishPurgeListener {
         purger.purge(path("dataset", d.getParentDatasetKey()));
       }
     }
-    purger.ban(String.format("dataset/%s/constituents", purger.anyKey(parentKeys)));
+    purger.ban(String.format("dataset/%s/constituents", VarnishPurger.anyKey(parentKeys)));
     // /installation/{d.installationKey}/dataset BAN
-    purger.ban(String.format("installation/%s/dataset", purger.anyKey(instKeys)));
+    purger.ban(String.format("installation/%s/dataset", VarnishPurger.anyKey(instKeys)));
     // /organization/{d.publishingOrganizationKey}/publishedDataset BAN
     // /organization/{d.installation.organizationKey}/hostedDataset BAN
-    purger.ban(String.format("organization/%s/(published|hosted)Dataset", purger.anyKey(orgKeys)));
+    purger.ban(String.format("organization/%s/(published|hosted)Dataset", VarnishPurger.anyKey(orgKeys)));
     // /node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
-    purger.ban(String.format("node/%s/dataset", purger.anyKey(nodeKeys)));
+    purger.ban(String.format("node/%s/dataset", VarnishPurger.anyKey(nodeKeys)));
     // /network/{any UUID}/constituents BAN
     purger.ban(String.format("network/.+/constituents"));
   }
@@ -242,7 +242,7 @@ public class VarnishPurgeListener {
     for (Organization o : orgs) {
       nodeKeys.add(o.getEndorsingNodeKey());
     }
-    purger.ban(String.format("node/%s/organization", purger.anyKey(nodeKeys)));
+    purger.ban(String.format("node/%s/organization", VarnishPurger.anyKey(nodeKeys)));
   }
 
   private void cascadeInstallationChange(Installation ... installations) {
@@ -251,7 +251,7 @@ public class VarnishPurgeListener {
     for (Installation i : installations) {
       keys.add(i.getOrganizationKey());
     }
-    purger.ban(String.format("organization/%s/installation", purger.anyKey(keys)));
+    purger.ban(String.format("organization/%s/installation", VarnishPurger.anyKey(keys)));
 
     // /node/{i.organization.endorsingNodeKey}/installation BAN
     Set<UUID> nodekeys = new UUIDHashSet();
@@ -259,26 +259,28 @@ public class VarnishPurgeListener {
       Organization o = organizationService.get(orgKey);
       nodekeys.add(o.getEndorsingNodeKey());
     }
-    purger.ban(String.format("%node/%s/organization", purger.anyKey(nodekeys)));
+    purger.ban(String.format("%node/%s/organization", VarnishPurger.anyKey(nodekeys)));
   }
 
   private void cascadePersonChange(Person ... persons) {
     Set<UUID> collectionKeys = new UUIDHashSet();
     for (Person p : persons) {
-      List<Collection> collections = collectionService.list(null, null, p.getKey(), null).getResults();
+      List<Collection> collections =
+          collectionService.list(null, null, p.getKey(), null, null, null).getResults();
       collections.forEach(c -> collectionKeys.add(c.getKey()));
     }
 
     Set<UUID> institutionKeys = new UUIDHashSet();
     for (Person p : persons) {
-      List<Institution> institutions = institutionService.list(null, p.getKey(), null).getResults();
+      List<Institution> institutions =
+          institutionService.list(null, p.getKey(), null, null, null).getResults();
       institutions.forEach(i -> institutionKeys.add(i.getKey()));
     }
 
     // /collection/{collectionKey}/contact BAN
-    purger.ban(String.format("collection/%s/contact", purger.anyKey(collectionKeys)));
+    purger.ban(String.format("collection/%s/contact", VarnishPurger.anyKey(collectionKeys)));
     // /institution/{institutionKey}/contact BAN
-    purger.ban(String.format("institution/%s/contact", purger.anyKey(institutionKeys)));
+    purger.ban(String.format("institution/%s/contact", VarnishPurger.anyKey(institutionKeys)));
   }
 
   /**
