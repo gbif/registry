@@ -7,7 +7,6 @@ import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
 import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetSearchService;
-import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.search.DatasetEsFieldMapper;
 import org.gbif.registry.search.dataset.search.DatasetEsResponseParser;
 import org.gbif.registry.search.dataset.search.common.EsSearchRequestBuilder;
@@ -23,31 +22,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service
 @Slf4j
-
+@Service
 public class DatasetSearchServiceEs implements DatasetSearchService {
 
   private static final int DEFAULT_SUGGEST_LIMIT = 10;
   private static final int MAX_SUGGEST_LIMIT = 100;
-  private static final DatasetEsResponseParser ES_RESPONSE_PARSER = DatasetEsResponseParser.create();
 
+  private final DatasetEsResponseParser esResponseParser;
   private final RestHighLevelClient restHighLevelClient;
   private final String index;
 
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder = new EsSearchRequestBuilder<>(new DatasetEsFieldMapper());
 
   @Autowired
-  public DatasetSearchServiceEs(@Value("${esIndex}") String index, @Value("${esHosts}") String esHosts) {
+  public DatasetSearchServiceEs(@Value("${esIndex}") String index, RestHighLevelClient restHighLevelClient, DatasetEsResponseParser esResponseParser) {
     this.index = index;
-    restHighLevelClient = EsClient.provideEsClient(esHosts.split(","));
+    this.esResponseParser = esResponseParser;
+    this.restHighLevelClient = restHighLevelClient;
   }
 
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(DatasetSearchRequest datasetSearchRequest) {
     try {
       SearchRequest searchRequest = esSearchRequestBuilder.buildSearchRequest(datasetSearchRequest, true, index);
-      return ES_RESPONSE_PARSER.buildSearchResponse(restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), datasetSearchRequest);
+      return esResponseParser.buildSearchResponse(restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), datasetSearchRequest);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
@@ -71,7 +70,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
                                                                              DatasetSearchParameter.DATASET_TITLE,
                                                                              request.getLimit(),
                                                                              index);
-      return ES_RESPONSE_PARSER.buildSuggestResponse(restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), DatasetSearchParameter.DATASET_TITLE);
+      return esResponseParser.buildSuggestResponse(restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), DatasetSearchParameter.DATASET_TITLE);
     } catch (IOException ex) {
       log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);
