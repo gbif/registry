@@ -7,8 +7,8 @@ import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.EmailType;
+import org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,17 +24,13 @@ import java.util.UUID;
 @Service
 public class IdentityEmailManager {
 
-  // TODO: 2019-08-22 move to ConfigurationProperties
-  @Value("${identity.surety.mail.urlTemplate.confirmUser}")
-  private String confirmUserUrlTemplate;
-
-  @Value("${identity.surety.mail.urlTemplate.resetPassword}")
-  private String resetPasswordUrlTemplate;
-
   private final EmailTemplateProcessor emailTemplateProcessor;
+  private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
 
-  public IdentityEmailManager(@Qualifier("identityEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessor) {
+  public IdentityEmailManager(@Qualifier("identityEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessor,
+                              IdentitySuretyMailConfigurationProperties identityMailConfigProperties) {
     this.emailTemplateProcessor = emailTemplateProcessor;
+    this.identityMailConfigProperties = identityMailConfigProperties;
   }
 
   public BaseEmailModel generateNewUserEmailModel(GbifUser user, ChallengeCode challengeCode) throws IOException {
@@ -75,10 +71,18 @@ public class IdentityEmailManager {
   }
 
   private URL generateConfirmUserUrl(String userName, UUID confirmationKey) throws MalformedURLException {
-    return new URL(MessageFormat.format(confirmUserUrlTemplate, userName, confirmationKey.toString()));
+    return new URL(
+      MessageFormat.format(
+        identityMailConfigProperties.getUrlTemplate().getConfirmUser(),
+        userName,
+        confirmationKey.toString()));
   }
 
   private URL generateResetPasswordUrl(String userName, UUID confirmationKey) throws MalformedURLException {
-    return new URL(MessageFormat.format(resetPasswordUrlTemplate, userName, confirmationKey.toString()));
+    return new URL(
+      MessageFormat.format(
+        identityMailConfigProperties.getUrlTemplate().getResetPassword(),
+        userName,
+        confirmationKey.toString()));
   }
 }
