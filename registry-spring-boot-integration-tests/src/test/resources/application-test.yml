@@ -74,14 +74,11 @@ mybatis:
     map-underscore-to-camel-case: true
 
 # Solr (tmp embedded)
-solr:
-  dataset:
-    serverType: EMBEDDED
-    home: /tmp/solrregistry
-    collection: dataset
-    delete: true
-  indexing:
-    threads: 2
+elasticsearch:
+  hosts: http://localhost:9200/
+  index: dataset
+
+gbifApiBaseUrl: http://api.gbif.org/v1/
 
 spring:
   # DB connection
