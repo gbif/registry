@@ -36,7 +36,7 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder = new EsSearchRequestBuilder<>(new DatasetEsFieldMapper());
 
   @Autowired
-  public DatasetSearchServiceEs(@Value("${esIndex}") String index, RestHighLevelClient restHighLevelClient, DatasetEsResponseParser esResponseParser) {
+  public DatasetSearchServiceEs(@Value("${elasticsearch.index}") String index, RestHighLevelClient restHighLevelClient, DatasetEsResponseParser esResponseParser) {
     this.index = index;
     this.esResponseParser = esResponseParser;
     this.restHighLevelClient = restHighLevelClient;

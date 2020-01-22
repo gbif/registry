@@ -1,6 +1,7 @@
 gbifApiBaseUrl: ${gbifApiBaseUrl}
-esHosts: ${esHosts}
-esIndex: ${indexName}
+elasticsearch:
+  hosts: ${elasticsearch.hosts}
+  index: ${elasticsearch.index}
 spring:
   main:
     web-application-type: none

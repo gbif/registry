@@ -51,7 +51,7 @@ public class DatasetSearchResultConverter implements SearchResultConverter<Datas
   private String index;
 
   @Autowired
-  public DatasetSearchResultConverter(RestHighLevelClient restHighLevelClient, @Value("${esIndex}") String index) {
+  public DatasetSearchResultConverter(RestHighLevelClient restHighLevelClient, @Value("${elasticsearch.index}") String index) {
     this.restHighLevelClient = restHighLevelClient;
     this.index = index;
   }

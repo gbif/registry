@@ -3,13 +3,12 @@ package org.gbif.registry.ws.security;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.InstallationMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -22,18 +21,18 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationServiceImpl.class);
 
-  private UserRightsMapper userRightsMapper;
-  private DatasetService datasetService;
-  private InstallationService installationService;
-  private OrganizationService organizationService;
+  private final UserRightsMapper userRightsMapper;
+  private final OrganizationMapper organizationMapper;
+  private final DatasetMapper datasetMapper;
+  private final InstallationMapper installationMapper;
 
-  public EditorAuthorizationServiceImpl(@Lazy DatasetService datasetService,
-                                        @Lazy InstallationService installationService,
-                                        @Lazy OrganizationService organizationService,
+  public EditorAuthorizationServiceImpl(OrganizationMapper organizationMapper,
+                                        DatasetMapper datasetMapper,
+                                        InstallationMapper installationMapper,
                                         UserRightsMapper userRightsMapper) {
-    this.datasetService = datasetService;
-    this.installationService = installationService;
-    this.organizationService = organizationService;
+    this.organizationMapper = organizationMapper;
+    this.datasetMapper = datasetMapper;
+    this.installationMapper = installationMapper;
     this.userRightsMapper = userRightsMapper;
   }
 
@@ -71,7 +70,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     if (allowedToModifyEntity(name, datasetKey)) {
       return true;
     }
-    Dataset d = datasetService.get(datasetKey);
+    Dataset d = datasetMapper.get(datasetKey);
     // try installation rights
     if (d != null && allowedToModifyInstallation(name, d.getInstallationKey())) {
       return true;
@@ -89,7 +88,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return true;
     }
     // try endorsing node
-    Organization o = organizationService.get(orgKey);
+    Organization o = organizationMapper.get(orgKey);
     return o != null && allowedToModifyEntity(name, o.getEndorsingNodeKey());
   }
 
@@ -102,7 +101,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return true;
     }
     // try higher organization or node rights
-    Installation inst = installationService.get(installationKey);
+    Installation inst = installationMapper.get(installationKey);
     return inst != null && allowedToModifyOrganization(name, inst.getOrganizationKey());
   }
 }
