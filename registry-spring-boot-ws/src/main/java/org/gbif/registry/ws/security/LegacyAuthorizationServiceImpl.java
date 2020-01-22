@@ -5,10 +5,10 @@ import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.InstallationMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
@@ -36,16 +36,16 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationServiceImpl.class);
   private static final Splitter COLON_SPLITTER = Splitter.on(":").limit(2);
 
-  private final OrganizationService organizationService;
-  private final DatasetService datasetService;
-  private final InstallationService installationService;
+  private final OrganizationMapper organizationMapper;
+  private final DatasetMapper datasetMapper;
+  private final InstallationMapper installationMapper;
 
-  public LegacyAuthorizationServiceImpl(OrganizationService organizationService,
-                                        DatasetService datasetService,
-                                        InstallationService installationService) {
-    this.organizationService = organizationService;
-    this.datasetService = datasetService;
-    this.installationService = installationService;
+  public LegacyAuthorizationServiceImpl(OrganizationMapper organizationMapper,
+                                        DatasetMapper datasetMapper,
+                                        InstallationMapper installationMapper) {
+    this.organizationMapper = organizationMapper;
+    this.datasetMapper = datasetMapper;
+    this.installationMapper = installationMapper;
   }
 
   /**
@@ -85,23 +85,25 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   @NotNull
   private LegacyRequestAuthorization authenticateInternal(UUID user, String password, UUID organizationKey) {
     // try to validate organization key first
-    try {
-      Organization org = organizationService.get(user);
+    Organization org = organizationMapper.get(user);
+    if (org != null) {
       if (password.equals(org.getPassword())) {
         return new LegacyRequestAuthorization(user, organizationKey);
       } else {
         throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
       }
-    } catch (NotFoundException e) {
+    } else {
       // maybe an installation?
-      try {
-        Installation installation = installationService.get(user);
-        if (password.equals(installation.getPassword())) {
-          return new LegacyRequestAuthorization(user, organizationKey);
-        }
-      } catch (NotFoundException e1) {
-        // throw
+      Installation installation = installationMapper.get(user);
+
+      if (installation == null) {
+        throw new NotFoundException();
       }
+
+      if (password.equals(installation.getPassword())) {
+        return new LegacyRequestAuthorization(user, organizationKey);
+      }
+
       throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
   }
@@ -128,15 +130,14 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // validate installation key belongs to an existing installation
-    Organization org;
-    try {
-      org = organizationService.get(organizationKey);
-    } catch (NotFoundException e) {
+    Organization org = organizationMapper.get(organizationKey);
+
+    if (org == null) {
       LOG.error("Organization with key={} does not exist", organizationKey);
       return false;
     }
 
-    return org != null && org.getKey() != null && org.getKey().equals(authorization.getUserKey());
+    return org.getKey() != null && org.getKey().equals(authorization.getUserKey());
   }
 
   /**
@@ -156,11 +157,9 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // retrieve dataset to ensure it exists
-    Dataset dataset;
+    Dataset dataset = datasetMapper.get(datasetKey);
 
-    try {
-      dataset = datasetService.get(datasetKey);
-    } catch (NotFoundException e) {
+    if (dataset == null) {
       LOG.error("Dataset with key={} does not exist", datasetKey);
       return false;
     }
@@ -197,14 +196,13 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
     // validate installation key belongs to an existing installation
-    Installation installation;
-    try {
-      installation = installationService.get(installationKey);
-    } catch (NotFoundException e) {
+    Installation installation = installationMapper.get(installationKey);
+
+    if (installation == null) {
       LOG.error("Installation with key={} does not exist", installationKey);
       return false;
     }
 
-    return installation != null && installation.getKey() != null && installation.getKey().equals(authorization.getUserKey());
+    return installation.getKey() != null && installation.getKey().equals(authorization.getUserKey());
   }
 }
