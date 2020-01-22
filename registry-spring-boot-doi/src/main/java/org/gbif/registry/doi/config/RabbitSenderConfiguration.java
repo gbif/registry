@@ -11,19 +11,23 @@ import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 
-// TODO: 2019-06-21 rename
-// TODO: 2019-06-21 move to a dedicated package
 @Configuration
 public class RabbitSenderConfiguration {
 
-  // TODO: 2019-06-24 use property
   public static final String QUEUE_REGISTRY_DOI = "registry-doi";
   public static final String QUEUE_DEAD_REGISTRY_DOI = "dead-registry-doi";
+
+  private final ObjectMapper objectMapper;
+
+  public RabbitSenderConfiguration(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   @Bean
   Queue registryDoiQueue() {
@@ -44,7 +48,6 @@ public class RabbitSenderConfiguration {
 
   @Bean
   public Jackson2JsonMessageConverter producerJackson2MessageConverter() {
-    final ObjectMapper objectMapper = new ObjectMapper();
     final SimpleModule changeDoiMessageSerializerModule = new SimpleModule();
     changeDoiMessageSerializerModule.addSerializer(ChangeDoiMessage.class, new ChangeDoiMessageSerializer());
     objectMapper.registerModule(changeDoiMessageSerializerModule);
