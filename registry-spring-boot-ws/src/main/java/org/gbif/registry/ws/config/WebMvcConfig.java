@@ -166,11 +166,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(
-      LegacyEndpoint.class, LegacyEndpointResponse.class, LegacyEndpointResponseListWrapper.class,
+      LegacyEndpoint.class,
+      LegacyEndpointResponse.class,
+      LegacyEndpointResponseListWrapper.class,
       LegacyInstallation.class,
-      LegacyOrganizationResponse.class, LegacyOrganizationBriefResponseListWrapper.class, LegacyOrganizationBriefResponse.class,
-      LegacyDataset.class, LegacyDatasetResponse.class, LegacyDatasetResponseListWrapper.class,
-      IptEntityResponse.class, ErrorResponse.class);
+      LegacyOrganizationResponse.class,
+      LegacyOrganizationBriefResponseListWrapper.class,
+      LegacyOrganizationBriefResponse.class,
+      LegacyDataset.class,
+      LegacyDatasetResponse.class,
+      LegacyDatasetResponseListWrapper.class,
+      IptEntityResponse.class,
+      ErrorResponse.class);
     return marshaller;
   }
 }

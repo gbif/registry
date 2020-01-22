@@ -59,6 +59,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
       .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
       .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), JwtRequestFilter.class)
       .csrf().disable()
+      .cors().and()
       .authorizeRequests()
       .anyRequest().authenticated();
 
