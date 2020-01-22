@@ -44,11 +44,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
 @Slf4j
 @Component
+@Lazy
 public class DatasetJsonConverter {
 
   private static final int MAX_FACET_LIMIT = 1200000;
