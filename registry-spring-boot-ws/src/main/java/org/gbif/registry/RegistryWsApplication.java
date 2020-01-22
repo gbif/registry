@@ -24,8 +24,7 @@ import org.springframework.context.annotation.FilterType;
   "org.gbif.ws.security",
   "org.gbif.registry"
 },
-  excludeFilters = {
-    @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=DatasetBatchIndexBuilder.class)}
+  excludeFilters = {@ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=DatasetBatchIndexBuilder.class)}
 )
 public class RegistryWsApplication {
   public static void main(String[] args) {

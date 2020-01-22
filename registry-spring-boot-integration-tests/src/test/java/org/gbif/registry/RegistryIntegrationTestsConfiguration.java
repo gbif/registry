@@ -12,12 +12,14 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
+import org.gbif.registry.search.dataset.indexing.DatasetBatchIndexBuilder;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 
@@ -31,7 +33,8 @@ import java.util.Date;
   "org.gbif.ws.security",
   "org.gbif.registry",
   "org.gbif.registry.ws.security",
-})
+},
+  excludeFilters = {@ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= DatasetBatchIndexBuilder.class)})
 @PropertySource("classpath:application-test.yml")
 public class RegistryIntegrationTestsConfiguration {
 
