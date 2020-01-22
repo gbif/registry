@@ -78,7 +78,7 @@ elasticsearch:
   hosts: http://localhost:9200/
   index: dataset
 
-gbifApiBaseUrl: http://api.gbif.org/v1/
+gbifApiBaseUrl: http://api.gbif-dev.org/v1/
 
 spring:
   # DB connection
