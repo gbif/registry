@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,6 +30,7 @@ public class JacksonObjectMapper {
 
 
   @Bean("apiMapper")
+  @Lazy
   ObjectMapper objectMapper() {
     return JacksonObjectMapper.get();
   }

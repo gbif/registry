@@ -32,6 +32,7 @@ import org.cache2k.Cache2kBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -44,6 +45,7 @@ import static org.gbif.registry.search.dataset.indexing.ws.SearchParameterProvid
  * Retrofit {@link GbifApiService} client.
  */
 @Component
+@Lazy
 public class GbifWsClient {
 
   //Uses a cache for installations to avoid too many external calls
