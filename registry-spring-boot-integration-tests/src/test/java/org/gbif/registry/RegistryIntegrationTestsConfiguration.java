@@ -5,10 +5,14 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
+
+import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
+import org.gbif.registry.search.DatasetSearchServiceStub;
+
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -45,6 +49,14 @@ public class RegistryIntegrationTestsConfiguration {
   @ConditionalOnProperty(value = "message.enabled", havingValue = "false")
   public MessagePublisher messagePublisher() {
     return new MessagePublisherStub();
+  }
+
+
+  // use stub instead dataset search
+  @Bean
+  @Primary
+  public DatasetSearchService datasetSearchService() {
+    return new DatasetSearchServiceStub();
   }
 
   @Bean
