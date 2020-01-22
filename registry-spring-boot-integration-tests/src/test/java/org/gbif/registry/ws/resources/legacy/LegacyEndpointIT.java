@@ -10,7 +10,10 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/legacy_endpoint.feature"
   },
-  glue = {"org.gbif.registry.ws.resources.legacy.endpoint", "org.gbif.registry.utils.cucumber"},
+  glue = {
+    "org.gbif.registry.ws.resources.legacy.endpoint",
+    "org.gbif.registry.utils.cucumber"
+  },
   plugin = "pretty"
 )
 public class LegacyEndpointIT {
