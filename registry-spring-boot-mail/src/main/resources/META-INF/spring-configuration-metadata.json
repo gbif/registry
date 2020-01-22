@@ -21,6 +21,17 @@
       "type": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties",
       "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties",
       "sourceMethod": "getUrlTemplate()"
+    },
+    {
+      "name": "identity.surety.mail",
+      "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate",
+      "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties",
+      "sourceMethod": "getUrlTemplate()"
     }
   ],
   "properties": [
@@ -54,6 +65,16 @@
       "name": "organization.surety.mail.urlTemplate.organization",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate.confirmUser",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate.resetPassword",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
     },
     {
       "name": "organization.surety.mail.helpdesk",
