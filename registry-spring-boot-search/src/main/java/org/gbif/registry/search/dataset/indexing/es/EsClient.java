@@ -38,7 +38,7 @@ public class EsClient implements Closeable {
   private RestHighLevelClient restHighLevelClient;
 
   @Autowired
-  public EsClient(@Value("${esHosts}") String hosts) {
+  public EsClient(@Value("${elasticsearch.hosts}") String hosts) {
     restHighLevelClient = provideEsClient(hosts.split(","));
   }
 
@@ -119,7 +119,7 @@ public class EsClient implements Closeable {
   }
 
   @Bean
-  public RestHighLevelClient provideRestHighLevelClient(@Value("${esHosts}") String hosts) {
+  public RestHighLevelClient provideRestHighLevelClient(@Value("${elasticsearch.hosts}") String hosts) {
     return provideEsClient(hosts.split(","));
   }
 

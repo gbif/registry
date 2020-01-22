@@ -10,7 +10,10 @@ import org.junit.runner.RunWith;
   features = {
     "classpath:features/legacy_organization.feature"
   },
-  glue = {"org.gbif.registry.ws.resources.legacy.organization", "org.gbif.registry.utils.cucumber"},
+  glue = {
+    "org.gbif.registry.ws.resources.legacy.organization",
+    "org.gbif.registry.utils.cucumber"
+  },
   plugin = "pretty"
 )
 public class LegacyOrganizationIT {
