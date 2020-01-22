@@ -9,7 +9,6 @@ import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 import org.jetbrains.annotations.NotNull;
@@ -96,11 +95,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       // maybe an installation?
       Installation installation = installationMapper.get(user);
 
-      if (installation == null) {
-        throw new NotFoundException();
-      }
-
-      if (password.equals(installation.getPassword())) {
+      if (installation != null && password.equals(installation.getPassword())) {
         return new LegacyRequestAuthorization(user, organizationKey);
       }
 
