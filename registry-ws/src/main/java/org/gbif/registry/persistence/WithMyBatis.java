@@ -205,7 +205,7 @@ public class WithMyBatis {
     return machineTaggableMapper.listMachineTags(targetEntityKey);
   }
 
-  public static <T extends NetworkEntity> PagingResponse<T> listByMachineTag(
+  public static <T> PagingResponse<T> listByMachineTag(
     MachineTaggableMapper mapper, String namespace, @Nullable String name, @Nullable String value, @Nullable Pageable page
   ) {
     Preconditions.checkNotNull(page, "To list by machine tag you must supply a page");

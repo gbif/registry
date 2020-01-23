@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class InstitutionIT extends BaseCollectionTest<Institution> {
+public class InstitutionIT extends ExtendedCollectionEntityTest<Institution> {
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -68,6 +68,7 @@ public class InstitutionIT extends BaseCollectionTest<Institution> {
       PersonService personService,
       @Nullable SimplePrincipalProvider pp) {
     super(
+        institutionService,
         institutionService,
         institutionService,
         institutionService,

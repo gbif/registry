@@ -7,9 +7,11 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,16 +37,30 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path(GRSCICOLL_PATH + "/collection")
-public class CollectionResource extends BaseExtendableCollectionResource<Collection>
+public class CollectionResource extends ExtendedCollectionEntityResource<Collection>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
 
   @Inject
-  public CollectionResource(CollectionMapper collectionMapper, AddressMapper addressMapper,
-                            IdentifierMapper identifierMapper,TagMapper tagMapper, EventBus eventBus) {
-    super(collectionMapper, addressMapper, collectionMapper, tagMapper, collectionMapper, identifierMapper, collectionMapper,
-          eventBus, Collection.class);
+  public CollectionResource(
+      CollectionMapper collectionMapper,
+      AddressMapper addressMapper,
+      IdentifierMapper identifierMapper,
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EventBus eventBus,
+      EditorAuthorizationService userAuthService) {
+    super(
+        collectionMapper,
+        addressMapper,
+        tagMapper,
+        identifierMapper,
+        collectionMapper,
+        machineTagMapper,
+        eventBus,
+        Collection.class,
+        userAuthService);
     this.collectionMapper = collectionMapper;
   }
 

@@ -7,6 +7,8 @@
     <id property="key" column="key"/>
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="tags" column="key" select="listTags"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
   </resultMap>
 
   <sql id="PERSON_WRITE_FIELDS">
@@ -172,6 +174,100 @@
     INNER JOIN identifier i ON i."key" = cpi.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
+  <!-- END IDENTIFIERS -->
+
+  <!-- TAGS -->
+  <insert id="addTag">
+    INSERT INTO collection_person_tag(collection_person_key,tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{tagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listTags" resultType="Tag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
+    FROM tag INNER JOIN collection_person_tag ON tag_key = key
+    WHERE collection_person_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
+  <delete id="deleteTag">
+    DELETE FROM tag USING collection_person_tag
+    WHERE
+    tag_key = tag.key AND
+    collection_person_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+  </delete>
+  <!-- END TAGS -->
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO collection_person_machine_tag(collection_person_key,machine_tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{machineTagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listMachineTags" resultType="MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN collection_person_machine_tag ON machine_tag_key = key
+    WHERE collection_person_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING collection_person_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    collection_person_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING collection_person_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    collection_person_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="COLLECTION_PERSON_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (p.key) <include refid="PERSON_READ_FIELDS"/>
+    FROM collection_person p
+    INNER JOIN collection_person_machine_tag cm ON cm.collection_person_key = p.key
+    INNER JOIN machine_tag m ON cm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY p.key, p.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT p.key)
+    FROM collection_person p
+    INNER JOIN collection_person_machine_tag cm ON cm.collection_person_key = p.key
+    INNER JOIN machine_tag m ON cm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+  <!-- END MACHINE TAGS -->
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.PersonSuggestResult">

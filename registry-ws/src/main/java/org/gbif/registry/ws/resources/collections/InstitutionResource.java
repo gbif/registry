@@ -7,9 +7,11 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,16 +37,30 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path(GRSCICOLL_PATH + "/institution")
-public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
+public class InstitutionResource extends ExtendedCollectionEntityResource<Institution>
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
 
   @Inject
-  public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper,
-                             TagMapper tagMapper, EventBus eventBus) {
-    super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper,
-          eventBus, Institution.class);
+  public InstitutionResource(
+      InstitutionMapper institutionMapper,
+      AddressMapper addressMapper,
+      IdentifierMapper identifierMapper,
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EditorAuthorizationService userAuthService,
+      EventBus eventBus) {
+    super(
+        institutionMapper,
+        addressMapper,
+        tagMapper,
+        identifierMapper,
+        institutionMapper,
+        machineTagMapper,
+        eventBus,
+        Institution.class,
+        userAuthService);
     this.institutionMapper = institutionMapper;
   }
 

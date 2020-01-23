@@ -4,14 +4,12 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.IdentifierService;
+import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -32,33 +30,28 @@ import static org.junit.Assert.assertNull;
  * Base class to tests the main operations of {@link CollectionEntity} that are also {@link
  * Taggable}, {@link Identifiable} and {@link Contactable}.
  *
- * <p>It inherits from {@link CrudTest} to test the CRUD operations.
+ * <p>It inherits from {@link BaseTest} to test the CRUD operations.
  */
-public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable & Identifiable & Contactable>
-  extends CrudTest<T> {
+public abstract class ExtendedCollectionEntityTest<
+        T extends CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable>
+    extends BaseTest<T> {
 
   private final CrudService<T> crudService;
-  private final SimplePrincipalProvider pp;
   private final ContactService contactService;
-  private final TagService tagService;
-  private final IdentifierService identifierService;
   private final PersonService personService;
 
-  public BaseCollectionTest(
-    CrudService<T> crudService,
-    ContactService contactService,
-    TagService tagService,
-    IdentifierService identifierService,
-    PersonService personService,
-    @Nullable SimplePrincipalProvider pp
-  ) {
-    super(crudService, pp);
+  public ExtendedCollectionEntityTest(
+      CrudService<T> crudService,
+      ContactService contactService,
+      TagService tagService,
+      MachineTagService machineTagService,
+      IdentifierService identifierService,
+      PersonService personService,
+      @Nullable SimplePrincipalProvider pp) {
+    super(crudService, tagService, machineTagService, identifierService, pp);
     this.crudService = crudService;
     this.contactService = contactService;
-    this.tagService = tagService;
-    this.identifierService = identifierService;
     this.personService = personService;
-    this.pp = pp;
   }
 
   @Test
@@ -97,45 +90,6 @@ public abstract class BaseCollectionTest<T extends CollectionEntity & Taggable &
     assertEquals(1, entitySaved.getIdentifiers().size());
     assertEquals("id", entitySaved.getIdentifiers().get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
-  }
-
-  @Test
-  public void tagsTest() {
-    T entity = newEntity();
-    UUID key = crudService.create(entity);
-
-    Tag tag = new Tag();
-    tag.setValue("value");
-    Integer tagKey = tagService.addTag(key, tag);
-
-    List<Tag> tags = tagService.listTags(key, null);
-    assertEquals(1, tags.size());
-    assertEquals(tagKey, tags.get(0).getKey());
-    assertEquals("value", tags.get(0).getValue());
-
-    tagService.deleteTag(key, tagKey);
-    assertEquals(0, tagService.listTags(key, null).size());
-  }
-
-  @Test
-  public void identifiersTest() {
-    T entity = newEntity();
-    UUID key = crudService.create(entity);
-
-    Identifier identifier = new Identifier();
-    identifier.setIdentifier("identifier");
-    identifier.setType(IdentifierType.LSID);
-
-    Integer identifierKey = identifierService.addIdentifier(key, identifier);
-
-    List<Identifier> identifiers = identifierService.listIdentifiers(key);
-    assertEquals(1, identifiers.size());
-    assertEquals(identifierKey, identifiers.get(0).getKey());
-    assertEquals("identifier", identifiers.get(0).getIdentifier());
-    assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
-
-    identifierService.deleteIdentifier(key, identifierKey);
-    assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
   @Test

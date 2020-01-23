@@ -14,6 +14,7 @@
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
@@ -234,6 +235,7 @@
     tag_key = tag.key AND
     institution_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
+  <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
@@ -265,6 +267,75 @@
     INNER JOIN identifier i ON i."key" = ii.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
+  <!-- END IDENTIFIERS -->
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO institution_machine_tag(institution_key,machine_tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{machineTagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listMachineTags" resultType="MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN institution_machine_tag ON machine_tag_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="INSTITUTION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (i.key) <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY i.key, i.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT i.key)
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+  <!-- END MACHINE TAGS -->
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">

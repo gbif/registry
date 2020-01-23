@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class CollectionIT extends BaseCollectionTest<Collection> {
+public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -59,12 +59,18 @@ public class CollectionIT extends BaseCollectionTest<Collection> {
   }
 
   public CollectionIT(
-    CollectionService collectionService,
-    InstitutionService institutionService,
-    PersonService personService,
-    @Nullable SimplePrincipalProvider pp
-  ) {
-    super(collectionService, collectionService, collectionService, collectionService, personService, pp);
+      CollectionService collectionService,
+      InstitutionService institutionService,
+      PersonService personService,
+      @Nullable SimplePrincipalProvider pp) {
+    super(
+        collectionService,
+        collectionService,
+        collectionService,
+        collectionService,
+        collectionService,
+        personService,
+        pp);
     this.collectionService = collectionService;
     this.institutionService = institutionService;
     this.personService = personService;

@@ -5,30 +5,29 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -38,8 +37,6 @@ import com.google.inject.Singleton;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,11 +49,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path(GRSCICOLL_PATH + "/person")
-public class PersonResource extends BaseCrudResource<Person> implements PersonService, IdentifierService {
+public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
   private final AddressMapper addressMapper;
   private final IdentifierMapper identifierMapper;
+  private final TagMapper tagMapper;
+  private final MachineTagMapper machineTagMapper;
   private final EventBus eventBus;
 
   @Inject
@@ -64,11 +63,16 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
       PersonMapper personMapper,
       AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
-      EventBus eventBus) {
-    super(personMapper, eventBus, Person.class);
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EventBus eventBus,
+      EditorAuthorizationService userAuthService) {
+    super(personMapper, tagMapper, machineTagMapper, identifierMapper, userAuthService, eventBus, Person.class);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
     this.identifierMapper = identifierMapper;
+    this.tagMapper = tagMapper;
+    this.machineTagMapper = machineTagMapper;
     this.eventBus = eventBus;
   }
 
@@ -104,6 +108,24 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
+
+    if (!person.getMachineTags().isEmpty()) {
+      for (MachineTag machineTag : person.getMachineTags()) {
+        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        machineTag.setCreatedBy(person.getCreatedBy());
+        machineTagMapper.createMachineTag(machineTag);
+        personMapper.addMachineTag(person.getKey(), machineTag.getKey());
+      }
+    }
+
+    if (!person.getTags().isEmpty()) {
+      for (Tag tag : person.getTags()) {
+        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
+        tag.setCreatedBy(person.getCreatedBy());
+        tagMapper.createTag(tag);
+        personMapper.addTag(person.getKey(), tag.getKey());
+      }
+    }
 
     if (!person.getIdentifiers().isEmpty()) {
       for (Identifier identifier : person.getIdentifiers()) {
@@ -166,44 +188,13 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
     return personMapper.suggest(q);
   }
 
-  @POST
-  @Path("{key}/identifier")
-  @Trim
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addIdentifier(
-    @PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier, @Context SecurityContext security
-  ) {
-    identifier.setCreatedBy(security.getUserPrincipal().getName());
-    return addIdentifier(entityKey, identifier);
+  @Override
+  void checkUniqueness(Person entity) {
+    throw new UnsupportedOperationException();
   }
 
-  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(@NotNull UUID entityKey, @Valid @NotNull Identifier identifier) {
-    int identifierKey = WithMyBatis.addIdentifier(identifierMapper, personMapper, entityKey, identifier);
-    eventBus.post(ChangedComponentEvent.newInstance(entityKey, Person.class, Identifier.class));
-    return identifierKey;
-  }
-
-  @DELETE
-  @Path("{key}/identifier/{identifierKey}")
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  @Transactional
-  @Override
-  public void deleteIdentifier(
-    @PathParam("key") @NotNull UUID entityKey,
-    @PathParam("identifierKey") int identifierKey
-  ) {
-    WithMyBatis.deleteIdentifier(personMapper, entityKey, identifierKey);
-    eventBus.post(ChangedComponentEvent.newInstance(entityKey, Person.class, Identifier.class));
-  }
-
-  @GET
-  @Path("{key}/identifier")
-  @Nullable
-  @Validate(validateReturnedValue = true)
-  @Override
-  public List<Identifier> listIdentifiers(@PathParam("key") @NotNull UUID key) {
-    return WithMyBatis.listIdentifiers(personMapper, key);
+  void checkUniquenessInUpdate(Person oldEntity, Person newEntity) {
+    throw new UnsupportedOperationException();
   }
 }

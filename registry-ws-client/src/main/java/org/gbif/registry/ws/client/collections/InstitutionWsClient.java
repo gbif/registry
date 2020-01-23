@@ -19,7 +19,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<Institution>
+public class InstitutionWsClient extends BaseExtendedCollectionEntityClient<Institution>
   implements InstitutionService {
 
   private static final GenericType<PagingResponse<Institution>> PAGING_INSTITUTION =

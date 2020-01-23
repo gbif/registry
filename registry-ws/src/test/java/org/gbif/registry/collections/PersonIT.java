@@ -10,7 +10,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
@@ -39,7 +38,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class PersonIT extends CrudTest<Person> {
+public class PersonIT extends BaseTest<Person> {
 
   private static final String FIRST_NAME = "first name";
   private static final String LAST_NAME = "last name";
@@ -54,7 +53,6 @@ public class PersonIT extends CrudTest<Person> {
   private final PersonService personService;
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
-  private final IdentifierService identifierService;
 
   @Parameters
   public static Iterable<Object[]> data() {
@@ -65,30 +63,25 @@ public class PersonIT extends CrudTest<Person> {
           webservice.getInstance(PersonResource.class),
           webservice.getInstance(InstitutionResource.class),
           webservice.getInstance(CollectionResource.class),
-          webservice.getInstance(PersonResource.class),
           null
         },
         new Object[] {
           client.getInstance(PersonService.class),
           client.getInstance(InstitutionService.class),
           client.getInstance(CollectionService.class),
-          client.getInstance(PersonService.class),
           client.getInstance(SimplePrincipalProvider.class)
         });
   }
 
   public PersonIT(
-    PersonService personService,
-    InstitutionService institutionService,
-    CollectionService collectionService,
-    IdentifierService identifierService,
-    @Nullable SimplePrincipalProvider pp
-  ) {
-    super(personService, pp);
+      PersonService personService,
+      InstitutionService institutionService,
+      CollectionService collectionService,
+      @Nullable SimplePrincipalProvider pp) {
+    super(personService, personService, personService, personService, pp);
     this.personService = personService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
-    this.identifierService = identifierService;
   }
 
   @Test
@@ -128,16 +121,16 @@ public class PersonIT extends CrudTest<Person> {
     identifier.setIdentifier("identifier");
     identifier.setType(IdentifierType.LSID);
 
-    Integer identifierKey = identifierService.addIdentifier(key, identifier);
+    Integer identifierKey = personService.addIdentifier(key, identifier);
 
-    List<Identifier> identifiers = identifierService.listIdentifiers(key);
+    List<Identifier> identifiers = personService.listIdentifiers(key);
     assertEquals(1, identifiers.size());
     assertEquals(identifierKey, identifiers.get(0).getKey());
     assertEquals("identifier", identifiers.get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
 
-    identifierService.deleteIdentifier(key, identifierKey);
-    assertEquals(0, identifierService.listIdentifiers(key).size());
+    personService.deleteIdentifier(key, identifierKey);
+    assertEquals(0, personService.listIdentifiers(key).size());
   }
 
   @Test

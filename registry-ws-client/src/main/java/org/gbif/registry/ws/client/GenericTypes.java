@@ -41,7 +41,7 @@ import com.sun.jersey.api.client.GenericType;
 /**
  * Package access utility to provide generic types.
  */
-class GenericTypes {
+public class GenericTypes {
 
   public static final GenericType<PagingResponse<Node>> PAGING_NODE = new GenericType<PagingResponse<Node>>() {
   };

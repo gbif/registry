@@ -23,6 +23,30 @@
           PRIMARY KEY (identifier_key, collection_person_key)
         );
 
+        CREATE TABLE collection_person_tag (
+          collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,
+          tag_key int4 NOT NULL REFERENCES tag(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_person_key, tag_key)
+        );
+
+        CREATE TABLE collection_person_machine_tag (
+          collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,
+          machine_tag_key int4 NOT NULL UNIQUE REFERENCES machine_tag(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_person_key, machine_tag_key)
+        );
+
+        CREATE TABLE collection_machine_tag (
+          collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+          machine_tag_key int4 NOT NULL UNIQUE REFERENCES machine_tag(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_key, machine_tag_key)
+        );
+
+        CREATE TABLE institution_machine_tag (
+          institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+          machine_tag_key int4 NOT NULL UNIQUE REFERENCES machine_tag(key) ON DELETE CASCADE,
+          PRIMARY KEY (institution_key, machine_tag_key)
+        );
+
         CREATE OR REPLACE FUNCTION institution_change_trigger()
         RETURNS TRIGGER AS
         $instchange$

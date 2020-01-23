@@ -22,7 +22,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class PersonWsClient extends BaseCrudClient<Person> implements PersonService, IdentifierService {
+public class PersonWsClient extends BaseClient<Person> implements PersonService, IdentifierService {
 
   private static final GenericType<PagingResponse<Person>> PAGING_PERSON = new GenericType<PagingResponse<Person>>() {};
   private static final GenericType<List<PersonSuggestResult>> LIST_PERSON_SUGGEST =

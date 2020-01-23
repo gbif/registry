@@ -19,7 +19,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class CollectionWsClient extends BaseExtendableCollectionEntityClient<Collection> implements CollectionService {
+public class CollectionWsClient extends BaseExtendedCollectionEntityClient<Collection> implements CollectionService {
 
   private static final GenericType<PagingResponse<Collection>> PAGING_COLLECTION =
     new GenericType<PagingResponse<Collection>>() {};
