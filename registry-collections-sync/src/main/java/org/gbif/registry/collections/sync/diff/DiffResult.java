@@ -49,7 +49,7 @@ public class DiffResult {
   public static class EntityDiffResult<T extends CollectionEntity> {
     private T oldEntity;
     private T newEntity;
-    private StaffDiffResult staffDiffResult;
+    private StaffDiffResult<T> staffDiffResult;
 
     public boolean isEmpty() {
       return oldEntity == null && newEntity == null && staffDiffResult.isEmpty();
@@ -58,7 +58,9 @@ public class DiffResult {
 
   @Data
   @Builder
-  public static class StaffDiffResult {
+  public static class StaffDiffResult<T extends CollectionEntity> {
+    private T entity;
+
     @Singular(value = "personNoChange")
     private List<Person> personsNoChange;
 
@@ -68,8 +70,8 @@ public class DiffResult {
     @Singular(value = "personToUpdate")
     private List<PersonDiffResult> personsToUpdate;
 
-    @Singular(value = "personToDelete")
-    private List<Person> personsToDelete;
+    @Singular(value = "personToRemoveFromEntity")
+    private List<Person> personsToRemoveFromEntity;
 
     @Singular(value = "outdatedStaff")
     private List<IHOutdated<IHStaff, Person>> outdatedStaff;
@@ -81,7 +83,7 @@ public class DiffResult {
       return personsNoChange.isEmpty()
           && personsToCreate.isEmpty()
           && personsToUpdate.isEmpty()
-          && personsToDelete.isEmpty()
+          && personsToRemoveFromEntity.isEmpty()
           && outdatedStaff.isEmpty()
           && conflicts.isEmpty();
     }

@@ -4,6 +4,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.http.BasicAuthInterceptor;
@@ -117,16 +118,48 @@ public class GrSciCollHttpClient {
     syncCall(api.updateCollection(collection.getKey(), collection));
   }
 
-  public void createPerson(Person person) {
-    syncCall(api.createPerson(person));
+  /** Returns all persons in GrSciCol. */
+  public List<Person> getPersons() {
+    List<Person> result = new ArrayList<>();
+
+    boolean endRecords = false;
+    int offset = 0;
+    while (!endRecords) {
+      PagingResponse<Person> response = syncCall(api.listPersons(1000, offset));
+      endRecords = response.isEndOfRecords();
+      offset += response.getLimit();
+      result.addAll(response.getResults());
+    }
+
+    return result;
+  }
+
+  public UUID createPerson(Person person) {
+    return syncCall(api.createPerson(person));
   }
 
   public void updatePerson(Person person) {
     syncCall(api.updatePerson(person.getKey(), person));
   }
 
-  public void deletePerson(Person person) {
-    syncCall(api.deletePerson(person.getKey()));
+  public void addIdentifierToPerson(UUID personKey, Identifier identifier) {
+    syncCall(api.addIdentifierToPerson(personKey, identifier));
+  }
+
+  public void addPersonToInstitution(UUID personKey, UUID institutionKey) {
+    syncCall(api.addPersonToInstitution(institutionKey, personKey));
+  }
+
+  public void removePersonFromInstitution(UUID personKey, UUID institutionKey) {
+    syncCall(api.removePersonFromInstitution(institutionKey, personKey));
+  }
+
+  public void addPersonToCollection(UUID personKey, UUID collectionKey) {
+    syncCall(api.addPersonToCollection(collectionKey, personKey));
+  }
+
+  public void removePersonFromCollection(UUID personKey, UUID collectionKey) {
+    syncCall(api.removePersonFromCollection(collectionKey, personKey));
   }
 
   private interface API {
@@ -147,14 +180,34 @@ public class GrSciCollHttpClient {
     @PUT("collection/{key}")
     Call<Void> updateCollection(@Path("key") UUID key, @Body Collection collection);
 
+    @GET("person")
+    Call<PagingResponse<Person>> listPersons(
+        @Query("limit") int limit, @Query("offset") int offset);
+
     @POST("person")
     Call<UUID> createPerson(@Body Person person);
 
     @PUT("person/{key}")
     Call<Void> updatePerson(@Path("key") UUID key, @Body Person person);
 
-    @DELETE("person/{key}")
-    Call<Void> deletePerson(@Path("key") UUID key);
+    @POST("person/{key}/identifier")
+    Call<Void> addIdentifierToPerson(@Path("key") UUID personKey, @Body Identifier identifier);
+
+    @POST("{institutionKey}/contact")
+    Call<Void> addPersonToInstitution(
+        @Path("institutionKey") UUID institutionKey, @Body UUID personKey);
+
+    @DELETE("{institutionKey}/contact/{personKey}")
+    Call<Void> removePersonFromInstitution(
+        @Path("institutionKey") UUID institutionKey, @Path("personKey") UUID personKey);
+
+    @POST("{collectionKey}/contact")
+    Call<Void> addPersonToCollection(
+        @Path("collectionKey") UUID collectionKey, @Body UUID personKey);
+
+    @DELETE("{collectionKey}/contact/{personKey}")
+    Call<Void> removePersonFromCollection(
+        @Path("collectionKey") UUID collectionKey, @Path("personKey") UUID personKey);
   }
 
   /** Adapter necessary for retrofit due to versioning. */

@@ -1,5 +1,6 @@
 package org.gbif.registry.collections.sync.diff;
 
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.collections.sync.ih.IHStaff;
@@ -12,19 +13,29 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import static org.gbif.registry.collections.sync.diff.DiffResult.StaffDiffResult;
 import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
+import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
+import static org.gbif.registry.collections.sync.diff.Utils.mapByIrn;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class StaffDiffFinder {
 
   private static final String EMPTY = "";
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
+
+  private final EntityConverter entityConverter;
+  private final List<Person> allGrSciCollPersons;
+  private final Map<String, Set<Person>> grSciCollPersonsByIrn;
+
+  @Builder
+  private StaffDiffFinder(EntityConverter entityConverter, List<Person> allGrSciCollPersons) {
+    this.entityConverter = entityConverter;
+    this.allGrSciCollPersons = allGrSciCollPersons;
+    this.grSciCollPersonsByIrn = mapByIrn(allGrSciCollPersons);
+  }
 
   private static final Function<IHStaff, String> CONCAT_IH_NAME =
       s -> {
@@ -86,54 +97,81 @@ class StaffDiffFinder {
         return WHITESPACE.matcher(fullName).replaceAll(EMPTY);
       };
 
-  public static StaffDiffResult syncStaff(
-      List<IHStaff> ihStaffList, List<Person> persons, EntityConverter entityConverter) {
+  public <T extends CollectionEntity> StaffDiffResult<T> syncStaff(
+      T entity, List<IHStaff> ihStaffList, List<Person> contacts) {
 
-    StaffDiffResult.StaffDiffResultBuilder diffResult = StaffDiffResult.builder();
+    StaffDiffResult.StaffDiffResultBuilder<T> diffResult =
+        StaffDiffResult.<T>builder().entity(entity);
 
+    List<Person> contactsCopy = new ArrayList<>(contacts);
     for (IHStaff ihStaff : ihStaffList) {
       // try to find a match in the GrSciColl contacts
-      Set<Person> matches = match(ihStaff, persons, entityConverter);
+      Set<Person> matches = matchWithContacts(ihStaff, contactsCopy);
 
       if (matches.isEmpty()) {
-        // if there is no match we create a new person
-        Person person = entityConverter.convertToPerson(ihStaff);
-        diffResult.personToCreate(person);
-        continue;
-      }
-
-      if (matches.size() > 1) {
+        // no match among the contacts. We check now in all the GrSciColl persons.
+        Set<Person> globalMatches = matchGlobally(ihStaff, allGrSciCollPersons);
+        if (globalMatches.isEmpty()) {
+          // we create a new person and add it to the entity
+          Person person = entityConverter.convertToPerson(ihStaff);
+          diffResult.personToCreate(person);
+        } else if (globalMatches.size() > 1) {
+          // conflict
+          diffResult.conflict(new DiffResult.Conflict<>(ihStaff, new ArrayList<>(globalMatches)));
+        } else {
+          // there is one match.
+          Person globalMatch = globalMatches.iterator().next();
+          compareStaff(ihStaff, globalMatch, diffResult);
+        }
+      } else if (matches.size() > 1) {
         // conflict
-        persons.removeAll(matches);
+        contactsCopy.removeAll(matches);
         diffResult.conflict(new DiffResult.Conflict<>(ihStaff, new ArrayList<>(matches)));
       } else {
         // there is one match
         Person existing = matches.iterator().next();
-        persons.remove(existing);
-
-        if (Utils.isIHOutdated(ihStaff, existing)) {
-          // add issue
-          diffResult.outdatedStaff(new DiffResult.IHOutdated<>(ihStaff, existing));
-          continue;
-        }
-
-        Person person = entityConverter.convertToPerson(ihStaff, existing);
-        if (!person.lenientEquals(existing)) {
-          diffResult.personToUpdate(new DiffResult.PersonDiffResult(existing, person));
-        } else {
-          diffResult.personNoChange(person);
-        }
+        contactsCopy.remove(existing);
+        compareStaff(ihStaff, existing, diffResult);
       }
     }
 
-    // remove the GrSciColl persons that don't exist in IH
-    persons.forEach(diffResult::personToDelete);
+    // remove from the GrSciColl entity the persons that don't exist in IH
+    diffResult.personsToRemoveFromEntity(contactsCopy);
 
     return diffResult.build();
   }
 
-  private static Set<Person> match(
-      IHStaff ihStaff, List<Person> grSciCollPersons, EntityConverter entityConverter) {
+  private <T extends CollectionEntity> void compareStaff(
+      IHStaff ihStaff, Person existing, StaffDiffResult.StaffDiffResultBuilder<T> diffResult) {
+
+    if (isIHOutdated(ihStaff, existing)) {
+      // add issue
+      diffResult.outdatedStaff(new DiffResult.IHOutdated<>(ihStaff, existing));
+      return;
+    }
+
+    Person person = entityConverter.convertToPerson(ihStaff, existing);
+    if (!person.lenientEquals(existing)) {
+      diffResult.personToUpdate(new DiffResult.PersonDiffResult(existing, person));
+    } else {
+      diffResult.personNoChange(person);
+    }
+  }
+
+  private Set<Person> matchGlobally(IHStaff ihStaff, List<Person> grSciCollPersons) {
+    // first try with IRNs
+    Set<Person> matchesWithIrn =
+        grSciCollPersonsByIrn.getOrDefault(encodeIRN(ihStaff.getIrn()), Collections.emptySet());
+
+    if (!matchesWithIrn.isEmpty()) {
+      return matchesWithIrn;
+    }
+
+    // we try to match with fields
+    return matchWithFields(ihStaff, grSciCollPersons, 11);
+  }
+
+  private Set<Person> matchWithContacts(IHStaff ihStaff, List<Person> grSciCollPersons) {
     // try to find a match by using the IRN identifiers
     String irn = encodeIRN(ihStaff.getIrn());
     Set<Person> irnMatches =
@@ -149,12 +187,11 @@ class StaffDiffFinder {
     }
 
     // no irn matches, we try to match with the fields
-    return matchWithFields(ihStaff, grSciCollPersons, entityConverter);
+    return matchWithFields(ihStaff, grSciCollPersons, 10);
   }
 
   @VisibleForTesting
-  static Set<Person> matchWithFields(
-      IHStaff ihStaff, List<Person> persons, EntityConverter entityConverter) {
+  Set<Person> matchWithFields(IHStaff ihStaff, List<Person> persons, int minimumScore) {
     if (persons.isEmpty()) {
       return Collections.emptySet();
     }
@@ -166,6 +203,11 @@ class StaffDiffFinder {
     for (Person person : persons) {
       StaffNormalized personNorm = buildGrSciCollPersonNormalized(person);
       int equalityScore = getEqualityScore(ihStaffNorm, personNorm);
+
+      if (equalityScore < minimumScore) {
+        continue;
+      }
+
       if (equalityScore > maxScore) {
         bestMatches.clear();
         bestMatches.add(person);
@@ -230,8 +272,6 @@ class StaffDiffFinder {
   }
 
   private static int getEqualityScore(StaffNormalized staff1, StaffNormalized staff2) {
-    int score = 0;
-
     BiPredicate<String, String> compareStrings =
         (s1, s2) -> {
           if (!Strings.isNullOrEmpty(s1) && !Strings.isNullOrEmpty(s2)) {
@@ -248,23 +288,25 @@ class StaffDiffFinder {
           return false;
         };
 
-    if (compareStrings.test(staff1.fullName, staff2.fullName)) {
-      score += 10;
-    }
+    int score = 0;
     if (compareStrings.test(staff1.email, staff2.email)) {
       score += 10;
     }
-    if (compareStrings.test(staff1.firstName, staff2.firstName)) {
-      score += 5;
-    }
-    if (compareStrings.test(staff1.lastName, staff2.lastName)) {
-      score += 5;
-    }
-    if (compareNamePartially.test(staff1.firstName, staff2.firstName)) {
-      score += 4;
-    }
-    if (compareNamePartially.test(staff1.lastName, staff2.lastName)) {
-      score += 4;
+
+    if (compareStrings.test(staff1.fullName, staff2.fullName)) {
+      score += 10;
+    } else {
+      if (compareStrings.test(staff1.firstName, staff2.firstName)) {
+        score += 5;
+      } else if (compareNamePartially.test(staff1.firstName, staff2.firstName)) {
+        score += 4;
+      }
+
+      if (compareStrings.test(staff1.lastName, staff2.lastName)) {
+        score += 5;
+      } else if (compareNamePartially.test(staff1.lastName, staff2.lastName)) {
+        score += 4;
+      }
     }
 
     // at least the name or the email should match
@@ -275,7 +317,7 @@ class StaffDiffFinder {
     if (compareStrings.test(staff1.phone, staff2.phone)) {
       score += 3;
     }
-    if (staff1.country == staff2.country) {
+    if (staff2.country != null && staff1.country == staff2.country) {
       score += 3;
     }
     if (compareStrings.test(staff1.city, staff2.city)) {

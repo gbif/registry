@@ -1,17 +1,18 @@
 package org.gbif.registry.collections.sync.diff;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.SyncConfig;
 import org.gbif.registry.collections.sync.grscicoll.GrSciCollHttpClient;
 import org.gbif.registry.collections.sync.notification.GithubClient;
 import org.gbif.registry.collections.sync.notification.Issue;
 import org.gbif.registry.collections.sync.notification.IssueFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -24,9 +25,8 @@ import static org.gbif.registry.collections.sync.diff.DiffResult.PersonDiffResul
 import static org.gbif.registry.collections.sync.diff.DiffResult.StaffDiffResult;
 
 /**
- * Handles the results stored in a {@link org.gbif.registry.collections.sync.diff.DiffResult}. This
- * class is responsible to make the necessary updates in GrSciColl and notify the existing
- * conflicts.
+ * Handles the results stored in a {@link DiffResult}. This class is responsible to make the
+ * necessary updates in GrSciColl and notify the existing conflicts.
  */
 @Slf4j
 public class DiffResultHandler {
@@ -57,25 +57,125 @@ public class DiffResultHandler {
     }
 
     List<FailedAction> fails = new ArrayList<>();
-    fails.addAll(
-        executeGrSciCollAction(
-            diffResult.getInstitutionsToCreate(),
-            grSciCollHttpClient::createInstitution,
-            ActionType.CREATE));
-    fails.addAll(
-        executeGrSciCollUpdateAction(
-            diffResult.getInstitutionsToUpdate(), grSciCollHttpClient::updateInstitution));
-    fails.addAll(
-        executeGrSciCollUpdateAction(
-            diffResult.getCollectionsToUpdate(), grSciCollHttpClient::updateCollection));
+
+    // Institutions to create
+    for (Institution institutionToCreate : diffResult.getInstitutionsToCreate()) {
+      executeOrCreateFail(
+              () -> grSciCollHttpClient.createInstitution(institutionToCreate),
+              e ->
+                  new FailedAction(
+                      institutionToCreate, "Failed to create institution: " + e.getMessage()))
+          .ifPresent(fails::add);
+    }
+
+    // Institutions to update
+    for (EntityDiffResult<Institution> diff : diffResult.getInstitutionsToUpdate()) {
+      executeOrCreateFail(
+              () -> grSciCollHttpClient.updateInstitution(diff.getNewEntity()),
+              e ->
+                  new FailedAction(
+                      diff.getNewEntity(), "Failed to update institution: " + e.getMessage()))
+          .ifPresent(fails::add);
+
+      // staff
+      fails.addAll(
+          handleStaffDiff(
+              diff.getStaffDiffResult(),
+              grSciCollHttpClient::addPersonToInstitution,
+              grSciCollHttpClient::removePersonFromInstitution));
+    }
+
+    // collections to update
+    for (EntityDiffResult<Collection> diff : diffResult.getCollectionsToUpdate()) {
+      executeOrCreateFail(
+              () -> grSciCollHttpClient.updateCollection(diff.getNewEntity()),
+              e ->
+                  new FailedAction(
+                      diff.getNewEntity(), "Failed to update collection: " + e.getMessage()))
+          .ifPresent(fails::add);
+
+      // staff
+      fails.addAll(
+          handleStaffDiff(
+              diff.getStaffDiffResult(),
+              grSciCollHttpClient::addPersonToCollection,
+              grSciCollHttpClient::removePersonFromCollection));
+    }
+
+    // issues and conflicts
     fails.addAll(createInstitutionIssues());
 
-    if (!fails.isEmpty() && config.isSendNotifications()) {
+    // fails
+    if (!fails.isEmpty()) {
       // create issue
-      githubClient.createIssue(issueFactory.createFailsNotification(fails));
+      createIssue(issueFactory.createFailsNotification(fails)).ifPresent(fails::add);
     }
 
     return fails;
+  }
+
+  private <T extends CollectionEntity> List<FailedAction> handleStaffDiff(
+      StaffDiffResult<T> staffDiffResult,
+      BiConsumer<UUID, UUID> addPersonAction,
+      BiConsumer<UUID, UUID> removePersonAction) {
+    List<FailedAction> fails = new ArrayList<>();
+
+    for (Person personToCreate : staffDiffResult.getPersonsToCreate()) {
+      executeOrCreateFail(
+              () -> {
+                UUID createdKey = grSciCollHttpClient.createPerson(personToCreate);
+                addPersonAction.accept(createdKey, staffDiffResult.getEntity().getKey());
+              },
+              e -> new FailedAction(personToCreate, "Failed to add person: " + e.getMessage()))
+          .ifPresent(fails::add);
+    }
+
+    for (PersonDiffResult personDiff : staffDiffResult.getPersonsToUpdate()) {
+      executeOrCreateFail(
+              () -> {
+                grSciCollHttpClient.updatePerson(personDiff.getNewPerson());
+                // add identifiers if needed
+                personDiff.getNewPerson().getIdentifiers().stream()
+                    .filter(i -> i.getKey() == null)
+                    .forEach(
+                        i ->
+                            grSciCollHttpClient.addIdentifierToPerson(
+                                personDiff.getNewPerson().getKey(), i));
+              },
+              e ->
+                  new FailedAction(
+                      personDiff.getNewPerson(), "Failed to update person: " + e.getMessage()))
+          .ifPresent(fails::add);
+    }
+
+    for (Person personToRemove : staffDiffResult.getPersonsToRemoveFromEntity()) {
+      executeOrCreateFail(
+              () ->
+                  removePersonAction.accept(
+                      personToRemove.getKey(), staffDiffResult.getEntity().getKey()),
+              e -> new FailedAction(personToRemove, "Failed to remove person: " + e.getMessage()))
+          .ifPresent(fails::add);
+    }
+
+    // staff issues
+    fails.addAll(createStaffIssues(staffDiffResult));
+
+    return fails;
+  }
+
+  private Optional<FailedAction> executeOrCreateFail(
+      Runnable runnable, Function<Exception, FailedAction> failCreator) {
+    if (config.isDryRun()) {
+      return Optional.empty();
+    }
+
+    try {
+      runnable.run();
+    } catch (Exception e) {
+      return Optional.of(failCreator.apply(e));
+    }
+
+    return Optional.empty();
   }
 
   private List<FailedAction> createInstitutionIssues() {
@@ -98,33 +198,13 @@ public class DiffResultHandler {
             .map(c -> issueFactory.createConflict(c.getGrSciCollEntities(), c.getIhEntity()))
             .collect(Collectors.toList()));
 
-    issues.forEach(
-        i -> fails.addAll(executeAndStoreFail(githubClient::createIssue, i, ActionType.CREATE)));
+    issues.forEach(i -> createIssue(i).ifPresent(fails::add));
 
     return fails;
   }
 
-  private List<FailedAction> handleStaffDiff(StaffDiffResult s) {
-    List<FailedAction> fails = new ArrayList<>();
-    fails.addAll(
-        executeGrSciCollAction(
-            s.getPersonsToCreate(), grSciCollHttpClient::createPerson, ActionType.CREATE));
-    fails.addAll(
-        executeGrSciCollAction(
-            s.getPersonsToDelete(), grSciCollHttpClient::deletePerson, ActionType.DELETE));
-    fails.addAll(
-        executeGrSciCollAction(
-            s.getPersonsToUpdate().stream()
-                .map(PersonDiffResult::getNewPerson)
-                .collect(Collectors.toList()),
-            grSciCollHttpClient::updatePerson,
-            ActionType.UPDATE));
-    fails.addAll(createStaffIssues(s));
-
-    return fails;
-  }
-
-  private List<FailedAction> createStaffIssues(StaffDiffResult staffDiffResult) {
+  private <T extends CollectionEntity> List<FailedAction> createStaffIssues(
+      StaffDiffResult<T> staffDiffResult) {
     List<FailedAction> fails = new ArrayList<>();
     if (!config.isSendNotifications()) {
       log.debug("Ignore conflicts flag enabled. Ignoring conflict.");
@@ -144,62 +224,21 @@ public class DiffResultHandler {
             .map(c -> issueFactory.createStaffConflict(c.getGrSciCollEntities(), c.getIhEntity()))
             .collect(Collectors.toList()));
 
-    issues.forEach(
-        i -> fails.addAll(executeAndStoreFail(githubClient::createIssue, i, ActionType.CREATE)));
+    issues.forEach(i -> createIssue(i).ifPresent(fails::add));
     return fails;
   }
 
-  private <T> List<FailedAction> executeGrSciCollAction(
-      List<T> entities, Consumer<T> action, ActionType actionType) {
-    List<FailedAction> fails = new ArrayList<>();
-    if (config.isDryRun()) {
-      log.debug("Dry run enabled. Ignoring update.");
-      return fails;
+  private Optional<FailedAction> createIssue(Issue issue) {
+    if (!config.isSendNotifications()) {
+      return Optional.empty();
     }
-    entities.forEach(e -> fails.addAll(executeAndStoreFail(action, e, actionType)));
-    return fails;
-  }
-
-  private <T extends CollectionEntity> List<FailedAction> executeGrSciCollUpdateAction(
-      List<EntityDiffResult<T>> diffs, Consumer<T> updateAction) {
-    List<FailedAction> fails = new ArrayList<>();
-    if (config.isDryRun()) {
-      log.debug("Dry run enabled. Ignoring update.");
-      return fails;
-    }
-
-    diffs.forEach(
-        d -> {
-          fails.addAll(executeAndStoreFail(updateAction, d.getNewEntity(), ActionType.UPDATE));
-          fails.addAll(handleStaffDiff(d.getStaffDiffResult()));
-        });
-
-    return fails;
-  }
-
-  private <T> List<FailedAction> executeAndStoreFail(
-      Consumer<T> action, T entity, ActionType actionType) {
-    List<FailedAction> fails = new ArrayList<>();
 
     try {
-      action.accept(entity);
-    } catch (Exception ex) {
-      fails.add(
-          new FailedAction(
-              entity,
-              entity.getClass().getSimpleName()
-                  + " "
-                  + actionType.name()
-                  + " failed: "
-                  + ex.getMessage()));
+      githubClient.createIssue(issue);
+    } catch (Exception e) {
+      return Optional.of(new FailedAction(issue, "Failed to create isssue: " + e.getMessage()));
     }
 
-    return fails;
-  }
-
-  private enum ActionType {
-    UPDATE,
-    CREATE,
-    DELETE;
+    return Optional.empty();
   }
 }

@@ -11,6 +11,7 @@ import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -109,7 +110,7 @@ public class EntityConverter {
           }
 
           if (country != null) {
-            mappings.put(c, country);
+            mappings.put(c.toLowerCase(), country);
           }
         });
 
@@ -117,7 +118,7 @@ public class EntityConverter {
   }
 
   public Country matchCountry(String country) {
-    return countryLookup.get(country);
+    return countryLookup.get(country.toLowerCase());
   }
 
   public Institution convertToInstitution(IHInstitution ihInstitution) {
@@ -135,18 +136,11 @@ public class EntityConverter {
       }
     }
 
-    institution.setName(ihInstitution.getOrganization());
+    getStringValue(ihInstitution.getOrganization()).ifPresent(institution::setName);
     institution.setCode(ihInstitution.getCode());
     institution.setIndexHerbariorumRecord(true);
     institution.setNumberSpecimens(Math.toIntExact(ihInstitution.getSpecimenTotal()));
-    institution.setLatitude(
-        ihInstitution.getLocation() != null
-            ? BigDecimal.valueOf(ihInstitution.getLocation().getLat())
-            : null);
-    institution.setLongitude(
-        ihInstitution.getLocation() != null
-            ? BigDecimal.valueOf(ihInstitution.getLocation().getLon())
-            : null);
+    setLocation(ihInstitution, institution);
 
     setAddress(institution, ihInstitution);
     institution.setEmail(getIhEmails(ihInstitution));
@@ -156,6 +150,37 @@ public class EntityConverter {
     addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()), creationUser);
 
     return institution;
+  }
+
+  private static void setLocation(IHInstitution ihInstitution, Institution institution) {
+    if (ihInstitution.getLocation() != null) {
+      IHInstitution.Location location = ihInstitution.getLocation();
+      if (location.getLat() != null) {
+        BigDecimal lat = BigDecimal.valueOf(location.getLat()).setScale(6, RoundingMode.HALF_DOWN);
+        if (lat.compareTo(BigDecimal.valueOf(-90)) >= 0
+            && lat.compareTo(BigDecimal.valueOf(90)) <= 0) {
+          institution.setLatitude(lat);
+        } else {
+          log.info(
+              "Invalid lat coordinate {} for instittuion with IRN {}",
+              location.getLat(),
+              ihInstitution.getIrn());
+        }
+      }
+
+      if (location.getLon() != null) {
+        BigDecimal lon = BigDecimal.valueOf(location.getLon()).setScale(6, RoundingMode.HALF_DOWN);
+        if (lon.compareTo(BigDecimal.valueOf(-180)) >= 0
+            && lon.compareTo(BigDecimal.valueOf(180)) <= 0) {
+          institution.setLongitude(lon);
+        } else {
+          log.info(
+              "Invalid lon coordinate {} for instittuion with IRN {}",
+              location.getLon(),
+              ihInstitution.getIrn());
+        }
+      }
+    }
   }
 
   public Collection convertToCollection(IHInstitution ihInstitution, Collection existing) {
@@ -169,7 +194,7 @@ public class EntityConverter {
       }
     }
 
-    collection.setName(ihInstitution.getOrganization());
+    getStringValue(ihInstitution.getOrganization()).ifPresent(collection::setName);
     collection.setCode(ihInstitution.getCode());
     collection.setIndexHerbariorumRecord(true);
 
@@ -216,14 +241,15 @@ public class EntityConverter {
       getStringValue(ihStaff.getAddress().getState()).ifPresent(mailingAddress::setProvince);
       getStringValue(ihStaff.getAddress().getZipCode()).ifPresent(mailingAddress::setPostalCode);
 
-      Country mailingAddressCountry = countryLookup.get(ihStaff.getAddress().getCountry());
-      if (mailingAddressCountry == null) {
+      if (!Strings.isNullOrEmpty(ihStaff.getAddress().getCountry())) {
+        Country mailingAddressCountry = matchCountry(ihStaff.getAddress().getCountry());
         mailingAddress.setCountry(mailingAddressCountry);
-      } else {
-        log.warn(
-            "Country not found for {} and IH staff {}",
-            ihStaff.getAddress().getCountry(),
-            ihStaff.getIrn());
+        if (mailingAddressCountry == null) {
+          log.warn(
+              "Country not found for {} and IH staff {}",
+              ihStaff.getAddress().getCountry(),
+              ihStaff.getIrn());
+        }
       }
 
       person.setMailingAddress(mailingAddress);
@@ -262,14 +288,15 @@ public class EntityConverter {
       getStringValue(ih.getAddress().getPhysicalZipCode())
           .ifPresent(physicalAddress::setPostalCode);
 
-      Country physicalAddressCountry = countryLookup.get(ih.getAddress().getPhysicalCountry());
-      if (physicalAddressCountry != null) {
+      if (!Strings.isNullOrEmpty(ih.getAddress().getPhysicalCountry())) {
+        Country physicalAddressCountry = matchCountry(ih.getAddress().getPhysicalCountry());
         physicalAddress.setCountry(physicalAddressCountry);
-      } else {
-        log.warn(
-            "Country not found for {} and IH institution {}",
-            ih.getAddress().getPhysicalCountry(),
-            ih.getIrn());
+        if (physicalAddressCountry == null) {
+          log.warn(
+              "Country not found for {} and IH institution {}",
+              ih.getAddress().getPhysicalCountry(),
+              ih.getIrn());
+        }
       }
 
       mailingAddress = new Address();
@@ -278,14 +305,15 @@ public class EntityConverter {
       getStringValue(ih.getAddress().getPostalState()).ifPresent(mailingAddress::setProvince);
       getStringValue(ih.getAddress().getPostalZipCode()).ifPresent(mailingAddress::setPostalCode);
 
-      Country mailingAddressCountry = countryLookup.get(ih.getAddress().getPostalCountry());
-      if (mailingAddressCountry != null) {
+      if (!Strings.isNullOrEmpty(ih.getAddress().getPostalCountry())) {
+        Country mailingAddressCountry = matchCountry(ih.getAddress().getPostalCountry());
         mailingAddress.setCountry(mailingAddressCountry);
-      } else {
-        log.warn(
-            "Country not found for {} and IH institution {}",
-            ih.getAddress().getPhysicalCountry(),
-            ih.getIrn());
+        if (mailingAddressCountry == null) {
+          log.warn(
+              "Country not found for {} and IH institution {}",
+              ih.getAddress().getPhysicalCountry(),
+              ih.getIrn());
+        }
       }
     }
     contactable.setAddress(physicalAddress);

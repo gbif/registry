@@ -152,13 +152,15 @@ public class DiffResultExporter {
     writer.newLine();
   }
 
-  private static void printStaffDiffResult(BufferedWriter writer, StaffDiffResult staffDiffResult)
-      throws IOException {
+  private static <T extends CollectionEntity> void printStaffDiffResult(
+      BufferedWriter writer, StaffDiffResult<T> staffDiffResult) throws IOException {
     printWithNewLineAfter(writer, ">>> Differences in Associated Staff");
 
     printSubsection(writer, "Staff No Change", staffDiffResult.getPersonsNoChange());
-    printSubsection(writer, "Staff to Create", staffDiffResult.getPersonsToCreate());
-    printSubsection(writer, "Staff to Delete", staffDiffResult.getPersonsToDelete());
+    printSubsection(
+        writer, "Staff to Create and add to the entity", staffDiffResult.getPersonsToCreate());
+    printSubsection(
+        writer, "Staff to Remove from entity", staffDiffResult.getPersonsToRemoveFromEntity());
 
     printSubsectionTitle(writer, "Staff to Update: " + staffDiffResult.getPersonsToUpdate().size());
     for (PersonDiffResult staffUpdate : staffDiffResult.getPersonsToUpdate()) {

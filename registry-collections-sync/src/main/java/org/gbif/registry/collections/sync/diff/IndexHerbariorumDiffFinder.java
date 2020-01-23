@@ -1,12 +1,8 @@
 package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.registry.LenientEquals;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.collections.sync.ih.IHInstitution;
 import org.gbif.registry.collections.sync.ih.IHStaff;
 
@@ -15,12 +11,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.registry.collections.sync.diff.DiffResult.EntityDiffResult;
 import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
+import static org.gbif.registry.collections.sync.diff.Utils.mapByIrn;
 
 /**
  * A synchronization utility that will ensure GRSciColl is up to date with IndexHerbariorum. This
@@ -40,21 +36,37 @@ import static org.gbif.registry.collections.sync.diff.Utils.isIHOutdated;
  * and IH staff to resolve the differences.
  */
 @Slf4j
-@Builder
 public class IndexHerbariorumDiffFinder {
 
-  @NonNull private List<IHInstitution> ihInstitutions;
-  @NonNull private Function<String, List<IHStaff>> ihStaffFetcher;
-  private List<Institution> institutions;
-  private List<Collection> collections;
-  @NonNull private EntityConverter entityConverter;
+  private final List<IHInstitution> ihInstitutions;
+  private final Function<String, List<IHStaff>> ihStaffFetcher;
+  private final Map<String, Set<Institution>> institutionsByIrn;
+  private final Map<String, Set<Collection>> collectionsByIrn;
+  private final EntityConverter entityConverter;
+  private final StaffDiffFinder staffDiffFinder;
+
+  @Builder
+  private IndexHerbariorumDiffFinder(
+      List<IHInstitution> ihInstitutions,
+      Function<String, List<IHStaff>> ihStaffFetcher,
+      List<Institution> institutions,
+      List<Collection> collections,
+      List<Person> persons,
+      EntityConverter entityConverter) {
+    this.ihInstitutions = ihInstitutions;
+    this.ihStaffFetcher = ihStaffFetcher;
+    this.entityConverter = entityConverter;
+    this.institutionsByIrn = mapByIrn(institutions);
+    this.collectionsByIrn = mapByIrn(collections);
+    this.staffDiffFinder =
+        StaffDiffFinder.builder()
+            .allGrSciCollPersons(persons)
+            .entityConverter(entityConverter)
+            .build();
+  }
 
   public DiffResult find() {
     DiffResult.DiffResultBuilder diffResult = DiffResult.builder();
-
-    // map the GrSciColl entities by their IH IRN
-    Map<String, List<Institution>> institutionsByIrn = mapByIrn(institutions);
-    Map<String, List<Collection>> collectionsByIrn = mapByIrn(collections);
 
     for (IHInstitution ihInstitution : ihInstitutions) {
 
@@ -127,23 +139,6 @@ public class IndexHerbariorumDiffFinder {
     return diffResult.build();
   }
 
-  private <T extends CollectionEntity & Identifiable> Map<String, List<T>> mapByIrn(
-      List<T> entities) {
-    Map<String, List<T>> mapByIrn = new HashMap<>();
-    entities.forEach(
-        o ->
-            o.getIdentifiers().stream()
-                // TODO: use the enum when deployed
-                                .filter(i -> i.getIdentifier().startsWith("gbif:ih:irn:"))
-//                .filter(i -> i.getType() == IdentifierType.IH_IRN)
-                .forEach(
-                    i ->
-                        mapByIrn
-                            .computeIfAbsent(i.getIdentifier(), s -> new ArrayList<>())
-                            .add(o)));
-    return mapByIrn;
-  }
-
   private <T extends CollectionEntity & LenientEquals<T> & Contactable>
       EntityDiffResult<T> checkEntityDiff(IHInstitution ihInstitution, T newEntity, T existing) {
 
@@ -154,25 +149,21 @@ public class IndexHerbariorumDiffFinder {
 
     // look for differences in staff
     log.info("Syncing staff for IH institution {}", ihInstitution.getCode());
-    DiffResult.StaffDiffResult staffDiffResult =
-        StaffDiffFinder.syncStaff(
-            ihStaffFetcher.apply(ihInstitution.getCode()), existing.getContacts(), entityConverter);
+    DiffResult.StaffDiffResult<T> staffDiffResult =
+        staffDiffFinder.syncStaff(
+            newEntity, ihStaffFetcher.apply(ihInstitution.getCode()), existing.getContacts());
     updateDiffBuilder.staffDiffResult(staffDiffResult);
 
     return updateDiffBuilder.build();
   }
 
   private Match findMatches(
-      Map<String, List<Institution>> institutions,
-      Map<String, List<Collection>> collections,
+      Map<String, Set<Institution>> institutions,
+      Map<String, Set<Collection>> collections,
       String irn) {
     Match match = new Match();
-    List<Institution> institutionsMatched = institutions.get(irn);
-    List<Collection> collectionsMatched = collections.get(irn);
-    match.institutions =
-        institutionsMatched != null ? new HashSet<>(institutionsMatched) : Collections.emptySet();
-    match.collections =
-        collectionsMatched != null ? new HashSet<>(collectionsMatched) : Collections.emptySet();
+    match.institutions = institutions.getOrDefault(irn, Collections.emptySet());
+    match.collections = collections.getOrDefault(irn, Collections.emptySet());
 
     return match;
   }

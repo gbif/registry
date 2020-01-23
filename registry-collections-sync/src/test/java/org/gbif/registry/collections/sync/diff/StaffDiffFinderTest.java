@@ -1,6 +1,7 @@
 package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
@@ -20,10 +21,7 @@ import org.junit.Test;
 
 import static org.gbif.registry.collections.sync.diff.Utils.encodeIRN;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /** Tests the {@link StaffDiffFinder}. */
 public class StaffDiffFinderTest {
@@ -33,7 +31,18 @@ public class StaffDiffFinderTest {
           .countries(Arrays.asList("U.K.", "U.S.A.", "United Kingdom", "United States"))
           .creationUser("test-user")
           .build();
+  private static final StaffDiffFinder STAFF_DIFF_FINDER =
+      StaffDiffFinder.builder()
+          .entityConverter(ENTITY_CONVERTER)
+          .allGrSciCollPersons(Collections.emptyList())
+          .build();
   private static final String IRN_TEST = "1";
+  private static final Institution DEFAULT_INSTITUTION = new Institution();
+
+  static {
+    DEFAULT_INSTITUTION.setKey(UUID.randomUUID());
+    DEFAULT_INSTITUTION.setCode("code");
+  }
 
   @Test
   public void syncStaffTest() {
@@ -55,18 +64,18 @@ public class StaffDiffFinderTest {
             .map(TestStaff::getPerson)
             .collect(Collectors.toList());
 
-    DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(ihStaff, grSciCollPersons, ENTITY_CONVERTER);
+    DiffResult.StaffDiffResult<Institution> result =
+        STAFF_DIFF_FINDER.syncStaff(DEFAULT_INSTITUTION, ihStaff, grSciCollPersons);
     assertEquals(1, result.getPersonsToCreate().size());
     assertEquals(1, result.getPersonsToUpdate().size());
     assertEquals(1, result.getPersonsNoChange().size());
-    assertEquals(1, result.getPersonsToDelete().size());
+    assertEquals(1, result.getPersonsToRemoveFromEntity().size());
 
     assertEquals(staffNoChange.person, result.getPersonsNoChange().get(0));
     assertNotEquals(
         result.getPersonsToUpdate().get(0).getNewPerson(),
         result.getPersonsToUpdate().get(0).getOldPerson());
-    assertEquals(staffToDelete.person, result.getPersonsToDelete().get(0));
+    assertEquals(staffToDelete.person, result.getPersonsToRemoveFromEntity().get(0));
     assertFalse(grSciCollPersons.contains(result.getPersonsToCreate().get(0)));
   }
 
@@ -81,13 +90,75 @@ public class StaffDiffFinderTest {
     upToDatePerson.setModified(Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
     upToDatePerson.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
-    DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(
+    DiffResult.StaffDiffResult<Institution> result =
+        STAFF_DIFF_FINDER.syncStaff(
+            DEFAULT_INSTITUTION,
             Collections.singletonList(outdatedStaff),
-            Collections.singletonList(upToDatePerson),
-            ENTITY_CONVERTER);
+            Collections.singletonList(upToDatePerson));
 
-    assertEquals(1, result.getConflicts().size());
+    assertEquals(1, result.getOutdatedStaff().size());
+  }
+
+  @Test
+  public void syncWithGlobalMatchUpdateTest() {
+    IHStaff s = new IHStaff();
+    s.setCode("UARK");
+    s.setLastName("Last");
+    s.setMiddleName("M.");
+    s.setFirstName("First");
+    s.setPosition("Collections Manager");
+
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setEmail("a@a.com");
+    s.setContact(contact);
+
+    Person existing = new Person();
+    existing.setKey(UUID.randomUUID());
+    existing.setFirstName("First");
+    existing.setPosition("foo");
+    existing.setEmail("a@a.com");
+
+    StaffDiffFinder staffDiffFinder =
+        StaffDiffFinder.builder()
+            .entityConverter(ENTITY_CONVERTER)
+            .allGrSciCollPersons(Collections.singletonList(existing))
+            .build();
+
+    DiffResult.StaffDiffResult<Institution> diffResult =
+        staffDiffFinder.syncStaff(
+            DEFAULT_INSTITUTION, Collections.singletonList(s), Collections.emptyList());
+
+    assertEquals(1, diffResult.getPersonsToUpdate().size());
+    assertEquals(
+        s.getPosition(), diffResult.getPersonsToUpdate().get(0).getNewPerson().getPosition());
+    assertNotNull(diffResult.getPersonsToUpdate().get(0).getNewPerson().getKey());
+  }
+
+  @Test
+  public void syncWithGlobalMatchCreateTest() {
+    IHStaff s = new IHStaff();
+    s.setCode("UARK");
+    s.setLastName("Last");
+    s.setMiddleName("M.");
+    s.setFirstName("First");
+    s.setPosition("Collections Manager");
+
+    IHStaff.Contact contact = new IHStaff.Contact();
+    contact.setEmail("a@a.com");
+    s.setContact(contact);
+
+    StaffDiffFinder staffDiffFinder =
+        StaffDiffFinder.builder()
+            .entityConverter(ENTITY_CONVERTER)
+            .allGrSciCollPersons(Collections.emptyList())
+            .build();
+
+    DiffResult.StaffDiffResult<Institution> diffResult =
+        staffDiffFinder.syncStaff(
+            DEFAULT_INSTITUTION, Collections.singletonList(s), Collections.emptyList());
+
+    assertEquals(1, diffResult.getPersonsToCreate().size());
+    assertNull(diffResult.getPersonsToCreate().get(0).getKey());
   }
 
   @Test
@@ -105,9 +176,9 @@ public class StaffDiffFinderTest {
     p2.setEmail("bb@bb.com");
     p2.getIdentifiers().add(new Identifier(IdentifierType.IH_IRN, encodeIRN(IRN_TEST)));
 
-    DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(
-            Collections.singletonList(s), Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    DiffResult.StaffDiffResult<Institution> result =
+        STAFF_DIFF_FINDER.syncStaff(
+            DEFAULT_INSTITUTION, Collections.singletonList(s), Arrays.asList(p1, p2));
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -128,9 +199,9 @@ public class StaffDiffFinderTest {
     p2.setFirstName("Name");
     p2.setLastName("Last");
 
-    DiffResult.StaffDiffResult result =
-        StaffDiffFinder.syncStaff(
-            Collections.singletonList(s), Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    DiffResult.StaffDiffResult<Institution> result =
+        STAFF_DIFF_FINDER.syncStaff(
+            DEFAULT_INSTITUTION, Collections.singletonList(s), Arrays.asList(p1, p2));
 
     assertEquals(1, result.getConflicts().size());
   }
@@ -169,8 +240,7 @@ public class StaffDiffFinderTest {
     p2.setMailingAddress(address);
 
     // When
-    Set<Person> persons =
-        StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    Set<Person> persons = STAFF_DIFF_FINDER.matchWithFields(s, Arrays.asList(p1, p2), 0);
 
     // Expect
     assertEquals(1, persons.size());
@@ -187,7 +257,7 @@ public class StaffDiffFinderTest {
     p2.setMailingAddress(address);
 
     // When
-    persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    persons = STAFF_DIFF_FINDER.matchWithFields(s, Arrays.asList(p1, p2), 0);
 
     // Expect
     assertEquals(1, persons.size());
@@ -202,11 +272,11 @@ public class StaffDiffFinderTest {
     p2.setLastName("Last");
 
     // When
-    persons = StaffDiffFinder.matchWithFields(s, Arrays.asList(p1, p2), ENTITY_CONVERTER);
+    persons = STAFF_DIFF_FINDER.matchWithFields(s, Arrays.asList(p1, p2), 0);
 
     // Expect
     assertEquals(1, persons.size());
-    assertTrue(persons.contains(p2));
+    assertTrue(persons.contains(p1));
   }
 
   private TestStaff createTestStaffToUpdate() {
