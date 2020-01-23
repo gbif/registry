@@ -2,6 +2,7 @@ package org.gbif.registry.collections.sync;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.registry.collections.sync.diff.*;
 import org.gbif.registry.collections.sync.grscicoll.GrSciCollHttpClient;
 import org.gbif.registry.collections.sync.ih.IHHttpClient;
@@ -44,11 +45,18 @@ public class CliSyncApp {
     CompletableFuture<List<Collection>> collectionsFuture =
         CompletableFuture.supplyAsync(grSciCollHttpClient::getCollections);
 
-    CompletableFuture.allOf(ihInstitutionsFuture, institutionsFuture, collectionsFuture).join();
+    log.info("Loading Persons");
+    CompletableFuture<List<Person>> personsFuture =
+        CompletableFuture.supplyAsync(grSciCollHttpClient::getPersons);
+
+    CompletableFuture.allOf(
+            ihInstitutionsFuture, institutionsFuture, collectionsFuture, personsFuture)
+        .join();
 
     List<IHInstitution> ihInstitutions = ihInstitutionsFuture.join();
     List<Institution> institutions = institutionsFuture.join();
     List<Collection> collections = collectionsFuture.join();
+    List<Person> persons = personsFuture.join();
 
     // create an entity converter to use in the diff finder process
     EntityConverter entityConverter =
@@ -65,6 +73,7 @@ public class CliSyncApp {
             .ihStaffFetcher(ihHttpClient::getStaffByInstitution)
             .institutions(institutions)
             .collections(collections)
+            .persons(persons)
             .entityConverter(entityConverter)
             .build()
             .find();
