@@ -2,6 +2,7 @@ package org.gbif.registry.collections.sync.diff;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.collections.sync.ih.IHEntity;
 
 import java.time.LocalDate;
@@ -48,9 +49,7 @@ public class Utils {
     entities.forEach(
         o ->
             o.getIdentifiers().stream()
-                // TODO: use the enum when deployed
-                .filter(i -> i.getIdentifier().startsWith("gbif:ih:irn:"))
-                //                .filter(i -> i.getType() == IdentifierType.IH_IRN)
+                .filter(i -> i.getType() == IdentifierType.IH_IRN)
                 .forEach(
                     i -> mapByIrn.computeIfAbsent(i.getIdentifier(), s -> new HashSet<>()).add(o)));
     return mapByIrn;
