@@ -19,6 +19,7 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -148,6 +149,7 @@ public class DatasetJsonConverter {
   }
 
   private void addRecordCounts(ObjectNode dataset, Long datasetOccurrenceCount) {
+    DecimalFormat df = new DecimalFormat("0.000");
     String datasetKey  = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
@@ -155,7 +157,7 @@ public class DatasetJsonConverter {
     double nameUsagesPercentage = 0D;
 
     //Contribution of occurrence records
-    dataset.put("occurrencePercentage", occurrencePercentage);
+    dataset.put("occurrencePercentage", df.format(occurrencePercentage));
     DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
     if (Objects.nonNull(datasetMetrics)) {
@@ -166,10 +168,10 @@ public class DatasetJsonConverter {
     }
 
     //Contribution of NameUsages
-    dataset.put("nameUsagesPercentage", nameUsagesPercentage);
+    dataset.put("nameUsagesPercentage", df.format(nameUsagesPercentage));
 
     //How much a dataset contributes in terms of records to GBIF data
-    dataset.put("dataScore", occurrencePercentage + nameUsagesPercentage);
+    dataset.put("dataScore", df.format(occurrencePercentage + nameUsagesPercentage));
   }
 
   private void enumTransforms(ObjectNode dataset) {
@@ -244,12 +246,12 @@ public class DatasetJsonConverter {
     datasetObjectNode.putArray("institutionKey")
       .addAll(dataset.getMachineTags().stream()
               .filter(mt -> PROCESSING_NAMESPACE.equals(mt.getNamespace()) && INSTITUTION_TAG_NAME.equals(mt.getName()))
-              .map(v -> new TextNode(v.getValue()))
+              .map(v -> new TextNode(v.getValue().split(":")[0]))
               .collect(Collectors.toList()));
     datasetObjectNode.putArray("collectionKey")
       .addAll(dataset.getMachineTags().stream()
                 .filter(mt -> PROCESSING_NAMESPACE.equals(mt.getNamespace()) && COLLECTION_TAG_NAME.equals(mt.getName()))
-                .map(v -> new TextNode(v.getValue()))
+                .map(v -> new TextNode(v.getValue().split(":")[0]))
                 .collect(Collectors.toList()));
   }
 }

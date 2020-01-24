@@ -66,7 +66,7 @@ public class GbifWsClient {
    * @param apiBaseUrl GBIF Api base url, for example: https://api.gbif-dev.orf/v1/ .
    */
   @Autowired
-  public GbifWsClient(@Value("${gbifApiBaseUrl}") String apiBaseUrl, @Qualifier("apiMapper") ObjectMapper objectMapper) {
+  public GbifWsClient(@Value("${api.root.url}") String apiBaseUrl, @Qualifier("apiMapper") ObjectMapper objectMapper) {
 
     OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
       .connectTimeout(2, TimeUnit.MINUTES)

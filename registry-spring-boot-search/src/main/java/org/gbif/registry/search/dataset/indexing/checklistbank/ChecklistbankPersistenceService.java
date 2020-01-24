@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,6 +25,7 @@ public class ChecklistbankPersistenceService {
                                     "WHERE dataset_key = '%s'";
 
   @Autowired
+  @Qualifier("clb_datasource")
   private DataSource dataSource;
   /**
    * Pages over all datasets and adds them to SOLR.
