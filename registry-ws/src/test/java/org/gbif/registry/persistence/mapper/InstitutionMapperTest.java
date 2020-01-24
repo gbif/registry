@@ -13,6 +13,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -23,10 +24,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class InstitutionMapperTest {
 
@@ -80,6 +78,8 @@ public class InstitutionMapperTest {
     List<Discipline> disciplines = new ArrayList<>();
     disciplines.add(Discipline.AGRICULTURAL_ANIMAL_SCIENCE);
     institution.setDisciplines(disciplines);
+    institution.setEmail(Collections.singletonList("test@test.com"));
+    institution.setPhone(Collections.singletonList("1234"));
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -106,6 +106,10 @@ public class InstitutionMapperTest {
     assertTrue(institutionStored.getDisciplines().contains(Discipline.AGRICULTURAL_ANIMAL_SCIENCE));
     assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
     assertTrue(institutionStored.isActive());
+    assertEquals(1, institutionStored.getEmail().size());
+    assertTrue(institutionStored.getEmail().contains("test@test.com"));
+    assertEquals(1, institutionStored.getPhone().size());
+    assertTrue(institutionStored.getPhone().contains("1234"));
 
     // assert address
     assertNotNull(institutionStored.getAddress().getKey());
@@ -160,8 +164,12 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    List<Institution> cols = institutionMapper.list(null, null, PAGE.apply(5, 0L));
-    assertEquals(2, cols.size());
+    Pageable page = PAGE.apply(5, 0L);
+    assertEquals(2, institutionMapper.list(null, null, null, null, page).size());
+    assertEquals(1, institutionMapper.list(null, null, "i1", null, page).size());
+    assertEquals(1, institutionMapper.list(null, null, null, "n2", page).size());
+    assertEquals(1, institutionMapper.list(null, null, "i2", "n2", page).size());
+    assertEquals(0, institutionMapper.list(null, null, "i1", "n2", page).size());
   }
 
   @Test
@@ -191,21 +199,21 @@ public class InstitutionMapperTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Institution> cols = institutionMapper.list("i1 n1", null, pageable);
+    List<Institution> cols = institutionMapper.list("i1 n1", null, null, null, pageable);
     assertEquals(1, cols.size());
     assertEquals("i1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
-    cols = institutionMapper.list("i2 i1", null, pageable);
+    cols = institutionMapper.list("i2 i1", null, null, null, pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.list("i3", null, pageable);
+    cols = institutionMapper.list("i3", null, null, null, pageable);
     assertEquals(0, cols.size());
 
-    cols = institutionMapper.list("n1", null, pageable);
+    cols = institutionMapper.list("n1", null, null, null,pageable);
     assertEquals(2, cols.size());
 
-    cols = institutionMapper.list("dummy address fo ", null, pageable);
+    cols = institutionMapper.list("dummy address fo ", null, null, null,pageable);
     assertEquals(1, cols.size());
   }
 
@@ -228,6 +236,10 @@ public class InstitutionMapperTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    assertEquals(2, institutionMapper.count(null, null));
+    assertEquals(2, institutionMapper.count(null, null, null, null));
+    assertEquals(1, institutionMapper.count(null, null, "i1", null));
+    assertEquals(1, institutionMapper.count(null, null, null, "n2"));
+    assertEquals(1, institutionMapper.count(null, null, "i2", "n2"));
+    assertEquals(0, institutionMapper.count(null, null, "i1", "n2"));
   }
 }

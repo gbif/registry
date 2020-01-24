@@ -1,0 +1,13 @@
+registryWsUrl: http://test.com/
+ihWsUrl: http://test2.com/
+saveResultsToFile: true
+dryRun: true
+sendNotifications: true
+notification:
+  registryPortalUrl: https://a.com/
+  ihPortalUrl: https://b.com/
+  githubWsUrl: https://c.com/
+  githubUser: bar
+  githubPassword: fake
+  ghIssuesAssignees:
+    - foo

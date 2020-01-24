@@ -6,15 +6,19 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.registry.ws.resources.collections.PersonResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -34,7 +38,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class PersonIT extends CrudTest<Person> {
+public class PersonIT extends BaseTest<Person> {
 
   private static final String FIRST_NAME = "first name";
   private static final String LAST_NAME = "last name";
@@ -54,21 +58,27 @@ public class PersonIT extends CrudTest<Person> {
   public static Iterable<Object[]> data() {
     final Injector client = webserviceClient();
     final Injector webservice = webservice();
-    return ImmutableList.<Object[]>of(new Object[] {webservice.getInstance(PersonResource.class),
-                                        webservice.getInstance(InstitutionResource.class), webservice.getInstance(CollectionResource.class), null},
-                                      new Object[] {client.getInstance(PersonService.class),
-                                        client.getInstance(InstitutionService.class),
-                                        client.getInstance(CollectionService.class),
-                                        client.getInstance(SimplePrincipalProvider.class)});
+    return ImmutableList.<Object[]>of(
+        new Object[] {
+          webservice.getInstance(PersonResource.class),
+          webservice.getInstance(InstitutionResource.class),
+          webservice.getInstance(CollectionResource.class),
+          null
+        },
+        new Object[] {
+          client.getInstance(PersonService.class),
+          client.getInstance(InstitutionService.class),
+          client.getInstance(CollectionService.class),
+          client.getInstance(SimplePrincipalProvider.class)
+        });
   }
 
   public PersonIT(
-    PersonService personService,
-    InstitutionService institutionService,
-    CollectionService collectionService,
-    @Nullable SimplePrincipalProvider pp
-  ) {
-    super(personService, pp);
+      PersonService personService,
+      InstitutionService institutionService,
+      CollectionService collectionService,
+      @Nullable SimplePrincipalProvider pp) {
+    super(personService, personService, personService, personService, pp);
     this.personService = personService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
@@ -84,6 +94,11 @@ public class PersonIT extends CrudTest<Person> {
     mailingAddress.setCountry(Country.AFGHANISTAN);
     person.setMailingAddress(mailingAddress);
 
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("id");
+    identifier.setType(IdentifierType.IH_IRN);
+    person.setIdentifiers(Arrays.asList(identifier));
+
     UUID key = personService.create(person);
     Person personSaved = personService.get(key);
 
@@ -92,6 +107,30 @@ public class PersonIT extends CrudTest<Person> {
     assertEquals("mailing", personSaved.getMailingAddress().getAddress());
     assertEquals("city", personSaved.getMailingAddress().getCity());
     assertEquals(Country.AFGHANISTAN, personSaved.getMailingAddress().getCountry());
+    assertEquals(1, personSaved.getIdentifiers().size());
+    assertEquals("id", personSaved.getIdentifiers().get(0).getIdentifier());
+    assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
+  }
+
+  @Test
+  public void identifiersTest() {
+    Person person = newEntity();
+    UUID key = personService.create(person);
+
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("identifier");
+    identifier.setType(IdentifierType.LSID);
+
+    Integer identifierKey = personService.addIdentifier(key, identifier);
+
+    List<Identifier> identifiers = personService.listIdentifiers(key);
+    assertEquals(1, identifiers.size());
+    assertEquals(identifierKey, identifiers.get(0).getKey());
+    assertEquals("identifier", identifiers.get(0).getIdentifier());
+    assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
+
+    personService.deleteIdentifier(key, identifierKey);
+    assertEquals(0, personService.listIdentifiers(key).size());
   }
 
   @Test

@@ -7,18 +7,16 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -38,27 +36,43 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path(GRSCICOLL_PATH + "/institution")
-public class InstitutionResource extends BaseExtendableCollectionResource<Institution>
+public class InstitutionResource extends ExtendedCollectionEntityResource<Institution>
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
 
   @Inject
-  public InstitutionResource(InstitutionMapper institutionMapper, AddressMapper addressMapper, IdentifierMapper identifierMapper,
-                             TagMapper tagMapper, EventBus eventBus) {
-    super(institutionMapper, addressMapper, institutionMapper, tagMapper, institutionMapper, identifierMapper, institutionMapper,
-          eventBus, Institution.class);
+  public InstitutionResource(
+      InstitutionMapper institutionMapper,
+      AddressMapper addressMapper,
+      IdentifierMapper identifierMapper,
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EditorAuthorizationService userAuthService,
+      EventBus eventBus) {
+    super(
+        institutionMapper,
+        addressMapper,
+        tagMapper,
+        identifierMapper,
+        institutionMapper,
+        machineTagMapper,
+        eventBus,
+        Institution.class,
+        userAuthService);
     this.institutionMapper = institutionMapper;
   }
 
   @GET
   public PagingResponse<Institution> list(@Nullable @QueryParam("q") String query,
                                           @Nullable @QueryParam("contact") UUID contactKey,
+                                          @Nullable @QueryParam("code") String code,
+                                          @Nullable @QueryParam("name") String name,
                                           @Context Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = institutionMapper.count(query, contactKey);
-    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, page));
+    long total = institutionMapper.count(query, contactKey, code, name);
+    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, code, name, page));
   }
 
   @GET

@@ -4,13 +4,20 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,11 +25,7 @@ import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -46,17 +49,30 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path(GRSCICOLL_PATH + "/person")
-public class PersonResource extends BaseCrudResource<Person> implements PersonService {
+public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
   private final AddressMapper addressMapper;
+  private final IdentifierMapper identifierMapper;
+  private final TagMapper tagMapper;
+  private final MachineTagMapper machineTagMapper;
   private final EventBus eventBus;
 
   @Inject
-  public PersonResource(PersonMapper personMapper, AddressMapper addressMapper, EventBus eventBus) {
-    super(personMapper, eventBus, Person.class);
+  public PersonResource(
+      PersonMapper personMapper,
+      AddressMapper addressMapper,
+      IdentifierMapper identifierMapper,
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EventBus eventBus,
+      EditorAuthorizationService userAuthService) {
+    super(personMapper, tagMapper, machineTagMapper, identifierMapper, userAuthService, eventBus, Person.class);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
+    this.identifierMapper = identifierMapper;
+    this.tagMapper = tagMapper;
+    this.machineTagMapper = machineTagMapper;
     this.eventBus = eventBus;
   }
 
@@ -92,6 +108,34 @@ public class PersonResource extends BaseCrudResource<Person> implements PersonSe
 
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
+
+    if (!person.getMachineTags().isEmpty()) {
+      for (MachineTag machineTag : person.getMachineTags()) {
+        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        machineTag.setCreatedBy(person.getCreatedBy());
+        machineTagMapper.createMachineTag(machineTag);
+        personMapper.addMachineTag(person.getKey(), machineTag.getKey());
+      }
+    }
+
+    if (!person.getTags().isEmpty()) {
+      for (Tag tag : person.getTags()) {
+        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
+        tag.setCreatedBy(person.getCreatedBy());
+        tagMapper.createTag(tag);
+        personMapper.addTag(person.getKey(), tag.getKey());
+      }
+    }
+
+    if (!person.getIdentifiers().isEmpty()) {
+      for (Identifier identifier : person.getIdentifiers()) {
+        checkArgument(
+            identifier.getKey() == null, "Unable to create an identifier which already has a key");
+        identifier.setCreatedBy(person.getCreatedBy());
+        identifierMapper.createIdentifier(identifier);
+        personMapper.addIdentifier(person.getKey(), identifier.getKey());
+      }
+    }
 
     eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();

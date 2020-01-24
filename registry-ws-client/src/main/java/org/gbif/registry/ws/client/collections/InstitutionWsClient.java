@@ -19,7 +19,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<Institution>
+public class InstitutionWsClient extends BaseExtendedCollectionEntityClient<Institution>
   implements InstitutionService {
 
   private static final GenericType<PagingResponse<Institution>> PAGING_INSTITUTION =
@@ -38,12 +38,20 @@ public class InstitutionWsClient extends BaseExtendableCollectionEntityClient<In
 
   @Override
   public PagingResponse<Institution> list(
-    @Nullable String query, @Nullable UUID contactKey, @Nullable Pageable pageable
-  ) {
-    return get(PAGING_INSTITUTION,
-               null,
-               QueryParamBuilder.create("q", query).queryParam("contact", contactKey).build(),
-               pageable);
+      @Nullable String query,
+      @Nullable UUID contactKey,
+      @Nullable String code,
+      @Nullable String name,
+      @Nullable Pageable pageable) {
+    return get(
+        PAGING_INSTITUTION,
+        null,
+        QueryParamBuilder.create("q", query)
+            .queryParam("contact", contactKey)
+            .queryParam("code", code)
+            .queryParam("name", name)
+            .build(),
+        pageable);
   }
 
   @Override

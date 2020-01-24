@@ -3,8 +3,6 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.registry.persistence.mapper.IdentifiableMapper;
-import org.gbif.registry.persistence.mapper.TaggableMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,16 +10,19 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
-/**
- * Mapper for {@link Institution} entities.
- */
-public interface InstitutionMapper extends CrudMapper<Institution>, ContactableMapper, TaggableMapper, IdentifiableMapper {
+/** Mapper for {@link Institution} entities. */
+public interface InstitutionMapper extends BaseMapper<Institution>, ContactableMapper {
 
   List<Institution> list(@Nullable @Param("query") String query,
                          @Nullable @Param("contactKey") UUID contactKey,
+                         @Nullable @Param("code") String code,
+                         @Nullable @Param("name") String name,
                          @Nullable @Param("page") Pageable page);
 
-  long count(@Nullable @Param("query") String query, @Nullable @Param("contactKey") UUID contactKey);
+  long count(@Nullable @Param("query") String query,
+             @Nullable @Param("contactKey") UUID contactKey,
+             @Nullable @Param("code") String code,
+             @Nullable @Param("name") String name);
 
   /**
    * A simple suggest by title service.

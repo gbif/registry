@@ -10,10 +10,8 @@ import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 
-/**
- * Mapper for {@link Person} entities.
- */
-public interface PersonMapper extends CrudMapper<Person> {
+/** Mapper for {@link Person} entities. */
+public interface PersonMapper extends BaseMapper<Person> {
 
   List<Person> list(@Nullable @Param("institutionKey") UUID institutionKey,
                     @Nullable @Param("collectionKey") UUID collectionKey,
