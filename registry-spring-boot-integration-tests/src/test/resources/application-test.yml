@@ -81,7 +81,15 @@ elasticsearch:
   socketTimeOut: 60000
   connectionRequestTimeOut: 120000
   maxRetryTimeOut: 120000
-
+registry:
+  datasource:
+    url: @registry-it.db.url@
+    password: @registry-it.db.password@
+    username: @registry-it.db.username@
+    hikari:
+      idleTimeout: 60000
+      maximumPoolSize: 1
+      minimumIdle: 1
 spring:
   # DB connection
   datasource:
