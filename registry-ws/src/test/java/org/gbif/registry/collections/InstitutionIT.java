@@ -276,32 +276,4 @@ public class InstitutionIT extends ExtendedCollectionEntityTest<Institution> {
     institutionService.delete(key2);
     assertEquals(2, institutionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
   }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void createDuplicatedInstitution() {
-    Institution institution1 = newEntity();
-    institution1.setCode("code1");
-    institutionService.create(institution1);
-
-    Institution institution2 = newEntity();
-    institution2.setCode("code1");
-
-    institutionService.create(institution2);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void updateDuplicatedInstitution() {
-    Institution institution1 = newEntity();
-    institution1.setCode("code1");
-    UUID key1 = institutionService.create(institution1);
-
-    Institution institution2 = newEntity();
-    institution2.setCode("code2");
-    institutionService.create(institution2);
-
-    Institution institution1nUpdated = institutionService.get(key1);
-    institution1nUpdated.setCode("code2");
-
-    institutionService.update(institution1nUpdated);
-  }
 }

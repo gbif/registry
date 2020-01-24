@@ -103,7 +103,7 @@ class StaffDiffFinder {
     StaffDiffResult.StaffDiffResultBuilder<T> diffResult =
         StaffDiffResult.<T>builder().entity(entity);
 
-    List<Person> contactsCopy = new ArrayList<>(contacts);
+    List<Person> contactsCopy = contacts != null ? new ArrayList<>(contacts) : Collections.emptyList();
     for (IHStaff ihStaff : ihStaffList) {
       // try to find a match in the GrSciColl contacts
       Set<Person> matches = matchWithContacts(ihStaff, contactsCopy);
