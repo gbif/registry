@@ -46,6 +46,10 @@ public class Utils {
   public static <T extends CollectionEntity & Identifiable> Map<String, Set<T>> mapByIrn(
       List<T> entities) {
     Map<String, Set<T>> mapByIrn = new HashMap<>();
+    if (entities == null) {
+      return mapByIrn;
+    }
+
     entities.forEach(
         o ->
             o.getIdentifiers().stream()

@@ -345,34 +345,4 @@ public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
     collectionService.delete(key2);
     assertEquals(2, collectionService.listDeleted(PAGE.apply(5, 0L)).getResults().size());
   }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void createDuplicatedCollection() {
-    Collection collection1 = newEntity();
-    collection1.setCode("code1");
-    collectionService.create(collection1);
-
-    Collection collection2 = newEntity();
-    collection2.setCode("code1");
-
-    collectionService.create(collection2);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void updateDuplicatedCollection() {
-    Collection collection1 = newEntity();
-    collection1.setCode("code1");
-    collection1.setName("Institution name");
-    UUID key1 = collectionService.create(collection1);
-
-    Collection collection2 = newEntity();
-    collection2.setCode("code2");
-    collectionService.create(collection2);
-
-    Collection collection1nUpdated = collectionService.get(key1);
-    collection1nUpdated.setCode("code2");
-
-    collectionService.update(collection1nUpdated);
-  }
-
 }

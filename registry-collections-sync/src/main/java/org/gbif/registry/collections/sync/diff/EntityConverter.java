@@ -11,7 +11,6 @@ import org.gbif.registry.collections.sync.ih.IHStaff;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -143,8 +142,8 @@ public class EntityConverter {
     setLocation(ihInstitution, institution);
 
     setAddress(institution, ihInstitution);
-    institution.setEmail(getIhEmails(ihInstitution));
-    institution.setPhone(getIhPhones(ihInstitution));
+    getIhEmails(ihInstitution).ifPresent(institution::setEmail);
+    getIhPhones(ihInstitution).ifPresent(institution::setPhone);
     getIhHomepage(ihInstitution).ifPresent(institution::setHomepage);
 
     addIdentifierIfNotExists(institution, encodeIRN(ihInstitution.getIrn()), creationUser);
@@ -156,7 +155,7 @@ public class EntityConverter {
     if (ihInstitution.getLocation() != null) {
       IHInstitution.Location location = ihInstitution.getLocation();
       if (location.getLat() != null) {
-        BigDecimal lat = BigDecimal.valueOf(location.getLat()).setScale(6, RoundingMode.HALF_DOWN);
+        BigDecimal lat = BigDecimal.valueOf(location.getLat());
         if (lat.compareTo(BigDecimal.valueOf(-90)) >= 0
             && lat.compareTo(BigDecimal.valueOf(90)) <= 0) {
           institution.setLatitude(lat);
@@ -169,7 +168,7 @@ public class EntityConverter {
       }
 
       if (location.getLon() != null) {
-        BigDecimal lon = BigDecimal.valueOf(location.getLon()).setScale(6, RoundingMode.HALF_DOWN);
+        BigDecimal lon = BigDecimal.valueOf(location.getLon());
         if (lon.compareTo(BigDecimal.valueOf(-180)) >= 0
             && lon.compareTo(BigDecimal.valueOf(180)) <= 0) {
           institution.setLongitude(lon);
@@ -200,8 +199,8 @@ public class EntityConverter {
 
     setAddress(collection, ihInstitution);
 
-    collection.setEmail(getIhEmails(ihInstitution));
-    collection.setPhone(getIhPhones(ihInstitution));
+    getIhEmails(ihInstitution).ifPresent(collection::setEmail);
+    getIhPhones(ihInstitution).ifPresent(collection::setPhone);
     getIhHomepage(ihInstitution).ifPresent(collection::setHomepage);
 
     addIdentifierIfNotExists(collection, encodeIRN(ihInstitution.getIrn()), creationUser);
@@ -320,18 +319,18 @@ public class EntityConverter {
     contactable.setMailingAddress(mailingAddress);
   }
 
-  private static List<String> getIhEmails(IHInstitution ih) {
+  private static Optional<List<String>> getIhEmails(IHInstitution ih) {
     if (ih.getContact() != null && ih.getContact().getEmail() != null) {
-      return parseStringList(ih.getContact().getEmail());
+      return Optional.of(parseStringList(ih.getContact().getEmail()));
     }
-    return Collections.emptyList();
+    return Optional.empty();
   }
 
-  private static List<String> getIhPhones(IHInstitution ih) {
+  private static Optional<List<String>> getIhPhones(IHInstitution ih) {
     if (ih.getContact() != null && ih.getContact().getPhone() != null) {
-      return parseStringList(ih.getContact().getPhone());
+      return Optional.of(parseStringList(ih.getContact().getPhone()));
     }
-    return Collections.emptyList();
+    return Optional.empty();
   }
 
   private static List<String> parseStringList(String stringList) {
