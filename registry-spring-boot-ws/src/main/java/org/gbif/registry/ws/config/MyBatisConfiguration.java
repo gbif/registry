@@ -13,7 +13,6 @@ import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
@@ -88,7 +87,6 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Download", Download.class);
       configuration.getTypeAliasRegistry().registerAlias("DownloadRequest", DownloadRequest.class);
       configuration.getTypeAliasRegistry().registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
-      configuration.getTypeAliasRegistry().registerAlias("SqlDownloadRequest", SqlDownloadRequest.class);
       configuration.getTypeAliasRegistry().registerAlias("DatasetOccurrenceDownload", DatasetOccurrenceDownloadUsage.class);
       configuration.getTypeAliasRegistry().registerAlias("DatasetProcessStatus", DatasetProcessStatus.class);
       configuration.getTypeAliasRegistry().registerAlias("CrawlJob", CrawlJob.class);
