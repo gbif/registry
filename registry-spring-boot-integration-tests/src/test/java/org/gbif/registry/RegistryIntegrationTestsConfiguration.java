@@ -27,9 +27,7 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.Date;
 
 @TestConfiguration
-@EnableAutoConfiguration(
-  exclude = DataSourcesConfiguration.class
-)
+@EnableAutoConfiguration
 @ComponentScan(basePackages = {
   "org.gbif.ws.server.interceptor",
   "org.gbif.ws.server.filter",
@@ -38,8 +36,7 @@ import java.util.Date;
   "org.gbif.registry.ws.security",
 },
   excludeFilters = {
-  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= EsConfiguration.class),
-  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= DataSourcesConfiguration.class)
+  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, classes = {EsConfiguration.class, DataSourcesConfiguration.class})
 })
 @PropertySource("classpath:application-test.yml")
 public class RegistryIntegrationTestsConfiguration {
