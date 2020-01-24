@@ -81,6 +81,17 @@ elasticsearch:
   socketTimeOut: 60000
   connectionRequestTimeOut: 120000
   maxRetryTimeOut: 120000
+indexing:
+  datasource:
+    checklistbank:
+      url: @checklistbank.db.url@
+      username: @checklistbank.db.username@
+      password: @checklistbank.db.password@
+      hikari:
+        maxPoolSize: 1
+        minimumIdle: 1
+        idleTimeout: 60000
+        connectionTimeout: 5000
 registry:
   datasource:
     url: @registry-it.db.url@
