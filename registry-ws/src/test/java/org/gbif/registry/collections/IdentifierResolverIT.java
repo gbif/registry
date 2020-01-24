@@ -72,11 +72,11 @@ public class IdentifierResolverIT {
 
     // add identifier to collection
     collectionService.addIdentifier(
-        collectionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER1));
+        collectionKey, new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER1));
 
     // there could be duplicates since we don't check it
     collectionService.addIdentifier(
-        collectionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER1));
+        collectionKey, new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER1));
 
     // create institution
     Institution institution = new Institution();
@@ -88,9 +88,9 @@ public class IdentifierResolverIT {
     institutionService.addIdentifier(
         institutionKey, new Identifier(IdentifierType.LSID, IDENTIFIER2));
     institutionService.addIdentifier(
-        institutionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER3));
+        institutionKey, new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER3));
     institutionService.addIdentifier(
-        institutionKey, new Identifier(IdentifierType.GRBIO_URI, IDENTIFIER4));
+        institutionKey, new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER4));
   }
 
   @Test

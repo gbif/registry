@@ -5,6 +5,8 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="COLLECTION_MAP" type="SciCollection" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="contentTypes" column="content_type" typeHandler="CollectionContentTypeArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
@@ -12,18 +14,19 @@
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
   </resultMap>
 
   <sql id="COLLECTION_WRITE_FIELDS">
-    key, code, name, description, content_type, active, personal_collection, doi, homepage, catalog_url, api_url,
+    key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
-    created_by, modified_by, created, modified
+    created_by, modified_by, created, modified, index_herbariorum_record, number_specimens
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
-    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.homepage,
+    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
-    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted
+    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -35,6 +38,8 @@
     #{active,jdbcType=BOOLEAN},
     #{personalCollection,jdbcType=BOOLEAN},
     #{doi,jdbcType=VARCHAR},
+    #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
@@ -46,7 +51,9 @@
     #{createdBy,jdbcType=VARCHAR},
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
-    now() <!-- modified -->
+    now(), <!-- modified -->
+    #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    #{numberSpecimens,jdbcType=INTEGER}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -57,6 +64,8 @@
     active = #{active,jdbcType=BOOLEAN},
     personal_collection = #{personalCollection,jdbcType=BOOLEAN},
     doi = #{doi,jdbcType=VARCHAR},
+    email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
@@ -67,7 +76,9 @@
     address_key = #{address.key,jdbcType=INTEGER},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
-    deleted = null <!-- if we're updating it can't be deleted -->
+    deleted = null, <!-- if we're updating it can't be deleted -->
+    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    number_specimens = #{numberSpecimens,jdbcType=INTEGER}
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -122,6 +133,12 @@
     <if test="contactKey != null" >
       AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
     </if>
+    <if test="code != null" >
+      AND c.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND c.name = #{name,jdbcType=VARCHAR}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -140,6 +157,12 @@
     WHERE c.deleted IS NULL
     <if test="institutionKey != null" >
       AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    </if>
+    <if test="code != null" >
+      AND c.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND c.name = #{name,jdbcType=VARCHAR}
     </if>
     <if test="contactKey != null" >
       AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
@@ -206,6 +229,7 @@
     tag_key = tag.key AND
     collection_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
+  <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
@@ -237,6 +261,75 @@
     INNER JOIN identifier i ON i."key" = ci.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
+  <!-- END IDENTIFIERS -->
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO collection_machine_tag(collection_key,machine_tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{machineTagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listMachineTags" resultType="MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN collection_machine_tag ON machine_tag_key = key
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING collection_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    collection_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING collection_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    collection_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="COLLECTION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (c.key) <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    INNER JOIN collection_machine_tag cm ON cm.collection_key = c.key
+    INNER JOIN machine_tag m ON cm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY c.key, c.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT c.key)
+    FROM collection c
+    INNER JOIN collection_machine_tag cm ON cm.collection_key = c.key
+    INNER JOIN machine_tag m ON cm.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+  <!-- END MACHINE TAGS -->
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">

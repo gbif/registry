@@ -5,6 +5,8 @@
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="INSTITUTION_MAP" type="Institution" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
@@ -12,17 +14,18 @@
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
-    key, code, name, description, type, active, homepage, catalog_url, api_url, institutional_governance, discipline,
+    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
     created_by, modified_by, created, modified
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
-    i.key, i.code, i.name, i.description, i.type, i.active, i.homepage, i.catalog_url, i.api_url,
+    i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
@@ -36,6 +39,8 @@
     #{description,jdbcType=VARCHAR},
     #{type,jdbcType=OTHER},
     #{active,jdbcType=BOOLEAN},
+    #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
@@ -65,6 +70,8 @@
     description = #{description,jdbcType=VARCHAR},
     type = #{type,jdbcType=OTHER},
     active = #{active,jdbcType=BOOLEAN},
+    email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
@@ -156,6 +163,12 @@
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
     </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -174,6 +187,12 @@
     WHERE i.deleted IS NULL
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
     </if>
   </select>
 
@@ -216,6 +235,7 @@
     tag_key = tag.key AND
     institution_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
+  <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
@@ -247,6 +267,75 @@
     INNER JOIN identifier i ON i."key" = ii.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
+  <!-- END IDENTIFIERS -->
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO institution_machine_tag(institution_key,machine_tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{machineTagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listMachineTags" resultType="MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN institution_machine_tag ON machine_tag_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="INSTITUTION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (i.key) <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY i.key, i.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT i.key)
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+  <!-- END MACHINE TAGS -->
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">

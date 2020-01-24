@@ -51,4 +51,5 @@ public class PasswordEncoderTest {
     String encoded2 = encoder.encode(password, encoded1); // encode again reading the salt genarate above
     assertEquals(encoded1, encoded2); // verify they
   }
+
 }
