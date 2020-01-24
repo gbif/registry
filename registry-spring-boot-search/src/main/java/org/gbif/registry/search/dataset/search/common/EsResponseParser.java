@@ -37,14 +37,14 @@ public class EsResponseParser<T,S, P extends SearchParameter>{
 
   private static final Logger LOG = LoggerFactory.getLogger(EsResponseParser.class);
 
-  private final EsFieldParameterMapper<P> fieldParameterMapper;
+  private final EsFieldMapper<P> fieldParameterMapper;
 
   private final SearchResultConverter<T,S> searchResultConverter;
 
   /**
    * Private constructor.
    */
-  public EsResponseParser(SearchResultConverter<T,S> searchResultConverter, EsFieldParameterMapper<P> fieldParameterMapper) {
+  public EsResponseParser(SearchResultConverter<T,S> searchResultConverter, EsFieldMapper<P> fieldParameterMapper) {
     this.searchResultConverter = searchResultConverter;
     this.fieldParameterMapper = fieldParameterMapper;
   }

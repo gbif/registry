@@ -29,16 +29,15 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   private static final int DEFAULT_SUGGEST_LIMIT = 10;
   private static final int MAX_SUGGEST_LIMIT = 100;
 
-  private final DatasetEsResponseParser esResponseParser;
+  private final DatasetEsResponseParser esResponseParser = DatasetEsResponseParser.create();
   private final RestHighLevelClient restHighLevelClient;
   private final String index;
 
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder = new EsSearchRequestBuilder<>(new DatasetEsFieldMapper());
 
   @Autowired
-  public DatasetSearchServiceEs(@Value("${elasticsearch.index}") String index, RestHighLevelClient restHighLevelClient, DatasetEsResponseParser esResponseParser) {
+  public DatasetSearchServiceEs(@Value("${elasticsearch.index}") String index, RestHighLevelClient restHighLevelClient) {
     this.index = index;
-    this.esResponseParser = esResponseParser;
     this.restHighLevelClient = restHighLevelClient;
   }
 

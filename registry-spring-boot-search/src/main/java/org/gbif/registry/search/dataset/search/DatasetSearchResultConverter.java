@@ -9,7 +9,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.dataset.search.common.SearchResultConverter;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -22,39 +21,16 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.IdsQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.STRING_TO_DATE;
 
 @Slf4j
-@Component
 public class DatasetSearchResultConverter implements SearchResultConverter<DatasetSearchResult, DatasetSuggestResult> {
 
   private static final Pattern NESTED_PATTERN = Pattern.compile("^\\w+(\\.\\w+)+$");
   private static final Predicate<String> IS_NESTED = s -> NESTED_PATTERN.matcher(s).find();
-
-  private RestHighLevelClient restHighLevelClient;
-  private String index;
-
-  @Autowired
-  public DatasetSearchResultConverter(RestHighLevelClient restHighLevelClient, @Value("${elasticsearch.index}") String index) {
-    this.restHighLevelClient = restHighLevelClient;
-    this.index = index;
-  }
 
   @Override
   public DatasetSearchResult toSearchResult(SearchHit hit) {
@@ -65,11 +41,9 @@ public class DatasetSearchResultConverter implements SearchResultConverter<Datas
     getStringValue(fields,"title").ifPresent(d::setTitle);
     getDatasetTypeValue(fields, "type").ifPresent(d::setType);
     getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
-    getStringValue(fields, "title").ifPresent(d::setTitle);
     getStringValue(fields, "description").ifPresent(d::setDescription);
     getUuidValue(fields, "publishingOrganizationKey").ifPresent(d::setPublishingOrganizationKey);
     getStringValue(fields, "publishingOrganizationTitle").ifPresent(d::setPublishingOrganizationTitle);
-
     getUuidValue(fields, "hostingOrganizationKey").ifPresent(d::setHostingOrganizationKey);
     getStringValue(fields, "hostingOrganizationTitle").ifPresent(d::setHostingOrganizationTitle);
 
@@ -96,27 +70,17 @@ public class DatasetSearchResultConverter implements SearchResultConverter<Datas
 
   @Override
   public DatasetSuggestResult toSearchSuggestResult(SearchHit hit) {
-    try {
-      DatasetSuggestResult d = new DatasetSuggestResult();
-      d.setKey(UUID.fromString(hit.getId()));
-      SearchSourceBuilder searchById = new SearchSourceBuilder().size(1).query(QueryBuilders.idsQuery().addIds(hit.getId()));
+    DatasetSuggestResult d = new DatasetSuggestResult();
+    d.setKey(UUID.fromString(hit.getId()));
 
-      //Get the document data since the suggest response do not contain all the data
-      SearchResponse searchByIdResponse = restHighLevelClient.search(new SearchRequest().source(searchById).indices(index), RequestOptions.DEFAULT);
-      Map<String, Object> fields = hit.getSourceAsMap();
-      if(searchByIdResponse.getHits().getTotalHits() > 0) {
-        fields = searchByIdResponse.getHits().getAt(0).getSourceAsMap();
-      }
-      getStringValue(fields, "title").ifPresent(d::setTitle);
-      getDatasetTypeValue(fields, "type").ifPresent(d::setType);
-      getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
-      getStringValue(fields, "description").ifPresent(d::setDescription);
+    Map<String, Object> fields = hit.getSourceAsMap();
 
-      return d;
-    } catch (IOException ex) {
-      log.error("Error converting suggestion", ex);
-      throw new RuntimeException(ex);
-    }
+    getStringValue(fields, "title").ifPresent(d::setTitle);
+    getDatasetTypeValue(fields, "type").ifPresent(d::setType);
+    getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
+    getStringValue(fields, "description").ifPresent(d::setDescription);
+
+    return d;
   }
 
 

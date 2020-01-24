@@ -20,14 +20,12 @@ import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.NodeSelector;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,11 +34,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class EsClient implements Closeable {
 
-  private RestHighLevelClient restHighLevelClient;
+  private final RestHighLevelClient restHighLevelClient;
 
   @Autowired
-  public EsClient(@Value("${elasticsearch.hosts}") String hosts) {
-    restHighLevelClient = provideEsClient(hosts.split(","));
+  public EsClient(RestHighLevelClient restHighLevelClient) {
+    this.restHighLevelClient = restHighLevelClient;
   }
 
   /**
@@ -103,7 +101,8 @@ public class EsClient implements Closeable {
   /**
    * Creates ElasticSearch client using default connection settings.
    */
-  public static RestHighLevelClient provideEsClient(String[]hostsUrl) {
+  public static RestHighLevelClient provideEsClient(String[] hostsUrl, int connectionTimeOut, int socketTimeOut, int connectionRequestTimeOut, int maxRetryTimeOut) {
+
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
     int i = 0;
     for (String host : hostsUrl) {
@@ -116,13 +115,13 @@ public class EsClient implements Closeable {
       }
     }
 
-    return new RestHighLevelClient(RestClient.builder(hosts));
-  }
-
-  @Bean
-  @Lazy
-  public RestHighLevelClient provideRestHighLevelClient(@Value("${elasticsearch.hosts}") String hosts) {
-    return provideEsClient(hosts.split(","));
+  return new RestHighLevelClient(RestClient.builder(hosts)
+                                     .setRequestConfigCallback(
+                                       requestConfigBuilder ->  requestConfigBuilder
+                                                                 .setConnectTimeout(connectionTimeOut)
+                                                                 .setSocketTimeout(socketTimeOut)
+                                                                 .setConnectionRequestTimeout(connectionRequestTimeOut))
+                                       .setMaxRetryTimeoutMillis(maxRetryTimeOut).setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS));
   }
 
   @Override

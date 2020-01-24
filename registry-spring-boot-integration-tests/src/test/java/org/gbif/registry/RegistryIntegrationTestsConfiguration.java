@@ -12,7 +12,8 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
-import org.gbif.registry.search.dataset.indexing.DatasetBatchIndexBuilder;
+import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
+import org.gbif.registry.ws.config.DataSourcesConfiguration;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +27,9 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.Date;
 
 @TestConfiguration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(
+  exclude = DataSourcesConfiguration.class
+)
 @ComponentScan(basePackages = {
   "org.gbif.ws.server.interceptor",
   "org.gbif.ws.server.filter",
@@ -34,7 +37,10 @@ import java.util.Date;
   "org.gbif.registry",
   "org.gbif.registry.ws.security",
 },
-  excludeFilters = {@ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= DatasetBatchIndexBuilder.class)})
+  excludeFilters = {
+  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= EsConfiguration.class),
+  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value= DataSourcesConfiguration.class)
+})
 @PropertySource("classpath:application-test.yml")
 public class RegistryIntegrationTestsConfiguration {
 

@@ -1,8 +1,9 @@
-package org.gbif.registry.search.dataset.indexing;
+package org.gbif.cli.indexing.dataset;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
@@ -19,6 +20,7 @@ import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -29,8 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Primary;
 
 /**
  * A builder that will clear and build a new dataset index by paging over the given service.
@@ -38,7 +44,11 @@ import org.springframework.stereotype.Component;
 @SpringBootApplication
 @Slf4j
 @EnableConfigurationProperties
-@Component
+@ComponentScan(
+  basePackages = {
+    "org.gbif.registry.search"
+  }
+)
 public class DatasetBatchIndexBuilder implements CommandLineRunner {
 
   // controls how many results we request while paging over the WS
@@ -125,6 +135,20 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner {
         log.error("Error executing job", ex);
       }
     });
+  }
+
+  @Bean
+  @Primary
+  @ConfigurationProperties("indexing.datasource.checklistbank")
+  public DataSourceProperties clbDataSourceProperties() {
+    return new DataSourceProperties();
+  }
+
+  @Bean(name = "clb_datasource")
+  @Primary
+  @ConfigurationProperties("indexing.datasource.checklistbank.hikari")
+  public HikariDataSource clbDataSource() {
+    return clbDataSourceProperties().initializeDataSourceBuilder().type(HikariDataSource.class).build();
   }
 
   public static void main (String[] args) {
