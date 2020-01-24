@@ -8,8 +8,8 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -24,10 +24,12 @@ public class PipelinesHistoryTrackingServiceTest {
 
   @Mock private DatasetService datasetService;
 
+  @Mock private ExecutorService executorService;
+
   @Test
   public void getLatestSuccesfulStepTest() {
     DefaultPipelinesHistoryTrackingService trackingService =
-        new DefaultPipelinesHistoryTrackingService(pipelineProcessMapper, datasetService);
+        new DefaultPipelinesHistoryTrackingService(pipelineProcessMapper, datasetService, executorService);
 
     PipelineProcess process = new PipelineProcess();
     PipelineExecution execution = new PipelineExecution().setCreated(LocalDateTime.now());

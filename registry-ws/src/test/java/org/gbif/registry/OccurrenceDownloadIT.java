@@ -32,7 +32,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
@@ -128,7 +127,7 @@ public class OccurrenceDownloadIT {
         true, DownloadFormat.DWCA));
     return download;
   }
-  
+
   /**
    * Creates {@link Download} instance with test data using a predicate request.
    * The key is generated randomly using the class java.util.UUID.
@@ -140,30 +139,6 @@ public class OccurrenceDownloadIT {
       new PredicateDownloadRequest(null,
         TestConstants.TEST_ADMIN, Collections.singleton("downloadtest@gbif.org"),
         true, DownloadFormat.DWCA));
-    return download;
-  }
-
-  /**
-   * Creates {@link Download} instance with test data using a sql request.
-   * The key is generated randomly using the class java.util.UUID.
-   * The instance generated should be ready and valid to be persisted.
-   */
-  protected static Download getTestInstanceSqlDownload() {
-    Download download = getTestInstanceDownload();
-    download.setRequest(new SqlDownloadRequest("SELECT datasetKey FROM occurrence", TestConstants.TEST_ADMIN,
-      Collections.singleton("downloadtest@gbif.org"), true));
-    return download;
-  }
-  
-  /**
-   * Creates {@link Download} instance with test data using a null sql request.
-   * The key is generated randomly using the class java.util.UUID.
-   * The instance generated should be ready and valid to be persisted.
-   */
-  protected static Download getTestInstanceNullSqlDownload() {
-    Download download = getTestInstanceDownload();
-    download.setRequest(new SqlDownloadRequest(null, TestConstants.TEST_ADMIN,
-      Collections.singleton("downloadtest@gbif.org"), true));
     return download;
   }
 
@@ -180,29 +155,13 @@ public class OccurrenceDownloadIT {
   public void testCreate() {
     occurrenceDownloadService.create(getTestInstancePredicateDownload());
   }
-  
+
   /**
    * Persists a valid {@link Download} instance with null predicates.
    */
   @Test
   public void testCreateWithNullPredicate() {
     occurrenceDownloadService.create(getTestInstanceNullPredicateDownload());
-  }
-
-  /**
-   * Persists a valid {@link Download} instance with null sql predicates.
-   */
-  @Test
-  public void testCreateWithNullSql() {
-    occurrenceDownloadService.create(getTestInstanceNullSqlDownload());
-  }
-  
-  /**
-   * Persists a valid {@link Download} instance.
-   */
-  @Test
-  public void testCreateSqlDownload() {
-    occurrenceDownloadService.create(getTestInstanceSqlDownload());
   }
 
   /**
@@ -215,7 +174,7 @@ public class OccurrenceDownloadIT {
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
   }
-  
+
   /**
    * Tests the create and get(key) methods for null predicate.
    */
@@ -227,17 +186,6 @@ public class OccurrenceDownloadIT {
     assertNotNull(occurrenceDownload2);
   }
 
-  /**
-   * Tests the create and get(key) methods for null sql predicate.
-   */
-  @Test
-  public void testCreateAndGetNullSql() {
-    Download occurrenceDownload = getTestInstanceNullSqlDownload();
-    occurrenceDownloadService.create(occurrenceDownload);
-    Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
-    assertNotNull(occurrenceDownload2);
-  }
-  
   /**
    * Tests the persistence of the DownloadRequest's DownloadFormat.
    */
@@ -271,19 +219,12 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
 
-    //3 SqlDownloads
-    for (int i = 1; i <= 3; i++) {
-      occurrenceDownloadService.create(getTestInstanceSqlDownload());
-    }
-
     PagingResponse<Download> downloads = occurrenceDownloadService.list(new PagingRequest(0, 20), null);
     int resultSize = downloads.getResults().size();
-    long numberOfSqlDownloads = downloads.getResults().stream().filter(d -> d.getRequest() instanceof SqlDownloadRequest).count();
     long numberOfPredicateDownloads = downloads.getResults().stream().filter(d -> d.getRequest() instanceof PredicateDownloadRequest).count();
     //All numbers are compare to 2 different values because this each run twice: one for the WS and once for the MyBatis layer
-    assertTrue("A total of 6 or 12 records must be returned", resultSize == 6 || resultSize == 12);
-    assertTrue("A total of 3 or 6 SqlDownloads must be returned", numberOfSqlDownloads == 3L || numberOfSqlDownloads == 6L);
-    assertTrue("A total of 3 or 6 PredicateDownloads must be returned", numberOfPredicateDownloads == 3L || numberOfPredicateDownloads == 6L);
+    assertEquals("A total of 3 records must be returned", 3, resultSize);
+    assertEquals("A total of 3 PredicateDownloads must be returned", 3L, numberOfPredicateDownloads);
   }
 
   /**
