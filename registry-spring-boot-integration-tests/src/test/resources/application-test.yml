@@ -86,7 +86,7 @@ indexing:
     checklistbank:
       url: @checklistbank.db.url@
       username: @checklistbank.db.username@
-      password: @checklistbank.db.password@
+      password: @checklistbank-it.db.password@
       hikari:
         maxPoolSize: 1
         minimumIdle: 1
