@@ -13,7 +13,6 @@ import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
-import org.gbif.registry.ws.config.DataSourcesConfiguration;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,7 +35,7 @@ import java.util.Date;
   "org.gbif.registry.ws.security",
 },
   excludeFilters = {
-  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, classes = {EsConfiguration.class, DataSourcesConfiguration.class})
+  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, classes = {EsConfiguration.class})
 })
 @PropertySource("classpath:application-test.yml")
 public class RegistryIntegrationTestsConfiguration {
