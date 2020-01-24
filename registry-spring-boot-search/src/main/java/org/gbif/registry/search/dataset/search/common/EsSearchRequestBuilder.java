@@ -59,10 +59,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   private static final int MAX_SIZE_TERMS_AGGS = 1200000;
   private static final IntUnaryOperator DEFAULT_SHARD_SIZE = size -> (size * 2) + 50000;
 
-  private final EsFieldParameterMapper<P> parameterMapper;
+  private final EsFieldMapper<P> esFieldMapper;
 
-  public EsSearchRequestBuilder(EsFieldParameterMapper<P> parameterMapper) {
-    this.parameterMapper = parameterMapper;
+  public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
+    this.esFieldMapper = esFieldMapper;
   }
 
   public SearchRequest buildSearchRequest(FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
@@ -72,6 +72,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     esRequest.source(searchSourceBuilder);
+    searchSourceBuilder.fetchSource(null, esFieldMapper.excludeFields());
 
     // size and offset
     searchSourceBuilder.size(searchRequest.getLimit());
@@ -113,7 +114,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     request.source(searchSourceBuilder);
 
-    String esField = parameterMapper.get(parameter);
+    String esField = esFieldMapper.get(parameter);
 
     // create suggest query
     searchSourceBuilder.suggest(
@@ -126,7 +127,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                     .skipDuplicates(true)));
 
     // add source field
-    searchSourceBuilder.fetchSource(esField, null);
+    searchSourceBuilder.fetchSource(esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
 
     return request;
   }
@@ -157,10 +158,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       bool.filter()
           .addAll(
               params.asMap().entrySet().stream()
-                  .filter(e -> Objects.nonNull(parameterMapper.get(e.getKey())))
+                  .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
                   .flatMap(
                       e ->
-                          buildTermQuery(e.getValue(), e.getKey(), parameterMapper.get(e.getKey())).stream())
+                          buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey())).stream())
                   .collect(Collectors.toList()));
     }
 
@@ -208,7 +209,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                 .flatMap(
                     e ->
                         buildTermQuery(
-                            e.getValue(), e.getKey(), parameterMapper.get(e.getKey()))
+                          e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
                             .stream())
                 .collect(Collectors.toList()));
 
@@ -237,7 +238,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     }
 
     return searchRequest.getFacets().stream()
-        .filter(p -> parameterMapper.get(p) != null)
+        .filter(p -> esFieldMapper.get(p) != null)
         .map(
             facetParam -> {
 
@@ -250,14 +251,14 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                           .flatMap(
                               e ->
                                   buildTermQuery(
-                                      e.getValue(),
-                                      e.getKey(),
-                                      parameterMapper.get(e.getKey()))
+                                    e.getValue(),
+                                    e.getKey(),
+                                    esFieldMapper.get(e.getKey()))
                                       .stream())
                           .collect(Collectors.toList()));
 
               // add filter to the aggs
-              String esField = parameterMapper.get(facetParam);
+              String esField = esFieldMapper.get(facetParam);
               FilterAggregationBuilder filterAggs =
                   AggregationBuilders.filter(esField, bool);
 
@@ -278,10 +279,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private List<AggregationBuilder> buildFacets(FacetedSearchRequest<P> searchRequest) {
     return searchRequest.getFacets().stream()
-        .filter(p -> parameterMapper.get(p) != null)
+        .filter(p -> esFieldMapper.get(p) != null)
         .map(
             facetParam -> {
-              String esField = parameterMapper.get(facetParam);
+              String esField = esFieldMapper.get(facetParam);
               return buildTermsAggs(
                   esField,
                   esField,

@@ -1,6 +1,7 @@
 package org.gbif.registry;
 
-import org.gbif.registry.search.dataset.indexing.DatasetBatchIndexBuilder;
+import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
+
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
