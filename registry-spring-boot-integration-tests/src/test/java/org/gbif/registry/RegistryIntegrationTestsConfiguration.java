@@ -27,7 +27,9 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.Date;
 
 @TestConfiguration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(
+  exclude = DataSourcesConfiguration.class
+)
 @ComponentScan(basePackages = {
   "org.gbif.ws.server.interceptor",
   "org.gbif.ws.server.filter",
