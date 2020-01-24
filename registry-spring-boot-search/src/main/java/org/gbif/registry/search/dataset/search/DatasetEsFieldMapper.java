@@ -1,11 +1,11 @@
 package org.gbif.registry.search.dataset.search;
 
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
-import org.gbif.registry.search.dataset.search.common.EsFieldParameterMapper;
+import org.gbif.registry.search.dataset.search.common.EsFieldMapper;
 
 import com.google.common.collect.ImmutableBiMap;
 
-public class DatasetEsFieldMapper implements EsFieldParameterMapper<DatasetSearchParameter> {
+public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParameter> {
 
   private static final ImmutableBiMap<DatasetSearchParameter,String> SEARCH_TO_ES_MAPPING = ImmutableBiMap.<DatasetSearchParameter,String>builder()
     .put(DatasetSearchParameter.TAXON_KEY, "taxonKey")
@@ -26,15 +26,32 @@ public class DatasetEsFieldMapper implements EsFieldParameterMapper<DatasetSearc
     .put(DatasetSearchParameter.DATASET_TITLE, "title")
     .build();
 
+  private static final String[] EXCLUDE_FIELDS = new String[]{"all","taxonKey"};
+
+  private static final String[] DATASET_TITLE_SUGGEST_FIELDS = new String[]{"title", "type", "subtype", "description"};
 
 
+
+  @Override
   public DatasetSearchParameter get(String esField) {
     return SEARCH_TO_ES_MAPPING.inverse().get(esField);
   }
 
+  @Override
   public String get(DatasetSearchParameter datasetSearchParameter) {
     return SEARCH_TO_ES_MAPPING.get(datasetSearchParameter);
   }
 
+  @Override
+  public String[] excludeFields() {
+    return EXCLUDE_FIELDS;
+  }
 
+  @Override
+  public String[] includeSuggestFields(DatasetSearchParameter searchParameter) {
+    if (DatasetSearchParameter.DATASET_TITLE == searchParameter) {
+      return DATASET_TITLE_SUGGEST_FIELDS;
+    }
+    return new String[]{SEARCH_TO_ES_MAPPING.get(searchParameter)};
+  }
 }
