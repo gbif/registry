@@ -77,6 +77,7 @@ public class CollectionMapperTest {
     collection.setEmail(Collections.singletonList("test@test.com"));
     collection.setPhone(Collections.singletonList("1234"));
     collection.setIndexHerbariorumRecord(true);
+    collection.setNumberSpecimens(12);
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
@@ -104,6 +105,7 @@ public class CollectionMapperTest {
     assertEquals(1, collectionStored.getPhone().size());
     assertTrue(collectionStored.getPhone().contains("1234"));
     assertTrue(collectionStored.isIndexHerbariorumRecord());
+    assertEquals(12, collectionStored.getNumberSpecimens());
 
     // assert address
     assertNotNull(collectionStored.getAddress().getKey());
@@ -240,19 +242,4 @@ public class CollectionMapperTest {
     assertEquals(1, collectionMapper.count(null, null, null,"c1", "n1"));
     assertEquals(0, collectionMapper.count(null, null, null,"c2", "n1"));
   }
-
-  @Test
-  public void codeExistsTest() {
-    Collection col1 = new Collection();
-    col1.setKey(UUID.randomUUID());
-    col1.setCode("c1");
-    col1.setName("n1");
-    col1.setCreatedBy("test");
-    col1.setModifiedBy("test");
-
-    collectionMapper.create(col1);
-    assertTrue(collectionMapper.codeExists("c1"));
-    assertFalse(collectionMapper.codeExists("c2"));
-  }
-
 }

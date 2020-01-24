@@ -47,9 +47,4 @@ public interface CollectionMapper extends BaseMapper<Collection>, ContactableMap
    * @return the keys of the collections
    */
   List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
-
-  /**
-   * Checks if the code received exists among all the collections.
-   */
-  boolean codeExists(@Param("code") String code);
 }

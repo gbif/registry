@@ -20,13 +20,13 @@
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
-    created_by, modified_by, created, modified, index_herbariorum_record
+    created_by, modified_by, created, modified, index_herbariorum_record, number_specimens
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
-    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record
+    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -52,7 +52,8 @@
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
     now(), <!-- modified -->
-    #{indexHerbariorumRecord,jdbcType=BOOLEAN}
+    #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    #{numberSpecimens,jdbcType=INTEGER}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -76,7 +77,8 @@
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
-    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN}
+    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
+    number_specimens = #{numberSpecimens,jdbcType=INTEGER}
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -340,12 +342,6 @@
     UNION ALL
     (SELECT key,code,name FROM collection WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' ORDER BY name LIMIT 20)
     ) t1 LIMIT 20
-  </select>
-
-  <select id="codeExists" resultType="Boolean">
-    SELECT case when count(*) > 0 then 1 else 0 end
-    FROM collection c
-    WHERE c.deleted IS NULL AND c.code = #{code,jdbcType=VARCHAR}
   </select>
 
 </mapper>

@@ -242,18 +242,4 @@ public class InstitutionMapperTest {
     assertEquals(1, institutionMapper.count(null, null, "i2", "n2"));
     assertEquals(0, institutionMapper.count(null, null, "i1", "n2"));
   }
-
-  @Test
-  public void codeExistsTest() {
-    Institution inst1 = new Institution();
-    inst1.setKey(UUID.randomUUID());
-    inst1.setCode("i1");
-    inst1.setName("n1");
-    inst1.setCreatedBy("test");
-    inst1.setModifiedBy("test");
-
-    institutionMapper.create(inst1);
-    assertTrue(institutionMapper.codeExists("i1"));
-    assertFalse(institutionMapper.codeExists("i2"));
-  }
 }

@@ -16,6 +16,7 @@
         ALTER TABLE collection ADD COLUMN email text[];
         ALTER TABLE collection ADD COLUMN phone text[];
         ALTER TABLE collection ADD COLUMN index_herbariorum_record bool;
+        ALTER TABLE collection ADD COLUMN number_specimens int4;
 
         CREATE TABLE collection_person_identifier (
           collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,

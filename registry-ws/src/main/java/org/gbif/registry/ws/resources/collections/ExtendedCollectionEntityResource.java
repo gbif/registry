@@ -88,8 +88,6 @@ public abstract class ExtendedCollectionEntityResource<
   public UUID create(@Valid @NotNull T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
-    checkUniqueness(entity);
-
     if (entity.getAddress() != null) {
       checkArgument(entity.getAddress().getKey() == null, "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
@@ -149,8 +147,6 @@ public abstract class ExtendedCollectionEntityResource<
       // not allowed to delete when updating
       checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
     }
-
-    checkUniquenessInUpdate(entityOld, entity);
 
     // update mailing address
     updateAddress(entity.getMailingAddress(), entityOld.getMailingAddress());

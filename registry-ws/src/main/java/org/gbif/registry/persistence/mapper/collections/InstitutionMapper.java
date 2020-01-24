@@ -45,9 +45,4 @@ public interface InstitutionMapper extends BaseMapper<Institution>, ContactableM
    * @return the keys of the institutions
    */
   List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
-
-  /**
-   * Checks if the code received exists among all the institutions.
-   */
-  boolean codeExists(@Param("code") String code);
 }

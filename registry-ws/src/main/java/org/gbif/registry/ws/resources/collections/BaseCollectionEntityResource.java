@@ -376,7 +376,4 @@ public abstract class BaseCollectionEntityResource<
     page = page == null ? new PagingRequest() : page;
     return WithMyBatis.listByMachineTag(baseMapper, namespace, name, value, page);
   }
-
-  abstract void checkUniqueness(T entity);
-  abstract void checkUniquenessInUpdate(T oldEntity, T newEntity);
 }

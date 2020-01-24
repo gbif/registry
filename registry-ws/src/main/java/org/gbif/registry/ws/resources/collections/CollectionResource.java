@@ -21,7 +21,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -62,20 +61,6 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         Collection.class,
         userAuthService);
     this.collectionMapper = collectionMapper;
-  }
-
-  @Override
-  void checkUniqueness(Collection entity) {
-    // check if the code is unique
-    Preconditions.checkArgument(
-        !collectionMapper.codeExists(entity.getCode()), "The collection code already exists");
-  }
-
-  @Override
-  void checkUniquenessInUpdate(Collection oldEntity, Collection newEntity) {
-    if (!oldEntity.getCode().equals(newEntity.getCode())) {
-      checkUniqueness(newEntity);
-    }
   }
 
   @GET

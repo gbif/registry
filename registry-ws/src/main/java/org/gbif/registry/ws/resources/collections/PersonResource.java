@@ -187,14 +187,4 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   public List<PersonSuggestResult> suggest(@QueryParam("q") String q) {
     return personMapper.suggest(q);
   }
-
-  @Override
-  void checkUniqueness(Person entity) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  void checkUniquenessInUpdate(Person oldEntity, Person newEntity) {
-    throw new UnsupportedOperationException();
-  }
 }

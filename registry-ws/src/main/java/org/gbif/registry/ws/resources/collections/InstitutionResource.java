@@ -21,7 +21,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
@@ -62,19 +61,6 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         Institution.class,
         userAuthService);
     this.institutionMapper = institutionMapper;
-  }
-
-  @Override
-  void checkUniqueness(Institution entity) {
-    Preconditions.checkArgument(
-        !institutionMapper.codeExists(entity.getCode()), "The institution code already exists");
-  }
-
-  @Override
-  void checkUniquenessInUpdate(Institution oldEntity, Institution newEntity) {
-    if (!oldEntity.getCode().equals(newEntity.getCode())) {
-      checkUniqueness(newEntity);
-    }
   }
 
   @GET
