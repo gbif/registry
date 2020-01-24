@@ -77,8 +77,10 @@ mybatis:
 elasticsearch:
   hosts: http://localhost:9200/
   index: dataset
-
-gbifApiBaseUrl: http://api.gbif-dev.org/v1/
+  connectionTimeOut: 60000
+  socketTimeOut: 60000
+  connectionRequestTimeOut: 120000
+  maxRetryTimeOut: 120000
 
 spring:
   # DB connection
