@@ -38,7 +38,7 @@ DELETE FROM dataset;
 DELETE FROM installation;
 DELETE FROM organization;
 DELETE FROM node;
-DELETE FROM public."user";
+DELETE FROM "user";
 DELETE FROM challenge_code;
 DELETE FROM collection_collection_person;
 DELETE FROM collection_identifier;
