@@ -1,24 +1,23 @@
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.ContactableMapper;
-import org.gbif.registry.persistence.mapper.IdentifiableMapper;
-import org.gbif.registry.persistence.mapper.TaggableMapper;
-import org.springframework.stereotype.Repository;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 /**
  * Mapper for {@link Collection} entities.
  */
 @Repository
 public interface CollectionMapper
-    extends BaseMapper<Collection>, ContactableMapper, TaggableMapper, IdentifiableMapper {
+    extends BaseMapper<Collection>, ContactableMapper {
 
   List<Collection> list(@Nullable @Param("institutionKey") UUID institutionKey,
                         @Nullable @Param("contactKey") UUID contactKey,
