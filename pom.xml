@@ -60,7 +60,6 @@
     <module>registry-surety</module>
     <module>registry-ws</module>
     <module>registry-ws-client</module>
-    <module>registry-collections-sync</module>
   </modules>
 
   <!--
