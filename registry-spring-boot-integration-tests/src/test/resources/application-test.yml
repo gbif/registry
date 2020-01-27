@@ -97,19 +97,14 @@ registry:
     url: @registry-it.db.url@
     password: @registry-it.db.password@
     username: @registry-it.db.username@
+    initialization-mode: always
+    continue-on-error: false
+    data: classpath:schema.sql
     hikari:
       idleTimeout: 60000
       maximumPoolSize: 4
       minimumIdle: 1
 spring:
-  # DB connection
-  datasource:
-    url: @registry-it.db.url@
-    username: @registry-it.db.username@
-    password: @registry-it.db.password@
-    initialization-mode: always
-    continue-on-error: false
-    data: classpath:schema.sql
   # DOI messaging properties
   # queue 'registry-doi' should be used
   rabbitmq:
