@@ -88,7 +88,7 @@ indexing:
       username: @checklistbank.db.username@
       password: @checklistbank-it.db.password@
       hikari:
-        maxPoolSize: 4
+        maximumPoolSize: 10
         minimumIdle: 1
         idleTimeout: 60000
         connectionTimeout: 5000
@@ -102,7 +102,7 @@ registry:
     data: classpath:schema.sql
     hikari:
       idleTimeout: 60000
-      maximumPoolSize: 4
+      maximumPoolSize: 10
       minimumIdle: 1
 spring:
   # DOI messaging properties
