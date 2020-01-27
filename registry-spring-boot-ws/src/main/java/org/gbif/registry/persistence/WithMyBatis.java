@@ -117,7 +117,7 @@ public class WithMyBatis {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends NetworkEntity> PagingResponse<T> listByMachineTag(MachineTaggableMapper mapper,
+  public <T> PagingResponse<T> listByMachineTag(MachineTaggableMapper mapper,
                                                                       String namespace,
                                                                       @Nullable String name,
                                                                       @Nullable String value,

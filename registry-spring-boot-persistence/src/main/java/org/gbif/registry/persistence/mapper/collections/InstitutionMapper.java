@@ -17,13 +17,18 @@ import java.util.UUID;
  * Mapper for {@link Institution} entities.
  */
 @Repository
-public interface InstitutionMapper extends CrudMapper<Institution>, ContactableMapper, TaggableMapper, IdentifiableMapper {
+public interface InstitutionMapper extends BaseMapper<Institution>, ContactableMapper, TaggableMapper, IdentifiableMapper {
 
   List<Institution> list(@Nullable @Param("query") String query,
                          @Nullable @Param("contactKey") UUID contactKey,
+                         @Nullable @Param("code") String code,
+                         @Nullable @Param("name") String name,
                          @Nullable @Param("page") Pageable page);
 
-  long count(@Nullable @Param("query") String query, @Nullable @Param("contactKey") UUID contactKey);
+  long count(@Nullable @Param("query") String query,
+             @Nullable @Param("contactKey") UUID contactKey,
+             @Nullable @Param("code") String code,
+             @Nullable @Param("name") String name);
 
   /**
    * A simple suggest by title service.

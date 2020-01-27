@@ -3,26 +3,29 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.collections.InstitutionMapper">
 
   <!-- Auto-mapping and eager loading of sub resources  -->
-  <resultMap id="INSTITUTION_MAP" type="org.gbif.api.model.collections.Institution" autoMapping="true">
+  <resultMap id="INSTITUTION_MAP" type="Institution" autoMapping="true">
     <id property="key" column="key"/>
-    <result property="disciplines" column="discipline" typeHandler="org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler"/>
-    <result property="additionalNames" column="additional_names" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
+    <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
+    <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
-    key, code, name, description, type, active, homepage, catalog_url, api_url, institutional_governance, discipline,
+    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
     created_by, modified_by, created, modified
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
-    i.key, i.code, i.name, i.description, i.type, i.active, i.homepage, i.catalog_url, i.api_url,
+    i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
@@ -36,16 +39,18 @@
     #{description,jdbcType=VARCHAR},
     #{type,jdbcType=OTHER},
     #{active,jdbcType=BOOLEAN},
+    #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrl,jdbcType=VARCHAR},
     #{apiUrl,jdbcType=VARCHAR},
     #{institutionalGovernance,jdbcType=OTHER},
-    #{disciplines,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler},
+    #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     #{latitude,jdbcType=NUMERIC},
     #{longitude,jdbcType=NUMERIC},
     #{mailingAddress.key,jdbcType=INTEGER},
     #{address.key,jdbcType=INTEGER},
-    #{additionalNames,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{foundingDate,jdbcType=DATE},
     #{geographicDescription,jdbcType=VARCHAR},
     #{taxonomicDescription,jdbcType=VARCHAR},
@@ -65,16 +70,18 @@
     description = #{description,jdbcType=VARCHAR},
     type = #{type,jdbcType=OTHER},
     active = #{active,jdbcType=BOOLEAN},
+    email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrl,jdbcType=VARCHAR},
     api_url = #{apiUrl,jdbcType=VARCHAR},
     institutional_governance = #{institutionalGovernance,jdbcType=OTHER},
-    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler},
+    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     latitude = #{latitude,jdbcType=NUMERIC},
     longitude = #{longitude,jdbcType=NUMERIC},
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
     address_key = #{address.key,jdbcType=INTEGER},
-    additional_names = #{additionalNames,jdbcType=ARRAY,typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    additional_names = #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     founding_date = #{foundingDate,jdbcType=DATE},
     geographic_description = #{geographicDescription,jdbcType=VARCHAR},
     taxonomic_description = #{taxonomicDescription,jdbcType=VARCHAR},
@@ -91,12 +98,12 @@
     JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
   </sql>
 
-  <insert id="create" parameterType="org.gbif.api.model.collections.Institution">
+  <insert id="create" parameterType="Institution">
     INSERT INTO institution(<include refid="INSTITUTION_WRITE_FIELDS"/>)
     VALUES(<include refid="INSTITUTION_PARAMS_CREATE"/>)
   </insert>
 
-  <update id="update" parameterType="org.gbif.api.model.collections.Institution">
+  <update id="update" parameterType="Institution">
     UPDATE institution
     SET <include refid="INSTITUTION_PARAMS_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}
@@ -126,15 +133,15 @@
   <insert id="addContact">
     INSERT INTO institution_collection_person(institution_key,collection_person_key)
     VALUES(
-            #{entityKey,jdbcType=OTHER},
-            #{personKey,jdbcType=OTHER}
-          )
+    #{entityKey,jdbcType=OTHER},
+    #{personKey,jdbcType=OTHER}
+    )
   </insert>
 
   <delete id="removeContact">
     DELETE FROM institution_collection_person
     WHERE
-      institution_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
+    institution_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
   </delete>
 
   <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
@@ -143,7 +150,7 @@
     WHERE key = #{key,jdbcType=OTHER}
   </select>
 
-  <select id="list" resultType="org.gbif.api.model.collections.Institution"  resultMap="INSTITUTION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+  <select id="list" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     <if test="query != null" >
@@ -155,6 +162,12 @@
     WHERE i.deleted IS NULL
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
     </if>
     ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="page != null" >
@@ -175,9 +188,15 @@
     <if test="contactKey != null" >
       AND icp.collection_person_key = #{contactKey,jdbcType=OTHER}
     </if>
+    <if test="code != null" >
+      AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="name != null" >
+      AND i.name = #{name,jdbcType=VARCHAR}
+    </if>
   </select>
 
-  <select id="deleted" resultType="org.gbif.api.model.collections.Institution"  resultMap="INSTITUTION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+  <select id="deleted" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
     SELECT <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     WHERE i.deleted IS NOT NULL
@@ -197,12 +216,12 @@
   <insert id="addTag">
     INSERT INTO institution_tag(institution_key,tag_key)
     VALUES(
-            #{targetEntityKey,jdbcType=OTHER},
-            #{tagKey,jdbcType=INTEGER}
-          )
+    #{targetEntityKey,jdbcType=OTHER},
+    #{tagKey,jdbcType=INTEGER}
+    )
   </insert>
 
-  <select id="listTags" resultType="org.gbif.api.model.registry.Tag">
+  <select id="listTags" resultType="Tag">
     SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
     FROM tag INNER JOIN institution_tag ON tag_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
@@ -213,20 +232,21 @@
   <delete id="deleteTag">
     DELETE FROM tag USING institution_tag
     WHERE
-      tag_key = tag.key AND
-      institution_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+    tag_key = tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
+  <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
     INSERT INTO institution_identifier(institution_key,identifier_key)
     VALUES(
-            #{targetEntityKey,jdbcType=OTHER},
-            #{identifierKey,jdbcType=INTEGER}
-          )
+    #{targetEntityKey,jdbcType=OTHER},
+    #{identifierKey,jdbcType=INTEGER}
+    )
   </insert>
 
-  <select id="listIdentifiers" resultType="org.gbif.api.model.registry.Identifier">
+  <select id="listIdentifiers" resultType="Identifier">
     SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
     FROM identifier INNER JOIN institution_identifier ON identifier_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
@@ -237,28 +257,97 @@
   <delete id="deleteIdentifier">
     DELETE FROM identifier USING institution_identifier
     WHERE
-      identifier_key = identifier.key AND
-      institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    identifier_key = identifier.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
   <select id="findByIdentifier" resultType="java.util.UUID">
     SELECT ii.institution_key
     FROM institution_identifier ii
-           INNER JOIN identifier i ON i."key" = ii.identifier_key
+    INNER JOIN identifier i ON i."key" = ii.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
+  <!-- END IDENTIFIERS -->
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO institution_machine_tag(institution_key,machine_tag_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{machineTagKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listMachineTags" resultType="MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN institution_machine_tag ON machine_tag_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING institution_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="INSTITUTION_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (i.key) <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY i.key, i.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT i.key)
+    FROM institution i
+    INNER JOIN institution_machine_tag im ON im.institution_key = i.key
+    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+  <!-- END MACHINE TAGS -->
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
     SELECT key,code,name FROM (
-                                (SELECT key,code,name FROM institution WHERE code ilike #{q}||'%' ORDER BY code LIMIT 20)
-                                UNION ALL
-                                (SELECT key,code,name FROM institution WHERE name ilike #{q}||'%' ORDER BY name LIMIT 20)
-                                UNION ALL
-                                (SELECT key,code,name FROM institution WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' ORDER BY code LIMIT 20)
-                                UNION ALL
-                                (SELECT key,code,name FROM institution WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' ORDER BY name LIMIT 20)
-                              ) t1 LIMIT 20
+    (SELECT key,code,name FROM institution WHERE code ilike #{q}||'%' ORDER BY code LIMIT 20)
+    UNION ALL
+    (SELECT key,code,name FROM institution WHERE name ilike #{q}||'%' ORDER BY name LIMIT 20)
+    UNION ALL
+    (SELECT key,code,name FROM institution WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' ORDER BY code LIMIT 20)
+    UNION ALL
+    (SELECT key,code,name FROM institution WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' ORDER BY name LIMIT 20)
+    ) t1 LIMIT 20
   </select>
 
 </mapper>

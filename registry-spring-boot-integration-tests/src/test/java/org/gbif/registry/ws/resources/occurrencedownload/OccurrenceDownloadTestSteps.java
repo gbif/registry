@@ -1,5 +1,21 @@
 package org.gbif.registry.ws.resources.occurrencedownload;
 
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.fixtures.TestConstants;
+
+import java.sql.Connection;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
+import javax.sql.DataSource;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
@@ -12,16 +28,6 @@ import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
-import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.DownloadFormat;
-import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.SqlDownloadRequest;
-import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.service.registry.OccurrenceDownloadService;
-import org.gbif.registry.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -34,22 +40,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryOffsetDateTimeFormat;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
+
 import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -197,34 +191,6 @@ public class OccurrenceDownloadTestSteps {
         Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
         true,
         DownloadFormat.DWCA));
-    this.download = download;
-  }
-
-  @Given("sql download")
-  public void prepareSqlDownload() {
-    this.download = getTestInstanceSqlDownload();
-  }
-
-  private Download getTestInstanceSqlDownload() {
-    Download download = getTestInstanceDownload();
-    download.setRequest(
-      new SqlDownloadRequest(
-        "SELECT datasetKey FROM occurrence",
-        TestConstants.TEST_ADMIN,
-        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
-        true));
-    return download;
-  }
-
-  @Given("null sql download")
-  public void prepareNullSqlDownload() {
-    Download download = getTestInstanceDownload();
-    download.setRequest(
-      new SqlDownloadRequest(
-        null,
-        TestConstants.TEST_ADMIN,
-        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
-        true));
     this.download = download;
   }
 

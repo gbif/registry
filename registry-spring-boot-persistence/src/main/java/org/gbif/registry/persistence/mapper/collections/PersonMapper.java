@@ -14,7 +14,7 @@ import java.util.UUID;
  * Mapper for {@link Person} entities.
  */
 @Repository
-public interface PersonMapper extends CrudMapper<Person> {
+public interface PersonMapper extends BaseMapper<Person> {
 
   // TODO: 2019-07-24 get, create, delete, update inherited explicitly because of exception
   Person get(@Param("key") UUID key);
