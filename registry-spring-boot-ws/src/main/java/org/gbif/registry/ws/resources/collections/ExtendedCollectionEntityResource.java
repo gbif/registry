@@ -4,96 +4,90 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.TagService;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.TaggableMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CrudMapper;
+import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.ws.annotation.ValidateReturnedValue;
+import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.WebApplicationException;
-import org.gbif.ws.annotation.Trim;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.UUID;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import java.util.List;
-import java.util.UUID;
-
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link *
  * Taggable}, {@link Identifiable} and {@link Contactable}. * *
  *
- * <p>It inherits from {@link BaseCrudResource} to test the CRUD operations.
+ * <p>It inherits from {@link BaseCollectionEntityResource} to test the CRUD operations.
  */
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-public abstract class BaseExtendableCollectionResource<T extends CollectionEntity & Taggable & Identifiable & Contactable>
-  extends BaseCrudResource<T>
-  implements TagService, IdentifierService, ContactService {
+public abstract class ExtendedCollectionEntityResource<
+  T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
+  extends BaseCollectionEntityResource<T> implements ContactService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BaseExtendableCollectionResource.class);
-
-  private final CrudMapper<T> crudMapper;
+  private final BaseMapper<T> baseMapper;
   private final AddressMapper addressMapper;
-  private final TaggableMapper taggableMapper;
-  private final TagMapper tagMapper;
-  private final IdentifiableMapper identifiableMapper;
-  private final IdentifierMapper identifierMapper;
   private final ContactableMapper contactableMapper;
+  private final TagMapper tagMapper;
+  private final MachineTagMapper machineTagMapper;
+  private final IdentifierMapper identifierMapper;
   private final EventManager eventManager;
   private final Class<T> objectClass;
-  private final WithMyBatis withMyBatis;
 
-  protected BaseExtendableCollectionResource(CrudMapper<T> crudMapper, AddressMapper addressMapper,
-                                             TaggableMapper taggableMapper, TagMapper tagMapper,
-                                             IdentifiableMapper identifiableMapper, IdentifierMapper identifierMapper,
-                                             ContactableMapper contactableMapper, EventManager eventManager,
-                                             Class<T> objectClass, WithMyBatis withMyBatis) {
-    super(crudMapper, eventManager, objectClass);
-    this.crudMapper = crudMapper;
+  protected ExtendedCollectionEntityResource(
+      BaseMapper<T> baseMapper,
+      AddressMapper addressMapper,
+      TagMapper tagMapper,
+      IdentifierMapper identifierMapper,
+      ContactableMapper contactableMapper,
+      MachineTagMapper machineTagMapper,
+      EventManager eventManager,
+      Class<T> objectClass,
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
+    super(
+        baseMapper,
+        tagMapper,
+        machineTagMapper,
+        identifierMapper,
+        userAuthService,
+        eventManager,
+        objectClass,
+        withMyBatis);
+    this.baseMapper = baseMapper;
     this.addressMapper = addressMapper;
-    this.taggableMapper = taggableMapper;
-    this.tagMapper = tagMapper;
-    this.identifiableMapper = identifiableMapper;
-    this.identifierMapper = identifierMapper;
     this.contactableMapper = contactableMapper;
+    this.tagMapper = tagMapper;
+    this.machineTagMapper = machineTagMapper;
+    this.identifierMapper = identifierMapper;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
-    this.withMyBatis = withMyBatis;
   }
 
   @Transactional
@@ -112,14 +106,23 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     }
 
     entity.setKey(UUID.randomUUID());
-    crudMapper.create(entity);
+    baseMapper.create(entity);
+
+    if (!entity.getMachineTags().isEmpty()) {
+      for (MachineTag machineTag : entity.getMachineTags()) {
+        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        machineTag.setCreatedBy(entity.getCreatedBy());
+        machineTagMapper.createMachineTag(machineTag);
+        baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
+      }
+    }
 
     if (!entity.getTags().isEmpty()) {
       for (Tag tag : entity.getTags()) {
         checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
         tag.setCreatedBy(entity.getCreatedBy());
         tagMapper.createTag(tag);
-        taggableMapper.addTag(entity.getKey(), tag.getKey());
+        baseMapper.addTag(entity.getKey(), tag.getKey());
       }
     }
 
@@ -128,7 +131,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
         checkArgument(identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(entity.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
-        identifiableMapper.addIdentifier(entity.getKey(), identifier.getKey());
+        baseMapper.addIdentifier(entity.getKey(), identifier.getKey());
       }
     }
 
@@ -158,7 +161,7 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
     updateAddress(entity.getAddress(), entityOld.getAddress());
 
     // update entity
-    crudMapper.update(entity);
+    baseMapper.update(entity);
 
     // check if we can delete the mailing address
     if (entity.getMailingAddress() == null && entityOld.getMailingAddress() != null) {
@@ -217,86 +220,5 @@ public abstract class BaseExtendableCollectionResource<T extends CollectionEntit
   @Override
   public List<Person> listContacts(@PathVariable @NotNull UUID key) {
     return contactableMapper.listContacts(key);
-  }
-
-  @PostMapping(value = "{key}/identifier",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Trim
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey,
-                           @RequestBody @NotNull Identifier identifier,
-                           Authentication authentication) {
-    identifier.setCreatedBy(authentication.getName());
-    return addIdentifier(entityKey, identifier);
-  }
-
-  @Override
-  public int addIdentifier(@NotNull UUID entityKey, @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
-    int identifierKey = withMyBatis.addIdentifier(identifierMapper, identifiableMapper, entityKey, identifier);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
-    return identifierKey;
-  }
-
-  @DeleteMapping("{key}/identifier/{identifierKey}")
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  @Transactional
-  @Override
-  public void deleteIdentifier(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
-    identifiableMapper.deleteIdentifier(entityKey, identifierKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
-  }
-
-  @GetMapping("{key}/identifier")
-  @Nullable
-  @ValidateReturnedValue
-  @Override
-  public List<Identifier> listIdentifiers(@PathVariable @NotNull UUID key) {
-    return identifiableMapper.listIdentifiers(key);
-  }
-
-  @PostMapping(value = "{key}/tag",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Trim
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addTag(@PathVariable("key") @NotNull UUID entityKey,
-                    @RequestBody @NotNull Tag tag,
-                    Authentication authentication) {
-    tag.setCreatedBy(authentication.getName());
-    return addTag(entityKey, tag);
-  }
-
-  @Override
-  public int addTag(@NotNull UUID key, @NotNull String value) {
-    Tag tag = new Tag();
-    tag.setValue(value);
-    return addTag(key, tag);
-  }
-
-  @Override
-  public int addTag(@NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
-    int tagKey = withMyBatis.addTag(tagMapper, taggableMapper, entityKey, tag);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
-    return tagKey;
-  }
-
-  @DeleteMapping("{key}/tag/{tagKey}")
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  @Transactional
-  @Override
-  public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
-    taggableMapper.deleteTag(entityKey, tagKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
-  }
-
-  @GetMapping("{key}/tag")
-  @Nullable
-  @ValidateReturnedValue
-  @Override
-  public List<Tag> listTags(@PathVariable("key") @NotNull UUID key,
-                            @RequestParam(value = "owner", required = false) @Nullable String owner) {
-    if (owner != null) {
-      LOG.warn("Owner is not supported. Passed value: {}", owner);
-    }
-    return taggableMapper.listTags(key);
   }
 }
