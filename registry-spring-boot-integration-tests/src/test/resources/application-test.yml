@@ -84,9 +84,9 @@ elasticsearch:
 indexing:
   datasource:
     checklistbank:
-      url: @checklistbank.db.url@
-      username: @checklistbank.db.username@
-      password: @checklistbank-it.db.password@
+      url: @checklistbank-it-spring.db.url@
+      username: @checklistbank-it-spring.db.username@
+      password: @checklistbank-it-spring.db.password@
       hikari:
         maximumPoolSize: 10
         minimumIdle: 1
