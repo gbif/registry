@@ -116,6 +116,7 @@ spring:
   # Liquibase
   liquibase:
     change-log: classpath:liquibase/master.xml
+    enabled: true
   # Mail
   mail:
     default-encoding: UTF-8
