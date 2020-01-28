@@ -145,7 +145,10 @@
       "deleted": {"type": "date"},
       "pubDate": {"type": "date"},
       "taxonKey": {"type": "keyword"},
-      "year": {"type": "integer"}
+      "year": {"type": "integer"},
+      "occurrencePercentage": {"type": "float"},
+      "nameUsagesPercentage": {"type": "float"},
+      "dataScore": {"type": "float"}
     }
 }
 }
