@@ -34,10 +34,7 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  * implementation of {@link CollectionService}.
  */
 @RestController
-@RequestMapping(
-    value = GRSCICOLL_PATH + "/collection",
-    consumes = MediaType.APPLICATION_JSON_VALUE,
-    produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = GRSCICOLL_PATH + "/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionEntityResource extends ExtendedCollectionEntityResource<Collection>
     implements CollectionService {
 
