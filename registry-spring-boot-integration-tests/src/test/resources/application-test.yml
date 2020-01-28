@@ -94,9 +94,9 @@ indexing:
         connectionTimeout: 5000
 registry:
   datasource:
-    url: @registry-it.db.url@
-    password: @registry-it.db.password@
-    username: @registry-it.db.username@
+    url: @registry-it-spring.db.url@
+    password: @registry-it-spring.db.password@
+    username: @registry-it-spring.db.username@
     initialization-mode: always
     continue-on-error: false
     data: classpath:schema.sql
