@@ -99,7 +99,7 @@ registry:
     username: @registry-it-spring.db.username@
     initialization-mode: always
     continue-on-error: false
-    data: classpath:schema.sql
+#    data: classpath:schema.sql
     hikari:
       idleTimeout: 60000
       maximumPoolSize: 10
