@@ -148,7 +148,15 @@
       "year": {"type": "integer"},
       "occurrencePercentage": {"type": "float"},
       "nameUsagesPercentage": {"type": "float"},
-      "dataScore": {"type": "float"}
+      "dataScore": {"type": "float"},
+      "gridDerivedMetadata": {
+        "type": "object",
+        "properties": {
+          "percentNN":  { "type": "float"},
+          "countNN": { "type": "integer" },
+          "distanceNN": { "type": "float" }
+        }
+      }
     }
 }
 }
