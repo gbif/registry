@@ -53,6 +53,7 @@ DELETE FROM address;
 TRUNCATE gbif_doi;
 DELETE FROM pipeline_step;
 DELETE FROM pipeline_process;
+DELETE FROM pipeline_execution;
 
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,

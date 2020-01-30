@@ -97,9 +97,6 @@ registry:
     url: @registry-it-spring.db.url@
     password: @registry-it-spring.db.password@
     username: @registry-it-spring.db.username@
-    initialization-mode: always
-    continue-on-error: false
-#    data: classpath:schema.sql
     hikari:
       idleTimeout: 60000
       maximumPoolSize: 10

@@ -173,7 +173,7 @@
         <configuration>
           <excludes>
             <!-- This is where the exclusion occurs -->
-            <exclude>**/application.properties</exclude>
+            <exclude>**/application.yml</exclude>
             <exclude>**/bootstrap.yml</exclude>
           </excludes>
         </configuration>

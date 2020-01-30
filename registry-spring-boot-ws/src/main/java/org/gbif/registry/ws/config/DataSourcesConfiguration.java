@@ -13,9 +13,11 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class DataSourcesConfiguration {
 
+  public static final String REGISTRY_DATASOURCE_PREFIX = "registry";
+
   @Bean
   @Primary
-  @ConfigurationProperties("registry.datasource")
+  @ConfigurationProperties(REGISTRY_DATASOURCE_PREFIX + ".datasource")
   public DataSourceProperties registryDataSourceProperties() {
     return new DataSourceProperties();
   }
@@ -26,7 +28,6 @@ public class DataSourcesConfiguration {
   public HikariDataSource registryDataSource() {
     return registryDataSourceProperties().initializeDataSourceBuilder().type(HikariDataSource.class).build();
   }
-
 
   @Bean
   @ConfigurationProperties("indexing.datasource.checklistbank")
