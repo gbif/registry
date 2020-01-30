@@ -8,6 +8,7 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
@@ -18,10 +19,13 @@ import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPers
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -36,6 +40,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -43,8 +48,20 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
@@ -55,9 +72,15 @@ import org.xml.sax.SAXException;
 public class DatasetJsonConverter {
 
   private static final int MAX_FACET_LIMIT = 1200000;
+
+  //Collections
   private static final String PROCESSING_NAMESPACE = "processing.gbif.org";
   private static final String INSTITUTION_TAG_NAME = "institutionCode";
   private static final String COLLECTION_TAG_NAME = "collectionCode";
+
+  //Gridded datasets
+  private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
+  private static final String GRIDDED_DATASET_NAME = "griddedDataset";
 
   private final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
   private final TimeSeriesExtractor timeSeriesExtractor = new TimeSeriesExtractor(1000, 2400, 1800, 2050);
@@ -74,22 +97,32 @@ public class DatasetJsonConverter {
 
   private final ObjectMapper mapper;
 
+  private final RestHighLevelClient occurrenceEsClient;
+
+  private final String occurrenceIndex;
+
   @Autowired
-  private DatasetJsonConverter(GbifWsClient gbifWsClient, ChecklistbankPersistenceService checklistbankPersistenceService,
-                               @Qualifier("apiMapper") ObjectMapper mapper) {
+  private DatasetJsonConverter(GbifWsClient gbifWsClient,
+                               ChecklistbankPersistenceService checklistbankPersistenceService,
+                               @Qualifier("apiMapper") ObjectMapper mapper,
+                               @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
+                               @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
     this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
+    this.occurrenceEsClient = occurrenceEsClient;
+    this.occurrenceIndex = occurrenceIndex;
     consumers.add(this::metadataConsumer);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
-    consumers.add(this::addFacetsData);
+    //consumers.add(this::addFacetsData);
     occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
     nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
   }
 
-  public static DatasetJsonConverter create(GbifWsClient gbifWsClient, ChecklistbankPersistenceService checklistbankPersistenceService) {
-    return new DatasetJsonConverter(gbifWsClient, checklistbankPersistenceService, JacksonObjectMapper.get());
+  public static DatasetJsonConverter create(GbifWsClient gbifWsClient, ChecklistbankPersistenceService checklistbankPersistenceService,
+                                            RestHighLevelClient occurrenceEsClient, String occurrenceIndex) {
+    return new DatasetJsonConverter(gbifWsClient, checklistbankPersistenceService, JacksonObjectMapper.get(), occurrenceEsClient, occurrenceIndex);
   }
 
   public ObjectNode convert(Dataset dataset) {
@@ -98,8 +131,9 @@ public class DatasetJsonConverter {
     addDecades(dataset, datasetAsJson);
     addKeyword(dataset, datasetAsJson);
     addCountryCoverage(dataset, datasetAsJson);
-    addTaxonKeys(dataset, datasetAsJson);
+    //addTaxonKeys(dataset, datasetAsJson);
     addMachineTags(dataset, datasetAsJson);
+    addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -253,5 +287,101 @@ public class DatasetJsonConverter {
                 .filter(mt -> PROCESSING_NAMESPACE.equals(mt.getNamespace()) && COLLECTION_TAG_NAME.equals(mt.getName()))
                 .map(v -> new TextNode(v.getValue().split(":")[0]))
                 .collect(Collectors.toList()));
+
+    //Gridded dataset
+    dataset.getMachineTags().stream()
+      .filter(mt -> GRIDDED_DATASET_NAMESPACE.equals(mt.getNamespace()) && GRIDDED_DATASET_NAME.equals(mt.getName()))
+      .max(Comparator.comparing(MachineTag::getCreated))
+      .ifPresent(mt -> {
+        try {
+          datasetObjectNode.set("gridDerivedMetadata", mapper.readTree(mt.getValue()));
+        } catch (JsonProcessingException  ex) {
+          log.error("Error reading machine tag value", ex);
+        }
+      });
   }
+
+
+  private void addOccurrenceCoverage(Dataset dataset, ObjectNode datasetObjectNode) {
+    try {
+      SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+        .size(0)
+        .query(QueryBuilders.boolQuery().filter(QueryBuilders.termQuery("datasetKey", dataset.getKey().toString())))
+        .aggregation(AggregationBuilders
+                       .terms("countryCode")
+                       .field("countryCode")
+                       .size(200)
+                       .shardSize(200)
+                       .subAggregation(AggregationBuilders
+                                         .terms("taxonKey")
+                                         .size(120_000)
+                                         .shardSize(120_000)
+                                         .field("gbifClassification.taxonKey")
+                                         .subAggregation(AggregationBuilders
+                                                           .dateHistogram("eventDateSingle")
+                                                           .field("eventDateSingle")
+                                                           .dateHistogramInterval(new DateHistogramInterval("3650d")))));
+
+      org.elasticsearch.action.search.SearchResponse searchResponse = occurrenceEsClient
+        .search(new SearchRequest().source(searchSourceBuilder).indices(occurrenceIndex), RequestOptions.DEFAULT);
+
+
+      List<JsonNode> coverages = new ArrayList<>();
+
+      List<? extends Terms.Bucket> countryBuckets = getTermsBuckets(searchResponse.getAggregations(), "countryCode");
+      if (!countryBuckets.isEmpty()) {
+        countryBuckets.forEach(countryBucket -> {
+          List<? extends Terms.Bucket> taxonBuckets = getTermsBuckets(countryBucket.getAggregations(), "taxonKey");
+          if (!taxonBuckets.isEmpty()) {
+            taxonBuckets.forEach(taxonKeyBucket -> {
+              List<? extends Histogram.Bucket> decadesBuckets  = getHistogramBuckets(taxonKeyBucket.getAggregations(),"eventDateSingle");
+              if (!decadesBuckets.isEmpty()) {
+                decadesBuckets.forEach(decadeBucket -> {
+                  ObjectNode atDecadeCoverage = mapper.createObjectNode();
+                  atDecadeCoverage.set("country", toJson(countryBucket));
+                  atDecadeCoverage.set("taxonKey", toJson(taxonKeyBucket));
+                  atDecadeCoverage.set("decade", toJson(decadeBucket));
+                  coverages.add(atDecadeCoverage);
+                });
+              } else {
+                ObjectNode atTaxonKeyCoverage = mapper.createObjectNode();
+                atTaxonKeyCoverage.set("country", toJson(countryBucket));
+                atTaxonKeyCoverage.set("taxonKey", toJson(taxonKeyBucket));
+                coverages.add(atTaxonKeyCoverage);
+              }
+            });
+          } else {
+            ObjectNode atCountryCoverage = mapper.createObjectNode();
+            atCountryCoverage.set("country", toJson(countryBucket));
+            coverages.add(atCountryCoverage);
+          }
+        });
+      }
+    datasetObjectNode.putArray("occurrenceCoverage").addAll(coverages);
+
+    } catch (IOException ex) {
+      log.error("Error retrieving occurrence coverage data", ex);
+    }
+  }
+
+  private ObjectNode toJson(MultiBucketsAggregation.Bucket bucket) {
+    return mapper.createObjectNode()
+            .put("value", bucket.getKeyAsString())
+            .put("count", bucket.getDocCount());
+  }
+
+  private List<? extends Terms.Bucket> getTermsBuckets(Aggregations aggs, String aggName) {
+    return Optional.ofNullable(aggs)
+            .map(aggregations -> aggregations.getAsMap().get(aggName))
+            .map(agg -> ((Terms)agg).getBuckets())
+            .orElse(Collections.emptyList());
+  }
+
+  private List<? extends Histogram.Bucket> getHistogramBuckets(Aggregations aggs, String aggName) {
+    return Optional.ofNullable(aggs)
+            .map(aggregations -> aggregations.getAsMap().get(aggName))
+            .map(agg -> ((Histogram) agg).getBuckets())
+            .orElse(Collections.emptyList());
+  }
+
 }
