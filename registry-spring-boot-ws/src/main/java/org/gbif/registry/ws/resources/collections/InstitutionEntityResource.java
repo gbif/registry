@@ -16,8 +16,6 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-
-import com.google.common.eventbus.EventBus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,25 +41,25 @@ public class InstitutionEntityResource extends ExtendedCollectionEntityResource<
   private final InstitutionMapper institutionMapper;
 
   public InstitutionEntityResource(
-      InstitutionMapper institutionMapper,
-      AddressMapper addressMapper,
-      IdentifierMapper identifierMapper,
-      TagMapper tagMapper,
-      MachineTagMapper machineTagMapper,
-      EditorAuthorizationService userAuthService,
-      EventManager eventManager,
-      WithMyBatis withMyBatis) {
+    InstitutionMapper institutionMapper,
+    AddressMapper addressMapper,
+    IdentifierMapper identifierMapper,
+    TagMapper tagMapper,
+    MachineTagMapper machineTagMapper,
+    EditorAuthorizationService userAuthService,
+    EventManager eventManager,
+    WithMyBatis withMyBatis) {
     super(
-        institutionMapper,
-        addressMapper,
-        tagMapper,
-        identifierMapper,
-        institutionMapper,
-        machineTagMapper,
-        eventManager,
-        Institution.class,
-        userAuthService,
-        withMyBatis);
+      institutionMapper,
+      addressMapper,
+      tagMapper,
+      identifierMapper,
+      institutionMapper,
+      machineTagMapper,
+      eventManager,
+      Institution.class,
+      userAuthService,
+      withMyBatis);
     this.institutionMapper = institutionMapper;
   }
 
