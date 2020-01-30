@@ -1,11 +1,5 @@
 package org.gbif.registry.ws.resources.user;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
 import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
@@ -14,6 +8,21 @@ import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;
 import org.gbif.ws.server.RequestObject;
 import org.gbif.ws.util.SecurityConstants;
+
+import java.io.ByteArrayInputStream;
+import java.sql.Connection;
+import java.util.Enumeration;
+import java.util.Objects;
+import java.util.StringTokenizer;
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -28,14 +37,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-import java.io.ByteArrayInputStream;
-import java.sql.Connection;
-import java.util.Enumeration;
-import java.util.Objects;
-import java.util.StringTokenizer;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.isEmptyOrNullString;

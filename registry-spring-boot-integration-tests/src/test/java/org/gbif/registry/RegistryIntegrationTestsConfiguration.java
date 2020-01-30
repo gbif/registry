@@ -38,8 +38,10 @@ import java.util.Date;
   excludeFilters = {
   @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, classes = {EsConfiguration.class, DataSourcesConfiguration.class})
 })
-@PropertySource("classpath:application-test.yml")
+@PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 public class RegistryIntegrationTestsConfiguration {
+
+  public static final String TEST_PROPERTIES = "classpath:application-test.yml";
 
   // use InMemoryEmailSender if devemail is disabled
   @Bean
