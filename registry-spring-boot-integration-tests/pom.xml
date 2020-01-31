@@ -51,11 +51,6 @@
 
     <!-- Third party dependencies -->
     <dependency>
-      <groupId>com.icegreen</groupId>
-      <artifactId>greenmail</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
       <scope>test</scope>

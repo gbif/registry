@@ -125,9 +125,7 @@
     <!-- Tools-->
     <lombok.version>1.18.10</lombok.version>
 
-    <!--    <postgresql.version>42.2.8</postgresql.version>-->
     <xmlunit.version>2.6.3</xmlunit.version>
-    <greenmail.version>1.5.5</greenmail.version>
     <cucumber.version>4.8.0</cucumber.version>
     <hikaricp.version>3.2.0</hikaricp.version>
 
@@ -563,12 +561,6 @@
         <groupId>org.xmlunit</groupId>
         <artifactId>xmlunit-matchers</artifactId>
         <version>${xmlunit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.icegreen</groupId>
-        <artifactId>greenmail</artifactId>
-        <version>${greenmail.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
