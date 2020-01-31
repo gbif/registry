@@ -4,16 +4,21 @@ import com.google.common.collect.ImmutableMap;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.DatabaseInitializer;
+import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.UUID;
@@ -29,6 +34,9 @@ import static org.junit.Assert.assertTrue;
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 public class IdentityServiceImplIT {
+
+  @ClassRule
+  public static DatabaseInitializer databaseInitializer = new DatabaseInitializer();
 
   private static final String TEST_PASSWORD = "[password]";
   private static final String TEST_PASSWORD2 = "]password[";
