@@ -166,7 +166,6 @@
     <maven-jxr-plugin.version>2.5</maven-jxr-plugin.version>
     <maven-project-info-reports-plugin.version>2.8</maven-project-info-reports-plugin.version>
     <maven-release-plugin.version>2.5.1</maven-release-plugin.version>
-    <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
     <!-- maven-resoruce-plugin 2.7 has a bug with slf4j, so dont use it!
     https://bugzilla.redhat.com/show_bug.cgi?id=1077375
     -->
@@ -611,6 +610,7 @@
             <target>${java.version}</target>
             <showDeprecation>true</showDeprecation>
             <showWarnings>true</showWarnings>
+            <parameters>true</parameters>
           </configuration>
         </plugin>
 
