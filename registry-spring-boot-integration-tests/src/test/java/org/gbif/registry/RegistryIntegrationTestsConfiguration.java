@@ -5,7 +5,6 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
-
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.mail.EmailSender;
@@ -14,7 +13,6 @@ import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
-
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -28,16 +26,37 @@ import java.util.Date;
 
 @TestConfiguration
 @EnableAutoConfiguration
-@ComponentScan(basePackages = {
-  "org.gbif.ws.server.interceptor",
-  "org.gbif.ws.server.filter",
-  "org.gbif.ws.security",
-  "org.gbif.registry",
-  "org.gbif.registry.ws.security",
-},
-  excludeFilters = {
-  @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, classes = {EsConfiguration.class, DataSourcesConfiguration.class})
-})
+@ComponentScan(
+    basePackages = {
+      "org.gbif.ws.server.interceptor",
+      "org.gbif.ws.server.aspect",
+      "org.gbif.ws.server.filter",
+      "org.gbif.ws.server.advice",
+      "org.gbif.ws.server.mapper",
+      "org.gbif.ws.security",
+      "org.gbif.registry.search.dataset.service",
+      "org.gbif.registry.search.dataset.indexing",
+      "org.gbif.registry.ws.advice",
+      "org.gbif.registry.ws.aspect",
+      "org.gbif.registry.ws.config",
+      "org.gbif.registry.ws.resources",
+      "org.gbif.registry.ws.security",
+      "org.gbif.registry.ws.surety",
+      "org.gbif.registry.persistence",
+      "org.gbif.registry.identity",
+      "org.gbif.registry.surety",
+      "org.gbif.registry.mail",
+      "org.gbif.registry.stubs",
+      "org.gbif.registry.doi",
+      "org.gbif.registry.pipelines",
+      "org.gbif.registry.directory",
+      "org.gbif.registry.events"
+    },
+    excludeFilters = {
+      @ComponentScan.Filter(
+          type = FilterType.ASSIGNABLE_TYPE,
+          classes = {EsConfiguration.class, DataSourcesConfiguration.class})
+    })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 public class RegistryIntegrationTestsConfiguration {
 
@@ -59,7 +78,6 @@ public class RegistryIntegrationTestsConfiguration {
     return new MessagePublisherStub();
   }
 
-
   // use stub instead dataset search
   @Bean
   @Primary
@@ -70,19 +88,20 @@ public class RegistryIntegrationTestsConfiguration {
   @Bean
   public BeanUtilsBean beanUtilsBean() {
     DateTimeConverter dateConverter = new DateConverter(null);
-    dateConverter.setPatterns(new String[]{"dd-MM-yyyy"});
+    dateConverter.setPatterns(new String[] {"dd-MM-yyyy"});
     ConvertUtils.register(dateConverter, Date.class);
 
-    ConvertUtilsBean convertUtilsBean = new ConvertUtilsBean() {
-      @Override
-      public Object convert(String value, Class clazz) {
-        if (clazz.isEnum()) {
-          return Enum.valueOf(clazz, value);
-        } else {
-          return super.convert(value, clazz);
-        }
-      }
-    };
+    ConvertUtilsBean convertUtilsBean =
+        new ConvertUtilsBean() {
+          @Override
+          public Object convert(String value, Class clazz) {
+            if (clazz.isEnum()) {
+              return Enum.valueOf(clazz, value);
+            } else {
+              return super.convert(value, clazz);
+            }
+          }
+        };
 
     convertUtilsBean.register(dateConverter, Date.class);
 
