@@ -853,6 +853,7 @@
             </execution>
           </executions>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
@@ -895,6 +896,7 @@
               </rules>
             </configuration>
           </plugin>
+
           <plugin>
             <artifactId>maven-source-plugin</artifactId>
             <executions>
@@ -907,6 +909,7 @@
               </execution>
             </executions>
           </plugin>
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-site-plugin</artifactId>
@@ -925,6 +928,7 @@
               </execution>
             </executions>
           </plugin>
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-scm-publish-plugin</artifactId>

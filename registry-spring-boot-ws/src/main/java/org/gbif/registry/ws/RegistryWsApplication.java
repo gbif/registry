@@ -27,7 +27,12 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.ws.security",
       "org.gbif.registry.search.dataset.service",
       "org.gbif.registry.search.dataset.indexing",
-      "org.gbif.registry.ws",
+      "org.gbif.registry.ws.advice",
+      "org.gbif.registry.ws.aspect",
+      "org.gbif.registry.ws.config",
+      "org.gbif.registry.ws.resources",
+      "org.gbif.registry.ws.security",
+      "org.gbif.registry.ws.surety",
       "org.gbif.registry.persistence",
       "org.gbif.registry.identity",
       "org.gbif.registry.surety",
@@ -36,7 +41,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.doi",
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",
-      "org.gbif.registry.events",
+      "org.gbif.registry.events"
     },
     excludeFilters = {
       @ComponentScan.Filter(
