@@ -153,8 +153,6 @@
     <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
 
     <!-- Plugin versions -->
-    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
     <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
     <maven-clean-plugin.version>2.6.1</maven-clean-plugin.version>
     <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
