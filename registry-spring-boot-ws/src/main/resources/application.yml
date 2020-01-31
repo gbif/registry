@@ -73,14 +73,22 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-# Solr (tmp embedded)
+# ElasticSearch
 elasticsearch:
-  hosts: http://localhost:9200/
-  index: dataset
-  connectionTimeOut: 60000
-  socketTimeOut: 60000
-  connectionRequestTimeOut: 120000
-  maxRetryTimeOut: 120000
+  registry:
+    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
+    index: dataset
+    connectionTimeOut: 60000
+    socketTimeOut: 60000
+    connectionRequestTimeOut: 120000
+    maxRetryTimeOut: 120000
+  occurrence:
+    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
+    index: occurrence
+    connectionTimeOut: 60000
+    socketTimeOut: 60000
+    connectionRequestTimeOut: 120000
+    maxRetryTimeOut: 120000
 indexing:
   datasource:
     checklistbank:
