@@ -9,6 +9,9 @@
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="contentTypes" column="content_type" typeHandler="CollectionContentTypeArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
+    <result property="incorporatedCollections" column="incorporated_collections" typeHandler="StringArrayTypeHandler"/>
+    <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
+    <result property="collectionSummary" column="collection_summary" typeHandler="CollectionSummaryTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contacts" column="key" select="listContacts"/>
@@ -20,13 +23,15 @@
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
-    created_by, modified_by, created, modified, index_herbariorum_record, number_specimens
+    created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
+    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
-    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens
+    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
+    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -53,7 +58,13 @@
     now(), <!-- created -->
     now(), <!-- modified -->
     #{indexHerbariorumRecord,jdbcType=BOOLEAN},
-    #{numberSpecimens,jdbcType=INTEGER}
+    #{numberSpecimens,jdbcType=INTEGER},
+    #{taxonomicCoverage,jdbcType=VARCHAR},
+    #{geography,jdbcType=VARCHAR},
+    #{notes,jdbcType=VARCHAR},
+    #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -78,7 +89,13 @@
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
     index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
-    number_specimens = #{numberSpecimens,jdbcType=INTEGER}
+    number_specimens = #{numberSpecimens,jdbcType=INTEGER},
+    taxonomic_coverage = #{taxonomicCoverage,jdbcType=VARCHAR},
+    geography = #{geography,jdbcType=VARCHAR},
+    notes = #{notes,jdbcType=VARCHAR},
+    incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore
   </sql>
 
   <sql id="FULLTEXT_SEARCH">

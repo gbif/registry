@@ -164,6 +164,7 @@ public class RegistryMyBatisModule extends PrivateServiceModule {
       addAlias("CollectionContentTypeArrayTypeHandler").to(CollectionContentTypeArrayTypeHandler.class);
       addAlias("PreservationTypeArrayTypeHandler").to(PreservationTypeArrayTypeHandler.class);
       addAlias("StepTypeArrayTypeHandler").to(StepTypeArrayTypeHandler.class);
+      addAlias("CollectionSummaryTypeHandler").to(CollectionSummaryTypeHandler.class);
 
       // pipelines aliases
       addAlias("PipelineProcess").to(PipelineProcess.class);

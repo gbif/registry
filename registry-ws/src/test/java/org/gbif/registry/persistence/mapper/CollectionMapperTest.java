@@ -13,10 +13,7 @@ import org.gbif.registry.guice.RegistryTestModules;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import com.google.inject.Injector;
@@ -78,6 +75,12 @@ public class CollectionMapperTest {
     collection.setPhone(Collections.singletonList("1234"));
     collection.setIndexHerbariorumRecord(true);
     collection.setNumberSpecimens(12);
+    collection.setTaxonomicCoverage("taxonomic coverage");
+    collection.setGeography("geography");
+    collection.setNotes("notes for testing");
+    collection.setIncorporatedCollections(Arrays.asList("col1", "col2"));
+    collection.setImportantCollectors(Arrays.asList("collector 1", "collector 2"));
+    collection.setCollectionSummary(Collections.singletonMap("key", 0));
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
@@ -94,18 +97,7 @@ public class CollectionMapperTest {
     collectionMapper.create(collection);
 
     Collection collectionStored = collectionMapper.get(key);
-
-    assertEquals("CODE", collectionStored.getCode());
-    assertEquals("NAME", collectionStored.getName());
-    assertEquals(AccessionStatus.INSTITUTIONAL, collectionStored.getAccessionStatus());
-    assertEquals(2, collectionStored.getPreservationTypes().size());
-    assertTrue(collectionStored.getPreservationTypes().contains(PreservationType.SAMPLE_CRYOPRESERVED));
-    assertEquals(1, collectionStored.getEmail().size());
-    assertTrue(collectionStored.getEmail().contains("test@test.com"));
-    assertEquals(1, collectionStored.getPhone().size());
-    assertTrue(collectionStored.getPhone().contains("1234"));
-    assertTrue(collectionStored.isIndexHerbariorumRecord());
-    assertEquals(12, collectionStored.getNumberSpecimens());
+    assertTrue(collection.lenientEquals(collectionStored));
 
     // assert address
     assertNotNull(collectionStored.getAddress().getKey());
@@ -117,12 +109,7 @@ public class CollectionMapperTest {
     collection.setPreservationTypes(preservationTypes);
     collectionMapper.update(collection);
     collectionStored = collectionMapper.get(key);
-
-    assertEquals("CODE", collectionStored.getCode());
-    assertEquals("NAME", collectionStored.getName());
-    assertEquals("dummy description", collectionStored.getDescription());
-    assertEquals(AccessionStatus.INSTITUTIONAL, collectionStored.getAccessionStatus());
-    assertEquals(3, collectionStored.getPreservationTypes().size());
+    assertTrue(collection.lenientEquals(collectionStored));
 
     // assert address
     assertEquals("dummy address", collectionStored.getAddress().getAddress());

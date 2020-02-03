@@ -96,20 +96,7 @@ public class InstitutionMapperTest {
     institutionMapper.create(institution);
 
     Institution institutionStored = institutionMapper.get(key);
-
-    assertEquals("CODE", institutionStored.getCode());
-    assertEquals("NAME", institutionStored.getName());
-    assertEquals("dummy description", institutionStored.getDescription());
-    assertEquals("test", institutionStored.getCreatedBy());
-    assertEquals(2, institutionStored.getAdditionalNames().size());
-    assertEquals(1, institutionStored.getDisciplines().size());
-    assertTrue(institutionStored.getDisciplines().contains(Discipline.AGRICULTURAL_ANIMAL_SCIENCE));
-    assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
-    assertTrue(institutionStored.isActive());
-    assertEquals(1, institutionStored.getEmail().size());
-    assertTrue(institutionStored.getEmail().contains("test@test.com"));
-    assertEquals(1, institutionStored.getPhone().size());
-    assertTrue(institutionStored.getPhone().contains("1234"));
+    assertTrue(institution.lenientEquals(institutionStored));
 
     // assert address
     assertNotNull(institutionStored.getAddress().getKey());
@@ -121,14 +108,7 @@ public class InstitutionMapperTest {
     institution.setAdditionalNames(additionalNames);
     institutionMapper.update(institution);
     institutionStored = institutionMapper.get(key);
-
-    assertEquals("CODE", institutionStored.getCode());
-    assertEquals("NAME", institutionStored.getName());
-    assertEquals("Another dummy description", institutionStored.getDescription());
-    assertEquals("test", institutionStored.getCreatedBy());
-    assertEquals(3, institutionStored.getAdditionalNames().size());
-    assertEquals(URI.create("http://dummy.com"), institutionStored.getHomepage());
-    assertTrue(institutionStored.isActive());
+    assertTrue(institution.lenientEquals(institutionStored));
 
     // assert address
     assertEquals("dummy address", institutionStored.getAddress().getAddress());
