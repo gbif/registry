@@ -23,6 +23,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class PersonMapperTest {
 
@@ -82,10 +83,7 @@ public class PersonMapperTest {
     personMapper.create(person);
 
     Person personStored = personMapper.get(key);
-
-    assertEquals("FN", personStored.getFirstName());
-    assertEquals("LN", personStored.getLastName());
-    assertEquals("test@test.com", personStored.getEmail());
+    assertTrue(person.lenientEquals(personStored));
 
     // assert address
     assertNotNull(personStored.getMailingAddress().getKey());
@@ -96,11 +94,7 @@ public class PersonMapperTest {
     person.setPhone("12234");
     personMapper.update(person);
     personStored = personMapper.get(key);
-
-    assertEquals("FN2", personStored.getFirstName());
-    assertNull(personStored.getLastName());
-    assertEquals("12234", personStored.getPhone());
-    assertEquals("test@test.com", personStored.getEmail());
+    assertTrue(person.lenientEquals(personStored));
 
     // assert address
     assertEquals("dummy address", personStored.getMailingAddress().getAddress());
