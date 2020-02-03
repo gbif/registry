@@ -78,7 +78,7 @@
 
   <properties>
     <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
-    <gbif-bom.version>1.0.0-SNAPSHOT</gbif-bom.version>
+    <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
     <java.version>1.8</java.version>
     <minimumMavenVersion>3.0</minimumMavenVersion>
     <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
@@ -184,8 +184,8 @@
     <dependencies>
       <dependency>
         <groupId>org.gbif</groupId>
-        <artifactId>gbif-bom</artifactId>
-        <version>${gbif-bom.version}</version>
+        <artifactId>gbif-spring-bom</artifactId>
+        <version>${gbif-spring-bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
