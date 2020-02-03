@@ -55,7 +55,6 @@ public class EsResponseParser<T,S, P extends SearchParameter>{
    * @return a new instance of a SearchResponse.
    */
   public SearchResponse<T, P> buildSearchResponse(org.elasticsearch.action.search.SearchResponse esResponse, SearchRequest<P> request) {
-
     SearchResponse<T, P> response = new SearchResponse<>(request);
     response.setCount(esResponse.getHits().getTotalHits());
     parseHits(esResponse).ifPresent(response::setResults);

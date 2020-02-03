@@ -21,4 +21,11 @@ public interface EsFieldMapper<P extends SearchParameter> {
   default String[] includeSuggestFields(P searchParameter) {
     return new String[]{get(searchParameter)};
   }
+
+  /**
+   * Fields used during to highlight in results.
+   */
+  default String[] highlightingFields() {
+    return new String[]{};
+  }
 }
