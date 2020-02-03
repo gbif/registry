@@ -30,6 +30,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
   private static final String[] DATASET_TITLE_SUGGEST_FIELDS = new String[]{"title", "type", "subtype", "description"};
 
+  private static final String[] DATASET_HIGHLIGHT_FIELDS = new String[]{"title", "description"};
+
 
 
   @Override
@@ -53,5 +55,10 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       return DATASET_TITLE_SUGGEST_FIELDS;
     }
     return new String[]{SEARCH_TO_ES_MAPPING.get(searchParameter)};
+  }
+
+  @Override
+  public String[] highlightingFields() {
+    return DATASET_HIGHLIGHT_FIELDS;
   }
 }
