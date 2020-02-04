@@ -156,7 +156,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // adding full text search parameter
     if (!Strings.isNullOrEmpty(qParam)) {
-      bool.must(QueryBuilders.matchQuery("all", qParam));
+      bool.must(esFieldMapper.fullTextQuery(qParam));
     }
 
     if (params != null && !params.isEmpty()) {
