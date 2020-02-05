@@ -22,7 +22,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.search.dataset.search.common.EsFieldMapper;
 import org.gbif.registry.search.dataset.search.common.SearchResultConverter;
 
 import java.util.Date;
@@ -57,14 +56,17 @@ public class DatasetSearchResultConverter
     DatasetSearchResult d = new DatasetSearchResult();
     Map<String, Object> fields = hit.getSourceAsMap();
     d.setKey(UUID.fromString(hit.getId()));
-    getHighlightOrStringValue(fields, hit.getHighlightFields(),"title").ifPresent(d::setTitle);
+    getHighlightOrStringValue(fields, hit.getHighlightFields(), "title").ifPresent(d::setTitle);
     getDatasetTypeValue(fields, "type").ifPresent(d::setType);
     getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "description").ifPresent(d::setDescription);
+    getHighlightOrStringValue(fields, hit.getHighlightFields(), "description")
+        .ifPresent(d::setDescription);
     getUuidValue(fields, "publishingOrganizationKey").ifPresent(d::setPublishingOrganizationKey);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(),"publishingOrganizationTitle").ifPresent(d::setPublishingOrganizationTitle);
+    getHighlightOrStringValue(fields, hit.getHighlightFields(), "publishingOrganizationTitle")
+        .ifPresent(d::setPublishingOrganizationTitle);
     getUuidValue(fields, "hostingOrganizationKey").ifPresent(d::setHostingOrganizationKey);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "hostingOrganizationTitle").ifPresent(d::setHostingOrganizationTitle);
+    getHighlightOrStringValue(fields, hit.getHighlightFields(), "hostingOrganizationTitle")
+        .ifPresent(d::setHostingOrganizationTitle);
 
     getCountryValue(fields, "publishingCountry").ifPresent(d::setPublishingCountry);
     getLicenceValue(fields, "license").ifPresent(d::setLicense);
@@ -136,10 +138,13 @@ public class DatasetSearchResultConverter
     return getValue(fields, esField, Function.identity());
   }
 
-  private static Optional<String> getHighlightOrStringValue(Map<String, Object> fields, Map<String, HighlightField> hlFields, String esField) {
+  private static Optional<String> getHighlightOrStringValue(
+      Map<String, Object> fields, Map<String, HighlightField> hlFields, String esField) {
     Optional<String> fieldValue = getValue(fields, esField, Function.identity());
     if (Objects.nonNull(hlFields)) {
-      Optional<String> hlValue = Optional.ofNullable(hlFields.get(esField)).map(hlField -> hlField.getFragments()[0].string());
+      Optional<String> hlValue =
+          Optional.ofNullable(hlFields.get(esField))
+              .map(hlField -> hlField.getFragments()[0].string());
       return hlValue.isPresent() ? hlValue : fieldValue;
     }
     return fieldValue;

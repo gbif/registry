@@ -37,16 +37,12 @@ public interface EsFieldMapper<P extends SearchParameter> {
     return new String[] {get(searchParameter)};
   }
 
-  /**
-   * Fields used during to highlight in results.
-   */
+  /** Fields used during to highlight in results. */
   default String[] highlightingFields() {
-    return new String[]{};
+    return new String[] {};
   }
 
-  /**
-   * Builds a full text search query builder.
-   */
+  /** Builds a full text search query builder. */
   default QueryBuilder fullTextQuery(String q) {
     return QueryBuilders.matchQuery("all", q);
   }
