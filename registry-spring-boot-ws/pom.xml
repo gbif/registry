@@ -10,6 +10,10 @@
   <name>registry-spring-boot-ws</name>
   <description>Web services</description>
 
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
+
   <dependencies>
     <!-- Spring dependencies -->
     <dependency>
@@ -90,6 +94,10 @@
       <artifactId>registry-spring-boot-identity</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-metadata</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
@@ -104,6 +112,14 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-httputils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.common</groupId>
+      <artifactId>gbif-postal-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-doi</artifactId>
     </dependency>
 
     <!-- Third party dependencies -->
@@ -182,6 +198,7 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
         <executions>
           <execution>
             <id>repackage</id>
