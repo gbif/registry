@@ -1,13 +1,14 @@
 package org.gbif.registry.metadata.parse;
 
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.digester3.Digester;
-import org.apache.commons.digester3.RuleSetBase;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.metadata.parse.converter.GreedyUriConverter;
 import org.gbif.registry.metadata.parse.converter.LanguageTypeConverter;
 
 import java.net.URI;
+
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.digester3.Digester;
+import org.apache.commons.digester3.RuleSetBase;
 
 /**
  * Digester rules to parse Dublin Core metadata documents together with a DatasetDelegator digester model.
@@ -27,6 +28,7 @@ public class DublinCoreRuleSet extends RuleSetBase {
     ConvertUtils.register(langConverter, Language.class);
   }
 
+  @Override
   public void addRuleInstances(Digester digester) {
     setupTypeConverters();
 

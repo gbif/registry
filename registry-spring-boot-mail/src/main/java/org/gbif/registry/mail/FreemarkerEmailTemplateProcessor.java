@@ -1,10 +1,7 @@
 package org.gbif.registry.mail;
 
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +10,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
+
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
 
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
@@ -43,6 +45,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * @param subjectParams     computable params for subject message formatting
    * @return email model to send
    */
+  @Override
   public BaseEmailModel buildEmail(EmailType emailType,
                                    String emailAddress,
                                    Object templateDataModel,
@@ -63,6 +66,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * @param subjectParams     computable params for subject message formatting
    * @return email model to send
    */
+  @Override
   public BaseEmailModel buildEmail(EmailType emailType,
                                    String emailAddress,
                                    Object templateDataModel,

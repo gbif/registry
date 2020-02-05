@@ -1,11 +1,12 @@
 package org.gbif.registry.metadata.parse;
 
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.List;
 
 /**
  * Class to temporarily keep paragraph strings before they are used as a single,
@@ -27,6 +28,7 @@ public class ParagraphContainer {
     }
   }
 
+  @Override
   public String toString() {
     if (paragraphs.isEmpty()) {
       return null;

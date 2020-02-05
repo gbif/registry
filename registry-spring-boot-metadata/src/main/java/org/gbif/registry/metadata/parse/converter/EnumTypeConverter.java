@@ -1,10 +1,12 @@
 package org.gbif.registry.metadata.parse.converter;
 
-import com.google.common.collect.Maps;
-import org.apache.commons.beanutils.converters.AbstractConverter;
 import org.gbif.api.util.VocabularyUtils;
 
 import java.util.Map;
+
+import org.apache.commons.beanutils.converters.AbstractConverter;
+
+import com.google.common.collect.Maps;
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion
@@ -33,6 +35,7 @@ public class EnumTypeConverter<T extends Enum<?>> extends AbstractConverter {
    *
    * @return The default type this <code>Converter</code> handles.
    */
+  @Override
   protected Class getDefaultType() {
     return clazz;
   }
@@ -46,16 +49,16 @@ public class EnumTypeConverter<T extends Enum<?>> extends AbstractConverter {
    * @return The converted value.
    * @throws Throwable if an error occurs converting to the specified type
    */
+  @Override
   protected Object convertToType(Class type, Object value) throws Throwable {
     // never null, super class implements this as:
-    // return value.toString();
     final String val = value.toString();
     if (lookup.containsKey(val)) {
       return lookup.get(val);
     }
     // try regular enum values
     try {
-      T eVal = (T) VocabularyUtils.lookupEnum(val, clazz);
+      T eVal = VocabularyUtils.lookupEnum(val, clazz);
       return eVal == null ? defaultValue : eVal;
     } catch (IllegalArgumentException e) {
       // cant parse, return default

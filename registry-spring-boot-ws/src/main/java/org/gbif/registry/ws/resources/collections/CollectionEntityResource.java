@@ -17,15 +17,17 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 
 import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
@@ -64,6 +66,7 @@ public class CollectionEntityResource extends ExtendedCollectionEntityResource<C
   }
 
   @GetMapping
+  @Override
   public PagingResponse<Collection> list(@Nullable @RequestParam(value = "q", required = false) String query,
                                          @Nullable @RequestParam(value = "institution", required = false) UUID institutionKey,
                                          @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,

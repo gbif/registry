@@ -1,13 +1,5 @@
 package org.gbif.registry.metadata.parse;
 
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.Converter;
-import org.apache.commons.beanutils.converters.IntegerConverter;
-import org.apache.commons.digester3.AbstractObjectCreationFactory;
-import org.apache.commons.digester3.Digester;
-import org.apache.commons.digester3.RuleSetBase;
-import org.apache.commons.digester3.SetNextRule;
-import org.apache.commons.digester3.SetRootRule;
 import org.gbif.api.model.common.InterpretedEnum;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
@@ -41,10 +33,19 @@ import org.gbif.registry.metadata.parse.converter.IdentifierTypeConverter;
 import org.gbif.registry.metadata.parse.converter.LanguageTypeConverter;
 import org.gbif.registry.metadata.parse.converter.MaintenanceUpdateFrequencyConverter;
 import org.gbif.registry.metadata.parse.converter.PreservationMethodTypeConverter;
-import org.xml.sax.Attributes;
 
 import java.net.URI;
 import java.util.Date;
+
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.Converter;
+import org.apache.commons.beanutils.converters.IntegerConverter;
+import org.apache.commons.digester3.AbstractObjectCreationFactory;
+import org.apache.commons.digester3.Digester;
+import org.apache.commons.digester3.RuleSetBase;
+import org.apache.commons.digester3.SetNextRule;
+import org.apache.commons.digester3.SetRootRule;
+import org.xml.sax.Attributes;
 
 /**
  * Digester rules to parse EML dataset metadata documents together with a DatasetDelegator digester model.
@@ -89,6 +90,7 @@ public class EMLRuleSet extends RuleSetBase {
   /**
    * Creates a new digester with all rules to parse an EML document.
    */
+  @Override
   public void addRuleInstances(Digester digester) {
 
     setupTypeConverters();

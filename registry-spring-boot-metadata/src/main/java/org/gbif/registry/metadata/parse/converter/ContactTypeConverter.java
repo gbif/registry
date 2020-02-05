@@ -1,8 +1,9 @@
 package org.gbif.registry.metadata.parse.converter;
 
-import org.apache.commons.beanutils.converters.AbstractConverter;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.ContactType;
+
+import org.apache.commons.beanutils.converters.AbstractConverter;
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion
@@ -35,6 +36,7 @@ public final class ContactTypeConverter extends AbstractConverter {
    *
    * @return The default type this {@code Converter} handles.
    */
+  @Override
   protected Class getDefaultType() {
     return ContactType.class;
   }
@@ -51,9 +53,10 @@ public final class ContactTypeConverter extends AbstractConverter {
    *
    * @throws Throwable if an error occurs converting to the specified type
    */
+  @Override
   protected Object convertToType(Class type, Object value) throws Throwable {
 
-    ContactType infer = (ContactType) VocabularyUtils.lookupEnum(value.toString(), ContactType.class);
+    ContactType infer = VocabularyUtils.lookupEnum(value.toString(), ContactType.class);
     return infer == null ? DEFAULT_CONTACT_TYPE : infer;
   }
 }

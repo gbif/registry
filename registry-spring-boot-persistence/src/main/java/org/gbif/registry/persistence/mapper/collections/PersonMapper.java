@@ -1,14 +1,16 @@
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
-import org.springframework.stereotype.Repository;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 /**
  * Mapper for {@link Person} entities.
@@ -17,12 +19,16 @@ import java.util.UUID;
 public interface PersonMapper extends BaseMapper<Person> {
 
   // TODO: 2019-07-24 get, create, delete, update inherited explicitly because of exception
+  @Override
   Person get(@Param("key") UUID key);
 
+  @Override
   void create(Person entity);
 
+  @Override
   void delete(@Param("key") UUID key);
 
+  @Override
   void update(Person entity);
 
   List<Person> list(@Nullable @Param("institutionKey") UUID institutionKey,
