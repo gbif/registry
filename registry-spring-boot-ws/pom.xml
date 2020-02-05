@@ -186,6 +186,7 @@
           <execution>
             <id>repackage</id>
             <configuration>
+              <attach>true</attach>
               <classifier>exec</classifier>
               <addResources>false</addResources>
             </configuration>
