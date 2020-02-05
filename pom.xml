@@ -4,6 +4,12 @@
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
 
+  <parent>
+    <groupId>org.gbif</groupId>
+    <artifactId>motherpom</artifactId>
+    <version>40</version>
+  </parent>
+
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-spring-boot-parent</artifactId>
   <version>1.1.1-SNAPSHOT</version>
@@ -77,6 +83,7 @@
   </modules>
 
   <properties>
+    <main.basedir>${project.basedir}</main.basedir>
     <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
     <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
     <java.version>1.8</java.version>
@@ -177,28 +184,20 @@
     <maven-site-plugin.version>3.4</maven-site-plugin.version>
     <doxia-module-markdown.version>1.6</doxia-module-markdown.version>
     <maven-source-plugin.version>2.4</maven-source-plugin.version>
+    <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <versions-maven-plugin.version>2.1</versions-maven-plugin.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!-- Spring dependencies -->
       <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-spring-bom</artifactId>
-        <version>${gbif-spring-bom.version}</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-
-      <!-- Tools -->
-      <dependency>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-        <version>${lombok.version}</version>
-        <scope>provided</scope>
-      </dependency>
-
-      <!-- Spring dependencies -->
       <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -388,6 +387,12 @@
 
       <!-- Third party dependencies -->
       <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper.version}</version>
@@ -532,7 +537,6 @@
         <version>${elasticsearch.version}</version>
       </dependency>
 
-
       <!-- Caching -->
       <dependency>
         <groupId>org.cache2k</groupId>
@@ -598,6 +602,11 @@
         <configuration>
           <topSiteURL>http://gbif.github.io/registry-spring-boot/</topSiteURL>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
     </plugins>
 

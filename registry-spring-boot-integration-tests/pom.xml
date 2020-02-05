@@ -9,6 +9,10 @@
 
   <artifactId>registry-spring-boot-integration-tests</artifactId>
 
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
+
   <dependencies>
     <!-- Spring dependencies -->
     <dependency>

@@ -11,6 +11,10 @@
   <name>registry-spring-boot-search</name>
   <description>Registry Elasticsearch indexing and search</description>
 
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
+
   <dependencies>
 
     <!-- Tools -->
