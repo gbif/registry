@@ -216,4 +216,5 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
   private static Optional<String> extractStringValue(Map<String, Object> fields, String fieldName) {
     return extractValue(fields, fieldName, Function.identity());
   }
+
 }
