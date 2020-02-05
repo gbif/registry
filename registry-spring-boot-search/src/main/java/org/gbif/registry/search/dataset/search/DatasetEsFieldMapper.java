@@ -18,7 +18,6 @@ package org.gbif.registry.search.dataset.search;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.registry.search.dataset.search.common.EsFieldMapper;
 
-import com.google.common.collect.ImmutableBiMap;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -26,6 +25,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FieldValueFactorFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+
+import com.google.common.collect.ImmutableBiMap;
 
 public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParameter> {
 
@@ -51,16 +52,15 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
   private static final String[] EXCLUDE_FIELDS = new String[] {"all", "taxonKey"};
 
-  private static final String[] DATASET_TITLE_SUGGEST_FIELDS = new String[]{"title", "type", "subtype", "description"};
+  private static final String[] DATASET_TITLE_SUGGEST_FIELDS =
+      new String[] {"title", "type", "subtype", "description"};
 
-  private static final String[] DATASET_HIGHLIGHT_FIELDS = new String[]{"title", "description"};
+  private static final String[] DATASET_HIGHLIGHT_FIELDS = new String[] {"title", "description"};
 
-  private static final FieldValueFactorFunctionBuilder FULLTEXT_SCORE_FUNCTION = ScoreFunctionBuilders
-    .fieldValueFactorFunction("dataScore")
-    .modifier(FieldValueFactorFunction.Modifier.LN2P)
-    .missing(0d);
-
-
+  private static final FieldValueFactorFunctionBuilder FULLTEXT_SCORE_FUNCTION =
+      ScoreFunctionBuilders.fieldValueFactorFunction("dataScore")
+          .modifier(FieldValueFactorFunction.Modifier.LN2P)
+          .missing(0d);
 
   @Override
   public DatasetSearchParameter get(String esField) {
@@ -93,17 +93,20 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
   @Override
   public QueryBuilder fullTextQuery(String q) {
 
-    return new FunctionScoreQueryBuilder(QueryBuilders.multiMatchQuery(q)
-                                           .field("title", 20.0f)
-                                           .field("keyword", 10.0f)
-                                           .field("description",8.0f)
-                                           .field("publishingOrganizationTitle",5.0f)
-                                           .field("hostingOrganizationTitle", 5.0f)
-                                           .field("metadata", 3.0f)
-                                           .field("projectId" ,2.0f)
-                                           .field("all",1.0f)
-                                           .tieBreaker(0.2f).minimumShouldMatch("25%").slop(100),
-                                         FULLTEXT_SCORE_FUNCTION)
-      .boostMode(CombineFunction.MULTIPLY);
+    return new FunctionScoreQueryBuilder(
+            QueryBuilders.multiMatchQuery(q)
+                .field("title", 20.0f)
+                .field("keyword", 10.0f)
+                .field("description", 8.0f)
+                .field("publishingOrganizationTitle", 5.0f)
+                .field("hostingOrganizationTitle", 5.0f)
+                .field("metadata", 3.0f)
+                .field("projectId", 2.0f)
+                .field("all", 1.0f)
+                .tieBreaker(0.2f)
+                .minimumShouldMatch("25%")
+                .slop(100),
+            FULLTEXT_SCORE_FUNCTION)
+        .boostMode(CombineFunction.MULTIPLY);
   }
 }
