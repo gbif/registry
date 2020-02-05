@@ -1,7 +1,5 @@
 package org.gbif.registry.ws.resources.collections;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -16,15 +14,20 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 
 import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
@@ -64,6 +67,7 @@ public class InstitutionEntityResource extends ExtendedCollectionEntityResource<
   }
 
   @GetMapping
+  @Override
   public PagingResponse<Institution> list(@Nullable @RequestParam(value = "q", required = false) String query,
                                           @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
                                           @Nullable @RequestParam(value = "code", required = false) String code,

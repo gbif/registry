@@ -11,11 +11,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
 import lombok.experimental.UtilityClass;
 
 import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.DEFAULT_SEARCH_PARAM_VALUE;
@@ -71,7 +73,6 @@ public class SearchParameterProvider {
 
     if (searchRequest == null) {
       parameters.put(PARAM_QUERY_STRING, DEFAULT_SEARCH_PARAM_VALUE);
-
     } else {
       String searchParamValue = searchRequest.getQ();
       if (!Strings.isNullOrEmpty(searchParamValue)) {
@@ -91,7 +92,7 @@ public class SearchParameterProvider {
     return parameters;
   }
 
-  public class ProxyRetrofitQueryMap extends HashMap<String, Object> {
+  public static class ProxyRetrofitQueryMap extends HashMap<String, Object> {
     public ProxyRetrofitQueryMap() {
       super(new HashMap<>());
     }

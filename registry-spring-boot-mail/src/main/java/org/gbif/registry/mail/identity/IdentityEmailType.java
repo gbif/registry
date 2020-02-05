@@ -30,10 +30,12 @@ public enum IdentityEmailType implements EmailType {
     this.ftlTemplate = ftlTemplate;
   }
 
+  @Override
   public String getSubjectKey() {
     return subjectKey;
   }
 
+  @Override
   public String getFtlTemplate() {
     return ftlTemplate;
   }
