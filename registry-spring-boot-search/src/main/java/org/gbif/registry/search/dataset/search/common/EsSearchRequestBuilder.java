@@ -53,6 +53,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -81,11 +82,25 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private static final int MAX_SIZE_TERMS_AGGS = 1200000;
   private static final IntUnaryOperator DEFAULT_SHARD_SIZE = size -> (size * 2) + 50000;
+  private static final String PRE_HL_TAG ="<em class=\"gbifHl\">";
+  private static final String POST_HL_TAG ="</em>";
 
   private final EsFieldMapper<P> esFieldMapper;
 
+  //this instance is created only once and reused for all searches
+  private final HighlightBuilder highlightBuilder = new HighlightBuilder()
+    .forceSource(true)
+    .preTags(PRE_HL_TAG)
+    .postTags(POST_HL_TAG)
+    .encoder("html")
+    .highlighterType("unified")
+    .requireFieldMatch(false)
+    .numOfFragments(0);
+
+
   public EsSearchRequestBuilder(EsFieldMapper<P> esFieldMapper) {
     this.esFieldMapper = esFieldMapper;
+    Arrays.stream(esFieldMapper.highlightingFields()).forEach(highlightBuilder::field);
   }
 
   public SearchRequest buildSearchRequest(
@@ -108,6 +123,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       searchSourceBuilder.sort(SortBuilders.fieldSort("created").order(SortOrder.DESC));
     } else {
       searchSourceBuilder.sort(SortBuilders.scoreSort());
+      if (searchRequest.isHighlight()) {
+        searchSourceBuilder.highlighter(highlightBuilder);
+      }
     }
 
     // group params
@@ -163,7 +181,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // adding full text search parameter
     if (!Strings.isNullOrEmpty(qParam)) {
-      bool.must(QueryBuilders.matchQuery("all", qParam));
+      bool.must(esFieldMapper.fullTextQuery(qParam));
     }
 
     if (params != null && !params.isEmpty()) {
