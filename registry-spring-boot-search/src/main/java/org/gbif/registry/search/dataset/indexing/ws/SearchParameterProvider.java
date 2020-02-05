@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.search.dataset.indexing.ws;
 
 import org.gbif.api.model.common.paging.Pageable;
@@ -34,13 +49,14 @@ import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.P
 @UtilityClass
 public class SearchParameterProvider {
 
-  public static <P extends SearchParameter,R extends FacetedSearchRequest<P>> ProxyRetrofitQueryMap getParameterFromFacetedRequest(@Nullable
-                                                                                                                                 R searchRequest) {
+  public static <P extends SearchParameter, R extends FacetedSearchRequest<P>>
+      ProxyRetrofitQueryMap getParameterFromFacetedRequest(@Nullable R searchRequest) {
     // The searchRequest is transformed in a parameter map
     ProxyRetrofitQueryMap parameters = getParameterFromSearchRequest(searchRequest);
 
     if (searchRequest != null) {
-      parameters.put(PARAM_FACET_MULTISELECT, Boolean.toString(searchRequest.isMultiSelectFacets()));
+      parameters.put(
+          PARAM_FACET_MULTISELECT, Boolean.toString(searchRequest.isMultiSelectFacets()));
       if (searchRequest.getFacetMinCount() != null) {
         parameters.put(PARAM_FACET_MINCOUNT, Integer.toString(searchRequest.getFacetMinCount()));
       }
@@ -51,12 +67,18 @@ public class SearchParameterProvider {
         parameters.put(PARAM_FACET_OFFSET, Integer.toString(searchRequest.getFacetOffset()));
       }
       if (searchRequest.getFacets() != null) {
-        parameters.put(PARAM_FACET, searchRequest.getFacets().stream().map(SearchParameter::name).collect(Collectors.toList()));
+        parameters.put(
+            PARAM_FACET,
+            searchRequest.getFacets().stream()
+                .map(SearchParameter::name)
+                .collect(Collectors.toList()));
         for (P facet : searchRequest.getFacets()) {
           Pageable facetPage = searchRequest.getFacetPage(facet);
           if (facetPage != null) {
-            parameters.put(facet.name() + '.' + PARAM_FACET_OFFSET, Long.toString(facetPage.getOffset()));
-            parameters.put(facet.name() + '.' + PARAM_FACET_LIMIT, Long.toString(facetPage.getLimit()));
+            parameters.put(
+                facet.name() + '.' + PARAM_FACET_OFFSET, Long.toString(facetPage.getOffset()));
+            parameters.put(
+                facet.name() + '.' + PARAM_FACET_LIMIT, Long.toString(facetPage.getLimit()));
           }
         }
       }
@@ -65,8 +87,8 @@ public class SearchParameterProvider {
     return parameters;
   }
 
-  public static <P extends SearchParameter> ProxyRetrofitQueryMap getParameterFromSearchRequest(@Nullable
-                                                                                              SearchRequest<P> searchRequest) {
+  public static <P extends SearchParameter> ProxyRetrofitQueryMap getParameterFromSearchRequest(
+      @Nullable SearchRequest<P> searchRequest) {
 
     // The searchRequest is transformed in a parameter map
     ProxyRetrofitQueryMap parameters = new ProxyRetrofitQueryMap();
@@ -80,7 +102,7 @@ public class SearchParameterProvider {
       }
       parameters.put(PARAM_HIGHLIGHT, Boolean.toString(searchRequest.isHighlight()));
       parameters.put(PARAM_SPELLCHECK, Boolean.toString(searchRequest.isSpellCheck()));
-      parameters.put(PARAM_SPELLCHECK_COUNT,Integer.toString(searchRequest.getSpellCheckCount()));
+      parameters.put(PARAM_SPELLCHECK_COUNT, Integer.toString(searchRequest.getSpellCheckCount()));
 
       Multimap<P, String> requestParameters = searchRequest.getParameters();
       if (requestParameters != null) {
@@ -110,17 +132,15 @@ public class SearchParameterProvider {
         Object entryValue = entry.getValue();
         if (entryValue == null) {
           throw new IllegalArgumentException(
-            "Query map contained null value for key '" + entryKey + "'.");
-        }
-        else if(entryValue instanceof List) {
-          for(Object arrayValue:(List)entryValue)  {
+              "Query map contained null value for key '" + entryKey + "'.");
+        } else if (entryValue instanceof List) {
+          for (Object arrayValue : (List) entryValue) {
             if (arrayValue != null) { // Skip null values
               Entry<String, Object> newEntry = new AbstractMap.SimpleEntry<>(entryKey, arrayValue);
               newSet.add(newEntry);
             }
           }
-        }
-        else {
+        } else {
           Entry<String, Object> newEntry = new AbstractMap.SimpleEntry<>(entryKey, entryValue);
           newSet.add(newEntry);
         }

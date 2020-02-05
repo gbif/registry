@@ -1,8 +1,35 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.ws.security.GbifAuthentication;
 import org.gbif.ws.security.GbifAuthenticationToken;
+
+import java.io.IOException;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,29 +41,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.regex.Pattern;
-
 import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
 
 /**
  * Filter to validate the JWT tokens.
- * <p>
- * If the token is not present this validation is skipped.
+ *
+ * <p>If the token is not present this validation is skipped.
  */
 @Component
 public class JwtRequestFilter extends GenericFilterBean {
 
   private static final Logger LOG = LoggerFactory.getLogger(JwtRequestFilter.class);
 
-  //Patterns that catches case insensitive versions of word 'bearer'
+  // Patterns that catches case insensitive versions of word 'bearer'
   private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer");
 
   private final UserDetailsService userDetailsService;
@@ -53,7 +70,8 @@ public class JwtRequestFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
     final HttpServletResponse httpResponse = (HttpServletResponse) response;
     final Optional<String> token = findTokenInRequest(httpRequest);
@@ -68,10 +86,11 @@ public class JwtRequestFilter extends GenericFilterBean {
 
         LOG.debug("JWT successfully validated for user {}", gbifUser.getUserName());
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(gbifUser.getUserName());
+        final UserDetails userDetails =
+            userDetailsService.loadUserByUsername(gbifUser.getUserName());
 
         final GbifAuthentication gbifAuthentication =
-          new GbifAuthenticationToken(userDetails, userDetails.getAuthorities());
+            new GbifAuthenticationToken(userDetails, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(gbifAuthentication);
 
         // refresh the token and add it to the headers
@@ -86,9 +105,7 @@ public class JwtRequestFilter extends GenericFilterBean {
     }
   }
 
-  /**
-   * Tries to find the token in the {@link HttpHeaders#AUTHORIZATION} header.
-   */
+  /** Tries to find the token in the {@link HttpHeaders#AUTHORIZATION} header. */
   public Optional<String> findTokenInRequest(HttpServletRequest request) {
     // check header first
     return Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))

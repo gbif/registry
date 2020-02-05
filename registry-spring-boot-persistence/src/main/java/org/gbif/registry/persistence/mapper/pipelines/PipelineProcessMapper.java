@@ -1,20 +1,35 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.persistence.mapper.pipelines;
 
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.springframework.stereotype.Repository;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Mapper for {@link PipelineProcess} entities.
- */
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+/** Mapper for {@link PipelineProcess} entities. */
 @Repository
 public interface PipelineProcessMapper {
 
@@ -36,7 +51,7 @@ public interface PipelineProcessMapper {
    * @return {@link PipelineProcess}
    */
   PipelineProcess getByDatasetAndAttempt(
-    @Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
+      @Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
 
   /**
    * Retrieves a {@link PipelineProcess} by key.
@@ -52,11 +67,11 @@ public interface PipelineProcessMapper {
    * Adds a {@link PipelineExecution} to an existing {@link PipelineProcess}.
    *
    * @param pipelinesProcessKey key of the process where we want to add the step
-   * @param execution           execution to add
+   * @param execution execution to add
    */
   void addPipelineExecution(
-    @Param("pipelinesProcessKey") long pipelinesProcessKey,
-    @Param("execution") PipelineExecution execution);
+      @Param("pipelinesProcessKey") long pipelinesProcessKey,
+      @Param("execution") PipelineExecution execution);
 
   /**
    * Retrieves a {@link PipelineExecution} by key.
@@ -70,10 +85,10 @@ public interface PipelineProcessMapper {
    * Adds a {@link PipelineStep} to an existing {@link PipelineExecution}.
    *
    * @param pipelineExecutionKey key of the process where we want to add the step
-   * @param step                 step to add
+   * @param step step to add
    */
   void addPipelineStep(
-    @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
+      @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
 
   /**
    * Lists {@link PipelineProcess} based in the search parameters.
@@ -81,20 +96,18 @@ public interface PipelineProcessMapper {
    * <p>It supports paging.
    *
    * @param datasetKey dataset key
-   * @param attempt    attempt
-   * @param page       page to specify the offset and the limit
+   * @param attempt attempt
+   * @param page page to specify the offset and the limit
    * @return list of {@link PipelineProcess}
    */
   List<PipelineProcess> list(
-    @Nullable @Param("datasetKey") UUID datasetKey,
-    @Nullable @Param("attempt") Integer attempt,
-    @Nullable @Param("page") Pageable page);
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("attempt") Integer attempt,
+      @Nullable @Param("page") Pageable page);
 
-  /**
-   * Counts the number of {@link PipelineProcess} based in the search parameters.
-   */
+  /** Counts the number of {@link PipelineProcess} based in the search parameters. */
   long count(
-    @Nullable @Param("datasetKey") UUID datasetKey, @Nullable @Param("attempt") Integer attempt);
+      @Nullable @Param("datasetKey") UUID datasetKey, @Nullable @Param("attempt") Integer attempt);
 
   PipelineStep getPipelineStep(@Param("key") long key);
 

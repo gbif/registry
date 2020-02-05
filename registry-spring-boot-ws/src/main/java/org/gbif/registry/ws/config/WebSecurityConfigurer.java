@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
@@ -37,7 +52,9 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
   private UserDetailsService userDetailsService;
 
-  public WebSecurityConfigurer(@Qualifier("registryUserDetailsService") UserDetailsService userDetailsService, ApplicationContext context) {
+  public WebSecurityConfigurer(
+      @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
+      ApplicationContext context) {
     this.userDetailsService = userDetailsService;
     this.context = context;
   }
@@ -56,23 +73,26 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http
-      .httpBasic().disable()
-      .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
-      .addFilterAfter(context.getBean(RequestHeaderParamUpdateFilter.class), HttpServletRequestWrapperFilter.class)
-      .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
-      .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
-      .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
-      .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
-      .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), JwtRequestFilter.class)
-      .csrf().disable()
-      .cors().and()
-      .authorizeRequests()
-      .anyRequest().authenticated();
+    http.httpBasic()
+        .disable()
+        .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), LogoutFilter.class)
+        .addFilterAfter(
+            context.getBean(RequestHeaderParamUpdateFilter.class),
+            HttpServletRequestWrapperFilter.class)
+        .addFilterAfter(context.getBean(IdentityFilter.class), RequestHeaderParamUpdateFilter.class)
+        .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
+        .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
+        .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
+        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), JwtRequestFilter.class)
+        .csrf()
+        .disable()
+        .cors()
+        .and()
+        .authorizeRequests()
+        .anyRequest()
+        .authenticated();
 
-    http
-      .sessionManagement()
-      .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
   @Bean
@@ -87,12 +107,12 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type"));
     configuration.setAllowedOrigins(Collections.singletonList("*"));
     configuration.setAllowedMethods(
-      Arrays.asList("HEAD", "GET", "POST", "DELETE", "PUT", "OPTIONS"));
+        Arrays.asList("HEAD", "GET", "POST", "DELETE", "PUT", "OPTIONS"));
     configuration.setExposedHeaders(
-      Arrays.asList(
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Methods",
-        "Access-Control-Allow-Headers"));
+        Arrays.asList(
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Methods",
+            "Access-Control-Allow-Headers"));
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;

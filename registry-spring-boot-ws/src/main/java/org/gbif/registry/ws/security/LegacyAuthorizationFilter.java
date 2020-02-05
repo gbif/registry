@@ -1,8 +1,34 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security;
 
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -10,20 +36,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
-
 import static org.gbif.ws.util.CommonWsUtils.getFirst;
 
 /**
- * A filter that will intercept legacy web service requests to /registry/* and perform authentication setting
- * a security context on the request.
+ * A filter that will intercept legacy web service requests to /registry/* and perform
+ * authentication setting a security context on the request.
  */
 @Component
 public class LegacyAuthorizationFilter extends GenericFilterBean {
@@ -47,7 +64,8 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
     final HttpServletRequest httpRequest = (HttpServletRequest) request;
     String path = httpRequest.getRequestURI().toLowerCase();
 
@@ -56,8 +74,8 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
       if ("GET".equalsIgnoreCase(httpRequest.getMethod())) {
         filterGetRequests(httpRequest);
       } else if ("POST".equalsIgnoreCase(httpRequest.getMethod())
-        || "PUT".equalsIgnoreCase(httpRequest.getMethod())
-        || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
+          || "PUT".equalsIgnoreCase(httpRequest.getMethod())
+          || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
         filterPostPutDeleteRequests(httpRequest, path);
       }
     }
@@ -108,16 +126,16 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
 
   private void filterGetRequests(HttpServletRequest httpRequest) {
     // E.g. validate organization request, identified by param op=login
-    if (getFirst(httpRequest.getParameterMap(), "op") != null &&
-      getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
+    if (getFirst(httpRequest.getParameterMap(), "op") != null
+        && getFirst(httpRequest.getParameterMap(), "op").equalsIgnoreCase("login")) {
       UUID organizationKey = retrieveKeyFromRequestPath(httpRequest);
       authorizeOrganizationChange(httpRequest, organizationKey);
     }
   }
 
   /**
-   * Authorize request can make a change to an organization, setting the request security context specifying the
-   * principal provider. Called for example, when adding a new dataset.
+   * Authorize request can make a change to an organization, setting the request security context
+   * specifying the principal provider. Called for example, when adding a new dataset.
    *
    * @throws WebApplicationException if request isn't authorized
    */
@@ -132,16 +150,18 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   /**
-   * Authorize request can make a change to an organization, first extracting the organization key from the
-   * request path. If authorization is successful, the method sets the request security context specifying the
-   * principal provider. Called for example, when verifying the credentials are correct for an organization.
+   * Authorize request can make a change to an organization, first extracting the organization key
+   * from the request path. If authorization is successful, the method sets the request security
+   * context specifying the principal provider. Called for example, when verifying the credentials
+   * are correct for an organization.
    *
    * @param organizationKey organization key
    * @throws WebApplicationException if request isn't authorized
    */
   private void authorizeOrganizationChange(HttpServletRequest request, UUID organizationKey) {
     LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
-    if (legacyAuthorizationService.isAuthorizedToModifyOrganization(authorization, organizationKey)) {
+    if (legacyAuthorizationService.isAuthorizedToModifyOrganization(
+        authorization, organizationKey)) {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to register not authorized!");
@@ -150,15 +170,17 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   /**
-   * Authorize request can make a change to an organization's dataset, setting the request security context specifying
-   * the principal provider. Called for example, when updating or deleting a dataset.
+   * Authorize request can make a change to an organization's dataset, setting the request security
+   * context specifying the principal provider. Called for example, when updating or deleting a
+   * dataset.
    *
    * @param datasetKey dataset key
    * @throws WebApplicationException if request isn't authorized
    */
   private void authorizeOrganizationDatasetChange(HttpServletRequest request, UUID datasetKey) {
     LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
-    if (legacyAuthorizationService.isAuthorizedToModifyOrganizationsDataset(authorization, datasetKey)) {
+    if (legacyAuthorizationService.isAuthorizedToModifyOrganizationsDataset(
+        authorization, datasetKey)) {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to update Dataset not authorized!");
@@ -167,15 +189,16 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   /**
-   * Authorize request can make a change to an installation, setting the request security context specifying the
-   * principal provider. Called for example, when adding a new dataset.
+   * Authorize request can make a change to an installation, setting the request security context
+   * specifying the principal provider. Called for example, when adding a new dataset.
    *
    * @param installationKey installation key
    * @throws WebApplicationException if request isn't authorized
    */
   private void authorizeInstallationChange(HttpServletRequest request, UUID installationKey) {
     LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
-    if (legacyAuthorizationService.isAuthorizedToModifyInstallation(authorization, installationKey)) {
+    if (legacyAuthorizationService.isAuthorizedToModifyInstallation(
+        authorization, installationKey)) {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to update IPT not authorized!");
@@ -184,8 +207,8 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   /**
-   * Retrieve key from request path, where the key is the last path segment, e.g. /registry/resource/{key}
-   * Ensure any trailing .json for example is removed.
+   * Retrieve key from request path, where the key is the last path segment, e.g.
+   * /registry/resource/{key} Ensure any trailing .json for example is removed.
    *
    * @param request request
    * @return dataset key

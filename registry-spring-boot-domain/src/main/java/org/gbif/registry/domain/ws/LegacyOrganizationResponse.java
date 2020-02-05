@@ -1,9 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.domain.ws;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -11,17 +22,22 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
+import java.util.Optional;
+
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Optional;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 
 /**
- * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation with an s in the
- * GBRDS.
- * </br>
- * JAXB annotations allow the class to be converted into an XML document or JSON response. @XmlElement is used to
- * specify element names that consumers of legacy services expect to find.
+ * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation
+ * with an s in the GBRDS. </br> JAXB annotations allow the class to be converted into an XML
+ * document or JSON response. @XmlElement is used to specify element names that consumers of legacy
+ * services expect to find.
  */
 @XmlRootElement(name = "organisation")
 public class LegacyOrganizationResponse {
@@ -53,24 +69,32 @@ public class LegacyOrganizationResponse {
   private void mapOrganizationPart(Organization organization) {
     key = organization.getKey() == null ? "" : organization.getKey().toString();
     name = Strings.nullToEmpty(organization.getTitle());
-    nameLanguage = Optional.ofNullable(organization.getLanguage())
-      .map(Language::getIso2LetterCode)
-      .orElse("");
+    nameLanguage =
+        Optional.ofNullable(organization.getLanguage()).map(Language::getIso2LetterCode).orElse("");
     homepageURL = organization.getHomepage() == null ? "" : organization.getHomepage().toString();
     description = Strings.nullToEmpty(organization.getDescription());
     descriptionLanguage = nameLanguage;
   }
 
   private void mapContactPart(Contact contact) {
-    primaryContactAddress = contact == null || contact.getAddress().isEmpty() ? "" :
-      Strings.nullToEmpty(contact.getAddress().get(0));
-    primaryContactDescription = contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
-    primaryContactEmail = contact == null || contact.getEmail() == null || contact.getEmail().isEmpty() ? "" :
-      Strings.nullToEmpty(contact.getEmail().get(0));
-    primaryContactPhone = contact == null || contact.getPhone() == null || contact.getPhone().isEmpty() ? "" :
-      Strings.nullToEmpty(contact.getPhone().get(0));
+    primaryContactAddress =
+        contact == null || contact.getAddress().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getAddress().get(0));
+    primaryContactDescription =
+        contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
+    primaryContactEmail =
+        contact == null || contact.getEmail() == null || contact.getEmail().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getEmail().get(0));
+    primaryContactPhone =
+        contact == null || contact.getPhone() == null || contact.getPhone().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getPhone().get(0));
     primaryContactName =
-      contact == null ? "" : CONTACT_NAME.join(new String[]{contact.getFirstName(), contact.getLastName()});
+        contact == null
+            ? ""
+            : CONTACT_NAME.join(new String[] {contact.getFirstName(), contact.getLastName()});
 
     // conversion of contact type, defaulting to empty
     primaryContactType = "";
@@ -89,14 +113,12 @@ public class LegacyOrganizationResponse {
   private void mapNodePart(Node node) {
     nodeKey = node.getKey() == null ? "" : node.getKey().toString();
     nodeName = node.getTitle() == null ? "" : node.getTitle();
-    nodeContactEmail = node.getEmail() == null || node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
+    nodeContactEmail =
+        node.getEmail() == null || node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
   }
 
-  /**
-   * No argument, default constructor needed by JAXB.
-   */
-  public LegacyOrganizationResponse() {
-  }
+  /** No argument, default constructor needed by JAXB. */
+  public LegacyOrganizationResponse() {}
 
   @XmlElement(name = LegacyResourceConstants.KEY_PARAM)
   @NotNull
@@ -253,48 +275,61 @@ public class LegacyOrganizationResponse {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     LegacyOrganizationResponse that = (LegacyOrganizationResponse) o;
-    return Objects.equal(key, that.key) &&
-      Objects.equal(name, that.name) &&
-      Objects.equal(nameLanguage, that.nameLanguage) &&
-      Objects.equal(homepageURL, that.homepageURL) &&
-      Objects.equal(description, that.description) &&
-      Objects.equal(descriptionLanguage, that.descriptionLanguage) &&
-      Objects.equal(nodeKey, that.nodeKey) &&
-      Objects.equal(nodeName, that.nodeName) &&
-      Objects.equal(nodeContactEmail, that.nodeContactEmail) &&
-      Objects.equal(primaryContactType, that.primaryContactType) &&
-      Objects.equal(primaryContactName, that.primaryContactName) &&
-      Objects.equal(primaryContactEmail, that.primaryContactEmail) &&
-      Objects.equal(primaryContactAddress, that.primaryContactAddress) &&
-      Objects.equal(primaryContactPhone, that.primaryContactPhone) &&
-      Objects.equal(primaryContactDescription, that.primaryContactDescription);
+    return Objects.equal(key, that.key)
+        && Objects.equal(name, that.name)
+        && Objects.equal(nameLanguage, that.nameLanguage)
+        && Objects.equal(homepageURL, that.homepageURL)
+        && Objects.equal(description, that.description)
+        && Objects.equal(descriptionLanguage, that.descriptionLanguage)
+        && Objects.equal(nodeKey, that.nodeKey)
+        && Objects.equal(nodeName, that.nodeName)
+        && Objects.equal(nodeContactEmail, that.nodeContactEmail)
+        && Objects.equal(primaryContactType, that.primaryContactType)
+        && Objects.equal(primaryContactName, that.primaryContactName)
+        && Objects.equal(primaryContactEmail, that.primaryContactEmail)
+        && Objects.equal(primaryContactAddress, that.primaryContactAddress)
+        && Objects.equal(primaryContactPhone, that.primaryContactPhone)
+        && Objects.equal(primaryContactDescription, that.primaryContactDescription);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(key, name, nameLanguage, homepageURL, description, descriptionLanguage, nodeKey, nodeName,
-      nodeContactEmail, primaryContactType, primaryContactName, primaryContactEmail, primaryContactAddress,
-      primaryContactPhone, primaryContactDescription);
+    return Objects.hashCode(
+        key,
+        name,
+        nameLanguage,
+        homepageURL,
+        description,
+        descriptionLanguage,
+        nodeKey,
+        nodeName,
+        nodeContactEmail,
+        primaryContactType,
+        primaryContactName,
+        primaryContactEmail,
+        primaryContactAddress,
+        primaryContactPhone,
+        primaryContactDescription);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-      .add("key", key)
-      .add("name", name)
-      .add("nameLanguage", nameLanguage)
-      .add("homepageURL", homepageURL)
-      .add("description", description)
-      .add("descriptionLanguage", descriptionLanguage)
-      .add("nodeKey", nodeKey)
-      .add("nodeName", nodeName)
-      .add("nodeContactEmail", nodeContactEmail)
-      .add("primaryContactType", primaryContactType)
-      .add("primaryContactName", primaryContactName)
-      .add("primaryContactEmail", primaryContactEmail)
-      .add("primaryContactAddress", primaryContactAddress)
-      .add("primaryContactPhone", primaryContactPhone)
-      .add("primaryContactDescription", primaryContactDescription)
-      .toString();
+        .add("key", key)
+        .add("name", name)
+        .add("nameLanguage", nameLanguage)
+        .add("homepageURL", homepageURL)
+        .add("description", description)
+        .add("descriptionLanguage", descriptionLanguage)
+        .add("nodeKey", nodeKey)
+        .add("nodeName", nodeName)
+        .add("nodeContactEmail", nodeContactEmail)
+        .add("primaryContactType", primaryContactType)
+        .add("primaryContactName", primaryContactName)
+        .add("primaryContactEmail", primaryContactEmail)
+        .add("primaryContactAddress", primaryContactAddress)
+        .add("primaryContactPhone", primaryContactPhone)
+        .add("primaryContactDescription", primaryContactDescription)
+        .toString();
   }
 }

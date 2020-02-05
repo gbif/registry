@@ -1,15 +1,29 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security.jwt;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
-/**
- * Class that handle JWT token issuance.
- */
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+/** Class that handle JWT token issuance. */
 @Service
 @Primary
 public class JwtIssuanceServiceImpl implements JwtIssuanceService {
@@ -22,14 +36,16 @@ public class JwtIssuanceServiceImpl implements JwtIssuanceService {
 
   /**
    * Generates a JWT with the configuration specified.
-   * <p>
-   * It always sets the following fields:
+   *
+   * <p>It always sets the following fields:
+   *
    * <ul>
-   * <li>expiration: takes the time from the properties</li>
-   * <li>Issued time: sets the current time when the token is issued</li>
-   * <li>Issuer: takes the issuer from the properties</li>
-   * <li>Username claim: custom claim to store the username received as a parameter</li>
-   * <li>signature: signs the token using {@link SignatureAlgorithm#HS256} and the key specified in the properties</li>
+   *   <li>expiration: takes the time from the properties
+   *   <li>Issued time: sets the current time when the token is issued
+   *   <li>Issuer: takes the issuer from the properties
+   *   <li>Username claim: custom claim to store the username received as a parameter
+   *   <li>signature: signs the token using {@link SignatureAlgorithm#HS256} and the key specified
+   *       in the properties
    * </ul>
    */
   @Override

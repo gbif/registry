@@ -1,17 +1,31 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.mail;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * Simple {@link EmailSender} implementation that keep the {@link BaseEmailModel} into memory.
- * - For testing only
- * - 1 {@link BaseEmailModel} is stored per email address
- * - no automatic cleanup
+ * Simple {@link EmailSender} implementation that keep the {@link BaseEmailModel} into memory. - For
+ * testing only - 1 {@link BaseEmailModel} is stored per email address - no automatic cleanup
  */
 public class InMemoryEmailSender implements EmailSender {
 
@@ -32,9 +46,7 @@ public class InMemoryEmailSender implements EmailSender {
     return emails.get(emailAddress);
   }
 
-  /**
-   * Clear all emails in memory
-   */
+  /** Clear all emails in memory */
   public void clear() {
     emails.clear();
   }

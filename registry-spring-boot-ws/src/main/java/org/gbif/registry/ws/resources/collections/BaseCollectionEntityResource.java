@@ -1,10 +1,31 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
@@ -30,6 +51,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -43,17 +65,24 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-public abstract class BaseCollectionEntityResource<T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
+public abstract class BaseCollectionEntityResource<
+        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
     implements CrudService<T>, TagService, IdentifierService, MachineTagService {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseCollectionEntityResource.class);
@@ -125,32 +154,35 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
     return baseMapper.get(key);
   }
 
-  @PutMapping(value = "{key}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
+  public void update(
+      @PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
-      key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
+        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(authentication.getName());
     update(entity);
   }
 
-  @PostMapping(value = "{key}/identifier",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addIdentifier(@PathVariable("key") @NotNull UUID entityKey,
-                           @RequestBody @NotNull Identifier identifier,
-                           Authentication authentication) {
+  public int addIdentifier(
+      @PathVariable("key") @NotNull UUID entityKey,
+      @RequestBody @NotNull Identifier identifier,
+      Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(entityKey, identifier);
   }
 
   @Override
-  public int addIdentifier(@NotNull UUID entityKey, @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
-    int identifierKey = withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
+  public int addIdentifier(
+      @NotNull UUID entityKey,
+      @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
+    int identifierKey =
+        withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
     return identifierKey;
   }
@@ -159,7 +191,8 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Transactional
   @Override
-  public void deleteIdentifier(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
+  public void deleteIdentifier(
+      @PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
     baseMapper.deleteIdentifier(entityKey, identifierKey);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
@@ -172,13 +205,13 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
     return baseMapper.listIdentifiers(key);
   }
 
-  @PostMapping(value = "{key}/tag",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public int addTag(@PathVariable("key") @NotNull UUID entityKey,
-                    @RequestBody @NotNull Tag tag,
-                    Authentication authentication) {
+  public int addTag(
+      @PathVariable("key") @NotNull UUID entityKey,
+      @RequestBody @NotNull Tag tag,
+      Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(entityKey, tag);
   }
@@ -191,7 +224,8 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   @Override
-  public int addTag(@NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
+  public int addTag(
+      @NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
     return tagKey;
@@ -210,8 +244,9 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   @Nullable
   @ValidateReturnedValue
   @Override
-  public List<Tag> listTags(@PathVariable("key") @NotNull UUID key,
-                            @RequestParam(value = "owner", required = false) @Nullable String owner) {
+  public List<Tag> listTags(
+      @PathVariable("key") @NotNull UUID key,
+      @RequestParam(value = "owner", required = false) @Nullable String owner) {
     if (owner != null) {
       LOG.warn("Owner is not supported. Passed value: {}", owner);
     }
@@ -219,28 +254,27 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   /**
-   * Adding most machineTags is restricted based on the namespace.
-   * For some tags, it is restricted based on the editing role as usual.
+   * Adding most machineTags is restricted based on the namespace. For some tags, it is restricted
+   * based on the editing role as usual.
    *
    * @param targetEntityKey key of target entity to add MachineTag to
-   * @param machineTag      MachineTag to add
+   * @param machineTag MachineTag to add
    * @return key of MachineTag created
    */
-  @PostMapping(value = "{key}/machineTag",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  public int addMachineTag(@PathVariable("key") UUID targetEntityKey,
-                           @RequestBody @NotNull @Trim MachineTag machineTag,
-                           Authentication authentication) {
+  public int addMachineTag(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim MachineTag machineTag,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
         || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
         || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
             && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-            && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
-    ) {
+            && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
@@ -249,16 +283,17 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   @Override
-  public int addMachineTag(UUID targetEntityKey,
-                           @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
+  public int addMachineTag(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey,
-                           @NotNull String namespace,
-                           @NotNull String name,
-                           @NotNull String value) {
+  public int addMachineTag(
+      @NotNull UUID targetEntityKey,
+      @NotNull String namespace,
+      @NotNull String name,
+      @NotNull String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -267,28 +302,24 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey,
-                           @NotNull TagName tagName,
-                           @NotNull String value) {
+  public int addMachineTag(
+      @NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
 
   /**
-   * The webservice method to delete a machine tag.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete a machine tag. Ensures that the caller is authorized to perform
+   * the action by looking at the namespace.
    */
   @SuppressWarnings("unchecked")
-  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey,
-                                              int machineTagKey,
-                                              Authentication authentication) {
+  public void deleteMachineTagByMachineTagKey(
+      UUID targetEntityKey, int machineTagKey, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     List<MachineTag> machineTags = baseMapper.listMachineTags(targetEntityKey);
-    Optional<MachineTag> optMachineTag = machineTags
-      .stream()
-      .filter(m -> m.getKey() == machineTagKey)
-      .findFirst();
+    Optional<MachineTag> optMachineTag =
+        machineTags.stream().filter(m -> m.getKey() == machineTagKey).findFirst();
 
     if (optMachineTag.isPresent()) {
       MachineTag machineTag = optMachineTag.get();
@@ -297,8 +328,7 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
           || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
           || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
               && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-              && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
-      ) {
+              && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
         deleteMachineTag(targetEntityKey, machineTagKey);
 
       } else {
@@ -313,21 +343,19 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
    * Deletes the MachineTag according to interface without security restrictions.
    *
    * @param targetEntityKey key of target entity to delete MachineTag from
-   * @param machineTagKey   key of MachineTag to delete
+   * @param machineTagKey key of MachineTag to delete
    */
   @Override
-  public void deleteMachineTag(UUID targetEntityKey,
-                               int machineTagKey) {
+  public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
     baseMapper.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
-   * The webservice method to delete all machine tag in a namespace.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete all machine tag in a namespace. Ensures that the caller is
+   * authorized to perform the action by looking at the namespace.
    */
-  public void deleteMachineTagsByNamespace(UUID targetEntityKey,
-                                           String namespace,
-                                           Authentication authentication) {
+  public void deleteMachineTagsByNamespace(
+      UUID targetEntityKey, String namespace, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
@@ -338,14 +366,14 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   /**
-   * It was added because of an ambiguity problem.
-   * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
+   * It was added because of an ambiguity problem. (Spring can't distinguish
+   * {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
    */
-  @DeleteMapping(value = "{key}/machineTag/{parameter}",
-    consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
-                                @PathVariable String parameter,
-                                Authentication authentication) {
+  @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
+  public void deleteMachineTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable String parameter,
+      Authentication authentication) {
     if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
       deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
     } else {
@@ -354,27 +382,25 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull TagNamespace tagNamespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull String namespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
   /**
-   * The webservice method to delete all machine tag of a particular name in a namespace.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
+   * that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}",
-    consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
-                                @PathVariable String namespace,
-                                @PathVariable String name,
-                                Authentication authentication) {
+  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
+  public void deleteMachineTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable String namespace,
+      @PathVariable String name,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
@@ -385,15 +411,13 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull TagName tagName) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull String namespace,
-                                @NotNull String name) {
+  public void deleteMachineTags(
+      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -404,10 +428,8 @@ public abstract class BaseCollectionEntityResource<T extends CollectionEntity & 
     return baseMapper.listMachineTags(targetEntityKey);
   }
 
-  public PagingResponse<T> listByMachineTag(String namespace,
-                                            @Nullable String name,
-                                            @Nullable String value,
-                                            Pageable page) {
+  public PagingResponse<T> listByMachineTag(
+      String namespace, @Nullable String name, @Nullable String value, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(baseMapper, namespace, name, value, page);
   }

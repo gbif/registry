@@ -1,15 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -21,8 +26,6 @@ import org.gbif.api.util.formatter.TemporalCoverageFormatterVisitor;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.metadata.contact.ContactAdapter;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZoneOffset;
@@ -31,10 +34,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Writer to serialize a Dataset as DublinCore XML document.
- * Currently using a OAI DC profile.
- */
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
+
+/** Writer to serialize a Dataset as DublinCore XML document. Currently using a OAI DC profile. */
 public class DublinCoreWriter {
 
   public static final String ADDITIONAL_PROPERTY_OCC_COUNT = "occurrence_count";
@@ -43,11 +59,12 @@ public class DublinCoreWriter {
   private static final String DC_TEMPLATE = "oai-dc-profile-template/dc-dataset.ftl";
   private final Configuration freemarkerConfig;
 
-  //We should probably use @Named("portal.url") but it would be more appropriate to wait
-  //until we turn this class in a non static one.
+  // We should probably use @Named("portal.url") but it would be more appropriate to wait
+  // until we turn this class in a non static one.
   private static final String IDENTIFIER_PREFIX = "https://www.gbif.org/dataset/";
   private static final FastDateFormat FDF = DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT;
-  private static final TemporalCoverageFormatterVisitor TC_FORMATTER = new DcTemporalTemporalCoverageFormatter();
+  private static final TemporalCoverageFormatterVisitor TC_FORMATTER =
+      new DcTemporalTemporalCoverageFormatter();
 
   /**
    * Private constructor, use {@link #newInstance()}
@@ -70,13 +87,19 @@ public class DublinCoreWriter {
   /**
    * Write a DublinCore document from a Dataset object.
    *
-   * @param organization         organization who published this dataset, should not be null but nulls are handled.
-   * @param dataset              non null dataset object
+   * @param organization organization who published this dataset, should not be null but nulls are
+   *     handled.
+   * @param dataset non null dataset object
    * @param additionalProperties
-   * @param writer               where the output document will go. The writer is not closed by this method.
+   * @param writer where the output document will go. The writer is not closed by this method.
    * @throws IOException if an error occurs while processing the template
    */
-  public void writeTo(@Nullable Organization organization, @NotNull Dataset dataset, Map<String, Object> additionalProperties, Writer writer) throws IOException {
+  public void writeTo(
+      @Nullable Organization organization,
+      @NotNull Dataset dataset,
+      Map<String, Object> additionalProperties,
+      Writer writer)
+      throws IOException {
     Preconditions.checkNotNull(dataset, "Dataset can't be null");
     Map<String, Object> map = Maps.newHashMap();
     map.put("dataset", dataset);
@@ -89,13 +112,14 @@ public class DublinCoreWriter {
     try {
       freemarkerConfig.getTemplate(DC_TEMPLATE).process(map, writer);
     } catch (TemplateException e) {
-      throw new IOException("Error while processing the DublinCore Freemarker template for dataset " + dataset.getKey(), e);
+      throw new IOException(
+          "Error while processing the DublinCore Freemarker template for dataset "
+              + dataset.getKey(),
+          e);
     }
   }
 
-  /**
-   * This class requires to be public to be used in the Freemarker template.
-   */
+  /** This class requires to be public to be used in the Freemarker template. */
   public static class DcDatasetWrapper {
     private final Dataset dataset;
     private final ContactAdapter contactAdapter;
@@ -112,21 +136,26 @@ public class DublinCoreWriter {
     }
 
     public String getFormat() {
-      if (additionalProperties != null && additionalProperties.containsKey(ADDITIONAL_PROPERTY_DC_FORMAT)) {
+      if (additionalProperties != null
+          && additionalProperties.containsKey(ADDITIONAL_PROPERTY_DC_FORMAT)) {
         return (String) additionalProperties.get(ADDITIONAL_PROPERTY_DC_FORMAT);
       }
       return "";
     }
 
     /**
-     * The following ordering will be respected: ADMINISTRATIVE_POINT_OF_CONTACT, METADATA_AUTHOR and ORIGINATOR
+     * The following ordering will be respected: ADMINISTRATIVE_POINT_OF_CONTACT, METADATA_AUTHOR
+     * and ORIGINATOR
      *
      * @return set of formatted contact name ordered by ContactType
      */
     public Set<String> getCreators() {
       Set<String> creators = Sets.newLinkedHashSet();
-      List<Contact> filteredContacts = contactAdapter.getFilteredContacts(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT,
-          ContactType.METADATA_AUTHOR, ContactType.ORIGINATOR);
+      List<Contact> filteredContacts =
+          contactAdapter.getFilteredContacts(
+              ContactType.ADMINISTRATIVE_POINT_OF_CONTACT,
+              ContactType.METADATA_AUTHOR,
+              ContactType.ORIGINATOR);
       for (Contact contact : filteredContacts) {
         creators.add(ContactAdapter.formatContactName(contact));
       }
@@ -147,7 +176,8 @@ public class DublinCoreWriter {
     }
 
     public Long getOccurrenceCount() {
-      if (additionalProperties != null && additionalProperties.containsKey(ADDITIONAL_PROPERTY_OCC_COUNT)) {
+      if (additionalProperties != null
+          && additionalProperties.containsKey(ADDITIONAL_PROPERTY_OCC_COUNT)) {
         return (Long) additionalProperties.get(ADDITIONAL_PROPERTY_OCC_COUNT);
       }
       return null;
@@ -177,10 +207,9 @@ public class DublinCoreWriter {
     }
   }
 
-  /**
-   * Implementation of TemporalCoverageFormatterVisitor for DublinCore
-   */
-  private static class DcTemporalTemporalCoverageFormatter implements TemporalCoverageFormatterVisitor {
+  /** Implementation of TemporalCoverageFormatterVisitor for DublinCore */
+  private static class DcTemporalTemporalCoverageFormatter
+      implements TemporalCoverageFormatterVisitor {
 
     private String formatYearOrYmd(Date date) {
       if (date == null) {

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.domain.pipelines;
 
 import org.gbif.api.model.pipelines.StepType;
@@ -7,13 +22,12 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Encapsulates the possible response of the request of re-execute a pipeline of dataset and and attempt.
+ * Encapsulates the possible response of the request of re-execute a pipeline of dataset and and
+ * attempt.
  */
 public class RunPipelineResponse {
 
-  /**
-   * Possible response statuses.
-   */
+  /** Possible response statuses. */
   public enum ResponseStatus {
     OK,
     PIPELINE_IN_SUBMITTED,
@@ -29,23 +43,23 @@ public class RunPipelineResponse {
 
   private final String message;
 
-  public RunPipelineResponse(ResponseStatus responseStatus, Set<StepType> steps, Set<StepType> stepsFailed, String message) {
+  public RunPipelineResponse(
+      ResponseStatus responseStatus,
+      Set<StepType> steps,
+      Set<StepType> stepsFailed,
+      String message) {
     this.responseStatus = responseStatus;
     this.steps = steps;
     this.message = message;
     this.stepsFailed = stepsFailed;
   }
 
-  /**
-   * @return the response status of execution request
-   */
+  /** @return the response status of execution request */
   public ResponseStatus getResponseStatus() {
     return responseStatus;
   }
 
-  /**
-   * @return steps requested to be executed
-   */
+  /** @return steps requested to be executed */
   public Set<StepType> getSteps() {
     return steps;
   }
@@ -64,9 +78,9 @@ public class RunPipelineResponse {
     if (o == null || getClass() != o.getClass()) return false;
     RunPipelineResponse that = (RunPipelineResponse) o;
     return responseStatus == that.responseStatus
-      && steps.equals(that.steps)
-      && stepsFailed.equals(that.stepsFailed)
-      && message.equals(that.message);
+        && steps.equals(that.steps)
+        && stepsFailed.equals(that.stepsFailed)
+        && message.equals(that.message);
   }
 
   @Override
@@ -74,25 +88,20 @@ public class RunPipelineResponse {
     return Objects.hash(responseStatus, steps, stepsFailed, message);
   }
 
-  /**
-   * @return a new Builder instance.
-   */
+  /** @return a new Builder instance. */
   public static Builder builder() {
     return new Builder();
   }
 
-  /**
-   * @return a new Builder instance.
-   */
+  /** @return a new Builder instance. */
   public static Builder builder(RunPipelineResponse runPipelineResponse) {
     Builder builder = new Builder();
-    return builder.setSteps(runPipelineResponse.steps)
-      .setResponseStatus(runPipelineResponse.responseStatus);
+    return builder
+        .setSteps(runPipelineResponse.steps)
+        .setResponseStatus(runPipelineResponse.responseStatus);
   }
 
-  /**
-   * Builder for {@link RunPipelineResponse}.
-   */
+  /** Builder for {@link RunPipelineResponse}. */
   public static class Builder {
 
     private ResponseStatus responseStatus;

@@ -1,12 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.legacy.ipt;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -16,6 +24,17 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.IptEntityResponse;
+
+import java.net.URI;
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+
+import javax.sql.DataSource;
+
+import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -28,13 +47,13 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.sql.DataSource;
-import java.net.URI;
-import java.sql.Connection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.HOMEPAGE_URL_PARAM;
@@ -62,8 +81,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = {RegistryIntegrationTestsConfiguration.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class IptTestSteps {
 
@@ -82,45 +102,37 @@ public class IptTestSteps {
   private Installation installationBeforeUpdate;
   private Dataset datasetBeforeUpdate;
 
-  @Autowired
-  private DatasetService datasetService;
+  @Autowired private DatasetService datasetService;
 
-  @Autowired
-  private WebApplicationContext context;
+  @Autowired private WebApplicationContext context;
 
-  @Autowired
-  private DataSource ds;
+  @Autowired private DataSource ds;
 
   private Connection connection;
 
-  @Autowired
-  private InstallationService installationService;
+  @Autowired private InstallationService installationService;
 
-  @Autowired
-  private XmlMapper xmlMapper;
+  @Autowired private XmlMapper xmlMapper;
 
   @Before("@IPT")
   public void setUp() throws Exception {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/ipt/ipt_register_cleanup.sql"));
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/ipt/ipt_register_prepare.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/ipt/ipt_register_cleanup.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/ipt/ipt_register_prepare.sql"));
 
-    mvc = MockMvcBuilders
-      .webAppContextSetup(context)
-      .apply(springSecurity())
-      .build();
+    mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
   }
 
   @After("@IPT")
   public void tearDown() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/ipt/ipt_register_cleanup.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/ipt/ipt_register_cleanup.sql"));
 
     connection.close();
   }
@@ -151,15 +163,20 @@ public class IptTestSteps {
     requestParamsInstallation.add(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
 
     // primary contact
-    requestParamsInstallation.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
-    requestParamsInstallation.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
-    requestParamsInstallation.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
+    requestParamsInstallation.add(
+        PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
+    requestParamsInstallation.add(
+        PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
+    requestParamsInstallation.add(
+        PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
 
     // service/endpoint
     requestParamsInstallation.add(SERVICE_TYPES_PARAM, params.get(SERVICE_TYPES_PARAM));
-    requestParamsInstallation.add(SERVICE_URLS_PARAM, URI.create(params.get(SERVICE_URLS_PARAM)).toASCIIString());
+    requestParamsInstallation.add(
+        SERVICE_URLS_PARAM, URI.create(params.get(SERVICE_URLS_PARAM)).toASCIIString());
 
-    // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL operations
+    // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL
+    // operations
     requestParamsInstallation.add(WS_PASSWORD_PARAM, params.get(WS_PASSWORD_PARAM));
   }
 
@@ -177,7 +194,8 @@ public class IptTestSteps {
     requestParamsDataset.add(PRIMARY_CONTACT_TYPE_PARAM, params.get(PRIMARY_CONTACT_TYPE_PARAM));
     requestParamsDataset.add(PRIMARY_CONTACT_EMAIL_PARAM, params.get(PRIMARY_CONTACT_EMAIL_PARAM));
     requestParamsDataset.add(PRIMARY_CONTACT_NAME_PARAM, params.get(PRIMARY_CONTACT_NAME_PARAM));
-    requestParamsDataset.add(PRIMARY_CONTACT_ADDRESS_PARAM, params.get(PRIMARY_CONTACT_ADDRESS_PARAM));
+    requestParamsDataset.add(
+        PRIMARY_CONTACT_ADDRESS_PARAM, params.get(PRIMARY_CONTACT_ADDRESS_PARAM));
     requestParamsDataset.add(PRIMARY_CONTACT_PHONE_PARAM, params.get(PRIMARY_CONTACT_PHONE_PARAM));
 
     // endpoint(s)
@@ -207,30 +225,38 @@ public class IptTestSteps {
     }
   }
 
-  @When("register new installation for organization {string} using valid/invalid organization key {string} and password {string}")
-  public void registerIpt(String orgName, String organisationKey, String password) throws Exception {
-    result = mvc
-      .perform(
-        post("/registry/ipt/register")
-          .params(requestParamsInstallation)
-          .contentType(APPLICATION_FORM_URLENCODED)
-          .accept(APPLICATION_XML)
-          .with(httpBasic(organisationKey, password)));
+  @When(
+      "register new installation for organization {string} using valid/invalid organization key {string} and password {string}")
+  public void registerIpt(String orgName, String organisationKey, String password)
+      throws Exception {
+    result =
+        mvc.perform(
+            post("/registry/ipt/register")
+                .params(requestParamsInstallation)
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .accept(APPLICATION_XML)
+                .with(httpBasic(organisationKey, password)));
   }
 
   @When("register new dataset using valid/invalid organization key {string} and password {string}")
   public void registerDataset(String installationKey, String password) throws Exception {
-    result = mvc
-      .perform(
-        post("/registry/ipt/resource")
-          .params(requestParamsDataset)
-          .contentType(APPLICATION_FORM_URLENCODED)
-          .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey, password)));
+    result =
+        mvc.perform(
+            post("/registry/ipt/resource")
+                .params(requestParamsDataset)
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .accept(APPLICATION_XML)
+                .with(httpBasic(installationKey, password)));
   }
 
   @When("update installation {string} using {word} installation key {string} and password {string}")
-  public void updateIptInstallation(String instName, String valid, String installationKey, String password, Map<String, String> params) throws Exception {
+  public void updateIptInstallation(
+      String instName,
+      String valid,
+      String installationKey,
+      String password,
+      Map<String, String> params)
+      throws Exception {
     requestParamsInstallation.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsInstallation.set(NAME_PARAM, params.get(NAME_PARAM));
 
@@ -238,18 +264,25 @@ public class IptTestSteps {
       installationBeforeUpdate = installationService.get(UUID.fromString(installationKey));
     }
 
-    result = mvc
-      .perform(
-        post("/registry/ipt/update/{key}", installationKey)
-          .params(requestParamsInstallation)
-          .contentType(APPLICATION_FORM_URLENCODED)
-          .accept(APPLICATION_XML)
-          .with(httpBasic(installationKey, password)));
+    result =
+        mvc.perform(
+            post("/registry/ipt/update/{key}", installationKey)
+                .params(requestParamsInstallation)
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .accept(APPLICATION_XML)
+                .with(httpBasic(installationKey, password)));
   }
 
-  @When("update dataset {string} with key {string} using {word} organization key {string} and password {string}")
-  public void updateIptDataset(String datasetName, String datasetKey, String valid, String orgKey,
-                               String password, Map<String, String> params) throws Exception {
+  @When(
+      "update dataset {string} with key {string} using {word} organization key {string} and password {string}")
+  public void updateIptDataset(
+      String datasetName,
+      String datasetKey,
+      String valid,
+      String orgKey,
+      String password,
+      Map<String, String> params)
+      throws Exception {
     requestParamsDataset.set(DESCRIPTION_PARAM, params.get(DESCRIPTION_PARAM));
     requestParamsDataset.set(NAME_PARAM, params.get(NAME_PARAM));
 
@@ -257,35 +290,38 @@ public class IptTestSteps {
       datasetBeforeUpdate = datasetService.get(UUID.fromString(datasetKey));
     }
 
-    result = mvc
-      .perform(
-        post("/registry/ipt/resource/{key}", datasetKey)
-          .params(requestParamsDataset)
-          .contentType(APPLICATION_FORM_URLENCODED)
-          .accept(APPLICATION_XML)
-          .with(httpBasic(orgKey, password)));
+    result =
+        mvc.perform(
+            post("/registry/ipt/resource/{key}", datasetKey)
+                .params(requestParamsDataset)
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .accept(APPLICATION_XML)
+                .with(httpBasic(orgKey, password)));
   }
 
-  @When("delete dataset {string} with valid/invalid key {string} using {word} organization key {string} and password {string}")
-  public void deleteIptDataset(String datasetName, String datasetKey, String valid, String orgKey, String password) throws Exception {
-    result = mvc
-      .perform(
-        delete("/registry/ipt/resource/{key}", datasetKey)
-          .contentType(APPLICATION_FORM_URLENCODED)
-          .with(httpBasic(orgKey, password)));
+  @When(
+      "delete dataset {string} with valid/invalid key {string} using {word} organization key {string} and password {string}")
+  public void deleteIptDataset(
+      String datasetName, String datasetKey, String valid, String orgKey, String password)
+      throws Exception {
+    result =
+        mvc.perform(
+            delete("/registry/ipt/resource/{key}", datasetKey)
+                .contentType(APPLICATION_FORM_URLENCODED)
+                .with(httpBasic(orgKey, password)));
   }
 
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
-    result
-      .andExpect(status().is(status));
+    result.andExpect(status().is(status));
   }
 
   @Then("installation UUID is returned")
   public void checkInstallationUuid() throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    IptEntityResponse iptEntityResponse = xmlMapper.readValue(contentAsString, IptEntityResponse.class);
+    IptEntityResponse iptEntityResponse =
+        xmlMapper.readValue(contentAsString, IptEntityResponse.class);
     installationKey = UUID.fromString(iptEntityResponse.getKey());
     assertNotNull("Registered IPT key should be in response", installationKey);
   }
@@ -294,7 +330,8 @@ public class IptTestSteps {
   public void checkDatasetUuid() throws Exception {
     MvcResult mvcResult = result.andReturn();
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    IptEntityResponse iptEntityResponse = xmlMapper.readValue(contentAsString, IptEntityResponse.class);
+    IptEntityResponse iptEntityResponse =
+        xmlMapper.readValue(contentAsString, IptEntityResponse.class);
     datasetKey = UUID.fromString(iptEntityResponse.getKey());
     assertNotNull("Registered Dataset key should be in response", datasetKey);
   }
@@ -309,8 +346,10 @@ public class IptTestSteps {
 
   @Then("registered/updated {word} contacts are")
   public void checkContacts(String entityType, List<Contact> expectedContacts) {
-    List<Contact> actualContacts = "dataset".equals(entityType)
-      ? actualDataset.getContacts() : actualInstallation.getContacts();
+    List<Contact> actualContacts =
+        "dataset".equals(entityType)
+            ? actualDataset.getContacts()
+            : actualInstallation.getContacts();
 
     for (int i = 0; i < expectedContacts.size(); i++) {
       Contact actualContact = actualContacts.get(i);
@@ -322,8 +361,10 @@ public class IptTestSteps {
 
   @Then("registered/updated {word} endpoints are")
   public void checkEndpoints(String entityType, List<Endpoint> expectedEndpoints) {
-    List<Endpoint> actualEndpoints = "dataset".equals(entityType)
-      ? actualDataset.getEndpoints() : actualInstallation.getEndpoints();
+    List<Endpoint> actualEndpoints =
+        "dataset".equals(entityType)
+            ? actualDataset.getEndpoints()
+            : actualInstallation.getEndpoints();
 
     for (int i = 0; i < expectedEndpoints.size(); i++) {
       Endpoint actualEndpoint = actualEndpoints.get(i);
@@ -349,7 +390,9 @@ public class IptTestSteps {
 
   @Then("total number of installations is {int}")
   public void checkNumberOfInstallations(int installationsNumber) {
-    assertEquals(installationsNumber, installationService.list(new PagingRequest(0, 10)).getResults().size());
+    assertEquals(
+        installationsNumber,
+        installationService.list(new PagingRequest(0, 10)).getResults().size());
   }
 
   @Then("total number of datasets is {int}")
@@ -358,20 +401,22 @@ public class IptTestSteps {
   }
 
   @Then("following installation fields were not updated")
-  public void checkInstallationFieldsWhichAreSameAfterUpdate(List<String> expectedFields) throws Exception {
+  public void checkInstallationFieldsWhichAreSameAfterUpdate(List<String> expectedFields)
+      throws Exception {
     for (String property : expectedFields) {
       assertEquals(
-        PropertyUtils.getNestedProperty(installationBeforeUpdate, property),
-        PropertyUtils.getNestedProperty(actualInstallation, property));
+          PropertyUtils.getNestedProperty(installationBeforeUpdate, property),
+          PropertyUtils.getNestedProperty(actualInstallation, property));
     }
   }
 
   @Then("following dataset fields were not updated")
-  public void checkDatasetFieldsWhichAreSameAfterUpdate(List<String> expectedFields) throws Exception {
+  public void checkDatasetFieldsWhichAreSameAfterUpdate(List<String> expectedFields)
+      throws Exception {
     for (String property : expectedFields) {
       assertEquals(
-        PropertyUtils.getNestedProperty(datasetBeforeUpdate, property),
-        PropertyUtils.getNestedProperty(actualDataset, property));
+          PropertyUtils.getNestedProperty(datasetBeforeUpdate, property),
+          PropertyUtils.getNestedProperty(actualDataset, property));
     }
   }
 
@@ -401,7 +446,8 @@ public class IptTestSteps {
   @Then("installation endpointKey was updated")
   public void checkInstEndpointKeyNewAfterUpdate() {
     // compare endpoint key and make sure it does change after update (Endpoints are not mutable)
-    assertNotEquals(endpointKeyBeforeSecondUpdate, actualInstallation.getEndpoints().get(0).getKey());
+    assertNotEquals(
+        endpointKeyBeforeSecondUpdate, actualInstallation.getEndpoints().get(0).getKey());
   }
 
   @Then("dataset endpointKey was updated")

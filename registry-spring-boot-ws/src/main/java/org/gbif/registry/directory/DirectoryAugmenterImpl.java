@@ -1,9 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.directory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Ints;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.directory.ParticipantPerson;
@@ -14,13 +25,19 @@ import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.ContactType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
 
 import static org.gbif.registry.directory.DirectoryRegistryMapping.findParticipantID;
 
@@ -33,9 +50,8 @@ public class DirectoryAugmenterImpl implements Augmenter {
   private NodeService nodeService;
   private PersonService personService;
 
-  public DirectoryAugmenterImpl(ParticipantService participantService,
-                                NodeService nodeService,
-                                PersonService personService) {
+  public DirectoryAugmenterImpl(
+      ParticipantService participantService, NodeService nodeService, PersonService personService) {
     this.participantService = participantService;
     this.nodeService = nodeService;
     this.personService = personService;
@@ -51,19 +67,22 @@ public class DirectoryAugmenterImpl implements Augmenter {
           if (participant != null) {
             List<Contact> contacts = Lists.newArrayList();
             // update node with Directory info if it exists
-            List<org.gbif.api.model.directory.Node> participantNodes = getParticipantNodes(participant);
+            List<org.gbif.api.model.directory.Node> participantNodes =
+                getParticipantNodes(participant);
             registryNode.setParticipantTitle(participant.getName());
             contacts.addAll(getContactsForParticipant(participant));
 
             registryNode.setAbbreviation(participant.getAbbreviatedName());
             registryNode.setDescription(participant.getComments());
             if (participant.getMembershipStart() != null) {
-              registryNode.setParticipantSince(getParticipantSinceYear(participant.getMembershipStart()));
+              registryNode.setParticipantSince(
+                  getParticipantSinceYear(participant.getMembershipStart()));
             }
             if (!participantNodes.isEmpty()) {
               contacts.addAll(getContactsForNode(participantNodes));
               registryNode.setAddress(getNodesAddresses(participantNodes));
-              registryNode.setHomepage(Lists.newArrayList(getWebUrls(participant, participantNodes)));
+              registryNode.setHomepage(
+                  Lists.newArrayList(getWebUrls(participant, participantNodes)));
               registryNode.setEmail(getEmails(participantNodes));
               registryNode.setPhone(getPhones(participantNodes));
             } else {
@@ -80,9 +99,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return registryNode;
   }
 
-  /**
-   * Gets the year part of the membershipStart field.
-   */
+  /** Gets the year part of the membershipStart field. */
   private static Integer getParticipantSinceYear(String membershipStart) {
     String[] membershipStartComponents = membershipStart.split(" ");
     if (membershipStartComponents.length > 1) {
@@ -91,9 +108,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return null;
   }
 
-  /**
-   * Gets all the nodes associated to a participant.
-   */
+  /** Gets all the nodes associated to a participant. */
   private List<org.gbif.api.model.directory.Node> getParticipantNodes(Participant participant) {
     List<org.gbif.api.model.directory.Node> nodes = Lists.newArrayList();
     if (participant.getNodes() != null) {
@@ -104,10 +119,9 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return nodes;
   }
 
-  /**
-   * Collect all the unique addresses associated to a participant.
-   */
-  private static List<String> getNodesAddresses(List<org.gbif.api.model.directory.Node> participantNodes) {
+  /** Collect all the unique addresses associated to a participant. */
+  private static List<String> getNodesAddresses(
+      List<org.gbif.api.model.directory.Node> participantNodes) {
     List<String> addresses = Lists.newArrayList();
     for (org.gbif.api.model.directory.Node node : participantNodes) {
       addresses.add(node.getAddress());
@@ -115,16 +129,18 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return addresses;
   }
 
-  /**
-   * Gets all the unique web pages/urls of participant and its nodes.
-   */
-  private static Set<URI> getWebUrls(Participant participant, List<org.gbif.api.model.directory.Node> participantNodes) {
+  /** Gets all the unique web pages/urls of participant and its nodes. */
+  private static Set<URI> getWebUrls(
+      Participant participant, List<org.gbif.api.model.directory.Node> participantNodes) {
     Set<URI> webUrls = Sets.newHashSet();
     if (StringUtils.isNotBlank(participant.getParticipantUrl())) {
       try {
         webUrls.add(URI.create(participant.getParticipantUrl()));
       } catch (IllegalArgumentException iaEx) {
-        LOG.warn("ParticipantId {} contains invalid participantUrl {}", participant.getId(), participant.getParticipantUrl());
+        LOG.warn(
+            "ParticipantId {} contains invalid participantUrl {}",
+            participant.getId(),
+            participant.getParticipantUrl());
       }
     }
     for (org.gbif.api.model.directory.Node node : participantNodes) {
@@ -139,9 +155,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return webUrls;
   }
 
-  /**
-   * Gets all the emails from the nodes list.
-   */
+  /** Gets all the emails from the nodes list. */
   private static List<String> getEmails(List<org.gbif.api.model.directory.Node> participantNodes) {
     List<String> emails = Lists.newArrayList();
     for (org.gbif.api.model.directory.Node node : participantNodes) {
@@ -152,9 +166,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return emails;
   }
 
-  /**
-   * Gets all the phones numbers from the nodes list.
-   */
+  /** Gets all the phones numbers from the nodes list. */
   private static List<String> getPhones(List<org.gbif.api.model.directory.Node> participantNodes) {
     List<String> phones = Lists.newArrayList();
     for (org.gbif.api.model.directory.Node node : participantNodes) {
@@ -165,9 +177,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return phones;
   }
 
-  /**
-   * Transforms the persons associated to a participant into a list of contacts.
-   */
+  /** Transforms the persons associated to a participant into a list of contacts. */
   private List<Contact> getContactsForParticipant(Participant participant) {
     List<Contact> contacts = Lists.newArrayList();
     if (participant.getPeople() != null) {
@@ -178,7 +188,9 @@ public class DirectoryAugmenterImpl implements Augmenter {
         person = personService.get(participantPerson.getPersonId());
         contactType = null;
         if (participantPerson.getRole() != null) {
-          contactType = DirectoryRegistryMapping.PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(participantPerson.getRole());
+          contactType =
+              DirectoryRegistryMapping.PARTICIPANT_ROLE_TO_CONTACT_TYPE.get(
+                  participantPerson.getRole());
         }
         contact = personToContact(person, participant.getName(), contactType);
         contacts.add(contact);
@@ -204,7 +216,8 @@ public class DirectoryAugmenterImpl implements Augmenter {
             person = personService.get(nodePerson.getPersonId());
             contactType = null;
             if (nodePerson.getRole() != null) {
-              contactType = DirectoryRegistryMapping.NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
+              contactType =
+                  DirectoryRegistryMapping.NODE_ROLE_TO_CONTACT_TYPE.get(nodePerson.getRole());
             }
             contact = personToContact(person, currentNode.getName(), contactType);
             contacts.add(contact);
@@ -217,9 +230,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
     return contacts;
   }
 
-  /**
-   * Transform a Directory Person into a Registry Contact.
-   */
+  /** Transform a Directory Person into a Registry Contact. */
   private Contact personToContact(Person person, String organization, ContactType contactType) {
     Contact contact = new Contact();
     contact.setKey(person.getId());

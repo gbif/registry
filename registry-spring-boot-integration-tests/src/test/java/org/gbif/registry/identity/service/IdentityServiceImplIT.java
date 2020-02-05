@@ -1,16 +1,32 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.identity.service;
 
-import com.google.common.collect.ImmutableMap;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.DatabaseInitializer;
-import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -18,11 +34,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.collect.ImmutableMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,28 +49,21 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 public class IdentityServiceImplIT {
 
-  @ClassRule
-  public static DatabaseInitializer databaseInitializer = new DatabaseInitializer();
+  @ClassRule public static DatabaseInitializer databaseInitializer = new DatabaseInitializer();
 
   private static final String TEST_PASSWORD = "[password]";
   private static final String TEST_PASSWORD2 = "]password[";
   private static final AtomicInteger index = new AtomicInteger(0);
 
-  @Autowired
-  private EmailSender emailSender;
+  @Autowired private EmailSender emailSender;
 
-  @Autowired
-  private ChallengeCodeMapper challengeCodeMapper;
+  @Autowired private ChallengeCodeMapper challengeCodeMapper;
 
-  @Autowired
-  private UserMapper userMapper;
+  @Autowired private UserMapper userMapper;
 
-  @Autowired
-  private IdentityService identityService;
+  @Autowired private IdentityService identityService;
 
-  /**
-   * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
-   */
+  /** Checks the typical CRUD process with correct data only (i.e. no failure scenarios). */
   @Test
   public void testCRUD() {
     GbifUser u1 = generateUser();
@@ -81,7 +88,9 @@ public class IdentityServiceImplIT {
 
     UserModelMutationResult mutationResult = identityService.update(u2);
     assertNotNull("got mutationResult", mutationResult);
-    assertFalse("Doesn't contain error like " + mutationResult.getConstraintViolation(), mutationResult.containsError());
+    assertFalse(
+        "Doesn't contain error like " + mutationResult.getConstraintViolation(),
+        mutationResult.containsError());
 
     GbifUser u3 = identityService.get(u1.getUserName());
     assertNotNull(u3);
@@ -94,9 +103,7 @@ public class IdentityServiceImplIT {
     assertNull(u4);
   }
 
-  /**
-   * Checks the typical CRUD process with correct data only (i.e. no failure scenarios).
-   */
+  /** Checks the typical CRUD process with correct data only (i.e. no failure scenarios). */
   @Test
   public void testCreateError() {
     GbifUser u1 = generateUser();
@@ -105,25 +112,32 @@ public class IdentityServiceImplIT {
     assertNotNull("Expected the Username to be set", result.getUsername());
 
     // try to create it again with a different username (but same email)
-    u1.setKey(null); //reset key
+    u1.setKey(null); // reset key
     u1.setUserName("user_x");
     result = identityService.create(u1, TEST_PASSWORD);
-    assertEquals("Expected USER_ALREADY_EXIST (user already exists)", ModelMutationError.USER_ALREADY_EXIST, result.getError());
+    assertEquals(
+        "Expected USER_ALREADY_EXIST (user already exists)",
+        ModelMutationError.USER_ALREADY_EXIST,
+        result.getError());
 
     u1.setUserName("");
     u1.setEmail("email@email.com");
     result = identityService.create(u1, TEST_PASSWORD);
-    assertEquals("Expected CONSTRAINT_VIOLATION for empty username", ModelMutationError.CONSTRAINT_VIOLATION, result.getError());
+    assertEquals(
+        "Expected CONSTRAINT_VIOLATION for empty username",
+        ModelMutationError.CONSTRAINT_VIOLATION,
+        result.getError());
 
     // try with a password too short
     u1.setUserName("user_x");
     result = identityService.create(u1, "p");
-    assertEquals("Expected PASSWORD_LENGTH_VIOLATION", ModelMutationError.PASSWORD_LENGTH_VIOLATION, result.getError());
+    assertEquals(
+        "Expected PASSWORD_LENGTH_VIOLATION",
+        ModelMutationError.PASSWORD_LENGTH_VIOLATION,
+        result.getError());
   }
 
-  /**
-   * Checks that the get(username) is case insensitive.
-   */
+  /** Checks that the get(username) is case insensitive. */
   @Test
   public void testGetIsCaseInsensitive() {
     GbifUser u1 = generateUser();
@@ -132,14 +146,17 @@ public class IdentityServiceImplIT {
 
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
-    assertNotNull("Expected the Username to be set. " + result.getConstraintViolation(), result.getUsername());
+    assertNotNull(
+        "Expected the Username to be set. " + result.getConstraintViolation(),
+        result.getUsername());
 
     GbifUser newUser = identityService.get("tEstuSeR");
-    assertNotNull("Can get the user using the same username with capital letters", newUser.getKey());
-    //ensure we stored the email by respecting the case
+    assertNotNull(
+        "Can get the user using the same username with capital letters", newUser.getKey());
+    // ensure we stored the email by respecting the case
     assertEquals("myEmail@b.com", newUser.getEmail());
 
-    //but we should be able to login using the lowercase version
+    // but we should be able to login using the lowercase version
     newUser = identityService.get("myemail@b.com");
     assertNotNull("Can get the user using the email in lowercase", newUser.getKey());
   }
@@ -151,7 +168,9 @@ public class IdentityServiceImplIT {
 
     // create
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
-    assertNotNull("Expected the Username to be set. " + result.getConstraintViolation(), result.getUsername());
+    assertNotNull(
+        "Expected the Username to be set. " + result.getConstraintViolation(),
+        result.getUsername());
     GbifUser newUser = identityService.getBySystemSetting("my.app.setting", "secret-magic");
     assertNotNull("Can get the user using systemSettings", newUser.getKey());
 
@@ -170,19 +189,24 @@ public class IdentityServiceImplIT {
     GbifUser user = createConfirmedUser(identityService, emailSender);
     identityService.resetPassword(user.getKey());
 
-    //ensure we can not login
-    assertNull("Can not login until the password is changed",
-      identityService.authenticate(user.getUserName(), TEST_PASSWORD));
+    // ensure we can not login
+    assertNull(
+        "Can not login until the password is changed",
+        identityService.authenticate(user.getUserName(), TEST_PASSWORD));
 
-    //confirm challenge code
+    // confirm challenge code
     UUID challengeCode = getChallengeCode(user.getKey());
     assertNotNull("Got a challenge code for " + user.getEmail(), challengeCode);
-    assertFalse("password can be changed using challengeCode", identityService.updatePassword(user.getKey(),
-      TEST_PASSWORD2, challengeCode).containsError());
+    assertFalse(
+        "password can be changed using challengeCode",
+        identityService
+            .updatePassword(user.getKey(), TEST_PASSWORD2, challengeCode)
+            .containsError());
 
-    //ensure we can now login
-    assertNotNull("Can login after the challenge code is confirmed",
-      identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
+    // ensure we can now login
+    assertNotNull(
+        "Can login after the challenge code is confirmed",
+        identityService.authenticate(user.getUserName(), TEST_PASSWORD2));
   }
 
   @Test
@@ -205,10 +229,7 @@ public class IdentityServiceImplIT {
     assertEquals(0, identityService.listEditorRights(result.getUsername()).size());
   }
 
-  /**
-   * Generates a different user on each call.
-   * Thread-Safe
-   */
+  /** Generates a different user on each call. Thread-Safe */
   public static GbifUser generateUser() {
     int idx = index.incrementAndGet();
     GbifUser user = new GbifUser();
@@ -223,28 +244,30 @@ public class IdentityServiceImplIT {
     return user;
   }
 
-  /**
-   * Creates a new user and confirms its challenge code.
-   * No assertion performed.
-   */
+  /** Creates a new user and confirms its challenge code. No assertion performed. */
   public GbifUser createConfirmedUser(IdentityService identityService, EmailSender emailManager) {
     GbifUser u1 = generateUser();
     // create the user
     UserModelMutationResult result = identityService.create(u1, TEST_PASSWORD);
     assertNotNull("Expected the Username to be set", result.getUsername());
 
-    //ensure we can not login
-    assertNull("Can not login until the challenge code is confirmed", identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
+    // ensure we can not login
+    assertNull(
+        "Can not login until the challenge code is confirmed",
+        identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
 
     UUID challengeCode = getChallengeCode(u1.getKey());
-    //confirm challenge code
+    // confirm challenge code
     assertNotNull("Got a challenge code for email: " + u1.getEmail(), challengeCode);
 
     GbifUser user = identityService.get(u1.getUserName());
-    assertTrue("challengeCode can be confirmed", identityService.confirmUser(u1.getKey(), challengeCode));
+    assertTrue(
+        "challengeCode can be confirmed", identityService.confirmUser(u1.getKey(), challengeCode));
 
-    //ensure we can now login
-    assertNotNull("Can login after the challenge code is confirmed", identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
+    // ensure we can now login
+    assertNotNull(
+        "Can login after the challenge code is confirmed",
+        identityService.authenticate(u1.getUserName(), TEST_PASSWORD));
     return user;
   }
 

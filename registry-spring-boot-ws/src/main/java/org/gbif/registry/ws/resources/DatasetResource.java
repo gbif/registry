@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.exception.ServiceUnavailableException;
@@ -116,24 +131,24 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 @RestController
-@RequestMapping(value = "dataset",
-  produces = MediaType.APPLICATION_JSON_VALUE)
-public class DatasetResource
-  extends BaseNetworkEntityResource<Dataset>
-  implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
+@RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+public class DatasetResource extends BaseNetworkEntityResource<Dataset>
+    implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
   private static final int ALL_DATASETS_LIMIT = 200;
 
   // HTML sanitizer policy for paragraph
-  private static final PolicyFactory PARAGRAPH_HTML_SANITIZER = new HtmlPolicyBuilder()
-    .allowCommonBlockElements() // "p", "div", "h1", ...
-    .allowCommonInlineFormattingElements() // "b", "i" ...
-    .allowElements("a")
-    .allowUrlProtocols("https", "http")
-    .allowAttributes("href").onElements("a")
-    .toFactory();
+  private static final PolicyFactory PARAGRAPH_HTML_SANITIZER =
+      new HtmlPolicyBuilder()
+          .allowCommonBlockElements() // "p", "div", "h1", ...
+          .allowCommonInlineFormattingElements() // "b", "i" ...
+          .allowElements("a")
+          .allowUrlProtocols("https", "http")
+          .allowAttributes("href")
+          .onElements("a")
+          .toFactory();
 
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
@@ -148,30 +163,36 @@ public class DatasetResource
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
   private final WithMyBatis withMyBatis;
 
-  private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE = CacheBuilder.newBuilder()
-    .expireAfterWrite(5, TimeUnit.MINUTES)
-    .build(
-      new CacheLoader<UUID, Organization>() {
-        @Override
-        public Organization load(UUID key) {
-          return organizationMapper.get(key);
-        }
-      });
+  private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE =
+      CacheBuilder.newBuilder()
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(
+              new CacheLoader<UUID, Organization>() {
+                @Override
+                public Organization load(UUID key) {
+                  return organizationMapper.get(key);
+                }
+              });
 
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
 
-
-  public DatasetResource(MapperServiceLocator mapperServiceLocator,
-                         EventManager eventManager,
-                         DatasetSearchService searchService,
-                         EditorAuthorizationService userAuthService,
-                         DoiGenerator doiGenerator,
-                         DataCiteDoiHandlerStrategy doiHandlingStrategy,
-                         WithMyBatis withMyBatis,
-                         @Autowired(required = false) MessagePublisher messagePublisher) {
-    super(mapperServiceLocator.getDatasetMapper(), mapperServiceLocator, Dataset.class, eventManager, userAuthService,
-      withMyBatis);
+  public DatasetResource(
+      MapperServiceLocator mapperServiceLocator,
+      EventManager eventManager,
+      DatasetSearchService searchService,
+      EditorAuthorizationService userAuthService,
+      DoiGenerator doiGenerator,
+      DataCiteDoiHandlerStrategy doiHandlingStrategy,
+      WithMyBatis withMyBatis,
+      @Autowired(required = false) MessagePublisher messagePublisher) {
+    super(
+        mapperServiceLocator.getDatasetMapper(),
+        mapperServiceLocator,
+        Dataset.class,
+        eventManager,
+        userAuthService,
+        withMyBatis);
     this.searchService = searchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
@@ -189,7 +210,8 @@ public class DatasetResource
 
   @GetMapping("search")
   @Override
-  public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(DatasetSearchRequest searchRequest) {
+  public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
+      DatasetSearchRequest searchRequest) {
     return searchService.search(searchRequest);
   }
 
@@ -213,14 +235,13 @@ public class DatasetResource
   }
 
   /**
-   * All network entities support simple (!) search with "&q=".
-   * This is to support the console user interface, and is in addition to any complex, faceted search that might
-   * additionally be supported, such as dataset search.
+   * All network entities support simple (!) search with "&q=". This is to support the console user
+   * interface, and is in addition to any complex, faceted search that might additionally be
+   * supported, such as dataset search.
    */
   @GetMapping
-  public PagingResponse<Dataset> list(@Nullable Country country,
-                                      @Valid DatasetRequestSearchParams request,
-                                      Pageable page) {
+  public PagingResponse<Dataset> list(
+      @Nullable Country country, @Valid DatasetRequestSearchParams request, Pageable page) {
     if (country == null && request.getType() != null) {
       return listByType(request.getType(), page);
     } else if (country != null) {
@@ -230,8 +251,11 @@ public class DatasetResource
     } else if (request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifier(), page);
     } else if (request.getMachineTagNamespace() != null) {
-      return listByMachineTag(request.getMachineTagNamespace(), request.getMachineTagName(),
-        request.getMachineTagValue(), page);
+      return listByMachineTag(
+          request.getMachineTagNamespace(),
+          request.getMachineTagName(),
+          request.getMachineTagValue(),
+          page);
     } else if (!Strings.isNullOrEmpty(request.getQ())) {
       return search(request.getQ(), page);
     } else {
@@ -261,9 +285,7 @@ public class DatasetResource
     return augmentWithMetadata(super.list(page));
   }
 
-  /**
-   * Returns the parsed, preferred metadata document as a dataset.
-   */
+  /** Returns the parsed, preferred metadata document as a dataset. */
   @Nullable
   private Dataset getPreferredMetadataDataset(UUID key) {
     List<Metadata> docs = listMetadata(key, null);
@@ -274,7 +296,7 @@ public class DatasetResource
         stream = getMetadataDocument(docs.get(0).getKey());
         return DatasetParser.build(stream);
       } catch (IOException | IllegalArgumentException e) {
-        //Not sure if we should not propagate an Exception to return a 500 instead
+        // Not sure if we should not propagate an Exception to return a 500 instead
         LOG.error("Stored metadata document {} cannot be read", docs.get(0).getKey(), e);
       } finally {
         Closeables.closeQuietly(stream);
@@ -300,16 +322,19 @@ public class DatasetResource
 
   /**
    * Augments the target dataset with all persistable properties from the supplementary dataset.
-   * Typically the target would be a dataset built from rich XML metadata, and the supplementary would be the persisted
-   * view of the same dataset. NULL values in the supplementary dataset overwrite existing values in the target.
-   * Developers please note:
+   * Typically the target would be a dataset built from rich XML metadata, and the supplementary
+   * would be the persisted view of the same dataset. NULL values in the supplementary dataset
+   * overwrite existing values in the target. Developers please note:
+   *
    * <ul>
-   * <li>If the target is null, then the supplementary dataset object itself is returned - not a copy</li>
-   * <li>These objects are all mutable, and care should be taken that the returned object may be one or the other of the
-   * supplied, thus you need to {@code Dataset result = merge(Dataset emlView, Dataset dbView);}</li>
+   *   <li>If the target is null, then the supplementary dataset object itself is returned - not a
+   *       copy
+   *   <li>These objects are all mutable, and care should be taken that the returned object may be
+   *       one or the other of the supplied, thus you need to {@code Dataset result = merge(Dataset
+   *       emlView, Dataset dbView);}
    * </ul>
    *
-   * @param target        that will be modified with persitable values from the supplementary
+   * @param target that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
    * @return the modified target dataset, or the supplementary dataset if the target is null
    */
@@ -388,8 +413,7 @@ public class DatasetResource
     return null;
   }
 
-  @PostMapping(value = "{key}/document",
-    consumes = MediaType.APPLICATION_XML_VALUE)
+  @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, HttpServletRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -421,13 +445,14 @@ public class DatasetResource
     MetadataType type;
     try (InputStream in = new ByteArrayInputStream(data)) {
       type = DatasetParser.detectParserType(in);
-      //TODO: should we not also validate the EML/DC document ???
+      // TODO: should we not also validate the EML/DC document ???
     } catch (IOException e) {
       throw new IllegalArgumentException("Unreadable document", e);
     }
 
     // first, determine if this document is already stored, returning it with no action
-    // we do this, because updating metadata when nothing has changed, results in registry change events being
+    // we do this, because updating metadata when nothing has changed, results in registry change
+    // events being
     // propagated which can trigger crawlers which will run an update etc.
     List<Metadata> existingDocs = listMetadata(datasetKey, type);
     for (Metadata existing : existingDocs) {
@@ -445,7 +470,8 @@ public class DatasetResource
     }
 
     // persist metadata & data, which we know is not already stored
-    // first remove all existing metadata of the same type (so we end up storing only one document per type)
+    // first remove all existing metadata of the same type (so we end up storing only one document
+    // per type)
     Metadata metadata = new Metadata();
     metadata.setDatasetKey(datasetKey);
     metadata.setType(type);
@@ -460,26 +486,31 @@ public class DatasetResource
     // check if we should update our registered base information
     if (dataset.isLockedForAutoUpdate()) {
       LOG.info(
-        "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
-        datasetKey);
+          "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
+          datasetKey);
 
     } else {
-      // we retrieve the preferred document and only update if this new metadata is the preferred one
+      // we retrieve the preferred document and only update if this new metadata is the preferred
+      // one
       // e.g. we could put a DC document while an EML document exists that takes preference
       updateFromPreferredMetadata(datasetKey, user);
-      LOG.info("Dataset {} updated with base information from metadata document {}", datasetKey, metaKey);
+      LOG.info(
+          "Dataset {} updated with base information from metadata document {}",
+          datasetKey,
+          metaKey);
     }
 
     return metadata;
   }
 
   /**
-   * When we get a new Metadata document, this method is responsible to preserve the GBIF properties on the
-   * dataset object to make sure they are not overwritten.
+   * When we get a new Metadata document, this method is responsible to preserve the GBIF properties
+   * on the dataset object to make sure they are not overwritten.
    *
-   * @param updatedDataset  normally instantiated from a metadata document
+   * @param updatedDataset normally instantiated from a metadata document
    * @param existingDataset current {@link Dataset} object from the database.
-   * @return same instance as updatedDataset but with GBIF properties preserved (taken from existingDataset)
+   * @return same instance as updatedDataset but with GBIF properties preserved (taken from
+   *     existingDataset)
    */
   private Dataset preserveGBIFDatasetProperties(Dataset updatedDataset, Dataset existingDataset) {
     // keep properties that we do not allow to update via metadata
@@ -498,8 +529,10 @@ public class DatasetResource
 
     // keep original license, unless a supported license detected in preferred metadata
     if (!replaceLicense(updatedDataset.getLicense())) {
-      LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.",
-        updatedDataset.getLicense(), existingDataset.getLicense());
+      LOG.warn(
+          "New dataset license {} cannot replace old license {}! Restoring old license.",
+          updatedDataset.getLicense(),
+          existingDataset.getLicense());
       updatedDataset.setLicense(existingDataset.getLicense());
     }
 
@@ -523,7 +556,7 @@ public class DatasetResource
     Dataset updDataset = getPreferredMetadataDataset(uuid);
     if (updDataset != null) {
       updDataset = preserveGBIFDatasetProperties(updDataset, dataset);
-      //keep the DOI only if none can be extracted from the metadata
+      // keep the DOI only if none can be extracted from the metadata
       if (updDataset.getDoi() == null && dataset.getDoi() != null) {
         updDataset.setDoi(dataset.getDoi());
       }
@@ -536,7 +569,8 @@ public class DatasetResource
       addIdentifiers(uuid, updDataset.getIdentifiers(), user);
       addTags(uuid, updDataset.getTags(), user);
 
-      // now update the core dataset only, remove associated data to avoid confusion and potential validation problems
+      // now update the core dataset only, remove associated data to avoid confusion and potential
+      // validation problems
       updDataset.getContacts().clear();
       updDataset.getIdentifiers().clear();
       updDataset.getTags().clear();
@@ -557,9 +591,7 @@ public class DatasetResource
     return false;
   }
 
-  /**
-   * Add all not yet existing identifiers to the db!
-   */
+  /** Add all not yet existing identifiers to the db! */
   private void addIdentifiers(UUID datasetKey, List<Identifier> newIdentifiers, String user) {
     List<Identifier> existing = datasetMapper.listIdentifiers(datasetKey);
     for (Identifier id : newIdentifiers) {
@@ -574,9 +606,7 @@ public class DatasetResource
     }
   }
 
-  /**
-   * Add all not yet existing identifiers to the db!
-   */
+  /** Add all not yet existing identifiers to the db! */
   private void addTags(UUID datasetKey, List<Tag> newTags, String user) {
     List<Tag> existing = datasetMapper.listTags(datasetKey);
     for (Tag tag : newTags) {
@@ -604,8 +634,8 @@ public class DatasetResource
   }
 
   /**
-   * Decide whether the current license should be overwritten based on following rule(s):
-   * Only overwrite current license is overwriting license is a GBIF-supported license.
+   * Decide whether the current license should be overwritten based on following rule(s): Only
+   * overwrite current license is overwriting license is a GBIF-supported license.
    *
    * @param license license
    */
@@ -617,36 +647,39 @@ public class DatasetResource
   }
 
   /**
-   * Set the generated GBIF citation on the provided Dataset object.
-   * This function is used until we decide if we store the GBIF generated citation in the database.
-   * <p>
-   * see https://github.com/gbif/registry/issues/4
+   * Set the generated GBIF citation on the provided Dataset object. This function is used until we
+   * decide if we store the GBIF generated citation in the database.
+   *
+   * <p>see https://github.com/gbif/registry/issues/4
    *
    * @param dataset
    * @return
    */
   private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null && dataset.getPublishingOrganizationKey() != null
-      // for CoL and its constituents we want to show the verbatim citation and no GBIF generated one:
-      // https://github.com/gbif/portal-feedback/issues/1819
-      && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
-      && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+    if (dataset != null
+        && dataset.getPublishingOrganizationKey() != null
+        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated
+        // one:
+        // https://github.com/gbif/portal-feedback/issues/1819
+        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
+        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
 
-      // if the citation already exists keep it and only change the text. That allows us to keep the identifier
+      // if the citation already exists keep it and only change the text. That allows us to keep the
+      // identifier
       // if provided.
       Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
-      citation.setText(CitationGenerator.generateCitation(dataset,
-        ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
+      citation.setText(
+          CitationGenerator.generateCitation(
+              dataset, ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
     }
   }
 
   /**
-   * Creates a new Dataset.
-   * </br>
-   * Before creating it, method:
-   * 1. assigns it a {@link DOI} as per <a href="http://dev.gbif.org/issues/browse/POR-2554">GBIF DOI business rules</a>
-   * 2. ensures it has a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License business rules</a>
+   * Creates a new Dataset. </br> Before creating it, method: 1. assigns it a {@link DOI} as per <a
+   * href="http://dev.gbif.org/issues/browse/POR-2554">GBIF DOI business rules</a> 2. ensures it has
+   * a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License
+   * business rules</a>
    */
   @Override
   public UUID create(@Validated({PrePersist.class, Default.class}) Dataset dataset) {
@@ -654,17 +687,21 @@ public class DatasetResource
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
     // Assign CC-BY 4.0 (default license) when license not specified yet
-    // See https://github.com/gbif/registry/issues/71#issuecomment-438280021 for background on possibly changing this.
+    // See https://github.com/gbif/registry/issues/71#issuecomment-438280021 for background on
+    // possibly changing this.
     if (dataset.getLicense() == null) {
-      LOG.warn("Dataset created by {} {} with the V1 API does not specify a license, defaulting to CC_BY_4_0",
-        dataset.getPublishingOrganizationKey(), dataset.getCreatedBy());
+      LOG.warn(
+          "Dataset created by {} {} with the V1 API does not specify a license, defaulting to CC_BY_4_0",
+          dataset.getPublishingOrganizationKey(),
+          dataset.getCreatedBy());
       dataset.setLicense(License.CC_BY_4_0);
     }
 
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
-    doiHandlerStrategy.scheduleDatasetRegistration(dataset.getDoi(), doiHandlerStrategy.buildMetadata(get(key)), key);
+    doiHandlerStrategy.scheduleDatasetRegistration(
+        dataset.getDoi(), doiHandlerStrategy.buildMetadata(get(key)), key);
     return key;
   }
 
@@ -676,37 +713,47 @@ public class DatasetResource
     }
     // replace current license? Only if dataset being updated has a supported license
     if (!replaceLicense(dataset.getLicense())) {
-      LOG.warn("New dataset license {} cannot replace old license {}! Restoring old license.", dataset.getLicense(),
-        old.getLicense());
+      LOG.warn(
+          "New dataset license {} cannot replace old license {}! Restoring old license.",
+          dataset.getLicense(),
+          old.getLicense());
       dataset.setLicense(old.getLicense());
     }
     update(dataset, old.getIdentifiers(), old.getDoi(), dataset.getModifiedBy());
   }
 
   /**
-   * This method does a regular dataset update as defined in the super.update(), but also deals with setting, changing
-   * or removing DOIs from the dataset.doi property and the list of attached identifiers.
-   * <p>
-   * DOI update logic:
-   * <ul>
-   *   <li>If oldDoi exists and the new DOI is the same nothing happens</li>
-   *   <li>If oldDoi exists and the new DOI is different, the new one is used for the dataset and the old one is moved
-   *   to the identifiers table. If the new DOI existed in the identifiers table it will be removed.</li>
-   *   <li>If the dataset has no DOI and no oldDoi exists a new GBIF DOI is issued</li>
-   *   <li>If the dataset has no DOI and the oldDoi is a GBIF DOI, the oldDoi is kept</li>
-   *   <li>If the dataset has no DOI and the oldDoi is not a GBIF DOI, the oldDoi is moved to the identifiers table.
-   *   In case the identifiers table already contains a GBIF DOI this is removed and used for the dataset. If there was
-   *   no GBIF DOI yet a new one is issued</li>
-   * </ul>
-   * <p>
-   * Also see http://dev.gbif.org/issues/browse/POR-2554 for a discussion.
+   * This method does a regular dataset update as defined in the super.update(), but also deals with
+   * setting, changing or removing DOIs from the dataset.doi property and the list of attached
+   * identifiers.
    *
-   * @param dataset     the dataset to be used to update the dataset table in postgres
-   * @param existingIds the complete list of identifiers linked in postgres to the dataset before the update
-   * @param oldDoi      the doi as found in postgres for the dataset before this update
-   * @param user        the gbif user doing the update
+   * <p>DOI update logic:
+   *
+   * <ul>
+   *   <li>If oldDoi exists and the new DOI is the same nothing happens
+   *   <li>If oldDoi exists and the new DOI is different, the new one is used for the dataset and
+   *       the old one is moved to the identifiers table. If the new DOI existed in the identifiers
+   *       table it will be removed.
+   *   <li>If the dataset has no DOI and no oldDoi exists a new GBIF DOI is issued
+   *   <li>If the dataset has no DOI and the oldDoi is a GBIF DOI, the oldDoi is kept
+   *   <li>If the dataset has no DOI and the oldDoi is not a GBIF DOI, the oldDoi is moved to the
+   *       identifiers table. In case the identifiers table already contains a GBIF DOI this is
+   *       removed and used for the dataset. If there was no GBIF DOI yet a new one is issued
+   * </ul>
+   *
+   * <p>Also see http://dev.gbif.org/issues/browse/POR-2554 for a discussion.
+   *
+   * @param dataset the dataset to be used to update the dataset table in postgres
+   * @param existingIds the complete list of identifiers linked in postgres to the dataset before
+   *     the update
+   * @param oldDoi the doi as found in postgres for the dataset before this update
+   * @param user the gbif user doing the update
    */
-  private void update(Dataset dataset, List<Identifier> existingIds, @Nullable final DOI oldDoi, final String user) {
+  private void update(
+      Dataset dataset,
+      List<Identifier> existingIds,
+      @Nullable final DOI oldDoi,
+      final String user) {
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
@@ -733,9 +780,7 @@ public class DatasetResource
     doiHandlerStrategy.datasetChanged(get(dataset.getKey()), oldDoi);
   }
 
-  /**
-   * Add old DOI to list of alt identifiers in dataset.
-   */
+  /** Add old DOI to list of alt identifiers in dataset. */
   private void addDOIAsAlternateId(DOI altId, UUID datasetKey, String user) {
     // update alt ids of dataset
     Identifier id = new Identifier();
@@ -743,13 +788,14 @@ public class DatasetResource
     id.setIdentifier(altId.toString());
     id.setCreatedBy(user);
     id.setCreated(new Date());
-    LOG.info("DOI changed. Adding previous DOI {} to alternative identifier list for dataset {}", altId, datasetKey);
+    LOG.info(
+        "DOI changed. Adding previous DOI {} to alternative identifier list for dataset {}",
+        altId,
+        datasetKey);
     withMyBatis.addIdentifier(identifierMapper, datasetMapper, datasetKey, id);
   }
 
-  /**
-   * Removes a DOI from the alternative identifiers list of a dataset if it exists.
-   */
+  /** Removes a DOI from the alternative identifiers list of a dataset if it exists. */
   private void removeAltIdIfExists(UUID key, DOI doiToRemove, List<Identifier> existingIds) {
     for (Identifier id : existingIds) {
       if (DOI.isParsable(id.getIdentifier())) {
@@ -763,8 +809,8 @@ public class DatasetResource
   }
 
   /**
-   * Scan list of alternate identifiers to find a previous, deleted GBIF DOI and update the dataset instance.
-   * If none can be found use a newly generated one.
+   * Scan list of alternate identifiers to find a previous, deleted GBIF DOI and update the dataset
+   * instance. If none can be found use a newly generated one.
    */
   private void reactivatePreviousGbifDoiOrMintNew(List<Identifier> existingIds, Dataset d) {
     for (Identifier id : existingIds) {
@@ -799,8 +845,9 @@ public class DatasetResource
   }
 
   /**
-   * We need to implement this interface method here, but there is no way to retrieve the actual user
-   * as we cannot access any http request. The real server method does this correctly but has more parameters.
+   * We need to implement this interface method here, but there is no way to retrieve the actual
+   * user as we cannot access any http request. The real server method does this correctly but has
+   * more parameters.
    */
   @Override
   public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, InputStream document) {
@@ -810,9 +857,12 @@ public class DatasetResource
 
   @GetMapping("{key}/constituents")
   @Override
-  public PagingResponse<Dataset> listConstituents(@PathVariable("key") UUID datasetKey, Pageable page) {
-    return pagingResponse(page, (long) datasetMapper.countConstituents(datasetKey),
-      datasetMapper.listConstituents(datasetKey, page));
+  public PagingResponse<Dataset> listConstituents(
+      @PathVariable("key") UUID datasetKey, Pageable page) {
+    return pagingResponse(
+        page,
+        (long) datasetMapper.countConstituents(datasetKey),
+        datasetMapper.listConstituents(datasetKey, page));
   }
 
   @GetMapping("{key}/networks")
@@ -829,8 +879,9 @@ public class DatasetResource
 
   @GetMapping("{key}/metadata")
   @Override
-  public List<Metadata> listMetadata(@PathVariable("key") UUID datasetKey,
-                                     @RequestParam(value = "type", required = false) MetadataType type) {
+  public List<Metadata> listMetadata(
+      @PathVariable("key") UUID datasetKey,
+      @RequestParam(value = "type", required = false) MetadataType type) {
     return metadataMapper.list(datasetKey, type);
   }
 
@@ -873,83 +924,90 @@ public class DatasetResource
   @GetMapping("withNoEndpoint")
   @Override
   public PagingResponse<Dataset> listDatasetsWithNoEndpoint(Pageable page) {
-    return pagingResponse(page, datasetMapper.countWithNoEndpoint(), datasetMapper.withNoEndpoint(page));
+    return pagingResponse(
+        page, datasetMapper.countWithNoEndpoint(), datasetMapper.withNoEndpoint(page));
   }
 
-  /**
-   * Utility method to run batch jobs on all dataset elements
-   */
-  private void doOnAllOccurrenceDatasets(Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
+  /** Utility method to run batch jobs on all dataset elements */
+  private void doOnAllOccurrenceDatasets(
+      Consumer<Dataset> onDataset, List<UUID> datasetsToExclude) {
     PagingRequest pagingRequest = new PagingRequest(0, ALL_DATASETS_LIMIT);
     PagingResponse<Dataset> response;
     do {
       response = list(pagingRequest);
       response.getResults().stream()
-        .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
-        .forEach(
-          d -> {
-            try {
-              LOG.info("trying to crawl dataset {}", d.getKey());
-              onDataset.accept(d);
-            } catch (Exception ex) {
-              LOG.error(
-                "Error processing dataset {} while crawling all: {}",
-                d.getKey(),
-                ex.getMessage());
-            }
-          });
+          .filter(d -> datasetsToExclude == null || !datasetsToExclude.contains(d.getKey()))
+          .forEach(
+              d -> {
+                try {
+                  LOG.info("trying to crawl dataset {}", d.getKey());
+                  onDataset.accept(d);
+                } catch (Exception ex) {
+                  LOG.error(
+                      "Error processing dataset {} while crawling all: {}",
+                      d.getKey(),
+                      ex.getMessage());
+                }
+              });
       pagingRequest.addOffset(response.getResults().size());
     } while (!response.isEndOfRecords());
   }
 
   /**
-   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
-   * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
-   * necessary security.
+   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to
+   * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
+   * crawl, and applies necessary security.
    */
   @PostMapping("crawlall")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawlAll(@RequestParam(value = "platform", required = false) String platform,
-                       @Nullable CrawlAllParams crawlAllParams) {
+  public void crawlAll(
+      @RequestParam(value = "platform", required = false) String platform,
+      @Nullable CrawlAllParams crawlAllParams) {
     CompletableFuture.runAsync(
-      () ->
-        doOnAllOccurrenceDatasets(
-          dataset -> crawl(dataset.getKey(), platform),
-          crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
+        () ->
+            doOnAllOccurrenceDatasets(
+                dataset -> crawl(dataset.getKey(), platform),
+                crawlAllParams != null ? crawlAllParams.datasetsToExclude : null));
   }
 
   /**
-   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to trigger the
-   * crawling of the dataset. This simply emits a message to rabbitmq requesting the crawl, and applies
-   * necessary security.
+   * This is a REST only (e.g. not part of the Java API) method that allows the registry console to
+   * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
+   * crawl, and applies necessary security.
    */
   @PostMapping("{key}/crawl")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void crawl(@PathVariable("key") UUID datasetKey,
-                    @RequestParam(value = "platform", required = false) String platform) {
+  public void crawl(
+      @PathVariable("key") UUID datasetKey,
+      @RequestParam(value = "platform", required = false) String platform) {
     Platform indexingPlatform = Platform.parse(platform).orElse(Platform.ALL);
     if (messagePublisher != null) {
       LOG.info("Requesting crawl of dataset[{}]", datasetKey);
       try {
         // we'll bump this to the top of the queue since it is a user initiated
-        messagePublisher.send(new StartCrawlMessage(datasetKey, StartCrawlMessage.Priority.CRITICAL.getPriority(), indexingPlatform));
+        messagePublisher.send(
+            new StartCrawlMessage(
+                datasetKey, StartCrawlMessage.Priority.CRITICAL.getPriority(), indexingPlatform));
       } catch (IOException e) {
         LOG.error("Unable to send message requesting crawl", e);
       }
     } else {
-      LOG.warn("Registry is configured to run without messaging capabilities. Unable to crawl dataset[{}]", datasetKey);
+      LOG.warn(
+          "Registry is configured to run without messaging capabilities. Unable to crawl dataset[{}]",
+          datasetKey);
     }
   }
 
-  @PostMapping(value = "{datasetKey}/process",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{datasetKey}/process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void createDatasetProcessStatus(@PathVariable UUID datasetKey,
-                                         @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
-    checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
-      "DatasetProcessStatus must have the same key as the dataset");
+  public void createDatasetProcessStatus(
+      @PathVariable UUID datasetKey,
+      @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
+    checkArgument(
+        datasetKey.equals(datasetProcessStatus.getDatasetKey()),
+        "DatasetProcessStatus must have the same key as the dataset");
     createDatasetProcessStatus(datasetProcessStatus);
   }
 
@@ -957,30 +1015,38 @@ public class DatasetResource
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void createDatasetProcessStatus(@Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
-    checkNotNull(datasetProcessStatus.getDatasetKey(),
-      "DatasetProcessStatus must have the dataset key");
-    checkNotNull(datasetProcessStatus.getCrawlJob(),
-      "DatasetProcessStatus must have the crawl job with an attempt number");
+  public void createDatasetProcessStatus(
+      @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
+    checkNotNull(
+        datasetProcessStatus.getDatasetKey(), "DatasetProcessStatus must have the dataset key");
+    checkNotNull(
+        datasetProcessStatus.getCrawlJob(),
+        "DatasetProcessStatus must have the crawl job with an attempt number");
     DatasetProcessStatus existing =
-      datasetProcessStatusMapper.get(datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob()
-        .getAttempt());
-    checkArgument(existing == null, "Cannot create dataset process status [%s] for attempt[%s] as one already exists",
-      datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob().getAttempt());
+        datasetProcessStatusMapper.get(
+            datasetProcessStatus.getDatasetKey(), datasetProcessStatus.getCrawlJob().getAttempt());
+    checkArgument(
+        existing == null,
+        "Cannot create dataset process status [%s] for attempt[%s] as one already exists",
+        datasetProcessStatus.getDatasetKey(),
+        datasetProcessStatus.getCrawlJob().getAttempt());
     datasetProcessStatusMapper.create(datasetProcessStatus);
   }
 
-  @PutMapping(value = "{datasetKey}/process/{attempt}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{datasetKey}/process/{attempt}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
-  public void updateDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt,
-                                         @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
-    checkArgument(datasetKey.equals(datasetProcessStatus.getDatasetKey()),
-      "DatasetProcessStatus must have the same key as the url");
-    checkArgument(attempt == datasetProcessStatus.getCrawlJob().getAttempt(),
-      "DatasetProcessStatus must have the same attempt as the url");
+  public void updateDatasetProcessStatus(
+      @PathVariable UUID datasetKey,
+      @PathVariable int attempt,
+      @RequestBody @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
+    checkArgument(
+        datasetKey.equals(datasetProcessStatus.getDatasetKey()),
+        "DatasetProcessStatus must have the same key as the url");
+    checkArgument(
+        attempt == datasetProcessStatus.getCrawlJob().getAttempt(),
+        "DatasetProcessStatus must have the same attempt as the url");
     updateDatasetProcessStatus(datasetProcessStatus);
   }
 
@@ -988,7 +1054,8 @@ public class DatasetResource
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void updateDatasetProcessStatus(@Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
+  public void updateDatasetProcessStatus(
+      @Valid @NotNull @Trim DatasetProcessStatus datasetProcessStatus) {
     datasetProcessStatusMapper.update(datasetProcessStatus);
   }
 
@@ -996,48 +1063,56 @@ public class DatasetResource
   @Nullable
   @NullToNotFound
   @Override
-  public DatasetProcessStatus getDatasetProcessStatus(@PathVariable UUID datasetKey, @PathVariable int attempt) {
+  public DatasetProcessStatus getDatasetProcessStatus(
+      @PathVariable UUID datasetKey, @PathVariable int attempt) {
     return datasetProcessStatusMapper.get(datasetKey, attempt);
   }
 
   @GetMapping("process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(Pageable page) {
-    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.count(),
-      datasetProcessStatusMapper.list(page));
+    return new PagingResponse<>(
+        page, (long) datasetProcessStatusMapper.count(), datasetProcessStatusMapper.list(page));
   }
 
   @GetMapping("process/aborted")
   @Override
   public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(Pageable page) {
-    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countAborted(),
-      datasetProcessStatusMapper.listAborted(page));
+    return new PagingResponse<>(
+        page,
+        (long) datasetProcessStatusMapper.countAborted(),
+        datasetProcessStatusMapper.listAborted(page));
   }
 
   @GetMapping("{datasetKey}/process")
   @Override
-  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(@PathVariable UUID datasetKey, Pageable page) {
-    return new PagingResponse<>(page, (long) datasetProcessStatusMapper.countByDataset(datasetKey),
-      datasetProcessStatusMapper.listByDataset(datasetKey, page));
+  public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(
+      @PathVariable UUID datasetKey, Pageable page) {
+    return new PagingResponse<>(
+        page,
+        (long) datasetProcessStatusMapper.countByDataset(datasetKey),
+        datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
 
   @Override
   protected List<UUID> owningEntityKeys(@NotNull Dataset entity) {
     List<UUID> keys = new ArrayList<>();
     keys.add(entity.getPublishingOrganizationKey());
-    keys.add(ORGANIZATION_CACHE.getUnchecked(entity.getPublishingOrganizationKey()).getEndorsingNodeKey());
+    keys.add(
+        ORGANIZATION_CACHE
+            .getUnchecked(entity.getPublishingOrganizationKey())
+            .getEndorsingNodeKey());
     return keys;
   }
 
   @GetMapping("doi/{doi:.+}")
   @Override
   public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {
-    return new PagingResponse<>(page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+    return new PagingResponse<>(
+        page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
   }
 
-  /**
-   * Encapsulates the params to pass in the body for the crawAll method.
-   */
+  /** Encapsulates the params to pass in the body for the crawAll method. */
   private static class CrawlAllParams {
     List<UUID> datasetsToExclude = new ArrayList<>();
 

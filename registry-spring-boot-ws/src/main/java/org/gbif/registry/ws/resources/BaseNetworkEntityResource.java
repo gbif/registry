@@ -1,9 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -40,6 +51,19 @@ import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.NullToNotFound;
 import org.gbif.ws.annotation.Trim;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -58,16 +82,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.regex.Pattern;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
@@ -76,14 +94,15 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
 /**
  * Provides a skeleton implementation of the following.
+ *
  * <ul>
- * <li>Base CRUD operations for a network entity</li>
- * <li>Comment operations</li>
- * <li>Contact operations (in addition to BaseNetworkEntityResource)</li>
- * <li>Endpoint operations (in addition to BaseNetworkEntityResource)</li>
- * <li>Identifier operations (in addition to BaseNetworkEntityResource2)</li>
- * <li>MachineTag operations</li>
- * <li>Tag operations</li>
+ *   <li>Base CRUD operations for a network entity
+ *   <li>Comment operations
+ *   <li>Contact operations (in addition to BaseNetworkEntityResource)
+ *   <li>Endpoint operations (in addition to BaseNetworkEntityResource)
+ *   <li>Identifier operations (in addition to BaseNetworkEntityResource2)
+ *   <li>MachineTag operations
+ *   <li>Tag operations
  * </ul>
  *
  * @param <T> The type of resource that is under CRUD
@@ -105,12 +124,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
 
-  protected BaseNetworkEntityResource(BaseNetworkEntityMapper<T> mapper,
-                                      MapperServiceLocator mapperServiceLocator,
-                                      Class<T> objectClass,
-                                      EventManager eventManager,
-                                      EditorAuthorizationService userAuthService,
-                                      WithMyBatis withMyBatis) {
+  protected BaseNetworkEntityResource(
+      BaseNetworkEntityMapper<T> mapper,
+      MapperServiceLocator mapperServiceLocator,
+      Class<T> objectClass,
+      EventManager eventManager,
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
     this.mapper = mapper;
     this.commentMapper = mapperServiceLocator.getCommentMapper();
     this.machineTagMapper = mapperServiceLocator.getMachineTagMapper();
@@ -125,8 +145,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled fields for createdBy and modifiedBy. It then creates the entity.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy and modifiedBy. It then creates the entity.
    *
    * @param entity entity that extends NetworkEntity
    * @return key of entity created
@@ -135,8 +155,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity,
-                     Authentication authentication) {
+  public UUID create(
+      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
@@ -169,19 +190,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action, and then deletes the entity.
-   * </br>
-   * Relax content-type to wildcard to allow angularjs.
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * entity. </br> Relax content-type to wildcard to allow angularjs.
    *
    * @param key key of entity to delete
    */
-  @DeleteMapping(value = "{key}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
-  public void delete(@NotNull @PathVariable UUID key,
-                     Authentication authentication) {
-    // the following lines allow to set the "modifiedBy" to the user who actually deletes the entity.
+  public void delete(@NotNull @PathVariable UUID key, Authentication authentication) {
+    // the following lines allow to set the "modifiedBy" to the user who actually deletes the
+    // entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
 
@@ -209,8 +228,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   // we do a post not get cause we expect large numbers of keys to be sent
-  @PostMapping(value = "titles",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "titles", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public Map<UUID, String> getTitles(@RequestBody @NotNull Collection<UUID> keys) {
     Map<UUID, String> titles = Maps.newHashMap();
@@ -227,44 +245,43 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> search(String query,
-                                  Pageable page) {
+  public PagingResponse<T> search(String query, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     // trim and handle null from given input
-    String q = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
+    String q =
+        query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     return withMyBatis.search(mapper, q, page);
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(IdentifierType type,
-                                            String identifier,
-                                            Pageable page) {
+  public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByIdentifier(mapper, type, identifier, page);
   }
 
   @Override
-  public PagingResponse<T> listByIdentifier(String identifier,
-                                            Pageable page) {
+  public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
     return listByIdentifier(null, identifier, page);
   }
 
   /**
-   * This method ensures that the path variable for the key matches the entity's key, ensures that the caller is
-   * authorized to perform the action and then adds the server controlled field modifiedBy.
+   * This method ensures that the path variable for the key matches the entity's key, ensures that
+   * the caller is authorized to perform the action and then adds the server controlled field
+   * modifiedBy.
    *
-   * @param key    key of entity to update
+   * @param key key of entity to update
    * @param entity entity that extends NetworkEntity
    */
-  @PutMapping(value = "{key}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void update(@PathVariable UUID key,
-                     @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class}) T entity,
-                     Authentication authentication) {
-    checkArgument(key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
+  public void update(
+      @PathVariable UUID key,
+      @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class}) T entity,
+      Authentication authentication) {
+    checkArgument(
+        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
     entity.setModifiedBy(authentication.getName());
     update(entity);
   }
@@ -273,54 +290,57 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public void update(@Validated({PostPersist.class, Default.class}) T entity) {
     T oldEntity = get(entity.getKey());
     withMyBatis.update(mapper, entity);
-    // get complete entity with components populated, so subscribers of UpdateEvent can compare new and old entities
+    // get complete entity with components populated, so subscribers of UpdateEvent can compare new
+    // and old entities
     T newEntity = get(entity.getKey());
     eventManager.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled fields for createdBy and modifiedBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy and modifiedBy.
    *
    * @param targetEntityKey key of target entity to add comment to
-   * @param comment         Comment to add
+   * @param comment Comment to add
    * @return key of Comment created
    */
-  @PostMapping(value = "{key}/comment",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addComment(@NotNull @PathVariable("key") UUID targetEntityKey,
-                        @RequestBody @NotNull @Trim Comment comment,
-                        Authentication authentication) {
+  public int addComment(
+      @NotNull @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim Comment comment,
+      Authentication authentication) {
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
     return addComment(targetEntityKey, comment);
   }
 
   @Override
-  public int addComment(UUID targetEntityKey,
-                        @Validated({PrePersist.class, Default.class}) Comment comment) {
+  public int addComment(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Comment comment) {
     int key = withMyBatis.addComment(commentMapper, mapper, targetEntityKey, comment);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
     return key;
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action, and then deletes the Comment.
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * Comment.
    *
    * @param targetEntityKey key of target entity to delete comment from
-   * @param commentKey      key of Comment to delete
+   * @param commentKey key of Comment to delete
    */
-  @DeleteMapping(value = "{key}/comment/{commentKey}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/comment/{commentKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteComment(@NotNull @PathVariable("key") UUID targetEntityKey,
-                            @PathVariable int commentKey) {
+  public void deleteComment(
+      @NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
     mapper.deleteComment(targetEntityKey, commentKey);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
   }
 
   @GetMapping(value = "{key}/comment")
@@ -330,28 +350,27 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * Adding most machineTags is restricted based on the namespace.
-   * For some tags, it is restricted based on the editing role as usual.
+   * Adding most machineTags is restricted based on the namespace. For some tags, it is restricted
+   * based on the editing role as usual.
    *
    * @param targetEntityKey key of target entity to add MachineTag to
-   * @param machineTag      MachineTag to add
+   * @param machineTag MachineTag to add
    * @return key of MachineTag created
    */
-  @PostMapping(value = "{key}/machineTag",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  public int addMachineTag(@PathVariable("key") UUID targetEntityKey,
-                           @RequestBody @NotNull @Trim MachineTag machineTag,
-                           Authentication authentication) {
+  public int addMachineTag(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim MachineTag machineTag,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-      || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-      || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-      && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-      && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
-    ) {
+        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
+        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
+            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+            && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
@@ -360,16 +379,17 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(UUID targetEntityKey,
-                           @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
+  public int addMachineTag(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey,
-                           @NotNull String namespace,
-                           @NotNull String name,
-                           @NotNull String value) {
+  public int addMachineTag(
+      @NotNull UUID targetEntityKey,
+      @NotNull String namespace,
+      @NotNull String name,
+      @NotNull String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -378,38 +398,33 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(@NotNull UUID targetEntityKey,
-                           @NotNull TagName tagName,
-                           @NotNull String value) {
+  public int addMachineTag(
+      @NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
 
   /**
-   * The webservice method to delete a machine tag.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete a machine tag. Ensures that the caller is authorized to perform
+   * the action by looking at the namespace.
    */
   @SuppressWarnings("unchecked")
-  public void deleteMachineTagByMachineTagKey(UUID targetEntityKey,
-                                              int machineTagKey,
-                                              Authentication authentication) {
+  public void deleteMachineTagByMachineTagKey(
+      UUID targetEntityKey, int machineTagKey, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     List<MachineTag> machineTags = mapper.listMachineTags(targetEntityKey);
-    Optional<MachineTag> optMachineTag = machineTags
-      .stream()
-      .filter(m -> m.getKey() == machineTagKey)
-      .findFirst();
+    Optional<MachineTag> optMachineTag =
+        machineTags.stream().filter(m -> m.getKey() == machineTagKey).findFirst();
 
     if (optMachineTag.isPresent()) {
       MachineTag machineTag = optMachineTag.get();
 
       if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-        && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-        && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))
-      ) {
+          || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
+          || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
+              && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+              && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
         deleteMachineTag(targetEntityKey, machineTagKey);
 
       } else {
@@ -424,39 +439,37 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Deletes the MachineTag according to interface without security restrictions.
    *
    * @param targetEntityKey key of target entity to delete MachineTag from
-   * @param machineTagKey   key of MachineTag to delete
+   * @param machineTagKey key of MachineTag to delete
    */
   @Override
-  public void deleteMachineTag(UUID targetEntityKey,
-                               int machineTagKey) {
+  public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
     mapper.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
-   * The webservice method to delete all machine tag in a namespace.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete all machine tag in a namespace. Ensures that the caller is
+   * authorized to perform the action by looking at the namespace.
    */
-  public void deleteMachineTagsByNamespace(UUID targetEntityKey,
-                                           String namespace,
-                                           Authentication authentication) {
+  public void deleteMachineTagsByNamespace(
+      UUID targetEntityKey, String namespace, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-      && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
+        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
   }
 
   /**
-   * It was added because of an ambiguity problem.
-   * (Spring can't distinguish {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
+   * It was added because of an ambiguity problem. (Spring can't distinguish
+   * {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
    */
-  @DeleteMapping(value = "{key}/machineTag/{parameter}",
-    consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
-                                @PathVariable String parameter,
-                                Authentication authentication) {
+  @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
+  public void deleteMachineTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable String parameter,
+      Authentication authentication) {
     if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
       deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
     } else {
@@ -465,46 +478,42 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull TagNamespace tagNamespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull String namespace) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
     mapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
   /**
-   * The webservice method to delete all machine tag of a particular name in a namespace.
-   * Ensures that the caller is authorized to perform the action by looking at the namespace.
+   * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
+   * that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}",
-    consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(@PathVariable("key") UUID targetEntityKey,
-                                @PathVariable String namespace,
-                                @PathVariable String name,
-                                Authentication authentication) {
+  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
+  public void deleteMachineTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable String namespace,
+      @PathVariable String name,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-      && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
+        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
       throw new WebApplicationException(HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace, name);
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull TagName tagName) {
+  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey,
-                                @NotNull String namespace,
-                                @NotNull String name) {
+  public void deleteMachineTags(
+      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -516,68 +525,64 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public PagingResponse<T> listByMachineTag(String namespace,
-                                            @Nullable String name,
-                                            @Nullable String value,
-                                            Pageable page) {
+  public PagingResponse<T> listByMachineTag(
+      String namespace, @Nullable String name, @Nullable String value, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(mapper, namespace, name, value, page);
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled fields for createdBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy.
    *
    * @param targetEntityKey key of target entity to add Tag to
-   * @param tag             Tag to add
+   * @param tag Tag to add
    * @return key of Tag created
    */
-  @PostMapping(value = "{key}/tag",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addTag(@PathVariable("key") UUID targetEntityKey,
-                    @RequestBody @NotNull Tag tag,
-                    Authentication authentication) {
+  public int addTag(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull Tag tag,
+      Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(targetEntityKey, tag);
   }
 
   @Override
-  public int addTag(@NotNull UUID targetEntityKey,
-                    @NotNull String value) {
+  public int addTag(@NotNull UUID targetEntityKey, @NotNull String value) {
     Tag tag = new Tag();
     tag.setValue(value);
     return addTag(targetEntityKey, tag);
   }
 
   @Override
-  public int addTag(UUID targetEntityKey,
-                    @Validated({PrePersist.class, Default.class}) Tag tag) {
+  public int addTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Tag tag) {
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
     return key;
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action, and then deletes the Tag.
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * Tag.
    *
    * @param targetEntityKey key of target entity to delete Tag from
-   * @param tagKey          key of Tag to delete
+   * @param tagKey key of Tag to delete
    */
-  @DeleteMapping(value = "{key}/tag/{tagKey}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/tag/{tagKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteTag(@PathVariable("key") UUID targetEntityKey,
-                        @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
     mapper.deleteTag(targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
 
   @GetMapping("{key}/tag")
   @Override
-  public List<Tag> listTags(@PathVariable("key") UUID targetEntityKey,
-                            @RequestParam(value = "owner", required = false) String owner) {
+  public List<Tag> listTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestParam(value = "owner", required = false) String owner) {
     if (owner != null) {
       LOG.warn("Owner is not supported. Value: {}", owner);
     }
@@ -585,80 +590,83 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled fields for createdBy and modifiedBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy and modifiedBy.
    *
    * @param targetEntityKey key of target entity to add Contact to
-   * @param contact         Contact to add
-   * @param authentication  SecurityContext (security related information)
+   * @param contact Contact to add
+   * @param authentication SecurityContext (security related information)
    * @return key of Contact created
    */
-  @PostMapping(value = "{key}/contact",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  public int addContact(@PathVariable("key") UUID targetEntityKey,
-                        @RequestBody @NotNull @Trim Contact contact,
-                        Authentication authentication) {
+  public int addContact(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim Contact contact,
+      Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
     return addContact(targetEntityKey, contact);
   }
 
   @Override
-  public int addContact(UUID targetEntityKey,
-                        @Validated({PrePersist.class, Default.class}) Contact contact) {
+  public int addContact(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
     return key;
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled field for modifiedBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled field for modifiedBy.
    *
    * @param targetEntityKey key of target entity to update contact
-   * @param contactKey      key of Contact to update
-   * @param contact         updated Contact
+   * @param contactKey key of Contact to update
+   * @param contact updated Contact
    */
-  @PutMapping(value = "{key}/contact/{contactKey}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void updateContact(@PathVariable("key") UUID targetEntityKey,
-                            @PathVariable int contactKey,
-                            @RequestBody @NotNull @Trim Contact contact) {
+  public void updateContact(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable int contactKey,
+      @RequestBody @NotNull @Trim Contact contact) {
     // for safety, and to match a nice RESTful URL structure
-    Preconditions.checkArgument(Integer.valueOf(contactKey).equals(contact.getKey()),
-      "Provided contact (key) does not match the path provided");
+    Preconditions.checkArgument(
+        Integer.valueOf(contactKey).equals(contact.getKey()),
+        "Provided contact (key) does not match the path provided");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setModifiedBy(authentication.getName());
     updateContact(targetEntityKey, contact);
   }
 
   @Override
-  public void updateContact(UUID targetEntityKey,
-                            @Validated({PostPersist.class, Default.class}) Contact contact) {
+  public void updateContact(
+      UUID targetEntityKey, @Validated({PostPersist.class, Default.class}) Contact contact) {
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
 
   /**
    * This method ensures that the caller is authorized to perform the action.
    *
    * @param targetEntityKey key of target entity to delete Contact from
-   * @param contactKey      key of Contact to delete
+   * @param contactKey key of Contact to delete
    */
-  @DeleteMapping(value = "{key}/contact/{contactKey}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteContact(@PathVariable("key") UUID targetEntityKey,
-                            @PathVariable int contactKey) {
+  public void deleteContact(
+      @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
     mapper.deleteContact(targetEntityKey, contactKey);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
   }
 
   @GetMapping("{key}/contact")
@@ -668,58 +676,63 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled fields for createdBy and modifiedBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy and modifiedBy.
    *
    * @param targetEntityKey key of target entity to add Endpoint to
-   * @param endpoint        Endpoint to add
+   * @param endpoint Endpoint to add
    * @return key of Endpoint created
    */
-  @PostMapping(value = "{key}/endpoint",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addEndpoint(@PathVariable("key") UUID targetEntityKey,
-                         @RequestBody @NotNull @Trim Endpoint endpoint,
-                         Authentication authentication) {
+  public int addEndpoint(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim Endpoint endpoint,
+      Authentication authentication) {
     endpoint.setCreatedBy(authentication.getName());
     endpoint.setModifiedBy(authentication.getName());
     return addEndpoint(targetEntityKey, endpoint);
   }
 
   @Override
-  public int addEndpoint(UUID targetEntityKey,
-                         @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
+  public int addEndpoint(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
     T oldEntity = get(targetEntityKey);
-    int key = withMyBatis.addEndpoint(endpointMapper, mapper, targetEntityKey, endpoint, machineTagMapper);
+    int key =
+        withMyBatis.addEndpoint(
+            endpointMapper, mapper, targetEntityKey, endpoint, machineTagMapper);
     T newEntity = get(targetEntityKey);
-    // posts an UpdateEvent instead of a ChangedComponentEvent, otherwise the crawler would have to start subscribing
+    // posts an UpdateEvent instead of a ChangedComponentEvent, otherwise the crawler would have to
+    // start subscribing
     // to ChangedComponentEvent instead just to detect when an endpoint has been added to a Dataset
     eventManager.post(UpdateEvent.newInstance(newEntity, oldEntity, objectClass));
     return key;
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action, and then deletes the Endpoint.
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * Endpoint.
    *
    * @param targetEntityKey key of target entity to delete Endpoint from
-   * @param endpointKey     key of Endpoint to delete
+   * @param endpointKey key of Endpoint to delete
    */
-  @DeleteMapping(value = "{key}/endpoint/{endpointKey}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/endpoint/{endpointKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey,
-                             @PathVariable int endpointKey,
-                             Authentication authentication) {
+  public void deleteEndpoint(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable int endpointKey,
+      Authentication authentication) {
     deleteEndpoint(targetEntityKey, endpointKey);
   }
 
   @Override
-  public void deleteEndpoint(@PathVariable("key") UUID targetEntityKey,
-                             @PathVariable int endpointKey) {
+  public void deleteEndpoint(
+      @PathVariable("key") UUID targetEntityKey, @PathVariable int endpointKey) {
     withMyBatis.deleteEndpoint(mapper, targetEntityKey, endpointKey);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));
   }
 
   @GetMapping("{key}/endpoint")
@@ -729,47 +742,49 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action and then adds the server
-   * controlled field for createdBy.
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled field for createdBy.
    *
    * @param targetEntityKey key of target entity to add Identifier to
-   * @param identifier      Identifier to add
+   * @param identifier Identifier to add
    * @return key of Identifier created
    */
-  @PostMapping(value = "{key}/identifier",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public int addIdentifier(@PathVariable("key") UUID targetEntityKey,
-                           @RequestBody @NotNull @Trim Identifier identifier,
-                           Authentication authentication) {
+  public int addIdentifier(
+      @PathVariable("key") UUID targetEntityKey,
+      @RequestBody @NotNull @Trim Identifier identifier,
+      Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(targetEntityKey, identifier);
   }
 
   @Override
-  public int addIdentifier(UUID targetEntityKey,
-                           @Validated({PrePersist.class, Default.class}) Identifier identifier) {
+  public int addIdentifier(
+      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Identifier identifier) {
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
     return key;
   }
 
   /**
-   * This method ensures that the caller is authorized to perform the action, and then deletes the Identifier.
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * Identifier.
    *
    * @param targetEntityKey key of target entity to delete Identifier from
-   * @param identifierKey   key of Identifier to delete
+   * @param identifierKey key of Identifier to delete
    */
-  @DeleteMapping(value = "{key}/identifier/{identifierKey}",
-    consumes = MediaType.ALL_VALUE)
+  @DeleteMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.ALL_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteIdentifier(@PathVariable("key") UUID targetEntityKey,
-                               @PathVariable("identifierKey") int identifierKey) {
+  public void deleteIdentifier(
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("identifierKey") int identifierKey) {
     mapper.deleteIdentifier(targetEntityKey, identifierKey);
-    eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
   }
 
   @GetMapping("{key}/identifier")
@@ -779,11 +794,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   /**
-   * Override this method to extract the entity key that governs security rights for creating.
-   * If null is returned only admins are allowed to create new entities which is the default.
+   * Override this method to extract the entity key that governs security rights for creating. If
+   * null is returned only admins are allowed to create new entities which is the default.
    */
   protected List<UUID> owningEntityKeys(@NotNull T entity) {
-    LOG.debug("Entity {} with key {} has no owning entity keys", entity.getClass(), entity.getKey());
+    LOG.debug(
+        "Entity {} with key {} has no owning entity keys", entity.getClass(), entity.getKey());
     return Collections.emptyList();
   }
 
@@ -792,9 +808,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param page page to create response for, can be null
    */
-  protected <D> PagingResponse<D> pagingResponse(Pageable page,
-                                                 Long count,
-                                                 List<D> result) {
+  protected <D> PagingResponse<D> pagingResponse(Pageable page, Long count, List<D> result) {
     if (page == null) {
       // use default request
       page = new PagingRequest();

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.user;
 
 import org.gbif.api.service.common.LoggedUserWithToken;
@@ -14,15 +29,10 @@ import java.sql.Connection;
 import java.util.Enumeration;
 import java.util.Objects;
 import java.util.StringTokenizer;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -37,6 +47,14 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -55,8 +73,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = {RegistryIntegrationTestsConfiguration.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class UserTestSteps {
 
@@ -70,17 +89,13 @@ public class UserTestSteps {
 
   private MockMvc mvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Autowired
-  private WebApplicationContext context;
+  @Autowired private WebApplicationContext context;
 
-  @Autowired
-  private GbifAuthServiceImpl gbifAuthService;
+  @Autowired private GbifAuthServiceImpl gbifAuthService;
 
-  @Autowired
-  private DataSource ds;
+  @Autowired private DataSource ds;
 
   private Connection connection;
 
@@ -89,23 +104,20 @@ public class UserTestSteps {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/user/user_cleanup.sql"));
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/user/user_prepare.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/user/user_cleanup.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/user/user_prepare.sql"));
 
-    mvc = MockMvcBuilders
-      .webAppContextSetup(context)
-      .apply(springSecurity())
-      .build();
+    mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
   }
 
   @After("@User")
   public void tearDown() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/user/user_cleanup.sql"));
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/user/user_cleanup.sql"));
 
     connection.close();
   }
@@ -117,33 +129,31 @@ public class UserTestSteps {
 
   @When("login {string} with no credentials")
   public void loginGetWithNoCredentials(String method) throws Exception {
-    MockHttpServletRequestBuilder requestBuilder = "GET".equals(method)
-      ? get("/user/login") : post("/user/login");
+    MockHttpServletRequestBuilder requestBuilder =
+        "GET".equals(method) ? get("/user/login") : post("/user/login");
     result = mvc.perform(requestBuilder);
   }
 
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
-    result
-      .andExpect(status().is(status));
+    result.andExpect(status().is(status));
   }
 
   @When("login {string} with valid credentials login {string} and password {string}")
-  public void loginWithValidCredentials(String method, String login, String password) throws Exception {
+  public void loginWithValidCredentials(String method, String login, String password)
+      throws Exception {
     login(method, login, password);
   }
 
   private void login(String method, String login, String password) throws Exception {
-    MockHttpServletRequestBuilder requestBuilder = "GET".equals(method)
-      ? get("/user/login") : post("/user/login");
-    result = mvc
-      .perform(
-        requestBuilder
-          .with(httpBasic(login, password)));
+    MockHttpServletRequestBuilder requestBuilder =
+        "GET".equals(method) ? get("/user/login") : post("/user/login");
+    result = mvc.perform(requestBuilder.with(httpBasic(login, password)));
   }
 
   @Then("user {string} is logged in")
-  public void checkUserLoggedIn(String username, LoggedUserWithToken expectedUser) throws Exception {
+  public void checkUserLoggedIn(String username, LoggedUserWithToken expectedUser)
+      throws Exception {
     MvcResult mvcResult = result.andReturn();
 
     String contentAsString = mvcResult.getResponse().getContentAsString();
@@ -158,17 +168,18 @@ public class UserTestSteps {
   }
 
   @When("change password for user {string} from {string} to {string}")
-  public void changePassword(String login, String oldPassword, String newPassword) throws Exception {
+  public void changePassword(String login, String oldPassword, String newPassword)
+      throws Exception {
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(newPassword);
 
-    result = mvc
-      .perform(
-        put("/user/changePassword")
-          .content(objectMapper.writeValueAsString(params))
-          .contentType(MediaType.APPLICATION_JSON)
-          .with(httpBasic(login, oldPassword)))
-      .andDo(print());
+    result =
+        mvc.perform(
+                put("/user/changePassword")
+                    .content(objectMapper.writeValueAsString(params))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(httpBasic(login, oldPassword)))
+            .andDo(print());
   }
 
   @When("login {string} with old password {string}")
@@ -189,7 +200,8 @@ public class UserTestSteps {
 
       final Enumeration enumeration = new StringTokenizer("Content-Type x-gbif-user");
       when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
-      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
+      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE))
+          .thenReturn(MediaType.APPLICATION_JSON_VALUE);
       when(rawRequestMock.getHeader(SecurityConstants.HEADER_GBIF_USER)).thenReturn("fake");
 
       requestObject = new RequestObject(rawRequestMock);
@@ -200,29 +212,30 @@ public class UserTestSteps {
       rawRequestMock = mock(HttpServletRequest.class);
       when(rawRequestMock.getMethod()).thenReturn(RequestMethod.POST.name());
       when(rawRequestMock.getRequestURI()).thenReturn("/test/app2");
-      when(rawRequestMock.getInputStream()).thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(contentToSign)));
+      when(rawRequestMock.getInputStream())
+          .thenReturn(new DelegatingServletInputStream(new ByteArrayInputStream(contentToSign)));
       final Enumeration enumeration = new StringTokenizer("Content-Type");
       when(rawRequestMock.getHeaderNames()).thenReturn(enumeration);
-      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE)).thenReturn(MediaType.APPLICATION_JSON_VALUE);
+      when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE))
+          .thenReturn(MediaType.APPLICATION_JSON_VALUE);
 
-      requestObject = gbifAuthService.signRequest("gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
+      requestObject =
+          gbifAuthService.signRequest(
+              "gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
     }
   }
 
   @When("{word} login by APP role")
   public void loginByAppRole(String state) throws Exception {
     if ("invalid".equals(state)) {
-      result = mvc
-        .perform(
-          post("/test/app")
-            .headers(requestObject.getHttpHeaders()));
+      result = mvc.perform(post("/test/app").headers(requestObject.getHttpHeaders()));
     } else {
-      result = mvc
-        .perform(
-          post("/test/app2")
-            .content(requestObject.getContent())
-            .contentType(MediaType.APPLICATION_JSON)
-            .headers(requestObject.getHttpHeaders()));
+      result =
+          mvc.perform(
+              post("/test/app2")
+                  .content(requestObject.getContent())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .headers(requestObject.getHttpHeaders()));
     }
   }
 
@@ -242,10 +255,7 @@ public class UserTestSteps {
 
   @When("perform whoami request for user {string} with password {string}")
   public void getUserInformation(String user, String password) throws Exception {
-    result = mvc
-      .perform(
-        post("/user/whoami")
-          .with(httpBasic(user, password)));
+    result = mvc.perform(post("/user/whoami").with(httpBasic(user, password)));
   }
 
   @Then("change password response contains error information {string}")

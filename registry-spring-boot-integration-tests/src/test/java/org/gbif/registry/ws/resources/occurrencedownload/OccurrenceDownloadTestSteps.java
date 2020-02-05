@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.occurrencedownload;
 
 import org.gbif.api.model.common.DOI;
@@ -13,16 +28,17 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import java.sql.Connection;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+
 import javax.sql.DataSource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
@@ -40,10 +56,18 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isDownloadDoi;
 import static org.gbif.registry.utils.matcher.RegistryMatchers.isRegistryOffsetDateTimeFormat;
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
-
 import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -55,8 +79,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class},
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = {RegistryIntegrationTestsConfiguration.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class OccurrenceDownloadTestSteps {
 
@@ -65,35 +90,28 @@ public class OccurrenceDownloadTestSteps {
   private DOI doi;
   private Download download;
 
-  @Autowired
-  private WebApplicationContext context;
+  @Autowired private WebApplicationContext context;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Autowired
-  private OccurrenceDownloadService occurrenceDownloadService;
+  @Autowired private OccurrenceDownloadService occurrenceDownloadService;
 
-  @Autowired
-  private DataSource ds;
+  @Autowired private DataSource ds;
 
   private Connection connection;
 
-  @Autowired
-  private BeanUtilsBean beanUtils;
+  @Autowired private BeanUtilsBean beanUtils;
 
   @Before("@OccurrenceDownload")
   public void setUp() throws Exception {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_list_prepare.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource("/scripts/occurrencedownload/occurrence_download_list_prepare.sql"));
 
-    mvc = MockMvcBuilders
-      .webAppContextSetup(context)
-      .apply(springSecurity())
-      .build();
+    mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
   }
 
   @Before("@DownloadUserStatistic")
@@ -101,15 +119,16 @@ public class OccurrenceDownloadTestSteps {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_prepare.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource(
+            "/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource(
+            "/scripts/occurrencedownload/occurrence_download_statistic_prepare.sql"));
 
-    mvc = MockMvcBuilders
-      .webAppContextSetup(context)
-      .apply(springSecurity())
-      .build();
+    mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
   }
 
   @Before("@OccurrenceDownloadUsage")
@@ -117,20 +136,19 @@ public class OccurrenceDownloadTestSteps {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_prepare.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_prepare.sql"));
 
-    mvc = MockMvcBuilders
-      .webAppContextSetup(context)
-      .apply(springSecurity())
-      .build();
+    mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
   }
 
   @After("@OccurrenceDownload")
   public void tearDown() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_cleanup.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource("/scripts/occurrencedownload/occurrence_download_cleanup.sql"));
 
     connection.close();
   }
@@ -139,16 +157,19 @@ public class OccurrenceDownloadTestSteps {
   public void cleanUserStatistic() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource(
+            "/scripts/occurrencedownload/occurrence_download_statistic_clean.sql"));
   }
 
   @After("@OccurrenceDownloadUsage")
   public void cleanDownloadUsage() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
 
-    ScriptUtils.executeSqlScript(connection,
-      new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_clean.sql"));
+    ScriptUtils.executeSqlScript(
+        connection,
+        new ClassPathResource("/scripts/occurrencedownload/occurrence_download_usage_clean.sql"));
   }
 
   @Given("equals predicate download")
@@ -159,24 +180,25 @@ public class OccurrenceDownloadTestSteps {
   private Download getTestInstancePredicateDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(
-      new PredicateDownloadRequest(
-        new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
-        TestConstants.TEST_ADMIN,
-        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
-        true,
-        DownloadFormat.DWCA));
+        new PredicateDownloadRequest(
+            new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212"),
+            TestConstants.TEST_ADMIN,
+            Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+            true,
+            DownloadFormat.DWCA));
     return download;
   }
 
   @Given("download with invalid parameters")
   public void prepareInvalidParamsDownload(DataTable dataTable) throws Exception {
     DateTimeConverter dateConverter = new DateConverter(null);
-    dateConverter.setPatterns(new String[]{"dd-MM-yyyy"});
+    dateConverter.setPatterns(new String[] {"dd-MM-yyyy"});
     ConvertUtils.register(dateConverter, Date.class);
 
     for (Map<String, String> params : dataTable.asMaps()) {
       for (Map.Entry<String, String> entry : params.entrySet()) {
-        BeanUtils.setProperty(download, entry.getKey(), "null".equals(entry.getValue()) ? null : entry.getValue());
+        BeanUtils.setProperty(
+            download, entry.getKey(), "null".equals(entry.getValue()) ? null : entry.getValue());
       }
     }
   }
@@ -185,12 +207,12 @@ public class OccurrenceDownloadTestSteps {
   public void prepareNullPredicateDownload() {
     Download download = getTestInstanceDownload();
     download.setRequest(
-      new PredicateDownloadRequest(
-        null,
-        TestConstants.TEST_ADMIN,
-        Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
-        true,
-        DownloadFormat.DWCA));
+        new PredicateDownloadRequest(
+            null,
+            TestConstants.TEST_ADMIN,
+            Arrays.asList("address1@mailinator.org", "address2@mailinator.org"),
+            true,
+            DownloadFormat.DWCA));
     this.download = download;
   }
 
@@ -222,12 +244,12 @@ public class OccurrenceDownloadTestSteps {
   public void createDownload(String userRole, String username) throws Exception {
     String stringContent = objectMapper.writeValueAsString(download);
 
-    result = mvc
-      .perform(
-        post("/occurrence/download")
-          .with(httpBasic(username, TEST_PASSWORD))
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(stringContent));
+    result =
+        mvc.perform(
+            post("/occurrence/download")
+                .with(httpBasic(username, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(stringContent));
   }
 
   @When("get download")
@@ -237,16 +259,14 @@ public class OccurrenceDownloadTestSteps {
 
   @When("get download {string}")
   public void getDownload(String downloadKey) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/{key}", downloadKey));
+    result = mvc.perform(get("/occurrence/download/{key}", downloadKey));
   }
 
   @When("get download by doi")
   public void getDownloadByDoi() throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()));
+    result =
+        mvc.perform(
+            get("/occurrence/download/{prefix}/{suffix}", doi.getPrefix(), doi.getSuffix()));
   }
 
   @When("list downloads using {word} {string}")
@@ -255,30 +275,36 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @When("list downloads using {word} {string} with query params")
-  public void listDownloads(String userRole, String username, Map<String, List<String>> params) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download")
-          .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(params)));
+  public void listDownloads(String userRole, String username, Map<String, List<String>> params)
+      throws Exception {
+    result =
+        mvc.perform(
+            get("/occurrence/download")
+                .with(httpBasic(username, TEST_PASSWORD))
+                .params(new LinkedMultiValueMap<>(params)));
   }
 
   @When("list downloads by user {string} using {word} {string}")
-  public void listDownloadsByUser(String userParam, String userRole, String username) throws Exception {
+  public void listDownloadsByUser(String userParam, String userRole, String username)
+      throws Exception {
     listDownloadsByUser(userParam, userRole, username, new HashMap<>());
   }
 
   @When("list downloads by user {string} using {word} {string} with query params")
-  public void listDownloadsByUser(String userParam, String userRole, String username, Map<String, List<String>> params) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/user/{user}", userParam)
-          .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(params)));
+  public void listDownloadsByUser(
+      String userParam, String userRole, String username, Map<String, List<String>> params)
+      throws Exception {
+    result =
+        mvc.perform(
+            get("/occurrence/download/user/{user}", userParam)
+                .with(httpBasic(username, TEST_PASSWORD))
+                .params(new LinkedMultiValueMap<>(params)));
   }
 
   @When("update occurrence download {string} using {word} {string} with values")
-  public void updateDownload(String downloadKey, String userRole, String username, Map<String, String> params) throws Exception {
+  public void updateDownload(
+      String downloadKey, String userRole, String username, Map<String, String> params)
+      throws Exception {
     download = occurrenceDownloadService.get(downloadKey);
 
     for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -287,21 +313,23 @@ public class OccurrenceDownloadTestSteps {
 
     String content = objectMapper.writeValueAsString(download);
 
-    result = mvc
-      .perform(
-        put("/occurrence/download/{key}", downloadKey)
-          .with(httpBasic(username, TEST_PASSWORD))
-          .content(content)
-          .contentType(MediaType.APPLICATION_JSON));
+    result =
+        mvc.perform(
+            put("/occurrence/download/{key}", downloadKey)
+                .with(httpBasic(username, TEST_PASSWORD))
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON));
   }
 
   @When("get download statistic using {word} {string} with params")
-  public void getDownloadStatisticByCountry(String userType, String username, Map<String, List<String>> requestParams) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/statistics/downloadsByUserCountry")
-          .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams))).andDo(print());
+  public void getDownloadStatisticByCountry(
+      String userType, String username, Map<String, List<String>> requestParams) throws Exception {
+    result =
+        mvc.perform(
+                get("/occurrence/download/statistics/downloadsByUserCountry")
+                    .with(httpBasic(username, TEST_PASSWORD))
+                    .params(new LinkedMultiValueMap<>(requestParams)))
+            .andDo(print());
   }
 
   @When("get download statistic using {word} {string} without params")
@@ -310,12 +338,14 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @When("get downloaded records by dataset using {word} {string} with params")
-  public void getDownloadedRecordsByDataset(String userType, String username, Map<String, List<String>> requestParams) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/statistics/downloadedRecordsByDataset")
-          .with(httpBasic(username, TEST_PASSWORD))
-          .params(new LinkedMultiValueMap<>(requestParams))).andDo(print());
+  public void getDownloadedRecordsByDataset(
+      String userType, String username, Map<String, List<String>> requestParams) throws Exception {
+    result =
+        mvc.perform(
+                get("/occurrence/download/statistics/downloadedRecordsByDataset")
+                    .with(httpBasic(username, TEST_PASSWORD))
+                    .params(new LinkedMultiValueMap<>(requestParams)))
+            .andDo(print());
   }
 
   @When("get downloaded records by dataset using {word} {string} without params")
@@ -323,8 +353,11 @@ public class OccurrenceDownloadTestSteps {
     getDownloadedRecordsByDataset(userType, username, new LinkedHashMap<>());
   }
 
-  @When("create occurrence download usage for download {string} using {word} {string} with citations")
-  public void createOccurrenceDownloadUsage(String downloadKey, String userType, String username, Map<String, String> citations) throws Exception {
+  @When(
+      "create occurrence download usage for download {string} using {word} {string} with citations")
+  public void createOccurrenceDownloadUsage(
+      String downloadKey, String userType, String username, Map<String, String> citations)
+      throws Exception {
     // values must be numbers not strings
     Map<String, Long> mappedCitations = new HashMap<>();
     for (String key : citations.keySet()) {
@@ -332,52 +365,53 @@ public class OccurrenceDownloadTestSteps {
     }
     String stringContent = objectMapper.writeValueAsString(mappedCitations);
 
-    result = mvc
-      .perform(
-        post("/occurrence/download/{key}/datasets", downloadKey)
-          .with(httpBasic(username, TEST_PASSWORD))
-          .contentType(MediaType.APPLICATION_JSON)
-          .content(stringContent));
+    result =
+        mvc.perform(
+            post("/occurrence/download/{key}/datasets", downloadKey)
+                .with(httpBasic(username, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(stringContent));
   }
 
   @When("list dataset usages by dataset {string} using {word} {string}")
-  public void listUsagesByDataset(String datasetKey, String userType, String username) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/dataset/{datasetKey}", datasetKey)
-          .with(httpBasic(username, TEST_PASSWORD)));
+  public void listUsagesByDataset(String datasetKey, String userType, String username)
+      throws Exception {
+    result =
+        mvc.perform(
+            get("/occurrence/download/dataset/{datasetKey}", datasetKey)
+                .with(httpBasic(username, TEST_PASSWORD)));
   }
 
   @When("list dataset usages for download {string} using {word} {string}")
   public void listUsages(String downloadKey, String userType, String username) throws Exception {
-    result = mvc
-      .perform(
-        get("/occurrence/download/{key}/datasets", downloadKey)
-          .with(httpBasic(username, TEST_PASSWORD)));
+    result =
+        mvc.perform(
+            get("/occurrence/download/{key}/datasets", downloadKey)
+                .with(httpBasic(username, TEST_PASSWORD)));
   }
 
   @Then("response status should be {int}")
   public void checkResponseStatus(int status) throws Exception {
-    result
-      .andExpect(status().is(status));
+    result.andExpect(status().is(status));
   }
 
   @Then("{word} download assertions passed")
-  public void checkDownloadResponse(String downloadType, Map<String, String> params) throws Exception {
+  public void checkDownloadResponse(String downloadType, Map<String, String> params)
+      throws Exception {
     checkDownloadResponse(params);
   }
 
   @Then("download assertions passed")
   public void checkDownloadResponse(Map<String, String> params) throws Exception {
     result
-      .andExpect(jsonPath("$.key").value(download.getKey()))
-      .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
-      .andExpect(jsonPath("$.created").value(isRegistryOffsetDateTimeFormat()))
-      .andExpect(jsonPath("$.modified").value(isRegistryOffsetDateTimeFormat()))
-      .andExpect(jsonPath("$.eraseAfter").value(isRegistryOffsetDateTimeFormat()))
-      // sensitive information is not present
-      .andExpect(jsonPath("$.request.creator").doesNotExist())
-      .andExpect(jsonPath("$.request.notificationAddresses").doesNotExist());
+        .andExpect(jsonPath("$.key").value(download.getKey()))
+        .andExpect(jsonPath("$.doi").value(isDownloadDoi()))
+        .andExpect(jsonPath("$.created").value(isRegistryOffsetDateTimeFormat()))
+        .andExpect(jsonPath("$.modified").value(isRegistryOffsetDateTimeFormat()))
+        .andExpect(jsonPath("$.eraseAfter").value(isRegistryOffsetDateTimeFormat()))
+        // sensitive information is not present
+        .andExpect(jsonPath("$.request.creator").doesNotExist())
+        .andExpect(jsonPath("$.request.notificationAddresses").doesNotExist());
 
     for (Map.Entry<String, String> entry : params.entrySet()) {
       result.andExpect(jsonPath("$." + entry.getKey()).value(entry.getValue()));
@@ -406,11 +440,12 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @Then("response contains {int} records for {int} years")
-  public void checkStatisticResponse(int numberOfRecords, int expectedYears, List<Map<String, String>> expectedData) throws Exception {
+  public void checkStatisticResponse(
+      int numberOfRecords, int expectedYears, List<Map<String, String>> expectedData)
+      throws Exception {
     result.andExpect(jsonPath("$.length()").value(expectedYears));
     for (Map<String, String> expected : expectedData) {
-      result
-        .andExpect(jsonPath("$." + expected.get("year.month")).value(expected.get("value")));
+      result.andExpect(jsonPath("$." + expected.get("year.month")).value(expected.get("value")));
     }
   }
 
@@ -420,21 +455,24 @@ public class OccurrenceDownloadTestSteps {
   }
 
   @Then("occurrence downloads usage list of {int} elements is")
-  public void checkDownloadUsageResponse(int expectedNumberOfElements, DataTable dataTable) throws Exception {
+  public void checkDownloadUsageResponse(int expectedNumberOfElements, DataTable dataTable)
+      throws Exception {
     result.andExpect(jsonPath("$.count").value(expectedNumberOfElements));
     int iteration = 0;
     for (Map<String, String> params : dataTable.asMaps()) {
       for (Map.Entry<String, String> entry : params.entrySet()) {
-        result.andExpect(jsonPath(String.format("$.results[%d].%s", iteration, entry.getKey())).value(entry.getValue()));
+        result.andExpect(
+            jsonPath(String.format("$.results[%d].%s", iteration, entry.getKey()))
+                .value(entry.getValue()));
       }
       iteration++;
     }
   }
 
   /**
-   * Creates {@link Download} instance with test data using a predicate request.
-   * The key is generated randomly using the class java.util.UUID.
-   * The instance generated should be ready and valid to be persisted.
+   * Creates {@link Download} instance with test data using a predicate request. The key is
+   * generated randomly using the class java.util.UUID. The instance generated should be ready and
+   * valid to be persisted.
    */
   private static Download getTestInstanceDownload() {
     Download download = new Download();

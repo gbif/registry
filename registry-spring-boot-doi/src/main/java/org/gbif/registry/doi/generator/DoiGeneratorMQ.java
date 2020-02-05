@@ -1,8 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.generator;
 
-import com.google.common.base.Strings;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
@@ -14,15 +26,21 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DoiPersistenceService;
 import org.gbif.registry.doi.DoiType;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.net.URI;
-import java.util.UUID;
+import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -84,17 +102,20 @@ public class DoiGeneratorMQ implements DoiGenerator {
         return doi;
       } catch (Exception e) {
         // might have hit a unique constraint, try another doi
-        LOG.debug("Exception: {}. Random {} DOI {} existed. Try another one", type, doi, e.getMessage());
+        LOG.debug(
+            "Exception: {}. Random {} DOI {} existed. Try another one", type, doi, e.getMessage());
       }
     }
     throw new IllegalStateException("Tried 100 random DOIs and none worked, Giving up");
   }
 
   /**
-   * @return a random DOI with the given prefix. It is not guaranteed to be unique and might exist already
+   * @return a random DOI with the given prefix. It is not guaranteed to be unique and might exist
+   *     already
    */
   private DOI random(@Nullable String shoulder) {
-    String suffix = Strings.nullToEmpty(shoulder) + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH);
+    String suffix =
+        Strings.nullToEmpty(shoulder) + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH);
     return new DOI(prefix, suffix);
   }
 
@@ -105,18 +126,23 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   @Override
   public void failed(DOI doi, InvalidMetadataException e) {
-    // Updates the doi table to FAILED status and uses the error stacktrace as the xml for debugging.
-    doiPersistenceService.update(doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
+    // Updates the doi table to FAILED status and uses the error stacktrace as the xml for
+    // debugging.
+    doiPersistenceService.update(
+        doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
   }
 
   @Override
-  public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey) throws InvalidMetadataException {
+  public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey)
+      throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(datasetKey, "Dataset key required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
+    Message message =
+        new ChangeDoiMessage(
+            DoiStatus.REGISTERED, doi, xml, datasetTarget.resolve(datasetKey.toString()));
 
     try {
       messagePublisher.send(message);
@@ -126,13 +152,15 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
-  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey) throws InvalidMetadataException {
+  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey)
+      throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(downloadKey, "Download key required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
+    Message message =
+        new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
 
     try {
       messagePublisher.send(message);
@@ -142,12 +170,15 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
-  public void registerDataPackage(DOI doi, DataCiteMetadata metadata) throws InvalidMetadataException {
+  public void registerDataPackage(DOI doi, DataCiteMetadata metadata)
+      throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, dataPackageTarget.resolve(doi.getDoiName()));
+    Message message =
+        new ChangeDoiMessage(
+            DoiStatus.REGISTERED, doi, xml, dataPackageTarget.resolve(doi.getDoiName()));
     try {
       messagePublisher.send(message);
     } catch (IOException e) {

@@ -1,19 +1,33 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata;
 
-import org.xml.sax.SAXException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
-/**
- * GBIF Metadata Profile schema validator utility.
- */
+import org.xml.sax.SAXException;
+
+/** GBIF Metadata Profile schema validator utility. */
 @NotThreadSafe
 public class EmlValidator {
 
@@ -22,8 +36,8 @@ public class EmlValidator {
   private final Validator validator;
 
   /**
-   * Return an instance of {@link EmlValidator} for a specific {@link EMLProfileVersion}.
-   * {@link EmlValidator} instances are NOT thread safe.
+   * Return an instance of {@link EmlValidator} for a specific {@link EMLProfileVersion}. {@link
+   * EmlValidator} instances are NOT thread safe.
    *
    * @param version
    * @return
@@ -35,9 +49,7 @@ public class EmlValidator {
     return new EmlValidator(schema.newValidator());
   }
 
-  /**
-   * Private constructor, use {@link #newValidator(EMLProfileVersion)}
-   */
+  /** Private constructor, use {@link #newValidator(EMLProfileVersion)} */
   private EmlValidator(Validator validator) {
     this.validator = validator;
   }

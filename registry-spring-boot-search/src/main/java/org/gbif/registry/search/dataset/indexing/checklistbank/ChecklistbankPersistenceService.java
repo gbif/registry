@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.search.dataset.indexing.checklistbank;
 
 import java.sql.Array;
@@ -8,28 +23,24 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-/**
- * A builder that will clear and build a new dataset index by paging over the given service.
- */
+import lombok.extern.slf4j.Slf4j;
+
+/** A builder that will clear and build a new dataset index by paging over the given service. */
 @Slf4j
 @Component
 public class ChecklistbankPersistenceService {
 
-  private static final String SQL = "SELECT array_agg(nub_fk) as keys " +
-                                    "FROM nub_rel " +
-                                    "WHERE dataset_key = '%s'";
+  private static final String SQL =
+      "SELECT array_agg(nub_fk) as keys " + "FROM nub_rel " + "WHERE dataset_key = '%s'";
 
   @Autowired
   @Qualifier("clb_datasource")
   private DataSource dataSource;
-  /**
-   * Pages over all datasets and adds them to SOLR.
-   */
+  /** Pages over all datasets and adds them to SOLR. */
   public Integer[] getTaxonKeys(String datasetKey) {
 
     try (Connection conn = dataSource.getConnection()) {
@@ -44,8 +55,8 @@ public class ChecklistbankPersistenceService {
       if (rs.next()) {
         try {
           Array result = rs.getArray("keys");
-          if(Objects.nonNull(result)) {
-            return (Integer[])result.getArray();
+          if (Objects.nonNull(result)) {
+            return (Integer[]) result.getArray();
           } else {
             return new Integer[0];
           }
@@ -60,5 +71,4 @@ public class ChecklistbankPersistenceService {
     }
     return new Integer[0];
   }
-
 }

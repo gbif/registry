@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.search.dataset.search.common;
 
 import org.gbif.api.model.common.search.FacetedSearchRequest;
@@ -19,9 +34,6 @@ import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.geo.ShapeRelation;
@@ -51,8 +63,19 @@ import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import static org.gbif.api.util.SearchTypeValidator.isRange;
-import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.*;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.CARDINALITIES;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.DATE_FIELDS;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.RANGE_SEPARATOR;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.RANGE_WILDCARD;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.UPPER_BOUND_RANGE_PARSER;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetLimit;
+import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.extractFacetOffset;
 
 public class EsSearchRequestBuilder<P extends SearchParameter> {
 
@@ -65,7 +88,8 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     this.esFieldMapper = esFieldMapper;
   }
 
-  public SearchRequest buildSearchRequest(FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
+  public SearchRequest buildSearchRequest(
+      FacetedSearchRequest<P> searchRequest, boolean facetsEnabled, String index) {
 
     SearchRequest esRequest = new SearchRequest();
     esRequest.indices(index);
@@ -127,7 +151,8 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                     .skipDuplicates(true)));
 
     // add source field
-    searchSourceBuilder.fetchSource(esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
+    searchSourceBuilder.fetchSource(
+        esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
 
     return request;
   }
@@ -148,7 +173,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
         shouldGeometry
             .should()
             .addAll(
-                params.get((P)OccurrenceSearchParameter.GEOMETRY).stream()
+                params.get((P) OccurrenceSearchParameter.GEOMETRY).stream()
                     .map(EsSearchRequestBuilder::buildGeoShapeQuery)
                     .collect(Collectors.toList()));
         bool.filter().add(shouldGeometry);
@@ -161,7 +186,8 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                   .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
                   .flatMap(
                       e ->
-                          buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey())).stream())
+                          buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
+                              .stream())
                   .collect(Collectors.toList()));
     }
 
@@ -208,29 +234,34 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
             postFilterParams.asMap().entrySet().stream()
                 .flatMap(
                     e ->
-                        buildTermQuery(
-                          e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
+                        buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
                             .stream())
                 .collect(Collectors.toList()));
 
     return Optional.of(bool);
   }
 
-  private Optional<List<AggregationBuilder>> buildAggs(FacetedSearchRequest<P> searchRequest,
-                                                                                          Multimap<P, String> postFilterParams,
-                                                                                          boolean facetsEnabled) {
-    if (!facetsEnabled || searchRequest.getFacets() == null || searchRequest.getFacets().isEmpty()) {
+  private Optional<List<AggregationBuilder>> buildAggs(
+      FacetedSearchRequest<P> searchRequest,
+      Multimap<P, String> postFilterParams,
+      boolean facetsEnabled) {
+    if (!facetsEnabled
+        || searchRequest.getFacets() == null
+        || searchRequest.getFacets().isEmpty()) {
       return Optional.empty();
     }
 
-    if (searchRequest.isMultiSelectFacets() && postFilterParams != null && !postFilterParams.isEmpty()) {
+    if (searchRequest.isMultiSelectFacets()
+        && postFilterParams != null
+        && !postFilterParams.isEmpty()) {
       return Optional.of(buildFacetsMultiselect(searchRequest, postFilterParams));
     }
 
     return Optional.of(buildFacets(searchRequest));
   }
 
-  private List<AggregationBuilder> buildFacetsMultiselect(FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
+  private List<AggregationBuilder> buildFacetsMultiselect(
+      FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
 
     if (searchRequest.getFacets().size() == 1) {
       // same case as normal facets
@@ -251,16 +282,13 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
                           .flatMap(
                               e ->
                                   buildTermQuery(
-                                    e.getValue(),
-                                    e.getKey(),
-                                    esFieldMapper.get(e.getKey()))
+                                      e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
                                       .stream())
                           .collect(Collectors.toList()));
 
               // add filter to the aggs
               String esField = esFieldMapper.get(facetParam);
-              FilterAggregationBuilder filterAggs =
-                  AggregationBuilders.filter(esField, bool);
+              FilterAggregationBuilder filterAggs = AggregationBuilders.filter(esField, bool);
 
               // build terms aggs and add it to the filter aggs
               TermsAggregationBuilder termsAggs =
@@ -294,14 +322,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   private static TermsAggregationBuilder buildTermsAggs(
-      String aggsName,
-      String esField,
-      int facetOffset,
-      int facetLimit,
-      Integer minCount) {
+      String aggsName, String esField, int facetOffset, int facetLimit, Integer minCount) {
     // build aggs for the field
-    TermsAggregationBuilder termsAggsBuilder =
-        AggregationBuilders.terms(aggsName).field(esField);
+    TermsAggregationBuilder termsAggsBuilder = AggregationBuilders.terms(aggsName).field(esField);
 
     // min count
     Optional.ofNullable(minCount).ifPresent(termsAggsBuilder::minDocCount);
@@ -451,8 +474,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     }
 
     try {
-      return QueryBuilders.geoShapeQuery("coordinate", shapeBuilder)
-          .relation(ShapeRelation.WITHIN);
+      return QueryBuilders.geoShapeQuery("coordinate", shapeBuilder).relation(ShapeRelation.WITHIN);
     } catch (IOException e) {
       throw new IllegalStateException(e.getMessage(), e);
     }
