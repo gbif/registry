@@ -1,6 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.domain.ws;
 
-import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
@@ -10,11 +24,12 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Strings;
+
 /**
- * Class used to generate responses for legacy (GBRDS/IPT) API.
- * </br>
- * JAXB annotations allow the class to be converted into an XML document or JSON response. @XmlElement is used to
- * specify element names that consumers of legacy services expect to find.
+ * Class used to generate responses for legacy (GBRDS/IPT) API. </br> JAXB annotations allow the
+ * class to be converted into an XML document or JSON response. @XmlElement is used to specify
+ * element names that consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "resource")
 public class LegacyDatasetResponse {
@@ -35,22 +50,36 @@ public class LegacyDatasetResponse {
 
   public LegacyDatasetResponse(Dataset dataset, Contact contact) {
     key = dataset.getKey() == null ? "" : dataset.getKey().toString();
-    organisationKey = dataset.getPublishingOrganizationKey() == null ? "" : dataset.getPublishingOrganizationKey().toString();
+    organisationKey =
+        dataset.getPublishingOrganizationKey() == null
+            ? ""
+            : dataset.getPublishingOrganizationKey().toString();
     name = dataset.getTitle() == null ? "" : dataset.getTitle();
     description = dataset.getDescription() == null ? "" : dataset.getDescription();
-    descriptionLanguage = dataset.getLanguage() == null ? "" : dataset.getLanguage().getIso2LetterCode();
+    descriptionLanguage =
+        dataset.getLanguage() == null ? "" : dataset.getLanguage().getIso2LetterCode();
     nameLanguage = dataset.getLanguage() == null ? "" : dataset.getLanguage().getIso2LetterCode();
     homepageURL = dataset.getHomepage() == null ? "" : dataset.getHomepage().toString();
-    primaryContactAddress = contact == null || contact.getAddress().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getAddress().get(0));
-    primaryContactDescription = contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
-    primaryContactEmail = contact == null || contact.getEmail().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getEmail().get(0));
-    primaryContactPhone = contact == null || contact.getPhone().isEmpty() ? "" :
-        Strings.nullToEmpty(contact.getPhone().get(0));
-    primaryContactName = contact == null
-        ? ""
-        : Strings.nullToEmpty(contact.getFirstName()) + " " + Strings.nullToEmpty(contact.getLastName());
+    primaryContactAddress =
+        contact == null || contact.getAddress().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getAddress().get(0));
+    primaryContactDescription =
+        contact == null ? "" : Strings.nullToEmpty(contact.getDescription());
+    primaryContactEmail =
+        contact == null || contact.getEmail().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getEmail().get(0));
+    primaryContactPhone =
+        contact == null || contact.getPhone().isEmpty()
+            ? ""
+            : Strings.nullToEmpty(contact.getPhone().get(0));
+    primaryContactName =
+        contact == null
+            ? ""
+            : Strings.nullToEmpty(contact.getFirstName())
+                + " "
+                + Strings.nullToEmpty(contact.getLastName());
     // conversion of contact type, defaulting to ""
     primaryContactType = "";
     if (contact != null) {
@@ -65,11 +94,8 @@ public class LegacyDatasetResponse {
     }
   }
 
-  /**
-   * No argument, default constructor needed by JAXB.
-   */
-  public LegacyDatasetResponse() {
-  }
+  /** No argument, default constructor needed by JAXB. */
+  public LegacyDatasetResponse() {}
 
   @XmlElement(name = LegacyResourceConstants.KEY_PARAM)
   @NotNull

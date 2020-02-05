@@ -1,7 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
@@ -11,6 +24,14 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
+
+import java.util.Base64;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,17 +39,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 
 import static org.gbif.ws.util.CommonWsUtils.getFirst;
 
-/**
- * Class providing temporary authorization for legacy web service requests (GBRDS/IPT).
- */
+/** Class providing temporary authorization for legacy web service requests (GBRDS/IPT). */
 @Service
 public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationService {
 
@@ -39,17 +55,18 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   private final DatasetMapper datasetMapper;
   private final InstallationMapper installationMapper;
 
-  public LegacyAuthorizationServiceImpl(OrganizationMapper organizationMapper,
-                                        DatasetMapper datasetMapper,
-                                        InstallationMapper installationMapper) {
+  public LegacyAuthorizationServiceImpl(
+      OrganizationMapper organizationMapper,
+      DatasetMapper datasetMapper,
+      InstallationMapper installationMapper) {
     this.organizationMapper = organizationMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
   }
 
   /**
-   * Evaluates the Basic authentication header and verifies provided password matches with the registered one.
-   * Checks both for organizations and installation keys.
+   * Evaluates the Basic authentication header and verifies provided password matches with the
+   * registered one. Checks both for organizations and installation keys.
    *
    * @return the registry entity this request has authenticated with
    */
@@ -67,8 +84,10 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
     try {
       final UUID user = UUID.fromString(iter.next());
       final String password = iter.next();
-      String organizationKeyStr = getFirst(httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
-      final UUID organizationKey = organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
+      String organizationKeyStr =
+          getFirst(httpRequest.getParameterMap(), LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
+      final UUID organizationKey =
+          organizationKeyStr != null ? UUID.fromString(organizationKeyStr) : null;
 
       return authenticateInternal(user, password, organizationKey);
     } catch (NoSuchElementException e) {
@@ -82,7 +101,8 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   }
 
   @NotNull
-  private LegacyRequestAuthorization authenticateInternal(UUID user, String password, UUID organizationKey) {
+  private LegacyRequestAuthorization authenticateInternal(
+      UUID user, String password, UUID organizationKey) {
     // try to validate organization key first
     Organization org = organizationMapper.get(user);
     if (org != null) {
@@ -104,9 +124,9 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   }
 
   /**
-   * Determine if HTTP request is authorized to modify Organization. The difference between this method and
-   * isAuthorizedToModifyOrganization(organizationKey) is that the organizationKey must first be parsed from the
-   * form parameters.
+   * Determine if HTTP request is authorized to modify Organization. The difference between this
+   * method and isAuthorizedToModifyOrganization(organizationKey) is that the organizationKey must
+   * first be parsed from the form parameters.
    *
    * @return true if the HTTP request is authorized to modify Organization
    * @see this#isAuthorizedToModifyOrganization(LegacyRequestAuthorization, UUID)
@@ -120,7 +140,8 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   }
 
   @Override
-  public boolean isAuthorizedToModifyOrganization(LegacyRequestAuthorization authorization, UUID organizationKey) {
+  public boolean isAuthorizedToModifyOrganization(
+      LegacyRequestAuthorization authorization, UUID organizationKey) {
     if (organizationKey == null) {
       return false;
     }
@@ -136,17 +157,18 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   }
 
   /**
-   * Determine if HTTP request is authorized to modify a Dataset belonging to an Organization.
-   * This method checks that the same organizationKey is specified in the credentials and HTTP form parameters,
-   * that the Organization corresponding to that organizationKey exists, that the Dataset corresponding to the
-   * datasetKey exists, that the Dataset is owned by that Organization, and that the correct organization password has
-   * been supplied.
+   * Determine if HTTP request is authorized to modify a Dataset belonging to an Organization. This
+   * method checks that the same organizationKey is specified in the credentials and HTTP form
+   * parameters, that the Organization corresponding to that organizationKey exists, that the
+   * Dataset corresponding to the datasetKey exists, that the Dataset is owned by that Organization,
+   * and that the correct organization password has been supplied.
    *
    * @param datasetKey Dataset key
    * @return true if the HTTP request is authorized to modify a Dataset belonging to Organization
    */
   @Override
-  public boolean isAuthorizedToModifyOrganizationsDataset(LegacyRequestAuthorization authorization, UUID datasetKey) {
+  public boolean isAuthorizedToModifyOrganizationsDataset(
+      LegacyRequestAuthorization authorization, UUID datasetKey) {
     if (datasetKey == null) {
       LOG.error("Dataset key was null");
       return false;
@@ -167,14 +189,16 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
 
     // check if an organisationKey was included in form params, that the organization keys match
     UUID organizationKeyFromFormParams = authorization.getOrganizationKey();
-    if (organizationKeyFromFormParams != null &&
-      organizationKeyFromFormParams.compareTo(authorization.getUserKey()) != 0) {
-      LOG.error("Different organization keys were specified in the form parameters and credentials");
+    if (organizationKeyFromFormParams != null
+        && organizationKeyFromFormParams.compareTo(authorization.getUserKey()) != 0) {
+      LOG.error(
+          "Different organization keys were specified in the form parameters and credentials");
       return false;
-
     }
-    LOG.info("Authorization succeeded, can modify dataset with key={} belonging to organization with key={}",
-      datasetKey, authorization.getUserKey());
+    LOG.info(
+        "Authorization succeeded, can modify dataset with key={} belonging to organization with key={}",
+        datasetKey,
+        authorization.getUserKey());
     return true;
   }
 
@@ -185,7 +209,8 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
    * @return true if the HTTP request is authorized to modify Installation
    */
   @Override
-  public boolean isAuthorizedToModifyInstallation(LegacyRequestAuthorization authorization, UUID installationKey) {
+  public boolean isAuthorizedToModifyInstallation(
+      LegacyRequestAuthorization authorization, UUID installationKey) {
     // retrieve path param for installation key
     if (installationKey == null) {
       return false;
@@ -198,6 +223,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return false;
     }
 
-    return installation.getKey() != null && installation.getKey().equals(authorization.getUserKey());
+    return installation.getKey() != null
+        && installation.getKey().equals(authorization.getUserKey());
   }
 }

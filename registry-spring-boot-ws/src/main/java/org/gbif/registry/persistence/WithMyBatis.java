@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.persistence;
 
 import org.gbif.api.model.common.paging.Pageable;
@@ -23,11 +38,13 @@ import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import javax.annotation.Nullable;
-import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -35,12 +52,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Service
 public class WithMyBatis {
 
-  private static final String CREATE_ERROR_MESSAGE = "Unable to create an entity which already has a key";
+  private static final String CREATE_ERROR_MESSAGE =
+      "Unable to create an entity which already has a key";
 
   @Transactional
   public <T extends NetworkEntity> UUID create(NetworkEntityMapper<T> mapper, T entity) {
     checkArgument(entity.getKey() == null, CREATE_ERROR_MESSAGE);
-    // REVIEW: If this call fails the entity will have been modified anyway! We could make a copy and return that instead
+    // REVIEW: If this call fails the entity will have been modified anyway! We could make a copy
+    // and return that instead
     entity.setKey(UUID.randomUUID());
     mapper.create(entity);
     return entity.getKey();
@@ -54,11 +73,14 @@ public class WithMyBatis {
 
     if (existing.getDeleted() != null) {
       // allow updates ONLY if they are undeleting too
-      checkArgument(entity.getDeleted() == null,
-        "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+      checkArgument(
+          entity.getDeleted() == null,
+          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // do not allow deletion here (for safety) - we have an explicity deletion service
-      checkArgument(entity.getDeleted() == null, "Cannot delete using the update service.  Use the deletion service");
+      checkArgument(
+          entity.getDeleted() == null,
+          "Cannot delete using the update service.  Use the deletion service");
     }
 
     mapper.update(entity);
@@ -68,48 +90,53 @@ public class WithMyBatis {
    * The simple search option of the list.
    *
    * @param mapper To use for the search
-   * @param query  A simple query string such as "Pontaurus"
-   * @param page   To support paging
+   * @param query A simple query string such as "Pontaurus"
+   * @param page To support paging
    * @return A paging response
    */
-  public <T extends NetworkEntity> PagingResponse<T> search(NetworkEntityMapper<T> mapper,
-                                                            String query,
-                                                            Pageable page) {
+  public <T extends NetworkEntity> PagingResponse<T> search(
+      NetworkEntityMapper<T> mapper, String query, Pageable page) {
     checkNotNull(page, "To search you must supply a page");
     long total = mapper.count(query);
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.search(query, page));
+    return new PagingResponse<>(
+        page.getOffset(), page.getLimit(), total, mapper.search(query, page));
   }
 
-  public <T extends NetworkEntity> PagingResponse<T> list(NetworkEntityMapper<T> mapper, Pageable page) {
+  public <T extends NetworkEntity> PagingResponse<T> list(
+      NetworkEntityMapper<T> mapper, Pageable page) {
     long total = mapper.count();
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.list(page));
   }
 
-  public <T extends NetworkEntity> PagingResponse<T> listByIdentifier(NetworkEntityMapper<T> mapper,
-                                                                      @Nullable IdentifierType type,
-                                                                      String identifier,
-                                                                      Pageable page) {
+  public <T extends NetworkEntity> PagingResponse<T> listByIdentifier(
+      NetworkEntityMapper<T> mapper,
+      @Nullable IdentifierType type,
+      String identifier,
+      Pageable page) {
     checkNotNull(page, "To list by identifier you must supply a page");
     checkNotNull(identifier, "To list by identifier you must supply an identifier");
     long total = mapper.countByIdentifier(type, identifier);
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier, page));
+    return new PagingResponse<>(
+        page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier, page));
   }
 
   @Transactional
-  public int addComment(CommentMapper commentMapper,
-                        CommentableMapper commentableMapper,
-                        UUID targetEntityKey,
-                        Comment comment) {
+  public int addComment(
+      CommentMapper commentMapper,
+      CommentableMapper commentableMapper,
+      UUID targetEntityKey,
+      Comment comment) {
     checkArgument(comment.getKey() == null, CREATE_ERROR_MESSAGE);
     commentMapper.createComment(comment);
     commentableMapper.addComment(targetEntityKey, comment.getKey());
     return comment.getKey();
   }
 
-  public int addMachineTag(MachineTagMapper machineTagMapper,
-                           MachineTaggableMapper machineTaggableMapper,
-                           UUID targetEntityKey,
-                           MachineTag machineTag) {
+  public int addMachineTag(
+      MachineTagMapper machineTagMapper,
+      MachineTaggableMapper machineTaggableMapper,
+      UUID targetEntityKey,
+      MachineTag machineTag) {
     checkArgument(machineTag.getKey() == null, CREATE_ERROR_MESSAGE);
     machineTagMapper.createMachineTag(machineTag);
     machineTaggableMapper.addMachineTag(targetEntityKey, machineTag.getKey());
@@ -117,22 +144,25 @@ public class WithMyBatis {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> PagingResponse<T> listByMachineTag(MachineTaggableMapper mapper,
-                                                                      String namespace,
-                                                                      @Nullable String name,
-                                                                      @Nullable String value,
-                                                                      Pageable page) {
+  public <T> PagingResponse<T> listByMachineTag(
+      MachineTaggableMapper mapper,
+      String namespace,
+      @Nullable String name,
+      @Nullable String value,
+      Pageable page) {
     checkNotNull(page, "To list by machine tag you must supply a page");
     checkNotNull(namespace, "To list by machine tag you must supply a namespace");
     long total = mapper.countByMachineTag(namespace, name, value);
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.listByMachineTag(namespace, name, value, page));
+    return new PagingResponse<>(
+        page.getOffset(),
+        page.getLimit(),
+        total,
+        mapper.listByMachineTag(namespace, name, value, page));
   }
 
   @Transactional
-  public int addTag(TagMapper tagMapper,
-                    TaggableMapper taggableMapper,
-                    UUID targetEntityKey,
-                    Tag tag) {
+  public int addTag(
+      TagMapper tagMapper, TaggableMapper taggableMapper, UUID targetEntityKey, Tag tag) {
     // Mybatis needs an object to set the key on
     tagMapper.createTag(tag);
     taggableMapper.addTag(targetEntityKey, tag.getKey());
@@ -140,45 +170,52 @@ public class WithMyBatis {
   }
 
   @Transactional
-  public int addContact(ContactMapper contactMapper,
-                        ContactableMapper contactableMapper,
-                        UUID targetEntityKey,
-                        Contact contact) {
+  public int addContact(
+      ContactMapper contactMapper,
+      ContactableMapper contactableMapper,
+      UUID targetEntityKey,
+      Contact contact) {
     checkArgument(contact.getKey() == null, CREATE_ERROR_MESSAGE);
     contactMapper.createContact(contact);
     // is this a primary contact? We need to make sure it only exists once per type
     if (contact.isPrimary()) {
       contactableMapper.updatePrimaryContacts(targetEntityKey, contact.getType());
     }
-    contactableMapper.addContact(targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
+    contactableMapper.addContact(
+        targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
     return contact.getKey();
   }
 
   @Transactional
-  public int updateContact(ContactMapper contactMapper,
-                           ContactableMapper contactableMapper,
-                           UUID targetEntityKey,
-                           Contact contact) {
+  public int updateContact(
+      ContactMapper contactMapper,
+      ContactableMapper contactableMapper,
+      UUID targetEntityKey,
+      Contact contact) {
     checkArgument(contact.getKey() != null, "Unable to update an entity with no key");
     // null safe checking follows
-    checkArgument(Boolean.TRUE.equals(contactableMapper.areRelated(targetEntityKey, contact.getKey())),
-      "The provided contact is not connected to the given entity");
+    checkArgument(
+        Boolean.TRUE.equals(contactableMapper.areRelated(targetEntityKey, contact.getKey())),
+        "The provided contact is not connected to the given entity");
     // is this a primary contact? We need to make sure it only exists once per type
     if (contact.isPrimary()) {
       contactableMapper.updatePrimaryContacts(targetEntityKey, contact.getType());
     }
     contactMapper.updateContact(contact);
-    // update the type and is_primary (is_primary will have been set to false by updatePrimaryContacts above)
-    contactableMapper.updateContact(targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
+    // update the type and is_primary (is_primary will have been set to false by
+    // updatePrimaryContacts above)
+    contactableMapper.updateContact(
+        targetEntityKey, contact.getKey(), contact.getType(), contact.isPrimary());
     return contact.getKey();
   }
 
   @Transactional
-  public int addEndpoint(EndpointMapper endpointMapper,
-                         EndpointableMapper endpointableMapper,
-                         UUID targetEntityKey,
-                         Endpoint endpoint,
-                         MachineTagMapper machineTagMapper) {
+  public int addEndpoint(
+      EndpointMapper endpointMapper,
+      EndpointableMapper endpointableMapper,
+      UUID targetEntityKey,
+      Endpoint endpoint,
+      MachineTagMapper machineTagMapper) {
     checkArgument(endpoint.getKey() == null, CREATE_ERROR_MESSAGE);
     endpointMapper.createEndpoint(endpoint);
     endpointableMapper.addEndpoint(targetEntityKey, endpoint.getKey());
@@ -191,28 +228,29 @@ public class WithMyBatis {
   }
 
   /**
-   * Private scoped to avoid misuse. Endpoints break the general principle and DO persist nested entities, and can
-   * safely do so because they are immutable.
+   * Private scoped to avoid misuse. Endpoints break the general principle and DO persist nested
+   * entities, and can safely do so because they are immutable.
    */
-  private static void addMachineTag(MachineTagMapper machineTagMapper,
-                                    EndpointMapper endpointMapper,
-                                    Integer endpointKey,
-                                    MachineTag machineTag) {
+  private static void addMachineTag(
+      MachineTagMapper machineTagMapper,
+      EndpointMapper endpointMapper,
+      Integer endpointKey,
+      MachineTag machineTag) {
     machineTagMapper.createMachineTag(machineTag);
     endpointMapper.addMachineTag(endpointKey, machineTag.getKey());
   }
 
-  public void deleteEndpoint(EndpointableMapper endpointableMapper,
-                             UUID targetEntityKey,
-                             int endpointKey) {
+  public void deleteEndpoint(
+      EndpointableMapper endpointableMapper, UUID targetEntityKey, int endpointKey) {
     endpointableMapper.deleteEndpoint(targetEntityKey, endpointKey);
   }
 
   @Transactional
-  public int addIdentifier(IdentifierMapper identifierMapper,
-                           IdentifiableMapper identifiableMapper,
-                           UUID targetEntityKey,
-                           Identifier identifier) {
+  public int addIdentifier(
+      IdentifierMapper identifierMapper,
+      IdentifiableMapper identifiableMapper,
+      UUID targetEntityKey,
+      Identifier identifier) {
     checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
     identifierMapper.createIdentifier(identifier);
     identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey());

@@ -1,8 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.domain.ws;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
@@ -12,28 +24,32 @@ import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.net.URI;
-import java.util.UUID;
+
+import org.apache.commons.validator.routines.EmailValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 /**
- * Class used to create or update an Installation for legacy (GBRDS/IPT) API. A set of HTTP Form parameters coming from
- * a POST request are injected.
- * </br>
- * Its fields are injected using the @ParamName. It is assumed the following parameters exist in the HTTP request:
- * 'organisationKey', 'name', 'description', 'primaryContactName', 'primaryContactEmail', 'primaryContactType',
- * 'serviceTypes', 'serviceURLs', and 'wsPassword'.
- * </br>
- * JAXB annotations allow the class to be converted into an XML document, that gets included in the Response following
- * a successful registration or update. @XmlElement is used to specify element names that consumers of legacy services
- * expect to find.
+ * Class used to create or update an Installation for legacy (GBRDS/IPT) API. A set of HTTP Form
+ * parameters coming from a POST request are injected. </br> Its fields are injected using
+ * the @ParamName. It is assumed the following parameters exist in the HTTP request:
+ * 'organisationKey', 'name', 'description', 'primaryContactName', 'primaryContactEmail',
+ * 'primaryContactType', 'serviceTypes', 'serviceURLs', and 'wsPassword'. </br> JAXB annotations
+ * allow the class to be converted into an XML document, that gets included in the Response
+ * following a successful registration or update. @XmlElement is used to specify element names that
+ * consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "IptInstallation")
 public class LegacyInstallation extends Installation {
@@ -54,15 +70,14 @@ public class LegacyInstallation extends Installation {
   // IPT constants
   private static final String RSS_ENDPOINT_TYPE = "RSS";
 
-  /**
-   * Default constructor.
-   */
+  /** Default constructor. */
   public LegacyInstallation() {
     setType(InstallationType.IPT_INSTALLATION);
   }
 
   /**
-   * Set the hosting organization key. Mandatory field, injected on both register and update requests.
+   * Set the hosting organization key. Mandatory field, injected on both register and update
+   * requests.
    *
    * @param organizationKey organization key as UUID
    */
@@ -71,7 +86,8 @@ public class LegacyInstallation extends Installation {
     try {
       setOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
     } catch (IllegalArgumentException e) {
-      LOG.error("Hosting organization key is not a valid UUID: {}", Strings.nullToEmpty(organizationKey));
+      LOG.error(
+          "Hosting organization key is not a valid UUID: {}", Strings.nullToEmpty(organizationKey));
     }
   }
 
@@ -88,11 +104,9 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set the title.
-   * </br>
-   * The title must be at least 2 characters long, a limit set in the database schema. Since older versions
-   * of the IPT may not have imposed the same limit, the field is padded if necessary so as to avoid problems
-   * during persistence.
+   * Set the title. </br> The title must be at least 2 characters long, a limit set in the database
+   * schema. Since older versions of the IPT may not have imposed the same limit, the field is
+   * padded if necessary so as to avoid problems during persistence.
    *
    * @param name title of the installation
    */
@@ -102,8 +116,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Get the title of the installation. This method is not used but it is needed otherwise this Object
-   * can't be converted into an XML document via JAXB.
+   * Get the title of the installation. This method is not used but it is needed otherwise this
+   * Object can't be converted into an XML document via JAXB.
    *
    * @return title of the installation
    */
@@ -114,11 +128,9 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set the description.
-   * </br>
-   * The description must be at least 10 characters long, a limit set in the database schema. Since older versions
-   * of the IPT may not have imposed the same limit, the field is padded if necessary so as to avoid problems
-   * during persistence.
+   * Set the description. </br> The description must be at least 10 characters long, a limit set in
+   * the database schema. Since older versions of the IPT may not have imposed the same limit, the
+   * field is padded if necessary so as to avoid problems during persistence.
    *
    * @param description of the installation
    */
@@ -128,8 +140,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Get the description of the installation. This method is not used but it is needed otherwise this Object
-   * can't be converted into an XML document via JAXB.
+   * Get the description of the installation. This method is not used but it is needed otherwise
+   * this Object can't be converted into an XML document via JAXB.
    *
    * @return description of the installation
    */
@@ -158,7 +170,9 @@ public class LegacyInstallation extends Installation {
   @ParamName(LegacyResourceConstants.SERVICE_TYPES_PARAM)
   public void setEndpointType(String endpointType) {
     this.endpointType =
-      endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE) ? EndpointType.FEED : EndpointType.fromString(endpointType);
+        endpointType.equalsIgnoreCase(RSS_ENDPOINT_TYPE)
+            ? EndpointType.FEED
+            : EndpointType.fromString(endpointType);
   }
 
   /**
@@ -205,8 +219,7 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set primary contact name.
-   * Note: this is not a required field.
+   * Set primary contact name. Note: this is not a required field.
    *
    * @param primaryContactName primary contact name
    */
@@ -227,9 +240,9 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set primary contact email and check if it is a valid email address.
-   * Note: this field is required, and the old web services would throw 400 response if not valid.
-   * TODO: once field validation is working, the validation below can be removed
+   * Set primary contact email and check if it is a valid email address. Note: this field is
+   * required, and the old web services would throw 400 response if not valid. TODO: once field
+   * validation is working, the validation below can be removed
    *
    * @param primaryContactEmail primary contact email address
    */
@@ -255,18 +268,19 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set primary contact type. First, check if it is not null or empty. The incoming type is always either
-   * administrative or technical, always defaulting to type technical.
-   * Note: this field is required, and the old web services would throw 400 response if not found.
+   * Set primary contact type. First, check if it is not null or empty. The incoming type is always
+   * either administrative or technical, always defaulting to type technical. Note: this field is
+   * required, and the old web services would throw 400 response if not found.
    *
    * @param primaryContactType primary contact type
    */
   @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
   public void setPrimaryContactType(String primaryContactType) {
-    if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
+    if (Strings.nullToEmpty(primaryContactType)
+        .equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
     } else if (Strings.nullToEmpty(primaryContactType)
-      .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
+        .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.TECHNICAL_POINT_OF_CONTACT;
     } else if (Strings.isNullOrEmpty(primaryContactType)) {
       LOG.error("No primary contact type has ben provided");
@@ -284,8 +298,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Set the endpoint of type FEED. This endpoint will have been created via addEndpoint() that creates the endpoint
-   * from the injected HTTP Form parameters.
+   * Set the endpoint of type FEED. This endpoint will have been created via addEndpoint() that
+   * creates the endpoint from the injected HTTP Form parameters.
    *
    * @param feedEndpoint endpoint of type FEED
    */
@@ -301,13 +315,16 @@ public class LegacyInstallation extends Installation {
   @XmlTransient
   @Nullable
   public Contact getPrimaryContact() {
-    return primaryContact != null && primaryContact.getEmail() != null && primaryContact.getType() != null
-      ? primaryContact : null;
+    return primaryContact != null
+            && primaryContact.getEmail() != null
+            && primaryContact.getType() != null
+        ? primaryContact
+        : null;
   }
 
   /**
-   * Set the primary contact. This contact will have been created via addContact() that creates the contact from
-   * the injected HTTP Form parameters.
+   * Set the primary contact. This contact will have been created via addContact() that creates the
+   * contact from the injected HTTP Form parameters.
    *
    * @param primaryContact primary contact
    */
@@ -316,8 +333,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Prepares the installation for being persisting, ensuring the primary contact and endpoint have been constructed
-   * from the injected HTTP parameters.
+   * Prepares the installation for being persisting, ensuring the primary contact and endpoint have
+   * been constructed from the injected HTTP parameters.
    */
   public void prepare() {
     addPrimaryContact();
@@ -325,8 +342,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Generates the primary technical contact, and adds it to the installation. This method must be called after all
-   * primary contact parameters have been set.
+   * Generates the primary technical contact, and adds it to the installation. This method must be
+   * called after all primary contact parameters have been set.
    */
   private void addPrimaryContact() {
     if (!Strings.isNullOrEmpty(primaryContactEmail) && primaryContactType != null) {
@@ -378,8 +395,8 @@ public class LegacyInstallation extends Installation {
   }
 
   /**
-   * Return a new GBIF API Installation instance, derived from the LegacyInstallation.
-   * Needed because of: http://dev.gbif.org/issues/browse/POR-97
+   * Return a new GBIF API Installation instance, derived from the LegacyInstallation. Needed
+   * because of: http://dev.gbif.org/issues/browse/POR-97
    *
    * @return Installation derived from LegacyInstallation
    */

@@ -1,8 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.persistence.mapper.handler;
 
-import com.google.common.base.Strings;
-import org.apache.ibatis.type.BaseTypeHandler;
-import org.apache.ibatis.type.JdbcType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
@@ -16,13 +28,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.ibatis.type.BaseTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+
+import com.google.common.base.Strings;
+
 /** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link PreservationType}. */
 public class StepTypeArrayTypeHandler extends BaseTypeHandler<List<StepType>> {
 
   @Override
   public void setNonNullParameter(
-    PreparedStatement ps, int i, List<StepType> parameter, JdbcType jdbcType)
-    throws SQLException {
+      PreparedStatement ps, int i, List<StepType> parameter, JdbcType jdbcType)
+      throws SQLException {
     Array array = ps.getConnection().createArrayOf("text", parameter.toArray());
     ps.setArray(i, array);
   }
@@ -39,7 +56,7 @@ public class StepTypeArrayTypeHandler extends BaseTypeHandler<List<StepType>> {
 
   @Override
   public List<StepType> getNullableResult(CallableStatement cs, int columnIndex)
-    throws SQLException {
+      throws SQLException {
     return toList(cs.getArray(columnIndex));
   }
 
@@ -49,9 +66,9 @@ public class StepTypeArrayTypeHandler extends BaseTypeHandler<List<StepType>> {
     String[] strings = (String[]) pgArray.getArray();
     if (strings != null && strings.length > 0) {
       return Arrays.stream(strings)
-        .filter(v -> !Strings.isNullOrEmpty(v))
-        .map(StepType::valueOf)
-        .collect(Collectors.toList());
+          .filter(v -> !Strings.isNullOrEmpty(v))
+          .map(StepType::valueOf)
+          .collect(Collectors.toList());
     }
     return new ArrayList<>();
   }

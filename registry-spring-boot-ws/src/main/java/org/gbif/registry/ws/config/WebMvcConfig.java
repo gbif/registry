@@ -1,13 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.config;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.occurrence.query.TitleLookupServiceFactory;
@@ -31,6 +38,12 @@ import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -45,10 +58,14 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -99,9 +116,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
       public Object postProcessAfterInitialization(@NotNull Object bean, String beanName) {
         if (bean instanceof RequestMappingHandlerAdapter) {
           RequestMappingHandlerAdapter adapter = (RequestMappingHandlerAdapter) bean;
-          List<HandlerMethodArgumentResolver> nullSafeArgumentResolvers = Optional.ofNullable(adapter.getArgumentResolvers())
-            .orElse(Collections.emptyList());
-          List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>(nullSafeArgumentResolvers);
+          List<HandlerMethodArgumentResolver> nullSafeArgumentResolvers =
+              Optional.ofNullable(adapter.getArgumentResolvers()).orElse(Collections.emptyList());
+          List<HandlerMethodArgumentResolver> argumentResolvers =
+              new ArrayList<>(nullSafeArgumentResolvers);
           argumentResolvers.add(0, paramNameProcessor());
           adapter.setArgumentResolvers(argumentResolvers);
         }
@@ -166,18 +184,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public Jaxb2Marshaller jaxbMarshaller() {
     Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
     marshaller.setClassesToBeBound(
-      LegacyEndpoint.class,
-      LegacyEndpointResponse.class,
-      LegacyEndpointResponseListWrapper.class,
-      LegacyInstallation.class,
-      LegacyOrganizationResponse.class,
-      LegacyOrganizationBriefResponseListWrapper.class,
-      LegacyOrganizationBriefResponse.class,
-      LegacyDataset.class,
-      LegacyDatasetResponse.class,
-      LegacyDatasetResponseListWrapper.class,
-      IptEntityResponse.class,
-      ErrorResponse.class);
+        LegacyEndpoint.class,
+        LegacyEndpointResponse.class,
+        LegacyEndpointResponseListWrapper.class,
+        LegacyInstallation.class,
+        LegacyOrganizationResponse.class,
+        LegacyOrganizationBriefResponseListWrapper.class,
+        LegacyOrganizationBriefResponse.class,
+        LegacyDataset.class,
+        LegacyDatasetResponse.class,
+        LegacyDatasetResponseListWrapper.class,
+        IptEntityResponse.class,
+        ErrorResponse.class);
     return marshaller;
   }
 }

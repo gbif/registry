@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Person;
@@ -23,12 +38,11 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,14 +52,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @RestController
-@RequestMapping(value = "/grscicoll/person",
-  produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
@@ -88,17 +103,19 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {
-      checkArgument(person.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
+      checkArgument(
+          person.getMailingAddress().getKey() == null,
+          "Unable to create an address which already has a key");
       addressMapper.create(person.getMailingAddress());
     }
 
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
 
-
     if (!person.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : person.getMachineTags()) {
-        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        checkArgument(
+            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(person.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         personMapper.addMachineTag(person.getKey(), machineTag.getKey());
@@ -117,7 +134,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     if (!person.getIdentifiers().isEmpty()) {
       for (Identifier identifier : person.getIdentifiers()) {
         checkArgument(
-          identifier.getKey() == null, "Unable to create an identifier which already has a key");
+            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(person.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         personMapper.addIdentifier(person.getKey(), identifier.getKey());
@@ -136,8 +153,9 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (oldPerson.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
-      checkArgument(person.getDeleted() == null,
-        "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+      checkArgument(
+          person.getDeleted() == null,
+          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // not allowed to delete when updating
       checkArgument(person.getDeleted() == null, "Can't delete an entity when updating");
@@ -146,8 +164,9 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     // update mailing address
     if (person.getMailingAddress() != null) {
       if (oldPerson.getMailingAddress() == null) {
-        checkArgument(person.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
+        checkArgument(
+            person.getMailingAddress().getKey() == null,
+            "Unable to create an address which already has a key");
         addressMapper.create(person.getMailingAddress());
       } else {
         addressMapper.update(person.getMailingAddress());
@@ -169,14 +188,16 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
   @GetMapping
   @Override
-  public PagingResponse<Person> list(@Nullable @RequestParam(value = "q", required = false) String query,
-                                     @Nullable @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
-                                     @Nullable @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
-                                     @Nullable Pageable page) {
+  public PagingResponse<Person> list(
+      @Nullable @RequestParam(value = "q", required = false) String query,
+      @Nullable @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
+      @Nullable @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
+      @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     long total = personMapper.count(institutionKey, collectionKey, query);
-    return new PagingResponse<>(page, total, personMapper.list(institutionKey, collectionKey, query, page));
+    return new PagingResponse<>(
+        page, total, personMapper.list(institutionKey, collectionKey, query, page));
   }
 
   @GetMapping("deleted")
@@ -188,7 +209,8 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
   @GetMapping("suggest")
   @Override
-  public List<PersonSuggestResult> suggest(@Nullable @RequestParam(value = "q", required = false) String q) {
+  public List<PersonSuggestResult> suggest(
+      @Nullable @RequestParam(value = "q", required = false) String q) {
     return personMapper.suggest(q);
   }
 }

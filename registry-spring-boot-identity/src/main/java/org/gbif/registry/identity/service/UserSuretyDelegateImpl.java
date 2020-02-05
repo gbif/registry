@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.ChallengeCode;
@@ -7,17 +22,16 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.identity.IdentityEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.surety.persistence.ChallengeCodeManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * @see UserSuretyDelegate
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+/** @see UserSuretyDelegate */
 @Service
 public class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
@@ -28,9 +42,9 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private final IdentityEmailManager identityEmailManager;
 
   public UserSuretyDelegateImpl(
-    EmailSender emailSender,
-    ChallengeCodeManager<Integer> challengeCodeManager,
-    IdentityEmailManager identityEmailManager) {
+      EmailSender emailSender,
+      ChallengeCodeManager<Integer> challengeCodeManager,
+      IdentityEmailManager identityEmailManager) {
     this.emailSender = emailSender;
     this.challengeCodeManager = challengeCodeManager;
     this.identityEmailManager = identityEmailManager;
@@ -53,8 +67,10 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     try {
       emailModel = identityEmailManager.generateNewUserEmailModel(user, challengeCode);
     } catch (IOException e) {
-      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
-        "Error while trying to generate email to confirm user " + user.getUserName(), e);
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email to confirm user " + user.getUserName(),
+          e);
       return;
     }
     emailSender.send(emailModel);
@@ -62,17 +78,22 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
   @Override
   public boolean confirmUser(GbifUser user, UUID confirmationObject) {
-    Boolean confirmationSucceeded = Optional.ofNullable(user.getKey())
-      .map(keyVal -> challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
-        && challengeCodeManager.remove(keyVal))
-      .orElse(Boolean.FALSE);
+    Boolean confirmationSucceeded =
+        Optional.ofNullable(user.getKey())
+            .map(
+                keyVal ->
+                    challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
+                        && challengeCodeManager.remove(keyVal))
+            .orElse(Boolean.FALSE);
     if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);
       } catch (IOException e) {
-        LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
-          "Error while trying to generate welcome email for user " + user.getUserName(), e);
+        LOG.error(
+            RegistryMailUtils.NOTIFY_ADMIN,
+            "Error while trying to generate welcome email for user " + user.getUserName(),
+            e);
       }
     }
     return confirmationSucceeded;
@@ -85,8 +106,10 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     try {
       emailModel = identityEmailManager.generateResetPasswordEmailModel(user, challengeCode);
     } catch (IOException e) {
-      LOG.error(RegistryMailUtils.NOTIFY_ADMIN,
-        "Error while trying to generate email to reset password of user " + user.getUserName(), e);
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email to reset password of user " + user.getUserName(),
+          e);
       return;
     }
     emailSender.send(emailModel);

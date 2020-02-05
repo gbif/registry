@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Collection;
@@ -67,23 +82,26 @@ public class CollectionEntityResource extends ExtendedCollectionEntityResource<C
 
   @GetMapping
   @Override
-  public PagingResponse<Collection> list(@Nullable @RequestParam(value = "q", required = false) String query,
-                                         @Nullable @RequestParam(value = "institution", required = false) UUID institutionKey,
-                                         @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
-                                         @Nullable @RequestParam(value = "code", required = false) String code,
-                                         @Nullable @RequestParam(value = "name", required = false) String name,
-                                         Pageable page) {
+  public PagingResponse<Collection> list(
+      @Nullable @RequestParam(value = "q", required = false) String query,
+      @Nullable @RequestParam(value = "institution", required = false) UUID institutionKey,
+      @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
+      @Nullable @RequestParam(value = "code", required = false) String code,
+      @Nullable @RequestParam(value = "name", required = false) String name,
+      Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     long total = collectionMapper.count(institutionKey, contactKey, query, code, name);
-    return new PagingResponse<>(page, total, collectionMapper.list(institutionKey, contactKey, query, code, name, page));
+    return new PagingResponse<>(
+        page, total, collectionMapper.list(institutionKey, contactKey, query, code, name, page));
   }
 
   @GetMapping("deleted")
   @Override
   public PagingResponse<Collection> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
+    return new PagingResponse<>(
+        page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
   }
 
   @GetMapping("suggest")

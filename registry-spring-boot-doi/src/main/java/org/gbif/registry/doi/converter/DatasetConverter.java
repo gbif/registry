@@ -1,8 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.converter;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -47,6 +59,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 import static org.gbif.registry.doi.util.DataCiteConstants.ORCID_NAME_IDENTIFIER_SCHEME;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
@@ -54,42 +70,44 @@ import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 public final class DatasetConverter {
 
   private static final Map<ContactType, ContributorType> REGISTRY_DATACITE_ROLE_MAPPING =
-      ImmutableMap.<ContactType, ContributorType>builder().
-          put(ContactType.EDITOR, ContributorType.EDITOR).
-          put(ContactType.PUBLISHER, ContributorType.EDITOR).
-          put(ContactType.CONTENT_PROVIDER, ContributorType.DATA_COLLECTOR).
-          put(ContactType.CUSTODIAN_STEWARD, ContributorType.DATA_MANAGER).
-          put(ContactType.CURATOR, ContributorType.DATA_CURATOR).
-          put(ContactType.METADATA_AUTHOR, ContributorType.DATA_CURATOR).
-          put(ContactType.DISTRIBUTOR, ContributorType.DISTRIBUTOR).
-          put(ContactType.OWNER, ContributorType.RIGHTS_HOLDER).
-          put(ContactType.POINT_OF_CONTACT, ContributorType.CONTACT_PERSON).
-          put(ContactType.PRINCIPAL_INVESTIGATOR, ContributorType.PROJECT_LEADER).
-          put(ContactType.ORIGINATOR, ContributorType.DATA_COLLECTOR).
-          put(ContactType.PROCESSOR, ContributorType.PRODUCER).
-          put(ContactType.PROGRAMMER, ContributorType.PRODUCER).
-          build();
+      ImmutableMap.<ContactType, ContributorType>builder()
+          .put(ContactType.EDITOR, ContributorType.EDITOR)
+          .put(ContactType.PUBLISHER, ContributorType.EDITOR)
+          .put(ContactType.CONTENT_PROVIDER, ContributorType.DATA_COLLECTOR)
+          .put(ContactType.CUSTODIAN_STEWARD, ContributorType.DATA_MANAGER)
+          .put(ContactType.CURATOR, ContributorType.DATA_CURATOR)
+          .put(ContactType.METADATA_AUTHOR, ContributorType.DATA_CURATOR)
+          .put(ContactType.DISTRIBUTOR, ContributorType.DISTRIBUTOR)
+          .put(ContactType.OWNER, ContributorType.RIGHTS_HOLDER)
+          .put(ContactType.POINT_OF_CONTACT, ContributorType.CONTACT_PERSON)
+          .put(ContactType.PRINCIPAL_INVESTIGATOR, ContributorType.PROJECT_LEADER)
+          .put(ContactType.ORIGINATOR, ContributorType.DATA_COLLECTOR)
+          .put(ContactType.PROCESSOR, ContributorType.PRODUCER)
+          .put(ContactType.PROGRAMMER, ContributorType.PRODUCER)
+          .build();
 
   // Patterns must return 2 groups: scheme and id
-  private static final Map<Pattern, String> SUPPORTED_SCHEMES = ImmutableMap.of(
-      Pattern.compile("^(http[s]?://orcid.org/)([\\d\\-]+$)"), ORCID_NAME_IDENTIFIER_SCHEME);
+  private static final Map<Pattern, String> SUPPORTED_SCHEMES =
+      ImmutableMap.of(
+          Pattern.compile("^(http[s]?://orcid.org/)([\\d\\-]+$)"), ORCID_NAME_IDENTIFIER_SCHEME);
 
-  private DatasetConverter() {
-  }
+  private DatasetConverter() {}
 
   /**
-   * Convert a dataset and publisher object into a datacite metadata instance.
-   * DataCite requires at least the following properties:
+   * Convert a dataset and publisher object into a datacite metadata instance. DataCite requires at
+   * least the following properties:
+   *
    * <ul>
-   * <li>Identifier</li>
-   * <li>Creators</li>
-   * <li>Titles</li>
-   * <li>Publisher</li>
-   * <li>PublicationYear</li>
-   * <li>ResourceType</li>
+   *   <li>Identifier
+   *   <li>Creators
+   *   <li>Titles
+   *   <li>Publisher
+   *   <li>PublicationYear
+   *   <li>ResourceType
    * </ul>
-   * As the publicationYear property is often not available from newly created datasets, this converter uses the
-   * current year as the default in case no created timestamp or pubdate exists.
+   *
+   * As the publicationYear property is often not available from newly created datasets, this
+   * converter uses the current year as the default in case no created timestamp or pubdate exists.
    */
   public static DataCiteMetadata convert(Dataset dataset, Organization publisher) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
@@ -121,17 +139,24 @@ public final class DatasetConverter {
     for (GeospatialCoverage gc : dataset.getGeographicCoverages()) {
       if (gc.getBoundingBox() != null) {
         // build geo locations
-        builder.withGeoLocations(geoLocationsBuilder
-            .addGeoLocation(GeoLocation.builder()
-                .addGeoLocationPlace(gc.getDescription())
-                .addGeoLocationBox(Box.builder()
-                    .withEastBoundLongitude((float) gc.getBoundingBox().getMaxLongitude())
-                    .withNorthBoundLatitude((float) gc.getBoundingBox().getMaxLatitude())
-                    .withSouthBoundLatitude((float) gc.getBoundingBox().getMinLatitude())
-                    .withWestBoundLongitude((float) gc.getBoundingBox().getMinLongitude())
-                    .build())
-                .build())
-            .build());
+        builder.withGeoLocations(
+            geoLocationsBuilder
+                .addGeoLocation(
+                    GeoLocation.builder()
+                        .addGeoLocationPlace(gc.getDescription())
+                        .addGeoLocationBox(
+                            Box.builder()
+                                .withEastBoundLongitude(
+                                    (float) gc.getBoundingBox().getMaxLongitude())
+                                .withNorthBoundLatitude(
+                                    (float) gc.getBoundingBox().getMaxLatitude())
+                                .withSouthBoundLatitude(
+                                    (float) gc.getBoundingBox().getMinLatitude())
+                                .withWestBoundLongitude(
+                                    (float) gc.getBoundingBox().getMinLongitude())
+                                .build())
+                        .build())
+                .build());
       }
     }
   }
@@ -145,9 +170,7 @@ public final class DatasetConverter {
           if (!Strings.isNullOrEmpty(kCol.getThesaurus())) {
             s.setSubjectScheme(kCol.getThesaurus());
           }
-          builder.withSubjects(subjectsBuilder
-              .addSubject(s)
-              .build());
+          builder.withSubjects(subjectsBuilder.addSubject(s).build());
         }
       }
     }
@@ -168,10 +191,7 @@ public final class DatasetConverter {
       if (!Strings.isNullOrEmpty(dataset.getRights())) {
         builder.withRightsList(
             RightsList.builder()
-                .withRights(
-                    Rights.builder()
-                        .withValue(dataset.getRights())
-                        .build())
+                .withRights(Rights.builder().withValue(dataset.getRights()).build())
                 .build());
       }
     }
@@ -228,7 +248,8 @@ public final class DatasetConverter {
     }
   }
 
-  private static void convertAlternateIdentifiers(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+  private static void convertAlternateIdentifiers(
+      DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
     if (dataset.getDoi() != null && dataset.getKey() != null) {
       builder.withAlternateIdentifiers(
           AlternateIdentifiers.builder()
@@ -269,10 +290,10 @@ public final class DatasetConverter {
       if (!contributors.isEmpty()) {
         for (Contact contact : contributors) {
           toDataCiteContributor(contact)
-              .ifPresent(contributor -> builder.withContributors(
-                  contributorsBuilder
-                      .addContributor(contributor)
-                      .build()));
+              .ifPresent(
+                  contributor ->
+                      builder.withContributors(
+                          contributorsBuilder.addContributor(contributor).build()));
         }
       }
     }
@@ -288,11 +309,8 @@ public final class DatasetConverter {
       for (Contact resourceCreator : resourceCreators) {
         final Optional<Creator> creatorWrapper = toDataCiteCreator(resourceCreator);
         creatorFound = creatorFound ? creatorFound : creatorWrapper.isPresent();
-        creatorWrapper
-            .ifPresent(creator -> builder.withCreators(
-                creatorsBuilder
-                    .addCreator(creator)
-                    .build()));
+        creatorWrapper.ifPresent(
+            creator -> builder.withCreators(creatorsBuilder.addCreator(creator).build()));
       }
     }
 
@@ -313,7 +331,8 @@ public final class DatasetConverter {
             .build());
   }
 
-  private static void convertPublicationYear(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
+  private static void convertPublicationYear(
+      DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
     if (dataset.getPubDate() != null) {
       // use pub date for publication year if it exists
       builder.withPublicationYear(getYear(dataset.getPubDate()));
@@ -325,21 +344,14 @@ public final class DatasetConverter {
     }
   }
 
-  private static void convertPublisher(DataCiteMetadata.Builder<Void> builder, Organization publisher) {
-    builder.withPublisher(
-        Publisher.builder()
-            .withValue(publisher.getTitle())
-            .build());
+  private static void convertPublisher(
+      DataCiteMetadata.Builder<Void> builder, Organization publisher) {
+    builder.withPublisher(Publisher.builder().withValue(publisher.getTitle()).build());
   }
 
   private static void convertTitles(DataCiteMetadata.Builder<Void> builder, Dataset dataset) {
     builder.withTitles(
-        Titles.builder()
-            .withTitle(
-                Title.builder()
-                    .withValue(dataset.getTitle())
-                    .build())
-            .build());
+        Titles.builder().withTitle(Title.builder().withValue(dataset.getTitle()).build()).build());
   }
 
   /**
@@ -357,19 +369,12 @@ public final class DatasetConverter {
 
     final Creator.Builder<Void> creatorBuilder = Creator.builder();
 
-    creatorBuilder
-        .withCreatorName(
-            CreatorName.builder()
-                .withValue(creatorNameValue)
-                .build());
+    creatorBuilder.withCreatorName(CreatorName.builder().withValue(creatorNameValue).build());
 
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
-      creatorBuilder
-          .withAffiliation(
-              Affiliation.builder()
-                  .withValue(contact.getOrganization())
-                  .build());
+      creatorBuilder.withAffiliation(
+          Affiliation.builder().withValue(contact.getOrganization()).build());
     }
 
     NameIdentifier nId = userIdToNameIdentifier(contact.getUserId());
@@ -380,15 +385,10 @@ public final class DatasetConverter {
     return Optional.of(creatorBuilder.build());
   }
 
-  /**
-   * Transforms a Contact into a DataCite Creator.
-   */
+  /** Transforms a Contact into a DataCite Creator. */
   private static Creator getDefaultGBIFDataCiteCreator(String fullname) {
     return Creator.builder()
-        .withCreatorName(
-            CreatorName.builder()
-                .withValue(fullname)
-                .build())
+        .withCreatorName(CreatorName.builder().withValue(fullname).build())
         .withNameIdentifier(
             NameIdentifier.builder()
                 .withValue(fullname)
@@ -413,19 +413,15 @@ public final class DatasetConverter {
 
     final Contributor.Builder<Void> contributorBuilder = Contributor.builder();
     contributorBuilder
-        .withContributorName(
-            ContributorName.builder()
-                .withValue(nameValue)
-                .build())
-        .withContributorType(REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(contact.getType(), ContributorType.RELATED_PERSON));
+        .withContributorName(ContributorName.builder().withValue(nameValue).build())
+        .withContributorType(
+            REGISTRY_DATACITE_ROLE_MAPPING.getOrDefault(
+                contact.getType(), ContributorType.RELATED_PERSON));
 
     // affiliation is optional
     if (!Strings.isNullOrEmpty(contact.getOrganization())) {
-      contributorBuilder
-          .withAffiliation(
-              Affiliation.builder()
-                  .withValue(contact.getOrganization())
-                  .build());
+      contributorBuilder.withAffiliation(
+          Affiliation.builder().withValue(contact.getOrganization()).build());
     }
 
     NameIdentifier nId = userIdToNameIdentifier(contact.getUserId());
@@ -437,10 +433,11 @@ public final class DatasetConverter {
   }
 
   /**
-   * Get the first userId from the list and
-   * transforms an userId in the form of https://orcid.org/0000-0000-0000-00001 into a DataCite NameIdentifier object.
+   * Get the first userId from the list and transforms an userId in the form of
+   * https://orcid.org/0000-0000-0000-00001 into a DataCite NameIdentifier object.
    *
-   * @return a NameIdentifier instance or null if the object can not be built (e.g. unsupported scheme)
+   * @return a NameIdentifier instance or null if the object can not be built (e.g. unsupported
+   *     scheme)
    */
   public static NameIdentifier userIdToNameIdentifier(List<String> userIds) {
     if (userIds == null || userIds.isEmpty()) {

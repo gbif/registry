@@ -1,11 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.domain.ws;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
@@ -18,31 +27,39 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.validator.routines.EmailValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+
 /**
- * Class used to create or update a Dataset for legacy (GBRDS/IPT) API. Previously known as a Resource in the GBRDS.
- * A set of HTTP Form parameters coming from a POST request are injected.
- * </br>
- * Its fields are injected using the @ParamName. It is assumed the following parameters exist in the HTTP request:
- * 'organisationKey', 'name', 'description', 'primaryContactName', 'primaryContactEmail', 'primaryContactType',
- * 'serviceTypes', 'serviceURLs', 'homepageURL', 'primaryContactPhone', 'logoURL', and 'primaryContactAddress'.
- * </br>
- * JAXB annotations allow the class to be converted into an XML document, that gets included in the Response following
- * a successful registration or update. @XmlElement is used to specify element names that consumers of legacy services
- * expect to find.
+ * Class used to create or update a Dataset for legacy (GBRDS/IPT) API. Previously known as a
+ * Resource in the GBRDS. A set of HTTP Form parameters coming from a POST request are injected.
+ * </br> Its fields are injected using the @ParamName. It is assumed the following parameters exist
+ * in the HTTP request: 'organisationKey', 'name', 'description', 'primaryContactName',
+ * 'primaryContactEmail', 'primaryContactType', 'serviceTypes', 'serviceURLs', 'homepageURL',
+ * 'primaryContactPhone', 'logoURL', and 'primaryContactAddress'. </br> JAXB annotations allow the
+ * class to be converted into an XML document, that gets included in the Response following a
+ * successful registration or update. @XmlElement is used to specify element names that consumers of
+ * legacy services expect to find.
  */
 @XmlRootElement(name = "resource")
 public class LegacyDataset extends Dataset {
@@ -68,23 +85,22 @@ public class LegacyDataset extends Dataset {
   // Dataset constants
   private static final String IPT_EML_SERVICE_TYPE = "EML";
   private static final Set<String> ARCHIVE_ENDPOINT_TYPE_ALTERNATIVES =
-    ImmutableSet.of(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1,
-      LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
-      LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
-      LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
-      LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
+      ImmutableSet.of(
+          LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1,
+          LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
+          LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
+          LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
+          LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
 
-  /**
-   * Default constructor.
-   */
+  /** Default constructor. */
   public LegacyDataset() {
     // fill in mandatory field language with default value
     setLanguage(Language.ENGLISH);
   }
 
   /**
-   * Get the dataset key. This method is not used but it is needed otherwise this Object can't be converted into an
-   * XML document via JAXB.
+   * Get the dataset key. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
    *
    * @return key of the dataset
    */
@@ -95,8 +111,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get the dataset Doi. This method is not used but it is needed otherwise this Object can't be converted into an
-   * XML document via JAXB.
+   * Get the dataset Doi. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
    *
    * @return key of the dataset
    */
@@ -107,8 +123,9 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the publishing organization key, a mandatory field. Be aware the publishing organisation key gets supplied in
-   * the parameters only on register requests. On update requests the key is supplied in the credentials.
+   * Set the publishing organization key, a mandatory field. Be aware the publishing organisation
+   * key gets supplied in the parameters only on register requests. On update requests the key is
+   * supplied in the credentials.
    *
    * @param organizationKey organization key as UUID
    */
@@ -119,12 +136,12 @@ public class LegacyDataset extends Dataset {
     } catch (IllegalArgumentException e) {
       LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
     }
-
   }
 
   /**
-   * Get the publishing organization key. This is a required field in Registry2, and is required by the web services.
-   * This method is not used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
+   * Get the publishing organization key. This is a required field in Registry2, and is required by
+   * the web services. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
    *
    * @return publishing organization key of the dataset
    */
@@ -135,8 +152,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the IPT key. Non-mandatory field because it has only been introduced as of IPT v2.0.5. It is injected on both
-   * register and update requests.
+   * Set the IPT key. Non-mandatory field because it has only been introduced as of IPT v2.0.5. It
+   * is injected on both register and update requests.
    *
    * @param iptKey IPT key as UUID
    */
@@ -151,8 +168,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the Dataset DOI. Non-mandatory field because it has only been introduced as of IPT v2.2. It is injected on both
-   * register and update requests.
+   * Set the Dataset DOI. Non-mandatory field because it has only been introduced as of IPT v2.2. It
+   * is injected on both register and update requests.
    *
    * @param doi The DOI
    */
@@ -168,8 +185,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get the key of the IPT installation. This method is not used but it is needed otherwise this Object can't be
-   * converted into an XML document via JAXB.
+   * Get the key of the IPT installation. This method is not used but it is needed otherwise this
+   * Object can't be converted into an XML document via JAXB.
    *
    * @return key of the dataset's IPT installation
    */
@@ -190,8 +207,9 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get the title of the dataset. This is a required field in Registry2, and is required by the web services.
-   * This method is not used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
+   * Get the title of the dataset. This is a required field in Registry2, and is required by the web
+   * services. This method is not used but it is needed otherwise this Object can't be converted
+   * into an XML document via JAXB.
    *
    * @return title of the dataset
    */
@@ -202,7 +220,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the language of the name of the dataset as the dataset langauge. 2 letter ISO 639-1 language code expected.
+   * Set the language of the name of the dataset as the dataset langauge. 2 letter ISO 639-1
+   * language code expected.
    *
    * @param nameLanguage language of the name of the dataset (ISO 639-1 2 letter language code)
    */
@@ -218,9 +237,9 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get the language of the dataset name. This is a required field in Registry2, and will be set either in the default
-   * constructor, or via the form parameter "nameLanguage". This method is not used but it is needed otherwise this
-   * Object can't be converted into an XML document via JAXB.
+   * Get the language of the dataset name. This is a required field in Registry2, and will be set
+   * either in the default constructor, or via the form parameter "nameLanguage". This method is not
+   * used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
    *
    * @return language of the dataset name
    */
@@ -253,9 +272,10 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get the language of the dataset description. There is no description language field in Registry2, so this method
-   * defaults to returning the dataset language instead. This method is not used but it is needed otherwise this
-   * Object can't be converted into an XML document via JAXB.
+   * Get the language of the dataset description. There is no description language field in
+   * Registry2, so this method defaults to returning the dataset language instead. This method is
+   * not used but it is needed otherwise this Object can't be converted into an XML document via
+   * JAXB.
    *
    * @return language of the dataset description
    */
@@ -283,8 +303,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get logo URL. This method is not used but it is needed otherwise this Object can't be converted into an XML
-   * document via JAXB.
+   * Get logo URL. This method is not used but it is needed otherwise this Object can't be converted
+   * into an XML document via JAXB.
    *
    * @return logo URL
    */
@@ -312,8 +332,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get homepage URL. This method is not used but it is needed otherwise this Object can't be converted into an XML
-   * document via JAXB.
+   * Get homepage URL. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
    *
    * @return homepage URL
    */
@@ -324,8 +344,7 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set primary contact name.
-   * Note: this is not a required field.
+   * Set primary contact name. Note: this is not a required field.
    *
    * @param primaryContactName primary contact name
    */
@@ -335,8 +354,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact name. This method is not used but it is needed otherwise this Object can't be converted into
-   * an XML document via JAXB.
+   * Get primary contact name. This method is not used but it is needed otherwise this Object can't
+   * be converted into an XML document via JAXB.
    *
    * @return primary contact name
    */
@@ -347,9 +366,9 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set primary contact email and check if it is a valid email address.
-   * Note: this field is required, and the old web services would throw 400 response if not valid.
-   * TODO: once field validation is working, the validation below can be removed
+   * Set primary contact email and check if it is a valid email address. Note: this field is
+   * required, and the old web services would throw 400 response if not valid. TODO: once field
+   * validation is working, the validation below can be removed
    *
    * @param primaryContactEmail primary contact email address
    */
@@ -364,8 +383,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact email. This method is not used but it is needed otherwise this Object can't be converted into
-   * an XML document via JAXB.
+   * Get primary contact email. This method is not used but it is needed otherwise this Object can't
+   * be converted into an XML document via JAXB.
    *
    * @return primary contact email
    */
@@ -376,18 +395,19 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set primary contact type. First, check if it is not null or empty. The incoming type is always either
-   * administrative or technical.
-   * Note: this field is required, and the old web services would throw 400 response if not found.
+   * Set primary contact type. First, check if it is not null or empty. The incoming type is always
+   * either administrative or technical. Note: this field is required, and the old web services
+   * would throw 400 response if not found.
    *
    * @param primaryContactType primary contact type
    */
   @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
   public void setPrimaryContactType(String primaryContactType) {
-    if (Strings.nullToEmpty(primaryContactType).equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
+    if (Strings.nullToEmpty(primaryContactType)
+        .equalsIgnoreCase(LegacyResourceConstants.ADMINISTRATIVE_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.ADMINISTRATIVE_POINT_OF_CONTACT;
     } else if (Strings.nullToEmpty(primaryContactType)
-      .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
+        .equalsIgnoreCase(LegacyResourceConstants.TECHNICAL_CONTACT_TYPE)) {
       this.primaryContactType = ContactType.TECHNICAL_POINT_OF_CONTACT;
     } else if (Strings.isNullOrEmpty(primaryContactType)) {
       LOG.error("No primary contact type has ben provided");
@@ -395,8 +415,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact type. This method is not used but it is needed otherwise this Object can't be converted into
-   * an XML document via JAXB.
+   * Get primary contact type. This method is not used but it is needed otherwise this Object can't
+   * be converted into an XML document via JAXB.
    *
    * @return primary contact type
    */
@@ -417,8 +437,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact phone. This method is not used but it is needed otherwise this Object can't be converted into
-   * an XML document via JAXB.
+   * Get primary contact phone. This method is not used but it is needed otherwise this Object can't
+   * be converted into an XML document via JAXB.
    *
    * @return primary contact phone
    */
@@ -439,8 +459,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact address. This method is not used but it is needed otherwise this Object can't be converted
-   * into an XML document via JAXB.
+   * Get primary contact address. This method is not used but it is needed otherwise this Object
+   * can't be converted into an XML document via JAXB.
    *
    * @return primary contact address
    */
@@ -461,8 +481,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Get primary contact description. This method is not used but it is needed otherwise this Object can't be
-   * converted into an XML document via JAXB.
+   * Get primary contact description. This method is not used but it is needed otherwise this Object
+   * can't be converted into an XML document via JAXB.
    *
    * @return primary contact phone
    */
@@ -525,8 +545,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the endpoint of type EML. This endpoint will have been created via addEndpoint() that creates the endpoint
-   * from the injected HTTP Form parameters.
+   * Set the endpoint of type EML. This endpoint will have been created via addEndpoint() that
+   * creates the endpoint from the injected HTTP Form parameters.
    *
    * @param emlEndpoint endpoint of type EML
    */
@@ -545,8 +565,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Set the endpoint of type ARCHIVE. This endpoint will have been created via addEndpoint() that creates the endpoint
-   * from the injected HTTP Form parameters.
+   * Set the endpoint of type ARCHIVE. This endpoint will have been created via addEndpoint() that
+   * creates the endpoint from the injected HTTP Form parameters.
    *
    * @param archiveEndpoint endpoint of type ARCHIVE
    */
@@ -562,13 +582,16 @@ public class LegacyDataset extends Dataset {
   @XmlTransient
   @Nullable
   public Contact getPrimaryContact() {
-    return primaryContact != null && primaryContact.getEmail() != null && primaryContact.getType() != null
-      ? primaryContact : null;
+    return primaryContact != null
+            && primaryContact.getEmail() != null
+            && primaryContact.getType() != null
+        ? primaryContact
+        : null;
   }
 
   /**
-   * Set the primary contact. This contact will have been created via addContact() that creates the contact from
-   * the injected HTTP Form parameters.
+   * Set the primary contact. This contact will have been created via addContact() that creates the
+   * contact from the injected HTTP Form parameters.
    *
    * @param primaryContact primary contact
    */
@@ -576,9 +599,7 @@ public class LegacyDataset extends Dataset {
     this.primaryContact = primaryContact;
   }
 
-  /**
-   * Excludes element from XML document created via JAXB.
-   */
+  /** Excludes element from XML document created via JAXB. */
   @XmlTransient
   @Nullable
   @Override
@@ -587,8 +608,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Prepares the dataset for being persisted, ensuring the primary contact, endpoints, and type have been constructed
-   * from the injected HTTP parameters.
+   * Prepares the dataset for being persisted, ensuring the primary contact, endpoints, and type
+   * have been constructed from the injected HTTP parameters.
    */
   public void prepare() {
     addPrimaryContact();
@@ -614,9 +635,12 @@ public class LegacyDataset extends Dataset {
           break;
         }
       }
-      // Only if it doesn't exist already, create it and populate it with the incoming contact parameters.
-      // If it does exist already, don't update it! This was the cause of http://dev.gbif.org/issues/browse/POR-2733
-      // Modifications to existing primary contacts should only happen via a) metadata sync or via b) registry console
+      // Only if it doesn't exist already, create it and populate it with the incoming contact
+      // parameters.
+      // If it does exist already, don't update it! This was the cause of
+      // http://dev.gbif.org/issues/browse/POR-2733
+      // Modifications to existing primary contacts should only happen via a) metadata sync or via
+      // b) registry console
       if (contact == null) {
         contact = new Contact();
         contact.setPrimary(true);
@@ -633,8 +657,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Generates an Endpoint of type EML, and adds it to the dataset. This method must be called after all
-   * endpoint related parameters have been set.
+   * Generates an Endpoint of type EML, and adds it to the dataset. This method must be called after
+   * all endpoint related parameters have been set.
    */
   private void addEmlEndpoint() {
     if (!Strings.isNullOrEmpty(serviceUrls) && !Strings.isNullOrEmpty(serviceTypes)) {
@@ -660,8 +684,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Generates an Endpoint of type ARCHIVE, and adds it to the dataset. This method must be called after all
-   * endpoint related parameters have been set.
+   * Generates an Endpoint of type ARCHIVE, and adds it to the dataset. This method must be called
+   * after all endpoint related parameters have been set.
    */
   private void addArchiveEndpoint() {
     if (!Strings.isNullOrEmpty(serviceUrls) && !Strings.isNullOrEmpty(serviceTypes)) {
@@ -687,10 +711,10 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes that the dataset
-   * only has 1 endpoint for each type: EML and DWC_ARCHIVE.
+   * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes
+   * that the dataset only has 1 endpoint for each type: EML and DWC_ARCHIVE.
    *
-   * @param url  Endpoint URL
+   * @param url Endpoint URL
    * @param type Endpoint type
    * @return Endpoint created or updated
    */
@@ -717,19 +741,19 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type OCCURRENCE, CHECKLIST
-   * or SAMPLING_EVENT could not be resolved.
+   * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type
+   * OCCURRENCE, CHECKLIST or SAMPLING_EVENT could not be resolved.
    *
-   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, CHECKLIST or SAMPLING_EVENT could not be
-   * resolved
+   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, CHECKLIST or
+   *     SAMPLING_EVENT could not be resolved
    */
   public DatasetType resolveType() {
     if (serviceTypes != null) {
-      if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1) || serviceTypes.contains(
-        LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
+      if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
+          || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
         return DatasetType.CHECKLIST;
-      } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1) || serviceTypes.contains(
-        LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
+      } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
+          || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
@@ -739,8 +763,8 @@ public class LegacyDataset extends Dataset {
   }
 
   /**
-   * Return a new GBIF API Dataset instance, derived from the LegacyDataset.
-   * Needed because of: http://dev.gbif.org/issues/browse/REG-459
+   * Return a new GBIF API Dataset instance, derived from the LegacyDataset. Needed because of:
+   * http://dev.gbif.org/issues/browse/REG-459
    *
    * @return Dataset derived from LegacyDataset
    */
@@ -767,42 +791,53 @@ public class LegacyDataset extends Dataset {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     LegacyDataset that = (LegacyDataset) o;
-    return primaryContactType == that.primaryContactType &&
-      Objects.equal(primaryContactEmail, that.primaryContactEmail) &&
-      Objects.equal(primaryContactName, that.primaryContactName) &&
-      Objects.equal(primaryContactPhone, that.primaryContactPhone) &&
-      Objects.equal(primaryContactAddress, that.primaryContactAddress) &&
-      Objects.equal(primaryContactDescription, that.primaryContactDescription) &&
-      Objects.equal(serviceTypes, that.serviceTypes) &&
-      Objects.equal(serviceUrls, that.serviceUrls) &&
-      Objects.equal(datasetDoi, that.datasetDoi) &&
-      Objects.equal(primaryContact, that.primaryContact) &&
-      Objects.equal(emlEndpoint, that.emlEndpoint) &&
-      Objects.equal(archiveEndpoint, that.archiveEndpoint);
+    return primaryContactType == that.primaryContactType
+        && Objects.equal(primaryContactEmail, that.primaryContactEmail)
+        && Objects.equal(primaryContactName, that.primaryContactName)
+        && Objects.equal(primaryContactPhone, that.primaryContactPhone)
+        && Objects.equal(primaryContactAddress, that.primaryContactAddress)
+        && Objects.equal(primaryContactDescription, that.primaryContactDescription)
+        && Objects.equal(serviceTypes, that.serviceTypes)
+        && Objects.equal(serviceUrls, that.serviceUrls)
+        && Objects.equal(datasetDoi, that.datasetDoi)
+        && Objects.equal(primaryContact, that.primaryContact)
+        && Objects.equal(emlEndpoint, that.emlEndpoint)
+        && Objects.equal(archiveEndpoint, that.archiveEndpoint);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), primaryContactType, primaryContactEmail, primaryContactName,
-      primaryContactPhone, primaryContactAddress, primaryContactDescription, serviceTypes, serviceUrls, datasetDoi,
-      primaryContact, emlEndpoint, archiveEndpoint);
+    return Objects.hashCode(
+        super.hashCode(),
+        primaryContactType,
+        primaryContactEmail,
+        primaryContactName,
+        primaryContactPhone,
+        primaryContactAddress,
+        primaryContactDescription,
+        serviceTypes,
+        serviceUrls,
+        datasetDoi,
+        primaryContact,
+        emlEndpoint,
+        archiveEndpoint);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-      .add("primaryContactType", primaryContactType)
-      .add("primaryContactEmail", primaryContactEmail)
-      .add("primaryContactName", primaryContactName)
-      .add("primaryContactPhone", primaryContactPhone)
-      .add("primaryContactAddress", primaryContactAddress)
-      .add("primaryContactDescription", primaryContactDescription)
-      .add("serviceTypes", serviceTypes)
-      .add("serviceUrls", serviceUrls)
-      .add("datasetDoi", datasetDoi)
-      .add("primaryContact", primaryContact)
-      .add("emlEndpoint", emlEndpoint)
-      .add("archiveEndpoint", archiveEndpoint)
-      .toString();
+        .add("primaryContactType", primaryContactType)
+        .add("primaryContactEmail", primaryContactEmail)
+        .add("primaryContactName", primaryContactName)
+        .add("primaryContactPhone", primaryContactPhone)
+        .add("primaryContactAddress", primaryContactAddress)
+        .add("primaryContactDescription", primaryContactDescription)
+        .add("serviceTypes", serviceTypes)
+        .add("serviceUrls", serviceUrls)
+        .add("datasetDoi", datasetDoi)
+        .add("primaryContact", primaryContact)
+        .add("emlEndpoint", emlEndpoint)
+        .add("archiveEndpoint", archiveEndpoint)
+        .toString();
   }
 }

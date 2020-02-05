@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Institution;
@@ -36,54 +51,58 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  * implementation of {@link InstitutionService}.
  */
 @RestController
-@RequestMapping(value = GRSCICOLL_PATH + "/institution",
-  produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = GRSCICOLL_PATH + "/institution",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionEntityResource extends ExtendedCollectionEntityResource<Institution>
-  implements InstitutionService {
+    implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
 
   public InstitutionEntityResource(
-    InstitutionMapper institutionMapper,
-    AddressMapper addressMapper,
-    IdentifierMapper identifierMapper,
-    TagMapper tagMapper,
-    MachineTagMapper machineTagMapper,
-    EditorAuthorizationService userAuthService,
-    EventManager eventManager,
-    WithMyBatis withMyBatis) {
+      InstitutionMapper institutionMapper,
+      AddressMapper addressMapper,
+      IdentifierMapper identifierMapper,
+      TagMapper tagMapper,
+      MachineTagMapper machineTagMapper,
+      EditorAuthorizationService userAuthService,
+      EventManager eventManager,
+      WithMyBatis withMyBatis) {
     super(
-      institutionMapper,
-      addressMapper,
-      tagMapper,
-      identifierMapper,
-      institutionMapper,
-      machineTagMapper,
-      eventManager,
-      Institution.class,
-      userAuthService,
-      withMyBatis);
+        institutionMapper,
+        addressMapper,
+        tagMapper,
+        identifierMapper,
+        institutionMapper,
+        machineTagMapper,
+        eventManager,
+        Institution.class,
+        userAuthService,
+        withMyBatis);
     this.institutionMapper = institutionMapper;
   }
 
   @GetMapping
   @Override
-  public PagingResponse<Institution> list(@Nullable @RequestParam(value = "q", required = false) String query,
-                                          @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
-                                          @Nullable @RequestParam(value = "code", required = false) String code,
-                                          @Nullable @RequestParam(value = "name", required = false) String name,
-                                          Pageable page) {
+  public PagingResponse<Institution> list(
+      @Nullable @RequestParam(value = "q", required = false) String query,
+      @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
+      @Nullable @RequestParam(value = "code", required = false) String code,
+      @Nullable @RequestParam(value = "name", required = false) String name,
+      Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     long total = institutionMapper.count(query, contactKey, code, name);
-    return new PagingResponse<>(page, total, institutionMapper.list(query, contactKey, code, name, page));
+    return new PagingResponse<>(
+        page, total, institutionMapper.list(query, contactKey, code, name, page));
   }
 
   @GetMapping("deleted")
   @Override
   public PagingResponse<Institution> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
+    return new PagingResponse<>(
+        page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
   }
 
   @GetMapping("suggest")

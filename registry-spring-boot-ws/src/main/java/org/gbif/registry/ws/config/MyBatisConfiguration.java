@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.config;
 
 import org.gbif.api.model.collections.Address;
@@ -49,12 +64,13 @@ import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusType
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
-import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.net.URI;
 import java.util.UUID;
+
+import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MyBatisConfiguration {
@@ -66,7 +82,9 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(URI.class, UriTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(Country.class, CountryTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(Language.class, LanguageTypeHandler.class);
-      configuration.getTypeHandlerRegistry().register(Download.Status.class, OccurrenceDownloadStatusTypeHandler.class);
+      configuration
+          .getTypeHandlerRegistry()
+          .register(Download.Status.class, OccurrenceDownloadStatusTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(DOI.class, DOITypeHandler.class);
       configuration.getTypeHandlerRegistry().register(Predicate.class, PredicateTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
@@ -86,9 +104,15 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Metadata", Metadata.class);
       configuration.getTypeAliasRegistry().registerAlias("Download", Download.class);
       configuration.getTypeAliasRegistry().registerAlias("DownloadRequest", DownloadRequest.class);
-      configuration.getTypeAliasRegistry().registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
-      configuration.getTypeAliasRegistry().registerAlias("DatasetOccurrenceDownload", DatasetOccurrenceDownloadUsage.class);
-      configuration.getTypeAliasRegistry().registerAlias("DatasetProcessStatus", DatasetProcessStatus.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DatasetOccurrenceDownload", DatasetOccurrenceDownloadUsage.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DatasetProcessStatus", DatasetProcessStatus.class);
       configuration.getTypeAliasRegistry().registerAlias("CrawlJob", CrawlJob.class);
       configuration.getTypeAliasRegistry().registerAlias("MetasyncHistory", MetasyncHistory.class);
       configuration.getTypeAliasRegistry().registerAlias("DoiData", DoiData.class);
@@ -106,22 +130,48 @@ public class MyBatisConfiguration {
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("LanguageTypeHandler", LanguageTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("CountryTypeHandler", CountryTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("DownloadStatusTypeHandler", OccurrenceDownloadStatusTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("LanguageTypeHandler", LanguageTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("CountryTypeHandler", CountryTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DownloadStatusTypeHandler", OccurrenceDownloadStatusTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("DoiTypeHandler", DOITypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("PredicateTypeHandler", PredicateTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("StringArrayTypeHandler", StringArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("UriArrayTypeHandler", UriArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("DisciplineArrayTypeHandler", DisciplineArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("PreservationTypeArrayTypeHandler", PreservationTypeArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("PredicateTypeHandler", PredicateTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("StringArrayTypeHandler", StringArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("UriArrayTypeHandler", UriArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DisciplineArrayTypeHandler", DisciplineArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias(
+              "CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias(
+              "PreservationTypeArrayTypeHandler", PreservationTypeArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
-      configuration.getTypeAliasRegistry().registerAlias("PipelineExecution", PipelineExecution.class);
-      configuration.getTypeAliasRegistry().registerAlias("MetricInfoTypeHandler", MetricInfoTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("PipelineExecution", PipelineExecution.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("MetricInfoTypeHandler", MetricInfoTypeHandler.class);
     };
   }
 }

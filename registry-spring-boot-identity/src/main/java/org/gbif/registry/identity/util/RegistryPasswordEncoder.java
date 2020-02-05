@@ -1,38 +1,58 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.identity.util;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 /**
  * A Java port of password encoding as done natively by Drupal 7.
- * <p/>
- * A password is structured as:
+ *
+ * <p>A password is structured as:
+ *
  * <pre>
  *   $S$<iterations><salt><encoded>
  * </pre>
  *
  * Where:
+ *
  * <ul>
- *   <li>iterations is a based 64 encoded number of loops to apply the hashing algorithm</li>
- *   <li>salt is an 8 character random string</li>
- *   <li>encoded is the the final encoded hash of the password using SHA-512 encoding applied iterations times and
- *   with the salt key.  The final encoded is truncated to the length provided in the constructor</li>
+ *   <li>iterations is a based 64 encoded number of loops to apply the hashing algorithm
+ *   <li>salt is an 8 character random string
+ *   <li>encoded is the the final encoded hash of the password using SHA-512 encoding applied
+ *       iterations times and with the salt key. The final encoded is truncated to the length
+ *       provided in the constructor
  * </ul>
  *
- * Mostly this code is copied from http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
+ * Mostly this code is copied from
+ * http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
  */
 public class RegistryPasswordEncoder implements PasswordEncoder {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryPasswordEncoder.class);
   private static final String ALGORITHM = "SHA-512";
   private static final SecureRandom RANDOM = new SecureRandom();
-  private static final String PASSWORD_ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  private static final String PASSWORD_ITOA64 =
+      "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
   private final int encodedHashLength;
 
@@ -44,33 +64,28 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     encodedHashLength = hashLength;
   }
 
-  /**
-   * Reads the iteration count out of the encoded settings.
-   */
+  /** Reads the iteration count out of the encoded settings. */
   private static int passwordGetCountLog2(String settings) {
     return PASSWORD_ITOA64.indexOf(settings.charAt(3));
   }
 
-  /**
-   * Encode using the algorithm.
-   */
+  /** Encode using the algorithm. */
   private static byte[] sha512(String input) {
     return sha512(input.getBytes());
   }
 
-  /**
-   * Encode using the algorithm.
-   */
+  /** Encode using the algorithm. */
   private static byte[] sha512(byte[] input) {
     try {
       return MessageDigest.getInstance(ALGORITHM).digest(input);
     } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("Missing required message digest algorithm " +  ALGORITHM);
+      throw new IllegalStateException("Missing required message digest algorithm " + ALGORITHM);
     }
   }
 
   /**
    * Encodes the password using a random salt.
+   *
    * @param password to encode
    * @return the encoded password which will have a random salt
    */
@@ -87,8 +102,9 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
 
   /**
    * Encodes password using the settings and and salt from the provided encoded password.
-   * @param preEncoded the pre-encoded version storing individual hashing settings in its first 12 chars.
    *
+   * @param preEncoded the pre-encoded version storing individual hashing settings in its first 12
+   *     chars.
    * @return the encoded password using the existing hash settings or null on error
    */
   public String encode(final String password, String preEncoded) {
@@ -119,9 +135,7 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     return (output.length() > 0) ? output.substring(0, encodedHashLength) : null;
   }
 
-  /**
-   * Joins the byte arrays into a new array, sized to fit.
-   */
+  /** Joins the byte arrays into a new array, sized to fit. */
   private static byte[] joinBytes(byte[] a, byte[] b) {
     byte[] combined = new byte[a.length + b.length];
 
@@ -131,9 +145,11 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
   }
 
   /**
-   * Encodes the input using some smarts.
-   * Understanding those smarts is an exercise left to the reader.
-   * @see <a href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords"/>
+   * Encodes the input using some smarts. Understanding those smarts is an exercise left to the
+   * reader.
+   *
+   * @see <a
+   *     href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords"/>
    */
   private static String base64Encode(byte[] input, int count) {
 
@@ -165,21 +181,17 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     return output.toString();
   }
 
-  /**
-   * Clears any sign bit on the given byte.
-   */
+  /** Clears any sign bit on the given byte. */
   private static long signedByteToUnsignedLong(byte b) {
     return b & 0xFF;
   }
 
-  /**
-   * Returns a random 8 character salt prefixed with "$S$D" (which is what Drupal 7 did).
-   */
+  /** Returns a random 8 character salt prefixed with "$S$D" (which is what Drupal 7 did). */
   private static String randomSalt() {
     // drupal uses 8 character salts, prefixed with $S$D so we copy that
     StringBuilder sb = new StringBuilder(11);
     sb.append("$S$D");
-    for( int i = 0; i < 8; i++ ) {
+    for (int i = 0; i < 8; i++) {
       sb.append(PASSWORD_ITOA64.charAt(RANDOM.nextInt(PASSWORD_ITOA64.length())));
     }
     return sb.toString();

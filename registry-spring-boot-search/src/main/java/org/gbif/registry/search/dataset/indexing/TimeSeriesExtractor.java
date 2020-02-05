@@ -1,4 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.search.dataset.indexing;
+
 import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.SingleDate;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
@@ -9,17 +25,19 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * A utility to extract decades (eg 1980, 1840) or centuries (eg 1400, 1500, 1600) from TemporalCoverages as
- * a list of integers. Max/min bounderies for supplied values can be specific in the constructor for both a decade
- * and a century range to avoid large list of decades for very old or future periods, mostly for bad data.
+ * A utility to extract decades (eg 1980, 1840) or centuries (eg 1400, 1500, 1600) from
+ * TemporalCoverages as a list of integers. Max/min bounderies for supplied values can be specific
+ * in the constructor for both a decade and a century range to avoid large list of decades for very
+ * old or future periods, mostly for bad data.
  */
 public class TimeSeriesExtractor {
   private static final Logger LOG = LoggerFactory.getLogger(TimeSeriesExtractor.class);
@@ -33,13 +51,18 @@ public class TimeSeriesExtractor {
   /**
    * @param minCentury the minimum value ever extracted, eg 1500
    * @param maxCentury the maximum value ever extracted, eg 2400
-   * @param minDecade the lowest decade value to be extracted, needs to be within the century range. Eg 1870
-   * @param maxDecade the largest decade value to be extracted, needs to be within the century range. Eg 2020
+   * @param minDecade the lowest decade value to be extracted, needs to be within the century range.
+   *     Eg 1870
+   * @param maxDecade the largest decade value to be extracted, needs to be within the century
+   *     range. Eg 2020
    */
   public TimeSeriesExtractor(int minCentury, int maxCentury, int minDecade, int maxDecade) {
-    Preconditions.checkArgument(minDecade <= maxDecade, "MinDecade must be below or equals maxDecade");
-    Preconditions.checkArgument(minCentury <= minDecade, "Century limits must be wider than decade boundaries");
-    Preconditions.checkArgument(maxCentury >= maxDecade, "Century limits must be wider than decade boundaries");
+    Preconditions.checkArgument(
+        minDecade <= maxDecade, "MinDecade must be below or equals maxDecade");
+    Preconditions.checkArgument(
+        minCentury <= minDecade, "Century limits must be wider than decade boundaries");
+    Preconditions.checkArgument(
+        maxCentury >= maxDecade, "Century limits must be wider than decade boundaries");
     Preconditions.checkArgument(minCentury % 100 == 0, "minCentury needs to be a multiple of 100");
     Preconditions.checkArgument(maxCentury % 100 == 0, "maxCentury needs to be a multiple of 100");
     Preconditions.checkArgument(minDecade % 10 == 0, "minDecade needs to be a multiple of 10");
@@ -64,11 +87,10 @@ public class TimeSeriesExtractor {
     if (!decadeRange.encloses(range)) {
       // skip anything below min/max
       int startC = 100 * (int) Math.floor(minmax(minCentury, maxCentury, start) / 100d);
-      int endC = 100 * (int) Math.floor(minmax(minCentury, maxCentury,  end) / 100d);
+      int endC = 100 * (int) Math.floor(minmax(minCentury, maxCentury, end) / 100d);
       for (int year = startC; year <= endC; year += 100) {
         decades.add(year);
       }
-
     }
 
     // Produce decades if falling within the decade range
@@ -83,7 +105,7 @@ public class TimeSeriesExtractor {
     return decades;
   }
 
-  private int minmax(int min, int max, int val){
+  private int minmax(int min, int max, int val) {
     return val < min ? min : (val > max ? max : val);
   }
 
@@ -121,5 +143,4 @@ public class TimeSeriesExtractor {
     }
     return Lists.newArrayList(decades);
   }
-
 }

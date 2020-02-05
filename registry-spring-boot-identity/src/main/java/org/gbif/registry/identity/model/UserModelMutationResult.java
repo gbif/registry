@@ -1,18 +1,35 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.identity.model;
 
-import com.google.common.base.MoreObjects;
 import org.gbif.api.model.common.AbstractGbifUser;
 
-import javax.validation.ConstraintViolation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.validation.ConstraintViolation;
+
+import com.google.common.base.MoreObjects;
+
 import static org.gbif.registry.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
 
 /**
- * Model containing result of mutations to user data.
- * Mostly used to return significant modelError if creation/update fails.
+ * Model containing result of mutations to user data. Mostly used to return significant modelError
+ * if creation/update fails.
  */
 public class UserModelMutationResult {
 
@@ -34,25 +51,26 @@ public class UserModelMutationResult {
   }
 
   /**
-   * Create a new {@link UserModelMutationResult} representing a custom {@link ModelMutationError#CONSTRAINT_VIOLATION}
-   * (not coming from javax.validation.Validator).
+   * Create a new {@link UserModelMutationResult} representing a custom {@link
+   * ModelMutationError#CONSTRAINT_VIOLATION} (not coming from javax.validation.Validator).
+   *
    * @param key
    * @param value
    * @return
    */
   public static UserModelMutationResult withSingleConstraintViolation(String key, String value) {
-    UserModelMutationResult userModelMutationResult = new UserModelMutationResult(CONSTRAINT_VIOLATION);
+    UserModelMutationResult userModelMutationResult =
+        new UserModelMutationResult(CONSTRAINT_VIOLATION);
     Map<String, String> constraintViolation = new HashMap<>();
     constraintViolation.put(key, value);
     userModelMutationResult.setConstraintViolation(constraintViolation);
     return userModelMutationResult;
   }
 
-  public static <T extends AbstractGbifUser> UserModelMutationResult withError(Set<ConstraintViolation<T>> constraintViolation) {
+  public static <T extends AbstractGbifUser> UserModelMutationResult withError(
+      Set<ConstraintViolation<T>> constraintViolation) {
     Map<String, String> cvMap = new HashMap<>();
-    constraintViolation.forEach(cv ->
-        cvMap.put(cv.getPropertyPath().toString(), cv.getMessage())
-    );
+    constraintViolation.forEach(cv -> cvMap.put(cv.getPropertyPath().toString(), cv.getMessage()));
     return new UserModelMutationResult(cvMap);
   }
 
@@ -65,11 +83,8 @@ public class UserModelMutationResult {
     this.modelError = modelError;
   }
 
-  /**
-   * Only for JSON serialisation
-   */
-  public UserModelMutationResult() {
-  }
+  /** Only for JSON serialisation */
+  public UserModelMutationResult() {}
 
   public void setUsername(String username) {
     this.username = username;

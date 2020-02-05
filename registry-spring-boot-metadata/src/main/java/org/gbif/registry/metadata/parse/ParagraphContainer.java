@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata.parse;
 
 import java.util.List;
@@ -9,11 +24,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 /**
- * Class to temporarily keep paragraph strings before they are used as a single,
- * concatenated string argument in other rules.
- * Digester needs public access to this otherwise package scoped class.
- * </br>
- * Note HTML is used to concatenate paragraphs using <p> instead of newline character ("\n"), see POR-3138.
+ * Class to temporarily keep paragraph strings before they are used as a single, concatenated string
+ * argument in other rules. Digester needs public access to this otherwise package scoped class.
+ * </br> Note HTML is used to concatenate paragraphs using
+ *
+ * <p>instead of newline character ("\n"), see POR-3138.
  *
  * @see <a href="http://dev.gbif.org/issues/browse/POR-3138">POR-3138</a>
  */
@@ -34,7 +49,7 @@ public class ParagraphContainer {
       return null;
     }
 
-    //do not wrap in HTML if we only have one element
+    // do not wrap in HTML if we only have one element
     if (paragraphs.size() == 1) {
       return paragraphs.get(0);
     }
