@@ -5,9 +5,10 @@
   <packaging>pom</packaging>
 
   <parent>
-    <groupId>org.gbif</groupId>
-    <artifactId>motherpom</artifactId>
-    <version>41</version>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.2.2.RELEASE</version>
+    <relativePath />
   </parent>
 
   <groupId>org.gbif.registry</groupId>
