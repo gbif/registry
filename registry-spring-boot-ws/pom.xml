@@ -201,10 +201,12 @@
         <executions>
           <execution>
             <id>repackage</id>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
             <configuration>
               <attach>true</attach>
               <classifier>exec</classifier>
-              <addResources>false</addResources>
             </configuration>
           </execution>
         </executions>
