@@ -21,7 +21,7 @@ import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.ws.resources.TestResource;
 import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;
-import org.gbif.ws.server.RequestObject;
+import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 import org.gbif.ws.util.SecurityConstants;
 
 import java.io.ByteArrayInputStream;
@@ -83,7 +83,7 @@ public class UserTestSteps {
 
   private LoggedUserWithToken loggedUserWithToken;
 
-  private RequestObject requestObject;
+  private GbifHttpServletRequestWrapper requestWrapper;
 
   private HttpServletRequest rawRequestMock;
 
@@ -204,7 +204,7 @@ public class UserTestSteps {
           .thenReturn(MediaType.APPLICATION_JSON_VALUE);
       when(rawRequestMock.getHeader(SecurityConstants.HEADER_GBIF_USER)).thenReturn("fake");
 
-      requestObject = new RequestObject(rawRequestMock);
+      requestWrapper = new GbifHttpServletRequestWrapper(rawRequestMock);
     } else {
       final TestResource.TestRequest requestToSign = new TestResource.TestRequest("test");
       final byte[] contentToSign = objectMapper.writeValueAsBytes(requestToSign);
@@ -219,23 +219,23 @@ public class UserTestSteps {
       when(rawRequestMock.getHeader(HttpHeaders.CONTENT_TYPE))
           .thenReturn(MediaType.APPLICATION_JSON_VALUE);
 
-      requestObject =
+      requestWrapper =
           gbifAuthService.signRequest(
-              "gbif.registry-ws-client-it", new RequestObject(rawRequestMock));
+              "gbif.registry-ws-client-it", new GbifHttpServletRequestWrapper(rawRequestMock));
     }
   }
 
   @When("{word} login by APP role")
   public void loginByAppRole(String state) throws Exception {
     if ("invalid".equals(state)) {
-      result = mvc.perform(post("/test/app").headers(requestObject.getHttpHeaders()));
+      result = mvc.perform(post("/test/app").headers(requestWrapper.getHttpHeaders()));
     } else {
       result =
           mvc.perform(
               post("/test/app2")
-                  .content(requestObject.getContent())
+                  .content(requestWrapper.getContent())
                   .contentType(MediaType.APPLICATION_JSON)
-                  .headers(requestObject.getHttpHeaders()));
+                  .headers(requestWrapper.getHttpHeaders()));
     }
   }
 
