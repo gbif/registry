@@ -20,7 +20,6 @@ import org.gbif.api.service.common.IdentityService;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -36,11 +35,9 @@ public class JwtAuthenticateService {
   private final IdentityService identityService;
 
   public JwtAuthenticateService(
-      @Value("${jwt.issuer}") String issuer,
-      @Value("${jwt.signingKey}") String signingKey,
-      IdentityService identityService) {
-    this.issuer = issuer;
-    this.signingKey = signingKey;
+      JwtConfiguration jwtConfiguration, IdentityService identityService) {
+    this.issuer = jwtConfiguration.getIssuer();
+    this.signingKey = jwtConfiguration.getSigningKey();
     this.identityService = identityService;
   }
 
