@@ -18,6 +18,7 @@ package org.gbif.registry.persistence.mapper;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.registry.DatabaseInitializer;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.doi.DoiType;
 
@@ -25,6 +26,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,8 @@ public class DoiMapperIT {
 
   @Autowired private DoiMapper mapper;
 
+  @ClassRule public static DatabaseInitializer databaseInitializer = new DatabaseInitializer();
+
   @Test
   public void testCreate() {
     DOI doi = new DOI("10.998/dead.moon");
@@ -56,13 +60,15 @@ public class DoiMapperIT {
 
   @Test
   public void testList() {
+    List<Map<String, Object>> dataBefore = mapper.list(null, DoiType.DATASET, null);
+
     DOI doi = new DOI("10.998/dead.pool");
     assertNull(mapper.get(doi));
     mapper.create(doi, DoiType.DATASET);
     List<Map<String, Object>> data = mapper.list(null, DoiType.DATASET, null);
 
     assertNotNull(data);
-    assertEquals(1, data.size());
+    assertEquals(dataBefore.size() + 1, data.size());
     // assertNull(data.getTarget());
   }
 
