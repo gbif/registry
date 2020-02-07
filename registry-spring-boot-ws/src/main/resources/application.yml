@@ -46,7 +46,7 @@ grscicoll:
 # JWT
 jwt:
   signingKey: 03bee45dc7ecfb7f3bdd1f7171add974947f264c11bd0c37cfdeb0d6da3fd5c6
-  expiryTimeInMs: 600000
+  expiryTimeInMs: 1800000
   issuer: GBIF-REGISTRY
 
   # Pipelines properties
@@ -102,9 +102,9 @@ indexing:
         connectionTimeout: 5000
 registry:
   datasource:
-    url: @registry.db.url@
-    password: @registry.db.password@
-    username: @registry.db.username@
+    url: @registry-it.db.url@
+    password: @registry-it.db.password@
+    username: @registry-it.db.username@
     data: classpath:init-db.sql
     hikari:
       idleTimeout: 60000
