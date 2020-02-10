@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.util;
+package org.gbif.registry.pipelines.util;
 
 import java.util.function.Predicate;
 

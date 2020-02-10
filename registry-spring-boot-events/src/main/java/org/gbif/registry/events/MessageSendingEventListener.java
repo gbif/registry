@@ -30,9 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A Guava event bus listener that propagates messages to the postal service. This can optionally be
@@ -55,7 +54,7 @@ public class MessageSendingEventListener {
       MessagePublisher messagePublisher,
       EventManager eventManager,
       @Value("${registry.postalservice.embargoSeconds:#{NULL}}") Integer durationInSeconds) {
-    checkNotNull(messagePublisher, "messagePublisher can't be null");
+    Preconditions.checkNotNull(messagePublisher, "messagePublisher can't be null");
     embargoSeconds = durationInSeconds == null ? 0 : durationInSeconds;
     LOG.info("Message sending configured with an embargo durations of {} seconds", embargoSeconds);
     this.messagePublisher = messagePublisher;
