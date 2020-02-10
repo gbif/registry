@@ -24,8 +24,8 @@ import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.doi.DoiPersistenceService;
-import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,7 +50,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiGeneratorMQ.class);
 
-  private final DoiPersistenceService doiPersistenceService;
+  private final DoiMapper doiMapper;
   private final MessagePublisher messagePublisher;
 
   private final URI datasetTarget;
@@ -64,11 +64,11 @@ public class DoiGeneratorMQ implements DoiGenerator {
   public DoiGeneratorMQ(
       @Value("${portal.url}") URI portal,
       @Value("${doi.prefix}") String prefix,
-      DoiPersistenceService doiPersistenceService,
+      DoiMapper doiMapper,
       MessagePublisher messagePublisher) {
     checkArgument(prefix.startsWith("10."), "DOI prefix must begin with '10.'");
     this.prefix = prefix;
-    this.doiPersistenceService = doiPersistenceService;
+    this.doiMapper = doiMapper;
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     this.portal = portal;
@@ -98,7 +98,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     for (int x = 0; x < 100; x++) {
       DOI doi = random(shoulder);
       try {
-        doiPersistenceService.create(doi, type);
+        doiMapper.create(doi, type);
         return doi;
       } catch (Exception e) {
         // might have hit a unique constraint, try another doi
@@ -128,8 +128,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   public void failed(DOI doi, InvalidMetadataException e) {
     // Updates the doi table to FAILED status and uses the error stacktrace as the xml for
     // debugging.
-    doiPersistenceService.update(
-        doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
+    doiMapper.update(doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
   }
 
   @Override

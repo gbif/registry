@@ -17,7 +17,7 @@ package org.gbif.registry.doi.registration;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
-import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.domain.doi.DoiType;
 
 /** Specifies the contract of a service that manages DOI registrations. */
 public interface DoiRegistrationService {

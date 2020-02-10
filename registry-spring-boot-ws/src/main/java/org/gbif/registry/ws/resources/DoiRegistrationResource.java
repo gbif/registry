@@ -22,11 +22,11 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.doi.DoiPersistenceService;
-import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
+import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.annotation.NullToNotFound;
 
@@ -62,12 +62,11 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   private static final Logger LOG = LoggerFactory.getLogger(DoiRegistrationResource.class);
 
   private final DoiGenerator doiGenerator;
-  private final DoiPersistenceService doiPersistenceService;
+  private final DoiMapper doiMapper;
 
-  public DoiRegistrationResource(
-      DoiGenerator doiGenerator, DoiPersistenceService doiPersistenceService) {
+  public DoiRegistrationResource(DoiGenerator doiGenerator, DoiMapper doiMapper) {
     this.doiGenerator = doiGenerator;
-    this.doiPersistenceService = doiPersistenceService;
+    this.doiMapper = doiMapper;
   }
 
   /** Generates a new DOI based on the DoiType. */
@@ -83,7 +82,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @NullToNotFound
   @Override
   public DoiData get(@PathVariable String prefix, @PathVariable String suffix) {
-    return doiPersistenceService.get(new DOI(prefix, suffix));
+    return doiMapper.get(new DOI(prefix, suffix));
   }
 
   /** Deletes an existent DOI. */
@@ -107,7 +106,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
             Optional.ofNullable(doiRegistrationToRegister.getDoi())
                 .ifPresent(
                     doi -> {
-                      Optional.ofNullable(doiPersistenceService.get(doi))
+                      Optional.ofNullable(doiMapper.get(doi))
                           .ifPresent(
                               doiData -> {
                                 // if DOI is not NEW throw an exception
@@ -117,8 +116,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                                           .body("Doi already exists"));
                                 }
                               });
-                      doiPersistenceService.update(
-                          doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
                     }));
   }
 
@@ -135,7 +133,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
             Optional.ofNullable(existingDoiRegistration.getDoi())
                 .ifPresent(
                     doi -> {
-                      Optional.ofNullable(doiPersistenceService.get(doi))
+                      Optional.ofNullable(doiMapper.get(doi))
                           .ifPresent(
                               doiData -> {
                                 // if DOI is not NEW throw an exception
@@ -145,8 +143,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                                           .body("DOI does not exist"));
                                 }
                               });
-                      doiPersistenceService.update(
-                          doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
+                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
                     }));
   }
 
