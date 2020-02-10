@@ -18,7 +18,6 @@ package org.gbif.registry.events.search.dataset.indexing;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.search.DatasetRealtimeIndexer;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.events.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.events.search.dataset.indexing.ws.GbifWsClient;
@@ -40,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
+public class DatasetRealtimeIndexer {
 
   private final RestHighLevelClient restHighLevelClient;
 
@@ -49,7 +48,7 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
   private final GbifWsClient gbifWsClient;
 
   @Autowired
-  public DatasetRealtimeIndexerImpl(
+  public DatasetRealtimeIndexer(
       RestHighLevelClient restHighLevelClient,
       DatasetJsonConverter datasetJsonConverter,
       GbifWsClient gbifWsClient) {
@@ -67,7 +66,6 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
         .source(datasetJsonConverter.convert(dataset));
   }
 
-  @Override
   public void index(Dataset dataset) {
     restHighLevelClient.indexAsync(
         toIndexRequest(dataset),
@@ -85,7 +83,6 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
         });
   }
 
-  @Override
   public void index(Iterable<Dataset> datasets) {
     BulkRequest bulkRequest = new BulkRequest();
     datasets.forEach(dataset -> bulkRequest.add(toIndexRequest(dataset)));
@@ -110,7 +107,6 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
         });
   }
 
-  @Override
   public void index(Organization organization) {
     // first purge cache
     gbifWsClient.purge(organization);
@@ -150,7 +146,6 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
     }
   }
 
-  @Override
   public void index(Installation installation) {
     // first purge cache
     gbifWsClient.purge(installation);
@@ -170,7 +165,6 @@ public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
     }
   }
 
-  @Override
   public void delete(Dataset dataset) {
     DeleteRequest deleteRequest =
         new DeleteRequest()
