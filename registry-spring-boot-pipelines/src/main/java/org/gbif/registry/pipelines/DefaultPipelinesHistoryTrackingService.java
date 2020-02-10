@@ -38,6 +38,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.domain.pipelines.RunPipelineResponse;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.gbif.registry.pipelines.util.PredicateUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -73,8 +74,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-
-import static org.gbif.registry.ws.util.PredicateUtils.not;
 
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 @Service
@@ -151,7 +150,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
       response = datasetService.list(pagingRequest);
       response.getResults().stream()
           .map(Dataset::getKey)
-          .filter(not(datasetsToExclude::contains))
+          .filter(PredicateUtils.not(datasetsToExclude::contains))
           .forEach(
               datasetKey ->
                   CompletableFuture.runAsync(() -> rerunFn.accept(datasetKey), executorService));

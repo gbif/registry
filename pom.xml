@@ -58,6 +58,7 @@
     <module>registry-spring-boot-doi</module>
     <module>registry-spring-boot-metadata</module>
     <module>registry-spring-boot-persistence</module>
+    <module>registry-spring-boot-pipelines</module>
     <module>registry-spring-boot-surety</module>
     <module>registry-spring-boot-identity</module>
     <module>registry-spring-boot-domain</module>
@@ -236,6 +237,11 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-events</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-pipelines</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
