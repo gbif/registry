@@ -16,8 +16,6 @@
 package org.gbif.registry.ws.config;
 
 import org.gbif.api.ws.mixin.Mixins;
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDataset;
@@ -45,7 +43,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -69,9 +66,6 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-
-  @Value("${api.root.url}")
-  private String apiRoot;
 
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
@@ -173,11 +167,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     converter.setMarshaller(jaxbMarshaller());
     converter.setUnmarshaller(jaxbMarshaller());
     return converter;
-  }
-
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
   }
 
   @Bean

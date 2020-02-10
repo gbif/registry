@@ -102,20 +102,16 @@
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>download-query-tools</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-httputils</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
