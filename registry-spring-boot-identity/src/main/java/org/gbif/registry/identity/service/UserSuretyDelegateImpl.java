@@ -21,7 +21,7 @@ import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.identity.IdentityEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
-import org.gbif.registry.surety.persistence.ChallengeCodeManager;
+import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
 import java.util.Optional;

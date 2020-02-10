@@ -34,7 +34,7 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.surety.persistence.ChallengeCodeManager;
+import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
 import java.util.List;
