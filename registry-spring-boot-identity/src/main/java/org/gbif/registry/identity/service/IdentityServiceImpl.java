@@ -21,7 +21,6 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.PropertyConstants;
 import org.gbif.registry.identity.model.UserModelMutationResult;

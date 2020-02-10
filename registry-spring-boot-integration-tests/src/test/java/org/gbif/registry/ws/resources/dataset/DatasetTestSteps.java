@@ -16,8 +16,8 @@
 package org.gbif.registry.ws.resources.dataset;
 
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.utils.Datasets;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.resources.DatasetResource;

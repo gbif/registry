@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.api.service.common;
+package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 
 import java.util.List;
