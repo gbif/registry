@@ -37,7 +37,7 @@
     WHERE doi = #{doi,jdbcType=OTHER}
   </select>
 
-  <select id="getType" resultType="org.gbif.registry.doi.DoiType">
+  <select id="getType" resultType="org.gbif.registry.domain.doi.DoiType">
     SELECT type
     FROM gbif_doi
     WHERE doi = #{doi,jdbcType=OTHER}

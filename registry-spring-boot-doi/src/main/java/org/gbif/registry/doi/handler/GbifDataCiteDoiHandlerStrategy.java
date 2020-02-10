@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi;
+package org.gbif.registry.doi.handler;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
@@ -31,7 +31,6 @@ import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.doi.converter.DatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.EnumSet;

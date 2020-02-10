@@ -29,8 +29,8 @@ import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.registration.DoiRegistration;
+import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.utils.RegistryITUtils;
 
 import java.sql.Connection;

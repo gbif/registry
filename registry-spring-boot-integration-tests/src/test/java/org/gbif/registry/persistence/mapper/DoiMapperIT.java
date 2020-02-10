@@ -20,7 +20,7 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.registry.DatabaseInitializer;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.doi.DoiType;
+import org.gbif.registry.domain.doi.DoiType;
 
 import java.net.URI;
 import java.util.List;
