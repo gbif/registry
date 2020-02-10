@@ -21,12 +21,12 @@ import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.search.DatasetRealtimeIndexer;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
-import org.gbif.registry.events.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.ws.NotFoundException;
 
 import java.util.UUID;
@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.eventbus.Subscribe;
 
+@SuppressWarnings("UnstableApiUsage")
 @Service
 public class DatasetIndexUpdateListener {
 

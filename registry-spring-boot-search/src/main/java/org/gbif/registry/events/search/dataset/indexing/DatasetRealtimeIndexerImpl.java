@@ -18,6 +18,7 @@ package org.gbif.registry.events.search.dataset.indexing;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.search.DatasetRealtimeIndexer;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.events.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.events.search.dataset.indexing.ws.GbifWsClient;
@@ -39,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class DatasetRealtimeIndexer {
+public class DatasetRealtimeIndexerImpl implements DatasetRealtimeIndexer {
 
   private final RestHighLevelClient restHighLevelClient;
 
@@ -48,7 +49,7 @@ public class DatasetRealtimeIndexer {
   private final GbifWsClient gbifWsClient;
 
   @Autowired
-  public DatasetRealtimeIndexer(
+  public DatasetRealtimeIndexerImpl(
       RestHighLevelClient restHighLevelClient,
       DatasetJsonConverter datasetJsonConverter,
       GbifWsClient gbifWsClient) {
@@ -66,7 +67,7 @@ public class DatasetRealtimeIndexer {
         .source(datasetJsonConverter.convert(dataset));
   }
 
-  /** Creates or Updates asynchronously an existing dataset in ElasticSearch. */
+  @Override
   public void index(Dataset dataset) {
     restHighLevelClient.indexAsync(
         toIndexRequest(dataset),
@@ -84,6 +85,7 @@ public class DatasetRealtimeIndexer {
         });
   }
 
+  @Override
   public void index(Iterable<Dataset> datasets) {
     BulkRequest bulkRequest = new BulkRequest();
     datasets.forEach(dataset -> bulkRequest.add(toIndexRequest(dataset)));
@@ -108,6 +110,7 @@ public class DatasetRealtimeIndexer {
         });
   }
 
+  @Override
   public void index(Organization organization) {
     // first purge cache
     gbifWsClient.purge(organization);
@@ -147,6 +150,7 @@ public class DatasetRealtimeIndexer {
     }
   }
 
+  @Override
   public void index(Installation installation) {
     // first purge cache
     gbifWsClient.purge(installation);
@@ -166,7 +170,7 @@ public class DatasetRealtimeIndexer {
     }
   }
 
-  /** Deletes asynchronously a dataset from the ElasticSearch index if it exists. */
+  @Override
   public void delete(Dataset dataset) {
     DeleteRequest deleteRequest =
         new DeleteRequest()
