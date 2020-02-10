@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.events.search;
 
 import org.gbif.api.model.registry.Dataset;
@@ -16,10 +31,11 @@ import org.gbif.ws.NotFoundException;
 
 import java.util.UUID;
 
-import com.google.common.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.google.common.eventbus.Subscribe;
 
 @Service
 public class DatasetIndexUpdateListener {
@@ -30,9 +46,10 @@ public class DatasetIndexUpdateListener {
   private final DatasetRealtimeIndexer indexService;
   private final DatasetService datasetService;
 
-  public DatasetIndexUpdateListener(DatasetRealtimeIndexer indexService,
-                                    DatasetService datasetService,
-                                    EventManager eventManager) {
+  public DatasetIndexUpdateListener(
+      DatasetRealtimeIndexer indexService,
+      DatasetService datasetService,
+      EventManager eventManager) {
     this.indexService = indexService;
     this.datasetService = datasetService;
     eventManager.register(this);
@@ -41,27 +58,27 @@ public class DatasetIndexUpdateListener {
   @Subscribe
   public final <T extends NetworkEntity> void created(CreateEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
-      indexService.index((Dataset)event.getNewObject());
+      indexService.index((Dataset) event.getNewObject());
     }
   }
 
   @Subscribe
   public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
-      indexService.index((Dataset)event.getNewObject());
+      indexService.index((Dataset) event.getNewObject());
 
     } else if (event.getObjectClass().equals(Organization.class)) {
       // we only care about title & country changes
-      Organization org1 = (Organization)event.getOldObject();
-      Organization org2 = (Organization)event.getNewObject();
+      Organization org1 = (Organization) event.getOldObject();
+      Organization org2 = (Organization) event.getNewObject();
       if (!org1.getTitle().equals(org2.getTitle()) || org1.getCountry() != org2.getCountry()) {
         indexService.index(org2);
       }
 
     } else if (event.getObjectClass().equals(Installation.class)) {
       // we only care about the hosting organization
-      Installation i1 = (Installation)event.getOldObject();
-      Installation i2 = (Installation)event.getNewObject();
+      Installation i1 = (Installation) event.getOldObject();
+      Installation i2 = (Installation) event.getNewObject();
       if (!i1.getOrganizationKey().equals(i2.getOrganizationKey())) {
         indexService.index(i2);
       }
@@ -71,23 +88,23 @@ public class DatasetIndexUpdateListener {
   @Subscribe
   public final <T extends NetworkEntity> void deleted(DeleteEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
-      indexService.delete((Dataset)event.getOldObject());
+      indexService.delete((Dataset) event.getOldObject());
     }
   }
 
   @Subscribe
   public final void updatedComponent(ChangedComponentEvent event) {
     // only fire in case of tagged datasets which become keywords in solr
-    if (event.getTargetClass().equals(Dataset.class) && event.getComponentClass().equals(Tag.class)) {
+    if (event.getTargetClass().equals(Dataset.class)
+        && event.getComponentClass().equals(Tag.class)) {
       // we only put tagged datasets onto the queue for this event type!
       UUID key = event.getTargetEntityKey();
       try {
-        Dataset d = datasetService.get( key );
+        Dataset d = datasetService.get(key);
         indexService.index(d);
       } catch (NotFoundException e) {
         LOG.error("Cannot update tagged, but missing dataset {}", key);
       }
     }
   }
-
 }
