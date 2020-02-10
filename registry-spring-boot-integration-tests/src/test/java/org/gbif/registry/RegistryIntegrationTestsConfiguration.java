@@ -20,8 +20,8 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
-import org.gbif.registry.search.DatasetSearchServiceStub;
-import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
+import org.gbif.registry.events.search.DatasetSearchServiceStub;
+import org.gbif.registry.events.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
 
 import java.util.Date;
@@ -50,8 +50,8 @@ import org.springframework.context.annotation.PropertySource;
       "org.gbif.ws.server.advice",
       "org.gbif.ws.server.mapper",
       "org.gbif.ws.security",
-      "org.gbif.registry.search.dataset.service",
-      "org.gbif.registry.search.dataset.indexing",
+      "org.gbif.registry.events.search.dataset.service",
+      "org.gbif.registry.events.search.dataset.indexing",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.aspect",
       "org.gbif.registry.ws.config",
