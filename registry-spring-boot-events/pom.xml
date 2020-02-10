@@ -35,6 +35,11 @@
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-search</artifactId>
+    </dependency>
+
 
     <!-- Third party dependencies -->
     <dependency>
