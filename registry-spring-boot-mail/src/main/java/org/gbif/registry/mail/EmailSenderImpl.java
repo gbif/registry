@@ -59,33 +59,38 @@ public class EmailSenderImpl implements EmailSender {
   @Override
   public void send(@Valid @NotNull BaseEmailModel emailModel) {
     RegistryMailUtils.toAddress(emailModel.getEmailAddress())
-        .ifPresent(
-            emailAddress -> {
-              try {
-                // Send E-Mail
-                final MimeMessage msg = mailSender.createMimeMessage();
-                // from will be set with the value from the {@link Session} object.
-                msg.setFrom();
-                msg.setRecipient(Message.RecipientType.TO, emailAddress);
-                msg.setRecipients(
-                    Message.RecipientType.CC,
-                    RegistryMailUtils.toInternetAddresses(emailModel.getCcAddress())
-                        .toArray(new Address[0]));
-                msg.setRecipients(
-                    Message.RecipientType.BCC,
-                    RegistryMailUtils.toInternetAddresses(mailConfigProperties.getBcc())
-                        .toArray(new Address[0]));
-                msg.setSubject(emailModel.getSubject());
-                msg.setSentDate(new Date());
-                msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
-                mailSender.send(msg);
-              } catch (MessagingException e) {
-                LOG.error(
-                    RegistryMailUtils.NOTIFY_ADMIN,
-                    "Sending of notification Mail for [{}] failed",
-                    emailAddress,
-                    e);
-              }
-            });
+        .ifPresent(emailAddress -> prepareAndSend(emailModel, emailAddress));
+  }
+
+  private void prepareAndSend(BaseEmailModel emailModel, Address emailAddress) {
+    try {
+      // Send E-Mail
+      final MimeMessage msg = mailSender.createMimeMessage();
+      // from will be set with the value from the {@link Session} object.
+      msg.setFrom();
+      msg.setRecipient(Message.RecipientType.TO, emailAddress);
+      msg.setRecipients(
+          Message.RecipientType.CC,
+          RegistryMailUtils.toInternetAddresses(emailModel.getCcAddress()).toArray(new Address[0]));
+      msg.setRecipients(
+          Message.RecipientType.BCC,
+          RegistryMailUtils.toInternetAddresses(mailConfigProperties.getBcc())
+              .toArray(new Address[0]));
+      msg.setSubject(emailModel.getSubject());
+      msg.setSentDate(new Date());
+      msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+
+      if (mailConfigProperties.getEnabled() != null && mailConfigProperties.getEnabled()) {
+        mailSender.send(msg);
+      } else {
+        LOG.warn("Mail sending is disabled!");
+      }
+    } catch (MessagingException e) {
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Sending of notification Mail for [{}] failed",
+          emailAddress,
+          e);
+    }
   }
 }

@@ -39,12 +39,12 @@
       "name": "mail.devemail.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": false,
-      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
     },
     {
       "name": "mail.devemail.address",
       "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
     },
     {
       "name": "mail.cc",
@@ -57,24 +57,30 @@
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
     },
     {
+      "name": "mail.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
       "name": "organization.surety.mail.urlTemplate.confirmOrganization",
       "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties"
     },
     {
       "name": "organization.surety.mail.urlTemplate.organization",
       "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties"
     },
     {
       "name": "identity.surety.mail.urlTemplate.confirmUser",
       "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
     },
     {
       "name": "identity.surety.mail.urlTemplate.resetPassword",
       "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
     },
     {
       "name": "organization.surety.mail.helpdesk",
