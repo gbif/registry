@@ -109,13 +109,12 @@ public class GbifWsClient {
     gbifApiService = retrofit.create(GbifApiService.class);
   }
 
-  private Map<String,String> toQueryMap(PagingRequest pagingRequest) {
+  private Map<String, String> toQueryMap(PagingRequest pagingRequest) {
     Map<String, String> params = new HashMap<>();
     params.put("offset", Long.toString(pagingRequest.getOffset()));
     params.put("limit", Long.toString(pagingRequest.getLimit()));
     return params;
   }
-
 
   public void purge(Installation installation) {
     installationCache.remove(installation.getKey().toString());
@@ -150,14 +149,20 @@ public class GbifWsClient {
     return syncCallWithResponse(gbifApiService.getOrganization(organizationKey)).body();
   }
 
-  public PagingResponse<Dataset> getOrganizationHostedDatasets(String organizationKey, PagingRequest pagingRequest) {
+  public PagingResponse<Dataset> getOrganizationHostedDatasets(
+      String organizationKey, PagingRequest pagingRequest) {
     Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(gbifApiService.getOrganizationHostedDatasets(organizationKey, params)).body();
+    return syncCallWithResponse(
+            gbifApiService.getOrganizationHostedDatasets(organizationKey, params))
+        .body();
   }
 
-  public PagingResponse<Dataset> getOrganizationPublishedDataset(String organizationKey, PagingRequest pagingRequest) {
+  public PagingResponse<Dataset> getOrganizationPublishedDataset(
+      String organizationKey, PagingRequest pagingRequest) {
     Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(gbifApiService.getOrganizationPublishedDatasets(organizationKey, params)).body();
+    return syncCallWithResponse(
+            gbifApiService.getOrganizationPublishedDatasets(organizationKey, params))
+        .body();
   }
 
   public InputStream getMetadataDocument(UUID datasetKey) {

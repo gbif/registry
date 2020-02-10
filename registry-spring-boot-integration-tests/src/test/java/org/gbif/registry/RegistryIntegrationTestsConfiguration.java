@@ -17,11 +17,11 @@ package org.gbif.registry;
 
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.registry.events.search.DatasetSearchServiceStub;
+import org.gbif.registry.events.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
-import org.gbif.registry.events.search.DatasetSearchServiceStub;
-import org.gbif.registry.events.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
 
 import java.util.Date;
