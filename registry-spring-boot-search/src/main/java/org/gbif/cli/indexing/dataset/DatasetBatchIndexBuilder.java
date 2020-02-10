@@ -18,10 +18,10 @@ package org.gbif.cli.indexing.dataset;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
-import org.gbif.registry.search.dataset.indexing.es.EsClient;
-import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.events.search.dataset.indexing.DatasetJsonConverter;
+import org.gbif.registry.events.search.dataset.indexing.es.EsClient;
+import org.gbif.registry.events.search.dataset.indexing.es.IndexingConstants;
+import org.gbif.registry.events.search.dataset.indexing.ws.GbifWsClient;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @Slf4j
 @EnableConfigurationProperties
-@ComponentScan(basePackages = {"org.gbif.registry.search"})
+@ComponentScan(basePackages = {"org.gbif.registry.events.search"})
 public class DatasetBatchIndexBuilder implements CommandLineRunner {
 
   // controls how many results we request while paging over the WS
