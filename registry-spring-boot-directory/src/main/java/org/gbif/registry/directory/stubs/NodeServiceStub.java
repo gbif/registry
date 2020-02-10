@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.stubs;
+package org.gbif.registry.directory.stubs;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.directory.Participant;
-import org.gbif.api.service.directory.ParticipantService;
+import org.gbif.api.model.directory.Node;
+import org.gbif.api.service.directory.NodeService;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -26,35 +26,34 @@ import javax.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ParticipantServiceStub implements ParticipantService {
-
+public class NodeServiceStub implements NodeService {
   @Override
-  public Participant create(@NotNull Participant participant) {
+  public Node create(@NotNull Node node) {
     throw new UnsupportedOperationException(
-        "ParticipantService#create not implemented yet (directory-ws needed)");
+        "NodeService#create not implemented yet (directory-ws needed)");
   }
 
   @Override
-  public Participant get(@NotNull Integer integer) {
+  public Node get(@NotNull Integer integer) {
     throw new UnsupportedOperationException(
-        "ParticipantService#get not implemented yet (directory-ws needed)");
+        "NodeService#get not implemented yet (directory-ws needed)");
   }
 
   @Override
-  public void update(@NotNull Participant participant) {
+  public void update(@NotNull Node node) {
     throw new UnsupportedOperationException(
-        "ParticipantService#update not implemented yet (directory-ws needed)");
+        "NodeService#update not implemented yet (directory-ws needed)");
   }
 
   @Override
   public void delete(@NotNull Integer integer) {
     throw new UnsupportedOperationException(
-        "ParticipantService#delete not implemented yet (directory-ws needed)");
+        "NodeService#delete not implemented yet (directory-ws needed)");
   }
 
   @Override
-  public PagingResponse<Participant> list(@Nullable String s, @Nullable Pageable pageable) {
+  public PagingResponse<Node> list(@Nullable String s, @Nullable Pageable pageable) {
     throw new UnsupportedOperationException(
-        "ParticipantService#list not implemented yet (directory-ws needed)");
+        "NodeService#list not implemented yet (directory-ws needed)");
   }
 }

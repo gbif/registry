@@ -106,6 +106,10 @@
       <artifactId>registry-spring-boot-pipelines</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-directory</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
