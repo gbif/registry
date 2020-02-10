@@ -98,6 +98,14 @@
       <artifactId>registry-spring-boot-metadata</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-events</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-pipelines</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
