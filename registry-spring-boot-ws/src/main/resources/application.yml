@@ -11,6 +11,7 @@ portal:
 mail:
   cc: @mail.cc@
   bcc: @mail.bcc@
+  enabled: true
   devemail:
     address: gbifregistry@mailinator.com
     enabled: @mail.devemail.enabled@

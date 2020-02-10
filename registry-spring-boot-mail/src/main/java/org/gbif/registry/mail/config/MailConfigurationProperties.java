@@ -31,6 +31,8 @@ public class MailConfigurationProperties {
 
   private List<String> bcc = Collections.emptyList();
 
+  private Boolean enabled = Boolean.FALSE;
+
   public DevemailProperties getDevemail() {
     return devemail;
   }
@@ -53,6 +55,14 @@ public class MailConfigurationProperties {
 
   public void setBcc(List<String> bcc) {
     this.bcc = bcc;
+  }
+
+  public Boolean getEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(Boolean enabled) {
+    this.enabled = enabled;
   }
 
   public static class DevemailProperties {
