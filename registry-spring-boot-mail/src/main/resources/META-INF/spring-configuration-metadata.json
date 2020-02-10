@@ -86,12 +86,6 @@
       "name": "organization.surety.mail.helpdesk",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
-    },
-    {
-      "name": "organization.surety.mail.enabled",
-      "type": "java.lang.Boolean",
-      "defaultValue": false,
-      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
     }
   ]
 }

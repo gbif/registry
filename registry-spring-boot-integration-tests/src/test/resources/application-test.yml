@@ -29,7 +29,6 @@ identity:
 organization:
   surety:
     mail:
-      enabled: false
       helpdesk: @mail.helpdesk@
       urlTemplate:
         organization: https://www.demo.gbif-dev.org/publisher/{0}

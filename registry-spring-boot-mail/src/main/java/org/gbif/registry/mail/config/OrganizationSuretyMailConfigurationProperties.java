@@ -36,14 +36,6 @@ public class OrganizationSuretyMailConfigurationProperties {
     this.helpdesk = helpdesk;
   }
 
-  public Boolean getEnabled() {
-    return enabled;
-  }
-
-  public void setEnabled(Boolean enabled) {
-    this.enabled = enabled;
-  }
-
   public UrlTemplateProperties getUrlTemplate() {
     return urlTemplate;
   }
