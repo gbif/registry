@@ -21,9 +21,9 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.registry.domain.ws.annotation.ParamName;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
 import java.util.UUID;
