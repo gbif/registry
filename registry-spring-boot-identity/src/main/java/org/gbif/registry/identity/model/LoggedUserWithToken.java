@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.api.service.common;
+package org.gbif.registry.identity.model;
 
 import org.gbif.api.model.common.GbifUser;
 

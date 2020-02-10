@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.ws.security.jwt;
 
-import org.gbif.api.service.common.LoggedUserWithToken;
+import org.gbif.registry.identity.model.LoggedUserWithToken;
 
 import org.junit.Before;
 import org.junit.Test;

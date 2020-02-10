@@ -15,8 +15,8 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.registry.domain.ws.UserAdminView;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.security.AppkeysConfiguration;
 import org.gbif.ws.security.GbifAuthentication;
 

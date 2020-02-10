@@ -15,9 +15,9 @@
  */
 package org.gbif.registry.ws.resources.user;
 
-import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.identity.model.LoggedUserWithToken;
 import org.gbif.registry.ws.resources.TestResource;
 import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;

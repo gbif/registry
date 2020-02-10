@@ -28,12 +28,12 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Tag;
-import org.gbif.api.service.common.LoggedUserWithToken;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
 import org.gbif.registry.domain.ws.LegacyEndpoint;
 import org.gbif.registry.domain.ws.LegacyEndpointResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
+import org.gbif.registry.identity.model.LoggedUserWithToken;
 
 import java.util.Locale;
 

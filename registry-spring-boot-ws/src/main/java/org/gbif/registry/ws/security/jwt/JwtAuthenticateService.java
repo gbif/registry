@@ -16,7 +16,7 @@
 package org.gbif.registry.ws.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.service.common.IdentityService;
+import org.gbif.registry.identity.service.IdentityService;
 
 import java.util.Optional;
 

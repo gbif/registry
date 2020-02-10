@@ -16,7 +16,7 @@
 package org.gbif.registry.utils.cucumber;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.service.common.LoggedUserWithToken;
+import org.gbif.registry.identity.model.LoggedUserWithToken;
 
 import java.util.Collections;
 import java.util.Map;

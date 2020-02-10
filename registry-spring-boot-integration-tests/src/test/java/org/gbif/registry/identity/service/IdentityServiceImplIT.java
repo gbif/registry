@@ -16,7 +16,6 @@
 package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.DatabaseInitializer;
 import org.gbif.registry.identity.model.ModelMutationError;

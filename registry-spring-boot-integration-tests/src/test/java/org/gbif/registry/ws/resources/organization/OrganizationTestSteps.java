@@ -16,9 +16,9 @@
 package org.gbif.registry.ws.resources.organization;
 
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.common.IdentityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.utils.Organizations;
 import org.gbif.registry.utils.RegistryITUtils;
 import org.gbif.registry.ws.resources.OrganizationResource;
