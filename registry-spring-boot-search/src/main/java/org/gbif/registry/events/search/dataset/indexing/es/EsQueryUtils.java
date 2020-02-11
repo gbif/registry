@@ -214,17 +214,6 @@ public class EsQueryUtils {
         return builder.build();
       };
 
-  public static final Map<String, Integer> CARDINALITIES =
-      ImmutableMap.<String, Integer>builder()
-          .put("license", License.values().length)
-          .put("country", Country.values().length)
-          .put("publishingCountry", Country.values().length)
-          .put("continent", Continent.values().length)
-          .put("type", DatasetType.values().length)
-          .put("subtype", DatasetSubtype.values().length)
-          .build();
-
-  public static final List<String> DATE_FIELDS = ImmutableList.of("modified", "created", "pubDate");
 
   public static <P extends SearchParameter> int extractFacetLimit(
       FacetedSearchRequest<P> request, P facet) {

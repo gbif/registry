@@ -16,8 +16,18 @@
 package org.gbif.registry.events.search.dataset.search;
 
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
+import org.gbif.api.vocabulary.Continent;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetSubtype;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.events.search.dataset.search.common.EsFieldMapper;
 
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -27,6 +37,10 @@ import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 
 import com.google.common.collect.ImmutableBiMap;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 
 public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParameter> {
 
@@ -50,6 +64,16 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DATASET_TITLE, "title")
           .build();
 
+  public static final Map<String, Integer> CARDINALITIES =
+    ImmutableMap.<String, Integer>builder()
+      .put("license", License.values().length)
+      .put("country", Country.values().length)
+      .put("publishingCountry", Country.values().length)
+      .put("continent", Continent.values().length)
+      .put("type", DatasetType.values().length)
+      .put("subtype", DatasetSubtype.values().length)
+      .build();
+
   private static final String[] EXCLUDE_FIELDS = new String[] {"all", "taxonKey"};
 
   private static final String[] DATASET_TITLE_SUGGEST_FIELDS =
@@ -62,9 +86,25 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .modifier(FieldValueFactorFunction.Modifier.LN2P)
           .missing(0d);
 
+  private static final FieldSortBuilder[] SORT = new FieldSortBuilder[]{
+    SortBuilders.fieldSort("dataScore").order(SortOrder.DESC),
+    SortBuilders.fieldSort("created").order(SortOrder.DESC)};
+
+  public static final List<String> DATE_FIELDS = ImmutableList.of("modified", "created", "pubDate");
+
   @Override
   public DatasetSearchParameter get(String esField) {
     return SEARCH_TO_ES_MAPPING.inverse().get(esField);
+  }
+
+  @Override
+  public boolean isDateField(String esFieldName) {
+    return DATE_FIELDS.contains(esFieldName);
+  }
+
+  @Override
+  public Integer getCardinality(String esFieldName) {
+    return CARDINALITIES.get(esFieldName);
   }
 
   @Override
@@ -75,6 +115,11 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
   @Override
   public String[] excludeFields() {
     return EXCLUDE_FIELDS;
+  }
+
+  @Override
+  public SortBuilder<? extends SortBuilder>[] sorts() {
+    return SORT;
   }
 
   @Override
