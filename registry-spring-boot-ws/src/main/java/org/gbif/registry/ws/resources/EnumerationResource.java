@@ -27,6 +27,8 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.ws.annotation.NullToNotFound;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -40,17 +42,22 @@ import javax.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.http.MediaType;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.SystemPropertyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.reflect.ClassPath;
-import com.google.common.reflect.ClassPath.ClassInfo;
+import com.google.common.collect.ImmutableSortedMap.Builder;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -117,30 +124,63 @@ public class EnumerationResource {
 
   // reflect over the package to find suitable enumerations
   private static Map<String, Enum<?>[]> enumerations() {
+    ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
+    ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+    MetadataReaderFactory metadataReaderFactory =
+        new CachingMetadataReaderFactory(resourcePatternResolver);
+
+    List<Class<? extends Serializable>> classes =
+        Arrays.asList(Country.class, PreservationType.class, PipelineStep.class);
+
+    ImmutableSortedMap<String, Enum<?>[]> result;
     try {
-      ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
-      ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
-
-      // create a list with gbif and collection vocabulary enums
-      ImmutableList.Builder<ClassInfo> infosListBuilder =
-          ImmutableList.<ClassInfo>builder()
-              .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
-              .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
-              .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
-
-      for (ClassInfo info : infosListBuilder.build()) {
-        Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());
-        // verify that it is an Enumeration
-        if (vocab != null && vocab.getEnumConstants() != null) {
-          builder.put(info.getSimpleName(), vocab.getEnumConstants());
-        }
+      for (Class<? extends Serializable> clazz : classes) {
+        addEnumResources(
+            builder,
+            metadataReaderFactory,
+            resourcePatternResolver.getResources(
+                ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
+                    + resolveBasePackage(clazz.getPackage().getName())
+                    + "/*.class"));
       }
-      return builder.build();
-
+      result = builder.build();
     } catch (Exception e) {
       LOG.error("Unable to read the classpath for enumerations", e);
-      return ImmutableMap.of(); // empty
+      result = ImmutableSortedMap.of(); // empty
     }
+
+    return result;
+  }
+
+  private static void addEnumResources(
+      Builder<String, Enum<?>[]> builder,
+      MetadataReaderFactory metadataReaderFactory,
+      Resource[] resources)
+      throws IOException {
+    for (Resource resource : resources) {
+      if (resource.isReadable()) {
+        MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
+        String className = metadataReader.getClassMetadata().getClassName();
+        Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(className);
+        if (isEnumeration(metadataReader)) {
+          builder.put(
+              org.apache.commons.lang.ClassUtils.getShortClassName(className),
+              vocab.getEnumConstants());
+        }
+      }
+    }
+  }
+
+  private static String resolveBasePackage(String basePackage) {
+    return ClassUtils.convertClassNameToResourcePath(
+        SystemPropertyUtils.resolvePlaceholders(basePackage));
+  }
+
+  private static boolean isEnumeration(MetadataReader metadataReader) {
+    Class<? extends Enum<?>> vocab =
+        VocabularyUtils.lookupVocabulary(metadataReader.getClassMetadata().getClassName());
+
+    return vocab != null && vocab.getEnumConstants() != null;
   }
 
   /** @return list of country information based on our enum. */
