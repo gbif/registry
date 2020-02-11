@@ -18,11 +18,6 @@ package org.gbif.registry.events.search.dataset.indexing.es;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.vocabulary.Continent;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.License;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,8 +31,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -47,8 +40,6 @@ import org.apache.http.protocol.HTTP;
 import org.elasticsearch.client.RequestOptions;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class EsQueryUtils {
 
@@ -213,18 +204,6 @@ public class EsQueryUtils {
         builder.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
         return builder.build();
       };
-
-  public static final Map<String, Integer> CARDINALITIES =
-      ImmutableMap.<String, Integer>builder()
-          .put("license", License.values().length)
-          .put("country", Country.values().length)
-          .put("publishingCountry", Country.values().length)
-          .put("continent", Continent.values().length)
-          .put("type", DatasetType.values().length)
-          .put("subtype", DatasetSubtype.values().length)
-          .build();
-
-  public static final List<String> DATE_FIELDS = ImmutableList.of("modified", "created", "pubDate");
 
   public static <P extends SearchParameter> int extractFacetLimit(
       FacetedSearchRequest<P> request, P facet) {

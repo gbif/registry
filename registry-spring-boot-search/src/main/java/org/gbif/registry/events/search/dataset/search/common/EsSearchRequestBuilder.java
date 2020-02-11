@@ -54,8 +54,8 @@ import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuil
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.locationtech.jts.geom.Coordinate;
@@ -69,8 +69,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import static org.gbif.api.util.SearchTypeValidator.isRange;
-import static org.gbif.registry.events.search.dataset.indexing.es.EsQueryUtils.CARDINALITIES;
-import static org.gbif.registry.events.search.dataset.indexing.es.EsQueryUtils.DATE_FIELDS;
 import static org.gbif.registry.events.search.dataset.indexing.es.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
 import static org.gbif.registry.events.search.dataset.indexing.es.EsQueryUtils.RANGE_SEPARATOR;
 import static org.gbif.registry.events.search.dataset.indexing.es.EsQueryUtils.RANGE_WILDCARD;
@@ -119,8 +117,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // sort
     if (Strings.isNullOrEmpty(searchRequest.getQ())) {
-      searchSourceBuilder.sort(SortBuilders.fieldSort("dataScore").order(SortOrder.DESC));
-      searchSourceBuilder.sort(SortBuilders.fieldSort("created").order(SortOrder.DESC));
+      for (SortBuilder sb : esFieldMapper.sorts()) {
+        searchSourceBuilder.sort(sb);
+      }
     } else {
       searchSourceBuilder.sort(SortBuilders.scoreSort());
       if (searchRequest.isHighlight()) {
@@ -339,7 +338,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
         .collect(Collectors.toList());
   }
 
-  private static TermsAggregationBuilder buildTermsAggs(
+  private TermsAggregationBuilder buildTermsAggs(
       String aggsName, String esField, int facetOffset, int facetLimit, Integer minCount) {
     // build aggs for the field
     TermsAggregationBuilder termsAggsBuilder = AggregationBuilders.terms(aggsName).field(esField);
@@ -353,13 +352,15 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // aggs shard size
     termsAggsBuilder.shardSize(
-        CARDINALITIES.getOrDefault(esField, DEFAULT_SHARD_SIZE.applyAsInt(size)));
+        Optional.ofNullable(esFieldMapper.getCardinality(esField))
+            .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
 
     return termsAggsBuilder;
   }
 
-  private static int calculateAggsSize(String esField, int facetOffset, int facetLimit) {
-    int maxCardinality = CARDINALITIES.getOrDefault(esField, Integer.MAX_VALUE);
+  private int calculateAggsSize(String esField, int facetOffset, int facetLimit) {
+    int maxCardinality =
+        Optional.ofNullable(esFieldMapper.getCardinality(esField)).orElse(Integer.MAX_VALUE);
 
     // the limit is bounded by the max cardinality of the field
     int limit = Math.min(facetOffset + facetLimit, maxCardinality);
@@ -414,10 +415,10 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return queries;
   }
 
-  private static RangeQueryBuilder buildRangeQuery(String esField, String value) {
+  private RangeQueryBuilder buildRangeQuery(String esField, String value) {
     RangeQueryBuilder builder = QueryBuilders.rangeQuery(esField);
 
-    if (DATE_FIELDS.contains(esField)) {
+    if (esFieldMapper.isDateField(esField)) {
       String[] values = value.split(RANGE_SEPARATOR);
 
       LocalDateTime lowerBound = LOWER_BOUND_RANGE_PARSER.apply(values[0]);
