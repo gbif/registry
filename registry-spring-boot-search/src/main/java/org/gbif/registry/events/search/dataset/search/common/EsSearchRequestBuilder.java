@@ -117,7 +117,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     // sort
     if (Strings.isNullOrEmpty(searchRequest.getQ())) {
-      for (SortBuilder sb: esFieldMapper.sorts()) {
+      for (SortBuilder sb : esFieldMapper.sorts()) {
         searchSourceBuilder.sort(sb);
       }
     } else {
@@ -351,14 +351,16 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     termsAggsBuilder.size(size);
 
     // aggs shard size
-    termsAggsBuilder.shardSize(Optional.ofNullable(esFieldMapper.getCardinality(esField))
-                                 .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
+    termsAggsBuilder.shardSize(
+        Optional.ofNullable(esFieldMapper.getCardinality(esField))
+            .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
 
     return termsAggsBuilder;
   }
 
   private int calculateAggsSize(String esField, int facetOffset, int facetLimit) {
-    int maxCardinality = Optional.ofNullable(esFieldMapper.getCardinality(esField)).orElse(Integer.MAX_VALUE);
+    int maxCardinality =
+        Optional.ofNullable(esFieldMapper.getCardinality(esField)).orElse(Integer.MAX_VALUE);
 
     // the limit is bounded by the max cardinality of the field
     int limit = Math.min(facetOffset + facetLimit, maxCardinality);

@@ -25,6 +25,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   /**
    * Looks-up the Elasticsearch field name linked to a search parameter.
+   *
    * @param searchParameter to lookup-up
    * @return the associated Elasticsearch field or null otherwise
    */
@@ -32,6 +33,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   /**
    * Looks-up the {@link SearchParameter} linked to a ElasticSearch field.
+   *
    * @param esFieldName to look-up
    * @return the search parameter associated to the field
    */
@@ -39,6 +41,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   /**
    * Looks-up for the estimate cardinality of ElasticSearch field.
+   *
    * @param esFieldName to look-up
    * @return the estimated cardinality
    */
@@ -46,6 +49,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   /**
    * Checks if a ElasticSearch fields is mapped to date data type.
+   *
    * @param esFieldName to look-up
    * @return true of the field is date type field, false otherwise
    */
@@ -54,9 +58,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
   /** @return a list of fields to be excluded in the _source field. */
   String[] excludeFields();
 
-  /**
-   * @return the default sorting of results
-   */
+  /** @return the default sorting of results */
   SortBuilder<? extends SortBuilder>[] sorts();
 
   /**
