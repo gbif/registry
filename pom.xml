@@ -132,7 +132,7 @@
     <powermock-mockito.version>1.6.0</powermock-mockito.version>
     <servlet-api.version>3.1.0</servlet-api.version>
     <slf4j.version>1.7.12</slf4j.version>
-    <solr.version>5.4.1</solr.version>
+    <solr.version>8.4.1</solr.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
     <yammer.version>2.2.0</yammer.version>
