@@ -29,7 +29,7 @@ public enum MapperType {
   NETWORK("networkMapper"),
   METADATA("metadataMapper"),
   DATASET_PROCESS_STATUS("datasetProcessStatusMapper"),
-  METASYNC_HISTORY_MAPPER("metasyncHistoryMapper");
+  META_SYNC_HISTORY_MAPPER("metaSyncHistoryMapper");
 
   private String name;
 

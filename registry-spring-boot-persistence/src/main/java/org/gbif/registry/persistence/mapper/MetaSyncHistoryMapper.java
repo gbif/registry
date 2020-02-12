@@ -26,10 +26,9 @@ import javax.annotation.Nullable;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-// TODO: 26/08/2019 xml mapper has the different name
 /** Mapper that perform operations on {@link MetasyncHistory} instances. */
 @Repository
-public interface MetasyncHistoryMapper {
+public interface MetaSyncHistoryMapper {
 
   int count();
 
