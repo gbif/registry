@@ -24,16 +24,15 @@ import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotEditor;
@@ -50,7 +49,7 @@ import static org.gbif.registry.ws.security.SecurityContextCheck.checkIsNotEdito
  * the BaseNetworkEntityResource.create() method directly.
  */
 @Component
-public class EditorAuthorizationFilter extends GenericFilterBean {
+public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
@@ -74,20 +73,20 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws IOException, ServletException {
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
     // only verify non GET methods with an authenticated REGISTRY_EDITOR
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource
     // methods
     final Authentication authentication = authenticationFacade.getAuthentication();
 
     final String name = authentication.getName();
-    final HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-    String path = httpRequest.getRequestURI().toLowerCase();
+    String path = request.getRequestURI().toLowerCase();
 
     // skip GET and OPTIONS requests
-    if (isNotGetOrOptionsRequest(httpRequest) && checkRequestRequiresEditorValidation(path)) {
+    if (isNotGetOrOptionsRequest(request) && checkRequestRequiresEditorValidation(path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       if (name == null) {
         throw new WebApplicationException(HttpStatus.FORBIDDEN);
@@ -109,7 +108,7 @@ public class EditorAuthorizationFilter extends GenericFilterBean {
         }
       }
     }
-    chain.doFilter(request, response);
+    filterChain.doFilter(request, response);
   }
 
   private boolean checkRequestRequiresEditorValidation(String path) {

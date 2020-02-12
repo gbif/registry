@@ -25,16 +25,15 @@ import java.util.UUID;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import static org.gbif.ws.util.CommonWsUtils.getFirst;
 
@@ -43,7 +42,7 @@ import static org.gbif.ws.util.CommonWsUtils.getFirst;
  * authentication setting a security context on the request.
  */
 @Component
-public class LegacyAuthorizationFilter extends GenericFilterBean {
+public class LegacyAuthorizationFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyAuthorizationFilter.class);
 
@@ -64,23 +63,23 @@ public class LegacyAuthorizationFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws IOException, ServletException {
-    final HttpServletRequest httpRequest = (HttpServletRequest) request;
-    String path = httpRequest.getRequestURI().toLowerCase();
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+      throws ServletException, IOException {
+    String path = request.getRequestURI().toLowerCase();
 
     // is it a legacy web service request?
     if (path.contains(REGISTRY_END_SIDE_SLASH_MAPPING)) {
-      if ("GET".equalsIgnoreCase(httpRequest.getMethod())) {
-        filterGetRequests(httpRequest);
-      } else if ("POST".equalsIgnoreCase(httpRequest.getMethod())
-          || "PUT".equalsIgnoreCase(httpRequest.getMethod())
-          || "DELETE".equalsIgnoreCase(httpRequest.getMethod())) {
-        filterPostPutDeleteRequests(httpRequest, path);
+      if ("GET".equalsIgnoreCase(request.getMethod())) {
+        filterGetRequests(request);
+      } else if ("POST".equalsIgnoreCase(request.getMethod())
+          || "PUT".equalsIgnoreCase(request.getMethod())
+          || "DELETE".equalsIgnoreCase(request.getMethod())) {
+        filterPostPutDeleteRequests(request, path);
       }
     }
     // otherwise just do nothing (request unchanged)
-    chain.doFilter(request, response);
+    filterChain.doFilter(request, response);
   }
 
   private void filterPostPutDeleteRequests(HttpServletRequest httpRequest, String path) {
