@@ -32,7 +32,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
+import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
@@ -84,7 +84,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   private final DatasetMapper datasetMapper;
   private final InstallationMapper installationMapper;
   private final OrganizationMapper organizationMapper;
-  private final MetasyncHistoryMapper metasyncHistoryMapper;
+  private final MetaSyncHistoryMapper metasyncHistoryMapper;
 
   /** The messagePublisher can be optional. */
   private final MessagePublisher messagePublisher;
@@ -105,7 +105,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
-    this.metasyncHistoryMapper = mapperServiceLocator.getMetasyncHistoryMapper();
+    this.metasyncHistoryMapper = mapperServiceLocator.getMetaSyncHistoryMapper();
     this.messagePublisher = messagePublisher;
   }
 
