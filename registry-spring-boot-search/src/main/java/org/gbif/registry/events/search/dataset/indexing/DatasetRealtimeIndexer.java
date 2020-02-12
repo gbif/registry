@@ -32,6 +32,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +64,7 @@ public class DatasetRealtimeIndexer {
         .index(IndexingConstants.ALIAS)
         .type(IndexingConstants.DATASET_RECORD_TYPE)
         .opType(DocWriteRequest.OpType.INDEX)
-        .source(datasetJsonConverter.convert(dataset));
+        .source(datasetJsonConverter.convert(dataset), XContentType.JSON);
   }
 
   public void index(Dataset dataset) {
