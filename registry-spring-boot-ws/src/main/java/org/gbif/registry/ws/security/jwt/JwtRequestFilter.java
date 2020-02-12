@@ -25,8 +25,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -39,7 +37,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
 
@@ -49,7 +47,7 @@ import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
  * <p>If the token is not present this validation is skipped.
  */
 @Component
-public class JwtRequestFilter extends GenericFilterBean {
+public class JwtRequestFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(JwtRequestFilter.class);
 
@@ -70,16 +68,14 @@ public class JwtRequestFilter extends GenericFilterBean {
   }
 
   @Override
-  public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+  protected void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    final HttpServletRequest httpRequest = (HttpServletRequest) request;
-    final HttpServletResponse httpResponse = (HttpServletResponse) response;
-    final Optional<String> token = findTokenInRequest(httpRequest);
+    final Optional<String> token = findTokenInRequest(request);
 
     if (!token.isPresent()) {
       // if there is no token in the request we ignore this authentication
       LOG.debug("No JWT token present.");
-      filterChain.doFilter(request, response);
     } else {
       try {
         final GbifUser gbifUser = jwtAuthenticateService.authenticate(token.get());
@@ -95,14 +91,14 @@ public class JwtRequestFilter extends GenericFilterBean {
 
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
-        httpResponse.addHeader(HEADER_TOKEN, newToken);
+        response.addHeader(HEADER_TOKEN, newToken);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
-        httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
       }
-
-      filterChain.doFilter(httpRequest, httpResponse);
     }
+
+    filterChain.doFilter(request, response);
   }
 
   /** Tries to find the token in the {@link HttpHeaders#AUTHORIZATION} header. */
