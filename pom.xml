@@ -56,6 +56,7 @@
     <module>registry-spring-boot-directory</module>
     <module>registry-spring-boot-events</module>
     <module>registry-spring-boot-ws</module>
+    <module>registry-spring-boot-messaging</module>
     <module>registry-spring-boot-doi</module>
     <module>registry-spring-boot-metadata</module>
     <module>registry-spring-boot-persistence</module>
@@ -74,6 +75,7 @@
     <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
     <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
     <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
+    <spotless.check.skip>false</spotless.check.skip>
 
     <release.tagNameBase>${project.artifactId}</release.tagNameBase>
 
@@ -89,7 +91,7 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
-    <gbif-postal-service.version>0.44.3-jackson2</gbif-postal-service.version>
+    <gbif-postal-service.version>0.44.4-jackson2-SNAPSHOT</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
     <gbif-api.version>0.103.10-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.15</gbif-directory.version>
@@ -195,6 +197,11 @@
             <artifactId>guice</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-messaging</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>

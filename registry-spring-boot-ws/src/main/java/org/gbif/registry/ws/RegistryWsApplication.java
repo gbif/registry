@@ -53,7 +53,6 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.identity",
       "org.gbif.registry.surety",
       "org.gbif.registry.mail",
-      "org.gbif.registry.stubs",
       "org.gbif.registry.doi",
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",

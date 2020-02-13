@@ -23,8 +23,8 @@ import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
-import org.gbif.registry.persistence.mapper.MetasyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -95,8 +95,8 @@ public class MapperServiceLocator {
         MapperType.DATASET_PROCESS_STATUS.getName(), DatasetProcessStatusMapper.class);
   }
 
-  public MetasyncHistoryMapper getMetasyncHistoryMapper() {
+  public MetaSyncHistoryMapper getMetaSyncHistoryMapper() {
     return appContext.getBean(
-        MapperType.METASYNC_HISTORY_MAPPER.getName(), MetasyncHistoryMapper.class);
+        MapperType.META_SYNC_HISTORY_MAPPER.getName(), MetaSyncHistoryMapper.class);
   }
 }
