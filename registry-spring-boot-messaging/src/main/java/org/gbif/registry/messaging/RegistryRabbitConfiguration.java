@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.messaging;
 
 import org.gbif.common.messaging.ConnectionParameters;
 import org.gbif.common.messaging.DefaultMessagePublisher;
@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
-public class RabbitSenderConfiguration {
+public class RegistryRabbitConfiguration {
 
   public static final String QUEUE_REGISTRY_DOI = "registry-doi";
   public static final String QUEUE_DEAD_REGISTRY_DOI = "dead-registry-doi";
@@ -40,7 +40,7 @@ public class RabbitSenderConfiguration {
   private final ObjectMapper objectMapper;
   private final RabbitProperties rabbitProperties;
 
-  public RabbitSenderConfiguration(
+  public RegistryRabbitConfiguration(
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       RabbitProperties rabbitProperties) {
     this.objectMapper = objectMapper;

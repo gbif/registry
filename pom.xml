@@ -56,6 +56,7 @@
     <module>registry-spring-boot-directory</module>
     <module>registry-spring-boot-events</module>
     <module>registry-spring-boot-ws</module>
+    <module>registry-spring-boot-messaging</module>
     <module>registry-spring-boot-doi</module>
     <module>registry-spring-boot-metadata</module>
     <module>registry-spring-boot-persistence</module>
@@ -195,6 +196,11 @@
             <artifactId>guice</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-messaging</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
