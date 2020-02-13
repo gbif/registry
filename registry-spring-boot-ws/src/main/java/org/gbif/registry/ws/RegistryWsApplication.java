@@ -57,7 +57,8 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.doi",
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",
-      "org.gbif.registry.events"
+      "org.gbif.registry.events",
+      "org.gbif.directory.client"
     },
     excludeFilters = {
       @ComponentScan.Filter(

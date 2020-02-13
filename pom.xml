@@ -66,6 +66,7 @@
     <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-mail</module>
     <module>registry-spring-boot-search</module>
+    <module>registry-spring-boot-directory-client</module>
   </modules>
 
   <properties>
@@ -251,6 +252,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-directory-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
@@ -284,6 +290,11 @@
             <artifactId>org.apache.bval.bundle</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.directory</groupId>
+        <artifactId>directory-ws-client</artifactId>
+        <version>${gbif-directory.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
