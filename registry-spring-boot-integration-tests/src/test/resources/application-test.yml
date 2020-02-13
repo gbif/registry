@@ -108,6 +108,10 @@ registry:
       idleTimeout: 60000
       maximumPoolSize: 10
       minimumIdle: 1
+directory:
+  app:
+    key: @directory.app.key@
+    secret: @directory.app.secret@
 spring:
   # DOI messaging properties
   # queue 'registry-doi' should be used
