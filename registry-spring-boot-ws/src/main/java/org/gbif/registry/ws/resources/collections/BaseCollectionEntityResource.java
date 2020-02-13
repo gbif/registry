@@ -40,7 +40,6 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.ws.WebApplicationException;
@@ -148,7 +147,6 @@ public abstract class BaseCollectionEntityResource<
   @GetMapping("{key}")
   @Nullable
   @NullToNotFound
-  @ValidateReturnedValue
   @Override
   public T get(@PathVariable @NotNull UUID key) {
     return baseMapper.get(key);
@@ -199,7 +197,6 @@ public abstract class BaseCollectionEntityResource<
 
   @GetMapping("{key}/identifier")
   @Nullable
-  @ValidateReturnedValue
   @Override
   public List<Identifier> listIdentifiers(@PathVariable @NotNull UUID key) {
     return baseMapper.listIdentifiers(key);
@@ -242,7 +239,6 @@ public abstract class BaseCollectionEntityResource<
 
   @GetMapping("{key}/tag")
   @Nullable
-  @ValidateReturnedValue
   @Override
   public List<Tag> listTags(
       @PathVariable("key") @NotNull UUID key,

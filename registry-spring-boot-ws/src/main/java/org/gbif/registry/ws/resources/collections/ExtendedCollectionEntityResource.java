@@ -38,7 +38,6 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.ws.annotation.ValidateReturnedValue;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.WebApplicationException;
 
@@ -254,7 +253,6 @@ public abstract class ExtendedCollectionEntityResource<
 
   @GetMapping("{key}/contact")
   @Nullable
-  @ValidateReturnedValue
   @Override
   public List<Person> listContacts(@PathVariable @NotNull UUID key) {
     return contactableMapper.listContacts(key);
