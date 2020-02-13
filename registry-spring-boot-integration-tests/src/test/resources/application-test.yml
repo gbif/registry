@@ -112,6 +112,8 @@ directory:
   app:
     key: @directory.app.key@
     secret: @directory.app.secret@
+  ws:
+    url: @directory.ws.url@
 spring:
   # DOI messaging properties
   # queue 'registry-doi' should be used
