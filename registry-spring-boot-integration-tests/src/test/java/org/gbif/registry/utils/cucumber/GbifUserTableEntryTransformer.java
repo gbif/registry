@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.cucumber.datatable.TableEntryTransformer;
 
@@ -41,6 +42,32 @@ public class GbifUserTableEntryTransformer implements TableEntryTransformer<Gbif
         .map(Arrays::asList)
         .map((Function<List<String>, HashSet>) HashSet::new)
         .ifPresent(result::setRoles);
+
+    Optional.ofNullable(entry.get("settings"))
+        .map(settings -> settings.split(","))
+        .map(Arrays::stream)
+        .map(
+            keyValuePairStream ->
+                keyValuePairStream
+                    .map(keyValuePair -> keyValuePair.split("=>"))
+                    .collect(
+                        Collectors.toMap(
+                            keyAndValue -> keyAndValue[0].trim(),
+                            keyAndValue -> keyAndValue[1].trim())))
+        .ifPresent(result::setSettings);
+
+    Optional.ofNullable(entry.get("systemSettings"))
+        .map(settings -> settings.split(","))
+        .map(Arrays::stream)
+        .map(
+            keyValuePairStream ->
+                keyValuePairStream
+                    .map(keyValuePair -> keyValuePair.split("=>"))
+                    .collect(
+                        Collectors.toMap(
+                            keyAndValue -> keyAndValue[0].trim(),
+                            keyAndValue -> keyAndValue[1].trim())))
+        .ifPresent(result::setSystemSettings);
 
     return result;
   }
