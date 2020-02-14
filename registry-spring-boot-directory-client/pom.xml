@@ -57,8 +57,8 @@
                   </excludes>
                 </relocation>
                 <relocation>
-                  <pattern>org.gbif.api</pattern>
-                  <shadedPattern>shaded.org.gbif.api</shadedPattern>
+                  <pattern>org.gbif.api.model</pattern>
+                  <shadedPattern>shaded.org.gbif.api.model</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
