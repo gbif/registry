@@ -179,7 +179,7 @@ public class DatasetRealtimeIndexer {
         new ActionListener<DeleteResponse>() {
           @Override
           public void onResponse(DeleteResponse deleteResponse) {
-            log.info("Dataset deleted {}, result {}", dataset, deleteResponse);
+            log.info("Dataset deleted {}, result {}", dataset.getKey(), deleteResponse);
           }
 
           @Override
