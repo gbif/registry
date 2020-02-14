@@ -56,6 +56,10 @@
                     <exclude>org.gbif.ws.client.guice.GbifWsClientModule</exclude>
                   </excludes>
                 </relocation>
+                <relocation>
+                  <pattern>org.gbif.api</pattern>
+                  <shadedPattern>shaded.org.gbif.api</shadedPattern>
+                </relocation>
               </relocations>
             </configuration>
           </execution>
