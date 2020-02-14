@@ -18,8 +18,12 @@
   <dependencies>
     <!-- Spring dependencies -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
     </dependency>
 
     <!-- GBIF dependencies -->
@@ -30,6 +34,11 @@
     <dependency>
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-ws</artifactId>
+      <version>${gbif-common-ws.version}</version>
     </dependency>
 
     <!-- Third party dependencies -->
