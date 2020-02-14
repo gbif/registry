@@ -57,8 +57,13 @@
                   </excludes>
                 </relocation>
                 <relocation>
-                  <pattern>org.gbif.api.model</pattern>
-                  <shadedPattern>shaded.org.gbif.api.model</shadedPattern>
+                  <pattern>org.gbif.api</pattern>
+                  <shadedPattern>shaded.org.gbif.api</shadedPattern>
+                  <excludes>
+                    <exclude>org.gbif.api.service.directory.*</exclude>
+                    <exclude>org.gbif.api.model.directory.*</exclude>
+                    <exclude>org.gbif.api.vocabulary.directory.*</exclude>
+                  </excludes>
                 </relocation>
               </relocations>
             </configuration>
