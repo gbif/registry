@@ -74,7 +74,7 @@ public class DatasetRealtimeIndexer {
         new ActionListener<IndexResponse>() {
           @Override
           public void onResponse(IndexResponse indexResponse) {
-            log.info("Dataset indexed {}, result {}", dataset, indexResponse);
+            log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
           }
 
           @Override
