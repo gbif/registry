@@ -64,7 +64,7 @@ public class DatasetRealtimeIndexer {
         .index(IndexingConstants.ALIAS)
         .type(IndexingConstants.DATASET_RECORD_TYPE)
         .opType(DocWriteRequest.OpType.INDEX)
-        .source(datasetJsonConverter.convert(dataset), XContentType.JSON);
+        .source(datasetJsonConverter.convertAsJsonString(dataset), XContentType.JSON);
   }
 
   public void index(Dataset dataset) {

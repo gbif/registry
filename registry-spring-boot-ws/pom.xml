@@ -114,6 +114,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-directory-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>gbif-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>

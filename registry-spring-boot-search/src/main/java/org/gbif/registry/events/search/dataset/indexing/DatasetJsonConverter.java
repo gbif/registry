@@ -55,6 +55,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import lombok.SneakyThrows;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -162,6 +163,11 @@ public class DatasetJsonConverter {
     addMachineTags(dataset, datasetAsJson);
     addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
+  }
+
+  @SneakyThrows
+  public String convertAsJsonString(Dataset dataset) {
+    return mapper.writeValueAsString(convert(dataset));
   }
 
   private void metadataConsumer(ObjectNode dataset) {
