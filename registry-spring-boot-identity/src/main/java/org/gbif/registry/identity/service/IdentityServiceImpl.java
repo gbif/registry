@@ -137,9 +137,9 @@ public class IdentityServiceImpl implements IdentityService {
    * Runs a Java bean validation on the provided {@link GbifUser} and a scope (e.g.
    * PostPersist.class)
    *
-   * @param gbifUser
-   * @param scope
-   * @return
+   * @param gbifUser user to validate
+   * @param scope validation scope
+   * @return validation result
    */
   private Optional<UserModelMutationResult> validateBean(GbifUser gbifUser, Class<?> scope) {
     Set<ConstraintViolation<GbifUser>> violations =
@@ -166,10 +166,11 @@ public class IdentityServiceImpl implements IdentityService {
    * Get a {@link GbifUser} using its identifier (username or email). The username is case
    * insensitive.
    *
-   * @param identifier
+   * @param identifier user's username or email
    * @return {@link GbifUser} or null
    */
   @Override
+  @Nullable
   public GbifUser get(String identifier) {
     if (Strings.isNullOrEmpty(identifier)) {
       return null;
@@ -184,9 +185,10 @@ public class IdentityServiceImpl implements IdentityService {
   /**
    * Get a {@link GbifUser} using its email. The email is case insensitive.
    *
-   * @param email
+   * @param email user's email
    * @return {@link GbifUser} or null
    */
+  @Nullable
   private GbifUser getByEmail(String email) {
     // emails are stored in lowercase
     // the mybatis mapper will run the query with a lower()
@@ -208,9 +210,10 @@ public class IdentityServiceImpl implements IdentityService {
    *
    * @param username username or email address
    * @param password clear text password
-   * @return
+   * @return authenticated user
    */
   @Override
+  @Nullable
   public GbifUser authenticate(String username, String password) {
     if (Strings.isNullOrEmpty(username) || password == null) {
       return null;
@@ -296,8 +299,8 @@ public class IdentityServiceImpl implements IdentityService {
    * GbifUser}. The goal is to ensure we can query this object in the same way we handle
    * inserts/updates. - trim() on username - trim() + toLowerCase() on emails
    *
-   * @param gbifUser
-   * @return
+   * @param gbifUser user to normalize
+   * @return normalized user
    */
   private static GbifUser normalize(GbifUser gbifUser) {
     gbifUser.setUserName(NORMALIZE_USERNAME_FCT.apply(gbifUser.getUserName()));
