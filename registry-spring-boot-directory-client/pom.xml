@@ -65,6 +65,10 @@
                     <exclude>org.gbif.api.vocabulary.directory.*</exclude>
                   </excludes>
                 </relocation>
+                <relocation>
+                  <pattern>com.sun.jersey.client</pattern>
+                  <shadedPattern>shaded.com.sun.jersey.client</shadedPattern>
+                </relocation>
               </relocations>
             </configuration>
           </execution>
@@ -115,45 +119,6 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>retrofit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-simplexml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-scalars</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>logging-interceptor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okio</groupId>
-      <artifactId>okio</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.cache2k</groupId>
-      <artifactId>cache2k-jcache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.cache2k</groupId>
-      <artifactId>cache2k-api</artifactId>
     </dependency>
 
   </dependencies>
