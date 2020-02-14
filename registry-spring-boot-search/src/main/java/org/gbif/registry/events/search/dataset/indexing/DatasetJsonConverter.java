@@ -81,6 +81,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -162,6 +163,11 @@ public class DatasetJsonConverter {
     addMachineTags(dataset, datasetAsJson);
     addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
+  }
+
+  @SneakyThrows
+  public String convertAsJsonString(Dataset dataset) {
+    return mapper.writeValueAsString(convert(dataset));
   }
 
   private void metadataConsumer(ObjectNode dataset) {

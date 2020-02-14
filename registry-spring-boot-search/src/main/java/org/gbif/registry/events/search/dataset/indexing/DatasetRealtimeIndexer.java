@@ -64,7 +64,7 @@ public class DatasetRealtimeIndexer {
         .index(IndexingConstants.ALIAS)
         .type(IndexingConstants.DATASET_RECORD_TYPE)
         .opType(DocWriteRequest.OpType.INDEX)
-        .source(datasetJsonConverter.convert(dataset), XContentType.JSON);
+        .source(datasetJsonConverter.convertAsJsonString(dataset), XContentType.JSON);
   }
 
   public void index(Dataset dataset) {
@@ -74,7 +74,7 @@ public class DatasetRealtimeIndexer {
         new ActionListener<IndexResponse>() {
           @Override
           public void onResponse(IndexResponse indexResponse) {
-            log.info("Dataset indexed {}, result {}", dataset, indexResponse);
+            log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
           }
 
           @Override
@@ -179,7 +179,7 @@ public class DatasetRealtimeIndexer {
         new ActionListener<DeleteResponse>() {
           @Override
           public void onResponse(DeleteResponse deleteResponse) {
-            log.info("Dataset deleted {}, result {}", dataset, deleteResponse);
+            log.info("Dataset deleted {}, result {}", dataset.getKey(), deleteResponse);
           }
 
           @Override

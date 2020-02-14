@@ -44,6 +44,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.events.search.dataset.service",
       "org.gbif.registry.events.search.dataset.indexing",
       "org.gbif.registry.ws.advice",
+      "org.gbif.registry.ws.aspect",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
       "org.gbif.registry.ws.security",
@@ -56,6 +57,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
+      "org.gbif.directory.client",
       "org.gbif.registry.messaging"
     },
     excludeFilters = {
