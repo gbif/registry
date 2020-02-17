@@ -21,7 +21,7 @@ import org.gbif.api.service.directory.ParticipantPersonService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonRoleService;
 import org.gbif.api.service.directory.PersonService;
-import org.gbif.directory.client.DirectoryWsClientFactory;
+import org.gbif.registry.directory.client.DirectoryWsClientFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

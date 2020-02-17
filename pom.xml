@@ -67,7 +67,6 @@
     <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-mail</module>
     <module>registry-spring-boot-search</module>
-    <module>registry-spring-boot-directory-client</module>
   </modules>
 
   <properties>
