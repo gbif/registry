@@ -3,6 +3,10 @@
 api:
   root:
     url: http://api.gbif.org/v1/
+  cache:
+    purge:
+      url: http://api.gbif-dev.org/v1
+      threads: 1
 
 portal:
   url: https://www.gbif-dev.org
