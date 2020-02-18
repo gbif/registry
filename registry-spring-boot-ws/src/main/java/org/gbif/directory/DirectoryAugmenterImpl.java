@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.directory;
+package org.gbif.directory;
 
 import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
@@ -25,9 +25,11 @@ import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Country;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
-import static org.gbif.registry.directory.DirectoryRegistryMapping.findParticipantID;
+import static org.gbif.directory.DirectoryRegistryMapping.findParticipantID;
 
 @Service
 public class DirectoryAugmenterImpl implements Augmenter {
@@ -235,7 +237,9 @@ public class DirectoryAugmenterImpl implements Augmenter {
     Contact contact = new Contact();
     contact.setKey(person.getId());
     contact.addAddress(person.getAddress());
-    contact.setCountry(person.getCountryCode());
+    if (Objects.nonNull(person.getCountryCode())) {
+      contact.setCountry(Country.fromIsoCode(person.getCountryCode().getIso2LetterCode()));
+    }
     if (person.getEmail() != null) {
       contact.addEmail(person.getEmail());
     }
