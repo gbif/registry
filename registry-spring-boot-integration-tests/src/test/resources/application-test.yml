@@ -7,7 +7,7 @@ api:
 portal:
   url: https://www.gbif-dev.org
 
-#Mail Properties
+# Mail Properties
 mail:
   cc: @mail.cc@
   bcc: @mail.bcc@
@@ -38,7 +38,7 @@ application:
   key: gbif.app.it
   secret: a
 
-#GRSCICOLL
+# GRSCICOLL
 grscicoll:
   portal:
     url: https://www.gbif-dev.org/grscicoll/
@@ -49,7 +49,7 @@ jwt:
   expiryTimeInMs: 1800000
   issuer: GBIF-REGISTRY
 
-  # Pipelines properties
+# Pipelines properties
 pipelines:
   envPrefix: test
   esHost: https://test.com
@@ -99,6 +99,8 @@ indexing:
         minimumIdle: 1
         idleTimeout: 60000
         connectionTimeout: 5000
+
+# Database
 registry:
   datasource:
     url: @registry-it-spring.db.url@
@@ -108,12 +110,21 @@ registry:
       idleTimeout: 60000
       maximumPoolSize: 10
       minimumIdle: 1
+
+# GBIF Directory configuration
 directory:
   app:
     key: @directory.app.key@
     secret: @directory.app.secret@
   ws:
     url: @directory.ws.url@
+
+# OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
+# this value will be used as the baseURL element in the Identify response
+oaipmh:
+  baseUrl: http://api.gbif.org/v1/oai-pmh/registry
+  adminEmail: gbifregistry@mailinator.com
+
 spring:
   # DOI messaging properties
   # queue 'registry-doi' should be used

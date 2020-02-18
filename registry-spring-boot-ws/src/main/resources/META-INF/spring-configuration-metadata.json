@@ -41,6 +41,16 @@
       "type": "java.lang.Integer",
       "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
       "sourceMethod": "getThreads()"
+    },
+    {
+      "name": "oaipmh.baseUrl",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.oaipmh.OaipmhConfigurationProperties"
+    },
+    {
+      "name": "oaipmh.adminEmail",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.oaipmh.OaipmhConfigurationProperties"
     }
   ]
 }
