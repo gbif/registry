@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.directory.client;
+package org.gbif.registry.directory.client;
 
 import org.gbif.api.service.directory.NodePersonService;
 import org.gbif.api.service.directory.NodeService;
