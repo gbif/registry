@@ -190,8 +190,9 @@ public class LegacyOrganizationResource {
     // simple read?
     else {
       return ResponseEntity.status(HttpStatus.OK)
-        .contentType(MediaType.parseMediaType(responseType))
-        .cacheControl(CacheControl.noCache()).body(org);
+          .contentType(MediaType.parseMediaType(responseType))
+          .cacheControl(CacheControl.noCache())
+          .body(org);
     }
   }
 
