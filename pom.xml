@@ -67,6 +67,7 @@
     <module>registry-spring-boot-domain</module>
     <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-mail</module>
+    <module>registry-spring-boot-service</module>
     <module>registry-spring-boot-search</module>
   </modules>
 
@@ -262,6 +263,11 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-occurrence-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-service</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
