@@ -61,6 +61,10 @@
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-openfeign</artifactId>
+    </dependency>
 
     <!-- GBIF dependencies -->
     <dependency>
@@ -110,6 +114,14 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-directory</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-oaipmh</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>

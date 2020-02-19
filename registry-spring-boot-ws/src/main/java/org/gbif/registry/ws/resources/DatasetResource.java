@@ -16,21 +16,18 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.exception.ServiceUnavailableException;
-import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
-import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
@@ -54,7 +51,6 @@ import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.WithMyBatis;
@@ -64,10 +60,9 @@ import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.annotation.NullToNotFound;
@@ -85,7 +80,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -94,11 +88,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -117,13 +110,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Closeables;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -139,17 +127,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   private static final int ALL_DATASETS_LIMIT = 200;
 
-  // HTML sanitizer policy for paragraph
-  private static final PolicyFactory PARAGRAPH_HTML_SANITIZER =
-      new HtmlPolicyBuilder()
-          .allowCommonBlockElements() // "p", "div", "h1", ...
-          .allowCommonInlineFormattingElements() // "b", "i" ...
-          .allowElements("a")
-          .allowUrlProtocols("https", "http")
-          .allowAttributes("href")
-          .onElements("a")
-          .toFactory();
-
+  private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
   private final DatasetMapper datasetMapper;
@@ -157,22 +135,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final IdentifierMapper identifierMapper;
   private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
-  private final OrganizationMapper organizationMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
   private final WithMyBatis withMyBatis;
-
-  private final LoadingCache<UUID, Organization> ORGANIZATION_CACHE =
-      CacheBuilder.newBuilder()
-          .expireAfterWrite(5, TimeUnit.MINUTES)
-          .build(
-              new CacheLoader<UUID, Organization>() {
-                @Override
-                public Organization load(UUID key) {
-                  return organizationMapper.get(key);
-                }
-              });
 
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
@@ -180,7 +146,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public DatasetResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
-      DatasetSearchService searchService,
+      RegistryDatasetService registryDatasetService,
+      @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
       EditorAuthorizationService userAuthService,
       DoiGenerator doiGenerator,
       DataCiteDoiHandlerStrategy doiHandlingStrategy,
@@ -193,6 +160,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         eventManager,
         userAuthService,
         withMyBatis);
+    this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
@@ -201,7 +169,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.tagMapper = mapperServiceLocator.getTagMapper();
     this.datasetProcessStatusMapper = mapperServiceLocator.getDatasetProcessStatusMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
-    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.doiGenerator = doiGenerator;
     this.doiHandlerStrategy = doiHandlingStrategy;
     this.messagePublisher = messagePublisher;
@@ -222,16 +189,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @GetMapping("{key}")
-  @Nullable
-  @NullToNotFound
   @Override
   public Dataset get(@PathVariable UUID key) {
-    Dataset dataset = merge(getPreferredMetadataDataset(key), super.get(key));
-    if (dataset == null) {
-      return null;
-    }
-
-    return sanitizeDataset(dataset);
+    return registryDatasetService.get(key);
   }
 
   /**
@@ -277,121 +237,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   public PagingResponse<Dataset> search(String query, Pageable page) {
-    return augmentWithMetadata(super.search(query, page));
+    return registryDatasetService.augmentWithMetadata(super.search(query, page));
   }
 
   @Override
   public PagingResponse<Dataset> list(Pageable page) {
-    return augmentWithMetadata(super.list(page));
-  }
-
-  /** Returns the parsed, preferred metadata document as a dataset. */
-  @Nullable
-  private Dataset getPreferredMetadataDataset(UUID key) {
-    List<Metadata> docs = listMetadata(key, null);
-    if (!docs.isEmpty()) {
-      InputStream stream = null;
-      try {
-        // the list is sorted by priority already, just pick the first!
-        stream = getMetadataDocument(docs.get(0).getKey());
-        return DatasetParser.build(stream);
-      } catch (IOException | IllegalArgumentException e) {
-        // Not sure if we should not propagate an Exception to return a 500 instead
-        LOG.error("Stored metadata document {} cannot be read", docs.get(0).getKey(), e);
-      } finally {
-        Closeables.closeQuietly(stream);
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Augments a list of datasets with information from their preferred metadata document.
-   *
-   * @return a the same paging response with a new list of augmented dataset instances
-   */
-  public PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
-    List<Dataset> augmented = Lists.newArrayList();
-    for (Dataset d : resp.getResults()) {
-      augmented.add(merge(getPreferredMetadataDataset(d.getKey()), d));
-    }
-    resp.setResults(augmented);
-    return resp;
-  }
-
-  /**
-   * Augments the target dataset with all persistable properties from the supplementary dataset.
-   * Typically the target would be a dataset built from rich XML metadata, and the supplementary
-   * would be the persisted view of the same dataset. NULL values in the supplementary dataset
-   * overwrite existing values in the target. Developers please note:
-   *
-   * <ul>
-   *   <li>If the target is null, then the supplementary dataset object itself is returned - not a
-   *       copy
-   *   <li>These objects are all mutable, and care should be taken that the returned object may be
-   *       one or the other of the supplied, thus you need to {@code Dataset result = merge(Dataset
-   *       emlView, Dataset dbView);}
-   * </ul>
-   *
-   * @param target that will be modified with persitable values from the supplementary
-   * @param supplementary holding the preferred properties for the target
-   * @return the modified target dataset, or the supplementary dataset if the target is null
-   */
-  @Nullable
-  private Dataset merge(@Nullable Dataset target, @Nullable Dataset supplementary) {
-
-    // nothing to merge, return the target (which may be null)
-    if (supplementary == null) {
-      setGeneratedCitation(target);
-      return target;
-    }
-
-    // nothing to overlay into
-    if (target == null) {
-      setGeneratedCitation(supplementary);
-      return supplementary;
-    }
-
-    // otherwise, copy all persisted values
-    target.setKey(supplementary.getKey());
-    target.setDoi(supplementary.getDoi());
-    target.setParentDatasetKey(supplementary.getParentDatasetKey());
-    target.setDuplicateOfDatasetKey(supplementary.getDuplicateOfDatasetKey());
-    target.setInstallationKey(supplementary.getInstallationKey());
-    target.setPublishingOrganizationKey(supplementary.getPublishingOrganizationKey());
-    target.setExternal(supplementary.isExternal());
-    target.setNumConstituents(supplementary.getNumConstituents());
-    target.setType(supplementary.getType());
-    target.setSubtype(supplementary.getSubtype());
-    target.setTitle(supplementary.getTitle());
-    target.setAlias(supplementary.getAlias());
-    target.setAbbreviation(supplementary.getAbbreviation());
-    target.setDescription(supplementary.getDescription());
-    target.setLanguage(supplementary.getLanguage());
-    target.setHomepage(supplementary.getHomepage());
-    target.setLogoUrl(supplementary.getLogoUrl());
-    target.setCitation(supplementary.getCitation());
-    target.setRights(supplementary.getRights());
-    target.setLicense(supplementary.getLicense());
-    target.setMaintenanceUpdateFrequency(supplementary.getMaintenanceUpdateFrequency());
-    target.setLockedForAutoUpdate(supplementary.isLockedForAutoUpdate());
-    target.setCreated(supplementary.getCreated());
-    target.setCreatedBy(supplementary.getCreatedBy());
-    target.setModified(supplementary.getModified());
-    target.setModifiedBy(supplementary.getModifiedBy());
-    target.setDeleted(supplementary.getDeleted());
-    // nested properties
-    target.setComments(supplementary.getComments());
-    target.setContacts(supplementary.getContacts());
-    target.setEndpoints(supplementary.getEndpoints());
-    target.setIdentifiers(supplementary.getIdentifiers());
-    target.setMachineTags(supplementary.getMachineTags());
-    target.setTags(supplementary.getTags());
-
-    setGeneratedCitation(target);
-
-    return target;
+    return registryDatasetService.augmentWithMetadata(super.list(page));
   }
 
   @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
@@ -553,7 +404,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       throw new NotFoundException("Dataset " + uuid + " has been deleted");
     }
     // retrieve preferred metadata document, if it exists
-    Dataset updDataset = getPreferredMetadataDataset(uuid);
+    Dataset updDataset = registryDatasetService.getPreferredMetadataDataset(uuid);
     if (updDataset != null) {
       updDataset = preserveGBIFDatasetProperties(updDataset, dataset);
       // keep the DOI only if none can be extracted from the metadata
@@ -644,35 +495,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       return false;
     }
     return license.isConcrete();
-  }
-
-  /**
-   * Set the generated GBIF citation on the provided Dataset object. This function is used until we
-   * decide if we store the GBIF generated citation in the database.
-   *
-   * <p>see https://github.com/gbif/registry/issues/4
-   *
-   * @param dataset
-   * @return
-   */
-  private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null
-        && dataset.getPublishingOrganizationKey() != null
-        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated
-        // one:
-        // https://github.com/gbif/portal-feedback/issues/1819
-        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
-        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
-
-      // if the citation already exists keep it and only change the text. That allows us to keep the
-      // identifier
-      // if provided.
-      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
-      citation.setText(
-          CitationGenerator.generateCitation(
-              dataset, ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
-      dataset.setCitation(citation);
-    }
   }
 
   /**
@@ -832,19 +654,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   /**
-   * Sanitize data on Dataset object mainly to restrict HTML tags that can be used.
-   *
-   * @param dataset
-   * @return the original dataset with its content sanitized
-   */
-  private Dataset sanitizeDataset(Dataset dataset) {
-    if (!Strings.isNullOrEmpty(dataset.getDescription())) {
-      dataset.setDescription(PARAGRAPH_HTML_SANITIZER.sanitize(dataset.getDescription()));
-    }
-    return dataset;
-  }
-
-  /**
    * We need to implement this interface method here, but there is no way to retrieve the actual
    * user as we cannot access any http request. The real server method does this correctly but has
    * more parameters.
@@ -882,7 +691,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public List<Metadata> listMetadata(
       @PathVariable("key") UUID datasetKey,
       @RequestParam(value = "type", required = false) MetadataType type) {
-    return metadataMapper.list(datasetKey, type);
+    return registryDatasetService.listMetadata(datasetKey, type);
   }
 
   @GetMapping("metadata/{key}")
@@ -896,11 +705,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   @NullToNotFound
   public InputStream getMetadataDocument(@PathVariable("key") int metadataKey) {
-    ByteArrayWrapper document = metadataMapper.getDocument(metadataKey);
-    if (document == null) {
-      return null;
-    }
-    return new ByteArrayInputStream(document.getData());
+    return registryDatasetService.getMetadataDocument(metadataKey);
   }
 
   @DeleteMapping("metadata/{key}")
@@ -1096,13 +901,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   protected List<UUID> owningEntityKeys(@NotNull Dataset entity) {
-    List<UUID> keys = new ArrayList<>();
-    keys.add(entity.getPublishingOrganizationKey());
-    keys.add(
-        ORGANIZATION_CACHE
-            .getUnchecked(entity.getPublishingOrganizationKey())
-            .getEndorsingNodeKey());
-    return keys;
+    return registryDatasetService.owningEntityKeys(entity);
   }
 
   @GetMapping("doi/{doi:.+}")

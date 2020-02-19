@@ -67,7 +67,9 @@
     <module>registry-spring-boot-domain</module>
     <module>registry-spring-boot-integration-tests</module>
     <module>registry-spring-boot-mail</module>
+    <module>registry-spring-boot-service</module>
     <module>registry-spring-boot-search</module>
+    <module>registry-spring-boot-oaipmh</module>
   </modules>
 
   <properties>
@@ -110,6 +112,7 @@
     <logback.version>1.2.3</logback.version>
     <janino-logback.version>2.5.10</janino-logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
+    <xoai.version>4.1.0-gbif-1</xoai.version>
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
 
@@ -256,6 +259,21 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-directory</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-occurrence-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-service</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-oaipmh</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -528,6 +546,39 @@
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>${hikaricp.version}</version>
+      </dependency>
+
+      <!-- OAI-PMH library -->
+      <dependency>
+        <groupId>org.dspace</groupId>
+        <artifactId>xoai-data-provider</artifactId>
+        <version>${xoai.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>wstx-asl</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.dspace</groupId>
+        <artifactId>xoai-service-provider</artifactId>
+        <version>${xoai.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>wstx-asl</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Test dependencies -->
