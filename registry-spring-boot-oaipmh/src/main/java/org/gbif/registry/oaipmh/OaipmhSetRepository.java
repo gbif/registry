@@ -15,19 +15,22 @@
  */
 package org.gbif.registry.oaipmh;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import java.util.List;
-import java.util.UUID;
-import org.apache.commons.lang3.StringUtils;
-import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
-import org.dspace.xoai.dataprovider.model.Set;
-import org.dspace.xoai.dataprovider.repository.SetRepository;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
+import org.dspace.xoai.dataprovider.model.Set;
+import org.dspace.xoai.dataprovider.repository.SetRepository;
 import org.springframework.stereotype.Component;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 
 /**
  * Implementation of a XOAI SetRepository for country, installation, dataset_type sets.

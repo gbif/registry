@@ -15,23 +15,21 @@
  */
 package org.gbif.registry.oaipmh;
 
-import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;
-import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.MetadataPrefix;
-import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.ResumptionToken;
-import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Verb;
+import org.gbif.api.exception.ServiceUnavailableException;
 
-import com.lyncode.xml.exceptions.XmlWriteException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
+
 import javax.annotation.Nullable;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
+
 import org.dspace.xoai.dataprovider.DataProvider;
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
 import org.dspace.xoai.dataprovider.exceptions.BadArgumentException;
@@ -50,11 +48,17 @@ import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
 import org.dspace.xoai.xml.XmlWritable;
 import org.dspace.xoai.xml.XmlWriter;
-import org.gbif.api.exception.ServiceUnavailableException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.lyncode.xml.exceptions.XmlWriteException;
+
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.MetadataPrefix;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.ResumptionToken;
+import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Verb;
 
 /** An OAI-PMH endpoint, using the XOAI library. */
 @Controller
