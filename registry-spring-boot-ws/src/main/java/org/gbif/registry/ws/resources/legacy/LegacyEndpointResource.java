@@ -203,6 +203,7 @@ public class LegacyEndpointResource {
 
         return ResponseEntity.status(HttpStatus.OK)
             .cacheControl(CacheControl.noCache())
+            .contentType(MediaType.parseMediaType(responseType))
             .body(new LegacyEndpointResponseListWrapper(endpoints));
       } catch (NotFoundException e) {
         LOG.error(
@@ -211,6 +212,7 @@ public class LegacyEndpointResource {
         // the organisation}"
         return ResponseEntity.status(HttpStatus.OK)
             .cacheControl(CacheControl.noCache())
+            .contentType(MediaType.parseMediaType(responseType))
             .body(new ErrorResponse("No dataset matches the key provided"));
       }
     }

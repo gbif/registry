@@ -189,7 +189,9 @@ public class LegacyOrganizationResource {
     }
     // simple read?
     else {
-      return ResponseEntity.status(HttpStatus.OK).cacheControl(CacheControl.noCache()).body(org);
+      return ResponseEntity.status(HttpStatus.OK)
+        .contentType(MediaType.parseMediaType(responseType))
+        .cacheControl(CacheControl.noCache()).body(org);
     }
   }
 
@@ -224,6 +226,7 @@ public class LegacyOrganizationResource {
 
     return ResponseEntity.status(HttpStatus.OK)
         .cacheControl(CacheControl.noCache())
+        .contentType(MediaType.parseMediaType(responseType))
         .body(new LegacyOrganizationBriefResponseListWrapper(organizations));
   }
 }
