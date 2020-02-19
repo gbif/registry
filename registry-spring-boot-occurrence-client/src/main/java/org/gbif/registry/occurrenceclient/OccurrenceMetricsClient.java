@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.occurenceclient;
+package org.gbif.registry.occurrenceclient;
 
 import java.util.UUID;
 
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /** Access to Occurrence metrics. */
-@FeignClient(value = "OccurrenceMetricsClient", url = "${api.url}")
+@FeignClient(value = "OccurrenceMetricsClient", url = "${url.occurrenceApi}")
 public interface OccurrenceMetricsClient {
 
   /**
@@ -33,9 +33,10 @@ public interface OccurrenceMetricsClient {
    * @param datasetKey dataset identifier (UUID)
    * @return number of occurrences
    */
+  @SuppressWarnings("squid:S4488")
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "occurrence/count",
+      value = "count",
       produces = MediaType.APPLICATION_JSON_VALUE)
   Long getCountForDataset(@RequestParam("datasetKey") UUID datasetKey);
 }
