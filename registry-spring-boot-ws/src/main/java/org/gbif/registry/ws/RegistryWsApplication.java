@@ -49,7 +49,6 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.ws.resources",
       "org.gbif.registry.ws.security",
       "org.gbif.registry.ws.surety",
-      "org.gbif.registry.ws.oaipmh",
       "org.gbif.registry.persistence",
       "org.gbif.registry.identity",
       "org.gbif.registry.surety",
@@ -60,7 +59,9 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.events",
       "org.gbif.directory",
       "org.gbif.registry.messaging",
-      "org.gbif.registry.occurrenceclient"
+      "org.gbif.registry.occurrenceclient",
+      "org.gbif.registry.oaipmh",
+      "org.gbif.registry.service"
     },
     excludeFilters = {
       @ComponentScan.Filter(

@@ -235,7 +235,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   /** Returns the parsed, preferred metadata document as a dataset. */
   @Nullable
-  private Dataset getPreferredMetadataDataset(UUID key) {
+  @Override
+  public Dataset getPreferredMetadataDataset(UUID key) {
     List<Metadata> docs = listMetadata(key, null);
     if (!docs.isEmpty()) {
       InputStream stream = null;

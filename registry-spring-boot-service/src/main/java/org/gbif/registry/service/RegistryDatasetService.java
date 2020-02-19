@@ -33,6 +33,9 @@ public interface RegistryDatasetService {
 
   PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp);
 
+  @Nullable
+  Dataset getPreferredMetadataDataset(UUID key);
+
   List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type);
 
   InputStream getMetadataDocument(int metadataKey);
