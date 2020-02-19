@@ -117,7 +117,11 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-spring-boot-occurrence-client</artifactId>
+      <artifactId>registry-spring-boot-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-oaipmh</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -178,20 +182,11 @@
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.dspace</groupId>
-      <artifactId>xoai-data-provider</artifactId>
-    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.dspace</groupId>
-      <artifactId>xoai-service-provider</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
