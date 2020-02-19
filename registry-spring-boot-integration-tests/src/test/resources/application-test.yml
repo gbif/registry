@@ -2,7 +2,7 @@
 
 api:
   root:
-    url: http://api.gbif.org/v1/
+    url: http://api.gbif-dev.org/v1/
   cache:
     purge:
       url: http://api.gbif-dev.org/v1
@@ -133,7 +133,7 @@ directory:
 # OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
 # this value will be used as the baseURL element in the Identify response
 oaipmh:
-  baseUrl: http://api.gbif.org/v1/oai-pmh/registry
+  baseUrl: http://api.gbif-dev.org/v1/oai-pmh/registry
   adminEmail: gbifregistry@mailinator.com
 
 spring:
