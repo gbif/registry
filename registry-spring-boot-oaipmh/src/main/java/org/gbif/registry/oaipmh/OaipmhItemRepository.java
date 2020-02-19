@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.oaipmh;
+package org.gbif.registry.oaipmh;
 
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -29,12 +29,13 @@ import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.occurrenceclient.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.ws.resources.DatasetResource;
+import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -56,12 +57,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
+
+import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.COUNTRY;
+import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;
+import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.INSTALLATION;
 
 /** Implementation of a XOAI ItemRepository for {@link Dataset}. */
 @Component
@@ -75,8 +79,7 @@ public class OaipmhItemRepository implements ItemRepository {
           .expireAfterAccess(1, TimeUnit.MINUTES)
           .build(buildOrganizationCacheLoader());
 
-  // TODO review if we should still use DatasetResource and DatasetMapper
-  private final DatasetResource datasetResource;
+  private final RegistryDatasetService datasetService;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
   private final OccurrenceMetricsClient occurrenceMetricsClient;
@@ -85,11 +88,11 @@ public class OaipmhItemRepository implements ItemRepository {
   private final DublinCoreWriter dublinCoreWriter;
 
   public OaipmhItemRepository(
-      DatasetResource datasetResource,
+      RegistryDatasetService datasetService,
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
       OccurrenceMetricsClient occurrenceMetricsClient) {
-    this.datasetResource = datasetResource;
+    this.datasetService = datasetService;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.occurrenceMetricsClient = occurrenceMetricsClient;
@@ -120,7 +123,7 @@ public class OaipmhItemRepository implements ItemRepository {
 
     // the fully augmented dataset
     try {
-      dataset = datasetResource.get(UUID.fromString(s));
+      dataset = datasetService.get(UUID.fromString(s));
     } catch (IllegalArgumentException ignoreEx) {
     }
 
@@ -352,7 +355,7 @@ public class OaipmhItemRepository implements ItemRepository {
 
     PagingResponse<Dataset> pagingResponse = new PagingResponse<>();
     pagingResponse.setResults(datasetList);
-    pagingResponse = datasetResource.augmentWithMetadata(pagingResponse);
+    pagingResponse = datasetService.augmentWithMetadata(pagingResponse);
 
     try {
       for (Dataset dataset : pagingResponse.getResults()) {
@@ -381,7 +384,7 @@ public class OaipmhItemRepository implements ItemRepository {
       LOG.error("Error while loading Organization from cache fro dataset {}", dataset, e);
     }
     List<Set> sets = getSets(organization, dataset);
-    Map<String, Object> additionalProperties = Maps.newHashMap();
+    Map<String, Object> additionalProperties = new HashMap<>();
     additionalProperties.put(
         DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, ExtraMediaTypes.APPLICATION_DWCA);
 
@@ -451,19 +454,10 @@ public class OaipmhItemRepository implements ItemRepository {
     }
 
     List<Set> sets = Lists.newArrayList();
-    sets.add(
-        new Set(
-            OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
-                + dataset.getInstallationKey().toString()));
-    sets.add(
-        new Set(
-            OaipmhSetRepository.SetType.DATASET_TYPE.getSubsetPrefix()
-                + dataset.getType().toString()));
+    sets.add(new Set(INSTALLATION.getSubsetPrefix() + dataset.getInstallationKey().toString()));
+    sets.add(new Set(DATASET_TYPE.getSubsetPrefix() + dataset.getType().toString()));
     if (publishingCountry != null) {
-      sets.add(
-          new Set(
-              OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
-                  + publishingCountry.getIso2LetterCode()));
+      sets.add(new Set(COUNTRY.getSubsetPrefix() + publishingCountry.getIso2LetterCode()));
     }
     return sets;
   }
