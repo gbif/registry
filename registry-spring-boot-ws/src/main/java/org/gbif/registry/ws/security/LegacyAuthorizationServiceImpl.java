@@ -143,6 +143,7 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
   public boolean isAuthorizedToModifyOrganization(
       LegacyRequestAuthorization authorization, UUID organizationKey) {
     if (organizationKey == null) {
+      LOG.error("Organization key is null");
       return false;
     }
     // validate installation key belongs to an existing installation
