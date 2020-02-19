@@ -256,6 +256,7 @@ public class LegacyDatasetResource {
         LOG.debug("Get all Datasets owned by Organization finished");
 
         return ResponseEntity.status(HttpStatus.OK)
+            .contentType(MediaType.parseMediaType(responseType))
             .body(new LegacyDatasetResponseListWrapper(datasets));
       } catch (NotFoundException e) {
         LOG.error(
@@ -297,12 +298,14 @@ public class LegacyDatasetResource {
       Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
       return ResponseEntity.status(HttpStatus.OK)
           .cacheControl(CacheControl.noCache())
+          .contentType(MediaType.parseMediaType(responseType))
           .body(new LegacyDatasetResponse(dataset, contact));
     } catch (NotFoundException e) {
       LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
     }
     return ResponseEntity.status(HttpStatus.OK)
         .cacheControl(CacheControl.noCache())
+        .contentType(MediaType.parseMediaType(responseType))
         .body(new ErrorResponse("No resource matches the key provided"));
   }
 
