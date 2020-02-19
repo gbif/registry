@@ -43,16 +43,6 @@
       "sourceMethod": "getThreads()"
     },
     {
-      "name": "oaipmh.baseUrl",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.oaipmh.OaipmhConfigurationProperties"
-    },
-    {
-      "name": "oaipmh.adminEmail",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.oaipmh.OaipmhConfigurationProperties"
-    },
-    {
       "name": "url.api",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.oaipmh;
+package org.gbif.registry.oaipmh;
 
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.Identifier;
 import static org.dspace.xoai.dataprovider.parameters.OAIRequest.Parameter.MetadataPrefix;
