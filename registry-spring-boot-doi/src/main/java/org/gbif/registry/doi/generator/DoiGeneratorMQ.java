@@ -38,6 +38,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -58,20 +59,18 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final URI dataPackageTarget;
   private static final int RANDOM_LENGTH = 6;
 
-  private final URI portal;
   private final String prefix;
 
   public DoiGeneratorMQ(
       @Value("${portal.url}") URI portal,
       @Value("${doi.prefix}") String prefix,
       DoiMapper doiMapper,
-      MessagePublisher messagePublisher) {
+      @Lazy MessagePublisher messagePublisher) {
     checkArgument(prefix.startsWith("10."), "DOI prefix must begin with '10.'");
     this.prefix = prefix;
     this.doiMapper = doiMapper;
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
-    this.portal = portal;
     datasetTarget = portal.resolve("dataset/");
     downloadTarget = portal.resolve("occurrence/download/");
     dataPackageTarget = portal.resolve("data_package/");
