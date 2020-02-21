@@ -139,6 +139,12 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
    * @throws WebApplicationException if request isn't authorized
    */
   private void authorizeOrganizationChange(HttpServletRequest request) {
+    request
+        .getParameterMap()
+        .forEach(
+            (k, v) -> {
+              LOG.error("Parameter {}  value {}", k, String.join(";", v));
+            });
     LegacyRequestAuthorization authorization = legacyAuthorizationService.authenticate(request);
     if (legacyAuthorizationService.isAuthorizedToModifyOrganization(authorization)) {
       SecurityContextHolder.getContext().setAuthentication(authorization);
