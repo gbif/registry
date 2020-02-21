@@ -31,6 +31,8 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -75,21 +77,24 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 public class RegistryIntegrationTestsConfiguration {
 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RegistryIntegrationTestsConfiguration.class);
+
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
 
   // use InMemoryEmailSender if devemail is disabled
   @Bean
-  @Primary
   @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
   public EmailSender emailSender() {
+    LOG.info("ImMemoryEmailSender (stub) activated");
     return new InMemoryEmailSender();
   }
 
   // use stub instead of rabbit MQ if message is disabled
   @Bean
-  @Primary
   @ConditionalOnProperty(value = "message.enabled", havingValue = "false")
   public MessagePublisher testMessagePublisher() {
+    LOG.info("MessagePublisherStub activated");
     return new MessagePublisherStub();
   }
 

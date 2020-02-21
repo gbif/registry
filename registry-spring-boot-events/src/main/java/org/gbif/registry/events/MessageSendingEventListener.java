@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
@@ -51,7 +52,7 @@ public class MessageSendingEventListener {
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(3);
 
   public MessageSendingEventListener(
-      MessagePublisher messagePublisher,
+      @Lazy MessagePublisher messagePublisher,
       EventManager eventManager,
       @Value("${registry.postalservice.embargoSeconds:#{NULL}}") Integer durationInSeconds) {
     Preconditions.checkNotNull(messagePublisher, "messagePublisher can't be null");
