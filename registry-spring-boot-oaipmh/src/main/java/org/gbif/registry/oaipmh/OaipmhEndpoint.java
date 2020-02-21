@@ -17,7 +17,6 @@ package org.gbif.registry.oaipmh;
 
 import org.gbif.api.exception.ServiceUnavailableException;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -48,6 +47,9 @@ import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
 import org.dspace.xoai.xml.XmlWritable;
 import org.dspace.xoai.xml.XmlWriter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -124,7 +126,7 @@ public class OaipmhEndpoint {
   }
 
   @GetMapping(produces = "application/xml;charset=UTF-8")
-  public InputStream oaipmh(
+  public ResponseEntity<byte[]> oaipmh(
       @RequestParam("verb") String verb,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       @Nullable @RequestParam(value = "metadataPrefix", required = false) String metadataPrefix,
@@ -141,7 +143,10 @@ public class OaipmhEndpoint {
       try {
         fromDate = dateProvider.parse(from);
       } catch (ParseException pEx) {
-        return handleOAIRequestBadArgument(reqBuilder.build(), "from=" + from);
+        byte[] data = handleOAIRequestBadArgument(reqBuilder.build(), "from=" + from);
+        return ResponseEntity.status(HttpStatus.OK)
+            .contentType(MediaType.APPLICATION_XML)
+            .body(data);
       }
     }
 
@@ -149,7 +154,10 @@ public class OaipmhEndpoint {
       try {
         untilDate = dateProvider.parse(until);
       } catch (ParseException pEx) {
-        return handleOAIRequestBadArgument(reqBuilder.build(), "until=" + until);
+        byte[] data = handleOAIRequestBadArgument(reqBuilder.build(), "until=" + until);
+        return ResponseEntity.status(HttpStatus.OK)
+            .contentType(MediaType.APPLICATION_XML)
+            .body(data);
       }
     }
 
@@ -160,14 +168,16 @@ public class OaipmhEndpoint {
         .withSet(set)
         .withResumptionToken(resumptionToken);
 
-    return handleOAIRequest(reqBuilder.build());
+    byte[] data = handleOAIRequest(reqBuilder.build());
+    return ResponseEntity.status(HttpStatus.OK)
+        .contentType(MediaType.APPLICATION_XML)
+        .body(data);
   }
 
-  private InputStream handleOAIRequest(OAIRequest request) {
+  private byte[] handleOAIRequest(OAIRequest request) {
     try {
       OAIPMH oaipmh = dataProvider.handle(request);
-      return new ByteArrayInputStream(write(oaipmh).getBytes(StandardCharsets.UTF_8));
-
+      return write(oaipmh).getBytes(StandardCharsets.UTF_8);
     } catch (Exception e) {
       throw new ServiceUnavailableException("OAI Failed to serialize dataset", e);
     }
@@ -180,8 +190,7 @@ public class OaipmhEndpoint {
    * @param errorMessage textual message to report
    * @return
    */
-  private InputStream handleOAIRequestBadArgument(
-      OAIRequest requestParameters, String errorMessage) {
+  private byte[] handleOAIRequestBadArgument(OAIRequest requestParameters, String errorMessage) {
 
     Request request =
         new Request(repository.getConfiguration().getBaseUrl())
@@ -196,8 +205,7 @@ public class OaipmhEndpoint {
               .withRequest(request)
               .withResponseDate(dateProvider.now())
               .withError(errorsHandler.handle(new BadArgumentException(errorMessage)));
-      return new ByteArrayInputStream(write(errorResponse).getBytes(StandardCharsets.UTF_8));
-
+      return write(errorResponse).getBytes(StandardCharsets.UTF_8);
     } catch (Exception e) {
       throw new ServiceUnavailableException("OAI Failed to serialize dataset", e);
     }
