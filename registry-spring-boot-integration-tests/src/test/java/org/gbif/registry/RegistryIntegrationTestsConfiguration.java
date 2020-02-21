@@ -84,7 +84,6 @@ public class RegistryIntegrationTestsConfiguration {
 
   // use InMemoryEmailSender if devemail is disabled
   @Bean
-  @Primary
   @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
   public EmailSender emailSender() {
     LOG.info("ImMemoryEmailSender (stub) activated");
@@ -93,7 +92,6 @@ public class RegistryIntegrationTestsConfiguration {
 
   // use stub instead of rabbit MQ if message is disabled
   @Bean
-  @Primary
   @ConditionalOnProperty(value = "message.enabled", havingValue = "false")
   public MessagePublisher testMessagePublisher() {
     LOG.info("MessagePublisherStub activated");
