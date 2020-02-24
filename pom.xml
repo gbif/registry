@@ -78,6 +78,7 @@
     <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
     <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
     <spotless.check.skip>false</spotless.check.skip>
+    <directory.enabled>true</directory.enabled>
 
     <release.tagNameBase>${project.artifactId}</release.tagNameBase>
 
@@ -674,5 +675,17 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>directory-stubs</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <directory.enabled>false</directory.enabled>
+      </properties>
+    </profile>
+  </profiles>
 
 </project>
