@@ -169,9 +169,7 @@ public class OaipmhEndpoint {
         .withResumptionToken(resumptionToken);
 
     byte[] data = handleOAIRequest(reqBuilder.build());
-    return ResponseEntity.status(HttpStatus.OK)
-        .contentType(MediaType.APPLICATION_XML)
-        .body(data);
+    return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_XML).body(data);
   }
 
   private byte[] handleOAIRequest(OAIRequest request) {
