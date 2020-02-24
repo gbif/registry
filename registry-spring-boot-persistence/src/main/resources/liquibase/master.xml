@@ -51,6 +51,8 @@
   <include file="liquibase/045-download-indices.xml"/>
   <include file="liquibase/046-datapackage-doi-type.xml"/>
   <include file="liquibase/047-dataset-version.xml"/>
+  <include file="liquibase/047-1-hstore-extension.xml"/>
+  <include file="liquibase/047-2-unaccent-extension.xml"/>
   <include file="liquibase/048-users.xml"/>
   <include file="liquibase/049-challenge-code-table.xml"/>
   <include file="liquibase/050-user-email-index.xml"/>
