@@ -35,7 +35,7 @@ public class IndexingConstants {
 
   static {
     DEFAULT_INDEXING_SETTINGS.put("index.refresh_interval", "-1");
-    DEFAULT_INDEXING_SETTINGS.put("index.number_of_shards", "3");
+    DEFAULT_INDEXING_SETTINGS.put("index.number_of_shards", "1");
     DEFAULT_INDEXING_SETTINGS.put("index.number_of_replicas", "0");
     DEFAULT_INDEXING_SETTINGS.put("index.translog.durability", "async");
   }
@@ -45,6 +45,6 @@ public class IndexingConstants {
 
   static {
     DEFAULT_SEARCH_SETTINGS.put("index.refresh_interval", "1s");
-    DEFAULT_SEARCH_SETTINGS.put("index.number_of_replicas", "1");
+    DEFAULT_SEARCH_SETTINGS.put("index.number_of_replicas", "3");
   }
 }
