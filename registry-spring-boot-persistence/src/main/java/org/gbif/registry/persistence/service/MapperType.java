@@ -31,7 +31,7 @@ public enum MapperType {
   DATASET_PROCESS_STATUS("datasetProcessStatusMapper"),
   META_SYNC_HISTORY_MAPPER("metaSyncHistoryMapper");
 
-  private String name;
+  private final String name;
 
   MapperType(String name) {
     this.name = name;
