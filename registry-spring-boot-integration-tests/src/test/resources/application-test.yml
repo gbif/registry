@@ -147,6 +147,7 @@ spring:
     virtual-host: @registry.messaging.virtualhost@
   # Liquibase
   liquibase:
+    default-schema: public
     change-log: classpath:liquibase/master.xml
     enabled: true
   # Mail
