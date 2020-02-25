@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.utils.cucumber;
 
-import org.gbif.registry.DatabaseInitializer;
+import java.util.Map;
 
-import org.junit.ClassRule;
-import org.junit.runner.RunWith;
+import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
 
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
+import io.cucumber.datatable.TableEntryTransformer;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(
-    strict = true,
-    features = {"classpath:features/oaipmh_get_record.feature"},
-    glue = {"org.gbif.registry.oaipmh", "org.gbif.registry.utils.cucumber"},
-    plugin = "pretty")
-public class OaipmhIT {
+public class GetRecordParametersTableEntryTransformer
+    implements TableEntryTransformer<GetRecordParameters> {
 
-  @ClassRule public static DatabaseInitializer databaseInitializer = new DatabaseInitializer();
+  @Override
+  public GetRecordParameters transform(Map<String, String> entry) {
+    return GetRecordParameters.request()
+        .withIdentifier(entry.get("identifier"))
+        .withMetadataFormatPrefix(entry.get("metadataFormatPrefix"));
+  }
 }
