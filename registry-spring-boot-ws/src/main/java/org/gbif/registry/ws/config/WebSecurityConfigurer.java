@@ -99,15 +99,6 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
-  /**
-   * This filter solved an issue that was preventing form parameters to be read in request filters.
-   */
-  @Bean
-  @Order(Ordered.HIGHEST_PRECEDENCE)
-  public Filter dummyFilter() {
-    return ((request, response, chain) -> chain.doFilter(request, response));
-  }
-
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new RegistryPasswordEncoder();
