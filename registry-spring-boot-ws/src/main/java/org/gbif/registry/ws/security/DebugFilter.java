@@ -25,14 +25,14 @@ import javax.servlet.ServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * This filter solved an issue that was preventing form parameters to be read in request filters.
  */
-@Component
+@Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class DebugFilter implements Filter {
 
