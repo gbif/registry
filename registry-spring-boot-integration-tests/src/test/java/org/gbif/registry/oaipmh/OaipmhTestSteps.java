@@ -15,10 +15,6 @@
  */
 package org.gbif.registry.oaipmh;
 
-import io.cucumber.datatable.DataTable;
-
-import org.dspace.xoai.serviceprovider.exceptions.CannotDisseminateFormatException;
-
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 
 import java.sql.Connection;
@@ -30,6 +26,7 @@ import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
+import org.dspace.xoai.serviceprovider.exceptions.CannotDisseminateFormatException;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.model.Context;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
@@ -44,6 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
