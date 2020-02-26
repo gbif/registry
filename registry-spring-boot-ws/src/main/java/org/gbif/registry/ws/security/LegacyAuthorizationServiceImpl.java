@@ -28,7 +28,6 @@ import org.gbif.ws.security.LegacyRequestAuthorization;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -73,11 +72,6 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
    */
   @Override
   public LegacyRequestAuthorization authenticate(HttpServletRequest httpRequest) {
-    String[] values =
-        httpRequest.getParameterValues(LegacyResourceConstants.ORGANIZATION_KEY_PARAM);
-    if (Objects.nonNull(values)) {
-      LOG.error("OrgKey {}", String.join(";", values));
-    }
     String authentication = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
     if (Strings.isNullOrEmpty(authentication) || !authentication.startsWith("Basic ")) {
       LOG.info("No basic authorization header found in legacy ws request");
