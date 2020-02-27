@@ -179,7 +179,7 @@ public class PipelinesHistoryResource {
    * but they will be validated in PipelinesHistoryResource#checkRunInputParams so here they are
    * specified as optional fields.
    */
-  @PostMapping(value = "run/{datasetKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "run/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
@@ -199,7 +199,7 @@ public class PipelinesHistoryResource {
    * validated in PipelinesHistoryResource#checkRunInputParams so here they are specified as
    * optional fields.
    */
-  @PostMapping(value = "run/{datasetKey}/{attempt}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "run/{datasetKey}/{attempt}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,

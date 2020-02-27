@@ -250,7 +250,6 @@ public class PipelinesTestSteps {
         mvc.perform(
                 post("/pipelines/history/run/{datasetKey}/{attempt}", datasetKey, attempt)
                     .params(new LinkedMultiValueMap<>(params))
-                    .contentType(MediaType.APPLICATION_JSON)
                     .with(httpBasic(username, TEST_PASSWORD)))
             .andDo(print());
   }
@@ -263,7 +262,6 @@ public class PipelinesTestSteps {
         mvc.perform(
                 post("/pipelines/history/run/{datasetKey}", datasetKey)
                     .params(new LinkedMultiValueMap<>(params))
-                    .contentType(MediaType.APPLICATION_JSON)
                     .with(httpBasic(username, TEST_PASSWORD)))
             .andDo(print());
   }
