@@ -62,9 +62,6 @@ import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 @RequestMapping(value = "pipelines/history", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PipelinesHistoryResource {
 
-  private static final String PROCESS_PATH = "process/";
-  private static final String RUN_PATH = "run/";
-
   private final PipelinesHistoryTrackingService historyTrackingService;
 
   public PipelinesHistoryResource(PipelinesHistoryTrackingService historyTrackingService) {
@@ -91,7 +88,7 @@ public class PipelinesHistoryResource {
     return historyTrackingService.get(datasetKey, attempt);
   }
 
-  @PostMapping(value = PROCESS_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long createPipelineProcess(
       @RequestBody @NotNull PipelineProcessParameters params, Authentication authentication) {
@@ -100,7 +97,7 @@ public class PipelinesHistoryResource {
   }
 
   /** Adds a new pipeline execution. */
-  @PostMapping(value = PROCESS_PATH + "{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "process/{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long addPipelineExecution(
       @PathVariable("processKey") long processKey,
@@ -112,7 +109,7 @@ public class PipelinesHistoryResource {
 
   /** Adds a new pipeline step. */
   @PostMapping(
-      value = PROCESS_PATH + "{processKey}/{executionKey}",
+      value = "process/{processKey}/{executionKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public long addPipelineStep(
@@ -124,7 +121,7 @@ public class PipelinesHistoryResource {
         processKey, executionKey, pipelineStep, authentication.getName());
   }
 
-  @GetMapping(PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}")
+  @GetMapping("process/{processKey}/{executionKey}/{stepKey}")
   public PipelineStep getPipelineStep(
       @PathVariable("processKey") long processKey,
       @PathVariable("executionKey") long executionKey,
@@ -134,7 +131,7 @@ public class PipelinesHistoryResource {
 
   /** Updates the step status. */
   @PutMapping(
-      value = PROCESS_PATH + "{processKey}/{executionKey}/{stepKey}",
+      value = "process/{processKey}/{executionKey}/{stepKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void updatePipelineStepStatusAndMetrics(
@@ -157,7 +154,7 @@ public class PipelinesHistoryResource {
    * will be validated in PipelinesHistoryResource#checkRunInputParams so here they are specified as
    * optional fields.
    */
-  @PostMapping(value = RUN_PATH, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "run", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runAll(
       @RequestParam(value = "steps", required = false) String steps,
@@ -182,7 +179,7 @@ public class PipelinesHistoryResource {
    * but they will be validated in PipelinesHistoryResource#checkRunInputParams so here they are
    * specified as optional fields.
    */
-  @PostMapping(value = RUN_PATH + "{datasetKey}")
+  @PostMapping(value = "run/{datasetKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
@@ -202,7 +199,7 @@ public class PipelinesHistoryResource {
    * validated in PipelinesHistoryResource#checkRunInputParams so here they are specified as
    * optional fields.
    */
-  @PostMapping(value = RUN_PATH + "{datasetKey}/{attempt}")
+  @PostMapping(value = "run/{datasetKey}/{attempt}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
