@@ -70,4 +70,5 @@
   <include file="liquibase/064-pipelines-execution.xml" />
   <include file="liquibase/065-ih-sync.xml" />
   <include file="liquibase/066-ih-new-fields.xml" />
+  <include file="liquibase/067-pipelines-process_idx.xml" />
 </databaseChangeLog>
