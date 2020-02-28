@@ -55,7 +55,6 @@ import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -68,7 +67,6 @@ import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.INSTALLATION;
 
 /** Implementation of a XOAI ItemRepository for {@link Dataset}. */
-@Component
 public class OaipmhItemRepository implements ItemRepository {
 
   private static final Logger LOG = LoggerFactory.getLogger(OaipmhItemRepository.class);
