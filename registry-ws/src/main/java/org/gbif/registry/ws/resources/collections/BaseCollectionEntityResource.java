@@ -9,6 +9,7 @@ import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.ChangedComponentEvent;
@@ -80,8 +81,12 @@ public abstract class BaseCollectionEntityResource<
   @Trim
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@NotNull T entity, @Context SecurityContext security) {
+    if (!isAllowedToEditEntity(security, entity)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
     entity.setCreatedBy(security.getUserPrincipal().getName());
     entity.setModifiedBy(security.getUserPrincipal().getName());
     return create(entity);
@@ -91,9 +96,14 @@ public abstract class BaseCollectionEntityResource<
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathParam("key") @NotNull UUID key, @Context SecurityContext security) {
     T entityToDelete = get(key);
+
+    if (!isAllowedToEditEntity(security, entityToDelete)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
     entityToDelete.setModifiedBy(security.getUserPrincipal().getName());
     update(entityToDelete);
 
@@ -123,13 +133,18 @@ public abstract class BaseCollectionEntityResource<
   @Path("{key}")
   @Validate
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(
       @PathParam("key") @NotNull UUID key,
       @NotNull @Trim T entity,
       @Context SecurityContext security) {
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
+
+    if (!isAllowedToEditEntity(security, entity)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
     entity.setModifiedBy(security.getUserPrincipal().getName());
     update(entity);
   }
@@ -137,10 +152,16 @@ public abstract class BaseCollectionEntityResource<
   @POST
   @Path("{key}/identifier")
   @Trim
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addIdentifier(
-    @PathParam("key") @NotNull UUID entityKey, @NotNull Identifier identifier, @Context SecurityContext security
-  ) {
+      @PathParam("key") @NotNull UUID entityKey,
+      @NotNull Identifier identifier,
+      @Context SecurityContext security) {
+    // only admins can add IH identifiers
+    if (identifier.getType() == IdentifierType.IH_IRN && !security.isUserInRole(GRSCICOLL_ADMIN_ROLE)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
     identifier.setCreatedBy(security.getUserPrincipal().getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -155,13 +176,31 @@ public abstract class BaseCollectionEntityResource<
 
   @DELETE
   @Path("{key}/identifier/{identifierKey}")
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void deleteIdentifier(
+      @PathParam("key") @NotNull UUID entityKey,
+      @PathParam("identifierKey") int identifierKey,
+      @Context SecurityContext security) {
+    // check if the user has permissions to delete the identifier. Only admins can delete IH
+    // identifiers.
+    List<Identifier> identifiers = baseMapper.listIdentifiers(entityKey);
+    Optional<Identifier> identifierToDelete =
+        identifiers.stream().filter(i -> i.getKey().equals(identifierKey)).findFirst();
+
+    if (identifierToDelete.isPresent()
+        && identifierToDelete.get().getType() == IdentifierType.IH_IRN
+        && !security.isUserInRole(GRSCICOLL_ADMIN_ROLE)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
+    deleteIdentifier(entityKey, identifierKey);
+  }
+
   @Transactional
   @Override
   public void deleteIdentifier(
-    @PathParam("key") @NotNull UUID entityKey,
-    @PathParam("identifierKey") int identifierKey
-  ) {
+      @PathParam("key") @NotNull UUID entityKey,
+      @PathParam("identifierKey") int identifierKey) {
     WithMyBatis.deleteIdentifier(baseMapper, entityKey, identifierKey);
     eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
   }
@@ -178,7 +217,7 @@ public abstract class BaseCollectionEntityResource<
   @POST
   @Path("{key}/tag")
   @Trim
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addTag(@PathParam("key") @NotNull UUID entityKey, @NotNull Tag tag, @Context SecurityContext security) {
     tag.setCreatedBy(security.getUserPrincipal().getName());
     return addTag(entityKey, tag);
@@ -201,7 +240,7 @@ public abstract class BaseCollectionEntityResource<
 
   @DELETE
   @Path("{key}/tag/{tagKey}")
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void deleteTag(@PathParam("key") @NotNull UUID entityKey, @PathParam("tagKey") int tagKey) {
@@ -375,5 +414,16 @@ public abstract class BaseCollectionEntityResource<
                                             @Nullable Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return WithMyBatis.listByMachineTag(baseMapper, namespace, name, value, page);
+  }
+
+  /** Only admins can edit IH entities. */
+  private boolean isAllowedToEditEntity(SecurityContext security, T entity) {
+    if (security.isUserInRole(GRSCICOLL_ADMIN_ROLE)) {
+      return true;
+    }
+
+    boolean isIhEntity =
+        entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
+    return !isIhEntity;
   }
 }
