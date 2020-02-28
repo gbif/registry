@@ -18,93 +18,70 @@ package org.gbif.registry.oaipmh;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 
 import java.sql.Connection;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.dspace.xoai.model.oaipmh.MetadataFormat;
-import org.dspace.xoai.model.oaipmh.Record;
-import org.dspace.xoai.serviceprovider.ServiceProvider;
-import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
-import org.dspace.xoai.serviceprovider.client.OAIClient;
-import org.dspace.xoai.serviceprovider.exceptions.CannotDisseminateFormatException;
-import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
-import org.dspace.xoai.serviceprovider.model.Context;
-import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
-import org.junit.Ignore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static java.time.ZoneOffset.UTC;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 @SpringBootTest(
     classes = {RegistryIntegrationTestsConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Ignore
 public class OaipmhTestSteps {
 
-  private MockMvc mvc;
   private ResultActions result;
-
-  @Autowired private ObjectMapper objectMapper;
-
-  @Autowired private WebApplicationContext context;
-
-  @Autowired private DataSource ds;
-
+  private MockMvc mvc;
+  private DataSource ds;
   private Connection connection;
+  private Map<String, List<String>> requestParams;
 
-  private final String baseUrl;
-  private final ServiceProvider serviceProvider;
-  private GetRecordParameters recordParameters;
-  private Exception actualException;
-  private Record record;
+  public OaipmhTestSteps(WebApplicationContext webContext, DataSource ds) {
+    mvc = MockMvcBuilders.webAppContextSetup(webContext).apply(springSecurity()).build();
+    this.ds = ds;
+  }
 
-  private String BASE_URL_FORMAT = "http://localhost:%d/oai-pmh/registry";
+  @Before("@OaipmhGetRecord")
+  public void before() throws Exception {
+    connection = ds.getConnection();
+    Objects.requireNonNull(connection, "Connection must not be null");
 
-  protected MetadataFormat OAIDC_FORMAT =
-      new MetadataFormat()
-          .withMetadataPrefix("oai_dc")
-          .withMetadataNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
-          .withSchema("http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
-
-  protected MetadataFormat EML_FORMAT =
-      new MetadataFormat()
-          .withMetadataPrefix("eml")
-          .withMetadataNamespace("eml://ecoinformatics.org/eml-2.1.1")
-          .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
-
-  public OaipmhTestSteps(@LocalServerPort int port) {
-    baseUrl = String.format(BASE_URL_FORMAT, port);
-    OAIClient oaiClient = new HttpOAIClient(baseUrl);
-    Context context =
-        new Context()
-            .withOAIClient(oaiClient)
-            .withMetadataTransformer(
-                EML_FORMAT.getMetadataPrefix(),
-                org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
-    serviceProvider = new ServiceProvider(context);
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_get_record_prepare.sql"));
   }
 
   @After("@OaipmhGetRecord")
-  public void after() {
-    actualException = null;
+  public void after() throws Exception {
+    Objects.requireNonNull(connection, "Connection must not be null");
+
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_get_record_cleanup.sql"));
+
+    connection.close();
   }
 
   @Given("node")
@@ -127,30 +104,53 @@ public class OaipmhTestSteps {
     // prepared by scripts
   }
 
-  @Given("Get record parameters")
-  public void prepareParameters(GetRecordParameters parameters) {
-    recordParameters = parameters;
+  @Given("metadata")
+  public void prepareMetadata(DataTable dataTable) {
+    // prepared by scripts
+  }
+
+  @Given("Request parameters")
+  public void prepareParameters(Map<String, List<String>> parameters) {
+    this.requestParams = parameters;
   }
 
   @When("Get record")
-  public void getRecord() {
-    try {
-      record = serviceProvider.getRecord(recordParameters);
-      System.out.println("stuff");
-    } catch (Exception e) {
-      actualException = e;
-    }
+  public void getRecord() throws Exception {
+    result = mvc.perform(get("/oai-pmh/registry").params(new LinkedMultiValueMap<>(requestParams)));
   }
 
-  @Then("IdDoesNotExistException is expected")
-  public void idDoesNotExistExceptionIsExpected() {
-    assertThat(actualException, is(notNullValue()));
-    assertThat(actualException, instanceOf(IdDoesNotExistException.class));
+  @Then("response status is {int}")
+  public void checkResponseStatus(int status) throws Exception {
+    result.andExpect(status().is(status));
   }
 
-  @Then("CannotDisseminateFormatException is expected")
-  public void cannotDisseminateFormatExceptionIsExpected() {
-    assertThat(actualException, is(notNullValue()));
-    assertThat(actualException, instanceOf(CannotDisseminateFormatException.class));
+  @Then("request parameters in response are correct")
+  public void checkRequestParams() throws Exception {
+    result
+        .andExpect(xpath("string(/OAI-PMH/request/@verb)").string(requestParams.get("verb").get(0)))
+        .andExpect(
+            xpath("string(/OAI-PMH/request/@identifier)")
+                .string(requestParams.get("identifier").get(0)))
+        .andExpect(
+            xpath("string(/OAI-PMH/request/@metadataPrefix)")
+                .string(requestParams.get("metadataPrefix").get(0)));
+  }
+
+  @Then("error code is {string}")
+  public void checkError(String error) throws Exception {
+    result.andExpect(xpath("string(/OAI-PMH/error/@code)").string(error));
+  }
+
+  @Then("no error in response")
+  public void checkNoError() throws Exception {
+    result.andExpect(xpath("/OAI-PMH/error").doesNotExist());
+  }
+
+  @Then("response contains processed citation {string}")
+  public void someResultIsExpected(String rawCitation) throws Exception {
+    String citation = String.format(rawCitation, LocalDate.now(UTC));
+    result.andExpect(
+        xpath("/OAI-PMH/GetRecord/record/metadata/eml/additionalMetadata/metadata/gbif/citation")
+            .string(citation));
   }
 }
