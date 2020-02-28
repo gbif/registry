@@ -37,8 +37,6 @@ import org.gbif.registry.identity.model.LoggedUserWithToken;
 
 import java.util.Locale;
 
-import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
-
 import io.cucumber.core.api.TypeRegistry;
 import io.cucumber.core.api.TypeRegistryConfigurer;
 import io.cucumber.datatable.DataTableType;
@@ -98,8 +96,5 @@ public class CucumberTypeRegistryConfigurer implements TypeRegistryConfigurer {
     typeRegistry.defineDataTableType(new DataTableType(Tag.class, new TagTableEntryTransformer()));
     typeRegistry.defineDataTableType(
         new DataTableType(Identifier.class, new IdentifierTableEntryTransformer()));
-    typeRegistry.defineDataTableType(
-        new DataTableType(
-            GetRecordParameters.class, new GetRecordParametersTableEntryTransformer()));
   }
 }
