@@ -21,6 +21,7 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.utils.file.properties.PropertiesUtil;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -173,6 +174,7 @@ public class DoiUpdaterListenerIT {
     assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDataCite(doi));
   }
 
+  @Ignore
   @Test
   public void handleMessageReservedDoiAndMessageStatusDeletedShouldBeDeletedFromDbAndDataCite() throws Exception {
     // given
