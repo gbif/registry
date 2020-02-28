@@ -1,137 +1,370 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security;
 
-import java.security.Principal;
-import java.util.UUID;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.SecurityContext;
+import org.gbif.ws.WebApplicationException;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import org.junit.Before;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.Matchers.eq;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EditorAuthorizationFilterTest {
 
-  private final String userWithRights = "with";
+  private static final UUID KEY = UUID.randomUUID();
+  private static final String USERNAME = "user";
+  private static final List<GrantedAuthority> ROLES_EDITOR_ONLY =
+      Collections.singletonList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE));
+  private static final List<GrantedAuthority> ROLES_USER_ONLY =
+      Collections.singletonList(new SimpleGrantedAuthority(UserRoles.USER_ROLE));
+  private static final List<GrantedAuthority> ROLES_ADMIN_AND_EDITOR =
+      Arrays.asList(
+          new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE),
+          new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE));
+  private static final List<GrantedAuthority> ROLES_EMPTY = Collections.emptyList();
 
-  @Mock
-  SecurityContext secContext;
-  @Mock
-  EditorAuthorizationService authService;
-  @Mock
-  ContainerRequest mockRequest;
-  private EditorAuthorizationFilter filter;
+  @Mock private HttpServletRequest mockRequest;
+  @Mock private HttpServletResponse mockResponse;
+  @Mock private FilterChain mockFilterChain;
+  @Mock private AuthenticationFacade mockAuthenticationFacade;
+  @Mock private EditorAuthorizationService mockEditorAuthService;
+  @Mock private Authentication mockAuthentication;
+  @InjectMocks private EditorAuthorizationFilter filter;
 
-  @Before
-  public void setupMocks() throws Exception {
-    // setup filter with mocks
-    filter = new EditorAuthorizationFilter(authService);
-    filter.setSecContext(secContext);
-    when(secContext.isUserInRole(not(eq(UserRoles.EDITOR_ROLE)))).thenReturn(false);
-    when(secContext.isUserInRole(eq(UserRoles.EDITOR_ROLE))).thenReturn(true);
+  @Test
+  public void testOrganizationPostNotNullEditorUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(true);
 
-    // setup mocks to authorize only based on user
-    when(authService.allowedToModifyEntity(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
-      @Override
-      public Boolean answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        return ((Principal) args[0]).getName().equals(userWithRights);
-      }
-    });
-    when(authService.allowedToModifyInstallation(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
-      @Override
-      public Boolean answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        return ((Principal) args[0]).getName().equals(userWithRights);
-      }
-    });
-    when(authService.allowedToModifyOrganization(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
-      @Override
-      public Boolean answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        return ((Principal) args[0]).getName().equals(userWithRights);
-      }
-    });
-    when(authService.allowedToModifyDataset(Matchers.<Principal>any(), Matchers.<UUID>any())).thenAnswer(new Answer<Boolean>() {
-      @Override
-      public Boolean answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        return ((Principal) args[0]).getName().equals(userWithRights);
-      }
-    });
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication, times(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
   }
 
   @Test
-  public void testFilterGET() throws Exception {
-    setRequestUser(userWithRights);
-    // GETs don't need auth
-    mockRequest("GET", "dataset");
-    filter.filter(mockRequest);
+  public void testDatasetPutNotNullEditorUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(true);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication, times(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
   }
 
   @Test
-  public void testFilterPOSTgood() throws Exception {
-    setRequestUser(userWithRights);
-    mockRequest("POST", "dataset");
-    filter.filter(mockRequest);
+  public void testInstallationPostNotNullEditorUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/installation/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(true);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication, times(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
   }
 
   @Test
-  public void testFilterPOSTgoodCreate() throws Exception {
-    // this is allowed as the filter does not handle paths without a UUID such as the create ones
-    setRequestUser("erfunden");
-    mockRequest("POST", "dataset");
-    filter.filter(mockRequest);
-  }
+  public void testNodePutNotNullEditorUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/node/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(true);
 
-  @Test(expected = WebApplicationException.class)
-  public void testFilterPOSTbad() throws Exception {
-    setRequestUser("erfunden");
-    mockRequest("POST", "dataset/"+ UUID.randomUUID().toString()+"/endpoint");
-    filter.filter(mockRequest);
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication, times(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
   }
 
   @Test
-  public void testFilterKeyInPathGood() throws Exception {
-    setRequestUser(userWithRights);
-    mockRequest("DELETE", "dataset/"+ UUID.randomUUID().toString());
-    filter.filter(mockRequest);
+  public void testOrganizationGetIgnore() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("GET");
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest).getMethod();
   }
 
-  @Test(expected = WebApplicationException.class)
-  public void testFilterKeyInPathBad() throws Exception {
-    setRequestUser("erfunden");
-    mockRequest("DELETE", "dataset/"+ UUID.randomUUID().toString());
-    filter.filter(mockRequest);
+  @Test
+  public void testOrganizationOptionsIgnore() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("OPTIONS");
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
   }
 
+  @Test
+  public void testOrganizationPutNullUserFail() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(null);
 
-  private void mockRequest(String method, String path) {
-    when(mockRequest.getPath()).thenReturn(path);
-    when(mockRequest.getMethod()).thenReturn(method.toUpperCase().trim());
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+    }
   }
 
-  private void setRequestUser(String user) {
-    when(secContext.getUserPrincipal()).thenReturn(principal(user));
-  }
-  private Principal principal(final String user){
-    return new Principal() {
-      @Override
-      public String getName() {
-        return user;
-      }
-    };
+  @Test
+  public void testOrganizationPutNotNullButNotEditorUserFail() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
+
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+      verify(mockAuthentication, times(2)).getAuthorities();
+    }
   }
 
+  @Test
+  public void testOrganizationPutNotNullEditorUserButWithoutRightsOnThisEntityFail()
+      throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(false);
 
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+      verify(mockAuthentication, times(2)).getAuthorities();
+      verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
+    }
+  }
+
+  @Test
+  public void testDatasetPutNotNullEditorUserButWithoutRightsOnThisEntityFail() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(false);
+
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+      verify(mockAuthentication, times(2)).getAuthorities();
+      verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
+    }
+  }
+
+  @Test
+  public void testInstallationPostNotNullEditorUserButWithoutRightsOnThisEntityFail()
+      throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/installation/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(false);
+
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+      verify(mockAuthentication, times(2)).getAuthorities();
+      verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
+    }
+  }
+
+  @Test
+  public void testNetworkPostNotNullEditorUserButWithoutRightsOnThisEntityFail() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/network/" + KEY);
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(false);
+
+    try {
+      // WHEN
+      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+      fail("WebApplicationException is expected");
+    } catch (WebApplicationException e) {
+      // THEN
+      verify(mockAuthenticationFacade).getAuthentication();
+      verify(mockRequest).getRequestURI();
+      verify(mockRequest, times(2)).getMethod();
+      verify(mockAuthentication).getName();
+      verify(mockAuthentication, times(2)).getAuthorities();
+      verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
+    }
+  }
+
+  @Test
+  public void testOrganizationDeleteNotNullAdminUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endpoint");
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_ADMIN_AND_EDITOR).when(mockAuthentication).getAuthorities();
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+    verify(mockAuthentication).getAuthorities();
+  }
+
+  @Test
+  public void testOrganizationEndorsementPostAnyUserSuccess() throws Exception {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endorsement");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    // WHEN
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, times(2)).getMethod();
+    verify(mockAuthentication).getName();
+  }
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata.parse;
 
 import org.gbif.api.model.common.DOI;
@@ -34,7 +49,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -55,7 +69,8 @@ public class DatasetParserTest {
 
   @Test
   public void testDetectParserType() throws Exception {
-    MetadataType type = DatasetParser.detectParserType(FileUtils.classpathStream("dc/worms_dc.xml"));
+    MetadataType type =
+        DatasetParser.detectParserType(FileUtils.classpathStream("dc/worms_dc.xml"));
     assertEquals(MetadataType.DC, type);
 
     type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/ipt_eml.xml"));
@@ -64,10 +79,14 @@ public class DatasetParserTest {
     type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/clb_eml.xml"));
     assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+    type =
+        DatasetParser.detectParserType(
+            FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
     assertEquals(MetadataType.EML, type);
 
-    type = DatasetParser.detectParserType(FileUtils.classpathStream("eml-metadata-profile/sample4-v1.1.xml"));
+    type =
+        DatasetParser.detectParserType(
+            FileUtils.classpathStream("eml-metadata-profile/sample4-v1.1.xml"));
     assertEquals(MetadataType.EML, type);
 
     type = DatasetParser.detectParserType(FileUtils.classpathStream("eml/eml_utf8_bom.xml"));
@@ -138,7 +157,8 @@ public class DatasetParserTest {
 
   @Test
   public void testDcParsing() throws Exception {
-    Dataset dataset = DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc.xml"));
+    Dataset dataset =
+        DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc.xml"));
 
     Calendar cal = Calendar.getInstance();
     cal.clear();
@@ -146,8 +166,11 @@ public class DatasetParserTest {
     assertNotNull(dataset);
 
     assertEquals("World Register of Marine Species", dataset.getTitle());
-    assertTrue(dataset.getDescription().startsWith(
-      "The aim of a World Register of Marine Species (WoRMS) is to provide an authoritative and comprehensive list of names of marine organisms, including information on synonymy. While highest priority goes to valid names, other names in use are included so that this register can serve as a guide to interpret taxonomic literature."));
+    assertTrue(
+        dataset
+            .getDescription()
+            .startsWith(
+                "The aim of a World Register of Marine Species (WoRMS) is to provide an authoritative and comprehensive list of names of marine organisms, including information on synonymy. While highest priority goes to valid names, other names in use are included so that this register can serve as a guide to interpret taxonomic literature."));
     assertEquals("http://www.marinespecies.org/", dataset.getHomepage().toString());
     assertEquals("Ward Appeltans", contactByType(dataset, ContactType.ORIGINATOR).getLastName());
     assertEquals("World Register of Marine Species", dataset.getTitle());
@@ -156,7 +179,8 @@ public class DatasetParserTest {
 
     assertIdentifierExists(dataset, "1234", IdentifierType.UNKNOWN);
     assertIdentifierExists(dataset, "doi:10.1093/ageing/29.1.57", IdentifierType.UNKNOWN);
-    assertIdentifierExists(dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.UNKNOWN);
+    assertIdentifierExists(
+        dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.UNKNOWN);
 
     assertKeywordExists(dataset, "Specimens");
     assertKeywordExists(dataset, "Authoritative");
@@ -170,12 +194,13 @@ public class DatasetParserTest {
   }
 
   /**
-   * Test License parsed from rights element populated with GBIF supported license acronym,
-   * and when license element has not populated.
+   * Test License parsed from rights element populated with GBIF supported license acronym, and when
+   * license element has not populated.
    */
   @Test
   public void testDcParsingLicenseFromRights() throws Exception {
-    Dataset dataset = DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc2.xml"));
+    Dataset dataset =
+        DatasetParser.parse(MetadataType.DC, FileUtils.classpathStream("dc/worms_dc2.xml"));
     assertEquals(License.CC_BY_NC_4_0, dataset.getLicense());
     assertEquals(License.CC_BY_NC_4_0.getLicenseTitle(), dataset.getLicense().getLicenseTitle());
   }
@@ -183,23 +208,28 @@ public class DatasetParserTest {
   @Test
   public void testEmlParsingBadEnum() {
     try {
-      Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample3-v1.0.1.xml"));
+      Dataset dataset =
+          DatasetParser.parse(
+              MetadataType.EML,
+              FileUtils.classpathStream("eml-metadata-profile/sample3-v1.0.1.xml"));
       // check bad/unrecognized PreservationMethodType enum defaults to PreservationMethodType.OTHER
-      assertEquals(PreservationMethodType.OTHER, dataset.getCollections().get(0).getSpecimenPreservationMethod());
+      assertEquals(
+          PreservationMethodType.OTHER,
+          dataset.getCollections().get(0).getSpecimenPreservationMethod());
     } catch (Exception e) {
       e.printStackTrace();
       fail();
     }
   }
 
-  /**
-   * Roundtripping test for parsing GBIF Metadata Profile version 1.0.1.
-   */
+  /** Roundtripping test for parsing GBIF Metadata Profile version 1.0.1. */
   @Test
   public void testRoundtrippingV101() {
     try {
       Dataset dataset =
-        DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
+          DatasetParser.parse(
+              MetadataType.EML,
+              FileUtils.classpathStream("eml-metadata-profile/sample2-v1.0.1.xml"));
       verifyV101(dataset);
 
       // write again to eml file and read again
@@ -220,7 +250,8 @@ public class DatasetParserTest {
   }
 
   /**
-   * Verify properties in GBIF Metadata Profile v1.0.1 are parsed and populated when building a Dataset.
+   * Verify properties in GBIF Metadata Profile v1.0.1 are parsed and populated when building a
+   * Dataset.
    */
   public void verifyV101(Dataset dataset) {
     Calendar cal = Calendar.getInstance();
@@ -232,7 +263,8 @@ public class DatasetParserTest {
     assertEquals(new DOI("doi:10.1093/ageing/29.1.57"), dataset.getDoi());
 
     assertIdentifierExists(dataset, "619a4b95-1a82-4006-be6a-7dbe3c9b33c5", IdentifierType.UUID);
-    assertIdentifierExists(dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.URL);
+    assertIdentifierExists(
+        dataset, "http://ageing.oxfordjournals.org/content/29/1/57", IdentifierType.URL);
     assertEquals(2, dataset.getIdentifiers().size());
 
     // assertEquals(7, dataset.getEmlVersion());
@@ -320,7 +352,8 @@ public class DatasetParserTest {
     // <language>en</language>
     assertEquals(Language.ENGLISH, dataset.getDataLanguage());
     assertEquals("Specimens in jars.", dataset.getDescription());
-    assertEquals(buildURI("http://www.any.org/fauna/coleoptera/beetleList.html"), dataset.getHomepage());
+    assertEquals(
+        buildURI("http://www.any.org/fauna/coleoptera/beetleList.html"), dataset.getHomepage());
     assertEquals(buildURI("http://www.tim.org/logo.jpg"), dataset.getLogoUrl());
 
     // KeywordSets
@@ -331,24 +364,42 @@ public class DatasetParserTest {
     assertTrue(dataset.getKeywordCollections().get(0).getKeywords().contains("Insect"));
     assertTrue(dataset.getKeywordCollections().get(0).getKeywords().contains("Insect"));
     assertTrue(dataset.getKeywordCollections().get(0).getKeywords().contains("Insect"));
-    assertEquals("Zoology Vocabulary Version 1", dataset.getKeywordCollections().get(0).getThesaurus());
+    assertEquals(
+        "Zoology Vocabulary Version 1", dataset.getKeywordCollections().get(0).getThesaurus());
     assertEquals(1, dataset.getKeywordCollections().get(1).getKeywords().size());
     assertTrue(dataset.getKeywordCollections().get(1).getKeywords().contains("Spider"));
-    assertEquals("Zoology Vocabulary Version 1", dataset.getKeywordCollections().get(1).getThesaurus());
+    assertEquals(
+        "Zoology Vocabulary Version 1", dataset.getKeywordCollections().get(1).getThesaurus());
 
     // geospatial coverages tests
     assertNotNull(dataset.getGeographicCoverages());
     assertEquals(2, dataset.getGeographicCoverages().size());
     assertEquals("Bounding Box 1", dataset.getGeographicCoverages().get(0).getDescription());
-    assertEquals("23.975", String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMaxLatitude()));
-    assertEquals("0.703", String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMaxLongitude()));
-    assertEquals("-22.745", String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMinLatitude()));
-    assertEquals("-1.564", String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMinLongitude()));
+    assertEquals(
+        "23.975",
+        String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMaxLatitude()));
+    assertEquals(
+        "0.703",
+        String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMaxLongitude()));
+    assertEquals(
+        "-22.745",
+        String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMinLatitude()));
+    assertEquals(
+        "-1.564",
+        String.valueOf(dataset.getGeographicCoverages().get(0).getBoundingBox().getMinLongitude()));
     assertEquals("Bounding Box 2", dataset.getGeographicCoverages().get(1).getDescription());
-    assertEquals("43.975", String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMaxLatitude()));
-    assertEquals("11.564", String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMaxLongitude()));
-    assertEquals("-32.745", String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMinLatitude()));
-    assertEquals("-10.703", String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMinLongitude()));
+    assertEquals(
+        "43.975",
+        String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMaxLatitude()));
+    assertEquals(
+        "11.564",
+        String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMaxLongitude()));
+    assertEquals(
+        "-32.745",
+        String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMinLatitude()));
+    assertEquals(
+        "-10.703",
+        String.valueOf(dataset.getGeographicCoverages().get(1).getBoundingBox().getMinLongitude()));
 
     // temporal coverages tests
     assertEquals(4, dataset.getTemporalCoverages().size());
@@ -378,40 +429,72 @@ public class DatasetParserTest {
     // taxonomic coverages tests
     assertNotNull(dataset.getTaxonomicCoverages());
     assertEquals(2, dataset.getTaxonomicCoverages().size());
-    assertEquals("This is a general taxon coverage with only the scientific name",
-      dataset.getTaxonomicCoverages().get(0).getDescription());
-    assertEquals("Mammalia", dataset.getTaxonomicCoverages().get(0).getCoverages().get(0).getScientificName());
-    assertEquals("Reptilia", dataset.getTaxonomicCoverages().get(0).getCoverages().get(1).getScientificName());
-    assertEquals("Coleoptera", dataset.getTaxonomicCoverages().get(0).getCoverages().get(2).getScientificName());
+    assertEquals(
+        "This is a general taxon coverage with only the scientific name",
+        dataset.getTaxonomicCoverages().get(0).getDescription());
+    assertEquals(
+        "Mammalia",
+        dataset.getTaxonomicCoverages().get(0).getCoverages().get(0).getScientificName());
+    assertEquals(
+        "Reptilia",
+        dataset.getTaxonomicCoverages().get(0).getCoverages().get(1).getScientificName());
+    assertEquals(
+        "Coleoptera",
+        dataset.getTaxonomicCoverages().get(0).getCoverages().get(2).getScientificName());
 
-    assertEquals("This is a second taxon coverage with all fields",
-      dataset.getTaxonomicCoverages().get(1).getDescription());
+    assertEquals(
+        "This is a second taxon coverage with all fields",
+        dataset.getTaxonomicCoverages().get(1).getDescription());
     // 1st classification
-    assertEquals("Class", dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getRank().getVerbatim());
-    assertEquals(Rank.CLASS, dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getRank().getInterpreted());
-    assertEquals("Aves", dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getScientificName());
-    assertEquals("Birds", dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getCommonName());
+    assertEquals(
+        "Class",
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getRank().getVerbatim());
+    assertEquals(
+        Rank.CLASS,
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getRank().getInterpreted());
+    assertEquals(
+        "Aves", dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getScientificName());
+    assertEquals(
+        "Birds", dataset.getTaxonomicCoverages().get(1).getCoverages().get(0).getCommonName());
     // 2nd classification
-    assertEquals("Kingdom", dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getRank().getVerbatim());
-    assertEquals(Rank.KINGDOM, dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getRank().getInterpreted());
-    assertEquals("Plantae", dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getScientificName());
-    assertEquals("Plants", dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getCommonName());
+    assertEquals(
+        "Kingdom",
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getRank().getVerbatim());
+    assertEquals(
+        Rank.KINGDOM,
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getRank().getInterpreted());
+    assertEquals(
+        "Plantae",
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getScientificName());
+    assertEquals(
+        "Plants", dataset.getTaxonomicCoverages().get(1).getCoverages().get(1).getCommonName());
     // 3nd classification with uninterpretable Rank. Only the verbatim value is preserved
-    assertEquals("kingggggggggggggdom",
-      dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getRank().getVerbatim());
-    assertNull(dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getRank().getInterpreted());
-    assertEquals("Animalia", dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getScientificName());
-    assertEquals("Animals", dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getCommonName());
+    assertEquals(
+        "kingggggggggggggdom",
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getRank().getVerbatim());
+    assertNull(
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getRank().getInterpreted());
+    assertEquals(
+        "Animalia",
+        dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getScientificName());
+    assertEquals(
+        "Animals", dataset.getTaxonomicCoverages().get(1).getCoverages().get(2).getCommonName());
 
     // sampling methods
     assertNotNull(dataset.getSamplingDescription());
     assertEquals(3, dataset.getSamplingDescription().getMethodSteps().size());
-    assertEquals("Took picture, identified", dataset.getSamplingDescription().getMethodSteps().get(0));
+    assertEquals(
+        "Took picture, identified", dataset.getSamplingDescription().getMethodSteps().get(0));
     assertEquals("Themometer based test", dataset.getSamplingDescription().getMethodSteps().get(1));
-    assertEquals("<p>Visual based test</p>\n<p>and one more time</p>", dataset.getSamplingDescription().getMethodSteps().get(2));
-    assertEquals("Daily Obersevation of Pigeons Eating Habits", dataset.getSamplingDescription().getStudyExtent());
-    assertEquals("44KHz is what a CD has... I was more like one a day if I felt like it",
-      dataset.getSamplingDescription().getSampling());
+    assertEquals(
+        "<p>Visual based test</p>\n<p>and one more time</p>",
+        dataset.getSamplingDescription().getMethodSteps().get(2));
+    assertEquals(
+        "Daily Obersevation of Pigeons Eating Habits",
+        dataset.getSamplingDescription().getStudyExtent());
+    assertEquals(
+        "44KHz is what a CD has... I was more like one a day if I felt like it",
+        dataset.getSamplingDescription().getSampling());
     assertEquals("None", dataset.getSamplingDescription().getQualityControl());
 
     // Project (not included is attribute citableClassificationSystem)
@@ -422,7 +505,8 @@ public class DatasetParserTest {
     assertEquals(ContactType.PUBLISHER, dataset.getProject().getContacts().get(0).getType());
     assertEquals("My Deep Pockets", dataset.getProject().getFunding());
     assertEquals("Turkish Mountains", dataset.getProject().getStudyAreaDescription());
-    assertEquals("This was done in Avian Migration patterns", dataset.getProject().getDesignDescription());
+    assertEquals(
+        "This was done in Avian Migration patterns", dataset.getProject().getDesignDescription());
 
     assertEquals(Language.ENGLISH, dataset.getLanguage());
 
@@ -445,9 +529,15 @@ public class DatasetParserTest {
     assertEquals("title 1", dataset.getBibliographicCitations().get(0).getText());
     assertEquals("title 2", dataset.getBibliographicCitations().get(1).getText());
     assertEquals("title 3", dataset.getBibliographicCitations().get(2).getText());
-    assertEquals("doi:tims-ident.2136.ex43.33.d", dataset.getBibliographicCitations().get(0).getIdentifier());
-    assertEquals("doi:tims-ident.2137.ex43.33.d", dataset.getBibliographicCitations().get(1).getIdentifier());
-    assertEquals("doi:tims-ident.2138.ex43.33.d", dataset.getBibliographicCitations().get(2).getIdentifier());
+    assertEquals(
+        "doi:tims-ident.2136.ex43.33.d",
+        dataset.getBibliographicCitations().get(0).getIdentifier());
+    assertEquals(
+        "doi:tims-ident.2137.ex43.33.d",
+        dataset.getBibliographicCitations().get(1).getIdentifier());
+    assertEquals(
+        "doi:tims-ident.2138.ex43.33.d",
+        dataset.getBibliographicCitations().get(2).getIdentifier());
 
     // assertEquals("dataset", dataset.getHierarchyLevel());
 
@@ -458,21 +548,25 @@ public class DatasetParserTest {
     assertEquals("ASCII", dataset.getDataDescriptions().get(0).getCharset());
     assertEquals("shapefile", dataset.getDataDescriptions().get(0).getFormat());
     assertEquals("2.0", dataset.getDataDescriptions().get(0).getFormatVersion());
-    assertEquals(buildURI(
-        "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_1.TXT"),
-      dataset.getDataDescriptions().get(0).getUrl());
+    assertEquals(
+        buildURI(
+            "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_1.TXT"),
+        dataset.getDataDescriptions().get(0).getUrl());
     assertEquals("INV-GCEM-0305a1_1_2.shp", dataset.getDataDescriptions().get(1).getName());
     assertEquals("ASCII", dataset.getDataDescriptions().get(1).getCharset());
     assertEquals("shapefile", dataset.getDataDescriptions().get(1).getFormat());
     assertEquals("2.0", dataset.getDataDescriptions().get(1).getFormatVersion());
-    assertEquals(buildURI(
-        "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_2.TXT"),
-      dataset.getDataDescriptions().get(1).getUrl());
+    assertEquals(
+        buildURI(
+            "http://metacat.lternet.edu/knb/dataAccessServlet?docid=knb-lter-gce.109.10&urlTail=accession=INV-GCEM-0305a1&filename=INV-GCEM-0305a1_1_2.TXT"),
+        dataset.getDataDescriptions().get(1).getUrl());
 
     assertEquals("Provide data to the whole world.", dataset.getPurpose());
-    assertEquals("Where can the additional information possibly come from?!", dataset.getAdditionalInfo());
+    assertEquals(
+        "Where can the additional information possibly come from?!", dataset.getAdditionalInfo());
 
-    // Both License and rights are set to null because there was no machine readable license in sample EML
+    // Both License and rights are set to null because there was no machine readable license in
+    // sample EML
     // intellectualRights and because dataset rights statements are no longer supported
     assertNull(dataset.getLicense());
     assertNull(dataset.getRights());
@@ -487,23 +581,32 @@ public class DatasetParserTest {
     assertNotNull(dataset.getCollections().get(0).getCuratorialUnits());
     assertEquals(5, dataset.getCollections().get(0).getCuratorialUnits().get(0).getCount());
     assertEquals(1, dataset.getCollections().get(0).getCuratorialUnits().get(0).getDeviation());
-    assertEquals("SPECIMENS", dataset.getCollections().get(0).getCuratorialUnits().get(0).getTypeVerbatim());
-    assertEquals("Drawers", dataset.getCollections().get(0).getCuratorialUnits().get(1).getTypeVerbatim());
+    assertEquals(
+        "SPECIMENS", dataset.getCollections().get(0).getCuratorialUnits().get(0).getTypeVerbatim());
+    assertEquals(
+        "Drawers", dataset.getCollections().get(0).getCuratorialUnits().get(1).getTypeVerbatim());
     assertEquals(7, dataset.getCollections().get(0).getCuratorialUnits().get(1).getLower());
     assertEquals(2, dataset.getCollections().get(0).getCuratorialUnits().get(1).getUpper());
   }
 
   @Test
   public void testEmlParsingBreaking() throws IOException {
-    // throws a ConversionException/Throwable that is caught - but build still returns the dataset populated partially
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking.xml"));
-    assertEquals("Estimates of walleye abundance for Oneida\n" + "      Lake, NY (1957-2008)", dataset.getTitle());
+    // throws a ConversionException/Throwable that is caught - but build still returns the dataset
+    // populated partially
+    Dataset dataset =
+        DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/sample-breaking.xml"));
+    assertEquals(
+        "Estimates of walleye abundance for Oneida\n" + "      Lake, NY (1957-2008)",
+        dataset.getTitle());
   }
 
   @Test
   public void testEmlParsingBreakingOnURLConversion() throws IOException {
-    // Gracefully handles ConversionException/Throwable during conversion of URLs, and fully populates the dataset
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample1-v1.0.xml"));
+    // Gracefully handles ConversionException/Throwable during conversion of URLs, and fully
+    // populates the dataset
+    Dataset dataset =
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample1-v1.0.xml"));
     assertEquals("WII Herbarium Dataset", dataset.getTitle());
     assertEquals(buildURI("http://www.wii.gov.in"), dataset.getHomepage());
   }
@@ -523,86 +626,92 @@ public class DatasetParserTest {
   @Test
   public void testUnsupportedLicenseSet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample5-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample5-v1.1.xml"));
     assertEquals(License.UNSUPPORTED, dataset.getLicense());
     assertNull(dataset.getRights());
   }
 
   /**
-   * Tests parser can still set License by lookup by license title, despite malformed license URL in EML.
+   * Tests parser can still set License by lookup by license title, despite malformed license URL in
+   * EML.
    */
   @Test
   public void testMalformedLicenseURLSet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
     assertNull(dataset.getRights());
   }
 
-  /**
-   * Simply test we can extract the version of dataset has provided by the IPT
-   */
+  /** Simply test we can extract the version of dataset has provided by the IPT */
   @Test
   public void testDatasetVersion() throws IOException {
     Dataset dataset =
-            DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/ipt_eml.xml"));
+        DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/ipt_eml.xml"));
     assertEquals("2.1", dataset.getVersion());
   }
 
   /**
-   * Tests parser does NOT set license when no machine readable license specified in EML.
-   * This ensures parser does not override dataset license set manually.
+   * Tests parser does NOT set license when no machine readable license specified in EML. This
+   * ensures parser does not override dataset license set manually.
    */
   @Test
   public void testUnspecifiedLicenseSet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample7-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample7-v1.1.xml"));
     assertNull(dataset.getLicense());
     assertNull(dataset.getRights());
   }
 
   /**
-   * Tests parser still sets Dataset.maintenanceUpdateFrequency when accepted alternative name "continous" is specified
-   * in EML instead of the correct value "continually" as per the vocabulary/ENUM.
+   * Tests parser still sets Dataset.maintenanceUpdateFrequency when accepted alternative name
+   * "continous" is specified in EML instead of the correct value "continually" as per the
+   * vocabulary/ENUM.
    */
   @Test
   public void testAcceptedAlternateMaintenanceUpdateFrequencySet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample5-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample5-v1.1.xml"));
     assertEquals(MaintenanceUpdateFrequency.CONTINUALLY, dataset.getMaintenanceUpdateFrequency());
   }
 
   /**
-   * Tests parser does NOT set Dataset.maintenanceUpdateFrequency when no accepted value specified in EML.
+   * Tests parser does NOT set Dataset.maintenanceUpdateFrequency when no accepted value specified
+   * in EML.
    */
   @Test
   public void tesInvalidMaintenanceUpdateFrequencySet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
     assertNull(dataset.getMaintenanceUpdateFrequency());
   }
 
   /**
-   * Tests parser does NOT set Dataset.Citation.identifier and Dataset.Citation.text equal to empty strings
-   * when invalid citation element supplied in EML. Both fields should be set to NULL.
+   * Tests parser does NOT set Dataset.Citation.identifier and Dataset.Citation.text equal to empty
+   * strings when invalid citation element supplied in EML. Both fields should be set to NULL.
    */
   @Test
   public void tesInvalidCitationSet() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample6-v1.1.xml"));
     assertNotNull(dataset.getCitation());
     assertNull(dataset.getCitation().getText());
     assertNull(dataset.getCitation().getIdentifier());
   }
 
-  /**
-   * Roundtripping test for GBIF Metadata Profile version 1.1
-   */
+  /** Roundtripping test for GBIF Metadata Profile version 1.1 */
   @Test
   public void testRoundtrippingV11() {
     try {
       Dataset dataset =
-        DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample4-v1.1.xml"));
+          DatasetParser.parse(
+              MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample4-v1.1.xml"));
       verifyV11(dataset);
 
       // write again to eml file and read again
@@ -624,22 +733,20 @@ public class DatasetParserTest {
   }
 
   /**
-   * Verify new properties added in GBIF Metadata Profile v1.1 are parsed and populated when building a Dataset.
-   * </br>
-   * New properties include:
-   * 1. license name and license URL stored in ulink element in intellectualRights (previously intellectualRights was
-   * free-text) - POR-2792
-   * 2. maintenanceDescription & maintenanceUpdateFrequency
-   * 3. multiple contacts, creators, and metadataProvider (previously parser may have expected a single one for each)
-   * 4. multiple userIds for any agent (requires aggregating the directory attribute and value together)
-   * 5. multiple project personnel (previously may have expected only a single person)
-   * 6. project ID attribute
-   * 7. multiple collections (previously parser may have expected a single collection)
-   * TODO handling multiple specimen preservation methods postponed because it would break API - POR-2460)
-   * 8. multiple paragraphs in description
+   * Verify new properties added in GBIF Metadata Profile v1.1 are parsed and populated when
+   * building a Dataset. </br> New properties include: 1. license name and license URL stored in
+   * ulink element in intellectualRights (previously intellectualRights was free-text) - POR-2792 2.
+   * maintenanceDescription & maintenanceUpdateFrequency 3. multiple contacts, creators, and
+   * metadataProvider (previously parser may have expected a single one for each) 4. multiple
+   * userIds for any agent (requires aggregating the directory attribute and value together) 5.
+   * multiple project personnel (previously may have expected only a single person) 6. project ID
+   * attribute 7. multiple collections (previously parser may have expected a single collection)
+   * TODO handling multiple specimen preservation methods postponed because it would break API -
+   * POR-2460) 8. multiple paragraphs in description
    */
   private void verifyV11(Dataset dataset) {
-    // Tests parser can set License by lookup by license URI, when machine readable license EML is well formatted.
+    // Tests parser can set License by lookup by license URI, when machine readable license EML is
+    // well formatted.
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
     assertNull(dataset.getRights());
 
@@ -674,7 +781,8 @@ public class DatasetParserTest {
     assertEquals("Provider 1", provider1.getFirstName());
     assertEquals("Edgar", provider1.getLastName());
     assertNotNull(provider1.getUserId());
-    assertEquals("https://scholar.google.com/citations?user=jvW0IrIAAAAY", provider1.getUserId().get(0));
+    assertEquals(
+        "https://scholar.google.com/citations?user=jvW0IrIAAAAY", provider1.getUserId().get(0));
 
     // test Metadata Provider #2
     Contact provider2 = contactList.get(3);
@@ -683,7 +791,8 @@ public class DatasetParserTest {
     assertEquals("Provider 2", provider2.getFirstName());
     assertEquals("Stuart-Smith", provider2.getLastName());
     assertNotNull(provider2.getUserId());
-    assertEquals("https://scholar.google.com/citations?user=jvW0IrIAAAAZ", provider2.getUserId().get(0));
+    assertEquals(
+        "https://scholar.google.com/citations?user=jvW0IrIAAAAZ", provider2.getUserId().get(0));
 
     // test Associated Party #1
     Contact party1 = contactList.get(4);
@@ -692,8 +801,9 @@ public class DatasetParserTest {
     assertEquals("Party 1", party1.getFirstName());
     assertEquals("Edgar", party1.getLastName());
     assertNotNull(party1.getUserId());
-    assertEquals("https://www.linkedin.com/profile/view?id=AAkAAABiOnwBeoX3a3wKqe4IEqDkJ_ifoVj1234",
-      party1.getUserId().get(0));
+    assertEquals(
+        "https://www.linkedin.com/profile/view?id=AAkAAABiOnwBeoX3a3wKqe4IEqDkJ_ifoVj1234",
+        party1.getUserId().get(0));
 
     // test Associated Party #2
     Contact party2 = contactList.get(5);
@@ -702,8 +812,9 @@ public class DatasetParserTest {
     assertEquals("Party 2", party2.getFirstName());
     assertEquals("Braak", party2.getLastName());
     assertNotNull(party2.getUserId());
-    assertEquals("https://www.linkedin.com/profile/view?id=AAkAAABiOnwBeoX3a3wKqe4IEqDkJ_ifoVj4321",
-      party2.getUserId().get(0));
+    assertEquals(
+        "https://www.linkedin.com/profile/view?id=AAkAAABiOnwBeoX3a3wKqe4IEqDkJ_ifoVj4321",
+        party2.getUserId().get(0));
 
     // test Contact #1
     Contact contact1 = contactList.get(6);
@@ -749,9 +860,18 @@ public class DatasetParserTest {
     assertEquals("AODN:60978150-1641-11dd-a326-00188b4c0af8", dataset.getProject().getIdentifier());
 
     // Project abstract and descriptions.
-    assertTrue(dataset.getProject().getAbstract().startsWith("Reef Life Survey (RLS) aims to improve"));
-    assertTrue(dataset.getProject().getStudyAreaDescription().startsWith("RLS surveys have been undertaken"));
-    assertTrue(dataset.getProject().getDesignDescription().startsWith("As of December 2015, the majority of global data"));
+    assertTrue(
+        dataset.getProject().getAbstract().startsWith("Reef Life Survey (RLS) aims to improve"));
+    assertTrue(
+        dataset
+            .getProject()
+            .getStudyAreaDescription()
+            .startsWith("RLS surveys have been undertaken"));
+    assertTrue(
+        dataset
+            .getProject()
+            .getDesignDescription()
+            .startsWith("As of December 2015, the majority of global data"));
 
     // Multiple collections
     List<Collection> collections = dataset.getCollections();
@@ -764,7 +884,8 @@ public class DatasetParserTest {
     assertEquals("Imaginary collection one", collection1.getName());
 
     // POR-2460 - Handling multiple specimen preservation methods postponed
-    //assertEquals(PreservationMethodType.DEEP_FROZEN, collection1.getSpecimenPreservationMethod());
+    // assertEquals(PreservationMethodType.DEEP_FROZEN,
+    // collection1.getSpecimenPreservationMethod());
 
     Collection collection2 = collections.get(1);
     assertEquals("urn:uuid:rls:fish:1", collection2.getParentIdentifier());
@@ -789,32 +910,41 @@ public class DatasetParserTest {
     // Multiple paragraphs in description
     assertNotNull(dataset.getDescription());
     assertTrue(dataset.getDescription().startsWith("<p>This dataset contains"));
-    assertTrue(dataset.getDescription().contains("worldwide.</p>\n<p>Abundance")); // HTML break tag concatenates para
+    assertTrue(
+        dataset
+            .getDescription()
+            .contains("worldwide.</p>\n<p>Abundance")); // HTML break tag concatenates para
     assertTrue(dataset.getDescription().endsWith("(Method 0).</p>"));
 
     // Citation
     assertNotNull(dataset.getCitation());
     assertEquals("http://doi.org/10.15468/qjgwba", dataset.getCitation().getIdentifier());
-    assertEquals("Edgar G J, Stuart-Smith R D (2014): Reef Life Survey: Global reef fish dataset. v2.0. Reef Life Survey. Dataset/Samplingevent. http://doi.org/10.15468/qjgwba", dataset.getCitation().getText());
+    assertEquals(
+        "Edgar G J, Stuart-Smith R D (2014): Reef Life Survey: Global reef fish dataset. v2.0. Reef Life Survey. Dataset/Samplingevent. http://doi.org/10.15468/qjgwba",
+        dataset.getCitation().getText());
 
     // Bibliographic citations
     assertEquals(7, dataset.getBibliographicCitations().size());
   }
 
-  /**
-   * Tests parser can handle EML documents exported from BioCASe.
-   */
+  /** Tests parser can handle EML documents exported from BioCASe. */
   @Test
   public void testHandlingBiocaseEml() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample8-v1.1.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml-metadata-profile/sample8-v1.1.xml"));
 
     // Title
-    assertEquals("BoBO - Botanic Garden and Botanical Museum Berlin-Dahlem Observations", dataset.getTitle());
+    assertEquals(
+        "BoBO - Botanic Garden and Botanical Museum Berlin-Dahlem Observations",
+        dataset.getTitle());
 
     // Description
     assertNotNull(dataset.getDescription());
-    assertTrue(dataset.getDescription().startsWith("BoBO aims at providing biodiversity observation data to GBIF"));
+    assertTrue(
+        dataset
+            .getDescription()
+            .startsWith("BoBO aims at providing biodiversity observation data to GBIF"));
 
     // License
     assertEquals(License.CC0_1_0, dataset.getLicense());
@@ -830,41 +960,60 @@ public class DatasetParserTest {
     Contact provider = dataset.getContacts().get(1);
     assertEquals(ContactType.METADATA_AUTHOR, provider.getType());
     assertTrue(provider.isPrimary());
-    assertEquals("Gabi Droege, Wolf-Henning Kusber", provider.getOrganization()); // TODO fix - not an organisation
+    assertEquals(
+        "Gabi Droege, Wolf-Henning Kusber",
+        provider.getOrganization()); // TODO fix - not an organisation
 
     // Contact equal to person
     Contact contact = dataset.getContacts().get(2);
     assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
     assertTrue(contact.isPrimary());
-    assertEquals("Gabi Droege, Wolf-Henning Kusber", contact.getLastName()); // TODO fix - should be split into 2 contacts
+    assertEquals(
+        "Gabi Droege, Wolf-Henning Kusber",
+        contact.getLastName()); // TODO fix - should be split into 2 contacts
 
     assertNotNull(dataset.getCitation());
     assertNotNull(dataset.getCitation().getText());
-    assertTrue(dataset.getCitation().getText().startsWith("Droege, G., Güntsch, A., Holetschek, J., Kusber"));
+    assertTrue(
+        dataset
+            .getCitation()
+            .getText()
+            .startsWith("Droege, G., Güntsch, A., Holetschek, J., Kusber"));
   }
 
   /**
    * Check dates are in UTC, and ranges use the endpoints of the range.
    *
-   * An improvement would be to use only the year, not 1st January.
+   * <p>An improvement would be to use only the year, not 1st January.
    */
   @Test
   public void testEmlParsingYearCoverage() throws IOException {
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/temporalCoverageRange.xml"));
+    Dataset dataset =
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml/temporalCoverageRange.xml"));
     assertEquals("Testing date range", dataset.getTitle());
     DateRange dateRange = (DateRange) dataset.getTemporalCoverages().get(0);
-    assertEquals(Date.from(ZonedDateTime.parse("1986-01-01T00:00:00.001Z").toInstant()), dateRange.getStart());
-    assertEquals(Date.from(ZonedDateTime.parse("2018-12-31T00:00:00.001Z").toInstant()), dateRange.getEnd());
+    assertEquals(
+        Date.from(ZonedDateTime.parse("1986-01-01T00:00:00.001Z").toInstant()),
+        dateRange.getStart());
+    assertEquals(
+        Date.from(ZonedDateTime.parse("2018-12-31T00:00:00.001Z").toInstant()), dateRange.getEnd());
 
-    assertEquals(Date.from(ZonedDateTime.parse("2018-12-12T00:00:00.000Z").toInstant()), dataset.getPubDate());
+    assertEquals(
+        Date.from(ZonedDateTime.parse("2018-12-12T00:00:00.000Z").toInstant()),
+        dataset.getPubDate());
   }
 
   /**
-   * Plazi provide multiple licenses, we need to use the first (CC0) and not overwrite that with the second (custom).
+   * Plazi provide multiple licenses, we need to use the first (CC0) and not overwrite that with the
+   * second (custom).
    */
   @Test
   public void testEmlParsingPlaziLicense() throws IOException {
-    Dataset dataset = DatasetParser.parse(MetadataType.EML, FileUtils.classpathStream("eml/3920856d-4923-4276-ae0b-e8b3478df276.xml"));
+    Dataset dataset =
+        DatasetParser.parse(
+            MetadataType.EML,
+            FileUtils.classpathStream("eml/3920856d-4923-4276-ae0b-e8b3478df276.xml"));
     assertEquals(License.CC0_1_0, dataset.getLicense());
   }
 }

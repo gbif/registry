@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
@@ -16,10 +31,10 @@ import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
-import org.gbif.registry.ws.guice.Trim;
 import org.gbif.registry.ws.provider.PartialDate;
-import org.gbif.ws.server.interceptor.NullToNotFound;
-import org.gbif.ws.util.ExtraMediaTypes;
+import org.gbif.ws.NotFoundException;
+import org.gbif.ws.annotation.NullToNotFound;
+import org.gbif.ws.annotation.Trim;
 
 import java.util.Date;
 import java.util.List;
@@ -30,43 +45,37 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.sun.jersey.api.NotFoundException;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
 
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
 import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData;
 
-/**
- * Occurrence download resource/web service.
- */
-@Singleton
-@Path("occurrence/download")
-@Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
-@Consumes(MediaType.APPLICATION_JSON)
+/** Occurrence download resource/web service. */
+@RestController
+@RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
@@ -75,20 +84,15 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
   private final DoiGenerator doiGenerator;
 
-  //Page size to iterate over dataset usages
+  // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
 
-  // This Guice injection is only used for testing purpose
-  @Inject(optional = true)
-  @Named("guiceInjectedSecurityContext")
-  @Context
-  private SecurityContext securityContext;
-
-  @Inject
-  public OccurrenceDownloadResource(OccurrenceDownloadMapper occurrenceDownloadMapper,
-                                    DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-                                    DoiGenerator doiGenerator, DataCiteDoiHandlerStrategy doiHandlingStrategy,
-                                    IdentityAccessService identityService) {
+  public OccurrenceDownloadResource(
+      OccurrenceDownloadMapper occurrenceDownloadMapper,
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DoiGenerator doiGenerator,
+      @Lazy DataCiteDoiHandlerStrategy doiHandlingStrategy,
+      IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;
@@ -96,128 +100,164 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     this.identityService = identityService;
   }
 
-  @POST
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
-  @RolesAllowed(ADMIN_ROLE)
+  @Secured(ADMIN_ROLE)
   @Override
-  public void create(@Valid @NotNull @Trim Download occurrenceDownload) {
+  public void create(
+      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class})
+          Download occurrenceDownload) {
     occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
     occurrenceDownload.setLicense(License.UNSPECIFIED);
     occurrenceDownloadMapper.create(occurrenceDownload);
   }
 
-  @GET
-  @Path("{key}")
-  @Nullable
+  @GetMapping("{key}")
   @NullToNotFound
   @Override
-  public Download get(@NotNull @PathParam("key") String key) {
+  public Download get(@NotNull @PathVariable("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
-    if (download == null && DOI.isParsable(key)) { //maybe it's a DOI?
-     download = occurrenceDownloadMapper.getByDOI(new DOI(key));
-    }
+
     if (download != null) { // the user can request a non-existing download
-      clearSensitiveData(securityContext, download);
+      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      clearSensitiveData(authentication, download);
     }
     return download;
   }
 
-  /**
-   * Lists all the downloads. This operation can be executed by role ADMIN only.
-   */
-  @GET
-  @RolesAllowed(ADMIN_ROLE)
+  @GetMapping("{prefix}/{suffix}")
+  @NullToNotFound
+  public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
+    Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
+
+    if (download != null) { // the user can request a non-existing download
+      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      clearSensitiveData(authentication, download);
+    }
+    return download;
+  }
+
+  /** Lists all the downloads. This operation can be executed by role ADMIN only. */
+  @GetMapping
+  @Secured(ADMIN_ROLE)
   @Override
-  public PagingResponse<Download> list(@Context Pageable page, @Nullable @QueryParam("status") Set<Download.Status> status) {
-    if(status == null ||status.isEmpty()) {
-      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
+  public PagingResponse<Download> list(
+      Pageable page,
+      @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+    if (status == null || status.isEmpty()) {
+      return new PagingResponse<>(
+          page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
     } else {
-      return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByStatus(status), occurrenceDownloadMapper.listByStatus(page,status));
+      return new PagingResponse<>(
+          page,
+          (long) occurrenceDownloadMapper.countByStatus(status),
+          occurrenceDownloadMapper.listByStatus(page, status));
     }
   }
 
-  @GET
-  @Path("user/{user}")
-  @NullToNotFound
-  public PagingResponse<Download> listByUser(@NotNull @PathParam("user") String user, @Context Pageable page,
-                                             @Nullable @QueryParam("status") Set<Download.Status> status) {
-    checkUserIsInSecurityContext(user, securityContext);
-    return new PagingResponse<>(page, (long) occurrenceDownloadMapper.countByUser(user,status),
-                                        occurrenceDownloadMapper.listByUser(user,page,status));
+  @GetMapping("user/{user}")
+  @Override
+  public PagingResponse<Download> listByUser(
+      @NotNull @PathVariable String user,
+      Pageable page,
+      @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    checkUserIsInSecurityContext(user, authentication);
+    return new PagingResponse<>(
+        page,
+        (long) occurrenceDownloadMapper.countByUser(user, status),
+        occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
-  @PUT
-  @Path("{key}")
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Override
-  public void update(@NotNull Download download) {
+  public void update(@RequestBody @NotNull Download download) {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
-    checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), securityContext);
-    GbifUser user = identityService.get(securityContext.getUserPrincipal().getName());
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), authentication);
+    GbifUser user = identityService.get(authentication.getName());
     doiHandlingStrategy.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
 
-  @GET
-  @Path("{key}/datasets")
+  @GetMapping("{key}/datasets")
   @Override
-  @NullToNotFound
-  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@NotNull @PathParam("key") String downloadKey,
-                                                                          @Context Pageable page){
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
+      @NotNull @PathVariable("key") String downloadKey, Pageable page) {
     Download download = get(downloadKey);
     if (download != null) {
-      List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
-      clearSensitiveData(securityContext, usages);
+      List<DatasetOccurrenceDownloadUsage> usages =
+          datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
+      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      clearSensitiveData(authentication, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
     }
     throw new NotFoundException();
   }
-  
-  @POST
-  @Path("{key}/datasets")
+
+  @PostMapping(value = "{key}/datasets", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
-  @RolesAllowed(ADMIN_ROLE)
+  @Secured(ADMIN_ROLE)
   @Override
-  public void createUsages(@NotNull @PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
+  public void createUsages(
+      @NotNull @PathVariable("key") String downloadKey,
+      @RequestBody @NotNull Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
-    .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+        .forEachRemaining(
+            batch ->
+                datasetOccurrenceDownloadMapper.createUsages(
+                    downloadKey,
+                    batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
-  @GET
-  @Path("statistics/downloadsByUserCountry")
+  @GetMapping("statistics/downloadsByUserCountry")
   @Override
-  @NullToNotFound
-  public Map<Integer,Map<Integer,Long>> getDownloadsByUserCountry(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
-                                                                  @Nullable @QueryParam("toDate") @PartialDate Date toDate,
-                                                                  @QueryParam("userCountry") Country userCountry) {
-    return groupByYear(occurrenceDownloadMapper.getDownloadsByUserCountry(fromDate, toDate,
-      Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
+  public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
+      @Nullable @PartialDate Date fromDate,
+      @Nullable @PartialDate Date toDate,
+      @Nullable Country userCountry) {
+    return groupByYear(
+        occurrenceDownloadMapper.getDownloadsByUserCountry(
+            fromDate,
+            toDate,
+            Optional.ofNullable(userCountry).map(Country::getIso2LetterCode).orElse(null)));
   }
 
-  @GET
-  @Path("statistics/downloadedRecordsByDataset")
+  @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
-  @NullToNotFound
-  public Map<Integer,Map<Integer,Long>> getDownloadedRecordsByDataset(@Nullable @QueryParam("fromDate") @PartialDate Date fromDate,
-                                                                      @Nullable @QueryParam("toDate") @PartialDate Date toDate,
-                                                                      @QueryParam("publishingCountry") Country publishingCountry,
-                                                                      @QueryParam("datasetKey") UUID datasetKey) {
-    return groupByYear(occurrenceDownloadMapper.getDownloadedRecordsByDataset(fromDate, toDate,
-      Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-      datasetKey));
+  public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
+      @Nullable @PartialDate Date fromDate,
+      @Nullable @PartialDate Date toDate,
+      @Nullable Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
+    return groupByYear(
+        occurrenceDownloadMapper.getDownloadedRecordsByDataset(
+            fromDate,
+            toDate,
+            Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
+            datasetKey));
   }
 
-  /**
-   * Aggregates the download statistics in tree structure of month grouped by year.
-   */
-  private Map<Integer, Map<Integer,Long>> groupByYear(List<Facet.Count> counts) {
-    Map<Integer,Map<Integer,Long>> yearsGrouping = new TreeMap<>();
-    counts.forEach(count -> yearsGrouping.computeIfAbsent(Integer.valueOf(count.getName().substring(0,4)), year -> new TreeMap<>()).put(Integer.valueOf(count.getName().substring(5)), count.getCount()));
-    return  yearsGrouping;
+  /** Aggregates the download statistics in tree structure of month grouped by year. */
+  private Map<Integer, Map<Integer, Long>> groupByYear(List<Facet.Count> counts) {
+    Map<Integer, Map<Integer, Long>> yearsGrouping = new TreeMap<>();
+    counts.forEach(
+        count ->
+            yearsGrouping
+                .computeIfAbsent(getYearFromFacetCount(count), year -> new TreeMap<>())
+                .put(getMonthFromFacetCount(count), count.getCount()));
+    return yearsGrouping;
+  }
+
+  private Integer getYearFromFacetCount(Facet.Count count) {
+    return Integer.valueOf(count.getName().substring(0, 4));
+  }
+
+  private Integer getMonthFromFacetCount(Facet.Count count) {
+    return Integer.valueOf(count.getName().substring(5));
   }
 }

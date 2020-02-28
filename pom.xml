@@ -1,34 +1,27 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>37</version>
+    <version>42</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
-  <artifactId>registry-motherpom</artifactId>
-  <version>2.146-SNAPSHOT</version>
-  <packaging>pom</packaging>
-
+  <artifactId>registry-parent</artifactId>
+  <version>1.1.1-SNAPSHOT</version>
   <name>GBIF Registry</name>
-  <description>The projects to provide the registry, web services and client</description>
-  <url>https://github.org/gbif/registry</url>
+  <description>GBIF Registry project (Spring Boot)</description>
 
   <scm>
-    <connection>scm:git:git@github.com:gbif/registry.git</connection>
-    <url>https://github.com/gbif/registry</url>
-    <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
+    <connection>scm:git:git@github.com:gbif/registry-spring-boot.git</connection>
+    <url>https://github.com/gbif/registry-spring-boot</url>
+    <developerConnection>scm:git:git@github.com:gbif/registry-spring-boot.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-
-  <distributionManagement>
-    <site>
-      <id>gh-pages</id>
-      <url>http://gbif.github.io/registry/</url>
-    </site>
-  </distributionManagement>
 
   <repositories>
     <repository>
@@ -48,156 +41,186 @@
     </repository>
   </repositories>
 
+  <distributionManagement>
+    <repository>
+      <id>gbif-release</id>
+      <url>http://repository.gbif.org/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>gbif-snapshot</id>
+      <url>http://repository.gbif.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <modules>
-    <module>registry-liquibase</module>
-    <module>registry-identity</module>
-    <module>registry-cli</module>
-    <module>registry-doi</module>
-    <module>registry-examples</module>
-    <module>registry-metadata</module>
-    <module>registry-metasync</module>
-    <module>registry-index-builder</module>
-    <module>registry-surety</module>
+    <module>registry-occurrence-client</module>
+    <module>registry-directory</module>
+    <module>registry-events</module>
     <module>registry-ws</module>
-    <module>registry-ws-client</module>
+    <module>registry-messaging</module>
+    <module>registry-doi</module>
+    <module>registry-metadata</module>
+    <module>registry-persistence</module>
+    <module>registry-pipelines</module>
+    <module>registry-surety</module>
+    <module>registry-identity</module>
+    <module>registry-domain</module>
+    <module>registry-integration-tests</module>
+    <module>registry-mail</module>
+    <module>registry-service</module>
+    <module>registry-search</module>
+    <module>registry-oaipmh</module>
   </modules>
 
-  <!--
-    Note to devs: prefer released versions unless SNAPSHOT functionality is *needed*.
-    Releasing registry artifacts can only be done when dependencies are released.
-    [Consider that relying on an external dependency snapshot therefore ties our release
-    to the release of that dependency]
-  -->
   <properties>
-    <jdkLevel>1.8</jdkLevel>
-    <release.tagNameBase>registry</release.tagNameBase>
+    <main.basedir>${project.basedir}</main.basedir>
+    <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
+    <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
+    <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
+    <spotless.check.skip>false</spotless.check.skip>
+    <directory.enabled>true</directory.enabled>
 
-    <aopalliance.version>1.0</aopalliance.version>
-    <assertj.version>1.7.1</assertj.version>
-    <bval.version>0.5</bval.version>
-    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+    <release.tagNameBase>${project.artifactId}</release.tagNameBase>
+
+    <spring-cloud-zookeeper.version>2.2.0.RELEASE</spring-cloud-zookeeper.version>
+    <spring-cloud-openfeign.version>2.2.1.RELEASE</spring-cloud-openfeign.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
     <commons-digester.version>3.2</commons-digester.version>
-    <commons-email.version>1.3.3</commons-email.version>
-    <commons-io.version>2.5</commons-io.version>
-    <commons-lang.version>3.4</commons-lang.version>
-    <commons-validator.version>1.5.1</commons-validator.version>
-    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
-    <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.104-SNAPSHOT</gbif-api.version>
-    <gbif-cli.version>0.10</gbif-cli.version>
-    <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
-    <gbif-common-search.version>0.33</gbif-common-search.version>
-    <gbif-common-service.version>0.16</gbif-common-service.version>
-    <gbif-common-test.version>0.7</gbif-common-test.version>
-    <gbif-common-ws.version>0.48</gbif-common-ws.version>
-    <gbif-common.version>0.40</gbif-common.version>
-    <gbif-doi.version>2.7</gbif-doi.version>
-    <gbif-download-query-tools.version>1.25</gbif-download-query-tools.version>
-    <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-microservice.version>0.7</gbif-microservice.version>
-    <gbif-parsers.version>0.36</gbif-parsers.version>
-    <gbif-postal-service.version>0.43</gbif-postal-service.version>
-    <gbif-directory.version>0.11</gbif-directory.version>
-    <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
-    <guava.version>18.0</guava.version>
-    <guice.version>4.0</guice.version>
-    <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
-    <hikaricp.version>2.4.7</hikaricp.version>
-    <httpclient.version>4.5.6</httpclient.version>
-    <httpcore.version>4.4.10</httpcore.version>
-    <jackson.version>1.9.11</jackson.version>
-    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
-    <jackson2.version>2.5.4</jackson2.version>
-    <janino.version>2.7.7</janino.version>
-    <!-- no newer than 1.4.7 because of compatibility with logback -->
-    <javax.mail.version>1.4.7</javax.mail.version>
-    <mock-javamail.version>1.9</mock-javamail.version>
-    <jaxb-api.version>2.2.12</jaxb-api.version>
-    <jcommander.version>1.48</jcommander.version>
-    <jersey-server.version>1.19.3</jersey-server.version>
-    <jersey.version>1.19.3</jersey.version>
-    <jettison.version>1.3.7</jettison.version>
-    <jsr250.version>1.0</jsr250.version>
+    <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
+    <gbif-doi.version>2.10-SNAPSHOT</gbif-doi.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
-    <junit.version>4.12</junit.version>
-    <xmlunit.version>2.6.3</xmlunit.version>
-    <liquibase.version>3.5.3</liquibase.version>
-    <logback.version>1.1.3</logback.version>
-    <logstash-encoder.version>4.6</logstash-encoder.version>
-    <metainf-services.version>1.5</metainf-services.version>
-    <mockito.version>1.10.8</mockito.version>
-    <mybatis-guice.version>3.7.1</mybatis-guice.version>
-    <mybatis.version>3.5.0</mybatis.version>
-    <postgresql.version>42.2.8</postgresql.version>
-    <powermock-mockito.version>1.6.0</powermock-mockito.version>
-    <servlet-api.version>3.1.0</servlet-api.version>
-    <slf4j.version>1.7.12</slf4j.version>
-    <solr.version>5.4.1</solr.version>
-    <validation-api.version>1.1.0.Final</validation-api.version>
-    <xoai.version>4.1.0-gbif-1</xoai.version>
-    <yammer.version>2.2.0</yammer.version>
-    <dbunit.version>2.4.9</dbunit.version>
+    <jettison.version>1.3.7</jettison.version>
+    <gbif-common.version>0.40</gbif-common.version>
+    <gbif-common-ws.version>0.49.3-sb-SNAPSHOT</gbif-common-ws.version>
+    <gbif-httputils.version>0.10</gbif-httputils.version>
+    <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
+    <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
+    <gbif-postal-service.version>0.44.4-jackson2-SNAPSHOT</gbif-postal-service.version>
+    <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
+    <gbif-api.version>0.103.10-jackson2-SNAPSHOT</gbif-api.version>
+    <gbif-directory.version>0.15</gbif-directory.version>
+    <gbif-parsers.version>0.36</gbif-parsers.version>
+    <commons-validator.version>1.5.1</commons-validator.version>
+    <commons-io.version>2.5</commons-io.version>
+    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <jjwt.version>0.9.1</jjwt.version>
-    <okhttp.version>4.1.1</okhttp.version>
+    <guava.version>23.0</guava.version>
+    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
+    <retrofit.version>2.5.0</retrofit.version>
+    <okhttp.version>3.11.0</okhttp.version>
+    <okio.version>2.0.0</okio.version>
+    <mybatis.version>3.5.0</mybatis.version>
+    <logback.version>1.2.3</logback.version>
+    <janino-logback.version>2.5.10</janino-logback.version>
+    <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
+    <xoai.version>4.1.0-gbif-1</xoai.version>
+    <!-- es version -->
+    <elasticsearch.version>6.5.4</elasticsearch.version>
 
-    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
-    <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
+    <!-- Caching -->
+    <cache2k.version>1.2.0.Final</cache2k.version>
+
+    <!-- Tools-->
+    <lombok.version>1.18.10</lombok.version>
+
+    <xmlunit.version>2.6.3</xmlunit.version>
+    <cucumber.version>4.8.0</cucumber.version>
+    <hikaricp.version>3.2.0</hikaricp.version>
+
+    <datacite.api.base.url/>
+    <datacite.user/>
+    <datacite.password/>
+
+    <mail.host/>
+    <mail.username/>
+    <mail.password/>
+    <mail.port/>
 
     <!-- Sonar -->
-    <sonar.language>java</sonar.language>
-    <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
+    <sonar.projectName>GBIF Registry (Spring Boot)</sonar.projectName>
 
-    <!-- JaCoCo -->
-    <coverage.dir>${project.build.directory}/coverage</coverage.dir>
-    <coverage.report.it.dir>${project.reporting.outputDirectory}/jacoco-it</coverage.report.it.dir>
-    <coverage.report.ut.dir>${project.reporting.outputDirectory}/jacoco-ut</coverage.report.ut.dir>
-    <jacoco.it.output.file>${coverage.dir}/jacoco-it.exec</jacoco.it.output.file>
-    <jacoco.ut.output.file>${coverage.dir}/jacoco-ut.exec</jacoco.ut.output.file>
-    <jacoco.merged.output.file>${coverage.dir}/jacoco.exec</jacoco.merged.output.file>
+    <!-- Plugin versions -->
+    <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
   </properties>
 
-  <!--
-    Fix versions of certain dependencies here, which can be included
-    by sub modules by declaring only the groupId and artifactId. The
-    version can be overridden if needed, but not encouraged without good reason.
-  -->
   <dependencyManagement>
     <dependencies>
+      <!-- Spring dependencies -->
       <dependency>
-        <groupId>aopalliance</groupId>
-        <artifactId>aopalliance</artifactId>
-        <version>${aopalliance.version}</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>commons-beanutils</groupId>
-        <artifactId>commons-beanutils</artifactId>
-        <version>${commons-beanutils.version}</version>
+        <groupId>org.mybatis.spring.boot</groupId>
+        <artifactId>mybatis-spring-boot-starter</artifactId>
+        <version>${mybatis-spring-boot-starter.version}</version>
       </dependency>
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+        <version>${spring-cloud-zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-archaius</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-netflix-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>${commons-lang.version}</version>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
+        <version>${spring-cloud-zookeeper.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.common</groupId>
-        <artifactId>gbif-postal-service</artifactId>
-        <version>${gbif-postal-service.version}</version>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-openfeign</artifactId>
+        <version>${spring-cloud-openfeign.version}</version>
+      </dependency>
+
+      <!-- GBIF dependencies -->
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-doi</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-microservice</artifactId>
-        <version>${gbif-microservice.version}</version>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-messaging</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.occurrence</groupId>
-        <artifactId>download-query-tools</artifactId>
-        <version>${gbif-download-query-tools.version}</version>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-ws</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-mail</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-domain</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
@@ -206,20 +229,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-liquibase</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-identity</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-identity</artifactId>
-        <type>test-jar</type>
-        <scope>test</scope>
+        <artifactId>registry-persistence</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -229,447 +239,54 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-surety</artifactId>
-        <type>test-jar</type>
-        <scope>test</scope>
+        <artifactId>registry-identity</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-ws</artifactId>
+        <artifactId>registry-search</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-ws</artifactId>
-        <version>${project.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-ws-client</artifactId>
+        <artifactId>registry-events</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-doi</artifactId>
+        <artifactId>registry-pipelines</artifactId>
         <version>${project.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-directory</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-occurrence-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-service</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-oaipmh</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common</artifactId>
-        <version>${gbif-common.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.common</groupId>
-        <artifactId>gbif-cli</artifactId>
-        <version>${gbif-cli.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-doi</artifactId>
-        <version>${gbif-doi.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-mybatis</artifactId>
-        <version>${gbif-common-mybatis.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-ws</artifactId>
-        <version>${gbif-common-ws.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-service</artifactId>
-        <version>${gbif-common-service.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-search</artifactId>
-        <version>${gbif-common-search.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.directory</groupId>
-        <artifactId>directory-api</artifactId>
-        <version>${gbif-directory.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.directory</groupId>
-        <artifactId>directory-ws-client</artifactId>
-        <version>${gbif-directory.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject</groupId>
-        <artifactId>guice</artifactId>
-        <version>${guice.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-servlet</artifactId>
-        <version>${guice.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-multibindings</artifactId>
-        <version>${guice.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.beust</groupId>
-        <artifactId>jcommander</artifactId>
-        <version>${jcommander.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>${yammer.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.yammer.metrics</groupId>
-        <artifactId>metrics-ganglia</artifactId>
-        <version>${yammer.version}</version>
-      </dependency>
-      <!-- jackson1 -->
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-mapper-asl</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-jaxrs</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-datatype-guava</artifactId>
-        <version>${jackson-datatype-guava.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <!-- jackson2 -->
-        <!-- This dependency is needed for the JsonIgnore annotations on the configuration objects. gbif-cli uses
-             Jackson 2 because only that supports YAML so we have to use the annotations from Jackson 2 -->
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.kohsuke.metainf-services</groupId>
-        <artifactId>metainf-services</artifactId>
-        <version>${metainf-services.version}</version>
-        <!-- This is the proper declaration. For details see the homepage of the project. -->
-        <optional>true</optional>
-      </dependency>
-
-      <!-- jersey-server required in order to inject form params into Legacy Objects via @InjectParam -->
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-server</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.ws.rs</groupId>
-        <artifactId>jsr311-api</artifactId>
-        <version>${jsr311-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>jsr305</artifactId>
-        <version>${findbugs-jsr305.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>jsr250-api</artifactId>
-        <version>${jsr250.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-client</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-core</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-guice</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-json</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>jersey-apache-client4</artifactId>
-        <version>${jersey.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>${servlet-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>jcl-over-slf4j</artifactId>
-        <version>${slf4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>jul-to-slf4j</artifactId>
-        <version>${slf4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <!-- next two for logback smtp appender -->
-      <dependency>
-        <groupId>org.codehaus.janino</groupId>
-        <artifactId>janino</artifactId>
-        <version>${janino.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>javax.mail</groupId>
-        <artifactId>mail</artifactId>
-        <version>${javax.mail.version}</version>
-        <!--<scope>runtime</scope>-->
-      </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.xmlunit</groupId>
-        <artifactId>xmlunit-core</artifactId>
-        <version>${xmlunit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.xmlunit</groupId>
-        <artifactId>xmlunit-matchers</artifactId>
-        <version>${xmlunit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-common-test</artifactId>
-        <version>${gbif-common-test.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.dbunit</groupId>
-        <artifactId>dbunit</artifactId>
-        <version>${dbunit.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <version>${assertj.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>${mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
-        <version>${mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-module-junit4</artifactId>
-        <version>${powermock-mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.powermock</groupId>
-        <artifactId>powermock-api-mockito</artifactId>
-        <version>${powermock-mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${postgresql.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${logback.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-core</artifactId>
-        <version>${logback.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>net.logstash.logback</groupId>
-        <artifactId>logstash-logback-encoder</artifactId>
-        <version>${logstash-encoder.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis</artifactId>
-        <version>${mybatis.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis-guice</artifactId>
-        <version>${mybatis-guice.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.zaxxer</groupId>
-        <artifactId>HikariCP</artifactId>
-        <version>${hikaricp.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>javax.validation</groupId>
-        <artifactId>validation-api</artifactId>
-        <version>${validation-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.bval</groupId>
-        <artifactId>bval-guice</artifactId>
-        <version>${bval.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.bval</groupId>
-        <artifactId>bval-jsr303</artifactId>
-        <version>${bval.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.bval</groupId>
-        <artifactId>org.apache.bval.bundle</artifactId>
-        <version>${bval.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-solrj</artifactId>
-        <version>${solr.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.solr</groupId>
-        <artifactId>solr-core</artifactId>
-        <version>${solr.version}</version>
-        <exclusions>
-             <exclusion>
-               <groupId>commons-logging</groupId>
-               <artifactId>commons-logging</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-jdk14</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-log4j12</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>log4j</groupId>
-               <artifactId>log4j</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.apache.httpcomponents</groupId>
-               <artifactId>httpmime</artifactId>
-             </exclusion>
-             <!-- solr 5.3.1 comes with various jetty 8.1 deps which clash with our microservices jetty 9.x -->
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-http</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-continuation</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-deploy</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-jmx</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-io</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-security</artifactId>
-             </exclusion>
-             <exclusion>
-               <groupId>org.eclipse.jetty</groupId>
-               <artifactId>jetty-xml</artifactId>
-             </exclusion>
-              <exclusion>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-rewrite</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-              </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.grizzly</groupId>
-        <artifactId>grizzly-servlet-webserver</artifactId>
-        <version>${grizzly-servlet-webserver.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -677,33 +294,135 @@
         <version>${gbif-parsers.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.directory</groupId>
+        <artifactId>directory-api</artifactId>
+        <version>${gbif-directory.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>bval-jsr303</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>org.apache.bval.bundle</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.directory</groupId>
+        <artifactId>directory-ws-client</artifactId>
+        <version>${gbif-directory.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-doi</artifactId>
+        <version>${gbif-doi.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-mybatis</artifactId>
+        <version>${gbif-common-mybatis.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-guice</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-multibindings</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common</artifactId>
+        <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common-ws</artifactId>
+        <version>${gbif-common-ws.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.common</groupId>
+        <artifactId>gbif-postal-service</artifactId>
+        <version>${gbif-postal-service.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-httputils</artifactId>
+        <version>${gbif-httputils.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>download-query-tools</artifactId>
+        <version>${gbif-download-query-tools.version}</version>
+      </dependency>
+
+      <!-- Third party dependencies -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>${mybatis.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-digester3</artifactId>
         <version>${commons-digester.version}</version>
         <exclusions>
-             <exclusion>
-                 <!-- brings in old version 3.3.1 -->
-               <groupId>asm</groupId>
-               <artifactId>asm</artifactId>
-             </exclusion>
-         </exclusions>
+          <exclusion>
+            <!-- brings in old version 3.3.1 -->
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.freemarker</groupId>
-        <artifactId>freemarker</artifactId>
-        <version>${freemarker.version}</version>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt</artifactId>
+        <version>${jjwt.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.liquibase</groupId>
-        <artifactId>liquibase-core</artifactId>
-        <version>${liquibase.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.jvnet.mock-javamail</groupId>
-        <artifactId>mock-javamail</artifactId>
-        <version>${mock-javamail.version}</version>
-        <scope>test</scope>
+        <groupId>org.codehaus.jettison</groupId>
+        <artifactId>jettison</artifactId>
+        <version>${jettison.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-validator</groupId>
@@ -711,35 +430,126 @@
         <version>${commons-validator.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-email</artifactId>
-        <version>${commons-email.version}</version>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>${httpclient.version}</version>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${findbugs-jsr305.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>${httpcore.version}</version>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>retrofit</artifactId>
+        <version>${retrofit.version}</version>
       </dependency>
       <dependency>
-        <groupId>javax.xml.bind</groupId>
-        <artifactId>jaxb-api</artifactId>
-        <version>${jaxb-api.version}</version>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>converter-jackson</artifactId>
+        <version>${retrofit.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif</groupId>
-        <artifactId>gbif-httputils</artifactId>
-        <version>${gbif-httputils.version}</version>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>converter-simplexml</artifactId>
+        <version>${retrofit.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.codehaus.jettison</groupId>
-        <artifactId>jettison</artifactId>
-        <version>${jettison.version}</version>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>converter-scalars</artifactId>
+        <version>${retrofit.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>logging-interceptor</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio</artifactId>
+        <version>${okio.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>janino</groupId>
+        <artifactId>janino</artifactId>
+        <version>${janino-logback.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-logback-encoder.version}</version>
+      </dependency>
+
+      <!-- ES -->
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch-core</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client-sniffer</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+
+      <!-- Caching -->
+      <dependency>
+        <groupId>org.cache2k</groupId>
+        <artifactId>cache2k-jcache</artifactId>
+        <version>${cache2k.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.cache2k</groupId>
+        <artifactId>cache2k-api</artifactId>
+        <version>${cache2k.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>${hikaricp.version}</version>
+      </dependency>
+
+      <!-- OAI-PMH library -->
       <dependency>
         <groupId>org.dspace</groupId>
         <artifactId>xoai-data-provider</artifactId>
@@ -771,54 +581,38 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <!-- Test dependencies -->
       <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-hdfs</artifactId>
-        <version>${hadoop.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-core</artifactId>
+        <version>${xmlunit.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-        <version>${hadoop.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-matchers</artifactId>
+        <version>${xmlunit.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>io.jsonwebtoken</groupId>
-        <artifactId>jjwt</artifactId>
-        <version>${jjwt.version}</version>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-java</artifactId>
+        <version>${cucumber.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
-    </dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-spring</artifactId>
+        <version>${cucumber.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-junit</artifactId>
+        <version>${cucumber.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -826,115 +620,72 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <configuration>
-          <topSiteURL>http://gbif.github.io/registry/</topSiteURL>
+          <topSiteURL>http://gbif.github.io/registry-spring-boot/</topSiteURL>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
     </plugins>
 
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot-maven-plugin.version}</version>
+        </plugin>
+
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven-surefire-plugin.version}</version>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
           <configuration>
-            <argLine>${surefireArgLine}</argLine>
-            <excludes>
-              <exclude>**/*IT.java</exclude>
-            </excludes>
+            <archive>
+              <manifest>
+                <mainClass>${start-class}</mainClass>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
           </configuration>
         </plugin>
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-failsafe-plugin</artifactId>
-          <version>${maven-failsafe-plugin.version}</version>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>${maven-war-plugin.version}</version>
           <configuration>
-            <argLine>${failsafeArgLine}</argLine>
+            <archive>
+              <manifest>
+                <mainClass>${start-class}</mainClass>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
           </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>${jacoco-maven-plugin.version}</version>
-          <configuration>
-            <excludes>
-              <exclude>org/gbif/datacite/rest/client/model/**/*</exclude>
-              <exclude>org/gbif/datacite/model/json/**/*</exclude>
-              <exclude>**/*Test*</exclude>
-              <exclude>**/*IT*</exclude>
-              <exclude>**/*Exception*</exclude>
-            </excludes>
-          </configuration>
-          <executions>
-            <execution>
-              <id>prepare-agent-ut</id>
-              <goals>
-                <goal>prepare-agent</goal>
-              </goals>
-              <configuration>
-                <destFile>${jacoco.ut.output.file}</destFile>
-                <propertyName>surefireArgLine</propertyName>
-              </configuration>
-            </execution>
-            <execution>
-              <id>report-ut-coverage</id>
-              <phase>test</phase>
-              <goals>
-                <goal>report</goal>
-              </goals>
-              <configuration>
-                <dataFile>${jacoco.ut.output.file}</dataFile>
-                <outputDirectory>${coverage.report.ut.dir}</outputDirectory>
-              </configuration>
-            </execution>
-            <execution>
-              <id>prepare-agent-it</id>
-              <goals>
-                <goal>prepare-agent-integration</goal>
-              </goals>
-              <phase>package</phase>
-              <configuration>
-                <destFile>${jacoco.it.output.file}</destFile>
-                <propertyName>failsafeArgLine</propertyName>
-              </configuration>
-            </execution>
-            <execution>
-              <id>report-it-coverage</id>
-              <phase>post-integration-test</phase>
-              <goals>
-                <goal>report-integration</goal>
-              </goals>
-              <configuration>
-                <dataFile>${jacoco.it.output.file}</dataFile>
-                <outputDirectory>${coverage.report.it.dir}</outputDirectory>
-              </configuration>
-            </execution>
-            <execution>
-              <id>merge-exec-files</id>
-              <phase>post-integration-test</phase>
-              <goals>
-                <goal>merge</goal>
-              </goals>
-              <configuration>
-                <fileSets>
-                  <fileSet>
-                    <directory>${coverage.dir}</directory>
-                    <includes>
-                      <include>*.exec</include>
-                    </includes>
-                  </fileSet>
-                </fileSets>
-                <destFile>${jacoco.merged.output.file}</destFile>
-              </configuration>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>directory-stubs</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <directory.enabled>false</directory.enabled>
+      </properties>
+    </profile>
+  </profiles>
 
 </project>

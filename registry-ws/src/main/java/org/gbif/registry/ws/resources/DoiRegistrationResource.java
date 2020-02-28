@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
@@ -7,95 +22,73 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.doi.DoiPersistenceService;
-import org.gbif.registry.doi.DoiType;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
-import org.gbif.ws.server.interceptor.NullToNotFound;
-import org.gbif.ws.util.ExtraMediaTypes;
+import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.persistence.mapper.DoiMapper;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.annotation.NullToNotFound;
 
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.JAXBException;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Resource class that exposes services to interact with DOI issued thru GBIF and DataCite.
- */
-@Singleton
-@Path("doi")
-@Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
-@Consumes(MediaType.APPLICATION_JSON)
+/** Resource class that exposes services to interact with DOI issued thru GBIF and DataCite. */
+@RestController
+@RequestMapping("doi")
 public class DoiRegistrationResource implements DoiRegistrationService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiRegistrationResource.class);
 
   private final DoiGenerator doiGenerator;
-  private final DoiPersistenceService doiPersistenceService;
+  private final DoiMapper doiMapper;
 
-  @Inject(optional = true)
-  @Named("guiceInjectedSecurityContext")
-  @Context
-  private SecurityContext securityContext;
-
-  @Inject
-  public DoiRegistrationResource(DoiGenerator doiGenerator, DoiPersistenceService doiPersistenceService) {
+  public DoiRegistrationResource(DoiGenerator doiGenerator, DoiMapper doiMapper) {
     this.doiGenerator = doiGenerator;
-    this.doiPersistenceService = doiPersistenceService;
+    this.doiMapper = doiMapper;
   }
 
-  /**
-   * Generates a new DOI based on the DoiType.
-   */
-  @POST
-  @Path("gen/{type}")
+  /** Generates a new DOI based on the DoiType. */
+  @PostMapping("gen/{type}")
   @Override
-  public DOI generate(@NotNull @PathParam("type") DoiType doiType) {
+  public DOI generate(@NotNull @PathVariable DoiType type) {
     checkIsUserAuthenticated();
-    return genDoiByType(doiType);
+    return genDoiByType(type);
   }
 
-  /**
-   * Retrieves the DOI information.
-   */
-  @GET
-  @Path("{prefix}/{suffix}")
+  /** Retrieves the DOI information. */
+  @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_VALUE)
   @NullToNotFound
   @Override
-  public DoiData get(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
-    return doiPersistenceService.get(new DOI(prefix, suffix));
+  public DoiData get(@PathVariable String prefix, @PathVariable String suffix) {
+    return doiMapper.get(new DOI(prefix, suffix));
   }
 
-  /**
-   * Deletes an existent DOI.
-   */
-  @DELETE
-  @Path("{prefix}/{suffix}")
-  @NullToNotFound
+  /** Deletes an existent DOI. */
+  @DeleteMapping("{prefix}/{suffix}")
   @Override
-  public void delete(@PathParam("prefix") String prefix, @PathParam("suffix") String suffix) {
+  public void delete(@PathVariable String prefix, @PathVariable String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
     doiGenerator.delete(new DOI(prefix, suffix));
   }
@@ -103,103 +96,113 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /**
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
-  @POST
-  @NullToNotFound
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI register(DoiRegistration doiRegistration) {
-   return createOrUpdate(doiRegistration, doiRegistrationToRegister -> {
-            //Persist the DOI
-            Optional.ofNullable(doiRegistrationToRegister.getDoi()).ifPresent(
-              doi -> {
-                Optional.ofNullable(doiPersistenceService.get(doi)).ifPresent(doiData -> { //if DOI is not NEW throw an exception
-                    if (DoiStatus.NEW != doiData.getStatus()) {
-                      throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                                          .entity("Doi already exists")
-                                                          .build());
-                    }
-                  });
-                doiPersistenceService.update(doi, doiPersistenceService.get(doi), doiRegistration.getMetadata());
-              }
-            );
-          });
+  public DOI register(@RequestBody @NotNull DoiRegistration doiRegistration) {
+    return createOrUpdate(
+        doiRegistration,
+        doiRegistrationToRegister ->
+            // Persist the DOI
+            Optional.ofNullable(doiRegistrationToRegister.getDoi())
+                .ifPresent(
+                    doi -> {
+                      Optional.ofNullable(doiMapper.get(doi))
+                          .ifPresent(
+                              doiData -> {
+                                // if DOI is not NEW throw an exception
+                                if (DoiStatus.NEW != doiData.getStatus()) {
+                                  throw new WebApplicationException(
+                                      ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                          .body("Doi already exists"));
+                                }
+                              });
+                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
+                    }));
   }
 
   /**
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
-  @PUT
-  @NullToNotFound
+  @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI update(DoiRegistration doiRegistration) {
-    DOI updatedDoi = createOrUpdate(doiRegistration, existingDoiRegistration  ->
-                             Optional.ofNullable(existingDoiRegistration.getDoi())
-                               .ifPresent(
-                                doi ->
-                                  Optional.ofNullable(doiPersistenceService.get(doi))
-                                    .ifPresent(doiData -> { //if DOI is not NEW throw an exception
-                                      if (DoiStatus.DELETED == doiData.getStatus()) {
-                                        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                                                            .entity("DOI does not exists")
-                                                                            .build());
-                                      }
-                                      doiPersistenceService.update(doi, doiPersistenceService.get(doi),
-                                                                   doiRegistration.getMetadata());
-                                    })
-                              ));
-    return updatedDoi;
+  public DOI update(@RequestBody @NotNull DoiRegistration doiRegistration) {
+    return createOrUpdate(
+        doiRegistration,
+        existingDoiRegistration ->
+            // Update the DOI
+            Optional.ofNullable(existingDoiRegistration.getDoi())
+                .ifPresent(
+                    doi -> {
+                      Optional.ofNullable(doiMapper.get(doi))
+                          .ifPresent(
+                              doiData -> {
+                                // if DOI is not NEW throw an exception
+                                if (DoiStatus.DELETED == doiData.getStatus()) {
+                                  throw new WebApplicationException(
+                                      ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                          .body("DOI does not exist"));
+                                }
+                              });
+                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
+                    }));
   }
-
 
   private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
     checkIsUserAuthenticated();
     try {
       preFilter.accept(doiRegistration);
-      //registration contains a DOI already
-      DOI doi = doiRegistration.getDoi() == null ? genDoiByType(doiRegistration.getType()) : doiRegistration.getDoi();
-      //Ensures that the metadata contains the DOI as an alternative identifier
+      // registration contains a DOI already
+      DOI doi =
+          doiRegistration.getDoi() == null
+              ? genDoiByType(doiRegistration.getType())
+              : doiRegistration.getDoi();
+      // Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
-      DataCiteMetadata metadata = DataCiteMetadata.copyOf(dataCiteMetadata)
-        .withAlternateIdentifiers(
-          addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi)).build();
-      //handle registration
+      DataCiteMetadata metadata =
+          DataCiteMetadata.copyOf(dataCiteMetadata)
+              .withAlternateIdentifiers(
+                  addDoiToIdentifiers(dataCiteMetadata.getAlternateIdentifiers(), doi))
+              .build();
+
+      // handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiGenerator.registerDataPackage(doi, metadata);
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
         doiGenerator.registerDownload(doi, metadata, doiRegistration.getKey());
       } else if (DoiType.DATASET == doiRegistration.getType()) {
-        doiGenerator.registerDataset(doi, metadata,  UUID.fromString(doiRegistration.getKey()));
+        doiGenerator.registerDataset(doi, metadata, UUID.fromString(doiRegistration.getKey()));
       }
 
       LOG.info("DOI registered/updated {}", doi.getDoiName());
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
       LOG.info("Error registering/updating DOI", ex);
-      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
     }
   }
 
-  /**
-   * Ensures that the DOI is included as AlternateIdentifier.
-   */
-  private static AlternateIdentifiers addDoiToIdentifiers(AlternateIdentifiers alternateIdentifiers, DOI doi) {
+  /** Ensures that the DOI is included as AlternateIdentifier. */
+  private static AlternateIdentifiers addDoiToIdentifiers(
+      AlternateIdentifiers alternateIdentifiers, DOI doi) {
     AlternateIdentifiers.Builder<Void> builder = AlternateIdentifiers.builder();
     if (alternateIdentifiers != null && alternateIdentifiers.getAlternateIdentifier() != null) {
-      builder.addAlternateIdentifier(alternateIdentifiers.getAlternateIdentifier().stream()
-                                       .filter( identifier -> !identifier.getValue().equals(doi.getDoiName())
-                                                              && !identifier.getAlternateIdentifierType()
-                                                                   .equalsIgnoreCase("DOI"))
-                                       .collect(Collectors.toList()));
+      builder.addAlternateIdentifier(
+          alternateIdentifiers.getAlternateIdentifier().stream()
+              .filter(
+                  identifier ->
+                      !identifier.getValue().equals(doi.getDoiName())
+                          && !identifier.getAlternateIdentifierType().equalsIgnoreCase("DOI"))
+              .collect(Collectors.toList()));
     }
-    builder.addAlternateIdentifier(AlternateIdentifiers.AlternateIdentifier.builder()
-                                     .withValue(doi.getDoiName())
-                                     .withAlternateIdentifierType("DOI")
-                                     .build());
+    builder.addAlternateIdentifier(
+        AlternateIdentifiers.AlternateIdentifier.builder()
+            .withValue(doi.getDoiName())
+            .withAlternateIdentifierType("DOI")
+            .build());
     return builder.build();
   }
 
-  /**
-   * Generates DOI based on the DoiType.
-   */
+  /** Generates DOI based on the DoiType. */
   private DOI genDoiByType(DoiType doiType) {
     if (DoiType.DATA_PACKAGE == doiType) {
       return doiGenerator.newDataPackageDOI();
@@ -210,12 +213,10 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     }
   }
 
-  /**
-   * Check that the user is authenticated.
-   */
+  /** Check that the user is authenticated. */
   private void checkIsUserAuthenticated() {
-     if(securityContext == null || (securityContext != null  && securityContext.getUserPrincipal() == null))
-       throw new WebApplicationException(Response.Status.UNAUTHORIZED);
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || authentication.getName() == null)
+      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
   }
-
 }

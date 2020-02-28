@@ -1,0 +1,30 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    1. Add dataset license type and as a not null column to dataset table, setting all values equal to use default 'UNSPECIFIED'.
+    2. Add dataset maintenance update frequency type and as a column to dataset,
+  -->
+  <changeSet id="39" author="kyle">
+    <!-- Add license column -->
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TYPE enum_dataset_license AS ENUM ('CC0_1_0', 'CC_BY_4_0', 'CC_BY_NC_4_0', 'UNSPECIFIED', 'UNSUPPORTED');
+        ALTER TABLE dataset ADD COLUMN license enum_dataset_license;
+        UPDATE dataset set license='UNSPECIFIED';
+        ALTER TABLE dataset ALTER COLUMN license SET NOT NULL;
+        ALTER TABLE dataset ALTER COLUMN license SET DEFAULT 'CC_BY_4_0';
+       ]]>
+    </sql>
+    <!-- Add maintenance_update_frequency column-->
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE TYPE enum_dataset_maintenance_update_frequency AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'BIANNUALLY', 'ANNUALLY', 'AS_NEEDED', 'CONTINUALLY', 'IRREGULAR', 'NOT_PLANNED', 'UNKOWN', 'OTHER_MAINTENANCE_PERIOD');
+      ALTER TABLE dataset ADD COLUMN maintenance_update_frequency enum_dataset_maintenance_update_frequency;
+      ALTER TABLE dataset ALTER COLUMN maintenance_update_frequency SET DEFAULT NULL;
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

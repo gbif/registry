@@ -1,7 +1,23 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata;
 
 import java.io.IOException;
 import java.io.StringReader;
+
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -18,18 +34,13 @@ import static org.junit.Assert.fail;
  */
 public class XMLValidator {
 
-  private static final SchemaFactory FACTORY = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+  private static final SchemaFactory FACTORY =
+      SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
 
-  /**
-   * Asserts that the xmlContent is valid according to the XSD at xsdLocation.
-   *
-   * @param xmlContent
-   * @param xsdLocation
-   * @throws IOException
-   */
+  /** Asserts that the xmlContent is valid according to the XSD at xsdLocation. */
   public static void assertXMLAgainstXSD(String xmlContent, String xsdLocation) throws IOException {
     try {
-      //warning, this is slow
+      // warning, this is slow
       Schema schema = FACTORY.newSchema(new StreamSource(xsdLocation));
       Validator validator = schema.newValidator();
       validator.validate(new StreamSource(new StringReader(xmlContent)));

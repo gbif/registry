@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata.parse;
 
 import org.gbif.api.model.registry.Dataset;
@@ -8,9 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.digester3.Digester;
 import org.slf4j.Logger;
@@ -22,15 +34,28 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closeables;
+
+import static org.gbif.api.vocabulary.MetadataType.DC;
+import static org.gbif.api.vocabulary.MetadataType.EML;
+
 /**
- * Main parser of dataset metadata that uses parser specific digester RuleSets for EML or Dublin Core.
- * It can automatically detect the document type if it is unknown or be used only with a specific parser type.
+ * Main parser of dataset metadata that uses parser specific digester RuleSets for EML or Dublin
+ * Core. It can automatically detect the document type if it is unknown or be used only with a
+ * specific parser type.
  *
- * This parser and its digester rules use the DatasetDelegator class to wrap a dataset and set complex bean components.
+ * <p>This parser and its digester rules use the DatasetDelegator class to wrap a dataset and set
+ * complex bean components.
  */
 public class DatasetParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetParser.class);
+
+  private DatasetParser() {
+    // empty constructor
+  }
 
   private static class ParserDetectionHandler extends DefaultHandler {
     private static final String DC_NAMESPACE = "http://purl.org/dc/terms/";
@@ -38,10 +63,11 @@ public class DatasetParser {
     private LinkedList<String> path = Lists.newLinkedList();
 
     @Override
-    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    public void startElement(String uri, String localName, String qName, Attributes attributes)
+        throws SAXException {
       // look for EML
       if (path.size() == 1 && path.get(0).equals("eml") && localName.equals("dataset")) {
-        parserType = MetadataType.EML;
+        parserType = EML;
       }
 
       // look for DC title
@@ -81,12 +107,13 @@ public class DatasetParser {
     } catch (IOException e) {
       LOG.warn("Failed to read metadata document for parser type detection", e);
     }
-    throw new IllegalArgumentException("No parser found for this metadata document. Only EML or DC supported");
+    throw new IllegalArgumentException(
+        "No parser found for this metadata document. Only EML or DC supported");
   }
 
-
   /**
-   * Build from stream on-top of a preexisting Dataset populating its fields from a source metadata that's parsed.
+   * Build from stream on-top of a preexisting Dataset populating its fields from a source metadata
+   * that's parsed.
    *
    * @param xml to read
    * @return The Dataset populated, never null
@@ -105,15 +132,12 @@ public class DatasetParser {
     digester.setNamespaceAware(true);
 
     // add digester rules based on parser type
-    switch (type) {
-      case EML:
-        LOG.debug("Parsing EML document");
-        digester.addRuleSet(new EMLRuleSet());
-        break;
-      case DC:
-        LOG.debug("Parsing DC document");
-        digester.addRuleSet(new DublinCoreRuleSet());
-        break;
+    if (type == EML) {
+      LOG.debug("Parsing EML document");
+      digester.addRuleSet(new EMLRuleSet());
+    } else if (type == DC) {
+      LOG.debug("Parsing DC document");
+      digester.addRuleSet(new DublinCoreRuleSet());
     }
 
     // push the Delegating object onto the stack
@@ -122,11 +146,12 @@ public class DatasetParser {
 
     // now parse and return the dataset
     try {
-        digester.parse(xml);
+      digester.parse(xml);
     } catch (ConversionException e) {
       // swallow
     } catch (SAXException e) {
-      if (e.getException() == null || !e.getException().getClass().equals(ConversionException.class)) {
+      if (e.getException() == null
+          || !e.getException().getClass().equals(ConversionException.class)) {
         // allow type conversions to happen
         throw new IllegalArgumentException("Invalid metadata xml document", e);
       }
@@ -137,5 +162,4 @@ public class DatasetParser {
 
     return delegator.getTarget();
   }
-
 }

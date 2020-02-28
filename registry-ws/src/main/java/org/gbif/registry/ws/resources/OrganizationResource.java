@@ -1,9 +1,12 @@
 /*
- * Copyright 2013 Global Biodiversity Information Facility (GBIF)
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -12,8 +15,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.Lists;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -21,341 +22,136 @@ import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
+import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.annotation.Trim;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
+import javax.validation.groups.Default;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-/**
- * A MyBATIS implementation of the service.
- *
- * Note: {@link OrganizationEndorsementService} is a composed object. Therefore it is not part of the API ({@link OrganizationService})
- * at the moment.
- *
- */
-@Path("organization")
-@Singleton
-public class OrganizationResource extends BaseNetworkEntityResource<Organization> implements OrganizationService {
+@RestController
+@RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
+public class OrganizationResource extends BaseNetworkEntityResource<Organization>
+    implements OrganizationService {
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 
-  protected static final int MINIMUM_PASSWORD_SIZE = 12;
-  protected static final int MAXIMUM_PASSWORD_SIZE = 15;
-  private static final String PASSWORD_ALLOWED_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  private static final int MINIMUM_PASSWORD_SIZE = 12;
+  private static final int MAXIMUM_PASSWORD_SIZE = 15;
+  private static final String ALLOWED_CHARACTERS =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
-
   private final OrganizationEndorsementService<UUID> organizationEndorsementService;
+  private final EditorAuthorizationService userAuthService;
 
-  @Inject
   public OrganizationResource(
-    OrganizationMapper organizationMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    IdentifierMapper identifierMapper,
-    CommentMapper commentMapper,
-    DatasetMapper datasetMapper,
-    InstallationMapper installationMapper,
-    OrganizationEndorsementService<UUID> organizationEndorsementService,
-    EventBus eventBus,
-    EditorAuthorizationService userAuthService) {
-    super(organizationMapper,
-      commentMapper,
-      contactMapper,
-      endpointMapper,
-      identifierMapper,
-      machineTagMapper,
-      tagMapper,
-      Organization.class,
-      eventBus,
-      userAuthService);
-
-    this.datasetMapper = datasetMapper;
-    this.organizationMapper = organizationMapper;
-    this.installationMapper = installationMapper;
+      MapperServiceLocator mapperServiceLocator,
+      OrganizationEndorsementService<UUID> organizationEndorsementService,
+      EventManager eventManager,
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
+    super(
+        mapperServiceLocator.getOrganizationMapper(),
+        mapperServiceLocator,
+        Organization.class,
+        eventManager,
+        userAuthService,
+        withMyBatis);
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
+    this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationEndorsementService = organizationEndorsementService;
+    this.userAuthService = userAuthService;
   }
 
   /**
-   * This method overrides the create method for an organization, populating the password field with a randomly
-   * generated string before passing on to the superclass create method.
+   * This method overrides the create method for an organization, populating the password field with
+   * a randomly generated string before passing on to the superclass create method.
    *
    * @param organization organization
-   * @param security     SecurityContext (security related information)
-   *
    * @return key of entity created
    */
-  @POST
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
-  @Trim
   @Override
-  public UUID create(@NotNull @Trim Organization organization, @Context SecurityContext security) {
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
+  @Trim
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  public UUID create(
+      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class})
+          Organization organization,
+      Authentication authentication) {
     organization.setPassword(generatePassword());
-    UUID newOrganization = super.create(organization, security);
+    UUID newOrganization = super.create(organization, authentication);
 
-    if (security.isUserInRole(APP_ROLE)) {
+    if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
       Optional.ofNullable(organization.getContacts())
-              .filter( c -> !c.isEmpty())
-              .ifPresent( contacts -> contacts.forEach(c -> addContact(newOrganization, c, security)));
+          .filter(c -> !c.isEmpty())
+          .ifPresent(contacts -> contacts.forEach(c -> addContact(newOrganization, c)));
       Optional.ofNullable(organization.getComments())
-              .filter( c -> !c.isEmpty())
-              .ifPresent( comments -> comments.forEach(c -> addComment(newOrganization, c, security)));
+          .filter(c -> !c.isEmpty())
+          .ifPresent(comments -> comments.forEach(c -> addComment(newOrganization, c)));
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;
   }
 
   /**
-   * Confirm the endorsement of an organization.
-   *
-   * @param organizationKey
-   * @param confirmationKeyParameter
-   *
-   * @return
-   */
-  @POST
-  @Path("{key}/endorsement")
-  @Validate
-  @RolesAllowed(APP_ROLE)
-  public Response confirmEndorsement(@PathParam("key") UUID organizationKey,
-                                     @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter,
-                                     @Context SecurityContext security) {
-    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey()) ?
-            Response.noContent() : Response.status(Response.Status.BAD_REQUEST)).build();
-  }
-
-  @Override
-  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
-    return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
-  }
-
-  @PUT
-  @Path("{key}")
-  @Trim
-  @Transactional
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  public void update(@PathParam("key") UUID key, @NotNull @Trim Organization organization,
-                     @Context SecurityContext securityContext) {
-    checkArgument(key.equals(organization.getKey()), "Provided entity must have the same key as the resource URL");
-
-    Organization previousOrg = super.get(organization.getKey());
-
-    // If the endorsement is being changed, and the user is only an EDITOR, they must have node permission.
-    // If the node is being changed, and the user is only an EDITOR, they must have node permission on both nodes.
-    boolean endorsementApprovedChanged = previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
-      || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
-    if (endorsementApprovedChanged
-        && !securityContext.isUserInRole(ADMIN_ROLE)
-        && !(userAuthService.allowedToModifyEntity(securityContext.getUserPrincipal(), organization.getEndorsingNodeKey())
-             || userAuthService.allowedToModifyEntity(securityContext.getUserPrincipal(), previousOrg.getEndorsingNodeKey()))) {
-      LOG.warn("Endorsement status or node changed, edit forbidden for {} on {}", securityContext.getUserPrincipal(), key);
-      throw new WebApplicationException(Response.Status.FORBIDDEN);
-    }
-
-
-    if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
-      // here we consider the user has the right to endorse an organization without a key.
-      confirmEndorsement(organization.getKey(), null);
-    }
-
-    // let the parent class set the modifiedBy
-    super.update(key, organization, securityContext);
-  }
-
-  public PagingResponse<Organization> search(String query, @Nullable Pageable page) {
-    return list(null, null, null, null, null, null, null, query, page);
-  }
-
-  /**
-   * All network entities support simple (!) search with "&q=".
-   * This is to support the console user interface, and is in addition to any complex, faceted search that might
-   * additionally be supported, such as dataset search.
-   */
-  @GET
-  public PagingResponse<Organization> list(
-    @Nullable @Context Country country,
-    @Nullable @QueryParam("identifierType") IdentifierType identifierType,
-    @Nullable @QueryParam("identifier") String identifier,
-    @Nullable @QueryParam("isEndorsed") Boolean isEndorsed,
-    @Nullable @QueryParam("machineTagNamespace") String namespace,
-    @Nullable @QueryParam("machineTagName") String name,
-    @Nullable @QueryParam("machineTagValue") String value,
-    @Nullable @QueryParam("q") String query,
-    @Nullable @Context Pageable page
-  ) {
-
-    // Hack: Intercept identifier search
-    if (identifierType != null && identifier != null) {
-      return listByIdentifier(identifierType, identifier, page);
-    } else if (identifier != null) {
-      return listByIdentifier(identifier, page);
-    }
-
-    // Intercept machine tag search
-    if (!Strings.isNullOrEmpty(namespace) || !Strings.isNullOrEmpty(name) || !Strings.isNullOrEmpty(value)) {
-      return listByMachineTag(namespace, name, value, page);
-    }
-
-    // short circuited list all
-    if (country == null && isEndorsed == null && Strings.isNullOrEmpty(query)) {
-      return list(page);
-    }
-
-    // This uses to Organization Mapper overloaded option of search which will scope (AND) the query, country and endorsement.
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = organizationMapper.count(query, country, isEndorsed);
-    page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total,
-                                            organizationMapper.search(query, country, isEndorsed, page));
-  }
-
-  @GET
-  @Path("{key}/hostedDataset")
-  @Override
-  public PagingResponse<Dataset> hostedDatasets(@PathParam("key") UUID organizationKey, @Context Pageable page) {
-    return pagingResponse(page, datasetMapper.countDatasetsHostedBy(organizationKey),
-      datasetMapper.listDatasetsHostedBy(organizationKey, page));
-  }
-
-  @GET
-  @Path("{key}/publishedDataset")
-  @Override
-  public PagingResponse<Dataset> publishedDatasets(@PathParam("key") UUID organizationKey, @Context Pageable page) {
-    return pagingResponse(page, datasetMapper.countDatasetsPublishedBy(organizationKey),
-      datasetMapper.listDatasetsPublishedBy(organizationKey, page));
-  }
-
-  /**
-   * This is an HTTP only method to provide the count for the homepage of the portal. The homepage count excludes
-   * non publishing an non endorsed datasets.
-   */
-  @GET
-  @Path("count")
-  public int countOrganizations() {
-    return organizationMapper.countPublishing();
-  }
-
-  @Override
-  public PagingResponse<Organization> listByCountry(Country country, @Nullable Pageable page) {
-    return pagingResponse(page, organizationMapper.countOrganizationsByCountry(country),
-      organizationMapper.organizationsByCountry(country, page));
-  }
-
-  @GET
-  @Path("{key}/installation")
-  @Override
-  public PagingResponse<Installation> installations(@PathParam("key") UUID organizationKey, @Context Pageable page) {
-    return pagingResponse(page, installationMapper.countInstallationsByOrganization(organizationKey),
-      installationMapper.listInstallationsByOrganization(organizationKey, page));
-  }
-
-  @GET
-  @Path("deleted")
-  @Override
-  public PagingResponse<Organization> listDeleted(@Context Pageable page) {
-    return pagingResponse(page, organizationMapper.countDeleted(), organizationMapper.deleted(page));
-  }
-
-  @GET
-  @Path("pending")
-  @Override
-  public PagingResponse<Organization> listPendingEndorsement(@Context Pageable page) {
-    return pagingResponse(page, organizationMapper.countPendingEndorsements(null),
-      organizationMapper.pendingEndorsements(null, page));
-  }
-
-  @GET
-  @Path("nonPublishing")
-  @Override
-  public PagingResponse<Organization> listNonPublishing(@Context Pageable page) {
-    return pagingResponse(page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
-  }
-
-
-  @Path("suggest")
-  @GET
-  @Override
-  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
-    return organizationMapper.suggest(label);
-  }
-
-  /**
-   * This is an HTTP only method to retrieve the shared token (password) for an organization.
-   *
-   * @param organizationKey organization key
-   *
-   * @return shared token if set, warning message if not set, or null if organization doesn't exist
-   */
-  @Path("{key}/password")
-  @GET
-  @RolesAllowed({ADMIN_ROLE, EDITOR_ROLE})
-  @Produces(MediaType.TEXT_PLAIN)
-  public String retrievePassword(@PathParam("key") UUID organizationKey) {
-    Organization o = get(organizationKey);
-    if (o == null) {
-      return null;
-    }
-    // Organization.password is never null according to database schema. API doesn't mirror this though.
-    return o.getPassword();
-  }
-
-  /**
    * Randomly generates a shared token (password) for an organization.
    *
-   * @return generated shared token
+   * @return generated password
    */
   @VisibleForTesting
   protected static String generatePassword() {
@@ -363,17 +159,228 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // randomly calculate the size of the password, between 0 and MAXIMUM_PASSWORD_SIZE
     int size = random.nextInt(MAXIMUM_PASSWORD_SIZE);
     // ensure the size is at least greater than or equal to MINIMUM_PASSWORD_SIZE
-    size = (size < MINIMUM_PASSWORD_SIZE) ? MINIMUM_PASSWORD_SIZE : size;
+    size = Math.max(size, MINIMUM_PASSWORD_SIZE);
 
     // generate the password
     StringBuilder password = new StringBuilder();
     int randomIndex;
     while (size-- > 0) {
-      random = new Random();
-      randomIndex = random.nextInt(PASSWORD_ALLOWED_CHARACTERS.length());
-      password.append(PASSWORD_ALLOWED_CHARACTERS.charAt(randomIndex));
+      randomIndex = random.nextInt(ALLOWED_CHARACTERS.length());
+      password.append(ALLOWED_CHARACTERS.charAt(randomIndex));
     }
     return password.toString();
+  }
+
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  @Transactional
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
+  public void update(
+      @PathVariable UUID key,
+      @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class})
+          Organization organization,
+      Authentication authentication) {
+    checkArgument(
+        key.equals(organization.getKey()),
+        "Provided organization must have the same key as the resource URL");
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
+
+    Organization previousOrg = super.get(organization.getKey());
+    checkNotNull(previousOrg, "Organization not found");
+
+    // If the endorsement is being changed, and the user is only an EDITOR, they must have node
+    // permission.
+    // If the node is being changed, and the user is only an EDITOR, they must have node permission
+    // on both nodes.
+    boolean endorsementApprovedChanged =
+        previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
+            || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
+    if (endorsementApprovedChanged
+        && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+        && !(userAuthService.allowedToModifyEntity(
+                nameFromContext, organization.getEndorsingNodeKey())
+            || userAuthService.allowedToModifyEntity(
+                nameFromContext, previousOrg.getEndorsingNodeKey()))) {
+      LOG.warn(
+          "Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
+      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+    }
+
+    if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
+      // here we consider the user has the right to endorse an organization without a key.
+      confirmEndorsement(organization.getKey(), (UUID) null);
+    }
+
+    // let the parent class set the modifiedBy
+    super.update(key, organization, authentication);
+  }
+
+  @Override
+  public PagingResponse<Organization> search(String query, Pageable page) {
+    final OrganizationRequestSearchParams request = new OrganizationRequestSearchParams();
+    request.setQ(query);
+    return list(null, request, page);
+  }
+
+  /**
+   * All network entities support simple (!) search with "&q=". This is to support the console user
+   * interface, and is in addition to any complex, faceted search that might additionally be
+   * supported, such as dataset search.
+   */
+  @GetMapping
+  public PagingResponse<Organization> list(
+      @Nullable Country country, @Valid OrganizationRequestSearchParams request, Pageable page) {
+    // Hack: Intercept identifier search
+    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    } else if (request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifier(), page);
+    }
+
+    // Intercept machine tag search
+    if (!Strings.isNullOrEmpty(request.getMachineTagNamespace())
+        || !Strings.isNullOrEmpty(request.getMachineTagName())
+        || !Strings.isNullOrEmpty(request.getMachineTagValue())) {
+      return listByMachineTag(
+          request.getMachineTagNamespace(),
+          request.getMachineTagName(),
+          request.getMachineTagValue(),
+          page);
+    }
+
+    // short circuited list all
+    if (country == null
+        && request.getIsEndorsed() == null
+        && Strings.isNullOrEmpty(request.getQ())) {
+      return list(page);
+    }
+
+    // This uses to Organization Mapper overloaded option of search which will scope (AND) the
+    // query, country and endorsement.
+    String query =
+        request.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(request.getQ()))
+            : request.getQ();
+    long total = organizationMapper.count(query, country, request.getIsEndorsed());
+    page = page == null ? new PagingRequest() : page;
+    return new PagingResponse<>(
+        page.getOffset(),
+        page.getLimit(),
+        total,
+        organizationMapper.search(query, country, request.getIsEndorsed(), page));
+  }
+
+  @GetMapping("{key}/hostedDataset")
+  @Override
+  public PagingResponse<Dataset> hostedDatasets(
+      @PathVariable("key") UUID organizationKey, Pageable page) {
+    return pagingResponse(
+        page,
+        datasetMapper.countDatasetsHostedBy(organizationKey),
+        datasetMapper.listDatasetsHostedBy(organizationKey, page));
+  }
+
+  @GetMapping("{key}/publishedDataset")
+  @Override
+  public PagingResponse<Dataset> publishedDatasets(
+      @PathVariable("key") UUID organizationKey, Pageable page) {
+    return pagingResponse(
+        page,
+        datasetMapper.countDatasetsPublishedBy(organizationKey),
+        datasetMapper.listDatasetsPublishedBy(organizationKey, page));
+  }
+
+  /**
+   * This is an HTTP only method to provide the count for the homepage of the portal. The homepage
+   * count excludes non publishing an non endorsed datasets.
+   */
+  @GetMapping("count")
+  public int countOrganizations() {
+    return organizationMapper.countPublishing();
+  }
+
+  @GetMapping("{key}/installation")
+  @Override
+  public PagingResponse<Installation> installations(
+      @PathVariable("key") UUID organizationKey, Pageable page) {
+    return pagingResponse(
+        page,
+        installationMapper.countInstallationsByOrganization(organizationKey),
+        installationMapper.listInstallationsByOrganization(organizationKey, page));
+  }
+
+  @Override
+  public PagingResponse<Organization> listByCountry(Country country, Pageable page) {
+    return pagingResponse(
+        page,
+        organizationMapper.countOrganizationsByCountry(country),
+        organizationMapper.organizationsByCountry(country, page));
+  }
+
+  @GetMapping("deleted")
+  @Override
+  public PagingResponse<Organization> listDeleted(Pageable page) {
+    return pagingResponse(
+        page, organizationMapper.countDeleted(), organizationMapper.deleted(page));
+  }
+
+  @GetMapping("pending")
+  @Override
+  public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
+    return pagingResponse(
+        page,
+        organizationMapper.countPendingEndorsements(null),
+        organizationMapper.pendingEndorsements(null, page));
+  }
+
+  @GetMapping("nonPublishing")
+  @Override
+  public PagingResponse<Organization> listNonPublishing(Pageable page) {
+    return pagingResponse(
+        page, organizationMapper.countNonPublishing(), organizationMapper.nonPublishing(page));
+  }
+
+  @GetMapping("suggest")
+  @Override
+  public List<KeyTitleResult> suggest(
+      @Nullable @RequestParam(value = "q", required = false) String label) {
+    return organizationMapper.suggest(label);
+  }
+
+  /**
+   * This is an HTTP only method to retrieve the shared token (password) for an organization.
+   *
+   * @param organizationKey organization key
+   * @return password if set, warning message if not set, or null if organization doesn't exist
+   */
+  @GetMapping(value = "{key}/password", produces = MediaType.TEXT_PLAIN_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  public String retrievePassword(@PathVariable("key") UUID organizationKey) {
+    Organization o = get(organizationKey);
+    if (o == null) {
+      return null;
+    }
+    // Organization.password is never null according to database schema. API doesn't mirror this
+    // though.
+    return o.getPassword();
+  }
+
+  /** Confirm the endorsement of an organization. */
+  @PostMapping(value = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured(APP_ROLE)
+  public ResponseEntity<Void> confirmEndorsement(
+      @PathVariable("key") UUID organizationKey,
+      @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
+    return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey())
+            ? ResponseEntity.noContent()
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+        .build();
+  }
+
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
+    return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
   }
 
   @Override

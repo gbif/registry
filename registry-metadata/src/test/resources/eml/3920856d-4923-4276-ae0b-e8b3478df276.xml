@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.0.1" xmlns:md="eml://ecoinformatics.org/methods-2.0.1" xmlns:proj="eml://ecoinformatics.org/project-2.0.1" xmlns:d="eml://ecoinformatics.org/dataset-2.0.1" xmlns:res="eml://ecoinformatics.org/resource-2.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/terms/" system="Plazi" scope="system" packageId="FFFA73722E22FF967267FFEFFFE3D035/eml-1544529526640.xml">
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.0.1" system="Plazi" scope="system"
+         packageId="FFFA73722E22FF967267FFEFFFE3D035/eml-1544529526640.xml">
         <dataset>
                 <alternateIdentifier>FFFA73722E22FF967267FFEFFFE3D035</alternateIdentifier>
                 <alternateIdentifier>https://doi.org/10.11646/zootaxa.4466.1.13</alternateIdentifier>

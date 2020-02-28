@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.converter;
 
 import org.gbif.api.model.common.DOI;
@@ -13,21 +28,24 @@ import org.gbif.api.vocabulary.License;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
-import com.google.common.collect.Lists;
-
-class DatasetTestDataProvider {
+public class DatasetTestDataProvider {
 
   static Dataset prepareFullDataset(DOI doi) {
     Dataset dataset = new Dataset();
     dataset.setKey(UUID.fromString("4b3c4936-24fc-4cbd-886d-3f874a44e31f"));
     dataset.setType(DatasetType.OCCURRENCE);
     dataset.setTitle("my title");
-    dataset.setCreated(Date.from(
-      LocalDateTime.of(2019, 10, 2, 0, 0).toInstant(ZoneOffset.UTC)));
-    dataset.setModified(Date.from(
-      LocalDateTime.of(2019, 10, 3, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setCreated(Date.from(LocalDateTime.of(2019, 10, 2, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setModified(Date.from(LocalDateTime.of(2019, 10, 3, 0, 0).toInstant(ZoneOffset.UTC)));
     dataset.setCreatedBy("Markus GBIF User");
     dataset.setLanguage(Language.NORWEGIAN);
     dataset.setDataLanguage(Language.NORWEGIAN);
@@ -91,7 +109,7 @@ class DatasetTestDataProvider {
 
     dataset.setDoi(doi);
     dataset.setDescription("some description");
-    List<GeospatialCoverage> geos = Lists.newArrayList();
+    List<GeospatialCoverage> geos = new ArrayList<>();
     dataset.setGeographicCoverages(geos);
     GeospatialCoverage g1 = new GeospatialCoverage();
     geos.add(g1);

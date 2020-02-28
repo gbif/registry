@@ -1,33 +1,44 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-/**
- * GBIF Metadata Profile schema validator utility.
- *
- */
+/** GBIF Metadata Profile schema validator utility. */
 @NotThreadSafe
 public class EmlValidator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(EmlValidator.class);
   private static final String SCHEMA_LANG = "http://www.w3.org/2001/XMLSchema";
 
   private final Validator validator;
 
   /**
-   * Return an instance of {@link EmlValidator} for a specific {@link EMLProfileVersion}.
-   * {@link EmlValidator} instances are NOT thread safe.
+   * Return an instance of {@link EmlValidator} for a specific {@link EMLProfileVersion}. {@link
+   * EmlValidator} instances are NOT thread safe.
+   *
    * @param version
    * @return
    * @throws SAXException
@@ -38,30 +49,25 @@ public class EmlValidator {
     return new EmlValidator(schema.newValidator());
   }
 
-  /**
-   * Private constructor, use {@link #newValidator(EMLProfileVersion)}
-   */
+  /** Private constructor, use {@link #newValidator(EMLProfileVersion)} */
   private EmlValidator(Validator validator) {
     this.validator = validator;
   }
 
   /**
    * Validate a EML document provided as String.
+   *
    * @param emlAsString
    * @throws InvalidEmlException
    */
   public void validate(String emlAsString) throws InvalidEmlException {
     StreamSource streamSource = toSourceStream(emlAsString);
-    if (streamSource != null) {
-      validate(streamSource);
-    }
-    else{
-      throw new InvalidEmlException("Can't create StreamSource");
-    }
+    validate(streamSource);
   }
 
   /**
    * Validate a EML document provided as InputStream.
+   *
    * @param inputStream
    * @throws InvalidEmlException
    */
@@ -71,6 +77,7 @@ public class EmlValidator {
 
   /**
    * Validate a EML document provided as StreamSource.
+   *
    * @param streamSource
    * @throws InvalidEmlException
    */
@@ -83,12 +90,6 @@ public class EmlValidator {
   }
 
   private StreamSource toSourceStream(String xmlAsString) {
-    try {
-      return new StreamSource(new ByteArrayInputStream(xmlAsString.getBytes("UTF-8")));
-    } catch (UnsupportedEncodingException e) {
-      LOG.error("Can't get UTF-8 bytes from String", e);
-    }
-    return null;
+    return new StreamSource(new ByteArrayInputStream(xmlAsString.getBytes(StandardCharsets.UTF_8)));
   }
-
 }

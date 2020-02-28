@@ -1,0 +1,71 @@
+{
+  "properties": [
+    {
+      "name": "jwt.signingKey",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "jwt.expiryTimeInMs",
+      "type": "java.lang.Long"
+    },
+    {
+      "name": "jwt.issuer",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "solr.dataset.serverType",
+      "type": "org.gbif.common.search.solr.SolrServerType",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getType()"
+    },
+    {
+      "name": "solr.dataset.home",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getHome()"
+    },
+    {
+      "name": "solr.dataset.collection",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getCollection()"
+    },
+    {
+      "name": "solr.dataset.delete",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getDelete()"
+    },
+    {
+      "name": "solr.indexing.threads",
+      "type": "java.lang.Integer",
+      "sourceType": "org.gbif.registry.search.config.SolrDatasetProperties",
+      "sourceMethod": "getThreads()"
+    },
+    {
+      "name": "url.api",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
+    },
+    {
+      "name": "url.portal",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
+    },
+    {
+      "name": "url.occurrenceApi",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
+    },
+    {
+      "name": "url.directoryApi",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
+    },
+    {
+      "name": "url.grscicollPortal",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
+    }
+  ]
+}

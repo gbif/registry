@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Person;
@@ -10,8 +25,10 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
@@ -21,34 +38,29 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
-
-import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
-/**
- * Class that acts both as the WS endpoint for {@link Person} entities and also provides an *
- * implementation of {@link PersonService}.
- */
-@Singleton
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
-@Path(GRSCICOLL_PATH + "/person")
+@RestController
+@RequestMapping(value = "/grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
@@ -56,53 +68,44 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   private final IdentifierMapper identifierMapper;
   private final TagMapper tagMapper;
   private final MachineTagMapper machineTagMapper;
-  private final EventBus eventBus;
+  private final EventManager eventManager;
 
-  @Inject
   public PersonResource(
       PersonMapper personMapper,
       AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
-      EventBus eventBus,
-      EditorAuthorizationService userAuthService) {
-    super(personMapper, tagMapper, machineTagMapper, identifierMapper, userAuthService, eventBus, Person.class);
+      EventManager eventManager,
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
+    super(
+        personMapper,
+        tagMapper,
+        machineTagMapper,
+        identifierMapper,
+        userAuthService,
+        eventManager,
+        Person.class,
+        withMyBatis);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
     this.identifierMapper = identifierMapper;
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
-    this.eventBus = eventBus;
+    this.eventManager = eventManager;
   }
 
-  @GET
-  public PagingResponse<Person> list(@Nullable @QueryParam("q") String query,
-                                     @Nullable @QueryParam("primaryInstitution") UUID institutionKey,
-                                     @Nullable @QueryParam("primaryCollection") UUID collectionKey,
-                                     @Nullable @Context Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = personMapper.count(institutionKey, collectionKey, query);
-    return new PagingResponse<>(page, total, personMapper.list(institutionKey, collectionKey, query, page));
-  }
-
-  @GET
-  @Path("deleted")
   @Override
-  public PagingResponse<Person> listDeleted(@Context Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(page, personMapper.countDeleted(), personMapper.deleted(page));
-  }
-
   @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
-  @Override
-  public UUID create(@Valid @NotNull Person person) {
+  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  public UUID create(@NotNull @Validated({PrePersist.class, Default.class}) Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {
-      checkArgument(person.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
+      checkArgument(
+          person.getMailingAddress().getKey() == null,
+          "Unable to create an address which already has a key");
       addressMapper.create(person.getMailingAddress());
     }
 
@@ -111,7 +114,8 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : person.getMachineTags()) {
-        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        checkArgument(
+            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(person.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         personMapper.addMachineTag(person.getKey(), machineTag.getKey());
@@ -137,21 +141,21 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
       }
     }
 
-    eventBus.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
+    eventManager.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
   }
 
   @Transactional
-  @Validate
   @Override
-  public void update(@Valid @NotNull Person person) {
+  public void update(@NotNull @Validated Person person) {
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
 
     if (oldPerson.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
-      checkArgument(person.getDeleted() == null,
-                    "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+      checkArgument(
+          person.getDeleted() == null,
+          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // not allowed to delete when updating
       checkArgument(person.getDeleted() == null, "Can't delete an entity when updating");
@@ -160,8 +164,9 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     // update mailing address
     if (person.getMailingAddress() != null) {
       if (oldPerson.getMailingAddress() == null) {
-        checkArgument(person.getMailingAddress().getKey() == null,
-                      "Unable to create an address which already has a key");
+        checkArgument(
+            person.getMailingAddress().getKey() == null,
+            "Unable to create an address which already has a key");
         addressMapper.create(person.getMailingAddress());
       } else {
         addressMapper.update(person.getMailingAddress());
@@ -178,13 +183,34 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     // check if we have to delete the address
     Person newPerson = get(person.getKey());
-    eventBus.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
+    eventManager.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
   }
 
-  @GET
-  @Path("suggest")
+  @GetMapping
   @Override
-  public List<PersonSuggestResult> suggest(@QueryParam("q") String q) {
+  public PagingResponse<Person> list(
+      @Nullable @RequestParam(value = "q", required = false) String query,
+      @Nullable @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
+      @Nullable @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
+      @Nullable Pageable page) {
+    page = page == null ? new PagingRequest() : page;
+    query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
+    long total = personMapper.count(institutionKey, collectionKey, query);
+    return new PagingResponse<>(
+        page, total, personMapper.list(institutionKey, collectionKey, query, page));
+  }
+
+  @GetMapping("deleted")
+  @Override
+  public PagingResponse<Person> listDeleted(@Nullable Pageable page) {
+    page = page == null ? new PagingRequest() : page;
+    return new PagingResponse<>(page, personMapper.countDeleted(), personMapper.deleted(page));
+  }
+
+  @GetMapping("suggest")
+  @Override
+  public List<PersonSuggestResult> suggest(
+      @Nullable @RequestParam(value = "q", required = false) String q) {
     return personMapper.suggest(q);
   }
 }

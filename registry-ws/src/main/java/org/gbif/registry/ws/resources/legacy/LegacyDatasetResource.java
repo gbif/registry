@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.legacy;
 
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -7,41 +22,45 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.ws.model.ErrorResponse;
-import org.gbif.registry.ws.model.LegacyDataset;
-import org.gbif.registry.ws.model.LegacyDatasetResponse;
-import org.gbif.registry.ws.security.LegacyAuthorizationFilter;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
-import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.registry.domain.ws.ErrorResponse;
+import org.gbif.registry.domain.ws.LegacyDataset;
+import org.gbif.registry.domain.ws.LegacyDatasetResponse;
+import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.ws.NotFoundException;
+import org.gbif.ws.util.CommonWsUtils;
 
 import java.util.List;
 import java.util.UUID;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.sun.jersey.api.NotFoundException;
-import com.sun.jersey.api.core.InjectParam;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.collect.Lists;
+
+import static org.gbif.registry.domain.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
- * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by the GBRDS.
+ * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by
+ * the GBRDS.
  */
-@Singleton
-@Path("registry/resource")
+@RestController
+@RequestMapping("registry")
 public class LegacyDatasetResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyDatasetResource.class);
@@ -51,141 +70,169 @@ public class LegacyDatasetResource {
   private final InstallationService installationService;
   private final IptResource iptResource;
 
-  @Inject
-  public LegacyDatasetResource(OrganizationService organizationService, DatasetService datasetService,
-    IptResource iptResource, InstallationService installationService) {
+  public LegacyDatasetResource(
+      OrganizationService organizationService,
+      DatasetService datasetService,
+      IptResource iptResource,
+      InstallationService installationService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
     this.installationService = installationService;
   }
 
-
   /**
-   * Register GBRDS dataset, handling incoming request with path /resource. The primary contact, publishing organization
-   * key, and resource name are mandatory. Only after both the dataset and primary contact have been persisted is a
-   * Response with Status.CREATED (201) returned.
+   * Register GBRDS dataset, handling incoming request with path /resource. The primary contact,
+   * publishing organization key, and resource name are mandatory. Only after both the dataset and
+   * primary contact have been persisted is a ResponseEntity with HttpStatus.CREATED (201) returned.
    *
-   * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
-   * @param security SecurityContext (security related information)
-   * @return Response
-   * @see IptResource#registerDataset(org.gbif.registry.ws.model.LegacyDataset, javax.ws.rs.core.SecurityContext)
+   * @param dataset IptDataset with HTTP form parameters
+   * @return ResponseEntity
+   * @see IptResource#registerDataset(LegacyDataset, Authentication)
    */
-  @POST
-  @Produces(MediaType.APPLICATION_XML)
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response registerDataset(@InjectParam LegacyDataset dataset, @Context SecurityContext security) {
+  @PostMapping(
+      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+      produces = MediaType.APPLICATION_XML_VALUE)
+  public ResponseEntity registerDataset(
+      @RequestParam LegacyDataset dataset, Authentication authentication) {
     // reuse existing subresource
-    return iptResource.registerDataset(dataset, security);
+    return iptResource.registerDataset(dataset, authentication);
   }
 
   /**
-   * Update GBRDS Dataset, handling incoming request with path /resource/{key}. The publishing organization key is
-   * mandatory (supplied in the credentials not the parameters). The primary contact is not required, but if any
-   * of the primary contact parameters were included in the request, it is required. This is the difference between this
-   * method and registerDataset. Only after both the dataset and optional primary contact have been updated is a
-   * Response with Status.OK (201) returned.
+   * Update GBRDS Dataset, handling incoming request with path /resource/{key}. The publishing
+   * organization key is mandatory (supplied in the credentials not the parameters). The primary
+   * contact is not required, but if any of the primary contact parameters were included in the
+   * request, it is required. This is the difference between this method and registerDataset. Only
+   * after both the dataset and optional primary contact have been updated is a ResponseEntity with
+   * HttpStatus.OK (201) returned.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @param dataset IptDataset with HTTP form parameters having been injected from Jersey
-   * @param security SecurityContext (security related information)
-   * @return Response with Status.CREATED (201) if successful
+   * @param dataset IptDataset with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
-  @POST
-  @Path("{key}")
-  @Produces(MediaType.APPLICATION_XML)
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response updateDataset(@PathParam("key") UUID datasetKey, @InjectParam LegacyDataset dataset,
-    @Context SecurityContext security) {
-    if (dataset != null) {
-      // set required fields
-      String user = security.getUserPrincipal().getName();
-      dataset.setCreatedBy(user);
-      dataset.setModifiedBy(user);
-      dataset.setKey(datasetKey);
-      // retrieve existing dataset
-      Dataset existing = datasetService.get(datasetKey);
-      // populate dataset with existing primary contact so it gets updated, not duplicated
-      dataset.setContacts(existing.getContacts());
-      // if primary contact wasn't supplied, set existing one here so that it doesn't respond BAD_REQUEST
-      if (dataset.getPrimaryContactAddress() == null && dataset.getPrimaryContactEmail() == null
-        && dataset.getPrimaryContactType() == null && dataset.getPrimaryContactPhone() == null
-        && dataset.getPrimaryContactName() == null && dataset.getPrimaryContactDescription() == null) {
-        dataset.setPrimaryContact(LegacyResourceUtils.getPrimaryContact(existing));
-      }
-      // otherwise, update primary contact and type
-      else {
-        dataset.prepare();
-      }
-      // If installation key wasn't provided, reuse existing dataset's installation key
-      // Reason: non-IPT consumers weren't aware they could supply the parameter iptKey on dataset updates before
-      if (dataset.getInstallationKey() == null) {
-        dataset.setInstallationKey(existing.getInstallationKey());
-      }
-      // Dataset can only have 1 installation key, log if the hosting installation is being changed
-      else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
-        LOG.debug("The dataset's technical installation is being changed from {} to {}", dataset.getInstallationKey(), existing.getInstallationKey());
-      }
-      // type can't be derived from endpoints, since there are no endpoints supplied on this update, so re-set existing
-      dataset.setType(existing.getType());
-      // populate publishing organization from credentials
-      dataset.setPublishingOrganizationKey( LegacyAuthorizationFilter.extractOrgKeyFromSecurity(security) );
-      // ensure the publishing organization exists, the installation exists, primary contact exists, etc
-      Contact contact = dataset.getPrimaryContact();
-      if (contact != null && LegacyResourceUtils.isValidOnUpdate(dataset,
-                                datasetService, organizationService, installationService)) {
-        // update only fields that could have changed
-        existing.setModifiedBy(user);
-        existing.setTitle(dataset.getTitle());
-        existing.setDescription(dataset.getDescription());
-        existing.setHomepage(dataset.getHomepage());
-        existing.setLogoUrl(dataset.getLogoUrl());
-        existing.setLanguage(dataset.getLanguage());
-        existing.setInstallationKey(dataset.getInstallationKey());
-
-        existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-
-        // persist changes
-        datasetService.update(existing);
-
-        // set primary contact's required field(s)
-        contact.setModifiedBy(user);
-        // add/update primary contact: Contacts are mutable, so try to update if the Contact already exists
-        if (contact.getKey() == null) {
-          contact.setCreatedBy(user);
-          datasetService.addContact(datasetKey, contact);
-        } else {
-          datasetService.updateContact(datasetKey, contact);
-        }
-
-        // endpoint changes are done through Service API
-
-        LOG.info("Dataset updated successfully, key=%s", datasetKey.toString());
-        return Response.status(Response.Status.CREATED).entity(dataset)
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
-
-      } else {
-        LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
-      }
+  @PostMapping(
+      value = "resource/{key}",
+      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+      produces = MediaType.APPLICATION_XML_VALUE)
+  public ResponseEntity updateDataset(
+      @PathVariable("key") UUID datasetKey,
+      @RequestParam LegacyDataset dataset,
+      Authentication authentication) {
+    // set required fields
+    String user = authentication.getName();
+    dataset.setCreatedBy(user);
+    dataset.setModifiedBy(user);
+    dataset.setKey(datasetKey);
+    // retrieve existing dataset
+    Dataset existing = datasetService.get(datasetKey);
+    // populate dataset with existing primary contact so it gets updated, not duplicated
+    dataset.setContacts(existing.getContacts());
+    // if primary contact wasn't supplied, set existing one here so that it doesn't respond
+    // BAD_REQUEST
+    if (dataset.getPrimaryContactAddress() == null
+        && dataset.getPrimaryContactEmail() == null
+        && dataset.getPrimaryContactType() == null
+        && dataset.getPrimaryContactPhone() == null
+        && dataset.getPrimaryContactName() == null
+        && dataset.getPrimaryContactDescription() == null) {
+      dataset.setPrimaryContact(LegacyResourceUtils.getPrimaryContact(existing));
     }
+    // otherwise, update primary contact and type
+    else {
+      dataset.prepare();
+    }
+    // If installation key wasn't provided, reuse existing dataset's installation key
+    // Reason: non-IPT consumers weren't aware they could supply the parameter iptKey on dataset
+    // updates before
+    if (dataset.getInstallationKey() == null) {
+      dataset.setInstallationKey(existing.getInstallationKey());
+    }
+    // Dataset can only have 1 installation key, log if the hosting installation is being changed
+    else if (dataset.getInstallationKey() != existing.getInstallationKey()) {
+      LOG.debug(
+          "The dataset's technical installation is being changed from {} to {}",
+          dataset.getInstallationKey(),
+          existing.getInstallationKey());
+    }
+    // type can't be derived from endpoints, since there are no endpoints supplied on this update,
+    // so re-set existing
+    dataset.setType(existing.getType());
+    // populate publishing organization from credentials
+    dataset.setPublishingOrganizationKey(extractOrgKeyFromSecurity(authentication));
+    // ensure the publishing organization exists, the installation exists, primary contact exists,
+    // etc
+    Contact contact = dataset.getPrimaryContact();
+    if (contact != null
+        && LegacyResourceUtils.isValidOnUpdate(
+            dataset, datasetService, organizationService, installationService)) {
+      // update only fields that could have changed
+      existing.setModifiedBy(user);
+      existing.setTitle(dataset.getTitle());
+      existing.setDescription(dataset.getDescription());
+      existing.setHomepage(dataset.getHomepage());
+      existing.setLogoUrl(dataset.getLogoUrl());
+      existing.setLanguage(dataset.getLanguage());
+      existing.setInstallationKey(dataset.getInstallationKey());
+
+      existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+
+      // persist changes
+      datasetService.update(existing);
+
+      // set primary contact's required field(s)
+      contact.setModifiedBy(user);
+      // add/update primary contact: Contacts are mutable, so try to update if the Contact already
+      // exists
+      if (contact.getKey() == null) {
+        contact.setCreatedBy(user);
+        datasetService.addContact(datasetKey, contact);
+      } else {
+        datasetService.updateContact(datasetKey, contact);
+      }
+
+      // endpoint changes are done through Service API
+
+      LOG.info("Dataset updated successfully, key={}", datasetKey);
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .cacheControl(CacheControl.noCache())
+          .body(dataset);
+    } else {
+      LOG.error("Request invalid. Dataset missing required fields or using stale keys!");
+    }
+
     LOG.error("Dataset update failed");
-    return Response.status(Response.Status.BAD_REQUEST).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED)
-      .build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .cacheControl(CacheControl.noCache())
+        .build();
   }
 
   /**
    * Retrieve all Datasets owned by an organization, handling incoming request with path /resource.
-   * The publishing organization query parameter is mandatory. Only after both
-   * the organizationKey is verified to correspond to an existing organization, is a Response including the list of
+   * The publishing organization query parameter is mandatory. Only after both the organizationKey
+   * is verified to correspond to an existing organization, is a Response including the list of
    * Datasets returned.
    *
    * @param organizationKey organization key (UUID) coming in as query param
-   * @return Response with list of Datasets or empty list with error message if none found
+   * @return ResponseEntity with list of Datasets or empty list with error message if none found
    */
-  @GET
-  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-  @Consumes(MediaType.TEXT_PLAIN)
-  public Response datasetsForOrganization(@QueryParam("organisationKey") UUID organizationKey) {
+  @GetMapping(
+      value = {"resource", "resource{extension:\\.[a-z]+}"},
+      consumes = MediaType.TEXT_PLAIN_VALUE,
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity datasetsForOrganization(
+      @PathVariable(value = "extension", required = false) String extension,
+      @RequestParam(value = "organisationKey", required = false) UUID organizationKey,
+      HttpServletResponse httpResponse) {
+    String responseType =
+        CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
+    if (responseType != null) {
+      httpResponse.setContentType(responseType);
+    } else {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .cacheControl(CacheControl.noCache())
+          .build();
+    }
 
     if (organizationKey != null) {
       try {
@@ -197,7 +244,8 @@ public class LegacyDatasetResource {
         PagingRequest page = new PagingRequest(0, LegacyResourceConstants.WS_PAGE_SIZE);
         PagingResponse<Dataset> response;
         do {
-          LOG.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
+          LOG.debug(
+              "Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
           response = organizationService.publishedDatasets(organizationKey, page);
           for (Dataset d : response.getResults()) {
             Contact contact = LegacyResourceUtils.getPrimaryContact(d);
@@ -206,57 +254,71 @@ public class LegacyDatasetResource {
           page.nextPage();
         } while (!response.isEndOfRecords());
         LOG.debug("Get all Datasets owned by Organization finished");
-        // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
-        // writer for Java class java.util.ArrayList
-        LegacyDatasetResponse[] array = datasets.toArray(new LegacyDatasetResponse[datasets.size()]);
-        return Response.status(Response.Status.OK).entity(array).build();
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .contentType(MediaType.parseMediaType(responseType))
+            .body(new LegacyDatasetResponseListWrapper(datasets));
       } catch (NotFoundException e) {
-        LOG.error("The organization with key {} specified by query parameter does not exist", organizationKey);
+        LOG.error(
+            "The organization with key {} specified by query parameter does not exist",
+            organizationKey);
       }
     }
-    return Response.status(Response.Status.OK).entity(new ErrorResponse("No organisation matches the key provided"))
-      .build();
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(new ErrorResponse("No organisation matches the key provided"));
   }
 
   /**
    * Read GBRDS Dataset, handling incoming request with path /resource/{key}.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return Response with Status.OK (200) if dataset exists
+   * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
    */
-  @GET
-  @Path("{key}")
-  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-  @Consumes(MediaType.TEXT_PLAIN)
-  public Response readDataset(@PathParam("key") UUID datasetKey) {
-    if (datasetKey != null) {
-      try {
-        LOG.debug("Get Dataset, key={}", datasetKey);
-        // verify Dataset with key exists, otherwise NotFoundException gets thrown
-        Dataset dataset = datasetService.get(datasetKey);
-        Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
-        return Response.status(Response.Status.OK).entity(new LegacyDatasetResponse(dataset, contact))
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
-      } catch (NotFoundException e) {
-        LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
-      }
+  @GetMapping(
+      value = {"resource/{key:[a-zA-Z0-9-]+}", "resource/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
+      consumes = MediaType.TEXT_PLAIN_VALUE,
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity readDataset(
+      @PathVariable("key") UUID datasetKey,
+      @PathVariable(value = "extension", required = false) String extension,
+      HttpServletResponse response) {
+    String responseType =
+        CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
+    if (responseType != null) {
+      response.setContentType(responseType);
+    } else {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .cacheControl(CacheControl.noCache())
+          .build();
     }
-    return Response.status(Response.Status.OK).entity(new ErrorResponse("No resource matches the key provided"))
-      .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+    try {
+      LOG.debug("Get Dataset, key={}", datasetKey);
+      // verify Dataset with key exists, otherwise NotFoundException gets thrown
+      Dataset dataset = datasetService.get(datasetKey);
+      Contact contact = LegacyResourceUtils.getPrimaryContact(dataset);
+      return ResponseEntity.status(HttpStatus.OK)
+          .cacheControl(CacheControl.noCache())
+          .contentType(MediaType.parseMediaType(responseType))
+          .body(new LegacyDatasetResponse(dataset, contact));
+    } catch (NotFoundException e) {
+      LOG.error("The dataset with key {} specified by path parameter does not exist", datasetKey);
+    }
+    return ResponseEntity.status(HttpStatus.OK)
+        .cacheControl(CacheControl.noCache())
+        .contentType(MediaType.parseMediaType(responseType))
+        .body(new ErrorResponse("No resource matches the key provided"));
   }
 
   /**
-   * Delete GBRDS Dataset, handling incoming request with path /resource/{key}. Only credentials are mandatory.
-   * If deletion is successful, returns Response with Status.OK.
+   * Delete GBRDS Dataset, handling incoming request with path /resource/{key}. Only credentials are
+   * mandatory. If deletion is successful, returns ResponseEntity with HttpStatus.OK.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return Response with Status.OK if successful
+   * @return ResponseEntity with HttpStatus.OK if successful
    * @see IptResource#deleteDataset(java.util.UUID)
    */
-  @DELETE
-  @Path("{key}")
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response deleteDataset(@PathParam("key") UUID datasetKey) {
+  @DeleteMapping(value = "resource/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
   }

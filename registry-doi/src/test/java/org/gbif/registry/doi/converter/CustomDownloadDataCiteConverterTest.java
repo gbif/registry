@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.converter;
 
 import org.gbif.api.model.common.DOI;
@@ -15,45 +30,46 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import com.google.common.collect.Lists;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.template.Configuration;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlunit.matchers.CompareMatcher;
 
-import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.template.Configuration;
 
+import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class CustomDownloadDataCiteConverterTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CustomDownloadDataCiteConverterTest.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(CustomDownloadDataCiteConverterTest.class);
   private static final Configuration FREEMARKER_CONFIG = createConfiguration();
 
-  /**
-   * @return FreeMarker Configuration
-   */
+  /** @return FreeMarker Configuration */
   public static Configuration createConfiguration() {
     Configuration configuration = new Configuration();
     configuration.setDefaultEncoding(StandardCharsets.UTF_8.toString());
-    TemplateLoader tl = new ClassTemplateLoader(CustomDownloadDataCiteConverterTest.class, "/customdownload");
+    TemplateLoader tl =
+        new ClassTemplateLoader(CustomDownloadDataCiteConverterTest.class, "/customdownload");
     configuration.setTemplateLoader(tl);
     return configuration;
   }
 
   /**
-   * Creates DataCite metadata XML document and homepage markdown file for custom download by reading
-   * download properties from customDownload.properties and list of used datasets from usedDatasets.txt.
+   * Creates DataCite metadata XML document and homepage markdown file for custom download by
+   * reading download properties from customDownload.properties and list of used datasets from
+   * usedDatasets.txt.
    */
   @Test
   public void createCustomDownload() throws Exception {
@@ -65,7 +81,9 @@ public class CustomDownloadDataCiteConverterTest {
     String creatorName = properties.getProperty("creatorName");
     String creatorUserId = properties.getProperty("creatorUserId");
     Calendar createdDate = Calendar.getInstance();
-    createdDate.setTime(DateFormatUtils.ISO_DATE_FORMAT.parse(properties.getProperty("createdIsoDate")));
+    createdDate.setTime(
+        DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.parse(
+            properties.getProperty("createdIsoDate")));
 
     // populate list of used Datasets
     List<DatasetOccurrenceDownloadUsage> usedDatasets = getUsedDatasets();
@@ -73,15 +91,24 @@ public class CustomDownloadDataCiteConverterTest {
     properties.put("downloadNumberDatasets", usedDatasets.size());
 
     // create DataCite metadata XML file
-    DataCiteMetadata metadata = CustomDownloadDataCiteConverter
-      .convert(doi, size, numberRecords, creatorName, creatorUserId, createdDate, usedDatasets);
+    DataCiteMetadata metadata =
+        CustomDownloadDataCiteConverter.convert(
+            doi, size, numberRecords, creatorName, creatorUserId, createdDate, usedDatasets);
     String xml = DataCiteValidator.toXml(doi, metadata);
-    String expectedMetadataXml = getXmlMetadataFromFile("customdownload/custom-download-metadata.xml");
-    assertThat(xml, CompareMatcher.isIdenticalTo(expectedMetadataXml).ignoreWhitespace().normalizeWhitespace());
+    String expectedMetadataXml =
+        getXmlMetadataFromFile("customdownload/custom-download-metadata.xml");
+    assertThat(
+        xml,
+        CompareMatcher.isIdenticalTo(expectedMetadataXml).ignoreWhitespace().normalizeWhitespace());
 
     // write it to tmp directory
     File output = FileUtils.createTempDir();
-    File xmlFile = new File(output, "custom_download-" + DateFormatUtils.ISO_DATE_FORMAT.format(createdDate) + ".xml");
+    File xmlFile =
+        new File(
+            output,
+            "custom_download-"
+                + DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(createdDate)
+                + ".xml");
     Writer xmlFileWriter = FileUtils.startNewUtf8File(xmlFile);
     xmlFileWriter.write(xml);
     xmlFileWriter.close();
@@ -95,14 +122,14 @@ public class CustomDownloadDataCiteConverterTest {
     LOG.info("Files written to: " + output.getAbsolutePath());
   }
 
-  /**
-   * @return list of DatasetOccurrenceDownloadUsage populated from usedDatasets.txt
-   */
-  private List<DatasetOccurrenceDownloadUsage> getUsedDatasets() throws IOException, ParseException {
+  /** @return list of DatasetOccurrenceDownloadUsage populated from usedDatasets.txt */
+  private List<DatasetOccurrenceDownloadUsage> getUsedDatasets()
+      throws IOException, ParseException {
     File csv = FileUtils.getClasspathFile("customdownload/usedDatasets.txt");
-    List<DatasetOccurrenceDownloadUsage> usages = Lists.newArrayList();
+    List<DatasetOccurrenceDownloadUsage> usages = new ArrayList<>();
 
-    try (TabularDataFileReader<List<String>> reader = TabularFiles.newTabularFileReader(
+    try (TabularDataFileReader<List<String>> reader =
+        TabularFiles.newTabularFileReader(
             Files.newBufferedReader(csv.toPath(), StandardCharsets.UTF_8), '\t', true)) {
       List<String> rec = reader.read();
       while (rec != null) {
@@ -132,15 +159,17 @@ public class CustomDownloadDataCiteConverterTest {
     return usages;
   }
 
-  /**
-   * Perform some tests to ensure used Datasets list was populated correctly.
-   */
+  /** Perform some tests to ensure used Datasets list was populated correctly. */
   private void testUsedDatasets(List<DatasetOccurrenceDownloadUsage> usedDatasets) {
     assertEquals(2, usedDatasets.size());
-    assertEquals(UUID.fromString("01536750-8af5-430c-b0e2-077dee7f7d5f"), usedDatasets.get(0).getDatasetKey());
-    assertEquals("Registros biológicos del Humedal Santa Maria del Lago 1999-2013",
-      usedDatasets.get(0).getDatasetTitle());
-    assertEquals(new DOI("10.15468/uvzgpk").getDoiName(), usedDatasets.get(0).getDatasetDOI().getDoiName());
+    assertEquals(
+        UUID.fromString("01536750-8af5-430c-b0e2-077dee7f7d5f"),
+        usedDatasets.get(0).getDatasetKey());
+    assertEquals(
+        "Registros biológicos del Humedal Santa Maria del Lago 1999-2013",
+        usedDatasets.get(0).getDatasetTitle());
+    assertEquals(
+        new DOI("10.15468/uvzgpk").getDoiName(), usedDatasets.get(0).getDatasetDOI().getDoiName());
     assertEquals(1, usedDatasets.get(0).getNumberRecords());
   }
 }

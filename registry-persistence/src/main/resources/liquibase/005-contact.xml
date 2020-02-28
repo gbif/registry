@@ -1,0 +1,44 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+	
+  <!--  
+    Replace simple Contact.name property with first and last name as its used in EML and our IMS.
+  -->
+  <changeSet id="5" author="markus">
+    <sql>
+      ALTER TABLE contact ADD COLUMN first_name TEXT CHECK (assert_min_length(first_name, 1));
+      <!-- keep all names as lastnames -->
+      ALTER TABLE contact RENAME COLUMN name TO last_name;
+    </sql>
+
+    <!--
+       Update CONTACT triggers with new first/last name columns
+     -->
+     <sql splitStatements="false" stripComments="false">
+       <![CDATA[
+       CREATE OR REPLACE FUNCTION contact_change_trigger()
+         RETURNS trigger AS
+         $func$
+           BEGIN
+             NEW.fulltext_search :=
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.first_name,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.last_name,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.description,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.position,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.email,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.phone,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.organization,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.address,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.city,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.province,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.country,'')) ||
+               TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.postal_code,''));
+             RETURN NEW;
+           END
+         $func$ LANGUAGE plpgsql;
+       ]]>
+     </sql>
+  </changeSet>
+</databaseChangeLog>

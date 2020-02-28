@@ -1,9 +1,12 @@
 /*
- * Copyright 2013 Global Biodiversity Information Facility (GBIF)
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -12,10 +15,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.Strings;
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
@@ -27,38 +26,41 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.directory.Augmenter;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.ContactMapper;
+import org.gbif.directory.Augmenter;
+import org.gbif.registry.domain.ws.NodeRequestSearchParams;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.EndpointMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.ws.guice.Trim;
+import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.ws.server.interceptor.NullToNotFound;
+import org.gbif.ws.annotation.NullToNotFound;
+import org.gbif.ws.annotation.Trim;
 
-import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.base.Strings;
+
 import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 
-@Singleton
-@Path("node")
+@RestController
+@RequestMapping(value = "node", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NodeResource extends BaseNetworkEntityResource<Node> implements NodeService {
 
   private final NodeMapper nodeMapper;
@@ -67,72 +69,59 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   private final DatasetMapper datasetMapper;
   private final Augmenter nodeAugmenter;
 
-  @Inject
   public NodeResource(
-    NodeMapper nodeMapper,
-    IdentifierMapper identifierMapper,
-    CommentMapper commentMapper,
-    ContactMapper contactMapper,
-    EndpointMapper endpointMapper,
-    MachineTagMapper machineTagMapper,
-    TagMapper tagMapper,
-    OrganizationMapper organizationMapper,
-    DatasetMapper datasetMapper,
-    InstallationMapper installationMapper,
-    EventBus eventBus,
-    Augmenter nodeAugmenter,
-    EditorAuthorizationService userAuthService) {
-    super(nodeMapper, commentMapper, contactMapper, endpointMapper, identifierMapper, machineTagMapper, tagMapper,
-      Node.class, eventBus, userAuthService);
-    this.nodeMapper = nodeMapper;
-    this.organizationMapper = organizationMapper;
+      MapperServiceLocator mapperServiceLocator,
+      EventManager eventManager,
+      Augmenter nodeAugmenter,
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
+    super(
+        mapperServiceLocator.getNodeMapper(),
+        mapperServiceLocator,
+        Node.class,
+        eventManager,
+        userAuthService,
+        withMyBatis);
+    this.nodeMapper = mapperServiceLocator.getNodeMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeAugmenter = nodeAugmenter;
-    this.datasetMapper = datasetMapper;
-    this.installationMapper = installationMapper;
+    this.datasetMapper = mapperServiceLocator.getDatasetMapper();
+    this.installationMapper = mapperServiceLocator.getInstallationMapper();
   }
 
-  @GET
-  @Path("{key}")
+  @GetMapping("{key}")
   @Nullable
   @NullToNotFound
   @Override
-  public Node get(@PathParam("key") UUID key) {
+  public Node get(@PathVariable UUID key) {
     return nodeAugmenter.augment(super.get(key));
   }
 
-
   /**
-   * All network entities support simple (!) search with "&q=".
-   * This is to support the console user interface, and is in addition to any complex, faceted search that might
-   * additionally be supported, such as dataset search.
+   * All network entities support simple (!) search with "&q=". This is to support the console user
+   * interface, and is in addition to any complex, faceted search that might additionally be
+   * supported, such as dataset search.
    */
-  @GET
-  public PagingResponse<Node> list(
-    @Nullable @QueryParam("identifierType") IdentifierType identifierType,
-    @Nullable @QueryParam("identifier") String identifier,
-    @Nullable @QueryParam("machineTagNamespace") String namespace,
-    @Nullable @QueryParam("machineTagName") String name,
-    @Nullable @QueryParam("machineTagValue") String value,
-    @Nullable @QueryParam("q") String query,
-    @Nullable @Context Pageable page
-  ) {
-    // This is getting messy: http://dev.gbif.org/issues/browse/REG-426
-    if (identifierType != null && identifier != null) {
-      return listByIdentifier(identifierType, identifier, page);
-    } else if (identifier != null) {
-      return listByIdentifier(identifier, page);
-    } else if (namespace != null) {
-      return listByMachineTag(namespace, name, value, page);
-    } else if (Strings.isNullOrEmpty(query)) {
+  @GetMapping
+  public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
+    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    } else if (request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifier(), page);
+    } else if (request.getMachineTagNamespace() != null) {
+      return listByMachineTag(
+          request.getMachineTagNamespace(),
+          request.getMachineTagName(),
+          request.getMachineTagValue(),
+          page);
+    } else if (Strings.isNullOrEmpty(request.getQ())) {
       return list(page);
     } else {
-      return search(query, page);
+      return search(request.getQ(), page);
     }
   }
 
-  /**
-   * Decorates the Nodes in the response with the Augmenter.
-   */
+  /** Decorates the Nodes in the response with the Augmenter. */
   private PagingResponse<Node> decorateResponse(PagingResponse<Node> response) {
     for (Node n : response.getResults()) {
       nodeAugmenter.augment(n);
@@ -141,53 +130,58 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Override
-  public PagingResponse<Node> search(String query, @Nullable Pageable page) {
+  public PagingResponse<Node> search(String query, Pageable page) {
     return decorateResponse(super.search(query, page));
   }
 
   @Override
-  public PagingResponse<Node> list(@Nullable Pageable page) {
+  public PagingResponse<Node> list(Pageable page) {
     return decorateResponse(super.list(page));
   }
 
   @Override
-  public PagingResponse<Node> listByIdentifier(IdentifierType type, String identifier, @Nullable Pageable page) {
+  public PagingResponse<Node> listByIdentifier(
+      IdentifierType type, String identifier, Pageable page) {
     return decorateResponse(super.listByIdentifier(type, identifier, page));
   }
 
   @Override
-  public PagingResponse<Node> listByIdentifier(String identifier, @Nullable Pageable page) {
+  public PagingResponse<Node> listByIdentifier(String identifier, Pageable page) {
     return decorateResponse(super.listByIdentifier(identifier, page));
   }
 
-  @GET
-  @Path("{key}/organization")
+  @GetMapping("{key}/organization")
   @Override
-  public PagingResponse<Organization> endorsedOrganizations(@PathParam("key") UUID nodeKey, @Context Pageable page) {
-    return new PagingResponse<>(page, organizationMapper.countOrganizationsEndorsedBy(nodeKey),
-      organizationMapper.organizationsEndorsedBy(nodeKey, page));
+  public PagingResponse<Organization> endorsedOrganizations(
+      @PathVariable("key") UUID nodeKey, Pageable page) {
+    return new PagingResponse<>(
+        page,
+        organizationMapper.countOrganizationsEndorsedBy(nodeKey),
+        organizationMapper.organizationsEndorsedBy(nodeKey, page));
   }
 
-  @GET
-  @Path("pendingEndorsement")
+  @GetMapping("pendingEndorsement")
   @Override
-  public PagingResponse<Organization> pendingEndorsements(@Context Pageable page) {
-    return new PagingResponse<>(page, organizationMapper.countPendingEndorsements(null),
-      organizationMapper.pendingEndorsements(null, page));
+  public PagingResponse<Organization> pendingEndorsements(Pageable page) {
+    return new PagingResponse<>(
+        page,
+        organizationMapper.countPendingEndorsements(null),
+        organizationMapper.pendingEndorsements(null, page));
   }
 
-  @GET
-  @Path("{key}/pendingEndorsement")
+  @GetMapping("{key}/pendingEndorsement")
   @Override
-  public PagingResponse<Organization> pendingEndorsements(@PathParam("key") UUID nodeKey, @Context Pageable page) {
-    return new PagingResponse<>(page, organizationMapper.countPendingEndorsements(nodeKey),
-      organizationMapper.pendingEndorsements(nodeKey, page));
+  public PagingResponse<Organization> pendingEndorsements(
+      @PathVariable("key") UUID nodeKey, Pageable page) {
+    return new PagingResponse<>(
+        page,
+        organizationMapper.countPendingEndorsements(nodeKey),
+        organizationMapper.pendingEndorsements(nodeKey, page));
   }
 
-  @GET
-  @Path("country/{key}")
+  @GetMapping("country/{key}")
   @Nullable
-  public Node getByCountry(@PathParam("key") String isoCode) {
+  public Node getByCountry(@PathVariable("key") String isoCode) {
     return getByCountry(Country.fromIsoCode(isoCode));
   }
 
@@ -197,60 +191,62 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     return nodeAugmenter.augment(nodeMapper.getByCountry(country));
   }
 
-  @GET
-  @Path("country")
+  @GetMapping("country")
   @Override
   public List<Country> listNodeCountries() {
     return nodeMapper.listNodeCountries();
   }
 
-  @GET
-  @Path("activeCountries")
+  @GetMapping("activeCountries")
   @Override
   public List<Country> listActiveCountries() {
     return nodeMapper.listActiveCountries();
   }
 
-  @GET
+  @GetMapping("{key}/dataset")
   @Override
-  @Path("{key}/dataset")
-  public PagingResponse<Dataset> endorsedDatasets(@PathParam("key") UUID nodeKey, @Context Pageable page) {
-    return pagingResponse(page, datasetMapper.countDatasetsEndorsedBy(nodeKey),
-      datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
+  public PagingResponse<Dataset> endorsedDatasets(
+      @PathVariable("key") UUID nodeKey, Pageable page) {
+    return pagingResponse(
+        page,
+        datasetMapper.countDatasetsEndorsedBy(nodeKey),
+        datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
   }
 
-  @GET
-  @Path("{key}/contact")
+  @GetMapping("{key}/contact")
   @Override
-  public List<Contact> listContacts(@PathParam("key") UUID targetEntityKey) {
+  public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
-  @DELETE
-  @Path("{key}/contact/{contactKey}")
-  @RolesAllowed(ADMIN_ROLE)
+  @DeleteMapping("{key}/contact/{contactKey}")
+  @Secured(ADMIN_ROLE)
   @Override
-  public void deleteContact(@PathParam("key") UUID targetEntityKey, @PathParam("contactKey") int contactKey) {
+  public void deleteContact(
+      @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
   @Override
-  public int addContact(UUID targetEntityKey, @NotNull @Valid @Trim Contact contact) {
+  public int addContact(
+      @PathVariable("key") UUID targetEntityKey, @NotNull @Valid @Trim Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
-  @GET
-  @Path("{key}/installation")
+  @GetMapping("{key}/installation")
   @Override
-  public PagingResponse<Installation> installations(@PathParam("key") UUID nodeKey, @Context Pageable page) {
-    return pagingResponse(page, installationMapper.countInstallationsEndorsedBy(nodeKey),
-      installationMapper.listInstallationsEndorsedBy(nodeKey, page));
+  public PagingResponse<Installation> installations(
+      @PathVariable("key") UUID nodeKey, Pageable page) {
+    return pagingResponse(
+        page,
+        installationMapper.countInstallationsEndorsedBy(nodeKey),
+        installationMapper.listInstallationsEndorsedBy(nodeKey, page));
   }
 
-  @Path("suggest")
-  @GET
+  @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(@QueryParam("q") String label) {
+  public List<KeyTitleResult> suggest(
+      @Nullable @RequestParam(value = "q", required = false) String label) {
     return nodeMapper.suggest(label);
   }
 }

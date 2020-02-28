@@ -1,0 +1,91 @@
+{
+  "groups": [
+    {
+      "name": "mail",
+      "type": "org.gbif.registry.mail.config.MailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
+      "name": "mail.devemail",
+      "type": "org.gbif.registry.mail.config.DevemailProperties",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties",
+      "sourceMethod": "getDevemail()"
+    },
+    {
+      "name": "organization.surety.mail",
+      "type": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
+    },
+    {
+      "name": "organization.surety.mail.urlTemplate",
+      "type": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties",
+      "sourceMethod": "getUrlTemplate()"
+    },
+    {
+      "name": "identity.surety.mail",
+      "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate",
+      "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties",
+      "sourceMethod": "getUrlTemplate()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "mail.devemail.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.devemail.address",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
+    },
+    {
+      "name": "mail.cc",
+      "type": "java.util.List",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
+      "name": "mail.bcc",
+      "type": "java.util.List",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
+      "name": "mail.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
+      "name": "organization.surety.mail.urlTemplate.confirmOrganization",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties"
+    },
+    {
+      "name": "organization.surety.mail.urlTemplate.organization",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties$UrlTemplateProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate.confirmUser",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
+    },
+    {
+      "name": "identity.surety.mail.urlTemplate.resetPassword",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
+    },
+    {
+      "name": "organization.surety.mail.helpdesk",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"
+    }
+  ]
+}

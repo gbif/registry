@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.handler;
 
 import org.gbif.api.model.common.DOI;
@@ -8,72 +23,42 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 
-/**
- * Business logic for DOI handling with DataCite.
- *
- */
+/** Business logic for DOI handling with DataCite. */
 public interface DataCiteDoiHandlerStrategy {
 
-  /**
-   * Tells is a DOI is using a predefined prefix.
-   * @return
-   */
+  /** Tells is a DOI is using a predefined prefix. */
   boolean isUsingMyPrefix(DOI doi);
 
-  /**
-   * Build the DataCiteMetadata for a Download.
-   *
-   * @param download
-   * @param user
-   * @return
-   */
+  /** Build the DataCiteMetadata for a Download. */
   DataCiteMetadata buildMetadata(Download download, GbifUser user);
 
-  /**
-   * Build the DataCiteMetadata for a Dataset.
-   *
-   * @param dataset
-   * @return
-   */
+  /** Build the DataCiteMetadata for a Dataset. */
   DataCiteMetadata buildMetadata(Dataset dataset);
 
-  /**
-   * Build the DataCiteMetadata for a Dataset that includes a relation to another DOI.
-   *
-   * @param dataset
-   * @param related
-   * @param relationType
-   * @return
-   */
-  DataCiteMetadata buildMetadata(Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType);
+  /** Build the DataCiteMetadata for a Dataset that includes a relation to another DOI. */
+  DataCiteMetadata buildMetadata(
+      Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType);
 
   /**
-   * Called when some data related to the Dataset changed. The implementation decides the action to take with the DOI
-   * service.
-   * @param dataset
+   * Called when some data related to the Dataset changed. The implementation decides the action to
+   * take with the DOI service.
+   *
    * @param previousDoi DOI of this dataset prior to the update.
    */
   void datasetChanged(Dataset dataset, @Nullable final DOI previousDoi);
 
   /**
-   * Called when some data in the Download changed. The implementation decides the action to take with the DOI
-   * service.
-   * @param download
-   * @param previousDownload download object as it appears before the change or null if the change is triggered
-   *                         by something else
-   * @param user
+   * Called when some data in the Download changed. The implementation decides the action to take
+   * with the DOI service.
+   *
+   * @param previousDownload download object as it appears before the change or null if the change
+   *     is triggered by something else
    */
   void downloadChanged(Download download, Download previousDownload, GbifUser user);
 
-  /**
-   * Directly schedule the registration of a Dataset DOI.
-   *
-   * @param doi
-   * @param metadata
-   * @param datasetKey
-   */
+  /** Directly schedule the registration of a Dataset DOI. */
   void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey);
-
 }

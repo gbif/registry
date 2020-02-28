@@ -1,39 +1,69 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.registry.events.ChangedComponentEvent;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.ContactableMapper;
+import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.ContactableMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
-import javax.annotation.security.RolesAllowed;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
-import com.google.common.eventbus.EventBus;
-import org.apache.bval.guice.Validate;
-import org.mybatis.guice.transactional.Transactional;
-
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link *
@@ -41,6 +71,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * <p>It inherits from {@link BaseCollectionEntityResource} to test the CRUD operations.
  */
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class ExtendedCollectionEntityResource<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
     extends BaseCollectionEntityResource<T> implements ContactService {
@@ -51,7 +82,7 @@ public abstract class ExtendedCollectionEntityResource<
   private final TagMapper tagMapper;
   private final MachineTagMapper machineTagMapper;
   private final IdentifierMapper identifierMapper;
-  private final EventBus eventBus;
+  private final EventManager eventManager;
   private final Class<T> objectClass;
 
   protected ExtendedCollectionEntityResource(
@@ -61,40 +92,45 @@ public abstract class ExtendedCollectionEntityResource<
       IdentifierMapper identifierMapper,
       ContactableMapper contactableMapper,
       MachineTagMapper machineTagMapper,
-      EventBus eventBus,
+      EventManager eventManager,
       Class<T> objectClass,
-      EditorAuthorizationService userAuthService) {
+      EditorAuthorizationService userAuthService,
+      WithMyBatis withMyBatis) {
     super(
         baseMapper,
         tagMapper,
         machineTagMapper,
         identifierMapper,
         userAuthService,
-        eventBus,
-        objectClass);
+        eventManager,
+        objectClass,
+        withMyBatis);
     this.baseMapper = baseMapper;
     this.addressMapper = addressMapper;
     this.contactableMapper = contactableMapper;
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
-    this.eventBus = eventBus;
+    this.eventManager = eventManager;
     this.objectClass = objectClass;
   }
 
   @Transactional
-  @Validate(groups = {PrePersist.class, Default.class})
   @Override
-  public UUID create(@Valid @NotNull T entity) {
+  public UUID create(@Validated({PrePersist.class, Default.class}) @NotNull T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
     if (entity.getAddress() != null) {
-      checkArgument(entity.getAddress().getKey() == null, "Unable to create an address which already has a key");
+      checkArgument(
+          entity.getAddress().getKey() == null,
+          "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
     }
 
     if (entity.getMailingAddress() != null) {
-      checkArgument(entity.getMailingAddress().getKey() == null, "Unable to create an address which already has a key");
+      checkArgument(
+          entity.getMailingAddress().getKey() == null,
+          "Unable to create an address which already has a key");
       addressMapper.create(entity.getMailingAddress());
     }
 
@@ -103,7 +139,8 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : entity.getMachineTags()) {
-        checkArgument(machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
+        checkArgument(
+            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(entity.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
@@ -121,28 +158,29 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getIdentifiers().isEmpty()) {
       for (Identifier identifier : entity.getIdentifiers()) {
-        checkArgument(identifier.getKey() == null, "Unable to create an identifier which already has a key");
+        checkArgument(
+            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(entity.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         baseMapper.addIdentifier(entity.getKey(), identifier.getKey());
       }
     }
 
-    eventBus.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
+    eventManager.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
 
   @Transactional
-  @Validate
   @Override
-  public void update(@Valid @NotNull T entity) {
+  public void update(@Validated @NotNull T entity) {
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
 
     if (entityOld.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
-      checkArgument(entity.getDeleted() == null,
-                    "Unable to update a previously deleted entity unless you clear the deletion timestamp");
+      checkArgument(
+          entity.getDeleted() == null,
+          "Unable to update a previously deleted entity unless you clear the deletion timestamp");
     } else {
       // not allowed to delete when updating
       checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
@@ -168,13 +206,14 @@ public abstract class ExtendedCollectionEntityResource<
     }
 
     T newEntity = get(entity.getKey());
-    eventBus.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
+    eventManager.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
   }
 
   private void updateAddress(Address newAddress, Address oldAddress) {
     if (newAddress != null) {
       if (oldAddress == null) {
-        checkArgument(newAddress.getKey() == null, "Unable to create an address which already has a key");
+        checkArgument(
+            newAddress.getKey() == null, "Unable to create an address which already has a key");
         addressMapper.create(newAddress);
       } else {
         addressMapper.update(newAddress);
@@ -182,45 +221,40 @@ public abstract class ExtendedCollectionEntityResource<
     }
   }
 
-  @POST
-  @Path("{key}/contact")
-  @Validate
+  @PostMapping(
+      value = "{key}/contact",
+      consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
-  public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
+  public void addContact(
+      @PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull UUID personKey) {
     // check if the contact exists
     List<Person> contacts = contactableMapper.listContacts(entityKey);
 
     if (contacts != null && contacts.stream().anyMatch(p -> p.getKey().equals(personKey))) {
-      throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity("Duplicate contact").build());
+      throw new WebApplicationException(
+          ResponseEntity.status(HttpStatus.CONFLICT).body("Duplicate contact"));
     }
 
     contactableMapper.addContact(entityKey, personKey);
-    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
-  @DELETE
-  @Path("{key}/contact/{personKey}")
-  @Validate
+  @DeleteMapping("{key}/contact/{personKey}")
   @Transactional
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Override
   public void removeContact(
-    @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey
-  ) {
+      @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
-    eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
-  @GET
-  @Path("{key}/contact")
+  @GetMapping("{key}/contact")
   @Nullable
-  @Validate(validateReturnedValue = true)
   @Override
-  public List<Person> listContacts(@PathParam("key") @NotNull UUID key) {
+  public List<Person> listContacts(@PathVariable @NotNull UUID key) {
     return contactableMapper.listContacts(key);
   }
-
 }

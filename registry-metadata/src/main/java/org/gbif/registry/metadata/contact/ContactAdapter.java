@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata.contact;
 
 import org.gbif.api.model.registry.Contact;
@@ -10,7 +25,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 /**
- *
  * Adapt the {@link Dataset} {@link Contact} list for what metadata documents generally want.
  *
  * @author cgendreau
@@ -26,9 +40,9 @@ public class ContactAdapter {
   }
 
   /**
-   * Get the list of AssociatedParties.
-   * This is defined as all non-primary {@link Contact}, excluding contacts with types the following types
-   * considered primary types: Originator, MetadataAuthor and AdministrativePointOfContact.
+   * Get the list of AssociatedParties. This is defined as all non-primary {@link Contact},
+   * excluding contacts with types the following types considered primary types: Originator,
+   * MetadataAuthor and AdministrativePointOfContact.
    *
    * @return list of AssociatedParties or empty list if none found
    */
@@ -42,19 +56,17 @@ public class ContactAdapter {
     return contacts;
   }
 
-  /**
-   * @return true if contact type is considered a preferred type, or false otherwise
-   */
+  /** @return true if contact type is considered a preferred type, or false otherwise */
   private boolean isPreferredContactType(ContactType type) {
-    return (type != null &&
-            (type == ContactType.ORIGINATOR
-             || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
-             || type == ContactType.METADATA_AUTHOR));
+    return (type != null
+        && (type == ContactType.ORIGINATOR
+            || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
+            || type == ContactType.METADATA_AUTHOR));
   }
 
   /**
-   * Get the ResourceCreator {@link Contact}.
-   * This is defined as the first primary {@link Contact} of type ContactType.ORIGINATOR.
+   * Get the ResourceCreator {@link Contact}. This is defined as the first primary {@link Contact}
+   * of type ContactType.ORIGINATOR.
    *
    * @return first preferred ResourceCreator found or null if none were found
    */
@@ -62,23 +74,22 @@ public class ContactAdapter {
     return getFirstPreferredType(ContactType.ORIGINATOR);
   }
 
-
   /**
    * Format the name of the contact as "FirstName LastName".
    *
    * @param contact
    * @return formatted name or "" if the contact is null or empty
    */
-  public static String formatContactName(Contact contact){
-    if(contact == null){
+  public static String formatContactName(Contact contact) {
+    if (contact == null) {
       return "";
     }
     return JOINER.join(contact.getFirstName(), contact.getLastName()).trim();
   }
 
   /**
-   * Get the AdministrativeContact {@link Contact}.
-   * This is defined as the first primary {@link Contact} of type ContactType.ADMINISTRATIVE_POINT_OF_CONTACT.
+   * Get the AdministrativeContact {@link Contact}. This is defined as the first primary {@link
+   * Contact} of type ContactType.ADMINISTRATIVE_POINT_OF_CONTACT.
    *
    * @return first preferred AdministrativeContact found or null if none were found
    */
@@ -87,21 +98,19 @@ public class ContactAdapter {
   }
 
   /**
-   * Filter contacts based on the provided contact types.
-   * The order in which the ContactType are provided will be respected in the response except missing
-   * ContactType will be ommited.
+   * Filter contacts based on the provided contact types. The order in which the ContactType are
+   * provided will be respected in the response except missing ContactType will be ommited.
    * Filtering is done by the {@link #getFirstPreferredType} method.
-
    *
    * @param types
    * @return filtered contacts or an empty list if none matched
    */
-  public List<Contact> getFilteredContacts(ContactType ... types){
+  public List<Contact> getFilteredContacts(ContactType... types) {
     List<Contact> contacts = Lists.newArrayList();
     Contact contact;
-    for(ContactType type : types){
+    for (ContactType type : types) {
       contact = getFirstPreferredType(type);
-      if(contact != null){
+      if (contact != null) {
         contacts.add(contact);
       }
     }

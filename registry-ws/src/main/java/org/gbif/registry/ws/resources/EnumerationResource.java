@@ -1,9 +1,12 @@
 /*
- * Copyright 2013 Global Biodiversity Information Facility (GBIF)
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,40 +17,59 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.InterpretationRemark;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NameUsageIssue;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.ws.server.interceptor.NullToNotFound;
-import org.gbif.ws.util.ExtraMediaTypes;
+import org.gbif.ws.annotation.NullToNotFound;
 
-import java.util.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.reflect.ClassPath;
-import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.inject.Singleton;
+import javax.validation.constraints.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
+import org.springframework.http.MediaType;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.SystemPropertyUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedMap.Builder;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
 /**
- * A resource that provides a JSON serialization of all Enumerations in the GBIF API suitable for building Javascript
- * based clients. This has no Java client, since Java clients have access to the Enums directly.
- * Reflection can be used to generate the inventory of enumerations.
+ * A resource that provides a JSON serialization of all Enumerations in the GBIF API suitable for
+ * building Javascript based clients. This has no Java client, since Java clients have access to the
+ * Enums directly. Reflection can be used to generate the inventory of enumerations.
  */
-@Path("enumeration")
-@Produces({MediaType.APPLICATION_JSON, ExtraMediaTypes.APPLICATION_JAVASCRIPT})
-@Singleton
+@SuppressWarnings("UnstableApiUsage")
+@RestController
+@RequestMapping(value = "enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnumerationResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(EnumerationResource.class);
@@ -55,164 +77,176 @@ public class EnumerationResource {
   // Uses reflection to find the enumerations in the API
   private static final Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
 
-  //List of Licenses as String
+  // List of Licenses as String
   private static final List<String> LICENSES =
-          Arrays.stream(License.values())
-                  .map(license -> license.isConcrete() ? license.getLicenseUrl() : license.name())
-                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      Arrays.stream(License.values())
+          .map(license -> license.isConcrete() ? license.getLicenseUrl() : license.name())
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   private static final List<Map<String, String>> COUNTRIES =
-          Arrays.stream(Country.values())
-                  .filter(Country::isOfficial)
-                  .map(EnumerationResource::countryToMap)
-                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      Arrays.stream(Country.values())
+          .filter(Country::isOfficial)
+          .map(EnumerationResource::countryToMap)
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   private static final List<Map<String, String>> LANGUAGES =
-          Arrays.stream(Language.values())
-                  .map(EnumerationResource::languageToMap)
-                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      Arrays.stream(Language.values())
+          .map(EnumerationResource::languageToMap)
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
-  //Only includes InterpretationRemark that are NOT deprecated
+  // Only includes InterpretationRemark that are NOT deprecated
+  @SuppressWarnings("Convert2MethodRef")
   private static final List<Map<String, Object>> INTERPRETATION_REMARKS =
-          Stream.concat(
-                  Arrays.stream(OccurrenceIssue.values()),
-                  Arrays.stream(NameUsageIssue.values()))
-                  .filter(val -> !val.isDeprecated())
-                  .map( val -> interpretationRemarkToMap(val)) //::interpretationRemarkToMap throws LambdaConversionException
-                  .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      Stream.concat(Arrays.stream(OccurrenceIssue.values()), Arrays.stream(NameUsageIssue.values()))
+          .filter(val -> !val.isDeprecated())
+          .map(
+              val ->
+                  interpretationRemarkToMap(
+                      val)) // ::interpretationRemarkToMap throws LambdaConversionException
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
-  // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as URLs.
+  // Exists to avoid use of the ExtensionSerializer, which would try (but fail) to give row types as
+  // URLs.
   private static final List<String> BASIC_EXTENSIONS =
-    Arrays.stream(Extension.values())
-      .map(Extension::name)
-      .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+      Arrays.stream(Extension.values())
+          .map(Extension::name)
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
    * An inventory of the enumerations supported.
    *
    * @return The enumerations in the GBIF API.
    */
-  @GET
-  @Path("basic")
+  @GetMapping("basic")
   public Set<String> inventory() {
     return PATH_MAPPING.keySet();
   }
 
   // reflect over the package to find suitable enumerations
   private static Map<String, Enum<?>[]> enumerations() {
+    ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
+    ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+    MetadataReaderFactory metadataReaderFactory =
+        new CachingMetadataReaderFactory(resourcePatternResolver);
+
+    List<Class<? extends Serializable>> classes =
+        Arrays.asList(Country.class, PreservationType.class, PipelineStep.class);
+
+    ImmutableSortedMap<String, Enum<?>[]> result;
     try {
-      ClassPath cp = ClassPath.from(EnumerationResource.class.getClassLoader());
-      ImmutableSortedMap.Builder<String, Enum<?>[]> builder = ImmutableSortedMap.naturalOrder();
-
-      // create a list with gbif and collection vocabulary enums
-      ImmutableList.Builder<ClassInfo> infosListBuilder = ImmutableList.<ClassInfo>builder()
-        .addAll(cp.getTopLevelClasses(Country.class.getPackage().getName()).asList())
-        .addAll(cp.getTopLevelClasses(PreservationType.class.getPackage().getName()).asList())
-        .addAll(cp.getTopLevelClasses(PipelineStep.class.getPackage().getName()).asList());
-
-      for (ClassInfo info : infosListBuilder.build()) {
-        Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(info.getName());
-        // verify that it is an Enumeration
-        if (vocab != null && vocab.getEnumConstants() != null) {
-          builder.put(info.getSimpleName(), vocab.getEnumConstants());
-        }
+      for (Class<? extends Serializable> clazz : classes) {
+        addEnumResources(
+            builder,
+            metadataReaderFactory,
+            resourcePatternResolver.getResources(
+                ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
+                    + resolveBasePackage(clazz.getPackage().getName())
+                    + "/*.class"));
       }
-      return builder.build();
-
+      result = builder.build();
     } catch (Exception e) {
       LOG.error("Unable to read the classpath for enumerations", e);
-      return ImmutableMap.<String, Enum<?>[]>of(); // empty
+      result = ImmutableSortedMap.of(); // empty
+    }
+
+    return result;
+  }
+
+  private static void addEnumResources(
+      Builder<String, Enum<?>[]> builder,
+      MetadataReaderFactory metadataReaderFactory,
+      Resource[] resources)
+      throws IOException {
+    for (Resource resource : resources) {
+      if (resource.isReadable()) {
+        MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
+        String className = metadataReader.getClassMetadata().getClassName();
+        Class<? extends Enum<?>> vocab = VocabularyUtils.lookupVocabulary(className);
+        if (isEnumeration(metadataReader)) {
+          builder.put(
+              org.apache.commons.lang.ClassUtils.getShortClassName(className),
+              vocab.getEnumConstants());
+        }
+      }
     }
   }
 
-  /**
-   * @return list of country information based on our enum.
-   */
-  @Path("country")
-  @GET
+  private static String resolveBasePackage(String basePackage) {
+    return ClassUtils.convertClassNameToResourcePath(
+        SystemPropertyUtils.resolvePlaceholders(basePackage));
+  }
+
+  private static boolean isEnumeration(MetadataReader metadataReader) {
+    Class<? extends Enum<?>> vocab =
+        VocabularyUtils.lookupVocabulary(metadataReader.getClassMetadata().getClassName());
+
+    return vocab != null && vocab.getEnumConstants() != null;
+  }
+
+  /** @return list of country information based on our enum. */
+  @GetMapping("country")
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
   }
 
-  /**
-   * @return list of language information based on our enum.
-   */
-  @Path("language")
-  @GET
+  /** @return list of language information based on our enum. */
+  @GetMapping("language")
   public List<Map<String, String>> listLanguages() {
     return LANGUAGES;
   }
 
   /**
-   * @return list of 'deserialised' License enums: uses License URL or just the enum name if no URL exists
+   * @return list of 'deserialized' License enums: uses License URL or just the enum name if no URL
+   *     exists
    */
-  @Path("license")
-  @GET
+  @GetMapping("license")
   public List<String> listLicenses() {
     return LICENSES;
   }
 
-  @Path("interpretationRemark")
-  @GET
+  @GetMapping("interpretationRemark")
   public List<Map<String, Object>> listInterpretationRemark() {
     return INTERPRETATION_REMARKS;
   }
 
   /**
-   * Gets the Extension enumeration.  This exists to avoid use of the ExtensionSerializer, which assumes JSON keys,
-   * since in this case we want values.
+   * Gets the Extension enumeration. This exists to avoid use of the ExtensionSerializer, which
+   * assumes JSON keys, since in this case we want values.
    *
    * @return The enumeration values.
    */
-  @Path("basic/Extension")
-  @GET()
+  @GetMapping("basic/Extension")
   public List<String> getExtensionEnumeration() {
     return BASIC_EXTENSIONS;
   }
 
   /**
-   * Gets the values of the named enumeration should the enumeration exist.
-   * Note this is used by the AngularJS console.
+   * Gets the values of the named enumeration should the enumeration exist. Note this is used by the
+   * AngularJS console.
    *
    * @param name Which should be the enumeration name in the GBIF vocabulary package (e.g. Country)
    * @return The enumeration values or null if the enumeration does not exist.
    */
-  @Path("basic/{name}")
-  @GET()
+  @GetMapping("basic/{name}")
   @NullToNotFound
-  public Enum<?>[] getEnumeration(@PathParam("name") @NotNull String name) {
-    if (PATH_MAPPING.containsKey(name)) {
-      return PATH_MAPPING.get(name);
-    } else {
-      return null;
-    }
+  public Object getEnumeration(@PathVariable("name") @NotNull String name) {
+    return PATH_MAPPING.getOrDefault(name, null);
   }
 
-  /**
-   * Transform a {@link Country} into a key-value map of properties.
-   *
-   * @param country
-   *
-   * @return
-   */
+  /** Transform a {@link Country} into a key-value map of properties. */
   private static Map<String, String> countryToMap(Country country) {
     Map<String, String> info = new LinkedHashMap<>();
     info.put("iso2", country.getIso2LetterCode());
     info.put("iso3", country.getIso3LetterCode());
     info.put("isoNumerical", String.valueOf(country.getIsoNumericalCode()));
     info.put("title", country.getTitle());
-    Optional.ofNullable(country.getGbifRegion()).ifPresent( gbifRegion -> info.put("gbifRegion", country.getGbifRegion().name()));
+    Optional.ofNullable(country.getGbifRegion())
+        .ifPresent(gbifRegion -> info.put("gbifRegion", country.getGbifRegion().name()));
     info.put("enumName", country.name());
     return info;
   }
 
-  /**
-   * Transform a {@link Language} into a key-value map of properties.
-   *
-   * @param language
-   *
-   * @return
-   */
+  /** Transform a {@link Language} into a key-value map of properties. */
   private static Map<String, String> languageToMap(Language language) {
     Map<String, String> info = new LinkedHashMap<>();
     info.put("iso2", language.getIso2LetterCode());
@@ -222,14 +256,9 @@ public class EnumerationResource {
     return info;
   }
 
-  /**
-   * Transform a {@link InterpretationRemark} into a key-value map of properties.
-   *
-   * @param interpretationRemark
-   *
-   * @return
-   */
-  private static Map<String, Object> interpretationRemarkToMap(InterpretationRemark interpretationRemark) {
+  /** Transform a {@link InterpretationRemark} into a key-value map of properties. */
+  private static Map<String, Object> interpretationRemarkToMap(
+      InterpretationRemark interpretationRemark) {
     Map<String, Object> info = new LinkedHashMap<>();
     info.put("id", interpretationRemark.getId());
     info.put("severity", interpretationRemark.getSeverity().name());

@@ -1,105 +1,121 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources.legacy;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.service.registry.DatasetService;
-import org.gbif.registry.ws.model.ErrorResponse;
-import org.gbif.registry.ws.model.LegacyEndpoint;
-import org.gbif.registry.ws.model.LegacyEndpointResponse;
-import org.gbif.registry.ws.util.LegacyResourceConstants;
-import org.gbif.registry.ws.util.LegacyResourceUtils;
+import org.gbif.registry.domain.ws.ErrorResponse;
+import org.gbif.registry.domain.ws.LegacyEndpoint;
+import org.gbif.registry.domain.ws.LegacyEndpointResponse;
+import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
+import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.ws.NotFoundException;
+import org.gbif.ws.util.CommonWsUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.sun.jersey.api.NotFoundException;
-import com.sun.jersey.api.core.InjectParam;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.collect.Lists;
 
 /**
- * Handle all legacy web service Endpoint requests (excluding IPT requests), previously handled by the GBRDS.
+ * Handle all legacy web service Endpoint requests (excluding IPT requests), previously handled by
+ * the GBRDS.
  */
-@Singleton
-@Path("registry/service")
+@RestController
+@RequestMapping("registry")
 public class LegacyEndpointResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyEndpointResource.class);
 
   private final DatasetService datasetService;
 
-  @Inject
   public LegacyEndpointResource(DatasetService datasetService) {
     this.datasetService = datasetService;
   }
 
   /**
-   * Register Dataset Endpoint, handling incoming request with path /resource/service. The access point URL, type, and
-   * dataset key are mandatory. Only after both the endpoint has been persisted is a Response with Status.CREATED
-   * returned.
+   * Register Dataset Endpoint, handling incoming request with path /resource/service. The access
+   * point URL, type, and dataset key are mandatory. Only after both the endpoint has been persisted
+   * is a ResponseEntity with HttpStatus.CREATED returned.
    *
-   * @param endpoint LegacyEndpoint with HTTP form parameters having been injected from Jersey
-   * @param security SecurityContext (security related information)
-   *
-   * @return Response with Status.CREATED if successful
+   * @param endpoint LegacyEndpoint with HTTP form parameters
+   * @return ResponseEntity with HttpStatus.CREATED if successful
    */
-  @POST
-  @Produces(MediaType.APPLICATION_XML)
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response registerEndpoint(@InjectParam LegacyEndpoint endpoint, @Context SecurityContext security) {
-    if (endpoint != null) {
+  @PostMapping(
+      value = "service",
+      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+      produces = MediaType.APPLICATION_XML_VALUE)
+  public ResponseEntity registerEndpoint(
+      @RequestParam @NotNull LegacyEndpoint endpoint, Authentication authentication) {
+    // required fields present, and corresponding dataset exists?
+    if (LegacyResourceUtils.isValid(endpoint, datasetService)) {
       // set required fields
-      String user = security.getUserPrincipal().getName();
-      endpoint.setCreatedBy(user);
-      endpoint.setModifiedBy(user);
+      endpoint.setCreatedBy(authentication.getName());
+      endpoint.setModifiedBy(authentication.getName());
 
-      // required fields present, and corresponding dataset exists?
-      if (LegacyResourceUtils.isValid(endpoint, datasetService)) {
+      // persist endpoint
+      int key = datasetService.addEndpoint(endpoint.getDatasetKey(), endpoint);
+      LOG.info("Endpoint created successfully, key={}", key);
 
-        // persist endpoint
-        int key = datasetService.addEndpoint(endpoint.getDatasetKey(), endpoint);
-        LOG.info("Endpoint created successfully, key=%s", String.valueOf(key));
-
-        // generate response
-        return Response.status(Response.Status.CREATED).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED)
-          .entity(endpoint).build();
-      } else {
-        LOG.error("Mandatory parameter(s) missing or invalid!");
-      }
+      // generate response
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .cacheControl(CacheControl.noCache())
+          .body(endpoint);
     }
-    LOG.error("Endpoint creation failed");
-    return Response.status(Response.Status.BAD_REQUEST).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED)
-      .build();
+    LOG.error("Mandatory parameter(s) missing or invalid! Endpoint creation failed");
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .cacheControl(CacheControl.noCache())
+        .build();
   }
 
   /**
-   * Delete all Endpoints for a Dataset, handling incoming request with path /resource/service and query parameter
-   * resourceKey. Only credentials are mandatory. If deletion is successful, returns Response with Status.OK.
+   * Delete all Endpoints for a Dataset, handling incoming request with path /resource/service and
+   * query parameter resourceKey. Only credentials are mandatory. If deletion is successful, returns
+   * ResponseEntity with HttpStatus.OK.
    *
    * @param datasetKey dataset key (UUID) coming in as query param
-   *
-   * @return Response with Status.OK if successful
+   * @return ResponseEntity with HttpStatus.OK if successful
    */
-  @DELETE
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  public Response deleteAllDatasetEndpoints(@QueryParam("resourceKey") UUID datasetKey) {
+  @DeleteMapping(value = "service", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+  public ResponseEntity deleteAllDatasetEndpoints(
+      @RequestParam(value = "resourceKey", required = false) UUID datasetKey) {
     if (datasetKey != null) {
       // retrieve existing dataset
       Dataset existing = datasetService.get(datasetKey);
@@ -111,49 +127,66 @@ public class LegacyEndpointResource {
           datasetService.deleteEndpoint(datasetKey, endpoint.getKey());
         }
 
-        LOG.info("Dataset's endpoints deleted successfully, key=%s", datasetKey.toString());
-        return Response.status(Response.Status.OK).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+        LOG.info("Dataset's endpoints deleted successfully, key={}", datasetKey);
+        return ResponseEntity.status(HttpStatus.OK).cacheControl(CacheControl.noCache()).build();
 
       } else {
         LOG.error("Request invalid. Dataset (whose endpoints are to be deleted) no longer exists!");
       }
     }
     LOG.error("Endpoint deletion failed");
-    return Response.status(Response.Status.BAD_REQUEST).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED)
-      .build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .cacheControl(CacheControl.noCache())
+        .build();
   }
 
   /**
-   * Retrieve all Endpoints associated to a Dataset, handling incoming request with path /service and query parameter
-   * resourceKey. The dataset key query parameter is mandatory. Only after both the datasetKey is verified to
-   * correspond to an existing Dataset, is a Response including the list of Endpoints returned.
-   * </br>
-   * Alternatively, get a list of all service types, handling incoming request with path /service.json and query
-   * parameter op=types
+   * Retrieve all Endpoints associated to a Dataset, handling incoming request with path /service
+   * and query parameter resourceKey. The dataset key query parameter is mandatory. Only after both
+   * the datasetKey is verified to correspond to an existing Dataset, is a Response including the
+   * list of Endpoints returned. </br> Alternatively, get a list of all service types, handling
+   * incoming request with path /service.json and query parameter op=types
    *
    * @param datasetKey dataset key (UUID) coming in as query param
-   *
-   * @return Response with list of Endpoints or empty list with error message if none found
+   * @return ResponseEntity with list of Endpoints or empty list with error message if none found
    */
-  @GET
-  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-  @Consumes(MediaType.TEXT_PLAIN)
-  public Response endpointsForDataset(@QueryParam("resourceKey") UUID datasetKey, @QueryParam("op") String op) {
-
+  @GetMapping(
+      value = {"service", "service{extension:\\.[a-z]+}"},
+      consumes = MediaType.TEXT_PLAIN_VALUE,
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity endpointsForDataset(
+      @PathVariable(value = "extension", required = false) String extension,
+      @RequestParam(value = "resourceKey", required = false) UUID datasetKey,
+      @RequestParam(value = "op", required = false) String op,
+      HttpServletResponse httpServletResponse) {
     // get all service types?
     if (op != null && op.equalsIgnoreCase("types")) {
-      // TODO: replace static list http://dev.gbif.org/issues/browse/REG-394
       try {
-        String content = Resources.toString(Resources.getResource("legacy/service_types.json"), Charsets.UTF_8);
+        String content =
+            new String(
+                FileCopyUtils.copyToByteArray(getServiceTypesInputStream()),
+                StandardCharsets.UTF_8);
         LOG.debug("Get service types finished");
-        return Response.status(Response.Status.OK).entity(content)
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+        return ResponseEntity.status(HttpStatus.OK)
+            .cacheControl(CacheControl.noCache())
+            .body(content);
       } catch (IOException e) {
         LOG.error("An error occurred retrieving service types");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .cacheControl(CacheControl.noCache())
+            .build();
       }
     } else if (datasetKey != null) {
+      String responseType =
+          CommonWsUtils.getResponseTypeByExtension(extension, MediaType.APPLICATION_XML_VALUE);
+      if (responseType != null) {
+        httpServletResponse.setContentType(responseType);
+      } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .cacheControl(CacheControl.noCache())
+            .build();
+      }
+
       try {
         // verify Dataset with key exists, otherwise NotFoundException gets thrown
         datasetService.get(datasetKey);
@@ -166,21 +199,29 @@ public class LegacyEndpointResource {
         for (Endpoint e : response) {
           endpoints.add(new LegacyEndpointResponse(e, datasetKey));
         }
-
         LOG.debug("Get all Endpoints for Dataset finished");
-        // return array, required for serialization otherwise get com.sun.jersey.api.MessageException: A message body
-        // writer for Java class java.util.ArrayList
-        LegacyEndpointResponse[] array = endpoints.toArray(new LegacyEndpointResponse[endpoints.size()]);
-        return Response.status(Response.Status.OK).entity(array)
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .cacheControl(CacheControl.noCache())
+            .contentType(MediaType.parseMediaType(responseType))
+            .body(new LegacyEndpointResponseListWrapper(endpoints));
       } catch (NotFoundException e) {
-        LOG.error("The dataset with key {} specified by query parameter does not exist", datasetKey);
-        // the dataset didn't exist, and expected response is "{Error: "No services associated to the organisation}"
-        return Response.status(Response.Status.OK).entity(new ErrorResponse("No dataset matches the key provided"))
-          .cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED).build();
+        LOG.error(
+            "The dataset with key {} specified by query parameter does not exist", datasetKey);
+        // the dataset didn't exist, and expected response is "{Error: "No services associated to
+        // the organisation}"
+        return ResponseEntity.status(HttpStatus.OK)
+            .cacheControl(CacheControl.noCache())
+            .contentType(MediaType.parseMediaType(responseType))
+            .body(new ErrorResponse("No dataset matches the key provided"));
       }
     }
-    return Response.status(Response.Status.BAD_REQUEST).cacheControl(LegacyResourceConstants.CACHE_CONTROL_DISABLED)
-      .build();
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .cacheControl(CacheControl.noCache())
+        .build();
+  }
+
+  private InputStream getServiceTypesInputStream() throws IOException {
+    return new ClassPathResource("legacy/service_types.json").getInputStream();
   }
 }

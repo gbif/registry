@@ -1,20 +1,33 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.security;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.ws.model.UserCreation;
-import org.gbif.registry.ws.model.UserUpdate;
+import org.gbif.registry.domain.ws.UserCreation;
+import org.gbif.registry.domain.ws.UserUpdate;
 
 import java.util.Set;
+
 import javax.annotation.Nullable;
 
-/**
- * Simple manager that only copies data from {@link UserUpdate} based on {@link UserRole}.
- */
+/** Simple manager that only copies data from {@link UserUpdate} based on {@link UserRole}. */
 public class UserUpdateRulesManager {
 
-  private UserUpdateRulesManager() {
-  }
+  private UserUpdateRulesManager() {}
 
   /**
    * Apply updates contained in {@link UserUpdate} to {@link GbifUser}.
@@ -25,12 +38,15 @@ public class UserUpdateRulesManager {
    * @param fromTrustedApp
    * @return
    */
-  public static GbifUser applyUpdate(@Nullable Set<UserRole> initiatorRoles, GbifUser user, UserUpdate userUpdate,
-                                     boolean fromTrustedApp) {
+  public static GbifUser applyUpdate(
+      @Nullable Set<UserRole> initiatorRoles,
+      GbifUser user,
+      UserUpdate userUpdate,
+      boolean fromTrustedApp) {
 
     boolean isAdmin = initiatorRoles != null && (initiatorRoles.contains(UserRole.REGISTRY_ADMIN));
 
-    //common operations
+    // common operations
     user.setFirstName(userUpdate.getFirstName());
     user.setLastName(userUpdate.getLastName());
     user.setEmail(userUpdate.getEmail());
@@ -64,5 +80,4 @@ public class UserUpdateRulesManager {
     user.getRoles().add(UserRole.USER);
     return user;
   }
-
 }

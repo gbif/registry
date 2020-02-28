@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.metadata;
 
 import org.gbif.api.model.registry.Citation;
@@ -20,11 +35,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.commons.io.FileUtils;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,7 +53,8 @@ public class DublinCoreWriterTest {
 
   // Take it from the test/resources folder since the live one was down for days in April 2016
   // http://www.openarchives.org/OAI/2.0/oai_dc.xsd
-  // Within the schema, a schemaLocation is changed from http://dublincore.org/schemas/xmls/simpledc20021212.xsd,
+  // Within the schema, a schemaLocation is changed from
+  // http://dublincore.org/schemas/xmls/simpledc20021212.xsd,
   // which redirects to HTTPS.  The validator doesn't follow the redirect.
   private static final String OAI_2_0_DC_SCHEMA = "xsd/oai_dc.xsd";
 
@@ -45,7 +62,7 @@ public class DublinCoreWriterTest {
   public void testWrite() throws Exception {
     Dataset d = new Dataset();
     d.setKey(UUID.fromString("bdd601cc-00a7-431c-9724-d5b03170fcb2"));
-    //d.setDoi(new DOI("10.1234/5679"));
+    // d.setDoi(new DOI("10.1234/5679"));
     d.setTitle("This is a keyboard dataset");
     d.setDataLanguage(Language.FRENCH);
 
@@ -63,10 +80,11 @@ public class DublinCoreWriterTest {
     listKeyWordColl.add(keyword);
     d.setKeywordCollections(listKeyWordColl);
 
-    //try additional properties
+    // try additional properties
     Map<String, Object> additionalProperties = Maps.newHashMap();
     additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, 3l);
-    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, "application/dwca+zip");
+    additionalProperties.put(
+        DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, "application/dwca+zip");
 
     List<Citation> citationList = Lists.newArrayList();
     Citation citation = new Citation();
@@ -80,24 +98,27 @@ public class DublinCoreWriterTest {
     originatorContact.setType(ContactType.ORIGINATOR);
     originatorContact.setPrimary(true);
 
-    //add the same name twice sith a different ContactType to make sure it will appear only once at the end
+    // add the same name twice sith a different ContactType to make sure it will appear only once at
+    // the end
     Contact metadataAuthorContact = new Contact();
     metadataAuthorContact.setFirstName("Carey");
     metadataAuthorContact.setLastName("Price");
     metadataAuthorContact.setType(ContactType.METADATA_AUTHOR);
     metadataAuthorContact.setPrimary(true);
 
-    // ADMINISTRATIVE_POINT_OF_CONTACT should be displayed first in the generated DublinCore document
+    // ADMINISTRATIVE_POINT_OF_CONTACT should be displayed first in the generated DublinCore
+    // document
     Contact administrativeContact = new Contact();
     administrativeContact.setFirstName("Patrick");
     administrativeContact.setLastName("Roy");
     administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
 
-    d.setContacts(Lists.newArrayList(originatorContact, metadataAuthorContact, administrativeContact));
+    d.setContacts(
+        Lists.newArrayList(originatorContact, metadataAuthorContact, administrativeContact));
 
     d.setGeographicCoverageDescription("Description de la portée");
     Date endDate = calendar.getTime();
-    //subtract a day
+    // subtract a day
     calendar.roll(Calendar.DAY_OF_MONTH, false);
     Date startDate = calendar.getTime();
     TemporalCoverage tp = new DateRange(startDate, endDate);
@@ -115,19 +136,19 @@ public class DublinCoreWriterTest {
     StringWriter writer = new StringWriter();
     DublinCoreWriter.newInstance().writeTo(organization, d, additionalProperties, writer);
 
-    //Load test file
-    String expectedContent = FileUtils.readFileToString(org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));
+    // Load test file
+    String expectedContent =
+        FileUtils.readFileToString(
+            org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));
 
-    //compare without the whitespace characters
-    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
-    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());
+    // compare without the whitespace characters
+    String expectedFileContent = CharMatcher.whitespace().removeFrom(expectedContent);
+    String actualFileContent = CharMatcher.whitespace().removeFrom(writer.toString());
 
     assertEquals(expectedFileContent, actualFileContent);
 
-
     // ensure we have a valid XML file according to the schema
-    XMLValidator.assertXMLAgainstXSD(writer.toString(), org.gbif.utils.file.FileUtils.classpath2Filepath(OAI_2_0_DC_SCHEMA));
-
+    XMLValidator.assertXMLAgainstXSD(
+        writer.toString(), org.gbif.utils.file.FileUtils.classpath2Filepath(OAI_2_0_DC_SCHEMA));
   }
-
 }
