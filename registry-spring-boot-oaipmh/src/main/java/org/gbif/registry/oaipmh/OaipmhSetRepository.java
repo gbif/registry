@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
 import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
-import org.springframework.stereotype.Component;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -37,7 +36,6 @@ import com.google.common.collect.Lists;
  *
  * @author cgendreau
  */
-@Component
 public class OaipmhSetRepository implements SetRepository {
 
   private static final String SUB_SET_SEPARATOR = ":";

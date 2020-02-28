@@ -35,9 +35,6 @@ public class OaipmhItem implements Item {
   /**
    * Creates a new OaipmhItem instance with no metadata content. Mostly to be used as
    * ItemIdentifier.
-   *
-   * @param dataset
-   * @param sets
    */
   public OaipmhItem(Dataset dataset, List<Set> sets) {
     this(dataset, null, sets);

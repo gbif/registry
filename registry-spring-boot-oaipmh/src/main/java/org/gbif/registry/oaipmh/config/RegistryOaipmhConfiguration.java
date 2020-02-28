@@ -15,13 +15,36 @@
  */
 package org.gbif.registry.oaipmh.config;
 
+import org.gbif.registry.oaipmh.OaipmhItemRepository;
+import org.gbif.registry.oaipmh.OaipmhSetRepository;
+import org.gbif.registry.occurrenceclient.OccurrenceMetricsClient;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.service.RegistryDatasetService;
+
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
+
+import org.dspace.xoai.dataprovider.DataProvider;
+import org.dspace.xoai.dataprovider.handlers.ErrorHandler;
+import org.dspace.xoai.dataprovider.model.Context;
+import org.dspace.xoai.dataprovider.model.MetadataFormat;
+import org.dspace.xoai.dataprovider.repository.ItemRepository;
+import org.dspace.xoai.dataprovider.repository.Repository;
 import org.dspace.xoai.dataprovider.repository.RepositoryConfiguration;
+import org.dspace.xoai.dataprovider.repository.SetRepository;
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Granularity;
+import org.dspace.xoai.services.api.DateProvider;
+import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
+import org.dspace.xoai.services.impl.UTCDateProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,7 +70,76 @@ public class RegistryOaipmhConfiguration {
   }
 
   @Bean
-  public RepositoryConfiguration repositoryConfiguration() {
+  public Repository repository(
+      RegistryDatasetService datasetService,
+      DatasetMapper datasetMapper,
+      OrganizationMapper organizationMapper,
+      OccurrenceMetricsClient occurrenceMetricsClient) {
+    return new Repository()
+        .withItemRepository(
+            itemRepository(
+                datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient))
+        .withSetRepository(setRepository(datasetMapper))
+        .withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
+        .withConfiguration(repositoryConfiguration());
+  }
+
+  @Bean
+  public DataProvider dataProvider(
+      RegistryDatasetService datasetService,
+      DatasetMapper datasetMapper,
+      OrganizationMapper organizationMapper,
+      OccurrenceMetricsClient occurrenceMetricsClient) {
+    return new DataProvider(
+        context(),
+        repository(datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient));
+  }
+
+  @Bean
+  public DateProvider dateProvider() {
+    return new UTCDateProvider();
+  }
+
+  @Bean
+  public ErrorHandler errorHandler() {
+    return new ErrorHandler();
+  }
+
+  private Context context() {
+    return new Context()
+        .withMetadataFormat(
+            new MetadataFormat()
+                .withPrefix("oai_dc")
+                .withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/")
+                .withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd")
+                .withTransformer(xsltTransformer("dc.xslt")))
+        .withMetadataFormat(
+            new MetadataFormat()
+                .withPrefix("eml")
+                .withNamespace("eml://ecoinformatics.org/eml-2.1.1")
+                .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd")
+                .withTransformer(xsltTransformer("eml.xslt")));
+  }
+
+  private Transformer xsltTransformer(String xsltFile) {
+    TransformerFactory factory = TransformerFactory.newInstance();
+    try {
+      /*
+       * TODO: "An object of this class [Transformer] may not be used in multiple threads running concurrently!"
+       * Instead, XOAI should accept an immutable Templates object, and call .newTransformer() to get a Transformer.
+       * See https://xalan.apache.org/xalan-j/usagepatterns.html#multithreading
+       */
+      InputStream stream =
+          this.getClass()
+              .getClassLoader()
+              .getResourceAsStream("org/gbif/registry/oaipmh/" + xsltFile);
+      return factory.newTransformer(new StreamSource(stream));
+    } catch (TransformerConfigurationException e) {
+      throw new RuntimeException("Unable to read XSLT transform " + xsltFile, e);
+    }
+  }
+
+  private RepositoryConfiguration repositoryConfiguration() {
     return new RepositoryConfiguration()
         .withRepositoryName(REPO_NAME)
         .withAdminEmail(oaipmhConfigProperties.getAdminEmail())
@@ -68,5 +160,18 @@ public class RegistryOaipmhConfiguration {
                 + "\t\tFor more information, see https://www.gbif.org/developer/registry\n"
                 + "\t</dc:description>\n"
                 + "</oai_dc:dc>\n");
+  }
+
+  private ItemRepository itemRepository(
+      RegistryDatasetService datasetService,
+      DatasetMapper datasetMapper,
+      OrganizationMapper organizationMapper,
+      OccurrenceMetricsClient occurrenceMetricsClient) {
+    return new OaipmhItemRepository(
+        datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient);
+  }
+
+  private SetRepository setRepository(DatasetMapper datasetMapper) {
+    return new OaipmhSetRepository(datasetMapper);
   }
 }
