@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>registry-parent</artifactId>
+    <groupId>org.gbif.registry</groupId>
+    <version>1.1.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>registry-directory</artifactId>
+
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+    <guice.version>4.0</guice.version>
+    <gbif-common-ws.version>0.48</gbif-common-ws.version>
+    <gbif-api-old.version>0.103</gbif-api-old.version>
+  </properties>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>*:*</include>
+                </includes>
+              </artifactSet>
+              <minimizeJar>false</minimizeJar>
+              <filters>
+                <filter>
+                  <!-- filter out signature files from signed dependencies, else repackaging fails with security ex -->
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <relocations>
+                <relocation>
+                  <pattern>org.gbif.ws</pattern>
+                  <shadedPattern>shaded.org.gbif.ws</shadedPattern>
+                  <excludes>
+                    <exclude>org.gbif.ws.client.guice.GbifWsClientModule</exclude>
+                  </excludes>
+                </relocation>
+                <relocation>
+                  <pattern>org.gbif.api</pattern>
+                  <shadedPattern>shaded.org.gbif.api</shadedPattern>
+                  <excludes>
+                    <exclude>org.gbif.api.service.directory.*</exclude>
+                    <exclude>org.gbif.api.model.directory.*</exclude>
+                    <exclude>org.gbif.api.vocabulary.directory.*</exclude>
+                  </excludes>
+                </relocation>
+                <relocation>
+                  <pattern>com.sun.jersey.client</pattern>
+                  <shadedPattern>shaded.com.sun.jersey.client</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Spring dependencies -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+
+    <!-- GBIF dependencies -->
+    <dependency>
+      <groupId>org.gbif.directory</groupId>
+      <artifactId>directory-api</artifactId>
+    </dependency>
+    <!-- GBIF dependencies -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <version>${gbif-api-old.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.directory</groupId>
+      <artifactId>directory-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common-ws</artifactId>
+      <version>${gbif-common-ws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.directory</groupId>
+      <artifactId>directory-ws-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+
+    <!-- Third party dependencies -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
+    <!-- Third party dependencies -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>
