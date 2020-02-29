@@ -1,3 +1,4 @@
+@Oaipmh
 @OaipmhGetRecord
 Feature: Test GetRecord verb of the OAI-PMH endpoint
 
@@ -26,6 +27,9 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
       | metadataPrefix | eml                            |
     Then response status is 200
     And request parameters in response are correct
+      | verb           | GetRecord                      |
+      | identifier     | non-existent-record-identifier |
+      | metadataPrefix | eml                            |
     And error code is "idDoesNotExist"
 
 
@@ -36,17 +40,21 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
       | metadataPrefix | made-up-metadata-format        |
     Then response status is 200
     And request parameters in response are correct
+      | verb           | GetRecord                      |
+      | identifier     | non-existent-record-identifier |
+      | metadataPrefix | made-up-metadata-format        |
     And error code is "cannotDisseminateFormat"
 
 
   Scenario Outline: Get record with unsupported date format in <paramName> causes "badArgument" error
     When Get record by parameters
-      | verb           | GetRecord                            |
-      | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
-      | metadataPrefix | eml                                  |
-      | <paramName>    | 111                                  |
+      | verb           | GetRecord |
+      | metadataPrefix | eml       |
+      | <paramName>    | 111       |
     Then response status is 200
     And request parameters in response are correct
+      | verb           | GetRecord |
+      | metadataPrefix | eml       |
     And error code is "badArgument"
 
     Scenarios:
@@ -62,28 +70,31 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
       | metadataPrefix | eml                                  |
     Then response status is 200
     And request parameters in response are correct
+      | verb           | GetRecord                            |
+      | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
+      | metadataPrefix | eml                                  |
     And no error in response
     And response contains processed citation "The BGBM (2010). Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\". Checklist dataset https://doi.org/10.21373/gbif.2014.xsd123 accessed via GBIF.org on %s."
 
 
-    Scenario: Get record deleted\restored dataset
-      When Get record by parameters
-        | verb           | GetRecord                            |
-        | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
-        | metadataPrefix | eml                                  |
-      Then response status is 200
-      And no record status
-      When delete dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
-      And Get record by parameters
-        | verb           | GetRecord                            |
-        | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
-        | metadataPrefix | eml                                  |
-      Then response status is 200
-      And record status is "deleted"
-      When restore dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
-      And Get record by parameters
-        | verb           | GetRecord                            |
-        | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
-        | metadataPrefix | eml                                  |
-      Then response status is 200
-      And no record status
+  Scenario: Get record deleted\restored dataset
+    When Get record by parameters
+      | verb           | GetRecord                            |
+      | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
+      | metadataPrefix | eml                                  |
+    Then response status is 200
+    And no record status
+    When delete dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
+    And Get record by parameters
+      | verb           | GetRecord                            |
+      | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
+      | metadataPrefix | eml                                  |
+    Then response status is 200
+    And record status is "deleted"
+    When restore dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
+    And Get record by parameters
+      | verb           | GetRecord                            |
+      | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
+      | metadataPrefix | eml                                  |
+    Then response status is 200
+    And no record status
