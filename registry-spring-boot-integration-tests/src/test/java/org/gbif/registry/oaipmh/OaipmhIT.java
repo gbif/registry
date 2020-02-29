@@ -26,7 +26,10 @@ import io.cucumber.junit.CucumberOptions;
 @RunWith(Cucumber.class)
 @CucumberOptions(
     strict = true,
-    features = {"classpath:features/oaipmh_get_record.feature"},
+    features = {
+      "classpath:features/oaipmh_get_record.feature",
+      "classpath:features/oaipmh_list_metadata_formats.feature"
+    },
     glue = {"org.gbif.registry.oaipmh", "org.gbif.registry.utils.cucumber"},
     plugin = "pretty")
 public class OaipmhIT {

@@ -74,7 +74,7 @@ public class OaipmhTestSteps {
     this.datasetService = datasetService;
   }
 
-  @Before("@OaipmhGetRecord")
+  @Before("@Oaipmh")
   public void before() throws Exception {
     connection = ds.getConnection();
     Objects.requireNonNull(connection, "Connection must not be null");
@@ -83,7 +83,7 @@ public class OaipmhTestSteps {
         connection, new ClassPathResource("/scripts/oaipmh/oaipmh_get_record_prepare.sql"));
   }
 
-  @After("@OaipmhGetRecord")
+  @After("@Oaipmh")
   public void after() throws Exception {
     Objects.requireNonNull(connection, "Connection must not be null");
 
@@ -132,12 +132,12 @@ public class OaipmhTestSteps {
   }
 
   @Then("request parameters in response are correct")
-  public void checkRequestParams() throws Exception {
-    result
-        .andExpect(xpath("string(/OAI-PMH/request/@verb)").string(requestParams.get("verb").get(0)))
-        .andExpect(
-            xpath("string(/OAI-PMH/request/@metadataPrefix)")
-                .string(requestParams.get("metadataPrefix").get(0)));
+  public void checkRequestParams(Map<String, String> params) throws Exception {
+    for (Map.Entry<String, String> entry : params.entrySet()) {
+      result.andExpect(
+          xpath(String.format("string(/OAI-PMH/request/@%s)", entry.getKey()))
+              .string(entry.getValue()));
+    }
   }
 
   @Then("error code is {string}")
@@ -178,8 +178,19 @@ public class OaipmhTestSteps {
   }
 
   @And("record status is {string}")
-  public void checkRecordStatus(String recordStatus) throws Exception {
+  public void checkRecordStatus(String expectedRecordStatus) throws Exception {
     result.andExpect(
-        xpath("string(/OAI-PMH/GetRecord/record/header/@status)").string(recordStatus));
+        xpath("string(/OAI-PMH/GetRecord/record/header/@status)").string(expectedRecordStatus));
+  }
+
+  @Then("metadata formats are")
+  public void checkListMetadataFormats(List<String> expectedFormats) throws Exception {
+    for (int i = 0; i < expectedFormats.size(); i++) {
+      result.andExpect(
+          xpath(
+                  String.format(
+                      "/OAI-PMH/ListMetadataFormats/metadataFormat[%d]/metadataPrefix", i + 1))
+              .string(expectedFormats.get(i)));
+    }
   }
 }
