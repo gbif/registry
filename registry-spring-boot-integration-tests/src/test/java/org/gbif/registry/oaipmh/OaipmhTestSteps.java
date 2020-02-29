@@ -118,7 +118,7 @@ public class OaipmhTestSteps {
     // prepared by scripts
   }
 
-  @When("Get record by parameters")
+  @When("Perform OAI-PMH call with parameters")
   public void getRecord(Map<String, List<String>> parameters) throws Exception {
     this.requestParams = parameters;
     result =
@@ -191,6 +191,13 @@ public class OaipmhTestSteps {
                   String.format(
                       "/OAI-PMH/ListMetadataFormats/metadataFormat[%d]/metadataPrefix", i + 1))
               .string(expectedFormats.get(i)));
+    }
+  }
+
+  @Then("Identify response contains")
+  public void identifyResponseContains(Map<String, String> expectedData) throws Exception {
+    for (Map.Entry<String, String> entry : expectedData.entrySet()) {
+      result.andExpect(xpath("/OAI-PMH/Identify/" + entry.getKey()).string(entry.getValue()));
     }
   }
 }
