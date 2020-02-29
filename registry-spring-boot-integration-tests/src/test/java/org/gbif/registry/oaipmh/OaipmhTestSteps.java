@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.oaipmh;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 
 import java.sql.Connection;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
@@ -38,13 +41,16 @@ import org.springframework.web.context.WebApplicationContext;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import static java.time.ZoneOffset.UTC;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
@@ -59,10 +65,13 @@ public class OaipmhTestSteps {
   private DataSource ds;
   private Connection connection;
   private Map<String, List<String>> requestParams;
+  private DatasetService datasetService;
 
-  public OaipmhTestSteps(WebApplicationContext webContext, DataSource ds) {
+  public OaipmhTestSteps(
+      WebApplicationContext webContext, DataSource ds, DatasetService datasetService) {
     mvc = MockMvcBuilders.webAppContextSetup(webContext).apply(springSecurity()).build();
     this.ds = ds;
+    this.datasetService = datasetService;
   }
 
   @Before("@OaipmhGetRecord")
@@ -109,14 +118,12 @@ public class OaipmhTestSteps {
     // prepared by scripts
   }
 
-  @Given("Request parameters")
-  public void prepareParameters(Map<String, List<String>> parameters) {
+  @When("Get record by parameters")
+  public void getRecord(Map<String, List<String>> parameters) throws Exception {
     this.requestParams = parameters;
-  }
-
-  @When("Get record")
-  public void getRecord() throws Exception {
-    result = mvc.perform(get("/oai-pmh/registry").params(new LinkedMultiValueMap<>(requestParams)));
+    result =
+        mvc.perform(get("/oai-pmh/registry").params(new LinkedMultiValueMap<>(requestParams)))
+            .andDo(print());
   }
 
   @Then("response status is {int}")
@@ -128,9 +135,6 @@ public class OaipmhTestSteps {
   public void checkRequestParams() throws Exception {
     result
         .andExpect(xpath("string(/OAI-PMH/request/@verb)").string(requestParams.get("verb").get(0)))
-        .andExpect(
-            xpath("string(/OAI-PMH/request/@identifier)")
-                .string(requestParams.get("identifier").get(0)))
         .andExpect(
             xpath("string(/OAI-PMH/request/@metadataPrefix)")
                 .string(requestParams.get("metadataPrefix").get(0)));
@@ -152,5 +156,30 @@ public class OaipmhTestSteps {
     result.andExpect(
         xpath("/OAI-PMH/GetRecord/record/metadata/eml/additionalMetadata/metadata/gbif/citation")
             .string(citation));
+  }
+
+  @When("restore dataset {string}")
+  public void restoreDataset(String datasetKey) {
+    Dataset dataset = datasetService.get(UUID.fromString(datasetKey));
+    assertNotNull(dataset.getDeleted());
+
+    dataset.setDeleted(null);
+    datasetService.update(dataset);
+  }
+
+  @When("delete dataset {string}")
+  public void deleteDataset(String datasetKey) {
+    datasetService.delete(UUID.fromString(datasetKey));
+  }
+
+  @And("no record status")
+  public void datasetIsNotDeleted() throws Exception {
+    result.andExpect(xpath("/OAI-PMH/GetRecord/record/header/@status").doesNotExist());
+  }
+
+  @And("record status is {string}")
+  public void checkRecordStatus(String recordStatus) throws Exception {
+    result.andExpect(
+        xpath("string(/OAI-PMH/GetRecord/record/header/@status)").string(recordStatus));
   }
 }
