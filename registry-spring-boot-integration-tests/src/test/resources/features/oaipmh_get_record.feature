@@ -1,6 +1,6 @@
 @Oaipmh
 @OaipmhGetRecord
-Feature: Test GetRecord verb of the OAI-PMH endpoint
+Feature: Test the GetRecord verb of the OAI-PMH endpoint
 
   Background:
     Given node
@@ -21,7 +21,7 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
 
 
   Scenario: Get record with non existent record identifier causes "idDoesNotExist" error
-    When Get record by parameters
+    When Perform OAI-PMH call with parameters
       | verb           | GetRecord                      |
       | identifier     | non-existent-record-identifier |
       | metadataPrefix | eml                            |
@@ -34,7 +34,7 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
 
 
   Scenario: Get record with unsupported metadata format causes "cannotDisseminateFormat" error
-    When Get record by parameters
+    When Perform OAI-PMH call with parameters
       | verb           | GetRecord                      |
       | identifier     | non-existent-record-identifier |
       | metadataPrefix | made-up-metadata-format        |
@@ -47,7 +47,7 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
 
 
   Scenario Outline: Get record with unsupported date format in <paramName> causes "badArgument" error
-    When Get record by parameters
+    When Perform OAI-PMH call with parameters
       | verb           | GetRecord |
       | metadataPrefix | eml       |
       | <paramName>    | 111       |
@@ -64,7 +64,7 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
 
 
   Scenario: Get record with augmented data
-    When Get record by parameters
+    When Perform OAI-PMH call with parameters
       | verb           | GetRecord                            |
       | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
       | metadataPrefix | eml                                  |
@@ -78,21 +78,21 @@ Feature: Test GetRecord verb of the OAI-PMH endpoint
 
 
   Scenario: Get record deleted\restored dataset
-    When Get record by parameters
+    When Perform OAI-PMH call with parameters
       | verb           | GetRecord                            |
       | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
       | metadataPrefix | eml                                  |
     Then response status is 200
     And no record status
     When delete dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
-    And Get record by parameters
+    And Perform OAI-PMH call with parameters
       | verb           | GetRecord                            |
       | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
       | metadataPrefix | eml                                  |
     Then response status is 200
     And record status is "deleted"
     When restore dataset "b951d9f4-57f8-4cd8-b7cf-6b44f325d318"
-    And Get record by parameters
+    And Perform OAI-PMH call with parameters
       | verb           | GetRecord                            |
       | identifier     | b951d9f4-57f8-4cd8-b7cf-6b44f325d318 |
       | metadataPrefix | eml                                  |
