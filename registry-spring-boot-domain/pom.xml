@@ -14,12 +14,6 @@
   </properties>
 
   <dependencies>
-    <!-- Spring dependencies -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>

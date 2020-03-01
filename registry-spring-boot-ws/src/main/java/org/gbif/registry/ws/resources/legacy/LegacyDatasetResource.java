@@ -27,7 +27,7 @@ import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.util.CommonWsUtils;
 
@@ -53,7 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.Lists;
 
-import static org.gbif.registry.domain.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
+import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by

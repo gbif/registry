@@ -18,7 +18,6 @@ package org.gbif.registry.domain.ws;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
@@ -47,7 +46,7 @@ import com.google.common.base.Strings;
  * used to specify element names that consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "service")
-public class LegacyEndpoint extends Endpoint {
+public class LegacyEndpoint extends Endpoint implements LegacyEntity {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyEndpoint.class);
 
@@ -87,7 +86,7 @@ public class LegacyEndpoint extends Endpoint {
   @ParamName(value = LegacyResourceConstants.DESCRIPTION_PARAM)
   @Override
   public void setDescription(String description) {
-    super.setDescription(LegacyResourceUtils.validateField(description, 10));
+    super.setDescription(validateField(description, 10));
   }
 
   /**

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.domain.ws.util;
+package org.gbif.registry.ws.util;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Contactable;
@@ -29,13 +29,9 @@ import org.gbif.ws.security.LegacyRequestAuthorization;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
-
-import com.google.common.base.Strings;
 
 /**
  * Class containing utility methods used across legacy resources, in answering legacy web service
@@ -46,30 +42,6 @@ public final class LegacyResourceUtils {
   private static final Logger LOG = LoggerFactory.getLogger(LegacyResourceUtils.class);
 
   private LegacyResourceUtils() {}
-
-  /**
-   * Checks if a field consists of the minimum number of characters. If it contains fewer characters
-   * than required, a warning text is appended to the field text, padding it until it exceeds the
-   * minimum required size.
-   *
-   * @param text field text
-   * @param size minimum field size (in number of characters)
-   * @return validated field meeting the minimum required length, or the original null or empty
-   *     string
-   */
-  public static String validateField(@Nullable String text, int size) {
-    String validated = Strings.emptyToNull(text);
-    if (validated != null) {
-      StringBuilder sb = new StringBuilder(validated);
-      while (sb.length() < size) {
-        sb.append(" [Field must be at least ");
-        sb.append(size);
-        sb.append(" characters long]");
-      }
-      return sb.toString();
-    }
-    return text;
-  }
 
   /**
    * Iterate through list of contacts, return first primary contact encountered, or null if none
