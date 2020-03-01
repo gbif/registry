@@ -25,10 +25,11 @@ import org.gbif.utils.HttpUtil;
 
 import java.net.URI;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public class VarnishPurgeConfiguration {
 
   private static final int DEFAULT_HTTP_TIMEOUT_MSECS = 2000;
@@ -36,7 +37,6 @@ public class VarnishPurgeConfiguration {
   private final URI purgeUrl;
   private final Integer purgingThreads;
 
-  @Autowired
   public VarnishPurgeConfiguration(
       @Value("${api.cache.purge.url}") String purgeUrl,
       @Value("${api.cache.purge.threads}") Integer purgingThreads) {
