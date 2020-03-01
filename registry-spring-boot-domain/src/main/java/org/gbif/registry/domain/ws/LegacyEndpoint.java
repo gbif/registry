@@ -15,10 +15,10 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
 import java.net.URISyntaxException;

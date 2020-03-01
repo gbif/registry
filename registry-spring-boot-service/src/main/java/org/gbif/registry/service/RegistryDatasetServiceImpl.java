@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.service;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Citation;
@@ -28,7 +29,6 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
-import org.gbif.ws.annotation.NullToNotFound;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

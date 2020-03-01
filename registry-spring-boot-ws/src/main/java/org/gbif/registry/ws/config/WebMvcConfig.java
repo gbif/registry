@@ -30,7 +30,6 @@ import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
-import org.gbif.ws.annotation.ParamName;
 import org.gbif.ws.server.processor.ParamNameProcessor;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
@@ -83,7 +82,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   }
 
   /**
-   * Processor for annotation {@link ParamName}.
+   * Processor for annotation {@link org.gbif.api.annotation.ParamName}.
    *
    * @return ParamNameProcessor
    */

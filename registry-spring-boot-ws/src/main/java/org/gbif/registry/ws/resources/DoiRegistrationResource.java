@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
@@ -28,7 +29,6 @@ import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.ws.WebApplicationException;
-import org.gbif.ws.annotation.NullToNotFound;
 
 import java.util.Optional;
 import java.util.UUID;
