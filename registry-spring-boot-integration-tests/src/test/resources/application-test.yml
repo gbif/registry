@@ -75,8 +75,7 @@ appkeys:
 # comma separated list of UUID
 doi:
   prefix: 10.21373
-  dataset:
-    parentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
 # MyBatis properties
 mybatis:
