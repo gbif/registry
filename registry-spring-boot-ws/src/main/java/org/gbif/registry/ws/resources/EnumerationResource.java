@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
@@ -25,7 +26,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.ws.annotation.NullToNotFound;
 
 import java.io.IOException;
 import java.io.Serializable;

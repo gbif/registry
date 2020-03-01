@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -36,7 +37,6 @@ import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.ws.annotation.Trim;
 
 import java.io.IOException;
 import java.math.BigDecimal;

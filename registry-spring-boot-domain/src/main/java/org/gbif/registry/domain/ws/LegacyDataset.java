@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
@@ -25,7 +26,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
 import java.net.URISyntaxException;

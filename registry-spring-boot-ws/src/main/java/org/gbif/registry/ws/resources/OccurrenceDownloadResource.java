@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
@@ -33,8 +35,6 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.NotFoundException;
-import org.gbif.ws.annotation.NullToNotFound;
-import org.gbif.ws.annotation.Trim;
 
 import java.util.Date;
 import java.util.List;

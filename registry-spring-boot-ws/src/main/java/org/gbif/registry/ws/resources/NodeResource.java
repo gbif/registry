@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
@@ -36,8 +38,6 @@ import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.ws.annotation.NullToNotFound;
-import org.gbif.ws.annotation.Trim;
 
 import java.util.List;
 import java.util.UUID;
