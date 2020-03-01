@@ -1,4 +1,4 @@
-# Registy OAI-PMH
+# GBIF Registy OAI-PMH
 
 In addition to the RESTful JSON API, Datasets are exposed using OAI-PMH. Two metadata formats can be retrieved: Ecological Metadata Language (EML) and OAI Dublin Core. Datasets are grouped into sets according to type, country and installation.
 
@@ -29,3 +29,5 @@ Properties can be configured
 * `oaipmh.baseUrl` is an API url (https://api.gbif.org/v1/oai-pmh/registry for production).
 
 * `oaipmh.adminEmail` is an admin email (dev@gbif.org for production).
+
+[Parent](../README.md)
