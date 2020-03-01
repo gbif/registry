@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 
 import com.google.common.eventbus.EventBus;
 
-// TODO: 27/08/2019 configure properly
 @Configuration
 public class EventConfiguration {
 
