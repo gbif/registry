@@ -22,7 +22,6 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
@@ -52,7 +51,7 @@ import com.google.common.collect.Lists;
  * consumers of legacy services expect to find.
  */
 @XmlRootElement(name = "IptInstallation")
-public class LegacyInstallation extends Installation {
+public class LegacyInstallation extends Installation implements LegacyEntity {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyInstallation.class);
 
@@ -112,7 +111,7 @@ public class LegacyInstallation extends Installation {
    */
   @ParamName(LegacyResourceConstants.NAME_PARAM)
   public void setIptName(String name) {
-    setTitle(LegacyResourceUtils.validateField(name, 2));
+    setTitle(validateField(name, 2));
   }
 
   /**
@@ -136,7 +135,7 @@ public class LegacyInstallation extends Installation {
    */
   @ParamName(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setIptDescription(String description) {
-    setDescription(LegacyResourceUtils.validateField(description, 10));
+    setDescription(validateField(description, 10));
   }
 
   /**

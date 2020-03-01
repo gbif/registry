@@ -22,7 +22,7 @@ import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.LegacyEndpoint;
 import org.gbif.registry.domain.ws.LegacyEndpointResponse;
 import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.util.CommonWsUtils;
 

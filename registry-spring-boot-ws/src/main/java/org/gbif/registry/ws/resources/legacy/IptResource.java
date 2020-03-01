@@ -28,7 +28,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyInstallation;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
+import org.gbif.registry.ws.util.LegacyResourceUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.gbif.registry.domain.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
+import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service requests coming from IPT installations, previously handled by the

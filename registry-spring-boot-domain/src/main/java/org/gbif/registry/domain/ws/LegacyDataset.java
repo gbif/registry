@@ -25,7 +25,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.domain.ws.util.LegacyResourceUtils;
 import org.gbif.ws.annotation.ParamName;
 
 import java.net.URI;
@@ -62,7 +61,7 @@ import com.google.common.collect.Lists;
  * legacy services expect to find.
  */
 @XmlRootElement(name = "resource")
-public class LegacyDataset extends Dataset {
+public class LegacyDataset extends Dataset implements LegacyEntity {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyDataset.class);
 
@@ -203,7 +202,7 @@ public class LegacyDataset extends Dataset {
    */
   @ParamName(LegacyResourceConstants.NAME_PARAM)
   public void setDatasetName(String name) {
-    setTitle(LegacyResourceUtils.validateField(name, 2));
+    setTitle(validateField(name, 2));
   }
 
   /**
@@ -256,7 +255,7 @@ public class LegacyDataset extends Dataset {
    */
   @ParamName(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setDatasetDescription(String description) {
-    setDescription(LegacyResourceUtils.validateField(description, 10));
+    setDescription(validateField(description, 10));
   }
 
   /**
