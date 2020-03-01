@@ -5,7 +5,13 @@ This module includes persistence related stuff: [Liquibase](https://www.liquibas
 ## Create
 
 Create an empty PostgreSQL database.
-Name should be identical in the property `registry.db.name` (see [ws module configuration](../registry-spring-boot-ws/README.md)), in [application.yml](../registry-spring-boot-ws/src/main/resources/application.yml), and in [application-test.yml](../registry-spring-boot-integration-tests/src/test/resources/application-test.yml) (`registry.datasourc.url` property).
+Name of the created database should be identical in these places:
+
+ * maven properties `registry.db.name` and `registry.db.url` (see [ws module configuration](../registry-spring-boot-ws/README.md))
+
+ * java property `registry.datasource.url` in [application.yml](../registry-spring-boot-ws/src/main/resources/application.yml)
+
+ * java property `registry.datasource.url` in [application-test.yml](../registry-spring-boot-integration-tests/src/test/resources/application-test.yml)
 
 
 ## Update
