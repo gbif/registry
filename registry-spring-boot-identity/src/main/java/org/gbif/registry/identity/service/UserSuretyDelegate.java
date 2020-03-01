@@ -19,7 +19,7 @@ import org.gbif.api.model.common.GbifUser;
 
 import java.util.UUID;
 
-/** Internal class used to coordinates actions between the MyBatis layer and the email manager. */
+/** Internal class used to coordinate actions between the MyBatis layer and the email manager. */
 interface UserSuretyDelegate {
 
   /** Check if user has a challenge code. */
