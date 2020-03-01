@@ -24,6 +24,7 @@ import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.registry.doi.config.DoiConfigurationProperties;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
@@ -63,11 +64,11 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   public DoiGeneratorMQ(
       @Value("${portal.url}") URI portal,
-      @Value("${doi.prefix}") String prefix,
+      DoiConfigurationProperties doiConfigProperties,
       DoiMapper doiMapper,
       @Lazy MessagePublisher messagePublisher) {
+    prefix = doiConfigProperties.getPrefix();
     checkArgument(prefix.startsWith("10."), "DOI prefix must begin with '10.'");
-    this.prefix = prefix;
     this.doiMapper = doiMapper;
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");

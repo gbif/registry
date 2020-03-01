@@ -28,6 +28,7 @@ import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookupService;
+import org.gbif.registry.doi.config.DoiConfigurationProperties;
 import org.gbif.registry.doi.converter.DatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
@@ -43,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
@@ -76,12 +76,12 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       OrganizationMapper organizationMapper,
       OccurrenceDownloadService occurrenceDownloadService,
       TitleLookupService titleLookupService,
-      @Value("${doi.dataset.parentExcludeList}") List<UUID> parentDatasetExcludeList) {
+      DoiConfigurationProperties doiConfigProperties) {
     this.doiGenerator = doiGenerator;
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
     this.titleLookupService = titleLookupService;
-    this.parentDatasetExcludeList = parentDatasetExcludeList;
+    this.parentDatasetExcludeList = doiConfigProperties.getDatasetParentExcludeList();
   }
 
   @Override
@@ -137,7 +137,6 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
     // in the
     // parentDatasetExcludeList
     if (dataset.getParentDatasetKey() != null
-        && parentDatasetExcludeList != null
         && parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
       LOG.info(
           "Dataset {} parentDatasetKey is part of the ignore list: ignoring DOI related action(s). ",
