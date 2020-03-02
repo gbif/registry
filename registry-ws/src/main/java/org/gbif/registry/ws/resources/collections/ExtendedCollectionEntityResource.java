@@ -9,10 +9,12 @@ import org.gbif.api.service.collections.ContactService;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.ContactableMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.persistence.mapper.collections.ContactableMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 
 import java.util.List;
@@ -23,8 +25,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
@@ -185,16 +189,31 @@ public abstract class ExtendedCollectionEntityResource<
   @POST
   @Path("{key}/contact")
   @Validate
-  @Transactional
   @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
   @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+  public void addContact(
+      @PathParam("key") @NotNull UUID entityKey,
+      @NotNull UUID personKey,
+      @Context SecurityContext securityContext) {
+
+    // check that the user has permissions to add a contact. Only admins can edit IH entities
+    T entity = baseMapper.get(entityKey);
+    if (!isAllowedToEditEntity(securityContext, entity)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
+    addContact(entityKey, personKey);
+  }
+
+  @Transactional
   @Override
   public void addContact(@PathParam("key") @NotNull UUID entityKey, @NotNull UUID personKey) {
     // check if the contact exists
     List<Person> contacts = contactableMapper.listContacts(entityKey);
 
     if (contacts != null && contacts.stream().anyMatch(p -> p.getKey().equals(personKey))) {
-      throw new WebApplicationException(Response.status(Response.Status.CONFLICT).entity("Duplicate contact").build());
+      throw new WebApplicationException(
+          Response.status(Response.Status.CONFLICT).entity("Duplicate contact").build());
     }
 
     contactableMapper.addContact(entityKey, personKey);
@@ -204,12 +223,25 @@ public abstract class ExtendedCollectionEntityResource<
   @DELETE
   @Path("{key}/contact/{personKey}")
   @Validate
-  @Transactional
   @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  public void removeContact(
+      @PathParam("key") @NotNull UUID entityKey,
+      @PathParam("personKey") @NotNull UUID personKey,
+      @Context SecurityContext securityContext) {
+
+    // check that the user has permissions to add a contact. Only admins can edit IH entities
+    T entity = baseMapper.get(entityKey);
+    if (!isAllowedToEditEntity(securityContext, entity)) {
+      throw new WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
+    removeContact(entityKey, personKey);
+  }
+
+  @Transactional
   @Override
   public void removeContact(
-    @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey
-  ) {
+      @PathParam("key") @NotNull UUID entityKey, @PathParam("personKey") @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
     eventBus.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
