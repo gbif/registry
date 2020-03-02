@@ -18,7 +18,6 @@
     <gbif-api-old.version>0.103</gbif-api-old.version>
   </properties>
 
-
   <build>
     <plugins>
       <plugin>
@@ -95,16 +94,10 @@
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-api</artifactId>
     </dependency>
-    <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
       <version>${gbif-api-old.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.gbif.directory</groupId>
-      <artifactId>directory-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -116,19 +109,16 @@
       <artifactId>directory-ws-client</artifactId>
     </dependency>
 
+    <!-- Third party dependencies -->
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
       <version>${guice.version}</version>
     </dependency>
-
-    <!-- Third party dependencies -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
     </dependency>
-
-    <!-- Third party dependencies -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
