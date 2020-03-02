@@ -1,6 +1,6 @@
 # GBIF Registry Persistence
 
-This module includes persistence related stuff: [Liquibase](https://www.liquibase.org/) migration scripts and [MyBatis](https://mybatis.org/mybatis-3/) mapper interfaces\xml.
+This module includes persistence related functionality: [Liquibase](https://www.liquibase.org/) migration scripts and [MyBatis](https://mybatis.org/mybatis-3/) mapper interfaces\xml.
 
 ## Create
 

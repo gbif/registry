@@ -9,7 +9,7 @@ of actions, generate the content of the emails related to users and interacts wi
    * `UserSuretyDelegate` coordinate actions between the MyBatis layer and the email manager
 
  This module does not contain:
-  * Authorisation related stuff other than providing the role(s) and the user(s)
+  * Authorisation related functionality other than providing the role(s) and the user(s)
   * Mappers or user database table definition (see `registry-persistence` module)
   * Ftl templates (see `registry-mail`)
 
