@@ -4,6 +4,10 @@
 
 # GBIF Registry
 
+The GBIF Registry is a core component of the architecture responsible for providing the authoritative source of information on GBIF participants (Nodes), institutions (e.g. data publishers), datasets, networks their interrelationships and the means to identify and access them.
+
+As a distributed network, the registry serves a central coordination mechanism, used for example to allow publishers to declare their existence and for data integrating components to discover how to access published datasets and interoperate with the publisher.
+
 ## Code style
 
 The registry uses google code style and spotless.
