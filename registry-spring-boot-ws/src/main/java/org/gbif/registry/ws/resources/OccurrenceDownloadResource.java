@@ -34,9 +34,8 @@ import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.provider.PartialDate;
-import org.gbif.ws.NotFoundException;
+import org.gbif.ws.WebApplicationException;
 
-import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +51,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -197,8 +197,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       clearSensitiveData(authentication, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
     }
-    throw new NotFoundException(
-        "Download was not found", URI.create("occurrence/download/{key}/datasets"));
+    throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
   }
 
   @PostMapping(value = "{key}/datasets", consumes = MediaType.APPLICATION_JSON_VALUE)

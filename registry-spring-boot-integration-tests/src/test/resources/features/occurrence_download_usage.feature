@@ -36,5 +36,5 @@ Feature: Occurrence download usage functionality
     Then response status should be 403
 
   Scenario: list occurrence download usages for download which does not exist should be Not Found 404
-    When list dataset usages for download "blablabl-blab-43ab-a0c7-95d4ae2ffaf5" using user "registry_user"
+    When list dataset usages for download "aaaaaaaa-aaaa-43ab-a0c7-95d4ae2ffaf5" using user "registry_user"
     Then response status should be 404
