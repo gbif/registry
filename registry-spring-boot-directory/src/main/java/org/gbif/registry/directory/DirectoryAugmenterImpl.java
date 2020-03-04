@@ -35,7 +35,6 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
@@ -54,9 +53,7 @@ public class DirectoryAugmenterImpl implements Augmenter {
   private PersonService personService;
 
   public DirectoryAugmenterImpl(
-      @Qualifier("participantClient") ParticipantService participantService,
-      @Qualifier("nodeClient") NodeService nodeService,
-      @Qualifier("personClient") PersonService personService) {
+      ParticipantService participantService, NodeService nodeService, PersonService personService) {
     this.participantService = participantService;
     this.nodeService = nodeService;
     this.personService = personService;
