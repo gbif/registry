@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -52,6 +51,7 @@ import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -165,7 +165,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       List<UUID> entityKeys = owningEntityKeys(entity);
       for (UUID entityKeyToBeAssessed : entityKeys) {
         if (entityKeyToBeAssessed == null) {
-          throw new WebApplicationException(HttpStatus.FORBIDDEN);
+          throw new WebApplicationException(
+              MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+              HttpStatus.FORBIDDEN);
         }
         if (userAuthService.allowedToModifyEntity(nameFromContext, entityKeyToBeAssessed)) {
           allowed = true;
@@ -173,7 +175,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         }
       }
       if (!allowed) {
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+            HttpStatus.FORBIDDEN);
       }
     }
     entity.setCreatedBy(nameFromContext);
@@ -219,8 +223,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
-  @GetMapping(value = "{key}")
-  @NullToNotFound
   @Nullable
   @Override
   public T get(@NotNull @PathVariable UUID key) {
@@ -374,7 +376,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+          HttpStatus.FORBIDDEN);
     }
   }
 
@@ -428,10 +432,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         deleteMachineTag(targetEntityKey, machineTagKey);
 
       } else {
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+            HttpStatus.FORBIDDEN);
       }
     } else {
-      throw new WebApplicationException(HttpStatus.NOT_FOUND);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "Machine tag {0} was not found for the entity with key {1}",
+              machineTagKey, targetEntityKey),
+          HttpStatus.NOT_FOUND);
     }
   }
 
@@ -456,7 +466,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
         && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+          HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
   }
@@ -501,7 +513,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
         && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
+          HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace, name);
   }

@@ -50,7 +50,6 @@ import javax.validation.groups.Default;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -233,8 +232,7 @@ public abstract class ExtendedCollectionEntityResource<
     List<Person> contacts = contactableMapper.listContacts(entityKey);
 
     if (contacts != null && contacts.stream().anyMatch(p -> p.getKey().equals(personKey))) {
-      throw new WebApplicationException(
-          ResponseEntity.status(HttpStatus.CONFLICT).body("Duplicate contact"));
+      throw new WebApplicationException("Duplicate contact", HttpStatus.CONFLICT);
     }
 
     contactableMapper.addContact(entityKey, personKey);

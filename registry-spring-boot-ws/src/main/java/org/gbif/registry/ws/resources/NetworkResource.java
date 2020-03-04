@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -31,6 +32,7 @@ import org.gbif.registry.ws.security.EditorAuthorizationService;
 import java.util.UUID;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -66,6 +68,13 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
         withMyBatis);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
+  }
+
+  @GetMapping(value = "{key}")
+  @NullToNotFound("/network/{key}")
+  @Override
+  public Network get(@NotNull @PathVariable UUID key) {
+    return super.get(key);
   }
 
   /**

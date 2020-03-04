@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
@@ -44,8 +43,10 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.registry.ws.security.SecurityContextCheck;
+import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -144,9 +145,7 @@ public abstract class BaseCollectionEntityResource<
     eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
   }
 
-  @GetMapping("{key}")
   @Nullable
-  @NullToNotFound
   @Override
   public T get(@PathVariable @NotNull UUID key) {
     return baseMapper.get(key);
@@ -274,7 +273,8 @@ public abstract class BaseCollectionEntityResource<
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
     }
   }
 
@@ -328,10 +328,11 @@ public abstract class BaseCollectionEntityResource<
         deleteMachineTag(targetEntityKey, machineTagKey);
 
       } else {
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
       }
     } else {
-      throw new WebApplicationException(HttpStatus.NOT_FOUND);
+      throw new NotFoundException("Machine tag was not found", URI.create("/"));
     }
   }
 
@@ -356,7 +357,8 @@ public abstract class BaseCollectionEntityResource<
 
     if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
         && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
   }
@@ -401,7 +403,8 @@ public abstract class BaseCollectionEntityResource<
 
     if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
         && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace, name);
   }

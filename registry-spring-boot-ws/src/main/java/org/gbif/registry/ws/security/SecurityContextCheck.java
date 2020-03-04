@@ -54,7 +54,8 @@ public class SecurityContextCheck {
   public static void ensureUserSetInSecurityContext(final Authentication authentication) {
     if (authentication == null || StringUtils.isBlank(authentication.getName())) {
       LOG.debug("Unauthenticated or incomplete request.");
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Unauthenticated or incomplete request", HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -71,7 +72,7 @@ public class SecurityContextCheck {
         && GBIF_SCHEME.equals(((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
-    throw new WebApplicationException(HttpStatus.FORBIDDEN);
+    throw new WebApplicationException("GBIF scheme is expected", HttpStatus.FORBIDDEN);
   }
 
   /**
@@ -87,16 +88,7 @@ public class SecurityContextCheck {
         && !GBIF_SCHEME.equals(((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
-    throw new WebApplicationException(HttpStatus.FORBIDDEN);
-  }
-
-  /** Check a precondition and throw a {@link WebApplicationException} if not met. */
-  public static void ensurePrecondition(
-      boolean precondition, HttpStatus statusOnPreconditionFailed) {
-    if (precondition) {
-      return;
-    }
-    throw new WebApplicationException(statusOnPreconditionFailed);
+    throw new WebApplicationException("Not GBIF scheme is expected", HttpStatus.FORBIDDEN);
   }
 
   /**
@@ -117,7 +109,8 @@ public class SecurityContextCheck {
     if (appKeyWhitelist.contains(appKey)) {
       return;
     }
-    throw new WebApplicationException(HttpStatus.FORBIDDEN);
+    throw new WebApplicationException(
+        "User is not present in the white list", HttpStatus.FORBIDDEN);
   }
 
   /**

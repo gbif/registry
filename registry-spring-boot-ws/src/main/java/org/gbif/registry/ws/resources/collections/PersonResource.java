@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -48,6 +49,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -60,7 +62,7 @@ import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 @RestController
-@RequestMapping(value = "/grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
 
   private final PersonMapper personMapper;
@@ -94,6 +96,13 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
     this.eventManager = eventManager;
+  }
+
+  @GetMapping("{key}")
+  @NullToNotFound("/grscicoll/person/{key}")
+  @Override
+  public Person get(@PathVariable @NotNull UUID key) {
+    return super.get(key);
   }
 
   @Override
