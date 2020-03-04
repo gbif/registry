@@ -26,11 +26,13 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Qualifier("nodeClient")
@@ -48,11 +50,14 @@ public interface NodeClient extends NodeService {
   @Override
   Node get(@NotNull @PathVariable("id") Integer id);
 
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "node",
+      produces = {MediaType.APPLICATION_JSON_VALUE})
+  @ResponseBody
   @Override
-  default PagingResponse<Node> list(String query, Pageable pageable) {
-    throw new WebApplicationException(
-        "Node list by client is not supported", HttpStatus.BAD_REQUEST);
-  }
+  PagingResponse<Node> list(
+      @RequestParam(value = "q", required = false) String query, @SpringQueryMap Pageable pageable);
 
   @Override
   default void delete(Integer id) {
