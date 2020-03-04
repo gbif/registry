@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.directory;
+package org.gbif.registry.directory;
 
 import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
@@ -35,13 +35,14 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
-import static org.gbif.directory.DirectoryRegistryMapping.findParticipantID;
+import static org.gbif.registry.directory.DirectoryRegistryMapping.findParticipantID;
 
 @Service
 public class DirectoryAugmenterImpl implements Augmenter {
@@ -53,7 +54,9 @@ public class DirectoryAugmenterImpl implements Augmenter {
   private PersonService personService;
 
   public DirectoryAugmenterImpl(
-      ParticipantService participantService, NodeService nodeService, PersonService personService) {
+      @Qualifier("participantClient") ParticipantService participantService,
+      @Qualifier("nodeClient") NodeService nodeService,
+      @Qualifier("personClient") PersonService personService) {
     this.participantService = participantService;
     this.nodeService = nodeService;
     this.personService = personService;

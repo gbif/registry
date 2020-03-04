@@ -124,7 +124,6 @@ registry:
 
 # GBIF Directory configuration
 directory:
-  enabled: @directory.enabled@
   app:
     key: @directory.app.key@
     secret: @directory.app.secret@
