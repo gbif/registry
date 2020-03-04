@@ -18,6 +18,7 @@ package org.gbif.registry.ws.security;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,14 +90,14 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     if (isNotGetOrOptionsRequest(request) && checkRequestRequiresEditorValidation(path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       if (name == null) {
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException("Username is null", HttpStatus.FORBIDDEN);
       }
 
       // validate only if user not admin
       if (checkIsNotAdmin(authentication)) {
         // only editors allowed to modify, because admins already excluded
         if (checkIsNotEditor(authentication)) {
-          throw new WebApplicationException(HttpStatus.FORBIDDEN);
+          throw new WebApplicationException("User has no editor rights", HttpStatus.FORBIDDEN);
         }
         try {
           checkOrganization(name, path);
@@ -131,7 +132,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       final String nodeOrNetwork = m.group(1);
       if (!userAuthService.allowedToModifyEntity(name, UUID.fromString(nodeOrNetwork))) {
         LOG.warn("User {} is not allowed to modify node/network {}", name, nodeOrNetwork);
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to modify node/network {1}", name, nodeOrNetwork),
+            HttpStatus.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify node/network {}", name, nodeOrNetwork);
       }
@@ -144,7 +148,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       final String installation = m.group(1);
       if (!userAuthService.allowedToModifyInstallation(name, UUID.fromString(installation))) {
         LOG.warn("User {} is not allowed to modify installation {}", name, installation);
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to modify installation {1}", name, installation),
+            HttpStatus.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify installation {}", name, installation);
       }
@@ -157,7 +164,9 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       final String dataset = m.group(1);
       if (!userAuthService.allowedToModifyDataset(name, UUID.fromString(dataset))) {
         LOG.warn("User {} is not allowed to modify dataset {}", name, dataset);
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format("User {0} is not allowed to modify dataset {1}", name, dataset),
+            HttpStatus.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify dataset {}", name, dataset);
       }
@@ -170,7 +179,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       final String organization = m.group(1);
       if (!userAuthService.allowedToModifyOrganization(name, UUID.fromString(organization))) {
         LOG.warn("User {} is not allowed to modify organization {}", name, organization);
-        throw new WebApplicationException(HttpStatus.FORBIDDEN);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to modify organization {1}", name, organization),
+            HttpStatus.FORBIDDEN);
       } else {
         LOG.debug("User {} is allowed to modify organization {}", name, organization);
       }

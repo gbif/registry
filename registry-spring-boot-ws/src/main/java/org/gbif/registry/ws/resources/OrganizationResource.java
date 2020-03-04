@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -40,6 +41,7 @@ import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 import org.gbif.ws.WebApplicationException;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -115,6 +117,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationEndorsementService = organizationEndorsementService;
     this.userAuthService = userAuthService;
+  }
+
+  @GetMapping(value = "{key}")
+  @NullToNotFound("/organization/{key}")
+  @Override
+  public Organization get(@NotNull @PathVariable UUID key) {
+    return super.get(key);
   }
 
   /**
@@ -204,7 +213,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
                 nameFromContext, previousOrg.getEndorsingNodeKey()))) {
       LOG.warn(
           "Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
-      throw new WebApplicationException(HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "Endorsement status or node changed, edit forbidden for {0} on {1}",
+              nameFromContext, key),
+          HttpStatus.FORBIDDEN);
     }
 
     if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {

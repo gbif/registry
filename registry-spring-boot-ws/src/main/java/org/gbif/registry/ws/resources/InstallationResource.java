@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -107,6 +108,13 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.metasyncHistoryMapper = mapperServiceLocator.getMetaSyncHistoryMapper();
     this.messagePublisher = messagePublisher;
+  }
+
+  @GetMapping(value = "{key}")
+  @NullToNotFound("/installation/{key}")
+  @Override
+  public Installation get(@NotNull @PathVariable UUID key) {
+    return super.get(key);
   }
 
   /**

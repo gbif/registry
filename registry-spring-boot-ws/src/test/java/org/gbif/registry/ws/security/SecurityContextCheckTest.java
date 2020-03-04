@@ -26,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import static org.junit.Assert.assertFalse;
@@ -142,15 +141,5 @@ public class SecurityContextCheckTest {
         mockAuth, "GBIF xxx:zzz", Arrays.asList("xx", "xxx"));
     verify(mockAuth).getName();
     verify(mockAuth).getAuthenticationScheme();
-  }
-
-  @Test
-  public void testEnsurePrecondition() throws WebApplicationException {
-    SecurityContextCheck.ensurePrecondition(true, HttpStatus.NOT_FOUND);
-  }
-
-  @Test(expected = WebApplicationException.class)
-  public void testEnsurePreconditionFail() {
-    SecurityContextCheck.ensurePrecondition(false, HttpStatus.NOT_FOUND);
   }
 }

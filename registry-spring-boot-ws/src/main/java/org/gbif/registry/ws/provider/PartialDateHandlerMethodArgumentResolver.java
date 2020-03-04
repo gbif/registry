@@ -17,6 +17,7 @@ package org.gbif.registry.ws.provider;
 
 import org.gbif.ws.WebApplicationException;
 
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -25,7 +26,6 @@ import java.util.Optional;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -88,7 +88,7 @@ public class PartialDateHandlerMethodArgumentResolver implements HandlerMethodAr
       }
     }
     throw new WebApplicationException(
-        ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body("Unaccepted parameter value " + paramName + ":" + dateValue));
+        MessageFormat.format("Unaccepted parameter value {0} : {1}", paramName, dateValue),
+        HttpStatus.BAD_REQUEST);
   }
 }

@@ -91,7 +91,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
 
   @GetMapping("{key}")
   @Nullable
-  @NullToNotFound
+  @NullToNotFound("/node/{key}")
   @Override
   public Node get(@PathVariable UUID key) {
     return nodeAugmenter.augment(super.get(key));

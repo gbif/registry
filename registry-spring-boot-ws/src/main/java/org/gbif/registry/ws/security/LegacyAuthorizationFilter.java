@@ -144,7 +144,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to register not authorized!");
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Request to register not authorized", HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -164,7 +165,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to register not authorized!");
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Request to register not authorized", HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -183,7 +185,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to update Dataset not authorized!");
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Request to update Dataset not authorized", HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -201,7 +204,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authorization);
     } else {
       LOG.error("Request to update IPT not authorized!");
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Request to update IPT not authorized", HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -222,7 +226,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
     try {
       return UUID.fromString(key);
     } catch (IllegalArgumentException e) {
-      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException(
+          "Key is not present it the request", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -243,7 +248,8 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
         throw new IllegalArgumentException("Key is not present in parameters!");
       }
     } catch (IllegalArgumentException e) {
-      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException(
+          "Dataset key is not present in the parameters", HttpStatus.BAD_REQUEST);
     }
   }
 }

@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.NotFoundException;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +115,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{key}")
-  @NullToNotFound
+  @NullToNotFound("/occurrence/download/{key}")
   @Override
   public Download get(@NotNull @PathVariable("key") String key) {
     Download download = occurrenceDownloadMapper.get(key);
@@ -127,7 +128,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{prefix}/{suffix}")
-  @NullToNotFound
+  @NullToNotFound("/occurrence/download/{prefix}/{suffix}")
   public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
     Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
 
@@ -196,7 +197,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       clearSensitiveData(authentication, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
     }
-    throw new NotFoundException();
+    throw new NotFoundException(
+        "Download was not found", URI.create("occurrence/download/{key}/datasets"));
   }
 
   @PostMapping(value = "{key}/datasets", consumes = MediaType.APPLICATION_JSON_VALUE)

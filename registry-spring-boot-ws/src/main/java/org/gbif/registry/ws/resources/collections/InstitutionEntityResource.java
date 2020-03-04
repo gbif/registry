@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -34,9 +35,11 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,16 +47,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
-import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
-
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
  */
 @RestController
-@RequestMapping(
-    value = GRSCICOLL_PATH + "/institution",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionEntityResource extends ExtendedCollectionEntityResource<Institution>
     implements InstitutionService {
 
@@ -80,6 +79,13 @@ public class InstitutionEntityResource extends ExtendedCollectionEntityResource<
         userAuthService,
         withMyBatis);
     this.institutionMapper = institutionMapper;
+  }
+
+  @GetMapping("{key}")
+  @NullToNotFound("/grscicoll/institution/{key}")
+  @Override
+  public Institution get(@PathVariable @NotNull UUID key) {
+    return super.get(key);
   }
 
   @GetMapping

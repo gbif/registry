@@ -25,6 +25,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 
+import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -93,11 +94,14 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       return authenticateInternal(user, password, organizationKey);
     } catch (NoSuchElementException e) {
       LOG.warn("Invalid Basic Authentication syntax: {}", authentication);
-      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException(
+          "Invalid Basic Authentication syntax", HttpStatus.BAD_REQUEST);
     } catch (IllegalArgumentException e) {
       // no valid username UUID
       LOG.warn("Invalid username, UUID required: {}", decrypted);
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          MessageFormat.format("Invalid username, UUID required {0}", decrypted),
+          HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -110,17 +114,26 @@ public class LegacyAuthorizationServiceImpl implements LegacyAuthorizationServic
       if (password.equals(org.getPassword())) {
         return new LegacyRequestAuthorization(user, organizationKey);
       } else {
-        throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+        throw new WebApplicationException(
+            "Organization password does not match", HttpStatus.UNAUTHORIZED);
       }
     } else {
       // maybe an installation?
       Installation installation = installationMapper.get(user);
 
-      if (installation != null && password.equals(installation.getPassword())) {
-        return new LegacyRequestAuthorization(user, organizationKey);
+      if (installation != null) {
+        if (password.equals(installation.getPassword())) {
+          return new LegacyRequestAuthorization(user, organizationKey);
+        } else {
+          throw new WebApplicationException(
+              MessageFormat.format("Installation password {0} does not match", organizationKey),
+              HttpStatus.UNAUTHORIZED);
+        }
+      } else {
+        throw new WebApplicationException(
+            MessageFormat.format("Organization or installation {0} was not found", organizationKey),
+            HttpStatus.UNAUTHORIZED);
       }
-
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
     }
   }
 

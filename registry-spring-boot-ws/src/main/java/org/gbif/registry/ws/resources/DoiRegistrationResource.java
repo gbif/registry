@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -79,7 +78,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
 
   /** Retrieves the DOI information. */
   @GetMapping(value = "{prefix}/{suffix}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @NullToNotFound
+  @NullToNotFound("/doi/{prefix}/{suffix}")
   @Override
   public DoiData get(@PathVariable String prefix, @PathVariable String suffix) {
     return doiMapper.get(new DOI(prefix, suffix));
@@ -112,8 +111,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                                 // if DOI is not NEW throw an exception
                                 if (DoiStatus.NEW != doiData.getStatus()) {
                                   throw new WebApplicationException(
-                                      ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                          .body("Doi already exists"));
+                                      "Doi already exists", HttpStatus.BAD_REQUEST);
                                 }
                               });
                       doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
@@ -139,8 +137,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
                                 // if DOI is not NEW throw an exception
                                 if (DoiStatus.DELETED == doiData.getStatus()) {
                                   throw new WebApplicationException(
-                                      ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                          .body("DOI does not exist"));
+                                      "Doi already exists", HttpStatus.BAD_REQUEST);
                                 }
                               });
                       doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
@@ -177,7 +174,8 @@ public class DoiRegistrationResource implements DoiRegistrationService {
       return doi;
     } catch (InvalidMetadataException | JAXBException ex) {
       LOG.info("Error registering/updating DOI", ex);
-      throw new WebApplicationException(HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException(
+          "Invalid metadata, error registering/updating DOI", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -213,10 +211,12 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     }
   }
 
+  // TODO: 03/03/2020 replace with annotation Secured(USER)
   /** Check that the user is authenticated. */
   private void checkIsUserAuthenticated() {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null || authentication.getName() == null)
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          "Authorization is required to perform this operation on DOI", HttpStatus.UNAUTHORIZED);
   }
 }

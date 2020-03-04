@@ -228,7 +228,7 @@ public class EnumerationResource {
    * @return The enumeration values or null if the enumeration does not exist.
    */
   @GetMapping("basic/{name}")
-  @NullToNotFound
+  @NullToNotFound("/enumeration/basic/{name}")
   public Object getEnumeration(@PathVariable("name") @NotNull String name) {
     return PATH_MAPPING.getOrDefault(name, null);
   }

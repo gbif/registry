@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.ws.WebApplicationException;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 
 import org.slf4j.Logger;
@@ -45,7 +46,10 @@ public final class DownloadSecurityUtils {
     // A null securityContext means that the class is executed locally
     if (isUserNotAuthorizedInContext(authentication, user)) {
       LOG.warn("Unauthorized access detected, authenticated use, requested user {}", user);
-      throw new WebApplicationException(HttpStatus.UNAUTHORIZED);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "Unauthorized access detected, authenticated use, requested user {0}", user),
+          HttpStatus.UNAUTHORIZED);
     }
   }
 

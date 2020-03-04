@@ -73,6 +73,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -279,9 +280,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // check if the dataset actually exists
     Dataset dataset = super.get(datasetKey);
     if (dataset == null) {
-      throw new NotFoundException("Dataset " + datasetKey + " not existing");
+      throw new NotFoundException(
+          "Dataset " + datasetKey + " not existing", URI.create("/dataset/{key}/document"));
     } else if (dataset.getDeleted() != null) {
-      throw new NotFoundException("Dataset " + datasetKey + " has been deleted");
+      throw new NotFoundException(
+          "Dataset " + datasetKey + " has been deleted", URI.create("/dataset/{key}/document"));
     }
 
     // first keep document as byte array so we can analyze it as much as we want and store it later
@@ -399,9 +402,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public void updateFromPreferredMetadata(UUID uuid, String user) {
     Dataset dataset = super.get(uuid);
     if (dataset == null) {
-      throw new NotFoundException("Dataset " + uuid + " not existing");
+      throw new NotFoundException(
+          "Dataset " + uuid + " not existing", URI.create("/dataset/{key}/document"));
     } else if (dataset.getDeleted() != null) {
-      throw new NotFoundException("Dataset " + uuid + " has been deleted");
+      throw new NotFoundException(
+          "Dataset " + uuid + " has been deleted", URI.create("/dataset/{key}/document"));
     }
     // retrieve preferred metadata document, if it exists
     Dataset updDataset = registryDatasetService.getPreferredMetadataDataset(uuid);
@@ -689,23 +694,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GetMapping("{key}/metadata")
   @Override
   public List<Metadata> listMetadata(
-      @PathVariable("key") UUID datasetKey,
-      @RequestParam(value = "type", required = false) MetadataType type) {
-    return registryDatasetService.listMetadata(datasetKey, type);
+      @PathVariable UUID key, @RequestParam(value = "type", required = false) MetadataType type) {
+    return registryDatasetService.listMetadata(key, type);
   }
 
   @GetMapping("metadata/{key}")
   @Override
-  @NullToNotFound
-  public Metadata getMetadata(@PathVariable("key") int metadataKey) {
-    return metadataMapper.get(metadataKey);
+  @NullToNotFound("/dataset/metadata/{key}")
+  public Metadata getMetadata(@PathVariable int key) {
+    return metadataMapper.get(key);
   }
 
   @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @Override
-  @NullToNotFound
-  public InputStream getMetadataDocument(@PathVariable("key") int metadataKey) {
-    return registryDatasetService.getMetadataDocument(metadataKey);
+  @NullToNotFound("/dataset/metadata/{key}/document")
+  public InputStream getMetadataDocument(@PathVariable int key) {
+    return registryDatasetService.getMetadataDocument(key);
   }
 
   @DeleteMapping("metadata/{key}")
@@ -866,7 +870,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @GetMapping("{datasetKey}/process/{attempt}")
   @Nullable
-  @NullToNotFound
+  @NullToNotFound("/dataset/{datasetKey}/process/{attempt}")
   @Override
   public DatasetProcessStatus getDatasetProcessStatus(
       @PathVariable UUID datasetKey, @PathVariable int attempt) {
@@ -913,6 +917,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /** Encapsulates the params to pass in the body for the crawAll method. */
   private static class CrawlAllParams {
+
     List<UUID> datasetsToExclude = new ArrayList<>();
 
     // getters and setters needed for jackson
