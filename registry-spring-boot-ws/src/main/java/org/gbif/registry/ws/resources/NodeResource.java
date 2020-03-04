@@ -28,7 +28,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.directory.Augmenter;
+import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.domain.ws.NodeRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
