@@ -74,8 +74,8 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
 
   public OrganizationEmailEndorsementService(
       MapperServiceLocator mapperServiceLocator,
-      @Qualifier("participantClient") ParticipantService participantService,
-      @Qualifier("nodeClient") NodeService directoryNodeService,
+      ParticipantService participantService,
+      NodeService directoryNodeService,
       PersonService personService,
       ChallengeCodeManager<UUID> challengeCodeManager,
       OrganizationEmailManager emailTemplateManager,
