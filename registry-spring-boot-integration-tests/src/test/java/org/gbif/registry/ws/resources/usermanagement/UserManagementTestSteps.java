@@ -22,8 +22,8 @@ import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.utils.file.properties.PropertiesUtil;
 import org.gbif.ws.security.Md5EncodeService;
+import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
 import java.sql.Connection;
@@ -31,14 +31,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -90,12 +88,8 @@ public class UserManagementTestSteps {
 
   private ResultActions result;
   private UserCreation user;
-  private Properties secrets;
   private UUID challengeCode;
   private Map<String, String> credentials = new HashMap<>();
-
-  @Value("${appkeys.file}")
-  private String appkeysFile;
 
   @Autowired private ObjectMapper objectMapper;
 
@@ -126,8 +120,6 @@ public class UserManagementTestSteps {
         connection, new ClassPathResource("/scripts/usermanagement/user_management_prepare.sql"));
 
     mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-
-    secrets = PropertiesUtil.loadProperties(appkeysFile);
   }
 
   @After(value = "@UserCRUD", order = 1)
@@ -161,14 +153,7 @@ public class UserManagementTestSteps {
     // perform user creation and check response
     String contentMd5 = md5EncodeService.encode(userJsonString);
     String gbifAuthorization =
-        getGbifAuthorization(
-            POST,
-            "/admin/user",
-            APPLICATION_JSON,
-            contentMd5,
-            appRole,
-            appRole,
-            secrets.getProperty(appRole));
+        getGbifAuthorization(POST, "/admin/user", APPLICATION_JSON, contentMd5, appRole, appRole);
     result =
         mvc.perform(
             post("/admin/user")
@@ -196,7 +181,6 @@ public class UserManagementTestSteps {
 
   @Then("user {string} reflects the original one")
   public void assertCreatedUser(String username) throws Exception {
-    // TODO: 25/10/2019 assert the whole result
     result
         .andExpect(jsonPath("$.username").value(username))
         .andExpect(jsonPath("$.email").value("user_14@gbif.org"))
@@ -223,13 +207,7 @@ public class UserManagementTestSteps {
     String contentMd5 = md5EncodeService.encode(confirmationJsonString);
     String gbifAuthorization =
         getGbifAuthorization(
-            POST,
-            "/admin/user/confirm",
-            APPLICATION_JSON,
-            contentMd5,
-            "user_14",
-            appRole,
-            secrets.getProperty(appRole));
+            POST, "/admin/user/confirm", APPLICATION_JSON, contentMd5, "user_14", appRole);
     result =
         mvc.perform(
             post("/admin/user/confirm")
@@ -273,9 +251,7 @@ public class UserManagementTestSteps {
   @When("get user by system settings {string} by APP role {string}")
   public void getUserBySystemSettingsByApp(String param, String appRole) throws Exception {
     // with APP role
-    String gbifAuthorization =
-        getGbifAuthorization(
-            GET, "/admin/user/find", appRole, appRole, secrets.getProperty(appRole));
+    String gbifAuthorization = getGbifAuthorization(GET, "/admin/user/find", appRole, appRole);
     result =
         mvc.perform(
             get("/admin/user/find")
@@ -287,8 +263,7 @@ public class UserManagementTestSteps {
   @When("reset password for user {string} by APP role {string}")
   public void resetPassword(String username, String appRole) throws Exception {
     String gbifAuthorization =
-        getGbifAuthorization(
-            POST, "/admin/user/resetPassword", username, appRole, secrets.getProperty(appRole));
+        getGbifAuthorization(POST, "/admin/user/resetPassword", username, appRole);
     result =
         mvc.perform(
                 post("/admin/user/resetPassword")
@@ -316,13 +291,7 @@ public class UserManagementTestSteps {
     String contentMd5 = md5EncodeService.encode(content);
     String gbifAuthorization =
         getGbifAuthorization(
-            POST,
-            "/admin/user/updatePassword",
-            APPLICATION_JSON,
-            contentMd5,
-            username,
-            appRole,
-            secrets.getProperty(appRole));
+            POST, "/admin/user/updatePassword", APPLICATION_JSON, contentMd5, username, appRole);
 
     result =
         mvc.perform(
@@ -337,12 +306,7 @@ public class UserManagementTestSteps {
   @Then("challenge code is valid for user {string} by APP role {string}")
   public void checkChallengeCodeValidity(String username, String appRole) throws Exception {
     String gbifAuthorization =
-        getGbifAuthorization(
-            GET,
-            "/admin/user/confirmationKeyValid",
-            username,
-            appRole,
-            secrets.getProperty(appRole));
+        getGbifAuthorization(GET, "/admin/user/confirmationKeyValid", username, appRole);
     mvc.perform(
             get("/admin/user/confirmationKeyValid")
                 .param("confirmationKey", challengeCode.toString())
@@ -362,13 +326,7 @@ public class UserManagementTestSteps {
     String contentMd5 = md5EncodeService.encode(userJsonString);
     String gbifAuthorization =
         getGbifAuthorization(
-            PUT,
-            "/admin/user/" + username,
-            APPLICATION_JSON,
-            contentMd5,
-            appRole,
-            appRole,
-            secrets.getProperty(appRole));
+            PUT, "/admin/user/" + username, APPLICATION_JSON, contentMd5, appRole, appRole);
     result =
         mvc.perform(
             put("/admin/user/{username}", username)
@@ -500,42 +458,29 @@ public class UserManagementTestSteps {
       MediaType contentType,
       String contentMd5,
       String user,
-      String authUser,
-      String secretKey) {
+      String authUser) {
     String strContentType = contentType == null ? null : contentType.toString();
-    String stringToSign =
+    RequestDataToSign requestDataToSign =
         buildStringToSign(method.name(), requestUrl, strContentType, contentMd5, user);
-    String sign = signingService.buildSignature(stringToSign, secretKey);
+    String sign = signingService.buildSignature(requestDataToSign, authUser);
     return "GBIF " + authUser + ":" + sign;
   }
 
   private String getGbifAuthorization(
-      RequestMethod method, String requestUrl, String user, String authUser, String secretKey) {
-    return getGbifAuthorization(method, requestUrl, null, null, user, authUser, secretKey);
+      RequestMethod method, String requestUrl, String user, String authUser) {
+    return getGbifAuthorization(method, requestUrl, null, null, user, authUser);
   }
 
-  private String buildStringToSign(
+  private RequestDataToSign buildStringToSign(
       String method, String requestUrl, String contentType, String contentMd5, String user) {
-    StringBuilder sb = new StringBuilder();
+    RequestDataToSign requestDataToSign = new RequestDataToSign();
 
-    sb.append(method).append('\n');
+    requestDataToSign.setMethod(method);
+    requestDataToSign.setUrl(requestUrl);
+    requestDataToSign.setUser(user);
+    requestDataToSign.setContentType(contentType);
+    requestDataToSign.setContentTypeMd5(contentMd5);
 
-    if (requestUrl != null) {
-      sb.append(requestUrl).append('\n');
-    }
-
-    if (contentType != null) {
-      sb.append(contentType).append('\n');
-    }
-
-    if (contentMd5 != null) {
-      sb.append(contentMd5).append('\n');
-    }
-
-    if (user != null) {
-      sb.append(user);
-    }
-
-    return sb.toString();
+    return requestDataToSign;
   }
 }
