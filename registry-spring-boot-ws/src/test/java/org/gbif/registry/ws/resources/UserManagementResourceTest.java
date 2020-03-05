@@ -17,7 +17,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.registry.domain.ws.UserAdminView;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.ws.security.AppkeysConfiguration;
+import org.gbif.ws.security.AppkeysConfigurationProperties;
 import org.gbif.ws.security.GbifAuthentication;
 
 import java.util.Collections;
@@ -36,7 +36,7 @@ public class UserManagementResourceTest {
 
   @Mock private GbifAuthentication mockAuth;
   @Mock private IdentityService mockIdentityService;
-  @Mock private AppkeysConfiguration appkeysConfiguration;
+  @Mock private AppkeysConfigurationProperties appkeysConfiguration;
   @InjectMocks private UserManagementResource resource;
 
   @Test

@@ -32,7 +32,7 @@ import org.gbif.registry.ws.UpdatePasswordException;
 import org.gbif.registry.ws.security.SecurityContextCheck;
 import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
-import org.gbif.ws.security.AppkeysConfiguration;
+import org.gbif.ws.security.AppkeysConfigurationProperties;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 
 import java.util.Arrays;
@@ -107,7 +107,7 @@ public class UserManagementResource {
 
   /** {@link UserManagementResource} main constructor. */
   public UserManagementResource(
-      IdentityService identityService, AppkeysConfiguration appkeysConfiguration) {
+      IdentityService identityService, AppkeysConfigurationProperties appkeysConfiguration) {
     this.identityService = identityService;
     appKeyWhitelist = appkeysConfiguration.getWhitelist();
   }
