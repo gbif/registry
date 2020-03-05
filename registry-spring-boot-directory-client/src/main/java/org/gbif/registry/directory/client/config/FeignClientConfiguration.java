@@ -58,12 +58,13 @@ public class FeignClientConfiguration {
   @Value("${directory.app.key}")
   private String appKey;
 
+  /** Sign request, set required headers. */
   @Bean
   public RequestInterceptor requestInterceptor() {
     return requestTemplate -> {
       RequestDataToSign requestDataToSign = new RequestDataToSign();
       requestDataToSign.setMethod(requestTemplate.method());
-      requestDataToSign.setUrl(requestTemplate.url());
+      requestDataToSign.setUrl(removeQueryParameters(requestTemplate.url()));
       requestDataToSign.setUser(appKey);
 
       if ("POST".equals(requestTemplate.method()) || "PUT".equals(requestTemplate.method())) {
@@ -93,6 +94,11 @@ public class FeignClientConfiguration {
             "Private key was not found for the application " + appKey, HttpStatus.UNAUTHORIZED);
       }
     };
+  }
+
+  /** Remove query parameters from the URL. */
+  private String removeQueryParameters(String url) {
+    return url.split("\\?")[0];
   }
 
   @Bean
