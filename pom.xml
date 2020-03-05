@@ -114,6 +114,7 @@
     <janino-logback.version>2.5.10</janino-logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
+    <feign-jackson.version>10.7.4</feign-jackson.version>
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
 
@@ -318,11 +319,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.gbif.directory</groupId>
-        <artifactId>directory-ws-client</artifactId>
-        <version>${gbif-directory.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-doi</artifactId>
         <version>${gbif-doi.version}</version>
@@ -448,6 +444,11 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson</artifactId>
+        <version>${feign-jackson.version}</version>
       </dependency>
 
       <dependency>
