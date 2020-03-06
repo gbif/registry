@@ -9,6 +9,6 @@ Feature: Test the Identify verb of the OAI-PMH endpoint
     And request parameters in response are correct
       | verb | Identify |
     And Identify response contains
-      | repositoryName | GBIF Registry              |
+      | repositoryName | GBIF Test Registry              |
       | baseURL        | ${api.url}oai-pmh/registry |
       | deletedRecord  | persistent                 |
