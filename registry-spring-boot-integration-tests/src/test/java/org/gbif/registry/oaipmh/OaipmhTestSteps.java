@@ -23,7 +23,6 @@ import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -47,6 +46,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import static java.time.ZoneOffset.UTC;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -74,21 +74,34 @@ public class OaipmhTestSteps {
     this.datasetService = datasetService;
   }
 
-  @Before("@Oaipmh")
-  public void before() throws Exception {
-    connection = ds.getConnection();
-    Objects.requireNonNull(connection, "Connection must not be null");
+  @Before("@OaipmhGetRecord")
+  public void beforeGetRecordsAndListMedata() throws Exception {
+    if (connection == null) {
+      connection = ds.getConnection();
+    }
 
     ScriptUtils.executeSqlScript(
         connection, new ClassPathResource("/scripts/oaipmh/oaipmh_get_record_prepare.sql"));
   }
 
-  @After("@Oaipmh")
-  public void after() throws Exception {
-    Objects.requireNonNull(connection, "Connection must not be null");
+  @Before("@OaipmhListRecords")
+  public void beforeListRecords() throws Exception {
+    if (connection == null) {
+      connection = ds.getConnection();
+    }
 
     ScriptUtils.executeSqlScript(
-        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_get_record_cleanup.sql"));
+        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_list_records_prepare.sql"));
+  }
+
+  @After("@Oaipmh")
+  public void after() throws Exception {
+    if (connection == null) {
+      connection = ds.getConnection();
+    }
+
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_cleanup.sql"));
 
     connection.close();
   }
@@ -199,5 +212,21 @@ public class OaipmhTestSteps {
     for (Map.Entry<String, String> entry : expectedData.entrySet()) {
       result.andExpect(xpath("/OAI-PMH/Identify/" + entry.getKey()).string(entry.getValue()));
     }
+  }
+
+  @Then("response contains {int} records")
+  public void checkListRecordsResponse(Integer expectedDatasets) throws Exception {
+    result.andExpect(xpath("/OAI-PMH/ListRecords/record").nodeCount(expectedDatasets));
+  }
+
+  @Given("Max list records size is {int}")
+  public void setMaxListRecordsSize(int size) {
+    // by default in OaipmhTestConfiguration
+    assertEquals(size, OaipmhTestConfiguration.MAX_LIST_RECORDS);
+  }
+
+  @Then("resumption token")
+  public void checkResumptionToken() throws Exception {
+    result.andExpect(xpath("/OAI-PMH/ListRecords/resumptionToken").exists());
   }
 }

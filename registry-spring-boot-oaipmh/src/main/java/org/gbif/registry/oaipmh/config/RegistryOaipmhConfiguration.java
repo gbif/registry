@@ -52,12 +52,12 @@ import org.springframework.context.annotation.Configuration;
 public class RegistryOaipmhConfiguration {
 
   // earliest date a dataset was created
-  private static final Date EARLIEST_DATE;
+  public static final Date EARLIEST_DATE;
 
   static {
     Calendar cal = Calendar.getInstance();
     cal.setTimeZone(TimeZone.getTimeZone("UTC"));
-    cal.set(2007, 0, 1, 0, 0, 1);
+    cal.set(2007, Calendar.JANUARY, 1, 0, 0, 1);
     EARLIEST_DATE = cal.getTime();
   }
 
