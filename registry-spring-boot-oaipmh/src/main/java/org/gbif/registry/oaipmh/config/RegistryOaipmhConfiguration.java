@@ -63,36 +63,21 @@ public class RegistryOaipmhConfiguration {
 
   private static final String REPO_NAME = "GBIF Registry";
 
-  private OaipmhConfigurationProperties oaipmhConfigProperties;
-
-  public RegistryOaipmhConfiguration(OaipmhConfigurationProperties oaipmhConfigProperties) {
-    this.oaipmhConfigProperties = oaipmhConfigProperties;
-  }
-
   @Bean
   public Repository repository(
-      RegistryDatasetService datasetService,
-      DatasetMapper datasetMapper,
-      OrganizationMapper organizationMapper,
-      OccurrenceMetricsClient occurrenceMetricsClient) {
+      ItemRepository itemRepository,
+      SetRepository setRepository,
+      RepositoryConfiguration repositoryConfiguration) {
     return new Repository()
-        .withItemRepository(
-            itemRepository(
-                datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient))
-        .withSetRepository(setRepository(datasetMapper))
+        .withItemRepository(itemRepository)
+        .withSetRepository(setRepository)
         .withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
-        .withConfiguration(repositoryConfiguration());
+        .withConfiguration(repositoryConfiguration);
   }
 
   @Bean
-  public DataProvider dataProvider(
-      RegistryDatasetService datasetService,
-      DatasetMapper datasetMapper,
-      OrganizationMapper organizationMapper,
-      OccurrenceMetricsClient occurrenceMetricsClient) {
-    return new DataProvider(
-        context(),
-        repository(datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient));
+  public DataProvider dataProvider(Repository repository) {
+    return new DataProvider(context(), repository);
   }
 
   @Bean
@@ -139,7 +124,9 @@ public class RegistryOaipmhConfiguration {
     }
   }
 
-  private RepositoryConfiguration repositoryConfiguration() {
+  @Bean
+  public RepositoryConfiguration repositoryConfiguration(
+      OaipmhConfigurationProperties oaipmhConfigProperties) {
     return new RepositoryConfiguration()
         .withRepositoryName(REPO_NAME)
         .withAdminEmail(oaipmhConfigProperties.getAdminEmail())
@@ -162,7 +149,8 @@ public class RegistryOaipmhConfiguration {
                 + "</oai_dc:dc>\n");
   }
 
-  private ItemRepository itemRepository(
+  @Bean
+  public ItemRepository itemRepository(
       RegistryDatasetService datasetService,
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
@@ -171,7 +159,8 @@ public class RegistryOaipmhConfiguration {
         datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient);
   }
 
-  private SetRepository setRepository(DatasetMapper datasetMapper) {
+  @Bean
+  public SetRepository setRepository(DatasetMapper datasetMapper) {
     return new OaipmhSetRepository(datasetMapper);
   }
 }
