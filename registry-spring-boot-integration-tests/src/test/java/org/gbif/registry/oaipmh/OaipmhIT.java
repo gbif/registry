@@ -30,7 +30,8 @@ import io.cucumber.junit.CucumberOptions;
       "classpath:features/oaipmh_get_record.feature",
       "classpath:features/oaipmh_list_metadata_formats.feature",
       "classpath:features/oaipmh_identify.feature",
-      "classpath:features/oaipmh_list_records.feature"
+      "classpath:features/oaipmh_list_records.feature",
+      "classpath:features/oaipmh_list_sets.feature"
     },
     glue = {"org.gbif.registry.oaipmh", "org.gbif.registry.utils.cucumber"},
     plugin = "pretty")

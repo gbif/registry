@@ -229,4 +229,19 @@ public class OaipmhTestSteps {
   public void checkResumptionToken() throws Exception {
     result.andExpect(xpath("/OAI-PMH/ListRecords/resumptionToken").exists());
   }
+
+  @Then("ListSets response contains {int} records")
+  public void checkListSetsResponse(Integer expectedDatasets) throws Exception {
+    result.andExpect(xpath("/OAI-PMH/ListSets/set").nodeCount(expectedDatasets));
+  }
+
+  @Given("one dataset {string}")
+  public void prepareDataset(String datasetKey) throws Exception {
+    if (connection == null) {
+      connection = ds.getConnection();
+    }
+
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/oaipmh/oaipmh_list_sets_prepare.sql"));
+  }
 }
