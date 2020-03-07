@@ -21,6 +21,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +29,6 @@ import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
 import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 /**
@@ -52,11 +52,7 @@ public class OaipmhSetRepository implements SetRepository {
       this.name = name;
     }
 
-    /**
-     * Return the name of the Set formatted to be used as a prefix of a subset.
-     *
-     * @return
-     */
+    /** Return the name of the Set formatted to be used as a prefix of a subset. */
     public String getSubsetPrefix() {
       return name + SUB_SET_SEPARATOR;
     }
@@ -69,7 +65,6 @@ public class OaipmhSetRepository implements SetRepository {
     /**
      * Get a SetType from a string.
      *
-     * @param str
      * @return SetType enum constant, never null
      * @throws NullPointerException if str is null
      * @throws IllegalArgumentException if str is not an enum constant of SetType
@@ -139,7 +134,7 @@ public class OaipmhSetRepository implements SetRepository {
    */
   public static Optional<SetIdentification> parseSetName(String setName) {
     if (StringUtils.isBlank(setName)) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -148,7 +143,7 @@ public class OaipmhSetRepository implements SetRepository {
       String subSet = StringUtils.substringAfter(setName, SUB_SET_SEPARATOR);
       return Optional.of(new SetIdentification(rootSetType, subSet));
     } catch (IllegalArgumentException iaEx) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -195,7 +190,7 @@ public class OaipmhSetRepository implements SetRepository {
       return false;
     }
 
-    SetType rootSetType = null;
+    SetType rootSetType;
     try {
       rootSetType = SetType.fromString(rootSet);
     } catch (IllegalArgumentException iaEx) {
@@ -218,7 +213,6 @@ public class OaipmhSetRepository implements SetRepository {
   /**
    * Check if a DatasetType exists. If no subSet is provided this method returns true.
    *
-   * @param subSet
    * @return the provided subSet exists or is empty
    */
   private boolean handleDatasetTypeSetExists(String subSet) {
@@ -233,17 +227,12 @@ public class OaipmhSetRepository implements SetRepository {
     }
 
     // still needed until POR-2858 is addressed
-    if (datasetType == null) {
-      return false;
-    }
-
-    return true;
+    return datasetType != null;
   }
 
   /**
    * Check if a Country ISO 2 letter code exists. If no subSet is provided this method returns true.
    *
-   * @param subSet
    * @return the provided subSet exists or is empty
    */
   private boolean handleCountrySetExists(String subSet) {
@@ -262,7 +251,6 @@ public class OaipmhSetRepository implements SetRepository {
   /**
    * Check if an Installation key exists. If no subSet is provided this method returns true.
    *
-   * @param subSet
    * @return the provided subSet exists or is empty
    */
   private boolean handleInstallationSetExists(String subSet) {
@@ -277,7 +265,7 @@ public class OaipmhSetRepository implements SetRepository {
       return false;
     }
 
-    if (uuid == null || !subSet.equalsIgnoreCase(uuid.toString())) {
+    if (!subSet.equalsIgnoreCase(uuid.toString())) {
       return false;
     }
 
