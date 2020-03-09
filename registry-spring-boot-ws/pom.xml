@@ -73,6 +73,10 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-spring-boot-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-spring-boot-mail</artifactId>
     </dependency>
     <dependency>
@@ -157,10 +161,6 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>

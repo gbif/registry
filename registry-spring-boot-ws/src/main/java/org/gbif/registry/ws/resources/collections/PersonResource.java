@@ -35,7 +35,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -58,8 +58,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)

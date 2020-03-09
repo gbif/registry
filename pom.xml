@@ -71,6 +71,7 @@
     <module>registry-spring-boot-service</module>
     <module>registry-spring-boot-search</module>
     <module>registry-spring-boot-oaipmh</module>
+    <module>registry-spring-boot-security</module>
   </modules>
 
   <properties>
@@ -198,6 +199,11 @@
       </dependency>
 
       <!-- GBIF dependencies -->
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-spring-boot-security</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-spring-boot-doi</artifactId>

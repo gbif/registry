@@ -29,7 +29,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;

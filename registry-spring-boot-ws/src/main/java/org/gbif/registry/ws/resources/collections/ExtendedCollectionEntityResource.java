@@ -38,7 +38,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
@@ -61,8 +61,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link *

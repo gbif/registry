@@ -37,7 +37,7 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +57,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping(value = "node", produces = MediaType.APPLICATION_JSON_VALUE)

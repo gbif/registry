@@ -28,9 +28,9 @@ import org.gbif.registry.domain.ws.UserUpdate;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.security.UserUpdateRulesManager;
 import org.gbif.registry.ws.UpdatePasswordException;
-import org.gbif.registry.ws.security.SecurityContextCheck;
-import org.gbif.registry.ws.security.UserUpdateRulesManager;
 import org.gbif.utils.AnnotationUtils;
 import org.gbif.ws.security.AppkeysConfigurationProperties;
 import org.gbif.ws.server.filter.AppIdentityFilter;
@@ -69,9 +69,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 /**
  * The "/admin/user" resource represents the "endpoints" related to user management. This means the
