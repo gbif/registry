@@ -67,7 +67,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
@@ -90,7 +90,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
@@ -107,7 +107,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Doe J. Dataset to be cited. Version 2.1. Cited Organization. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
@@ -126,7 +126,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
@@ -141,7 +141,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
@@ -158,7 +158,7 @@ public class CitationGeneratorTest {
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-            + LocalDate.now().toString()
+            + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
         CitationGenerator.generateCitation(dataset, org));
   }
