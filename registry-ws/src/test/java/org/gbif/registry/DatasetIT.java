@@ -624,15 +624,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     dataset.getCitation().setText("GOD publishing, volume 123");
     service.update(dataset);
     dataset = service.get(dataset.getKey());
-    assertEquals("doi:123", dataset.getCitation().getIdentifier());
+    assertEquals("doi:456", dataset.getCitation().getIdentifier());
     //original citation not preserved, we generate one
     assertNotEquals("GOD publishing, volume 123", dataset.getCitation().getText());
+    //generated citation contains the DOI
+    assertTrue(dataset.getCitation().getText().contains("456"));
 
     // setting to null should make it the default using the org:dataset titles
     dataset.getCitation().setText(null);
     service.update(dataset);
     dataset = service.get(dataset.getKey());
-    assertEquals("doi:123", dataset.getCitation().getIdentifier());
+    assertEquals("doi:456", dataset.getCitation().getIdentifier());
     //original citation not preserved, we generate one
     assertNotEquals("The BGBM: Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"", dataset.getCitation().getText());
   }
