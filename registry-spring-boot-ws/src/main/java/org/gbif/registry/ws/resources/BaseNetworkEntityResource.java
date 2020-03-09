@@ -46,9 +46,9 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.ws.security.SecurityContextCheck;
-import org.gbif.registry.ws.security.UserRoles;
+import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 
 import java.text.MessageFormat;
@@ -88,9 +88,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 /**
  * Provides a skeleton implementation of the following.

@@ -41,8 +41,8 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.ws.security.SecurityContextCheck;
+import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 
@@ -75,9 +75,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 /** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)

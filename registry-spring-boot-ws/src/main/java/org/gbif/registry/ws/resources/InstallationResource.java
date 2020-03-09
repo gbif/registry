@@ -37,7 +37,7 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -73,7 +73,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping(value = "installation", produces = MediaType.APPLICATION_JSON_VALUE)

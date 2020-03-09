@@ -36,8 +36,8 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
-import org.gbif.registry.ws.security.SecurityContextCheck;
+import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 import org.gbif.ws.WebApplicationException;
 
@@ -77,9 +77,9 @@ import com.google.common.collect.Lists;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.APP_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)

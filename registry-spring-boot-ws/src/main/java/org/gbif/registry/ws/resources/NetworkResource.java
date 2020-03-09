@@ -27,7 +27,7 @@ import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.UUID;
 
@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @RestController
 @RequestMapping(value = "network", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -21,7 +21,7 @@ import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.LoggedUserWithToken;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.ws.security.jwt.JwtIssuanceService;
+import org.gbif.registry.security.jwt.JwtIssuanceService;
 
 import javax.validation.constraints.NotNull;
 
@@ -38,9 +38,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.gbif.registry.ws.security.SecurityContextCheck.ensureNotGbifScheme;
-import static org.gbif.registry.ws.security.SecurityContextCheck.ensureUserSetInSecurityContext;
-import static org.gbif.registry.ws.security.UserRoles.USER_ROLE;
+import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifScheme;
+import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @RequestMapping(value = "user", produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController

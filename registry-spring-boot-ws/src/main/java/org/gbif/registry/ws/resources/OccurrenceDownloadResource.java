@@ -70,9 +70,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
-import static org.gbif.registry.ws.util.DownloadSecurityUtils.clearSensitiveData;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
+import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
 /** Occurrence download resource/web service. */
 @RestController

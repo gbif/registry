@@ -64,8 +64,8 @@ import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.service.RegistryDatasetService;
-import org.gbif.registry.ws.security.EditorAuthorizationService;
 import org.gbif.ws.NotFoundException;
 
 import java.io.ByteArrayInputStream;
@@ -116,8 +116,8 @@ import com.google.common.io.CharStreams;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
-import static org.gbif.registry.ws.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
