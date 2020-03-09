@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.security;
+package org.gbif.registry.security;
 
 import org.gbif.ws.security.AppKeyProvider;
 
