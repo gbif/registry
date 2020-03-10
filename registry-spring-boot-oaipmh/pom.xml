@@ -10,6 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-spring-boot-oaipmh</artifactId>
+  <name>GBIF Registry OAI-PMH</name>
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>

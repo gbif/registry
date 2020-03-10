@@ -8,6 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-spring-boot-mail</artifactId>
+  <name>GBIF Registry Mail</name>
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
