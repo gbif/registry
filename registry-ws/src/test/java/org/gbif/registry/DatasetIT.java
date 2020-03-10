@@ -628,7 +628,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     //original citation not preserved, we generate one
     assertNotEquals("GOD publishing, volume 123", dataset.getCitation().getText());
     //generated citation contains the DOI
-    assertTrue(dataset.getCitation().getText().contains("456"));
+    assertTrue(dataset.getCitation().getText().contains("xsd123"));
 
     // setting to null should make it the default using the org:dataset titles
     dataset.getCitation().setText(null);
