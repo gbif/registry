@@ -37,7 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -78,7 +78,7 @@ public class DoiUpdaterListenerIT {
   private static String rawMessage;
   private static org.codehaus.jackson.map.ObjectMapper vanillaObjectMapper;
 
-  @BeforeClass
+  //  @BeforeClass
   public static void setup() throws Exception {
     Properties properties = PropertiesUtil.loadProperties("doiupdater/application.properties");
     Injector injector =
@@ -129,6 +129,7 @@ public class DoiUpdaterListenerIT {
 
   // DB status REGISTERED, but missing at DataCite
   @Test
+  @Ignore
   public void
       handleMessageDoiWrongDefinedAsRegisteredAndMessageStatusRegisteredShouldCreateAndRegisterDoi()
           throws Exception {
@@ -149,6 +150,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageNewDoiAndMessageStatusRegisteredShouldCreateAndRegisterDoi()
       throws Exception {
     // given
@@ -165,6 +167,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageNewDoiAndMessageStatusReservedShouldCreateAndReserveDoi()
       throws Exception {
     // given
@@ -181,6 +184,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusDeletedShouldMarkDoiAsDeleted()
       throws Exception {
     // given
@@ -197,6 +201,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageReservedDoiAndMessageStatusDeletedShouldBeDeletedFromDbAndDataCite()
       throws Exception {
     // given
@@ -213,6 +218,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageReservedDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -229,6 +235,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -245,6 +252,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageFailedDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -261,6 +269,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void
       handleMessageFailedDoiButRegisteredInDataCiteAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
           throws Exception {
@@ -278,6 +287,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusReservedShouldUpdateStatusInDbWithFailed()
       throws Exception {
     // given
@@ -294,6 +304,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageDoiServiceRespondedWithHttpErrorShouldUpdateStatusInDbWithFailed()
       throws Exception {
     // given
@@ -317,6 +328,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageDoiHasTooLongMetadataShouldRegisterDoiAfterTruncatingMetadata()
       throws Exception {
     // given
@@ -353,6 +365,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageFirstAttemptDoiExceptionShouldRetryAndRegisterDoi() throws Exception {
     // given
     final DOI doi = newDoi();
@@ -376,6 +389,7 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
+  @Ignore
   public void handleMessageDoiExceptionAllAttemptsShouldRetryFourTimesAndMarkAsFailed()
       throws Exception {
     // given
