@@ -38,6 +38,7 @@ exit $RESULT
 ## Modules
  Project modules:
  - [**registry-directory**](registry-spring-boot-directory/README.md)
+ - [**registry-directory-client**](registry-spring-boot-directory-client/README.md)
  - [**registry-doi**](registry-spring-boot-doi/README.md)
  - [**registry-domain**](registry-spring-boot-domain/README.md)
  - [**registry-events**](registry-spring-boot-events/README.md)
@@ -51,6 +52,7 @@ exit $RESULT
  - [**registry-persistence**](registry-spring-boot-persistence/README.md)
  - [**registry-pipelines**](registry-spring-boot-pipelines/README.md)
  - [**registry-search**](registry-spring-boot-search/README.md)
+ - [**registry-security**](registry-spring-boot-security/README.md)
  - [**registry-service**](registry-spring-boot-service/README.md)
  - [**registry-surety**](registry-spring-boot-surety/README.md)
  - [**registry-ws**](registry-spring-boot-ws/README.md)
