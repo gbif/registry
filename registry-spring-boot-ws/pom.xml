@@ -9,8 +9,7 @@
     <version>1.1.1-SNAPSHOT</version>
   </parent>
   <artifactId>registry-spring-boot-ws</artifactId>
-  <name>registry-spring-boot-ws</name>
-  <description>Web services</description>
+  <name>GBIF Registry Webservices</name>
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>

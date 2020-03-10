@@ -9,8 +9,7 @@
 
   <artifactId>registry-spring-boot-cli</artifactId>
   <packaging>jar</packaging>
-
-  <name>Registry CLI</name>
+  <name>GBIF Registry CLI</name>
 
   <distributionManagement>
     <site>

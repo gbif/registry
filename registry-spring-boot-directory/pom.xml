@@ -10,6 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-spring-boot-directory</artifactId>
+  <name>GBIF Registry Directory</name>
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>

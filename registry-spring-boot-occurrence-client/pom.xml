@@ -10,6 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-spring-boot-occurrence-client</artifactId>
+  <name>GBIF Registry Occurrence Client</name>
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>

@@ -8,6 +8,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-spring-boot-metadata</artifactId>
+  <name>GBIF Registry Metadata</name>
+  <url>http://sites.gbif.org/registry/registry-metadata</url>
+  <description>Support for parsing and writing EML and other metadata formats to our dataset class</description>
+
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
