@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.cli.common.stubs;
 
-import org.gbif.registry.ws.security.EditorAuthorizationService;
+import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.UUID;
 
