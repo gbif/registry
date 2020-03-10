@@ -620,7 +620,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertNotEquals("This is a citation text", dataset.getCitation().getText());
 
     // update it
-    dataset.getCitation().setIdentifier("doi:123");
+    dataset.getCitation().setIdentifier("doi:456");
     dataset.getCitation().setText("GOD publishing, volume 123");
     service.update(dataset);
     dataset = service.get(dataset.getKey());
