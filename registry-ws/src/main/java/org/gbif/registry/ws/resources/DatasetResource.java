@@ -47,6 +47,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -122,6 +123,18 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                   new CacheLoader<UUID, Organization>() {
                     public Organization load(UUID key) {
                       return organizationMapper.get(key);
+                    }
+                  });
+
+  private final LoadingCache<UUID, Set<UUID>> DATASET_KEYS_IN_NETWORK_CACHE = CacheBuilder.newBuilder()
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(
+                  new CacheLoader<UUID, Set<UUID>>() {
+                    public Set<UUID> load(UUID key) {
+                      return datasetMapper.listDatasetsInNetwork(key, null)
+                        .stream()
+                        .map(dataset -> dataset.getKey())
+                        .collect(Collectors.toSet());
                     }
                   });
 
@@ -623,12 +636,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
 
     // Replace with Constants.OBIS_NETWORK_KEY when this is corrected.
-    boolean notObisDataset = ! networkMapper.listByDataset(dataset.getKey()).stream()
-      .filter(network -> network.getKey().equals(UUID.fromString("2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6"))).findAny().isPresent();
+    boolean notObisDataset = ! DATASET_KEYS_IN_NETWORK_CACHE.getUnchecked(UUID.fromString("2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6"))
+      .contains(dataset.getKey());
 
     Citation originalCitation = dataset.getCitation();
 
-    if (notObisDataset || originalCitation == null || originalCitation.getText().length() == 0) {
+    if (notObisDataset || originalCitation == null || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
       Citation citation = originalCitation == null ? new Citation() : originalCitation;
@@ -636,10 +649,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
               ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
     } else {
-      // Check DOI exists, and append it if it doesn't.
-      if (!originalCitation.getText().toLowerCase().contains("doi.org") && !originalCitation.getText().toLowerCase().contains("doi:")) {
-        originalCitation.setText(originalCitation.getText() + " " + dataset.getDoi().getUrl().toString());
-      }
+      // Append DOI if necessary, and append "accessed via GBIF.org".
+      originalCitation.setText(CitationGenerator.generatePublisherProvidedCitation(dataset));
     }
 
     return dataset;
