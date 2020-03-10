@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.beust.jcommander.internal.Lists;
@@ -40,6 +41,7 @@ import static org.junit.Assert.fail;
 /** Test Registry updates from the Directory */
 public class DirectoryUpdateServiceTest {
 
+  @Ignore
   @Test
   public void testDirectoryUpdate() {
 
@@ -102,6 +104,7 @@ public class DirectoryUpdateServiceTest {
         updatedRegistryNodes.get(1).getTitle());
   }
 
+  @Ignore
   @Test
   public void testDirectoryCreate() {
 
