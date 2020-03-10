@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.yammer.metrics.reporting.GangliaReporter;
 
 /**
@@ -45,6 +45,6 @@ public class GangliaConfiguration {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("host", host).add("port", port).toString();
+    return MoreObjects.toStringHelper(this).add("host", host).add("port", port).toString();
   }
 }
