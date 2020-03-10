@@ -13,26 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.cli.common.stubs;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.registry.events.EventManager;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+public class EventManagerStub implements EventManager {
 
-@Configuration
-public class TitleLookupConfiguration {
+  @Override
+  public void post(Object object) {}
 
-  private String apiRoot;
+  @Override
+  public void register(Object object) {}
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
-  }
-
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
-  }
+  @Override
+  public void unregister(Object object) {}
 }

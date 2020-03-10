@@ -13,26 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.cli.doisynchronizer;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.cli.BaseCommand;
+import org.gbif.cli.Command;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.kohsuke.MetaInfServices;
 
-@Configuration
-public class TitleLookupConfiguration {
+@MetaInfServices(Command.class)
+public class DoiSynchronizerCommand extends BaseCommand {
 
-  private String apiRoot;
+  private final DoiSynchronizerConfiguration config = new DoiSynchronizerConfiguration();
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
+  public DoiSynchronizerCommand() {
+    super("doi-synchronizer");
   }
 
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
+  @Override
+  protected Object getConfigurationObject() {
+    return config;
+  }
+
+  @Override
+  protected void doRun() {
+    DoiSynchronizerService service = new DoiSynchronizerService(config);
+    service.doRun();
   }
 }

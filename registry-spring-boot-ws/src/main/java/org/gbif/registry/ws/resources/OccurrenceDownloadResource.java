@@ -50,6 +50,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -93,7 +94,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
       DoiGenerator doiGenerator,
       @Lazy DataCiteDoiHandlerStrategy doiHandlingStrategy,
-      IdentityAccessService identityService) {
+      @Qualifier("ligthweightIdentityAccessService") IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiHandlingStrategy = doiHandlingStrategy;

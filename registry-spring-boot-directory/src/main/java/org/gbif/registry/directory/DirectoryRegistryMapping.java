@@ -18,14 +18,9 @@ package org.gbif.registry.directory;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.Continent;
-import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.NodeType;
-import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.api.vocabulary.directory.ParticipantPersonRole;
-import org.gbif.api.vocabulary.directory.ParticipantType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,40 +53,6 @@ public class DirectoryRegistryMapping {
           ContactType.NODE_MANAGER,
           NodePersonRole.NODE_STAFF,
           ContactType.NODE_STAFF);
-
-  /**
-   * Return the Directory ParticipationStatus from a Registry ParticipationStatus
-   * PARTICIPATION_STATUS.get(org.gbif.api.vocabulary.directory.ParticipationStatus) returns
-   * org.gbif.api.vocabulary.ParticipationStatus
-   */
-  public static final ImmutableBiMap<
-          org.gbif.api.vocabulary.directory.ParticipationStatus, ParticipationStatus>
-      PARTICIPATION_STATUS =
-          ImmutableBiMap.of(
-              org.gbif.api.vocabulary.directory.ParticipationStatus.VOTING,
-              ParticipationStatus.VOTING,
-              org.gbif.api.vocabulary.directory.ParticipationStatus.OBSERVER,
-              ParticipationStatus.OBSERVER,
-              org.gbif.api.vocabulary.directory.ParticipationStatus.ASSOCIATE,
-              ParticipationStatus.ASSOCIATE,
-              org.gbif.api.vocabulary.directory.ParticipationStatus.AFFILIATE,
-              ParticipationStatus.AFFILIATE,
-              org.gbif.api.vocabulary.directory.ParticipationStatus.FORMER,
-              ParticipationStatus.FORMER);
-
-  public static final ImmutableBiMap<ParticipantType, NodeType> PARTICIPATION_TYPE =
-      ImmutableBiMap.of(
-          ParticipantType.COUNTRY, NodeType.COUNTRY, ParticipantType.OTHER, NodeType.OTHER);
-
-  public static final ImmutableBiMap<GbifRegion, Continent> GBIF_REGION_CONTINENT =
-      new ImmutableBiMap.Builder()
-          .put(GbifRegion.AFRICA, Continent.AFRICA)
-          .put(GbifRegion.ASIA, Continent.ASIA)
-          .put(GbifRegion.EUROPE, Continent.EUROPE)
-          .put(GbifRegion.LATIN_AMERICA, Continent.SOUTH_AMERICA)
-          .put(GbifRegion.NORTH_AMERICA, Continent.NORTH_AMERICA)
-          .put(GbifRegion.OCEANIA, Continent.OCEANIA)
-          .build();
 
   /** Gets the Directory participantID from a Registry Node. */
   public static Integer findParticipantID(Node node) {

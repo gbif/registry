@@ -13,26 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.cli.doiupdater;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.cli.Command;
+import org.gbif.cli.service.ServiceCommand;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.kohsuke.MetaInfServices;
 
-@Configuration
-public class TitleLookupConfiguration {
+import com.google.common.util.concurrent.Service;
 
-  private String apiRoot;
+@MetaInfServices(Command.class)
+public class DoiUpdaterCommand extends ServiceCommand {
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
+  private final DoiUpdaterConfiguration config = new DoiUpdaterConfiguration();
+
+  public DoiUpdaterCommand() {
+    super("doi-updater");
   }
 
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
+  @Override
+  protected Service getService() {
+    return new DoiUpdaterService(config);
+  }
+
+  @Override
+  protected Object getConfigurationObject() {
+    return config;
   }
 }

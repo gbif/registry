@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
@@ -41,6 +40,7 @@ import javax.validation.groups.Default;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,14 +48,17 @@ import com.google.common.base.Strings;
 
 import static org.gbif.registry.identity.model.UserModelMutationResult.withError;
 import static org.gbif.registry.identity.model.UserModelMutationResult.withSingleConstraintViolation;
+import static org.gbif.registry.identity.util.IdentityUtils.NORMALIZE_EMAIL_FCT;
+import static org.gbif.registry.identity.util.IdentityUtils.NORMALIZE_USERNAME_FCT;
 
 /**
  * Main implementation of {@link IdentityService} on top of mybatis. Notes: - usernames are case
  * insensitive but the constraint in the db only allows lowercase at the moment (could be removed) -
  * emails are stored as provided (the case is preserved) but are queried in lowercase
  */
+@Primary
 @Service
-public class IdentityServiceImpl implements IdentityService {
+public class IdentityServiceImpl extends BaseIdentityAccessService implements IdentityService {
 
   private final UserMapper userMapper;
   private final UserSuretyDelegate userSuretyDelegate;
@@ -63,15 +66,12 @@ public class IdentityServiceImpl implements IdentityService {
 
   private static final Range<Integer> PASSWORD_LENGTH_RANGE = Range.between(6, 256);
 
-  private static final UnaryOperator<String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
-  private static final UnaryOperator<String> NORMALIZE_EMAIL_FCT =
-      email -> Optional.ofNullable(email).map(String::trim).orElse(null);
-
   private static final RegistryPasswordEncoder PASSWORD_ENCODER = new RegistryPasswordEncoder();
 
   @Autowired
   public IdentityServiceImpl(
       UserMapper userMapper, UserSuretyDelegate userSuretyDelegate, Validator validator) {
+    super(userMapper);
     this.userMapper = userMapper;
     this.userSuretyDelegate = userSuretyDelegate;
     this.validator = validator;
@@ -160,39 +160,6 @@ public class IdentityServiceImpl implements IdentityService {
   @Override
   public GbifUser getBySystemSetting(String key, String value) {
     return userMapper.getBySystemSetting(key, value);
-  }
-
-  /**
-   * Get a {@link GbifUser} using its identifier (username or email). The username is case
-   * insensitive.
-   *
-   * @param identifier user's username or email
-   * @return {@link GbifUser} or null
-   */
-  @Override
-  @Nullable
-  public GbifUser get(String identifier) {
-    if (Strings.isNullOrEmpty(identifier)) {
-      return null;
-    }
-    // this assumes username name can not contains @ (which is the case, see AbstractGbifUser's
-    // getUserName())
-    return StringUtils.contains(identifier, "@")
-        ? getByEmail(identifier)
-        : userMapper.get(NORMALIZE_USERNAME_FCT.apply(identifier));
-  }
-
-  /**
-   * Get a {@link GbifUser} using its email. The email is case insensitive.
-   *
-   * @param email user's email
-   * @return {@link GbifUser} or null
-   */
-  @Nullable
-  private GbifUser getByEmail(String email) {
-    // emails are stored in lowercase
-    // the mybatis mapper will run the query with a lower()
-    return userMapper.getByEmail(NORMALIZE_EMAIL_FCT.apply(email));
   }
 
   @Override
