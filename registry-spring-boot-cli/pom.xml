@@ -25,7 +25,7 @@
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
     <guice.version>4.0</guice.version>
-    <gbif-cli.version>0.13</gbif-cli.version>
+    <gbif-cli.version>0.14-SNAPSHOT</gbif-cli.version>
     <gbif-postal-service.version>0.43</gbif-postal-service.version>
     <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
     <metainf-services.version>1.5</metainf-services.version>
