@@ -37,6 +37,7 @@ exit $RESULT
 
 ## Modules
  Project modules:
+ - [**registry-cli**](registry-spring-boot-cli/README.md)
  - [**registry-directory**](registry-spring-boot-directory/README.md)
  - [**registry-directory-client**](registry-spring-boot-directory-client/README.md)
  - [**registry-doi**](registry-spring-boot-doi/README.md)
