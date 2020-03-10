@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.cli.datasetupdater;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.registry.cli.common.DbConfiguration;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
-@Configuration
-public class TitleLookupConfiguration {
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParametersDelegate;
 
-  private String apiRoot;
+/** A configuration exclusively for DatasetUpdater. */
+public class DatasetUpdaterConfiguration {
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
-  }
+  @ParametersDelegate @Valid @NotNull public DbConfiguration db = new DbConfiguration();
 
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
-  }
+  @Parameter(names = "--dataset-key")
+  public String key;
+
+  @Parameter(names = "--dataset-key-path")
+  public String keyFilePath;
 }

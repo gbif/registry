@@ -25,6 +25,7 @@ import org.gbif.ws.security.SigningService;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,15 +49,19 @@ public class FeignClientConfiguration {
 
   private SigningService signingService;
   private Md5EncodeService md5EncodeService;
+  private String appKey;
+  private String secretKey;
 
   public FeignClientConfiguration(
-      SigningService signingService, Md5EncodeService md5EncodeService) {
+      @Value("${directory.app.key}") String appKey,
+      @Value("${directory.app.secret}") String secretKey,
+      @Qualifier("secretKeySigningService") SigningService signingService,
+      Md5EncodeService md5EncodeService) {
     this.signingService = signingService;
     this.md5EncodeService = md5EncodeService;
+    this.appKey = appKey;
+    this.secretKey = secretKey;
   }
-
-  @Value("${directory.app.key}")
-  private String appKey;
 
   /** Sign request, set required headers. */
   @Bean
@@ -85,7 +90,7 @@ public class FeignClientConfiguration {
       }
 
       try {
-        String signature = signingService.buildSignature(requestDataToSign, appKey);
+        String signature = signingService.buildSignature(requestDataToSign, secretKey);
 
         requestTemplate.header("x-gbif-user", appKey);
         requestTemplate.header("Authorization", "GBIF " + appKey + ":" + signature);

@@ -13,26 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.identity.util;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.apache.commons.lang3.StringUtils;
 
-@Configuration
-public class TitleLookupConfiguration {
+public final class IdentityUtils {
 
-  private String apiRoot;
+  private IdentityUtils() {}
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
-  }
+  public static final UnaryOperator<String> NORMALIZE_USERNAME_FCT = StringUtils::trim;
 
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
-  }
+  public static final UnaryOperator<String> NORMALIZE_EMAIL_FCT =
+      email -> Optional.ofNullable(email).map(String::trim).orElse(null);
 }

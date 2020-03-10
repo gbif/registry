@@ -13,26 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.doi;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.doi.service.DoiService;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.google.inject.AbstractModule;
 
-@Configuration
-public class TitleLookupConfiguration {
+/** Provides a mock doi service */
+public class DoiMockModule extends AbstractModule {
 
-  private String apiRoot;
-
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
-  }
-
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
+  @Override
+  protected void configure() {
+    bind(DoiService.class).toInstance(new DoiServiceMock());
   }
 }

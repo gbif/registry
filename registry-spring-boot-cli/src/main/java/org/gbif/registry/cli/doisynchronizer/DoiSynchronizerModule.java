@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.config;
+package org.gbif.registry.cli.doisynchronizer;
 
-import org.gbif.occurrence.query.TitleLookupService;
-import org.gbif.occurrence.query.TitleLookupServiceFactory;
+import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.ApplicationContext;
 
-@Configuration
-public class TitleLookupConfiguration {
+public class DoiSynchronizerModule {
 
-  private String apiRoot;
+  private final DoiSynchronizerConfiguration config;
 
-  public TitleLookupConfiguration(@Value("${api.root.url}") String apiRoot) {
-    this.apiRoot = apiRoot;
+  public DoiSynchronizerModule(DoiSynchronizerConfiguration config) {
+    this.config = config;
   }
 
-  @Bean
-  public TitleLookupService titleLookupService() {
-    return TitleLookupServiceFactory.getInstance(apiRoot);
+  public ApplicationContext getContext() {
+    return SpringContextBuilder.create()
+        .withDoiSynchronizerConfiguration(config)
+        .withScanPackages("org.gbif.registry.doi")
+        .build();
   }
 }
