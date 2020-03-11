@@ -34,8 +34,8 @@ import com.google.common.eventbus.EventBus;
 import org.apache.bval.guice.Validate;
 import org.mybatis.guice.transactional.Transactional;
 
-import static org.gbif.registry.ws.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.ws.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -189,7 +189,7 @@ public abstract class ExtendedCollectionEntityResource<
   @POST
   @Path("{key}/contact")
   @Validate
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   public void addContact(
       @PathParam("key") @NotNull UUID entityKey,
@@ -223,7 +223,7 @@ public abstract class ExtendedCollectionEntityResource<
   @DELETE
   @Path("{key}/contact/{personKey}")
   @Validate
-  @RolesAllowed({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @RolesAllowed({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void removeContact(
       @PathParam("key") @NotNull UUID entityKey,
       @PathParam("personKey") @NotNull UUID personKey,
