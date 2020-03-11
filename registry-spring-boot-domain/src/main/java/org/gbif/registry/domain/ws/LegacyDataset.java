@@ -43,7 +43,6 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -824,7 +823,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
+    return Objects.toStringHelper(this)
         .add("primaryContactType", primaryContactType)
         .add("primaryContactEmail", primaryContactEmail)
         .add("primaryContactName", primaryContactName)
