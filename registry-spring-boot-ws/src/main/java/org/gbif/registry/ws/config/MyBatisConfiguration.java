@@ -79,6 +79,7 @@ public class MyBatisConfiguration {
   ConfigurationCustomizer mybatisConfigCustomizer() {
     return configuration -> {
       configuration.getTypeHandlerRegistry().register("org.gbif.registry.persistence.handler");
+      configuration.getTypeHandlerRegistry().register("org.gbif.mybatis.type");
       configuration.setMapUnderscoreToCamelCase(true);
       configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(URI.class, UriTypeHandler.class);
