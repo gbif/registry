@@ -47,6 +47,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -125,6 +126,18 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                     }
                   });
 
+  private final LoadingCache<UUID, Set<UUID>> DATASET_KEYS_IN_NETWORK_CACHE = CacheBuilder.newBuilder()
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(
+                  new CacheLoader<UUID, Set<UUID>>() {
+                    public Set<UUID> load(UUID key) {
+                      return datasetMapper.listDatasetsInNetwork(key, null)
+                        .stream()
+                        .map(dataset -> dataset.getKey())
+                        .collect(Collectors.toSet());
+                    }
+                  });
+
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
    */
@@ -181,6 +194,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (dataset == null) {
       return null;
     }
+
+    setGeneratedCitation(dataset);
 
     return sanitizeDataset(dataset);
   }
@@ -275,7 +290,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
     List<Dataset> augmented = Lists.newArrayList();
     for (Dataset d : resp.getResults()) {
-      augmented.add(merge(getPreferredMetadataDataset(d.getKey()), d));
+      augmented.add(setGeneratedCitation(merge(getPreferredMetadataDataset(d.getKey()), d)));
     }
     resp.setResults(augmented);
     return resp;
@@ -301,13 +316,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
     // nothing to merge, return the target (which may be null)
     if (supplementary == null) {
-      setGeneratedCitation(target);
       return target;
     }
 
     // nothing to overlay into
     if (target == null) {
-      setGeneratedCitation(supplementary);
       return supplementary;
     }
 
@@ -346,8 +359,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     target.setIdentifiers(supplementary.getIdentifiers());
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
-
-    setGeneratedCitation(target);
 
     return target;
   }
@@ -604,27 +615,47 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   /**
    * Set the generated GBIF citation on the provided Dataset object.
-   * This function is used until we decide if we store the GBIF generated citation in the database.
    *
-   * see https://github.com/gbif/registry/issues/4
+   * https://github.com/gbif/registry/issues/4
+   *
+   * Where the provider is in particular networks (OBIS), or part of CoL, we use the provided citation and check
+   * for a DOI.
+   *
+   * https://github.com/gbif/registry/issues/43 (OBIS)
+   * https://github.com/gbif/portal-feedback/issues/1819 (CoL)
    * @param dataset
    * @return
    */
-  private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null && dataset.getPublishingOrganizationKey() != null
-                        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated one:
-                        // https://github.com/gbif/portal-feedback/issues/1819
-                        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
-                        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+  private Dataset setGeneratedCitation(Dataset dataset) {
+    if (dataset == null || dataset.getPublishingOrganizationKey() == null) return dataset;
 
+    // for CoL and its constituents we want to show the verbatim citation and not the GBIF-generated one:
+    if (Constants.COL_DATASET_KEY.equals(dataset.getKey())
+        || Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+      return dataset;
+    }
+
+    // Replace with Constants.OBIS_NETWORK_KEY when this is corrected.
+    boolean notObisDataset = ! DATASET_KEYS_IN_NETWORK_CACHE.getUnchecked(UUID.fromString("2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6"))
+      .contains(dataset.getKey());
+
+    Citation originalCitation = dataset.getCitation();
+
+    if (notObisDataset || originalCitation == null || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the identifier
       // if provided.
-      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
+      Citation citation = originalCitation == null ? new Citation() : originalCitation;
       citation.setText(CitationGenerator.generateCitation(dataset,
               ORGANIZATION_CACHE.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
+    } else {
+      // Append DOI if necessary, and append "accessed via GBIF.org".
+      originalCitation.setText(CitationGenerator.generatePublisherProvidedCitation(dataset));
     }
+
+    return dataset;
   }
+
 
   /**
    * Creates a new Dataset.
