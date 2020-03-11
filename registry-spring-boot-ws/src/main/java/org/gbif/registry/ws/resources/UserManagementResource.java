@@ -258,7 +258,7 @@ public class UserManagementResource {
     page = page == null ? new PagingRequest() : page;
     String q =
         Optional.ofNullable(query)
-            .map(v -> Strings.nullToEmpty(CharMatcher.whitespace().trimFrom(v)))
+            .map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v)))
             .orElse(null);
     return identityService.search(q, page);
   }

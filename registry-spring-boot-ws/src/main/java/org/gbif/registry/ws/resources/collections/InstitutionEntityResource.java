@@ -97,7 +97,7 @@ public class InstitutionEntityResource extends ExtendedCollectionEntityResource<
       @Nullable @RequestParam(value = "name", required = false) String name,
       Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
+    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     long total = institutionMapper.count(query, contactKey, code, name);
     return new PagingResponse<>(
         page, total, institutionMapper.list(query, contactKey, code, name, page));

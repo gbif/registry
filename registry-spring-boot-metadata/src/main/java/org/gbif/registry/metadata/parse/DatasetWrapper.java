@@ -68,7 +68,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
@@ -573,7 +573,7 @@ public class DatasetWrapper {
   public void setTitle(String title) {
     // keep first true title in case we encounter several - just to be safe with this important
     // property
-    target.setTitle(MoreObjects.firstNonNull(target.getTitle(), title));
+    target.setTitle(Objects.firstNonNull(target.getTitle(), title));
   }
 
   public void setType(DatasetType type) {
