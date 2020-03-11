@@ -11,6 +11,9 @@ As a distributed network, the registry serves a central coordination mechanism, 
 ## Code style
 
 The registry uses google code style and spotless.
+See [motherpom](https://github.com/gbif/motherpom) project for more information.
+
+### Pre-commit hook
 To configure an automatic pre-commit hook to check code add a file 'pre-commit' to directory .git/hooks.
 File's content should be:
 
@@ -34,6 +37,21 @@ git stash pop -q
 # return the 'mvn spotless:check' exit code
 exit $RESULT
 ```
+
+To apply rules automatically run:
+
+```
+mvn spotless:apply
+```
+
+Sometimes it may not help (e.g. it does not fix two empty lines but consider this as a violation).
+In this case to display all violations command run:
+
+```
+mvn spotless:check
+```
+
+and fix all the issues manually afterwards.
 
 ## Modules
  Project modules:
