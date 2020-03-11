@@ -77,12 +77,6 @@ doi:
   prefix: 10.21373
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
-# MyBatis properties
-mybatis:
-  type-handlers-package: org.gbif.registry.persistence.mapper.handler;org.gbif.mybatis.type
-  configuration:
-    map-underscore-to-camel-case: true
-
 elasticsearch:
   registry:
     hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
