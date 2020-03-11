@@ -1,7 +1,7 @@
 # How citations are generated
 
-In order to offer a consistent citations, all citations are auto-generated for all datasets.
- * Documentation available on the GBIF.org [FAQ](https://www.gbif.org/faq#citation)
+In order to offer a consistent citations, citations are auto-generated for most datasets.
+ * Documentation available on the GBIF.org [FAQ](https://www.gbif.org/faq?q=citation)
  * Based on discussion from [Issue #4](https://github.com/gbif/registry/issues/4).
  * Source Code: [CitationGenerator.java](https://github.com/gbif/registry/blob/master/registry-metadata/src/main/java/org/gbif/registry/metadata/CitationGenerator.java)
 
