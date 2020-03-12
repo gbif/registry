@@ -32,38 +32,13 @@ import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.mybatis.type.CountryTypeHandler;
-import org.gbif.mybatis.type.LanguageTypeHandler;
-import org.gbif.mybatis.type.StringArrayTypeHandler;
-import org.gbif.mybatis.type.UriArrayTypeHandler;
-import org.gbif.mybatis.type.UriTypeHandler;
-import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.mybatis.type.*;
 import org.gbif.registry.domain.doi.DoiType;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.*;
 
 import java.net.URI;
 import java.util.UUID;
@@ -172,6 +147,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("MetricInfoTypeHandler", MetricInfoTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("CollectionSummaryTypeHandler", CollectionSummaryTypeHandler.class);
     };
   }
 }

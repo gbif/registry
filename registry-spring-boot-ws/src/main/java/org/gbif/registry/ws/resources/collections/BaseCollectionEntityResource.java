@@ -31,6 +31,7 @@ import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.ChangedComponentEvent;
@@ -75,7 +76,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
@@ -118,8 +118,13 @@ public abstract class BaseCollectionEntityResource<
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@RequestBody @NotNull @Validated T entity, Authentication authentication) {
+    if (!isAllowedToEditEntity(authentication, entity)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
     final String username = authentication.getName();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
@@ -128,9 +133,15 @@ public abstract class BaseCollectionEntityResource<
 
   @DeleteMapping("{key}")
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathVariable @NotNull UUID key, Authentication authentication) {
     T entityToDelete = get(key);
+
+    if (!isAllowedToEditEntity(authentication, entityToDelete)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
     entityToDelete.setModifiedBy(authentication.getName());
     update(entityToDelete);
 
@@ -153,23 +164,36 @@ public abstract class BaseCollectionEntityResource<
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(
       @PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
+
+    if (!isAllowedToEditEntity(authentication, entity)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
     entity.setModifiedBy(authentication.getName());
     update(entity);
   }
 
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addIdentifier(
       @PathVariable("key") @NotNull UUID entityKey,
       @RequestBody @NotNull Identifier identifier,
       Authentication authentication) {
+    // only admins can add IH identifiers
+    if (identifier.getType() == IdentifierType.IH_IRN
+        && !SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(entityKey, identifier);
   }
@@ -185,8 +209,28 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @DeleteMapping("{key}/identifier/{identifierKey}")
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
+  public void deleteIdentifier(
+      @PathVariable("key") @NotNull UUID entityKey,
+      @PathVariable int identifierKey,
+      Authentication authentication) {
+    // check if the user has permissions to delete the identifier. Only admins can delete IH
+    // identifiers.
+    List<Identifier> identifiers = baseMapper.listIdentifiers(entityKey);
+    Optional<Identifier> identifierToDelete =
+        identifiers.stream().filter(i -> i.getKey().equals(identifierKey)).findFirst();
+
+    if (identifierToDelete.isPresent()
+        && identifierToDelete.get().getType() == IdentifierType.IH_IRN
+        && !SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
+    deleteIdentifier(entityKey, identifierKey);
+  }
+
   @Override
   public void deleteIdentifier(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
@@ -203,7 +247,7 @@ public abstract class BaseCollectionEntityResource<
 
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addTag(
       @PathVariable("key") @NotNull UUID entityKey,
       @RequestBody @NotNull Tag tag,
@@ -228,7 +272,7 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @DeleteMapping("{key}/tag/{tagKey}")
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
@@ -431,5 +475,16 @@ public abstract class BaseCollectionEntityResource<
       String namespace, @Nullable String name, @Nullable String value, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(baseMapper, namespace, name, value, page);
+  }
+
+  /** Only admins can edit IH entities. */
+  protected boolean isAllowedToEditEntity(Authentication authentication, T entity) {
+    if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      return true;
+    }
+
+    boolean isIhEntity =
+        entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
+    return !isIhEntity;
   }
 }
