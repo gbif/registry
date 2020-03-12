@@ -49,8 +49,8 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
                 <mail.password>%your_email_password%</mail.password>
                 <mail.helpdesk>gbifregistry@mailinator.com</mail.helpdesk>
 
-                <directory.ws.url></directory.ws.url>
-                <directory.app.key></directory.app.key>
+                <directory.ws.url>http://api.gbif-dev.org/v1/directory/</directory.ws.url>
+                <directory.app.key>gbif.portal</directory.app.key>
                 <directory.app.secret></directory.app.secret>
 
                 <datacite.api.base.url>https://api.test.datacite.org/</datacite.api.base.url>
