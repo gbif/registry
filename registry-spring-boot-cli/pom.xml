@@ -20,8 +20,6 @@
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
-    <!-- guava has to match gbif-cli version -->
-    <guava.version>23.0</guava.version>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
     <guice.version>4.0</guice.version>
@@ -226,7 +224,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>

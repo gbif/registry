@@ -53,6 +53,8 @@ public class MyBatisConfiguration {
   @Bean
   ConfigurationCustomizer mybatisConfigCustomizer() {
     return configuration -> {
+      configuration.getTypeHandlerRegistry().register("org.gbif.registry.persistence.handler");
+      configuration.setMapUnderscoreToCamelCase(true);
       configuration.getTypeHandlerRegistry().register(UUID.class, UuidTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(URI.class, UriTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(Country.class, CountryTypeHandler.class);

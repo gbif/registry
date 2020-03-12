@@ -20,7 +20,7 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
-import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 /** Very basic email model that holds the main components of an email to send. */
 public class BaseEmailModel {
@@ -60,7 +60,7 @@ public class BaseEmailModel {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
+    return Objects.toStringHelper(this)
         .add("emailAddress", emailAddress)
         .add("subject", subject)
         .add("body", body)

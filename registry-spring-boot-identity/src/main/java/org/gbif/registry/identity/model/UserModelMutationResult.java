@@ -23,7 +23,7 @@ import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 
-import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 import static org.gbif.registry.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
 
@@ -129,7 +129,7 @@ public class UserModelMutationResult {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
+    return Objects.toStringHelper(this)
         .add("username", username)
         .add("email", email)
         .add("modelError", modelError)

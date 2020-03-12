@@ -67,7 +67,7 @@ pipelines:
 
 # file with all application keys & secrets
 appkeys:
-  file: @appkeys.testfile@
+  file: @appkeys.file@
   whitelist: gbif.registry-ws-client-it,gbif.app.it
 
 # d7dddbf4-2cf0-4f39-9b2a-bb099caae36c is the GBIF Backbone Taxonomy
@@ -75,12 +75,6 @@ appkeys:
 doi:
   prefix: 10.21373
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
-
-# MyBatis properties
-mybatis:
-  type-handlers-package: org.gbif.registry.persistence.mapper.handler;org.gbif.mybatis.type
-  configuration:
-    map-underscore-to-camel-case: true
 
 # ElasticSearch
 elasticsearch:
@@ -149,7 +143,7 @@ spring:
   # Liquibase
   liquibase:
     change-log: classpath:liquibase/master.xml
-    enabled: true
+    enabled: false
     default-schema: public
   # Mail
   mail:
