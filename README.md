@@ -10,8 +10,18 @@ As a distributed network, the registry serves a central coordination mechanism, 
 
 ## Code style
 
-The registry uses google code style and spotless.
-See [motherpom](https://github.com/gbif/motherpom) project for more information.
+The registry uses spotless-maven-plugin and google code style.
+Please check [motherpom](https://github.com/gbif/motherpom) project for some important configuration.
+
+### Project files
+
+Code style related files. **Please make sure you properly configure required IDE settings**:
+
+- [gbif.importorder](./gbif.importorder) overrides default google package import order (for spotless-maven-plugin).
+- [gbif-lecense-header](./gbif-license-header) provides default license header (for spotless-maven-plugin).
+- [google-style.xml](./google-style.xml) java google code style, should be imported to IDE as a default one: Preferences --> Editor --> Code Style --> Import scheme (gear next to 'Scheme' dropdown) --> Intellij IDEA code style XML.
+- [.editorconfig](./.editorconfig) formatting properties which overrides some inconvenient google ones (e.g. static imports at the beginning of imports list). Make sure editorconfig file is enabled in IDE: Preferences --> Editor --> Code Style --> General --> Enable EditorConfig support.
+
 
 ### Pre-commit hook
 To configure an automatic pre-commit hook to check code add a file 'pre-commit' to directory .git/hooks.
@@ -38,20 +48,25 @@ git stash pop -q
 exit $RESULT
 ```
 
-To apply rules automatically run:
+### Manual use of Spotless
 
-```
-mvn spotless:apply
-```
-
-Sometimes it may not help (e.g. it does not fix two empty lines but consider this as a violation).
-In this case to display all violations command run:
+Check that project follows code style conventions:
 
 ```
 mvn spotless:check
 ```
 
-and fix all the issues manually afterwards.
+Fix code style violations:
+
+```
+mvn spotless:apply
+```
+
+Sometimes it may not help (e.g. it does not fix two empty lines but consider them as a violation).
+In this case run spotless check command above and fix them manually afterwards.
+
+For more information see [documentation](https://github.com/diffplug/spotless/tree/master/plugin-maven).
+
 
 ## Modules
  Project modules:
