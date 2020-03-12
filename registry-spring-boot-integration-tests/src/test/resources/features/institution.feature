@@ -33,7 +33,7 @@ Feature: Institution functionality
     And new institution identifiers
       | identifierType | identifier                           |
       | UUID           | c4930a2c-3d3a-4d47-b65b-8347c42bf0a3 |
-    When create institution "New institution" using admin "registry_admin"
+    When create institution "New institution" using admin "grscicoll_admin"
     Then response status should be 201
     And institution key is present in response
     When get institution by key

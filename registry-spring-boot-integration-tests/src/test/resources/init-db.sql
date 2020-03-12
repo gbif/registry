@@ -69,10 +69,11 @@ VALUES (3, 'registry_admin', 'admin@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)
-VALUES (11, 'registry_editor', 'editor@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp',
-        'Mark', 'Editor', '{REGISTRY_EDITOR}', '', '', '2019-07-12 10:02:03.778207', null, null, null);
+VALUES (4, 'grscicoll_admin', 'grscicolladmin@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'GrSciColl',
+        'Admin', '{GRSCICOLL_ADMIN}', '', '', '2019-07-12 09:57:42.629508', null, null, null);
+
 
 INSERT INTO public."user" (key, username, email, password, first_name, last_name, roles, settings, system_settings,
                            created, last_login, deleted, challenge_code_key)
-VALUES (12, 'grscicoll_admin', 'grscicolladmin@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', 'GrSciColl',
-        'Admin', '{GRSCICOLL_ADMIN}', '', '', '2019-07-12 09:57:42.629508', null, null, null);
+VALUES (11, 'registry_editor', 'editor@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp',
+        'Mark', 'Editor', '{REGISTRY_EDITOR}', '', '', '2019-07-12 10:02:03.778207', null, null, null);
