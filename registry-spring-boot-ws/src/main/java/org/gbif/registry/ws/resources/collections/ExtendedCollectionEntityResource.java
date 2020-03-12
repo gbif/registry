@@ -47,10 +47,12 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
+import javax.ws.rs.core.Response;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -61,8 +63,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link *
@@ -224,7 +226,21 @@ public abstract class ExtendedCollectionEntityResource<
       value = "{key}/contact",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void addContact(
+      @PathVariable("key") @NotNull UUID entityKey,
+      @RequestBody @NotNull UUID personKey,
+      Authentication authentication) {
+    // check that the user has permissions to add a contact. Only admins can edit IH entities
+    T entity = baseMapper.get(entityKey);
+    if (!isAllowedToEditEntity(authentication, entity)) {
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
+    }
+
+    addContact(entityKey, personKey);
+  }
+
   @Override
   public void addContact(
       @PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull UUID personKey) {
@@ -241,7 +257,20 @@ public abstract class ExtendedCollectionEntityResource<
 
   @DeleteMapping("{key}/contact/{personKey}")
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void removeContact(
+      @PathVariable("key") @NotNull UUID entityKey,
+      @PathVariable @NotNull UUID personKey,
+      Authentication authentication) {
+    // check that the user has permissions to add a contact. Only admins can edit IH entities
+    T entity = baseMapper.get(entityKey);
+    if (!isAllowedToEditEntity(authentication, entity)) {
+      throw new javax.ws.rs.WebApplicationException(Response.Status.FORBIDDEN);
+    }
+
+    removeContact(entityKey, personKey);
+  }
+
   @Override
   public void removeContact(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
