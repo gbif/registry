@@ -39,17 +39,22 @@ Feature: Institution functionality
     When get institution by key
     Then response status should be 200
 
-    When update institution "New institution" using admin "registry_admin"
+    When update institution "New institution" using admin "grscicoll_admin"
       | description | new dummy description |
     Then response status should be 200
     When get institution by key
     Then response status should be 200
 
-    When delete institution "New institution" using admin "registry_admin"
+    When delete institution "New institution" using admin "grscicoll_admin"
     Then response status should be 200
     When get institution by key
     Then response status should be 200
 
+
+  Scenario: create institution without privileges will cause Forbidden 403
+    Given new arbitrary valid institution "New institution"
+    When create institution "New institution" using user "registry_admin"
+    Then response status should be 403
 
   Scenario: create institution without privileges will cause Forbidden 403
     Given new arbitrary valid institution "New institution"
