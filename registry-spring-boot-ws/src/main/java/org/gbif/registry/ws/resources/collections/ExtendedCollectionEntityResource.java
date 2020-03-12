@@ -19,13 +19,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
@@ -47,7 +41,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import javax.ws.rs.core.Response;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,12 +48,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
@@ -265,7 +253,8 @@ public abstract class ExtendedCollectionEntityResource<
     // check that the user has permissions to add a contact. Only admins can edit IH entities
     T entity = baseMapper.get(entityKey);
     if (!isAllowedToEditEntity(authentication, entity)) {
-      throw new javax.ws.rs.WebApplicationException(Response.Status.FORBIDDEN);
+      throw new WebApplicationException(
+          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
     }
 
     removeContact(entityKey, personKey);
