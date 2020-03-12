@@ -273,7 +273,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // query, country and endorsement.
     String query =
         request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(request.getQ()))
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
             : request.getQ();
     long total = organizationMapper.count(query, country, request.getIsEndorsed());
     page = page == null ? new PagingRequest() : page;

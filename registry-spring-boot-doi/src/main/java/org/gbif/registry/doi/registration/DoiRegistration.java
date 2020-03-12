@@ -20,7 +20,6 @@ import org.gbif.registry.domain.doi.DoiType;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -112,7 +111,7 @@ public class DoiRegistration {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
+    return Objects.toStringHelper(this)
         .add("key", key)
         .add("doi", doi)
         .add("metadata", metadata)

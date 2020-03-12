@@ -250,8 +250,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   public PagingResponse<T> search(String query, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     // trim and handle null from given input
-    String q =
-        query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
+    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     return withMyBatis.search(mapper, q, page);
   }
 
