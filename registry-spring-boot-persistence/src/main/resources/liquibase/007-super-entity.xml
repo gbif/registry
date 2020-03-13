@@ -1,0 +1,26 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+	
+  <!--  
+    Add support for identifiers and endpoints to all network entities.
+  -->
+  <changeSet id="7" author="markus">
+    <sql>
+      CREATE TABLE network_identifier
+      (
+        network_key uuid NOT NULL REFERENCES network(key),
+        identifier_key integer NOT NULL UNIQUE REFERENCES identifier(key) ON DELETE CASCADE,
+        PRIMARY KEY (network_key, identifier_key)
+      );
+
+      CREATE TABLE installation_identifier
+      (
+        installation_key uuid NOT NULL REFERENCES installation(key),
+        identifier_key integer NOT NULL UNIQUE REFERENCES identifier(key) ON DELETE CASCADE,
+        PRIMARY KEY (installation_key, identifier_key)
+      );
+    </sql>
+  </changeSet>
+</databaseChangeLog>

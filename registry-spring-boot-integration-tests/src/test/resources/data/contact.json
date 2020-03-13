@@ -1,0 +1,16 @@
+{
+  "firstName":"Tim",
+  "lastName":"Robertson",
+  "type":"PROGRAMMER",
+  "primary":true,
+  "description":"Description stuff...",
+  "position": ["Programmer"],
+  "email":["test@mailinator.com"],
+  "phone":["+45 28261487"],
+  "organization":"GBIF",
+  "address":["Universitetsparken 15"],
+  "city":"Copenhagen",
+  "province":"Capital",
+  "country":"DK",
+  "postalCode":"2100"
+}

@@ -1,0 +1,24 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Adds 2 new process status columns,
+    see https://github.com/gbif/gbif-api/commit/a287af0512980835cef379efe22dd57d44db46ca
+  -->
+  <changeSet id="30" author="markus">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+  CREATE TYPE process_status_type AS ENUM ('EMPTY', 'RUNNING', 'FINISHED');
+  ALTER TABLE crawl_history ADD COLUMN process_state_occurrence process_status_type;
+  ALTER TABLE crawl_history ADD COLUMN process_state_checklist process_status_type;
+
+  ALTER TABLE crawl_history ALTER COLUMN finish_reason TYPE text;
+  DROP TYPE finish_reason_type;
+  CREATE TYPE finish_reason_type AS ENUM ('NORMAL', 'NOT_MODIFIED', 'USER_ABORT', 'ABORT', 'UNKNOWN');
+  ALTER TABLE crawl_history ALTER COLUMN finish_reason TYPE finish_reason_type USING (finish_reason::finish_reason_type);
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,17 @@
+gbifApiBaseUrl: ${gbifApiBaseUrl}
+elasticsearch:
+  hosts: ${elasticsearch.hosts}
+  index: ${elasticsearch.index}
+spring:
+  main:
+    web-application-type: none
+  liquibase:
+    enabled: false
+  datasource:
+    password: ${clb.db.password}
+    url: ${clb.db.url}
+    username: ${clb.db.username}
+    hikari:
+      idleTimeout: ${clb.db.idleTimeout}
+      maximumPoolSize: ${clb.db.maximumPoolSize}
+      minimumIdle: ${clb.db.minimumIdle}

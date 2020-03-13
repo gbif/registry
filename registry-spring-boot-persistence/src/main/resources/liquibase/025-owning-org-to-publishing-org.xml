@@ -1,0 +1,21 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+   Change col name from deprecated "owning" name to "publishing".
+  -->
+  <changeSet id="24" author="oliver">
+    <sql>
+      DROP INDEX dataset_num_datasets_idx;
+      ALTER TABLE dataset DROP CONSTRAINT dataset_owning_organization_key_fkey;
+
+      ALTER TABLE dataset RENAME COLUMN owning_organization_key TO publishing_organization_key;
+
+      ALTER TABLE dataset ADD CONSTRAINT dataset_publishing_organization_key_fkey FOREIGN KEY (publishing_organization_key)
+      REFERENCES organization (key);
+      CREATE INDEX dataset_num_datasets_idx ON dataset (publishing_organization_key) WHERE deleted IS NULL;
+    </sql>
+  </changeSet>
+</databaseChangeLog>

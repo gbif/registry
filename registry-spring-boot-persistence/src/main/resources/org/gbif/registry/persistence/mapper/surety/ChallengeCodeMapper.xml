@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper">
+
+  <sql id="WRITABLE_FIELDS">
+    challenge_code, created
+  </sql>
+
+  <sql id="WRITABLE_FIELD_TYPES">
+    #{code,jdbcType=OTHER},
+    now() <!-- created -->
+  </sql>
+
+  <sql id="COMMENT_FIELDS">
+    key,<include refid="org.gbif.registry.persistence.mapper.CommentMapper.WRITABLE_COMMENT_FIELDS"/>
+  </sql>
+
+  <insert id="createChallengeCode" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO challenge_code(<include refid="WRITABLE_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_FIELD_TYPES"/>)
+  </insert>
+
+  <select id="getChallengeCode" resultType="java.util.UUID" >
+    SELECT challenge_code FROM challenge_code WHERE key = #{key}
+  </select>
+
+  <delete id="deleteChallengeCode">
+    DELETE FROM challenge_code WHERE key = #{key}
+  </delete>
+
+</mapper>
