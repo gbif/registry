@@ -1,6 +1,0 @@
-db:
-  serverName: localhost
-  databaseName: local_kbraak_prod_b_registry_2016_08_08
-  user: kbraak
-  password:
-keyFilePath: /Users/kbraak/dev/git/registry/registry-cli/src/test/resources/datasetupdater/datasetKeys.txt

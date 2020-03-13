@@ -1,8 +1,0 @@
-{
-  "userName": "blabla",
-  "password": "welcome",
-  "firstName": null,
-  "lastName": null,
-  "email": "app@email.email",
-  "roles": ["REGISTRY_ADMIN"]
-}
