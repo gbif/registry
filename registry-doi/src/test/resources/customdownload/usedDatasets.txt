@@ -1,3 +1,0 @@
-datasetKey	datasetTitle	datasetDoi	numberRecords
-01536750-8af5-430c-b0e2-077dee7f7d5f	Registros biológicos del Humedal Santa Maria del Lago 1999-2013	10.15468/uvzgpk	1
-07d54123-75b8-4660-9482-e4c665e6f069	Mid Ulster Hare Surveys 2012-2015	10.15468/le6m33	155
