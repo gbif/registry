@@ -11,15 +11,15 @@
   </parent>
 
   <groupId>org.gbif.registry</groupId>
-  <artifactId>registry-spring-boot-parent</artifactId>
-  <version>1.1.1-SNAPSHOT</version>
+  <artifactId>registry-parent</artifactId>
+  <version>2.148-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
-  <description>GBIF Registry project (Spring Boot)</description>
+  <description>GBIF Registry project</description>
 
   <scm>
-    <connection>scm:git:git@github.com:gbif/registry-spring-boot.git</connection>
-    <url>https://github.com/gbif/registry-spring-boot</url>
-    <developerConnection>scm:git:git@github.com:gbif/registry-spring-boot.git</developerConnection>
+    <connection>scm:git:git@github.com:gbif/registry.git</connection>
+    <url>https://github.com/gbif/registryt</url>
+    <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -53,26 +53,26 @@
   </distributionManagement>
 
   <modules>
-    <module>registry-spring-boot-directory-client</module>
-    <module>registry-spring-boot-occurrence-client</module>
-    <module>registry-spring-boot-directory</module>
-    <module>registry-spring-boot-events</module>
-    <module>registry-spring-boot-ws</module>
-    <module>registry-spring-boot-messaging</module>
-    <module>registry-spring-boot-doi</module>
-    <module>registry-spring-boot-metadata</module>
-    <module>registry-spring-boot-persistence</module>
-    <module>registry-spring-boot-pipelines</module>
-    <module>registry-spring-boot-surety</module>
-    <module>registry-spring-boot-identity</module>
-    <module>registry-spring-boot-domain</module>
-    <module>registry-spring-boot-integration-tests</module>
-    <module>registry-spring-boot-mail</module>
-    <module>registry-spring-boot-service</module>
-    <module>registry-spring-boot-search</module>
-    <module>registry-spring-boot-oaipmh</module>
-    <module>registry-spring-boot-security</module>
-    <module>registry-spring-boot-cli</module>
+    <module>registry-directory-client</module>
+    <module>registry-occurrence-client</module>
+    <module>registry-directory</module>
+    <module>registry-events</module>
+    <module>registry-ws</module>
+    <module>registry-messaging</module>
+    <module>registry-doi</module>
+    <module>registry-metadata</module>
+    <module>registry-persistence</module>
+    <module>registry-pipelines</module>
+    <module>registry-surety</module>
+    <module>registry-identity</module>
+    <module>registry-domain</module>
+    <module>registry-integration-tests</module>
+    <module>registry-mail</module>
+    <module>registry-service</module>
+    <module>registry-search</module>
+    <module>registry-oaipmh</module>
+    <module>registry-security</module>
+    <module>registry-cli</module>
   </modules>
 
   <properties>
@@ -202,92 +202,92 @@
       <!-- GBIF dependencies -->
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-security</artifactId>
+        <artifactId>registry-security</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-doi</artifactId>
+        <artifactId>registry-doi</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-messaging</artifactId>
+        <artifactId>registry-messaging</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-ws</artifactId>
+        <artifactId>registry-ws</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-mail</artifactId>
+        <artifactId>registry-mail</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-domain</artifactId>
+        <artifactId>registry-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-metadata</artifactId>
+        <artifactId>registry-metadata</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-persistence</artifactId>
+        <artifactId>registry-persistence</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-surety</artifactId>
+        <artifactId>registry-surety</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-identity</artifactId>
+        <artifactId>registry-identity</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-search</artifactId>
+        <artifactId>registry-search</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-events</artifactId>
+        <artifactId>registry-events</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-pipelines</artifactId>
+        <artifactId>registry-pipelines</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-directory</artifactId>
+        <artifactId>registry-directory</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-occurrence-client</artifactId>
+        <artifactId>registry-occurrence-client</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-directory-client</artifactId>
+        <artifactId>registry-directory-client</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-service</artifactId>
+        <artifactId>registry-service</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-spring-boot-oaipmh</artifactId>
+        <artifactId>registry-oaipmh</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
