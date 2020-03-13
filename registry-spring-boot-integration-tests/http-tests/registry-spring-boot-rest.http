@@ -1,0 +1,37 @@
+# TODO add doi stuff
+
+# POST /dataset HTTP/1.1
+# Host: api.gbif.org
+# Date: Mon, 26 Mar 2007 19:37:58 +0000
+# x-gbif-user: trobertson
+# Content-MD5: LiFThEP4Pj2TODQXa/oFPg==
+# Authorization: GBIF gbif.portal:frJIUN8DYpKDtOLCwo//yllqDzg=
+
+POST http://localhost:8080/admin/user
+Content-Type: application/json
+Authorization: Basic dGVzdHVzZXIyOnRlc3R1c2VyMg==
+
+< create_user.json
+
+###
+
+POST http://localhost:8080/admin/user/confirm
+Content-Type: application/json
+Authorization: Basic YnJhbmRuZXd1c2VyOmJyYW5kbmV3dXNlcg==
+
+< confirm_user.json
+
+###
+
+PUT http://localhost:8080/admin/user/brandnewuser
+Content-Type: application/json
+Authorization: Basic YnJhbmRuZXd1c2VyOmJyYW5kbmV3dXNlcg==
+
+< update_user.json
+
+###
+
+DELETE http://localhost:8080/admin/user/573
+Authorization: Basic YnJhbmRuZXd1c2VyOmJyYW5kbmV3dXNlcg==
+
+###

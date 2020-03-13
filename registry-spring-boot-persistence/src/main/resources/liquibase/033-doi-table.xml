@@ -1,0 +1,26 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Adding a new doi table to maintain all GBIF generated identifiers
+  -->
+  <changeSet id="33" author="markus">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+CREATE TYPE doi_status AS ENUM ('RESERVED', 'REGISTERED', 'DELETED');
+CREATE TYPE doi_type AS ENUM ('DATASET', 'DOWNLOAD');
+CREATE TABLE gbif_doi (
+    doi text NOT NULL PRIMARY KEY,
+    type doi_type NOT NULL,
+    target text,
+    status doi_status,
+    metadata text,
+    created timestamp with time zone NOT NULL DEFAULT now(),
+    modified timestamp with time zone NOT NULL DEFAULT now()
+);
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

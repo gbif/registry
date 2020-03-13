@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper">
+
+  <resultMap id="DATASET_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage" autoMapping="false">
+    <id property="downloadKey" column="download_key"/>
+    <id property="datasetKey" column="dataset_key"/>
+    <result property="datasetTitle" column="dataset_title"/>
+    <result property="datasetDOI" column="dataset_doi"/>
+    <result property="datasetCitation" column="dataset_citation"/>
+    <result property="numberRecords" column="number_records"/>
+    <association property="download" javaType="org.gbif.api.model.occurrence.Download" resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
+  </resultMap>
+
+  <resultMap id="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" type="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage" autoMapping="false">
+    <id property="downloadKey" column="download_key"/>
+    <id property="datasetKey" column="dataset_key"/>
+    <result property="datasetTitle" column="dataset_title"/>
+    <result property="datasetDOI" column="dataset_doi"/>
+    <result property="datasetCitation" column="dataset_citation"/>
+    <result property="numberRecords" column="number_records"/>
+    <!-- The download is null -->
+  </resultMap>
+
+  <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
+    download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records
+  </sql>
+
+  <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
+    WHERE download_key = #{downloadKey,jdbcType=OTHER}
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByDataset" resultType="Integer">
+    SELECT COUNT(*)
+    FROM dataset_occurrence_download
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+  <insert id="createUsages">
+    INSERT INTO dataset_occurrence_download (
+    WITH
+    dataset_usages(dataset_key, number_records) AS
+    ((VALUES
+    <foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
+      cast(#{key} as uuid),#{value}
+    </foreach>
+    ))
+    SELECT #{downloadKey} as download_key, dataset.key, number_records, title, doi, citation
+    FROM dataset
+    JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key);
+  </insert>
+
+</mapper>

@@ -1,0 +1,112 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+   Change network and organization to implement the Address interface.
+   See http://dev.gbif.org/issues/browse/POR-213
+  -->
+  <changeSet id="28" author="markus">
+    <sql>
+      <!-- tmp columns -->
+      ALTER TABLE organization add column email2 text[];
+      ALTER TABLE organization add column phone2 text[];
+      ALTER TABLE organization add column homepage2 text[];
+      ALTER TABLE organization add column address2 text[];
+      <!-- copy data -->
+      UPDATE organization set
+        email2 = array[]::text[] || email::text,
+        phone2 = array[]::text[] || phone::text,
+        homepage2 = array[]::text[] || homepage::text,
+        address2 = array[]::text[] || address::text;
+      <!-- rename to real column names -->
+      ALTER TABLE organization drop column email;
+      ALTER TABLE organization drop column phone;
+      ALTER TABLE organization drop column homepage;
+      ALTER TABLE organization drop column address;
+      ALTER TABLE organization rename column email2 TO email;
+      ALTER TABLE organization rename column phone2 TO phone;
+      ALTER TABLE organization rename column homepage2 TO homepage;
+      ALTER TABLE organization rename column address2 TO address;
+    </sql>
+
+    <sql>
+      <!-- tmp columns -->
+      ALTER TABLE network add column email2 text[];
+      ALTER TABLE network add column phone2 text[];
+      ALTER TABLE network add column homepage2 text[];
+      ALTER TABLE network add column address2 text[];
+      <!-- copy data -->
+      UPDATE network set
+        email2 = array[]::text[] || email::text,
+        phone2 = array[]::text[] || phone::text,
+        homepage2 = array[]::text[] || homepage::text,
+        address2 = array[]::text[] || address::text;
+      <!-- rename to real column names -->
+      ALTER TABLE network drop column email;
+      ALTER TABLE network drop column phone;
+      ALTER TABLE network drop column homepage;
+      ALTER TABLE network drop column address;
+      ALTER TABLE network rename column email2 TO email;
+      ALTER TABLE network rename column phone2 TO phone;
+      ALTER TABLE network rename column homepage2 TO homepage;
+      ALTER TABLE network rename column address2 TO address;
+    </sql>
+
+    <!--
+      Update fulltext triggers
+    -->
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+       CREATE OR REPLACE FUNCTION organization_change_trigger()
+        RETURNS trigger AS
+        $func$
+          BEGIN
+            NEW.fulltext_search :=
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.title,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.abbreviation,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.description,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.language,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.email,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.phone,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.homepage,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.logo_url,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.address,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.city,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.province,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.country,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.postal_code,''));
+            RETURN NEW;
+          END
+        $func$ LANGUAGE plpgsql;
+       ]]>
+    </sql>
+
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE OR REPLACE FUNCTION network_change_trigger()
+        RETURNS trigger AS
+        $func$
+          BEGIN
+            NEW.fulltext_search :=
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.title,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.description,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.language,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.email,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.phone,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.homepage,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.logo_url,'')) ||
+              TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.address,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.city,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.province,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.country,'')) ||
+              TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.postal_code,''));
+            RETURN NEW;
+          END
+        $func$ LANGUAGE plpgsql;
+       ]]>
+    </sql>
+
+  </changeSet>
+</databaseChangeLog>
