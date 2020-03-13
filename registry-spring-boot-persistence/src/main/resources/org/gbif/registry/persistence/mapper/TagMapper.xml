@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.TagMapper">
+
+  <sql id="WRITABLE_TAG_FIELDS">
+    value,created,created_by
+  </sql>
+
+  <sql id="TAG_FIELDS">
+    key,<include refid="org.gbif.registry.persistence.mapper.TagMapper.WRITABLE_TAG_FIELDS"/>
+  </sql>
+
+  <sql id="WRITABLE_TAG_FIELD_TYPES">
+    #{value},
+    now(),<!-- created -->
+    #{createdBy}
+  </sql>
+
+  <insert id="createTag" parameterType="org.gbif.api.model.registry.Tag" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO tag(<include refid="WRITABLE_TAG_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_TAG_FIELD_TYPES"/>)
+  </insert>
+</mapper>

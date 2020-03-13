@@ -1,0 +1,20 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Adds 2 new doi status entries to enum
+  -->
+  <changeSet id="34" author="markus">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+ALTER TABLE gbif_doi ALTER COLUMN status TYPE text;
+DROP TYPE doi_status;
+CREATE TYPE doi_status AS ENUM ('NEW', 'RESERVED', 'REGISTERED', 'DELETED', 'FAILED');
+ALTER TABLE gbif_doi ALTER COLUMN status TYPE doi_status USING (status::doi_status);;
+ALTER TABLE gbif_doi ALTER COLUMN status SET NOT NULL;
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

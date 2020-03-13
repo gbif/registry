@@ -2,10 +2,6 @@
 *.iml
 .idea
 target/
-registry-ws/logs
-logs/
-dependency-reduced-pom.xml
-appkeys.txt
 
 *.DS_Store
 
@@ -13,3 +9,4 @@ appkeys.txt
 *.jar
 *.war
 *.ear
+/HELP.md

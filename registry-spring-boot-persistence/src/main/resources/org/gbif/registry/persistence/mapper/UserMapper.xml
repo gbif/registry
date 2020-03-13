@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.UserMapper" >
+
+  <resultMap id="USER_MAP" type="org.gbif.api.model.common.GbifUser" >
+    <id column="username" property="userName" />
+    <result column="email" property="email" />
+    <result column="first_name" property="firstName" />
+    <result column="last_name" property="lastName" />
+    <result column="password" property="passwordHash" />
+    <result column="roles" property="roles" typeHandler="org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler"/>
+    <result column="settings" property="settings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
+    <result column="system_settings" property="systemSettings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
+    <result column="last_login" property="lastLogin" />
+    <result column="deleted" property="deleted" />
+  </resultMap>
+
+  <sql id="WRITABLE_USER_FIELDS">
+    username,first_name,last_name,email,password,roles,settings,system_settings,created
+  </sql>
+
+  <sql id="USER_FIELDS">
+    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.system_settings,u.last_login, u.deleted
+  </sql>
+
+  <sql id="WRITABLE_USER_FIELD_TYPES">
+    #{userName,jdbcType=VARCHAR},
+    #{firstName,jdbcType=VARCHAR},
+    #{lastName,jdbcType=VARCHAR},
+    #{email,jdbcType=VARCHAR},
+    #{passwordHash,jdbcType=VARCHAR},
+    #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler},
+    #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    now() <!-- created -->
+  </sql>
+
+  <sql id="USER_UPDATE">
+    first_name = #{firstName,jdbcType=VARCHAR},
+    last_name = #{lastName,jdbcType=VARCHAR},
+    email = #{email,jdbcType=VARCHAR},
+    password = #{passwordHash,jdbcType=VARCHAR},
+    roles = #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler},
+    settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    deleted = #{deleted}
+  </sql>
+
+  <sql id="SIMPLE_SEARCH">
+    WHERE
+      u.last_name ILIKE '%' || #{query} || '%' OR
+    u.first_name ILIKE '%' || #{query} || '%' OR
+    u.email ILIKE '%' || #{query} || '%' OR
+    u.username ILIKE '%' || #{query} || '%'
+  </sql>
+
+  <!-- Basic paging search functionality -->
+  <select id="search" resultMap="USER_MAP">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+    ORDER BY u.last_name, u.first_name, u.username
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer" parameterType="map">
+    SELECT COUNT(*)
+    FROM public.user u <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+  </select>
+
+  <insert id="create" parameterType="org.gbif.api.model.common.GbifUser" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO public.user(<include refid="WRITABLE_USER_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_USER_FIELD_TYPES"/>)
+  </insert>
+
+  <!--  Note: you can't get deleted users -->
+  <select id="get" resultMap="USER_MAP" parameterType="java.lang.String">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    WHERE lower(u.username) = lower(#{x}) AND u.deleted IS NULL
+  </select>
+
+  <!--  Note: getByKey returns deleted users -->
+  <select id="getByKey" resultMap="USER_MAP" parameterType="java.lang.Integer">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    WHERE u.key = #{x}
+  </select>
+
+  <select id="getByEmail" resultMap="USER_MAP" parameterType="java.lang.String">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    WHERE lower(u.email) = lower(#{x}) AND u.deleted IS NULL
+  </select>
+
+  <select id="getBySystemSetting" resultMap="USER_MAP" parameterType="java.lang.String">
+    SELECT <include refid="USER_FIELDS"/>
+    FROM public.user u
+    WHERE u.system_settings->#{key} = #{value} AND u.deleted IS NULL
+  </select>
+
+  <update id="update" parameterType="org.gbif.api.model.common.GbifUser">
+    UPDATE public.user
+    SET <include refid="USER_UPDATE"/>
+    WHERE username = #{userName,jdbcType=VARCHAR}
+  </update>
+
+  <select id="delete" parameterType="java.lang.Integer">
+    UPDATE public.user
+    SET deleted = now()
+    WHERE key = #{x} AND deleted IS NULL
+  </select>
+
+  <select id="getChallengeCodeKey" resultType="Integer" parameterType="java.lang.Integer">
+    SELECT challenge_code_key
+    FROM public.user
+    WHERE key = #{key}
+  </select>
+
+  <update id="updateChallengeCodeKey">
+    UPDATE public.user
+    SET challenge_code_key = #{challengeCodeKey}
+    WHERE key = #{key}
+  </update>
+
+  <update id="updateLastLogin">
+    UPDATE public.user
+    SET last_login = now()
+    WHERE key = #{key}
+  </update>
+
+  <select id="listEditorRights" resultType="java.util.UUID">
+    SELECT key
+    FROM editor_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+  </select>
+
+  <update id="addEditorRight">
+    INSERT INTO editor_rights(username,key)
+    VALUES(
+            #{userName,jdbcType=VARCHAR},
+            #{key,jdbcType=OTHER}
+          )
+  </update>
+
+  <delete id="deleteEditorRight">
+    DELETE FROM editor_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+      AND key = #{key,jdbcType=OTHER}
+  </delete>
+</mapper>
