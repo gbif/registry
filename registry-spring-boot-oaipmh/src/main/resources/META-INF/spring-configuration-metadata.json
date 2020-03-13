@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "oaipmh.baseUrl",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.oaipmh.config.OaipmhConfigurationProperties"
+    },
+    {
+      "name": "oaipmh.adminEmail",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.oaipmh.config.OaipmhConfigurationProperties"
+    }
+  ]
+}

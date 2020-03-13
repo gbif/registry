@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.MachineTagMapper">
+
+  <sql id="WRITABLE_MACHINETAG_FIELDS">
+    namespace,name,value,created,created_by
+  </sql>
+
+  <sql id="MACHINETAG_FIELDS">
+    key,<include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.WRITABLE_MACHINETAG_FIELDS"/>
+  </sql>
+
+  <sql id="WRITABLE_MACHINETAG_FIELD_TYPES">
+    #{namespace},
+    #{name},
+    #{value},
+    now(), <!-- created -->
+    #{createdBy}
+  </sql>
+
+  <insert id="createMachineTag" parameterType="org.gbif.api.model.registry.MachineTag" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO machine_tag(<include refid="WRITABLE_MACHINETAG_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_MACHINETAG_FIELD_TYPES"/>)
+  </insert>
+</mapper>

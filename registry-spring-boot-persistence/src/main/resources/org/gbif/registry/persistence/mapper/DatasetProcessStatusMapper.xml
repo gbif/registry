@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper">
+
+  <resultMap id="CRAWL_JOB_MAP" type="org.gbif.api.model.crawler.CrawlJob">
+    <constructor>
+      <idArg column="dataset_key" javaType="java.util.UUID" jdbcType="OTHER"/>
+      <idArg column="attempt" javaType="int"/>
+      <arg column="endpoint_type" javaType="org.gbif.api.vocabulary.EndpointType" jdbcType="OTHER"/>
+      <arg column="target_url" javaType="java.net.URI"/>
+    </constructor>
+  </resultMap>
+
+  <!-- Partial auto-mapping -->
+  <resultMap id="DATASET_PROCESS_STATUS_MAP" type="org.gbif.api.model.crawler.DatasetProcessStatus" autoMapping="true">
+    <association property="crawlJob" resultMap="CRAWL_JOB_MAP"/>
+  </resultMap>
+
+  <sql id="DATASET_PROCESS_STATUS_FIELDS">
+    dataset_key,attempt,target_url,endpoint_type,started_crawling,finished_crawling,
+    finish_reason,process_state_occurrence,process_state_checklist, pages_crawled,
+    pages_fragmented_successful,pages_fragmented_error,fragments_emitted,fragments_received,
+    raw_occurrences_persisted_new,raw_occurrences_persisted_updated,raw_occurrences_persisted_unchanged,
+    raw_occurrences_persisted_error,fragments_processed,verbatim_occurrences_persisted_successful,
+    verbatim_occurrences_persisted_error,interpreted_occurrences_persisted_successful, interpreted_occurrences_persisted_error
+  </sql>
+
+  <sql id="DATASET_PROCESS_STATUS_FIELDS_TYPES">
+    #{datasetKey,jdbcType=OTHER},
+    #{crawlJob.attempt,jdbcType=INTEGER},
+    #{crawlJob.targetUrl,jdbcType=VARCHAR},
+    #{crawlJob.endpointType,jdbcType=OTHER},
+    #{startedCrawling,jdbcType=TIMESTAMP},
+    #{finishedCrawling,jdbcType=TIMESTAMP},
+    #{finishReason,jdbcType=OTHER},
+    #{processStateOccurrence,jdbcType=OTHER},
+    #{processStateChecklist,jdbcType=OTHER},
+    #{pagesCrawled,jdbcType=INTEGER},
+    #{pagesFragmentedSuccessful,jdbcType=INTEGER},
+    #{pagesFragmentedError,jdbcType=INTEGER},
+    #{fragmentsEmitted,jdbcType=INTEGER},
+    #{fragmentsReceived,jdbcType=INTEGER},
+    #{rawOccurrencesPersistedNew,jdbcType=INTEGER},
+    #{rawOccurrencesPersistedUpdated,jdbcType=INTEGER},
+    #{rawOccurrencesPersistedUnchanged,jdbcType=INTEGER},
+    #{rawOccurrencesPersistedError,jdbcType=INTEGER},
+    #{fragmentsProcessed,jdbcType=INTEGER},
+    #{verbatimOccurrencesPersistedSuccessful,jdbcType=INTEGER},
+    #{verbatimOccurrencesPersistedError,jdbcType=INTEGER},
+    #{interpretedOccurrencesPersistedSuccessful,jdbcType=INTEGER},
+    #{interpretedOccurrencesPersistedError,jdbcType=INTEGER}
+  </sql>
+
+
+  <!--
+   key, created and deleted are never changed
+  -->
+  <sql id="DATASET_PROCESS_STATUS_UPDATE">
+    target_url = #{crawlJob.targetUrl,jdbcType=VARCHAR},
+    endpoint_type = #{crawlJob.endpointType,jdbcType=OTHER},
+    started_crawling = #{startedCrawling,jdbcType=TIMESTAMP},
+    finished_crawling = #{finishedCrawling,jdbcType=TIMESTAMP},
+    finish_reason = #{finishReason,jdbcType=OTHER},
+    process_state_occurrence = #{processStateOccurrence,jdbcType=OTHER},
+    process_state_checklist = #{processStateChecklist,jdbcType=OTHER},
+    pages_crawled = #{pagesCrawled,jdbcType=INTEGER},
+    pages_fragmented_successful = #{pagesFragmentedSuccessful,jdbcType=INTEGER},
+    pages_fragmented_error = #{pagesFragmentedError,jdbcType=INTEGER},
+    fragments_emitted = #{fragmentsEmitted,jdbcType=INTEGER},
+    fragments_received = #{fragmentsReceived,jdbcType=INTEGER},
+    raw_occurrences_persisted_new = #{rawOccurrencesPersistedNew,jdbcType=INTEGER},
+    raw_occurrences_persisted_updated = #{rawOccurrencesPersistedUpdated,jdbcType=INTEGER},
+    raw_occurrences_persisted_unchanged = #{rawOccurrencesPersistedUnchanged,jdbcType=INTEGER},
+    raw_occurrences_persisted_error= #{rawOccurrencesPersistedError,jdbcType=INTEGER},
+    fragments_processed = #{fragmentsProcessed,jdbcType=INTEGER},
+    verbatim_occurrences_persisted_successful = #{verbatimOccurrencesPersistedSuccessful,jdbcType=INTEGER},
+    verbatim_occurrences_persisted_error = #{verbatimOccurrencesPersistedError,jdbcType=INTEGER},
+    interpreted_occurrences_persisted_successful = #{interpretedOccurrencesPersistedSuccessful,jdbcType=INTEGER},
+    interpreted_occurrences_persisted_error = #{interpretedOccurrencesPersistedError,jdbcType=INTEGER}
+  </sql>
+
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="DATASET_PROCESS_STATUS_MAP">
+    SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+    FROM crawl_history
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    AND attempt = #{attempt,jdbcType=INTEGER}
+  </select>
+
+  <insert id="create" parameterType="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage">
+    INSERT INTO crawl_history(<include refid="DATASET_PROCESS_STATUS_FIELDS"/>)
+    VALUES(<include refid="DATASET_PROCESS_STATUS_FIELDS_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.crawler.DatasetProcessStatus">
+    UPDATE crawl_history
+    SET <include refid="DATASET_PROCESS_STATUS_UPDATE"/>
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    AND attempt = #{crawlJob.attempt,jdbcType=INTEGER}
+  </update>
+
+
+  <select id="list" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+    FROM crawl_history
+    ORDER BY started_crawling DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM crawl_history
+  </select>
+
+  <select id="listByDataset" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+    FROM crawl_history
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    ORDER BY started_crawling DESC, attempt DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByDataset" resultType="Integer">
+    SELECT COUNT(*)
+    FROM crawl_history
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+
+  <select id="countAborted" resultType="Integer">
+    SELECT COUNT(*) FROM (
+                           SELECT DISTINCT ON (dataset_key) dataset_key, finish_reason, started_crawling, finished_crawling
+                           FROM crawl_history
+                           ORDER BY started_crawling desc, dataset_key
+                         ) AS crawls
+    WHERE finish_reason='ABORT'
+  </select>
+
+  <select id="listAborted" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT * FROM (
+    SELECT DISTINCT ON (dataset_key) <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
+    FROM crawl_history
+    ORDER BY started_crawling DESC, dataset_key
+    ) AS crawls
+    WHERE finish_reason='ABORT'
+    LIMIT #{page.limit} OFFSET #{page.offset}
+  </select>
+</mapper>

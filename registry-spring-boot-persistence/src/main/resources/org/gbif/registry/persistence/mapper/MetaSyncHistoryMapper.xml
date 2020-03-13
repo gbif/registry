@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper">
+
+  <!-- Partial auto-mapping -->
+  <resultMap id="METASYNC_HISTORY_MAP" type="org.gbif.api.model.registry.metasync.MetasyncHistory" autoMapping="true">
+    <id property="installationKey" column="installation_key"/>
+    <id property="syncDate" column="sync_date"/>
+  </resultMap>
+
+  <sql id="METASYNC_HISTORY_FIELDS">
+    installation_key,sync_date,result,details
+  </sql>
+
+  <sql id="METASYNC_HISTORY_FIELDS_TYPES">
+    #{installationKey,jdbcType=OTHER},
+    now(),
+    #{result,jdbcType=OTHER},
+    #{details,jdbcType=VARCHAR}
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage">
+    INSERT INTO metasync_history(<include refid="METASYNC_HISTORY_FIELDS"/>)
+    VALUES(<include refid="METASYNC_HISTORY_FIELDS_TYPES"/>)
+  </insert>
+
+  <select id="list" resultMap="METASYNC_HISTORY_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="METASYNC_HISTORY_FIELDS"/>
+    FROM metasync_history
+    ORDER BY sync_date DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM metasync_history
+  </select>
+
+  <select id="listByInstallation" resultMap="METASYNC_HISTORY_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="METASYNC_HISTORY_FIELDS"/>
+    FROM metasync_history
+    WHERE installation_key = #{installationKey,jdbcType=OTHER}
+    ORDER BY sync_date DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByInstallation" resultType="Integer">
+    SELECT COUNT(*)
+    FROM metasync_history
+    WHERE installation_key = #{installationKey,jdbcType=OTHER}
+  </select>
+
+</mapper>

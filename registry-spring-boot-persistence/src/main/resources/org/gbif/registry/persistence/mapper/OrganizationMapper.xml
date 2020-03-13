@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.OrganizationMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="ORGANIZATION_MAP" type="org.gbif.api.model.registry.Organization" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
+    <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
+    <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
+    <collection property="contacts" column="key" select="listContacts"/>
+    <collection property="endpoints" column="key" select="listEndpoints"/>
+    <collection property="machineTags" column="key" select="listMachineTags"/>
+    <collection property="tags" column="key" select="listTags"/>
+    <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="comments" column="key" select="listComments"/>
+  </resultMap>
+
+  <sql id="WRITABLE_ORGANIZATION_FIELDS">
+    key,endorsing_node_key,endorsement_approved,password,title,abbreviation,description,language,email,
+    phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
+    modified,modified_by
+  </sql>
+
+  <sql id="ORGANIZATION_FIELDS">
+    o.key,o.endorsing_node_key,o.endorsement_approved,o.password,o.title,o.abbreviation,o.description,o.language,o.email,
+    o.phone,o.homepage,o.logo_url,o.address,o.city,o.province,o.country,o.postal_code,o.latitude,o.longitude,
+    o.created,o.created_by,o.modified,o.modified_by,o.deleted
+  </sql>
+
+  <sql id="LEGACY_ORGANIZATION_BRIEF_FIELDS">
+    o.key,o.title AS name
+  </sql>
+
+  <!--
+    Simple fulltext search on the search field or contact search field.
+    to_tsquery() is used to handle ALL stuff from the URL so the limitations are constrained by this method.
+    Uses the default configuration english for the English language.
+   -->
+  <sql id="SIMPLE_SEARCH">
+    AND (
+          query  @@ o.fulltext_search
+          OR EXISTS(
+          SELECT contact_key
+          FROM organization_contact JOIN contact c ON c.key = contact_key
+          WHERE organization_key=o.key AND query @@ c.fulltext_search
+          )
+        )
+  </sql>
+
+  <!--
+    key, password, created and deleted are never changed
+   -->
+  <sql id="ORGANIZATION_UPDATE">
+    endorsing_node_key = #{endorsingNodeKey,jdbcType=OTHER},
+    endorsement_approved = #{endorsementApproved,jdbcType=BOOLEAN},
+    title = #{title,jdbcType=VARCHAR},
+    abbreviation = #{abbreviation,jdbcType=CHAR},
+    description = #{description,jdbcType=VARCHAR},
+    language = #{language,jdbcType=CHAR,typeHandler=org.gbif.mybatis.type.LanguageTypeHandler},
+    email = #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    phone = #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    homepage = #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
+    logo_url = #{logoUrl,jdbcType=VARCHAR},
+    address = #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    city = #{city,jdbcType=VARCHAR},
+    province = #{province,jdbcType=VARCHAR},
+    country = upper(#{country,jdbcType=CHAR}),
+    postal_code = #{postalCode,jdbcType=VARCHAR},
+    latitude = #{latitude,jdbcType=DOUBLE},
+    longitude = #{longitude,jdbcType=DOUBLE},
+    modified = now(),
+    modified_by = #{modifiedBy},
+    deleted = null <!-- if we're updating it can't be deleted -->
+  </sql>
+
+  <sql id="WRITABLE_ORGANIZATION_FIELD_TYPES">
+    #{key,jdbcType=OTHER},
+    #{endorsingNodeKey,jdbcType=OTHER},
+    #{endorsementApproved,jdbcType=BOOLEAN},
+    #{password,jdbcType=VARCHAR},
+    #{title,jdbcType=VARCHAR},
+    #{abbreviation,jdbcType=CHAR},
+    #{description,jdbcType=VARCHAR},
+    #{language,jdbcType=CHAR,typeHandler=org.gbif.mybatis.type.LanguageTypeHandler},
+    #{email,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{phone,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{homepage,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.UriArrayTypeHandler},
+    #{logoUrl,jdbcType=VARCHAR},
+    #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
+    #{city,jdbcType=VARCHAR},
+    #{province,jdbcType=VARCHAR},
+    #{country,jdbcType=CHAR},
+    #{postalCode,jdbcType=VARCHAR},
+    #{latitude,jdbcType=DOUBLE},
+    #{longitude,jdbcType=DOUBLE},
+    now(), <!-- created -->
+    #{createdBy},
+    now(), <!-- modified -->
+    #{createdBy}
+  </sql>
+
+  <select id="countPublishedDatasets" resultType="int">
+    SELECT COUNT(*) AS num_datasets FROM dataset WHERE deleted IS NULL AND publishing_organization_key = #{key}
+  </select>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="ORGANIZATION_MAP">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="title" resultType="String">
+    SELECT title
+    FROM organization
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <insert id="create" parameterType="org.gbif.api.model.registry.Organization">
+    INSERT INTO organization(<include refid="WRITABLE_ORGANIZATION_FIELDS"/>)
+    VALUES(<include refid="WRITABLE_ORGANIZATION_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="update" parameterType="org.gbif.api.model.registry.Organization">
+    UPDATE organization
+    SET <include refid="ORGANIZATION_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- For safety, should it be already deleted nothing is done -->
+  <update id="delete">
+    UPDATE organization
+    SET deleted = now()
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <!-- Append safe ordering, omitting deleted entities -->
+  <select id="list" resultType="org.gbif.api.model.registry.Organization"  resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NULL
+    ORDER BY o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <!-- Append ordering by title, omitting deleted entities. No paging, instead all organizations included in response -->
+  <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse">
+    SELECT <include refid="LEGACY_ORGANIZATION_BRIEF_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NULL
+    ORDER BY lower(o.title)
+  </select>
+
+  <!-- Basic paging search functionality -->
+  <select id="search" resultMap="ORGANIZATION_MAP">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    WHERE deleted IS NULL
+    <if test="query != null" >
+      <include refid="SIMPLE_SEARCH"/>
+    </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
+    </if>
+    <if test="isEndorsed != null" >
+      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
+    </if>
+    ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Integer">
+    SELECT COUNT(*)
+    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    WHERE deleted IS NULL
+    <if test="query != null" >
+      <include refid="SIMPLE_SEARCH"/>
+    </if>
+    <if test="country != null" >
+      AND o.country = #{country,jdbcType=OTHER}
+    </if>
+    <if test="isEndorsed != null" >
+      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
+    </if>
+  </select>
+
+  <!-- TAGS -->
+  <insert id="addTag">
+    INSERT INTO organization_tag(organization_key,tag_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{tagKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listTags" resultType="org.gbif.api.model.registry.Tag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.TagMapper.TAG_FIELDS"/>
+    FROM tag INNER JOIN organization_tag ON tag_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of tag to trigger cascade delete of the join table -->
+  <delete id="deleteTag">
+    DELETE FROM tag USING organization_tag
+    WHERE
+      tag_key = tag.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- CONTACTS -->
+  <insert id="addContact">
+    INSERT INTO organization_contact(organization_key,contact_key, type, is_primary)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{contactKey,jdbcType=INTEGER},
+            #{type,jdbcType=OTHER},
+            #{isPrimary,jdbcType=BOOLEAN}
+          )
+  </insert>
+
+  <!-- Update existing primary contacts of a type to false -->
+  <update id="updatePrimaryContacts">
+    UPDATE organization_contact
+    SET is_primary=false
+    WHERE organization_key=#{targetEntityKey,jdbcType=OTHER} AND type=#{type,jdbcType=OTHER}
+  </update>
+
+  <!-- Update contact type and is_primary -->
+  <update id="updateContact">
+    UPDATE organization_contact
+    SET is_primary=#{primary,jdbcType=BOOLEAN},
+        type=#{type,jdbcType=OTHER}
+    WHERE organization_key=#{targetEntityKey,jdbcType=OTHER} AND contact_key=#{contactKey,jdbcType=INTEGER}
+  </update>
+
+  <!-- List of contacts returned in ascending created date, preserving same order in which they were persisted -->
+  <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_FIELDS"/>
+    FROM contact INNER JOIN organization_contact ON contact_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created ASC
+  </select>
+
+  <select id="areRelated" resultType="boolean">
+    SELECT true
+    FROM organization_contact
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+      AND contact_key = #{contactKey,jdbcType=INTEGER}
+    LIMIT 1
+  </select>
+
+
+  <!-- Joined delete of contact to trigger cascade delete of the join table -->
+  <delete id="deleteContact">
+    DELETE FROM contact USING organization_contact
+    WHERE
+      contact_key = contact.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteContacts">
+    DELETE FROM contact USING organization_contact
+    WHERE
+      contact_key = contact.key AND
+      organization_contact = #{targetEntityKey,jdbcType=OTHER}
+  </delete>
+
+  <!-- IDENTIFIERS -->
+  <insert id="addIdentifier">
+    INSERT INTO organization_identifier(organization_key,identifier_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{identifierKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listIdentifiers" resultType="org.gbif.api.model.registry.Identifier">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    FROM identifier INNER JOIN organization_identifier ON identifier_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of identifier to trigger cascade delete of the join table -->
+  <delete id="deleteIdentifier">
+    DELETE FROM identifier USING organization_identifier
+    WHERE
+      identifier_key = identifier.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- ENDPOINTS -->
+  <insert id="addEndpoint">
+    INSERT INTO organization_endpoint(organization_key,endpoint_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{endpointKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listEndpoints" resultMap="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.EndpointMapper.ENDPOINT_FIELDS"/>
+    FROM endpoint INNER JOIN organization_endpoint ON endpoint_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of endpoint to trigger cascade delete of the join table -->
+  <delete id="deleteEndpoint">
+    DELETE FROM endpoint USING organization_endpoint
+    WHERE
+      endpoint_key = endpoint.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- MACHINE TAGS -->
+  <insert id="addMachineTag">
+    INSERT INTO organization_machine_tag(organization_key,machine_tag_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{machineTagKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listMachineTags" resultType="org.gbif.api.model.registry.MachineTag">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.MachineTagMapper.MACHINETAG_FIELDS"/>
+    FROM machine_tag INNER JOIN organization_machine_tag ON machine_tag_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY namespace
+  </select>
+
+  <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
+  <delete id="deleteMachineTag">
+    DELETE FROM machine_tag USING organization_machine_tag
+    WHERE
+      machine_tag_key = machine_tag.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="deleteMachineTags">
+    DELETE FROM machine_tag USING organization_machine_tag
+    WHERE
+    machine_tag_key = machine_tag.key AND
+    organization_key = #{targetEntityKey,jdbcType=OTHER} AND
+    namespace = #{namespace}
+    <if test="name != null" >
+      AND name = #{name}
+    </if>
+  </delete>
+
+  <select id="listByMachineTag" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
+    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+    ORDER BY o.key, o.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countByMachineTag" resultType="Long">
+    SELECT count(DISTINCT o.key)
+    FROM organization o
+    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
+    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    <if test="name != null" >
+      AND m.name=#{name,jdbcType=VARCHAR}
+      <if test="value != null" >
+        AND m.value=#{value,jdbcType=VARCHAR}
+      </if>
+    </if>
+  </select>
+
+  <!-- COMMENTS -->
+  <insert id="addComment">
+    INSERT INTO organization_comment(organization_key,comment_key)
+    VALUES(
+            #{targetEntityKey,jdbcType=OTHER},
+            #{commentKey,jdbcType=INTEGER}
+          )
+  </insert>
+
+  <select id="listComments" resultType="org.gbif.api.model.registry.Comment">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
+    FROM comment INNER JOIN organization_comment ON comment_key = key
+    WHERE organization_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
+  <delete id="deleteComment">
+    DELETE FROM comment USING organization_comment
+    WHERE
+      comment_key = comment.key AND
+      organization_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- Append safe ordering (ordering done first by organization name, then created date), omitting deleted entities -->
+  <select id="organizationsEndorsedBy" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    INNER JOIN node n ON o.endorsing_node_key = n.key
+    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
+    ORDER BY o.title, o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countOrganizationsEndorsedBy" resultType="Long">
+    SELECT count(*)
+    FROM organization o
+           INNER JOIN node n ON o.endorsing_node_key = n.key
+    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
+  </select>
+
+  <!-- Append safe ordering, omitting deleted entities -->
+  <select id="pendingEndorsements" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NULL AND o.endorsement_approved = false
+    <if test="nodeKey != null" >
+      AND o.endorsing_node_key= #{nodeKey,jdbcType=OTHER}
+    </if>
+    ORDER BY o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countPendingEndorsements" resultType="Long">
+    SELECT count(*)
+    FROM organization o
+    WHERE o.deleted IS NULL AND o.endorsement_approved = false
+    <if test="nodeKey != null" >
+      AND o.endorsing_node_key= #{nodeKey,jdbcType=OTHER}
+    </if>
+  </select>
+
+  <!--
+   Append safe ordering, omitting deleted entities
+  -->
+  <select id="organizationsByCountry" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NULL AND o.country = #{country,jdbcType=OTHER}
+    ORDER BY o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countOrganizationsByCountry" resultType="Long">
+    SELECT count(*)
+    FROM organization o
+    WHERE o.deleted IS NULL AND o.country = #{country,jdbcType=OTHER}
+  </select>
+
+  <select id="deleted" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.deleted IS NOT NULL
+    ORDER BY o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countDeleted" resultType="Long">
+    SELECT count(*)
+    FROM organization o
+    WHERE o.deleted IS NOT NULL
+  </select>
+
+  <select id="nonPublishing" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    LEFT JOIN dataset ds ON o.key = ds.publishing_organization_key
+    WHERE o.deleted IS NULL AND ds.key IS NULL
+    ORDER BY o.created DESC, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+  <select id="countNonPublishing" resultType="Long">
+    SELECT count(*)
+    FROM organization o
+           LEFT JOIN dataset ds ON o.key = ds.publishing_organization_key
+    WHERE o.deleted IS NULL AND ds.key IS NULL
+  </select>
+  <select id="countPublishing" resultType="Integer">
+    SELECT count(DISTINCT o.key)
+    FROM organization o
+           INNER JOIN dataset ds ON o.key = ds.publishing_organization_key
+    WHERE o.deleted IS NULL AND ds.deleted IS NULL AND o.endorsement_approved=true
+  </select>
+
+  <select id="hostingInstallationsOf" resultMap="ORGANIZATION_MAP">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o JOIN installation i ON i.organization_key=o.key AND i.deleted IS NULL
+    WHERE o.deleted IS NULL AND i.type=#{type,jdbcType=OTHER}
+    <if test="georeferenced != null and georeferenced == true" >
+      AND o.latitude IS NOT NULL AND o.longitude IS NOT NULL
+    </if>
+  </select>
+
+  <select id="listByIdentifier" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    INNER JOIN organization_identifier ON organization_key = o.key
+    INNER JOIN identifier ide ON identifier_key = ide.key
+    WHERE identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="type != null" >
+      AND ide.type=#{type,jdbcType=OTHER}
+    </if>
+    ORDER BY o.key, o.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByIdentifier" resultType="Long">
+    SELECT count(DISTINCT o.key)
+    FROM organization o
+    INNER JOIN organization_identifier ON organization_key = o.key
+    INNER JOIN identifier ide ON identifier_key = ide.key
+    WHERE identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="type != null" >
+      AND ide.type=#{type,jdbcType=OTHER}
+    </if>
+  </select>
+
+  <select id="getChallengeCodeKey" resultType="Integer">
+    SELECT challenge_code_key FROM organization WHERE key = #{key, jdbcType=OTHER}
+  </select>
+
+  <update id="updateChallengeCodeKey">
+    UPDATE organization
+    SET challenge_code_key = #{challengeCodeKey}
+    WHERE key = #{key}
+  </update>
+
+  <!--
+   Simple suggest
+   -->
+  <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
+    SELECT key,title FROM (
+                            (SELECT key,title FROM organization WHERE title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                            UNION ALL
+                            (SELECT key,title FROM organization WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                          ) t1 LIMIT 25
+  </select>
+</mapper>
