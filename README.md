@@ -24,33 +24,15 @@ Code style related files. **Please make sure you properly configure required IDE
 
 
 ### Pre-commit hook
-To configure an automatic pre-commit hook to check code add a file 'pre-commit' to directory .git/hooks.
-File's content should be:
+To configure an automatic pre-commit hook to check the code, add the file [pre-commit](pre-commit) to the directory .git/hooks:
 
 ```
-#!/bin/sh
-
-echo '[git hook] executing spotless check before commit'
-
-# stash any unstaged changes
-git stash -q --keep-index
-
-# run the check with the maven
-mvn spotless:check
-
-# store the last exit code in a variable
-RESULT=$?
-
-# unstash the unstashed changes
-git stash pop -q
-
-# return the 'mvn spotless:check' exit code
-exit $RESULT
+cp pre-commit .git/hooks/
 ```
 
 ### Manual use of Spotless
 
-Check that project follows code style conventions:
+Check the project follows code style conventions:
 
 ```
 mvn spotless:check
