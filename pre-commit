@@ -1,0 +1,18 @@
+#!/bin/sh
+
+echo '[git hook] executing spotless check before commit'
+
+# stash any unstaged changes
+git stash -q --keep-index
+
+# run the check with the maven
+mvn spotless:check
+
+# store the last exit code in a variable
+RESULT=$?
+
+# unstash the unstashed changes
+git stash pop -q
+
+# return the 'mvn spotless:check' exit code
+exit $RESULT
