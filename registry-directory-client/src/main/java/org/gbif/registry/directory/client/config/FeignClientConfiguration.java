@@ -92,7 +92,6 @@ public class FeignClientConfiguration {
       try {
         String signature = signingService.buildSignature(requestDataToSign, secretKey);
 
-        requestTemplate.header("x-url", requestTemplate.url());
         requestTemplate.header("x-gbif-user", appKey);
         requestTemplate.header("Authorization", "GBIF " + appKey + ":" + signature);
       } catch (PrivateKeyNotFoundException e) {
