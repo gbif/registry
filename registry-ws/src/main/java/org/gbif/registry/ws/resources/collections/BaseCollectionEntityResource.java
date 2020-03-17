@@ -312,8 +312,7 @@ public abstract class BaseCollectionEntityResource<
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
         || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
         || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
-            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-            && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
+            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))) {
       machineTag.setCreatedBy(nameFromContext);
       return addMachineTag(targetEntityKey, machineTag);
     } else {
