@@ -109,7 +109,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
@@ -311,7 +310,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     List<Metadata> existingDocs = listMetadata(datasetKey, type);
     for (Metadata existing : existingDocs) {
       try (InputStream in = getMetadataDocument(existing.getKey())) {
-        String existingContent = CharStreams.toString(new InputStreamReader(in, Charsets.UTF_8));
+        String existingContent =
+            CharStreams.toString(new InputStreamReader(in, StandardCharsets.UTF_8));
         if (existingContent != null) {
           if (existingContent.equals(new String(data))) {
             LOG.debug("This metadata document already exists - returning existing");

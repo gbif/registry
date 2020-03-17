@@ -24,12 +24,12 @@ import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.TitleLookupService;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.xmlunit.matchers.CompareMatcher;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
@@ -78,7 +78,8 @@ public class DownloadConverterTest {
     // given
     DOI doi = new DOI("10.15468/dl.v8zc57");
     String sourceXml =
-        Resources.toString(Resources.getResource("metadata/datacite-large.xml"), Charsets.UTF_8);
+        Resources.toString(
+            Resources.getResource("metadata/datacite-large.xml"), StandardCharsets.UTF_8);
 
     // when
     String truncatedXml =
@@ -97,7 +98,8 @@ public class DownloadConverterTest {
     // given
     DOI doi = new DOI("10.15468/dl.v8zc57");
     String sourceXml =
-        Resources.toString(Resources.getResource("metadata/datacite-large.xml"), Charsets.UTF_8);
+        Resources.toString(
+            Resources.getResource("metadata/datacite-large.xml"), StandardCharsets.UTF_8);
 
     // when
     String truncatedXml =
