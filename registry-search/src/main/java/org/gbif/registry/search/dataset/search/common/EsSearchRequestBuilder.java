@@ -27,9 +27,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
@@ -65,8 +68,6 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 import static org.gbif.api.util.SearchTypeValidator.isRange;
 import static org.gbif.registry.search.dataset.indexing.es.EsQueryUtils.LOWER_BOUND_RANGE_PARSER;
@@ -174,7 +175,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     return request;
   }
 
-  private Optional<QueryBuilder> buildQuery(Multimap<P, String> params, String qParam) {
+  private Optional<QueryBuilder> buildQuery(Map<P, Set<String>> params, String qParam) {
     // create bool node
     BoolQueryBuilder bool = QueryBuilders.boolQuery();
 
@@ -199,7 +200,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       // adding term queries to bool
       bool.filter()
           .addAll(
-              params.asMap().entrySet().stream()
+              params.entrySet().stream()
                   .filter(e -> Objects.nonNull(esFieldMapper.get(e.getKey())))
                   .flatMap(
                       e ->
@@ -222,25 +223,24 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
       return groupedParams;
     }
 
-    groupedParams.queryParams = ArrayListMultimap.create();
-    groupedParams.postFilterParams = ArrayListMultimap.create();
+    groupedParams.queryParams = new HashMap<>();
+    groupedParams.postFilterParams = new HashMap<>();
 
     searchRequest
         .getParameters()
-        .asMap()
         .forEach(
             (k, v) -> {
               if (searchRequest.getFacets().contains(k)) {
-                groupedParams.postFilterParams.putAll(k, v);
+                groupedParams.postFilterParams.put(k, v);
               } else {
-                groupedParams.queryParams.putAll(k, v);
+                groupedParams.queryParams.put(k, v);
               }
             });
 
     return groupedParams;
   }
 
-  private Optional<QueryBuilder> buildPostFilter(Multimap<P, String> postFilterParams) {
+  private Optional<QueryBuilder> buildPostFilter(Map<P, Set<String>> postFilterParams) {
     if (postFilterParams == null || postFilterParams.isEmpty()) {
       return Optional.empty();
     }
@@ -248,7 +248,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     BoolQueryBuilder bool = QueryBuilders.boolQuery();
     bool.filter()
         .addAll(
-            postFilterParams.asMap().entrySet().stream()
+            postFilterParams.entrySet().stream()
                 .flatMap(
                     e ->
                         buildTermQuery(e.getValue(), e.getKey(), esFieldMapper.get(e.getKey()))
@@ -260,7 +260,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   private Optional<List<AggregationBuilder>> buildAggs(
       FacetedSearchRequest<P> searchRequest,
-      Multimap<P, String> postFilterParams,
+      Map<P, Set<String>> postFilterParams,
       boolean facetsEnabled) {
     if (!facetsEnabled
         || searchRequest.getFacets() == null
@@ -278,7 +278,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   private List<AggregationBuilder> buildFacetsMultiselect(
-      FacetedSearchRequest<P> searchRequest, Multimap<P, String> postFilterParams) {
+      FacetedSearchRequest<P> searchRequest, Map<P, Set<String>> postFilterParams) {
 
     if (searchRequest.getFacets().size() == 1) {
       // same case as normal facets
@@ -294,7 +294,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
               BoolQueryBuilder bool = QueryBuilders.boolQuery();
               bool.filter()
                   .addAll(
-                      postFilterParams.asMap().entrySet().stream()
+                      postFilterParams.entrySet().stream()
                           .filter(entry -> entry.getKey() != facetParam)
                           .flatMap(
                               e ->
@@ -519,7 +519,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   @VisibleForTesting
   static class GroupedParams<P extends SearchParameter> {
-    Multimap<P, String> postFilterParams;
-    Multimap<P, String> queryParams;
+    Map<P, Set<String>> postFilterParams;
+    Map<P, Set<String>> queryParams;
   }
 }
