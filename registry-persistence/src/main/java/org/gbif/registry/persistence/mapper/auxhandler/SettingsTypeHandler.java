@@ -31,7 +31,9 @@ import com.google.common.collect.Maps;
 
 /**
  * Provides convertion from the key value pairs to HStore. When reading, the caller is guaranteed
- * ordering of the content. This is in a separate package because of auto-mapping problems.
+ * ordering of the content.
+ *
+ * <p>IMPORTANT: This handler is in a separate package because of auto-mapping problems.
  */
 public class SettingsTypeHandler extends BaseTypeHandler<Map<String, String>> {
 

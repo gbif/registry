@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper.handler;
+package org.gbif.registry.persistence.mapper.auxhandler;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -31,7 +31,11 @@ import com.google.common.base.Strings;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 
-/** Converts a {@link MetricInfo} to a hstore and viceversa. */
+/**
+ * Converts a {@link MetricInfo} to a hstore and viceversa.
+ *
+ * <p>IMPORTANT: This handler is in a separate package because of auto-mapping problems.
+ */
 public class CollectionSummaryTypeHandler extends BaseTypeHandler<Map<String, Integer>> {
 
   @Override
