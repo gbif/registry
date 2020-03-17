@@ -24,6 +24,7 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 import lombok.experimental.UtilityClass;
 
@@ -104,7 +104,7 @@ public class SearchParameterProvider {
       parameters.put(PARAM_SPELLCHECK, Boolean.toString(searchRequest.isSpellCheck()));
       parameters.put(PARAM_SPELLCHECK_COUNT, Integer.toString(searchRequest.getSpellCheckCount()));
 
-      Multimap<P, String> requestParameters = searchRequest.getParameters();
+      Map<P, Set<String>> requestParameters = searchRequest.getParameters();
       if (requestParameters != null) {
         for (P param : requestParameters.keySet()) {
           parameters.put(param.name(), Lists.newArrayList(requestParameters.get(param)));
