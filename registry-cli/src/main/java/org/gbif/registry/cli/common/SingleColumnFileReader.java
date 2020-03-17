@@ -22,13 +22,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -49,7 +49,8 @@ public class SingleColumnFileReader {
   public static List<DOI> readDOIs(String fileName) {
     List<DOI> doiList = Lists.newArrayList();
     try (BufferedReader br =
-        new BufferedReader(new InputStreamReader(new FileInputStream(fileName), Charsets.UTF_8))) {
+        new BufferedReader(
+            new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8))) {
       String line;
       DOI doi;
       while ((line = br.readLine()) != null) {
@@ -83,7 +84,7 @@ public class SingleColumnFileReader {
     Preconditions.checkNotNull(filePath);
     return Resources.readLines(
         Paths.get(filePath).toUri().toURL(),
-        Charsets.UTF_8,
+        StandardCharsets.UTF_8,
         new LineProcessor<List<T>>() {
 
           List<T> list = Lists.newArrayList();
