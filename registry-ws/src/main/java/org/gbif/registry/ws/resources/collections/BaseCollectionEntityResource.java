@@ -478,7 +478,7 @@ public abstract class BaseCollectionEntityResource<
 
   /** Only admins can edit IH entities. */
   protected boolean isAllowedToEditEntity(Authentication authentication, T entity) {
-    if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return true;
     }
 
