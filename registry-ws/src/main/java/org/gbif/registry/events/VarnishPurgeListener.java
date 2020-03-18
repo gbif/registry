@@ -278,9 +278,9 @@ public class VarnishPurgeListener {
     }
 
     // /collection/{collectionKey}/contact BAN
-    purger.ban(String.format("collection/%s/contact", VarnishPurger.anyKey(collectionKeys)));
+    purger.ban(String.format("grscicoll/collection/%s/contact", VarnishPurger.anyKey(collectionKeys)));
     // /institution/{institutionKey}/contact BAN
-    purger.ban(String.format("institution/%s/contact", VarnishPurger.anyKey(institutionKeys)));
+    purger.ban(String.format("grscicoll/institution/%s/contact", VarnishPurger.anyKey(institutionKeys)));
   }
 
   /**
