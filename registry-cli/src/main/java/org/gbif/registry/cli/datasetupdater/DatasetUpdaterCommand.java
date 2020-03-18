@@ -41,14 +41,16 @@ import com.google.common.base.Function;
 public class DatasetUpdaterCommand extends BaseCommand {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetUpdaterCommand.class);
+
   private final DatasetUpdaterConfiguration config;
+  private DatasetUpdater updater;
 
   public DatasetUpdaterCommand() {
     super("dataset-updater");
     config = new DatasetUpdaterConfiguration();
   }
 
-  @VisibleForTesting
+  // constructor for tests
   public DatasetUpdaterCommand(DatasetUpdaterConfiguration config) {
     super("dataset-updater");
     this.config = config;
@@ -71,7 +73,8 @@ public class DatasetUpdaterCommand extends BaseCommand {
       return;
     }
 
-    DatasetUpdater updater = DatasetUpdater.build(config);
+    updater = DatasetUpdater.build(config);
+
     if (config.key != null) {
       updater.update(UUID.fromString(config.key));
       LOG.info("{} out of 1 datasets were updated", updater.getUpdateCounter());
@@ -112,5 +115,9 @@ public class DatasetUpdaterCommand extends BaseCommand {
       LOG.error("Error while reading csv key file [{}]. Exiting", keyFilePath, e);
     }
     return keys;
+  }
+
+  public DatasetUpdater getDatasetUpdater() {
+    return updater;
   }
 }

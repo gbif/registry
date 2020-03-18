@@ -16,6 +16,13 @@
 package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.cli.common.spring.SpringContextBuilder;
+import org.gbif.registry.cli.common.stubs.DoiGeneratorStub;
+import org.gbif.registry.cli.common.stubs.DoiHandlerStrategyStub;
+import org.gbif.registry.cli.common.stubs.EditorAuthorizationServiceStub;
+import org.gbif.registry.cli.common.stubs.EventManagerStub;
+import org.gbif.registry.cli.common.stubs.SearchServiceStub;
+import org.gbif.registry.service.RegistryDatasetServiceImpl;
 import org.gbif.registry.ws.resources.DatasetResource;
 
 import java.util.List;
@@ -25,8 +32,7 @@ import org.apache.ibatis.exceptions.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-
-import com.google.common.annotations.VisibleForTesting;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * A utility that will update either a single dataset or a list of datasets by reinterpreting their
@@ -35,8 +41,10 @@ import com.google.common.annotations.VisibleForTesting;
 public class DatasetUpdater {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetUpdater.class);
+
+  private ApplicationContext context;
   private int updateCounter;
-  private final DatasetResource datasetResource;
+  private DatasetResource datasetResource;
 
   public static DatasetUpdater build(DatasetUpdaterConfiguration cfg) {
     return new DatasetUpdater(cfg);
@@ -48,8 +56,22 @@ public class DatasetUpdater {
         cfg.db.serverName,
         cfg.db.databaseName,
         cfg.db.user);
-    ApplicationContext ctx = new DatasetUpdaterModule(cfg).getContext();
-    datasetResource = ctx.getBean(DatasetResource.class);
+    this.context = prepareContext(cfg);
+    this.datasetResource = context.getBean(DatasetResource.class);
+  }
+
+  private AnnotationConfigApplicationContext prepareContext(DatasetUpdaterConfiguration cfg) {
+    return SpringContextBuilder.create()
+        .withDbConfiguration(cfg.db)
+        .withComponents(
+            SearchServiceStub.class,
+            DoiGeneratorStub.class,
+            DoiHandlerStrategyStub.class,
+            EditorAuthorizationServiceStub.class,
+            EventManagerStub.class,
+            RegistryDatasetServiceImpl.class,
+            DatasetResource.class)
+        .build();
   }
 
   /**
@@ -94,8 +116,11 @@ public class DatasetUpdater {
     return updateCounter;
   }
 
-  @VisibleForTesting
   public DatasetResource getDatasetResource() {
     return datasetResource;
+  }
+
+  public ApplicationContext getContext() {
+    return context;
   }
 }

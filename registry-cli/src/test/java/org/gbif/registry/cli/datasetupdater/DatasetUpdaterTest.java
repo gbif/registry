@@ -15,14 +15,10 @@
  */
 package org.gbif.registry.cli.datasetupdater;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
 import org.junit.Test;
-
-import com.google.common.io.Resources;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,10 +26,12 @@ public class DatasetUpdaterTest {
 
   /** Tests keys file read successfully into list of UUID. */
   @Test
-  public void testReadKeys() throws IOException {
-    URL fileUrl = Resources.getResource("datasetupdater/datasetKeys.txt");
+  public void testReadKeys() {
+    //noinspection ConstantConditions
+    String path =
+        ClassLoader.getSystemClassLoader().getResource("datasetupdater/datasetKeys.txt").getPath();
     DatasetUpdaterCommand command = new DatasetUpdaterCommand();
-    List<UUID> keys = command.readKeys(fileUrl.getPath());
+    List<UUID> keys = command.readKeys(path);
     assertEquals(1, keys.size());
   }
 
@@ -41,10 +39,14 @@ public class DatasetUpdaterTest {
    * Tests keys file read successfully into list of UUID, skipping invalid line that isn't a UUID.
    */
   @Test
-  public void testReadBadKeys() throws IOException {
-    URL fileUrl = Resources.getResource("datasetupdater/datasetKeys-bad.txt");
+  public void testReadBadKeys() {
+    //noinspection ConstantConditions
+    String path =
+        ClassLoader.getSystemClassLoader()
+            .getResource("datasetupdater/datasetKeys-bad.txt")
+            .getPath();
     DatasetUpdaterCommand command = new DatasetUpdaterCommand();
-    List<UUID> keys = command.readKeys(fileUrl.getPath());
+    List<UUID> keys = command.readKeys(path);
     assertEquals(2, keys.size());
   }
 }
