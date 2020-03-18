@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
@@ -96,5 +97,17 @@ public class DbConfiguration {
       }
     }
     return props;
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DbConfiguration.class.getSimpleName() + "[", "]")
+        .add("serverName='" + serverName + "'")
+        .add("databaseName='" + databaseName + "'")
+        .add("user='" + user + "'")
+        .add("password='" + password + "'")
+        .add("maximumPoolSize=" + maximumPoolSize)
+        .add("connectionTimeout=" + connectionTimeout)
+        .toString();
   }
 }
