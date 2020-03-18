@@ -17,6 +17,8 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.registry.cli.common.DbConfiguration;
 
+import java.util.StringJoiner;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -33,4 +35,13 @@ public class DatasetUpdaterConfiguration {
 
   @Parameter(names = "--dataset-key-path")
   public String keyFilePath;
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DatasetUpdaterConfiguration.class.getSimpleName() + "[", "]")
+        .add("db=" + db)
+        .add("key='" + key + "'")
+        .add("keyFilePath='" + keyFilePath + "'")
+        .toString();
+  }
 }
