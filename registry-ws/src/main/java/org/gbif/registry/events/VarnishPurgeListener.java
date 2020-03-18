@@ -161,7 +161,9 @@ public class VarnishPurgeListener {
 
   @Subscribe
   public final <T extends CollectionEntity> void createdCollection(CreateCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getNewObject().getKey());
+    purgeEntityAndBanLists(
+      path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+      event.getNewObject().getKey());
 
     if (event.getObjectClass().equals(Person.class)) {
       cascadePersonChange((Person) event.getNewObject());
@@ -170,7 +172,9 @@ public class VarnishPurgeListener {
 
   @Subscribe
   public final <T extends CollectionEntity> void updatedCollection(UpdateCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+    purgeEntityAndBanLists(
+      path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+      event.getOldObject().getKey());
 
     if (event.getObjectClass().equals(Person.class)) {
       cascadePersonChange((Person) event.getOldObject(), (Person) event.getNewObject());
@@ -179,7 +183,9 @@ public class VarnishPurgeListener {
 
   @Subscribe
   public final <T extends CollectionEntity> void deletedCollection(DeleteCollectionEntityEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+    purgeEntityAndBanLists(
+      path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+      event.getOldObject().getKey());
 
     if (event.getObjectClass().equals(Person.class)) {
       cascadePersonChange((Person) event.getOldObject());
@@ -233,7 +239,7 @@ public class VarnishPurgeListener {
     // /node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
     purger.ban(String.format("node/%s/dataset", VarnishPurger.anyKey(nodeKeys)));
     // /network/{any UUID}/constituents BAN
-    purger.ban(String.format("network/.+/constituents"));
+    purger.ban("network/.+/constituents");
   }
 
   private void cascadeOrganizationChange(Organization ... orgs) {
@@ -288,13 +294,17 @@ public class VarnishPurgeListener {
    * This method does not check which entity class was supplied, but as it is some type of NetworkEntity
    * we deal with the right urls.
    */
-  private void purgeEntityAndBanLists(Class cl, UUID key) {
+  private void purgeEntityAndBanLists(String rootPath, UUID key) {
 
     // purge entity detail
-    purger.purge( path(cl.getSimpleName().toLowerCase(), key) );
+    purger.purge(path(rootPath, key));
 
     // banRegex lists and searches
-    purger.ban(String.format("%s(/search|/suggest)?[^/]*$", cl.getSimpleName().toLowerCase()));
+    purger.ban(String.format("%s(/search|/suggest)?[^/]*$", rootPath));
+  }
+
+  private void purgeEntityAndBanLists(Class cl, UUID key) {
+    purgeEntityAndBanLists(path(cl.getSimpleName().toLowerCase()), key);
   }
 
   private static String path(Object ... parts) {
