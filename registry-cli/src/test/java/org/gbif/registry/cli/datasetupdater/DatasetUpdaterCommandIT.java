@@ -17,14 +17,8 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
-import org.gbif.utils.file.FileUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,9 +31,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
+import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
+import static org.gbif.registry.cli.util.RegistryCliUtils.loadConfig;
+import static org.gbif.registry.cli.util.RegistryCliUtils.prepareConnection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -59,7 +53,7 @@ public class DatasetUpdaterCommandIT {
   }
 
   public DatasetUpdaterCommandIT(String configFile) {
-    loadConfig(configFile);
+    cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
   }
 
   @Before
@@ -89,37 +83,11 @@ public class DatasetUpdaterCommandIT {
    * ensuring license was updated properly.
    */
   @Test
-  public void testUpdateSingleDataset() {
+  public void testUpdate() {
     DatasetUpdaterCommand command = new DatasetUpdaterCommand(cfg);
     command.doRun();
     Dataset dataset = command.getDatasetUpdater().getDatasetResource().get(DATASET_KEY);
     assertNotNull(dataset);
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
-  }
-
-  private Connection prepareConnection(
-      String host, String databaseName, String user, String password) throws Exception {
-    return DriverManager.getConnection(
-        String.format("jdbc:postgresql://%s/%s", host, databaseName), user, password);
-  }
-
-  private String getFileData(String filename) throws Exception {
-    //noinspection ConstantConditions
-    byte[] bytes =
-        Files.readAllBytes(
-            Paths.get(ClassLoader.getSystemClassLoader().getResource(filename).getFile()));
-
-    return new String(bytes);
-  }
-
-  private void loadConfig(String configFile) {
-    try {
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      InputStream is = FileUtils.classpathStream(configFile);
-      cfg = mapper.readValue(is, DatasetUpdaterConfiguration.class);
-      System.out.println(cfg);
-    } catch (IOException e) {
-      throw new IllegalStateException(e);
-    }
   }
 }
