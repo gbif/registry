@@ -24,7 +24,6 @@
     <yammer.version>2.2.0</yammer.version>
     <guice.version>4.0</guice.version>
     <gbif-cli.version>0.14-SNAPSHOT</gbif-cli.version>
-    <gbif-postal-service.version>0.43</gbif-postal-service.version>
     <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
     <metainf-services.version>1.5</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
@@ -257,13 +256,6 @@
     <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
-      <version>${gbif-postal-service.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jackson-datatype-guava</artifactId>
-          <groupId>com.fasterxml.jackson</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
