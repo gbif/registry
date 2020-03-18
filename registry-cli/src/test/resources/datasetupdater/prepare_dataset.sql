@@ -1,3 +1,12 @@
+DELETE FROM public.metadata;
+DELETE FROM public.dataset_identifier;
+DELETE FROM public.dataset_contact;
+DELETE FROM public.dataset;
+DELETE FROM public.installation;
+DELETE FROM public.organization;
+DELETE FROM public.node;
+
+
 INSERT INTO public.node (key, gbif_region, continent, title, country, created_by, modified_by,
                          created, modified, deleted, fulltext_search, type, participation_status)
 VALUES ('a49e75d9-7b07-4d01-9be8-6ab2133f42f9', 'EUROPE', 'EUROPE', 'The UK National Node', 'GB',
