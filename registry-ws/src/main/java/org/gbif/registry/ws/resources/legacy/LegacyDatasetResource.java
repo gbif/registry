@@ -218,7 +218,7 @@ public class LegacyDatasetResource {
    */
   @GetMapping(
       value = {"resource", "resource{extension:\\.[a-z]+}"},
-      consumes = MediaType.TEXT_PLAIN_VALUE,
+      consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity datasetsForOrganization(
       @PathVariable(value = "extension", required = false) String extension,
@@ -276,7 +276,7 @@ public class LegacyDatasetResource {
    */
   @GetMapping(
       value = {"resource/{key:[a-zA-Z0-9-]+}", "resource/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
-      consumes = MediaType.TEXT_PLAIN_VALUE,
+      consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity readDataset(
       @PathVariable("key") UUID datasetKey,
