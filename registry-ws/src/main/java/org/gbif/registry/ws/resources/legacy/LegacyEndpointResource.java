@@ -152,7 +152,7 @@ public class LegacyEndpointResource {
    */
   @GetMapping(
       value = {"service", "service{extension:\\.[a-z]+}"},
-      consumes = MediaType.TEXT_PLAIN_VALUE,
+      consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity endpointsForDataset(
       @PathVariable(value = "extension", required = false) String extension,
