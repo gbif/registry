@@ -203,8 +203,8 @@ public class VarnishPurgeListener {
   public final <T extends CollectionEntity> void deletedCollection(
       DeleteCollectionEntityEvent<T> event) {
     purgeEntityAndBanLists(
-      path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
-      event.getOldObject().getKey());
+        path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+        event.getOldObject().getKey());
 
     if (event.getObjectClass().equals(Person.class)) {
       cascadePersonChange((Person) event.getOldObject());
