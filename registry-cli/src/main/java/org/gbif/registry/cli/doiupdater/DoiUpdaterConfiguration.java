@@ -20,6 +20,7 @@ import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.GangliaConfiguration;
 
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
@@ -47,4 +48,16 @@ public class DoiUpdaterConfiguration {
 
   @Parameter(names = "--retry-time")
   public long timeToRetryInMs = TimeUnit.MINUTES.toMillis(5);
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DoiUpdaterConfiguration.class.getSimpleName() + "[", "]")
+        .add("messaging=" + messaging)
+        .add("ganglia=" + ganglia)
+        .add("registry=" + registry)
+        .add("datacite=" + datacite)
+        .add("queueName='" + queueName + "'")
+        .add("timeToRetryInMs=" + timeToRetryInMs)
+        .toString();
+  }
 }

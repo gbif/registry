@@ -1,5 +1,10 @@
-user: ${datacite.user}
-password: ${datacite.password}
-baseApiUrl: https://api.test.datacite.org/
-fileCacheMaxSizeMb: 64
-timeOut: 60
+queueName: doi_updater
+registry:
+  serverName: ${registry-it.db.host}
+  databaseName: ${registry-it.db.name}
+  user: ${registry-it.db.username}
+  password: ${registry-it.db.password}
+datacite:
+  username: ${datacite.user}
+  password: ${datacite.password}
+  api: https://api.test.datacite.org/

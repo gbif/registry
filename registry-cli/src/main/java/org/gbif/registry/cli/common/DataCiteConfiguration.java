@@ -16,6 +16,7 @@
 package org.gbif.registry.cli.common;
 
 import java.net.URI;
+import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
@@ -42,4 +43,15 @@ public class DataCiteConfiguration {
 
   @Parameter(names = "--datacite-timeout")
   public int timeout = 20000;
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DataCiteConfiguration.class.getSimpleName() + "[", "]")
+        .add("username='" + username + "'")
+        .add("password='" + password + "'")
+        .add("api=" + api)
+        .add("threads=" + threads)
+        .add("timeout=" + timeout)
+        .toString();
+  }
 }

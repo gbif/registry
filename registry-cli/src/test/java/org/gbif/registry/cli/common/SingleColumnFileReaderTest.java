@@ -26,9 +26,8 @@ import org.junit.Test;
 import com.google.common.base.Function;
 import com.google.common.io.Resources;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-/** */
 public class SingleColumnFileReaderTest {
 
   @Test

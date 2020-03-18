@@ -24,37 +24,30 @@ import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.cli.common.spring.SpringContextBuilder;
+import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
-import org.gbif.utils.file.FileUtils;
-import org.gbif.utils.file.properties.PropertiesUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
 
-import org.junit.Ignore;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import static org.gbif.api.model.common.DoiStatus.FAILED;
 import static org.gbif.api.model.common.DoiStatus.NEW;
 import static org.gbif.api.model.common.DoiStatus.REGISTERED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -76,60 +69,41 @@ public class DoiUpdaterListenerIT {
   private static DoiUpdateListener doiUpdateListenerWithSpyService;
 
   private static String rawMessage;
-  private static org.codehaus.jackson.map.ObjectMapper vanillaObjectMapper;
 
-  //  @BeforeClass
+  private static ObjectMapper objectMapper = new ObjectMapper();
+
+  @BeforeClass
   public static void setup() throws Exception {
-    Properties properties = PropertiesUtil.loadProperties("doiupdater/application.properties");
-    Injector injector =
-        Guice.createInjector(new DoiUpdaterListenerIT.DoiUpdaterServiceITModule(properties));
-    doiMapper = injector.getInstance(DoiMapper.class);
-    doiService = CommonBuilder.createRestJsonApiDataCiteService(getConfig());
+    DoiUpdaterConfiguration doiUpdaterConfiguration = RegistryCliUtils
+      .loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
+    System.out.println(doiUpdaterConfiguration);
+
+    ApplicationContext context =
+        SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();
+
+    doiMapper = context.getBean(DoiMapper.class);
+    doiService = CommonBuilder.createRestJsonApiDataCiteService(prepareClientConfig(doiUpdaterConfiguration));
     doiServiceSpy = spy(doiService);
     doiUpdateListener = new DoiUpdateListener(doiService, doiMapper, 1000L);
     doiUpdateListenerWithSpyService = new DoiUpdateListener(doiServiceSpy, doiMapper, 1000L);
 
-    vanillaObjectMapper = new org.codehaus.jackson.map.ObjectMapper();
-    final byte[] bytes =
-        Files.readAllBytes(
-            Paths.get(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("doiupdater/test-send-rabbit.json")
-                    .getFile()));
-    rawMessage = new String(bytes);
+    rawMessage = RegistryCliUtils.getFileData("doiupdater/test-send-rabbit.json");
   }
 
-  private static ClientConfiguration getConfig() throws Exception {
-    try (InputStream dc = FileUtils.classpathStream("doiupdater/doi-updater.yaml")) {
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      ClientConfiguration cfg = mapper.readValue(dc, ClientConfiguration.class);
-      System.out.println(cfg);
-      return cfg;
-    }
+  private static ClientConfiguration prepareClientConfig(DoiUpdaterConfiguration doiUpdaterConfig) {
+   return ClientConfiguration.builder()
+      .withBaseApiUrl(doiUpdaterConfig.datacite.api.toString())
+      .withUser(doiUpdaterConfig.datacite.username)
+      .withPassword(doiUpdaterConfig.datacite.password)
+      .build();
   }
 
   private DOI newDoi() {
     return new DOI(PREFIX, SHOULDER + System.nanoTime());
   }
 
-  /** Guice module to bind all required injections. */
-  private static class DoiUpdaterServiceITModule extends AbstractModule {
-
-    private final Properties properties;
-
-    DoiUpdaterServiceITModule(Properties properties) {
-      this.properties = properties;
-    }
-
-    @Override
-    protected void configure() {
-      // TODO: install(new RegistryMyBatisModule(properties));
-    }
-  }
-
   // DB status REGISTERED, but missing at DataCite
   @Test
-  @Ignore
   public void
       handleMessageDoiWrongDefinedAsRegisteredAndMessageStatusRegisteredShouldCreateAndRegisterDoi()
           throws Exception {
@@ -150,7 +124,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageNewDoiAndMessageStatusRegisteredShouldCreateAndRegisterDoi()
       throws Exception {
     // given
@@ -167,7 +140,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageNewDoiAndMessageStatusReservedShouldCreateAndReserveDoi()
       throws Exception {
     // given
@@ -184,7 +156,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusDeletedShouldMarkDoiAsDeleted()
       throws Exception {
     // given
@@ -201,7 +172,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageReservedDoiAndMessageStatusDeletedShouldBeDeletedFromDbAndDataCite()
       throws Exception {
     // given
@@ -218,7 +188,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageReservedDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -235,7 +204,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -252,7 +220,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageFailedDoiAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
       throws Exception {
     // given
@@ -269,7 +236,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void
       handleMessageFailedDoiButRegisteredInDataCiteAndMessageStatusRegisteredShouldUpdateAndRegisterDoi()
           throws Exception {
@@ -287,7 +253,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageRegisteredDoiAndMessageStatusReservedShouldUpdateStatusInDbWithFailed()
       throws Exception {
     // given
@@ -304,7 +269,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageDoiServiceRespondedWithHttpErrorShouldUpdateStatusInDbWithFailed()
       throws Exception {
     // given
@@ -328,7 +292,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageDoiHasTooLongMetadataShouldRegisterDoiAfterTruncatingMetadata()
       throws Exception {
     // given
@@ -365,7 +328,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageFirstAttemptDoiExceptionShouldRetryAndRegisterDoi() throws Exception {
     // given
     final DOI doi = newDoi();
@@ -389,7 +351,6 @@ public class DoiUpdaterListenerIT {
   }
 
   @Test
-  @Ignore
   public void handleMessageDoiExceptionAllAttemptsShouldRetryFourTimesAndMarkAsFailed()
       throws Exception {
     // given
@@ -449,7 +410,7 @@ public class DoiUpdaterListenerIT {
   }
 
   private ChangeDoiMessage prepareMessage(DOI doi, String status) throws IOException {
-    return vanillaObjectMapper.readValue(
+    return objectMapper.readValue(
         rawMessage.replace("${doi}", doi.getDoiName()).replace("${status}", status),
         ChangeDoiMessage.class);
   }
