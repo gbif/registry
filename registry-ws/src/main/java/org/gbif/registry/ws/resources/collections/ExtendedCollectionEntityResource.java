@@ -27,8 +27,8 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
-import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.ContactableMapper;
@@ -251,7 +251,8 @@ public abstract class ExtendedCollectionEntityResource<
     }
 
     contactableMapper.addContact(entityKey, personKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
@@ -275,7 +276,8 @@ public abstract class ExtendedCollectionEntityResource<
   public void removeContact(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @GetMapping("{key}/contact")
