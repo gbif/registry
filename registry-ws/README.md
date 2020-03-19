@@ -77,7 +77,7 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
 
 To run this project
 
-```java -jar registry-spring-boot-ws/target/registry-spring-boot-ws-1.0-SNAPSHOT-exec.jar```
+```java -jar registry-ws/target/registry-ws-1.0-SNAPSHOT-exec.jar```
 
 Execute this command in root directory. Version may be different.
 
