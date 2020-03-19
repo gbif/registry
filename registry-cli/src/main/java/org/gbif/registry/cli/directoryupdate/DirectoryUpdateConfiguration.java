@@ -18,7 +18,7 @@ package org.gbif.registry.cli.directoryupdate;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 
-import java.util.Properties;
+import java.util.StringJoiner;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
-/** */
+/** A configuration exclusively for DirectoryUpdater. */
 public class DirectoryUpdateConfiguration {
 
   @ParametersDelegate @Valid @NotNull public DbConfiguration db = new DbConfiguration();
@@ -42,7 +42,13 @@ public class DirectoryUpdateConfiguration {
   @Parameter(names = "--frequency-in-hour")
   public Integer frequencyInHour = 24;
 
-  public Properties toProperties() {
-    return directory.toProperties();
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DirectoryUpdateConfiguration.class.getSimpleName() + "[", "]")
+        .add("db=" + db)
+        .add("directory=" + directory)
+        .add("startTime='" + startTime + "'")
+        .add("frequencyInHour=" + frequencyInHour)
+        .toString();
   }
 }
