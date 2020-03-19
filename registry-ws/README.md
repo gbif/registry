@@ -21,14 +21,6 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
                 <checklistbank-it-spring.db.username>checklistbank</checklistbank-it-spring.db.username>
                 <checklistbank-it-spring.db.password>%checklistbank_password%</checklistbank-it-spring.db.password>
 
-                <registry.db.url>jdbc:postgresql://localhost:5432/registry</registry.db.url>
-                <registry.db.host>localhost</registry.db.host>
-                <registry.db.name>registry</registry.db.name>
-                <registry.db.username>youruser</registry.db.username>
-                <registry.db.password>%db_password%</registry.db.password>
-                <registry.db.poolSize>6</registry.db.poolSize>
-                <registry.db.connectionTimeout>1000</registry.db.connectionTimeout>
-
                 <appkeys.file>/Users/youruser/dev/appkeys.properties</appkeys.file>
                 <api.url>http://api.gbif.org/v1/</api.url>
 
@@ -51,7 +43,7 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
 
                 <directory.ws.url>http://api.gbif-dev.org/v1/directory/</directory.ws.url>
                 <directory.app.key>gbif.portal</directory.app.key>
-                <directory.app.secret></directory.app.secret>
+                <directory.app.secret>%directory_app_secret%</directory.app.secret>
 
                 <datacite.api.base.url>https://api.test.datacite.org/</datacite.api.base.url>
                 <datacite.user>GBIF.GBIF</datacite.user>
@@ -63,13 +55,34 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
+        <profile>
+            <id>registry-local-it</id>
+            <properties>
+                <registry-it.db.url>jdbc:postgresql://localhost:5432/registry_it</registry-it.db.url>
+                <registry-it.db.host>localhost</registry-it.db.host>
+                <registry-it.db.name>registry_it</registry-it.db.name>
+                <registry-it.db.username>mpodolskiy</registry-it.db.username>
+                <registry-it.db.password/>
+
+                <registry-it-spring.db.url>jdbc:postgresql://localhost:5432/registry_it</registry-it-spring.db.url>
+                <registry-it-spring.db.host>localhost</registry-it-spring.db.host>
+                <registry-it-spring.db.name>registry_it</registry-it-spring.db.name>
+                <registry-it-spring.db.username>mpodolskiy</registry-it-spring.db.username>
+                <registry-it-spring.db.password/>
+
+                <appkeys.testfile>/Users/youruser/dev/appkeys.properties</appkeys.testfile>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
 ````
 
- * Some secret properties are absent, see gbif-configuration.
+ * Some passwords and secret properties are absent, see gbif-configuration.
 
  * Make sure database is already created (see [persitence module](../registry-persistence/README.md)).
 
- * Create appkeys.properties file under the path of property `appkeys.file`
+ * Create appkeys.properties file under the path of property `appkeys.file` and `appkeys.testfile`
 
  * Gmail example configuartion (can be any).
 
