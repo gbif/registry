@@ -38,6 +38,7 @@ import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
+import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -209,7 +210,8 @@ public class SpringContextBuilder {
         ElasticsearchAutoConfiguration.class,
         ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
-        LiquibaseAutoConfiguration.class
+        LiquibaseAutoConfiguration.class,
+        FreeMarkerAutoConfiguration.class
       })
   @MapperScan("org.gbif.registry.persistence.mapper")
   @EnableConfigurationProperties
