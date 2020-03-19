@@ -251,7 +251,8 @@ public abstract class ExtendedCollectionEntityResource<
     }
 
     contactableMapper.addContact(entityKey, personKey);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
@@ -275,7 +276,8 @@ public abstract class ExtendedCollectionEntityResource<
   public void removeContact(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
   @GetMapping("{key}/contact")

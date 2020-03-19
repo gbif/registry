@@ -204,7 +204,9 @@ public abstract class BaseCollectionEntityResource<
       @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, Identifier.class));
     return identifierKey;
   }
 
@@ -235,7 +237,9 @@ public abstract class BaseCollectionEntityResource<
   public void deleteIdentifier(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
     baseMapper.deleteIdentifier(entityKey, identifierKey);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, Identifier.class));
   }
 
   @GetMapping("{key}/identifier")
@@ -267,7 +271,8 @@ public abstract class BaseCollectionEntityResource<
   public int addTag(
       @NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
     return tagKey;
   }
 
@@ -277,7 +282,8 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
     baseMapper.deleteTag(entityKey, tagKey);
-    eventManager.post(ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
   @GetMapping("{key}/tag")
