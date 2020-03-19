@@ -16,10 +16,10 @@
 package org.gbif.registry.utils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 /** Base class providing basic Jackson based factories for new object instances. */
@@ -46,7 +46,7 @@ abstract class JsonBackedData<T> {
   // utility method to read the file, and throw RTE if there is a problem
   private String getJson(String file) {
     try {
-      return Resources.toString(Resources.getResource(file), Charsets.UTF_8);
+      return Resources.toString(Resources.getResource(file), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

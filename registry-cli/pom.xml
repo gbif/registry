@@ -24,14 +24,9 @@
     <yammer.version>2.2.0</yammer.version>
     <guice.version>4.0</guice.version>
     <gbif-cli.version>0.14-SNAPSHOT</gbif-cli.version>
-    <gbif-postal-service.version>0.43</gbif-postal-service.version>
-    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
     <metainf-services.version>1.5</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
-    <jackson.version>1.9.11</jackson.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <mockito.version>1.10.8</mockito.version>
-    <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
   </properties>
 
   <build>
@@ -133,6 +128,11 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
       </plugin>
 
@@ -176,67 +176,19 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.zaxxer</groupId>
-      <artifactId>HikariCP</artifactId>
-    </dependency>
 
+    <!-- GBIF dependencies -->
     <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>download-query-tools</artifactId>
-      <version>${gbif-download-query-tools.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.beust</groupId>
-      <artifactId>jcommander</artifactId>
-      <version>${jcommander.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>${yammer.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yammer.metrics</groupId>
-      <artifactId>metrics-ganglia</artifactId>
-      <version>${yammer.version}</version>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.directory</groupId>
       <artifactId>directory-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson</groupId>
-      <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson-datatype-guava.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <!-- This dependency is needed for the JsonIgnore annotations on the configuration objects. gbif-cli uses
-           Jackson 2 because only that supports YAML so we have to use the annotations from Jackson 2 -->
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>${guice.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>download-query-tools</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.common</groupId>
@@ -252,13 +204,6 @@
     <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
-      <version>${gbif-postal-service.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jackson-datatype-guava</artifactId>
-          <groupId>com.fasterxml.jackson</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
@@ -302,6 +247,45 @@
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-directory</artifactId>
     </dependency>
+
+
+    <!-- Third party dependencies -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>${jcommander.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${yammer.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-ganglia</artifactId>
+      <version>${yammer.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>${guice.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
     <!-- false positive from maven dep:analyze -->
     <dependency>
       <groupId>org.kohsuke.metainf-services</groupId>
@@ -342,14 +326,8 @@
       <version>${jersey.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -400,12 +378,6 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

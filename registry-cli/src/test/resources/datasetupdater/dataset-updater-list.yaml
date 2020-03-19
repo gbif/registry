@@ -1,6 +1,6 @@
 db:
-  serverName: localhost
-  databaseName: local_kbraak_prod_b_registry_2016_08_08
-  user: kbraak
-  password:
-keyFilePath: /Users/kbraak/dev/git/registry/registry-cli/src/test/resources/datasetupdater/datasetKeys.txt
+  serverName: ${registry-it-spring.db.host}
+  databaseName: ${registry-it-spring.db.name}
+  user: ${registry-it-spring.db.username}
+  password: ${registry-it-spring.db.password}
+keyFilePath: ${project.basedir}/src/test/resources/datasetupdater/datasetKeys.txt

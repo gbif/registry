@@ -16,6 +16,7 @@
 package org.gbif.registry.cli.common;
 
 import java.net.URI;
+import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
@@ -25,6 +26,7 @@ import com.beust.jcommander.internal.Nullable;
 /** A configuration for the DataCite service. */
 @SuppressWarnings("PublicField")
 public class DataCiteConfiguration {
+
   @Parameter(names = "--datacite-username")
   @NotNull
   public String username;
@@ -42,4 +44,15 @@ public class DataCiteConfiguration {
 
   @Parameter(names = "--datacite-timeout")
   public int timeout = 20000;
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DataCiteConfiguration.class.getSimpleName() + "[", "]")
+        .add("username='" + username + "'")
+        .add("password='" + password + "'")
+        .add("api=" + api)
+        .add("threads=" + threads)
+        .add("timeout=" + timeout)
+        .toString();
+  }
 }
