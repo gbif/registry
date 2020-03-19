@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -66,11 +65,6 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    LOG.info(
-        "Method: {}, URL: {}, Content-Type: {}",
-        request.getMethod(),
-        request.getRequestURI(),
-        request.getHeader(HttpHeaders.CONTENT_TYPE));
     String path = request.getRequestURI().toLowerCase();
 
     // is it a legacy web service request?

@@ -414,9 +414,7 @@ public class IptResource {
    * @param datasetKey dataset key (UUID) coming in as path param
    * @return ResponseEntity with HttpStatus.OK if successful
    */
-  @DeleteMapping(
-      value = "resource/{key}",
-      consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE + ";charset=UTF-8")
+  @DeleteMapping("resource/{key}")
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     if (datasetKey != null) {
       // retrieve existing dataset
