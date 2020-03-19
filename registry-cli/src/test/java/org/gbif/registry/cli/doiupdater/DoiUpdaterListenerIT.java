@@ -74,15 +74,17 @@ public class DoiUpdaterListenerIT {
 
   @BeforeClass
   public static void setup() throws Exception {
-    DoiUpdaterConfiguration doiUpdaterConfiguration = RegistryCliUtils
-      .loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
+    DoiUpdaterConfiguration doiUpdaterConfiguration =
+        RegistryCliUtils.loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
     System.out.println(doiUpdaterConfiguration);
 
     ApplicationContext context =
         SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();
 
     doiMapper = context.getBean(DoiMapper.class);
-    doiService = CommonBuilder.createRestJsonApiDataCiteService(prepareClientConfig(doiUpdaterConfiguration));
+    doiService =
+        CommonBuilder.createRestJsonApiDataCiteService(
+            prepareClientConfig(doiUpdaterConfiguration));
     doiServiceSpy = spy(doiService);
     doiUpdateListener = new DoiUpdateListener(doiService, doiMapper, 1000L);
     doiUpdateListenerWithSpyService = new DoiUpdateListener(doiServiceSpy, doiMapper, 1000L);
@@ -91,11 +93,11 @@ public class DoiUpdaterListenerIT {
   }
 
   private static ClientConfiguration prepareClientConfig(DoiUpdaterConfiguration doiUpdaterConfig) {
-   return ClientConfiguration.builder()
-      .withBaseApiUrl(doiUpdaterConfig.datacite.api.toString())
-      .withUser(doiUpdaterConfig.datacite.username)
-      .withPassword(doiUpdaterConfig.datacite.password)
-      .build();
+    return ClientConfiguration.builder()
+        .withBaseApiUrl(doiUpdaterConfig.datacite.api.toString())
+        .withUser(doiUpdaterConfig.datacite.username)
+        .withPassword(doiUpdaterConfig.datacite.password)
+        .build();
   }
 
   private DOI newDoi() {
