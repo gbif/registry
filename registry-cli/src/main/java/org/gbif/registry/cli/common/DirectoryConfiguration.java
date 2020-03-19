@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.cli.common;
 
-import java.util.Properties;
+import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
@@ -37,12 +37,12 @@ public class DirectoryConfiguration {
   @Parameter(names = "--directory-app-secret")
   public String appSecret;
 
-  /** Create a Properties object from the public fields from that class and its included db. */
-  public Properties toProperties() {
-    Properties props = new Properties();
-    props.put("directory.ws.url", wsUrl);
-    props.put("directory.app.key", appKey);
-    props.put("directory.app.secret", appSecret);
-    return props;
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DirectoryConfiguration.class.getSimpleName() + "[", "]")
+        .add("wsUrl='" + wsUrl + "'")
+        .add("appKey='" + appKey + "'")
+        .add("appSecret='" + appSecret + "'")
+        .toString();
   }
 }

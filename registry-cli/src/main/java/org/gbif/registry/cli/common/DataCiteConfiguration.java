@@ -26,6 +26,7 @@ import com.beust.jcommander.internal.Nullable;
 /** A configuration for the DataCite service. */
 @SuppressWarnings("PublicField")
 public class DataCiteConfiguration {
+
   @Parameter(names = "--datacite-username")
   @NotNull
   public String username;
