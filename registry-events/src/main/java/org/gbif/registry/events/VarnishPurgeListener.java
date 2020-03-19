@@ -29,6 +29,7 @@ import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
@@ -212,6 +213,17 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
+  public final void collectionEntityComponentChange(ChangedCollectionEntityComponentEvent event) {
+    purgeEntityAndBanLists(
+        path("grscicoll", event.getTargetClass().getSimpleName().toLowerCase()),
+        event.getTargetEntityKey());
+
+    if (event.getTargetClass().equals(Person.class)) {
+      cascadePersonChange(personService.get(event.getTargetEntityKey()));
+    }
+  }
+
+  @Subscribe
   public final void componentChange(ChangedComponentEvent event) {
     purgeEntityAndBanLists(event.getTargetClass(), event.getTargetEntityKey());
     // keys have not changed, only some component of the entity itself
@@ -221,8 +233,6 @@ public class VarnishPurgeListener {
       cascadeDatasetChange(datasetService.get(event.getTargetEntityKey()));
     } else if (event.getTargetClass().equals(Installation.class)) {
       cascadeInstallationChange(installationService.get(event.getTargetEntityKey()));
-    } else if (event.getTargetClass().equals(Person.class)) {
-      cascadePersonChange((Person) personService.get(event.getTargetEntityKey()));
     }
   }
 
@@ -258,7 +268,7 @@ public class VarnishPurgeListener {
     // /node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
     purger.ban(String.format("node/%s/dataset", purger.anyKey(nodeKeys)));
     // /network/{any UUID}/constituents BAN
-    purger.ban(String.format("network/.+/constituents"));
+    purger.ban("network/.+/constituents");
   }
 
   private void cascadeOrganizationChange(Organization... orgs) {

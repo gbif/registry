@@ -34,8 +34,8 @@ import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
-import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -204,7 +204,9 @@ public abstract class BaseCollectionEntityResource<
       @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, Identifier.class));
     return identifierKey;
   }
 
@@ -235,7 +237,9 @@ public abstract class BaseCollectionEntityResource<
   public void deleteIdentifier(
       @PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
     baseMapper.deleteIdentifier(entityKey, identifierKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Identifier.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, Identifier.class));
   }
 
   @GetMapping("{key}/identifier")
@@ -267,7 +271,8 @@ public abstract class BaseCollectionEntityResource<
   public int addTag(
       @NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
     return tagKey;
   }
 
@@ -277,7 +282,8 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
     baseMapper.deleteTag(entityKey, tagKey);
-    eventManager.post(ChangedComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
   }
 
   @GetMapping("{key}/tag")
