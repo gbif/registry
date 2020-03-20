@@ -94,7 +94,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
       initialDelay = LocalTime.now().until(t, ChronoUnit.MINUTES);
     }
 
-    // if the delay is passed,
+    // if the delay is passed
     if (initialDelay < 0) {
       initialDelay = initialDelay + ChronoUnit.DAYS.getDuration().toMinutes();
     }
@@ -104,7 +104,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
     scheduler.scheduleAtFixedRate(
         () -> directoryUpdater.applyUpdates(),
         initialDelay,
-        frequencyInHour * (ChronoUnit.MINUTES.getDuration().getSeconds()),
+        frequencyInHour * (ChronoUnit.HOURS.getDuration().toMinutes()),
         TimeUnit.MINUTES);
   }
 
