@@ -40,11 +40,7 @@ public abstract class GbifDOIDiagnosticResult {
   protected URI dataciteTarget;
   protected boolean metadataEquals;
 
-  /**
-   * Mechanism to let concrete classes provide contextual content to the diagnostic
-   *
-   * @return
-   */
+  /** Mechanism to let concrete classes provide contextual content to the diagnostic */
   public abstract List<String> getContextInformation();
 
   public GbifDOIDiagnosticResult(DOI doi) {

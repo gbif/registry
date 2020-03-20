@@ -18,13 +18,14 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 
+import java.util.StringJoiner;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
-/** */
 public class DoiSynchronizerConfiguration {
 
   @Parameter(names = "--portal-url")
@@ -45,35 +46,44 @@ public class DoiSynchronizerConfiguration {
   @ParametersDelegate @Valid @NotNull
   public PostalServiceConfiguration postalservice = new PostalServiceConfiguration();
 
-  @Parameter(names = "--doi", required = false)
+  @Parameter(names = "--doi")
   @NotNull
   public String doi = "";
 
-  @Parameter(names = "--doi-list", required = false)
+  @Parameter(names = "--doi-list")
   @NotNull
   public String doiList = "";
 
-  @Parameter(
-      names = {"--fix-doi"},
-      required = false)
+  @Parameter(names = {"--fix-doi"})
   @Valid
   public boolean fixDOI = false;
 
-  @Parameter(
-      names = {"--skip-dia"},
-      required = false)
+  @Parameter(names = {"--skip-dia"})
   @Valid
   public boolean skipDiagnostic = false;
 
-  @Parameter(
-      names = {"--export"},
-      required = false)
+  @Parameter(names = {"--export"})
   @Valid
   public boolean export = false;
 
-  @Parameter(
-      names = {"--list-failed-doi"},
-      required = false)
+  @Parameter(names = {"--list-failed-doi"})
   @Valid
   public boolean listFailedDOI = false;
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DoiSynchronizerConfiguration.class.getSimpleName() + "[", "]")
+        .add("portalurl='" + portalurl + "'")
+        .add("apiRoot='" + apiRoot + "'")
+        .add("registry=" + registry)
+        .add("datacite=" + datacite)
+        .add("postalservice=" + postalservice)
+        .add("doi='" + doi + "'")
+        .add("doiList='" + doiList + "'")
+        .add("fixDOI=" + fixDOI)
+        .add("skipDiagnostic=" + skipDiagnostic)
+        .add("export=" + export)
+        .add("listFailedDOI=" + listFailedDOI)
+        .toString();
+  }
 }

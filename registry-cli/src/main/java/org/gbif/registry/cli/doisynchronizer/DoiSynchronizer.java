@@ -27,6 +27,7 @@ import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.SingleColumnFileReader;
+import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDOIDiagnosticResult;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDatasetDOIDiagnosticResult;
@@ -55,9 +56,9 @@ import org.springframework.context.ApplicationContext;
  * This service allows to print a report of DOI and/or try to fix them by synchronizing with
  * Datacite. This service is mainly design to be run manually and uses System.out.
  */
-public class DoiSynchronizerService {
+public class DoiSynchronizer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DoiSynchronizerService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DoiSynchronizer.class);
 
   private final DoiSynchronizerConfiguration config;
 
@@ -71,11 +72,16 @@ public class DoiSynchronizerService {
 
   private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
 
-  public DoiSynchronizerService(DoiSynchronizerConfiguration config) {
-    this(config, new DoiSynchronizerModule(config).getContext());
+  public DoiSynchronizer(DoiSynchronizerConfiguration config) {
+    this(
+        config,
+        SpringContextBuilder.create()
+            .withDoiSynchronizerConfiguration(config)
+            .withScanPackages("org.gbif.registry.doi")
+            .build());
   }
 
-  public DoiSynchronizerService(DoiSynchronizerConfiguration config, ApplicationContext context) {
+  public DoiSynchronizer(DoiSynchronizerConfiguration config, ApplicationContext context) {
     this.config = config;
     doiMapper = context.getBean(DoiMapper.class);
     dataCiteDoiHandlerStrategy = context.getBean(DataCiteDoiHandlerStrategy.class);
@@ -179,7 +185,7 @@ public class DoiSynchronizerService {
   }
 
   /** Report the current status of a DOI */
-  private GbifDOIDiagnosticResult reportDOIStatus(DOI doi) {
+  private void reportDOIStatus(DOI doi) {
     GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
 
     if (doiDiagnostic != null) {
@@ -187,7 +193,6 @@ public class DoiSynchronizerService {
     } else {
       System.out.println("No report can be generated. Nothing found for DOI " + doi);
     }
-    return doiDiagnostic;
   }
 
   /** Try to fix a DOI if possible */
