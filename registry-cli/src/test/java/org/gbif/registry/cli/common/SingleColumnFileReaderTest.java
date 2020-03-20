@@ -15,34 +15,55 @@
  */
 package org.gbif.registry.cli.common;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
+import org.gbif.api.model.common.DOI;
 
-import javax.annotation.Nullable;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
 
 import org.junit.Test;
 
-import com.google.common.base.Function;
-import com.google.common.io.Resources;
-
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("ConstantConditions")
 public class SingleColumnFileReaderTest {
 
   @Test
-  public void testReadFile() throws IOException {
-    URL fileUrl = Resources.getResource("ids.txt");
-    List<Integer> idAsInt =
-        SingleColumnFileReader.readFile(
-            fileUrl.getPath(),
-            new Function<String, Integer>() {
-              @Nullable
-              @Override
-              public Integer apply(String input) {
-                return Integer.parseInt(input);
-              }
-            });
+  public void testReadFileIds() {
+    // given
+    String filePath = ClassLoader.getSystemClassLoader().getResource("ids.txt").getPath();
+    Function<String, Integer> toIntegerFunction = Integer::valueOf;
+
+    // when
+    List<Integer> idAsInt = SingleColumnFileReader.readFile(filePath, toIntegerFunction);
+
+    // then
     assertEquals(3, idAsInt.size());
+  }
+
+  @Test
+  public void testReadFileUuids() {
+    // given
+    String filePath = ClassLoader.getSystemClassLoader().getResource("uuids.txt").getPath();
+
+    // when
+    List<UUID> idAsInt = SingleColumnFileReader.readFile(filePath, SingleColumnFileReader::toUuid);
+
+    // then
+    // in total 6 lines, but one is invalid UUID
+    assertEquals(5, idAsInt.size());
+  }
+
+  @Test
+  public void testReadFileDois() {
+    // given
+    String filePath = ClassLoader.getSystemClassLoader().getResource("dois.txt").getPath();
+
+    // when
+    List<DOI> idAsInt = SingleColumnFileReader.readFile(filePath, SingleColumnFileReader::toDoi);
+
+    // then
+    // in total 5 lines, but one is invalid DOI
+    assertEquals(4, idAsInt.size());
   }
 }

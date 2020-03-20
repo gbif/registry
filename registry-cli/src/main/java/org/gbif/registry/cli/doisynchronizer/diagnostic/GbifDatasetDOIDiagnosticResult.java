@@ -18,20 +18,20 @@ package org.gbif.registry.cli.doisynchronizer.diagnostic;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Dataset;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /** Container object that represents the result of the diagnostic of a single Dataset DOI. */
 @NotThreadSafe
 public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
   private static final Joiner JOINER = Joiner.on(',');
-  private List<Dataset> relatedDataset = Lists.newArrayList();
+  private List<Dataset> relatedDataset = new ArrayList<>();
 
   private boolean doiIsInAlternateIdentifiers;
 
@@ -69,11 +69,7 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
     return relatedDataset.get(0);
   }
 
-  /**
-   * Append a dataset to the list of datasets related to the DOI.
-   *
-   * @param datasets
-   */
+  /** Append a dataset to the list of datasets related to the DOI. */
   public void appendRelatedDataset(List<Dataset> datasets) {
 
     for (Dataset dataset : datasets) {
@@ -93,8 +89,7 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
   @Override
   public List<String> getContextInformation() {
-
-    List<String> contextInformation = Lists.newArrayList();
+    List<String> contextInformation = new ArrayList<>();
 
     if (getRelatedDatasetList() == null || getRelatedDatasetList().isEmpty()) {
       contextInformation.add("WARNING: No dataset found");
@@ -102,7 +97,7 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
     }
 
     // from here we know we have at least on dataset linked to this DOI
-    List<String> relatedDatasetKeys = Lists.newArrayListWithCapacity(relatedDataset.size());
+    List<String> relatedDatasetKeys = new ArrayList<>(relatedDataset.size());
     for (Dataset dataset : relatedDataset) {
       relatedDatasetKeys.add(dataset.getKey().toString());
     }

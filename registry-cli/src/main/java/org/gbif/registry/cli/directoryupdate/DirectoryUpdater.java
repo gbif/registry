@@ -28,6 +28,8 @@ import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -83,8 +84,8 @@ public class DirectoryUpdater {
     PagingResponse<Node> nodes =
         directoryNodeService.list(null, new PagingRequest(0, DEFAULT_MAX_LIMIT));
 
-    Map<Integer, Participant> participantsById = Maps.newHashMap();
-    Map<Integer, Node> nodeByParticipantsId = Maps.newHashMap();
+    Map<Integer, Participant> participantsById = new HashMap<>();
+    Map<Integer, Node> nodeByParticipantsId = new HashMap<>();
     for (Participant participant : participants.getResults()) {
       participantsById.put(participant.getId(), participant);
     }
@@ -102,7 +103,7 @@ public class DirectoryUpdater {
     Integer participantId;
     Participant participant;
     Node directoryNode;
-    Set<Integer> participantFoundInRegistry = Sets.newHashSet();
+    Set<Integer> participantFoundInRegistry = new HashSet<>();
     for (org.gbif.api.model.registry.Node registryNode : registryNodes) {
       participantId = findParticipantId(registryNode);
       if (participantId != null) {
