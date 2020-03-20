@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -74,9 +75,9 @@ public final class SingleColumnFileReader {
 
     List<T> result;
 
-    try {
+    try (Stream<String> lines = Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)) {
       result =
-          Files.lines(Paths.get(filePath), StandardCharsets.UTF_8)
+          lines
               .map(String::trim)
               .filter(StringUtils::isNotEmpty)
               .map(toType)
