@@ -40,18 +40,16 @@ import org.gbif.registry.persistence.mapper.UserMapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 /**
  * This service allows to print a report of DOI and/or try to fix them by synchronizing with
@@ -96,7 +94,8 @@ public class DoiSynchronizerService {
         handleDOI(config.doi);
       } // DOI list
       else if (StringUtils.isNotBlank(config.doiList)) {
-        List<DOI> doiList = SingleColumnFileReader.readDOIs(config.doiList);
+        List<DOI> doiList =
+            SingleColumnFileReader.readFile(config.doiList, SingleColumnFileReader::toDoi);
         for (DOI doi : doiList) {
           handleDOI(doi);
         }
@@ -110,8 +109,6 @@ public class DoiSynchronizerService {
    * Check the current status of the DOI related configurations from the instance of {@link
    * DoiSynchronizerConfiguration}. The method is intended to be used on command line and will print
    * messages using System.out.
-   *
-   * @return
    */
   private boolean validateDOIParameters() {
 
@@ -148,25 +145,16 @@ public class DoiSynchronizerService {
     return true;
   }
 
-  /**
-   * Handle a single DOIm provided as String
-   *
-   * @param doiAsString
-   */
+  /** Handle a single DOIm provided as String */
   private void handleDOI(String doiAsString) {
     try {
       handleDOI(new DOI(doiAsString));
     } catch (IllegalArgumentException iaEx) {
       System.out.println(config.doi + " is not a valid DOI");
-      return;
     }
   }
 
-  /**
-   * Handle a single DOI
-   *
-   * @param doi
-   */
+  /** Handle a single DOI */
   private void handleDOI(DOI doi) {
     if (!config.skipDiagnostic) {
       reportDOIStatus(doi);
@@ -174,10 +162,10 @@ public class DoiSynchronizerService {
 
     if (config.export) {
       String registryDoiMetadata = doiMapper.getMetadata(doi);
-      if (!Strings.isNullOrEmpty(registryDoiMetadata)) {
+      if (StringUtils.isNotEmpty(registryDoiMetadata)) {
         File exportTo = new File(doi.getDoiName().replace("/", "_") + "_export.xml");
         try {
-          FileUtils.writeStringToFile(exportTo, registryDoiMetadata, Charset.forName("UTF-8"));
+          FileUtils.writeStringToFile(exportTo, registryDoiMetadata, StandardCharsets.UTF_8);
           System.out.println("Exported file saved in " + exportTo.getAbsolutePath());
         } catch (IOException e) {
           e.printStackTrace();
@@ -190,11 +178,7 @@ public class DoiSynchronizerService {
     }
   }
 
-  /**
-   * Report the current status of a DOI
-   *
-   * @param doi
-   */
+  /** Report the current status of a DOI */
   private GbifDOIDiagnosticResult reportDOIStatus(DOI doi) {
     GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
 
@@ -206,12 +190,7 @@ public class DoiSynchronizerService {
     return doiDiagnostic;
   }
 
-  /**
-   * Try to fix a DOI if possible
-   *
-   * @param doi
-   * @return
-   */
+  /** Try to fix a DOI if possible */
   private boolean tryFixDOI(DOI doi) {
     DoiType doiType = doiMapper.getType(doi);
     if (doiType == null) {
@@ -230,11 +209,10 @@ public class DoiSynchronizerService {
   /**
    * Re-apply the DataCite DOI handling strategy if possible.
    *
-   * @param doi
    * @return DataCite DOI handling strategy applied?
    */
   private boolean reapplyDatasetDOIStrategy(DOI doi) {
-    Preconditions.checkNotNull(doi, "DOI can't be null");
+    Objects.requireNonNull(doi, "DOI can't be null");
 
     List<Dataset> datasetsFromDOI = datasetMapper.listByDOI(doi.getDoiName(), null);
 
@@ -279,13 +257,7 @@ public class DoiSynchronizerService {
     return false;
   }
 
-  /**
-   * Checks if a DOI can be found in the list of dataset identifiers.
-   *
-   * @param doi
-   * @param identifiable
-   * @return
-   */
+  /** Checks if a DOI can be found in the list of dataset identifiers. */
   private static boolean isIdentifierDOIFound(DOI doi, Identifiable identifiable) {
     return identifiable.getIdentifiers().stream()
         .anyMatch(
@@ -297,12 +269,10 @@ public class DoiSynchronizerService {
   /**
    * Re-apply the Download DOI strategy from dataCiteDoiHandlerStrategy.
    *
-   * @param doi
    * @return success or not
    */
   private boolean reapplyDownloadDOIStrategy(DOI doi) {
-
-    Preconditions.checkNotNull(doi, "DOI can't be null");
+    Objects.requireNonNull(doi, "DOI can't be null");
 
     Download download = downloadMapper.getByDOI(doi);
     if (download == null) {
@@ -333,9 +303,6 @@ public class DoiSynchronizerService {
   /**
    * Compare the metadata linked to a DOI between what we have in the database and what is stored at
    * Datacite.
-   *
-   * @param doi
-   * @return
    */
   private boolean compareMetadataWithDatacite(DOI doi) {
     String registryDoiMetadata = doiMapper.getMetadata(doi);
@@ -370,12 +337,7 @@ public class DoiSynchronizerService {
     }
   }
 
-  /**
-   * Check the status of a DOI between GBIF and Datacite.
-   *
-   * @param doi
-   * @return
-   */
+  /** Check the status of a DOI between GBIF and Datacite. */
   private GbifDOIDiagnosticResult generateGbifDOIDiagnostic(DOI doi) {
     GbifDOIDiagnosticResult doiGbifDataciteDiagnostic = null;
 

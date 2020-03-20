@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
  * A CLI service that starts and stops a listener of DoiUpdate messages. Must always be only one
  * thread - multiple will introduce a possible race (e.g. delete before create).
  */
+@SuppressWarnings("UnstableApiUsage")
 public class DoiUpdaterService extends AbstractIdleService {
 
   private final DoiUpdaterConfiguration config;
@@ -56,7 +57,7 @@ public class DoiUpdaterService extends AbstractIdleService {
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  protected void shutDown() {
     if (listener != null) {
       listener.close();
     }
