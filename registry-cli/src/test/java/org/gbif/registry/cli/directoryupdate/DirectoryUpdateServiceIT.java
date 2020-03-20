@@ -18,7 +18,6 @@ package org.gbif.registry.cli.directoryupdate;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
@@ -34,7 +33,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -84,19 +82,10 @@ public class DirectoryUpdateServiceIT {
 
   @Test
   public void testDirectoryUpdateAndCreate() {
-    ApplicationContext context =
-        SpringContextBuilder.create()
-            .withDbConfiguration(directoryUpdateConfig.db)
-            .withDirectoryConfiguration(directoryUpdateConfig.directory)
-            .withComponents(DirectoryUpdater.class)
-            .build();
+    DirectoryUpdateService directoryUpdateService =
+        new DirectoryUpdateService(directoryUpdateConfig);
 
-    NodeMapper nodeMapper = context.getBean(NodeMapper.class);
-
-    DirectoryUpdateService serviceUnderTest =
-        new DirectoryUpdateService(directoryUpdateConfig, context);
-
-    serviceUnderTest.startAsync();
+    directoryUpdateService.startAsync();
 
     // maybe a little bit weak
     // TODO: 20/03/2020 async service, use awaitility?
@@ -107,14 +96,15 @@ public class DirectoryUpdateServiceIT {
       fail();
     }
 
-    serviceUnderTest.stopAsync();
+    directoryUpdateService.stopAsync();
     try {
-      serviceUnderTest.awaitTerminated(1, TimeUnit.MINUTES);
+      directoryUpdateService.awaitTerminated(1, TimeUnit.MINUTES);
     } catch (TimeoutException e) {
       e.printStackTrace();
       fail();
     }
 
+    NodeMapper nodeMapper = directoryUpdateService.getContext().getBean(NodeMapper.class);
     List<org.gbif.api.model.registry.Node> registryNodes =
         nodeMapper.list(new PagingRequest(0, 1000));
     org.gbif.api.model.registry.Node togoNode = nodeMapper.get(TOGO_NODE_UUID);
