@@ -51,8 +51,9 @@ public class DirectoryUpdateService extends AbstractIdleService {
   private Integer startHour;
   private Integer startMinute;
 
-  private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  private ScheduledExecutorService scheduler;
   private DirectoryUpdater directoryUpdater;
+  private ApplicationContext context;
 
   public DirectoryUpdateService(DirectoryUpdateConfiguration config) {
     this(
@@ -61,13 +62,18 @@ public class DirectoryUpdateService extends AbstractIdleService {
             .withDbConfiguration(config.db)
             .withDirectoryConfiguration(config.directory)
             .withComponents(DirectoryUpdater.class)
-            .build());
+            .build(),
+        Executors.newScheduledThreadPool(1));
   }
 
   // separate method in order to have an option to configure context manually
-  public DirectoryUpdateService(DirectoryUpdateConfiguration config, ApplicationContext context) {
+  public DirectoryUpdateService(
+      DirectoryUpdateConfiguration config,
+      ApplicationContext context,
+      ScheduledExecutorService scheduler) {
+    this.context = context;
+    this.scheduler = scheduler;
     this.directoryUpdater = context.getBean(DirectoryUpdater.class);
-
     this.frequencyInHour = ObjectUtils.defaultIfNull(config.frequencyInHour, DEFAULT_FREQUENCY);
 
     if (StringUtils.contains(config.startTime, ":")) {
@@ -93,7 +99,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
       initialDelay = initialDelay + ChronoUnit.DAYS.getDuration().toMinutes();
     }
 
-    LOG.info("DirectoryUpdateService Starting in " + initialDelay + " minute(s)");
+    LOG.info("DirectoryUpdateService Starting in {} minute(s)", initialDelay);
 
     scheduler.scheduleAtFixedRate(
         () -> directoryUpdater.applyUpdates(),
@@ -105,5 +111,9 @@ public class DirectoryUpdateService extends AbstractIdleService {
   @Override
   protected void shutDown() {
     scheduler.shutdown();
+  }
+
+  public ApplicationContext getContext() {
+    return context;
   }
 }
