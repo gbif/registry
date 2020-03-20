@@ -141,6 +141,7 @@
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Registry (Spring Boot)</sonar.projectName>
+    <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
