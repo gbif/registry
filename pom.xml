@@ -141,6 +141,8 @@
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Registry (Spring Boot)</sonar.projectName>
+    <sonar.exclusions>**/*Stub.java</sonar.exclusions>
+    <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
     <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
 
     <!-- Plugin versions -->
