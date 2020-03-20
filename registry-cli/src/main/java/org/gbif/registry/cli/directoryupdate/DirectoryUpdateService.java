@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
  * update the registry data if required. This service will NOT remove nodes that are not available
  * in the Directory.
  */
+@SuppressWarnings("UnstableApiUsage")
 public class DirectoryUpdateService extends AbstractIdleService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DirectoryUpdateService.class);
@@ -46,41 +47,41 @@ public class DirectoryUpdateService extends AbstractIdleService {
   private static final int DEFAULT_START_MINUTE = 34;
   private static final int DEFAULT_FREQUENCY = 24;
 
-  private final Integer frequencyInHour;
-  private final Integer startHour;
-  private final Integer startMinute;
+  private Integer frequencyInHour;
+  private Integer startHour;
+  private Integer startMinute;
 
   private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private DirectoryUpdater directoryUpdater;
 
-  public DirectoryUpdateService(DirectoryUpdateConfiguration cfg) {
+  public DirectoryUpdateService(DirectoryUpdateConfiguration config) {
     this(
-        cfg,
+        config,
         SpringContextBuilder.create()
-            .withDbConfiguration(cfg.db)
-            .withDirectoryConfiguration(cfg.directory)
+            .withDbConfiguration(config.db)
+            .withDirectoryConfiguration(config.directory)
             .withComponents(DirectoryUpdater.class)
             .build());
   }
 
-  public DirectoryUpdateService(DirectoryUpdateConfiguration cfg, ApplicationContext injector) {
+  // separate method in order to have an option to configure context manually
+  public DirectoryUpdateService(DirectoryUpdateConfiguration config, ApplicationContext context) {
+    this.directoryUpdater = context.getBean(DirectoryUpdater.class);
 
-    directoryUpdater = injector.getBean(DirectoryUpdater.class);
+    this.frequencyInHour = ObjectUtils.defaultIfNull(config.frequencyInHour, DEFAULT_FREQUENCY);
 
-    this.frequencyInHour = ObjectUtils.defaultIfNull(cfg.frequencyInHour, DEFAULT_FREQUENCY);
-
-    if (StringUtils.contains(cfg.startTime, ":")) {
-      String[] timeParts = cfg.startTime.split(":");
-      startHour = NumberUtils.toInt(timeParts[0], DEFAULT_START_HOUR);
-      startMinute = NumberUtils.toInt(timeParts[1], DEFAULT_START_MINUTE);
+    if (StringUtils.contains(config.startTime, ":")) {
+      String[] timeParts = config.startTime.split(":");
+      this.startHour = NumberUtils.toInt(timeParts[0], DEFAULT_START_HOUR);
+      this.startMinute = NumberUtils.toInt(timeParts[1], DEFAULT_START_MINUTE);
     } else {
-      startHour = null;
-      startMinute = null;
+      this.startHour = null;
+      this.startMinute = null;
     }
   }
 
   @Override
-  protected void startUp() throws Exception {
+  protected void startUp() {
     long initialDelay = 0;
     if (startHour != null && startMinute != null) {
       LocalTime t = LocalTime.of(startHour, startMinute);
@@ -95,19 +96,14 @@ public class DirectoryUpdateService extends AbstractIdleService {
     LOG.info("DirectoryUpdateService Starting in " + initialDelay + " minute(s)");
 
     scheduler.scheduleAtFixedRate(
-        new Runnable() {
-          @Override
-          public void run() {
-            directoryUpdater.applyUpdates();
-          }
-        },
+        () -> directoryUpdater.applyUpdates(),
         initialDelay,
         frequencyInHour * (ChronoUnit.MINUTES.getDuration().getSeconds()),
         TimeUnit.MINUTES);
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  protected void shutDown() {
     scheduler.shutdown();
   }
 }

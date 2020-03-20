@@ -38,8 +38,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -48,7 +47,7 @@ import com.google.common.collect.Sets;
  * Main logic Only a limited set of fields are updated see {@link #shouldUpdateRegistryNode} and
  * {@link #fillRegistryNode}
  */
-@Service
+@Component
 public class DirectoryUpdater {
 
   private static final Logger LOG = LoggerFactory.getLogger(DirectoryUpdater.class);
@@ -63,7 +62,6 @@ public class DirectoryUpdater {
   private IdentifierMapper identifierMapper;
   private WithMyBatis withMyBatis;
 
-  @Autowired
   public DirectoryUpdater(
       ParticipantService directoryParticipantService,
       NodeService directoryNodeService,
@@ -131,12 +129,7 @@ public class DirectoryUpdater {
     }
   }
 
-  /**
-   * Create a Registry Node (in the database) from a Directory Participant and Node.
-   *
-   * @param participant
-   * @param directoryNode
-   */
+  /** Create a Registry Node (in the database) from a Directory Participant and Node. */
   private void createRegistryNode(Participant participant, @Nullable Node directoryNode) {
 
     org.gbif.api.model.registry.Node registryNode =
@@ -159,13 +152,7 @@ public class DirectoryUpdater {
         DIRECTORY_UPDATE_USER);
   }
 
-  /**
-   * Update a Registry Node (in the database) from a Directory Participant and Node.
-   *
-   * @param registryNode
-   * @param participant
-   * @param directoryNode
-   */
+  /** Update a Registry Node (in the database) from a Directory Participant and Node. */
   private void updateRegistryNode(
       org.gbif.api.model.registry.Node registryNode,
       Participant participant,
@@ -184,11 +171,6 @@ public class DirectoryUpdater {
   /**
    * Check if a registry Node requires an update. Must be in sync with {@link
    * #fillRegistryNode(org.gbif.api.model.registry.Node, Participant, Node)}
-   *
-   * @param registryNode
-   * @param participant
-   * @param directoryNode
-   * @return
    */
   private boolean shouldUpdateRegistryNode(
       org.gbif.api.model.registry.Node registryNode,
@@ -212,11 +194,6 @@ public class DirectoryUpdater {
    * Note: registryNode title and abbreviation are set from the Node from the Directory with a
    * fallback on Participant if no Node is available in the Directory. Must be in sync with {@link
    * #shouldUpdateRegistryNode(org.gbif.api.model.registry.Node, Participant, Node)}
-   *
-   * @param registryNode
-   * @param participant
-   * @param directoryNode
-   * @return
    */
   private org.gbif.api.model.registry.Node fillRegistryNode(
       org.gbif.api.model.registry.Node registryNode,
