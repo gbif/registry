@@ -36,7 +36,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   @Override
   protected void doRun() {
-    DoiSynchronizerService service = new DoiSynchronizerService(config);
-    service.doRun();
+    DoiSynchronizer synchronizer = new DoiSynchronizer(config);
+    synchronizer.doRun();
   }
 }

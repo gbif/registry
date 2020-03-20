@@ -15,17 +15,13 @@
  */
 package org.gbif.registry.cli.doisynchronizer;
 
-import java.util.Properties;
+import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 
-/** */
 public class PostalServiceConfiguration {
-
-  public static String SYNC_PREFIX = "sync";
-  private static String POSTAL_SERVICE_INFIX = ".postalservice.";
 
   @Parameter(names = "--postalservice-hostname")
   @NotNull
@@ -51,15 +47,15 @@ public class PostalServiceConfiguration {
   @NotNull
   public int threadcount;
 
-  public Properties toProperties() {
-    Properties props = new Properties();
-    String prefix = SYNC_PREFIX + POSTAL_SERVICE_INFIX;
-    props.setProperty(prefix + "hostname", hostname);
-    props.setProperty(prefix + "port", Integer.toString(port));
-    props.setProperty(prefix + "username", username);
-    props.setProperty(prefix + "password", password);
-    props.setProperty(prefix + "virtualhost", virtualhost);
-    props.setProperty(prefix + "threadcount", Integer.toString(threadcount));
-    return props;
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", PostalServiceConfiguration.class.getSimpleName() + "[", "]")
+        .add("hostname='" + hostname + "'")
+        .add("port=" + port)
+        .add("username='" + username + "'")
+        .add("password='" + password + "'")
+        .add("virtualhost='" + virtualhost + "'")
+        .add("threadcount=" + threadcount)
+        .toString();
   }
 }
