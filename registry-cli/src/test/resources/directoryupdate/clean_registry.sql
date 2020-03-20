@@ -6,6 +6,7 @@ DELETE FROM public.network_tag;
 DELETE FROM public.network_identifier;
 DELETE FROM public.network;
 
+DELETE FROM public.metadata;
 DELETE FROM public.dataset_contact;
 DELETE FROM public.dataset_endpoint;
 DELETE FROM public.dataset_comment;
