@@ -42,6 +42,7 @@ import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfigura
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -211,7 +212,8 @@ public class SpringContextBuilder {
         ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
-        FreeMarkerAutoConfiguration.class
+        FreeMarkerAutoConfiguration.class,
+        ArchaiusAutoConfiguration.class
       })
   @MapperScan("org.gbif.registry.persistence.mapper")
   @EnableConfigurationProperties
