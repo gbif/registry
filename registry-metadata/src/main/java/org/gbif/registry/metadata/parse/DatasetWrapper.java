@@ -398,7 +398,7 @@ public class DatasetWrapper {
 
     URI uri = null;
     try {
-      uri = (Strings.isNullOrEmpty(uriString)) ? null : URI.create(uriString);
+      uri = Strings.isNullOrEmpty(uriString) ? null : URI.create(uriString);
     } catch (IllegalArgumentException e) {
       LOG.error(
           "Bad URI found when parsing eml/dataset/intellectualRights/para/ulink@url attribute: {}",

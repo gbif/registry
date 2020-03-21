@@ -297,12 +297,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -332,12 +326,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-doi</artifactId>
         <version>${gbif-doi.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -377,12 +365,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-httputils</artifactId>
         <version>${gbif-httputils.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.occurrence</groupId>
