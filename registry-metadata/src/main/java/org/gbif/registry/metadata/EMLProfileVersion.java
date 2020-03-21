@@ -22,8 +22,8 @@ public enum EMLProfileVersion {
   GBIF_1_0_2("1.0.2", "http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd"),
   GBIF_1_1("1.1", "http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd");
 
-  private String version;
-  private String schemaLocation;
+  private final String version;
+  private final String schemaLocation;
 
   EMLProfileVersion(String version, String schemaLocation) {
     this.version = version;
