@@ -17,9 +17,9 @@ package org.gbif.registry.directory.client.config;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,7 +73,7 @@ class HierarchicalContract extends SpringMvcContract {
   public MethodMetadata parseAndValidateMetadata(final Class<?> targetType, final Method method) {
     final MethodMetadata methodMetadata = super.parseAndValidateMetadata(targetType, method);
 
-    final LinkedList<Class<?>> classHierarchy = new LinkedList<>();
+    final ArrayDeque<Class<?>> classHierarchy = new ArrayDeque<>();
     classHierarchy.add(targetType);
     this.findClass(targetType, method.getDeclaringClass(), classHierarchy);
     classHierarchy.stream()
@@ -81,7 +81,7 @@ class HierarchicalContract extends SpringMvcContract {
         .filter(Optional::isPresent)
         .map(Optional::get)
         .findFirst()
-        .ifPresent((path) -> methodMetadata.template().insert(0, path));
+        .ifPresent(path -> methodMetadata.template().target(path));
     return methodMetadata;
   }
 
@@ -121,7 +121,7 @@ class HierarchicalContract extends SpringMvcContract {
   private boolean findClass(
       final Class<?> currentClass,
       final Class<?> searchClass,
-      final LinkedList<Class<?>> classHierarchy) {
+      final ArrayDeque<Class<?>> classHierarchy) {
     if (currentClass == searchClass) {
       return true;
     }
