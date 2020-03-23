@@ -17,8 +17,8 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.model.LoggedUser;
-import org.gbif.registry.identity.model.LoggedUserWithToken;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
@@ -63,7 +63,7 @@ public class UserResource {
   @RequestMapping(
       value = "login",
       method = {RequestMethod.GET, RequestMethod.POST})
-  public ResponseEntity<LoggedUserWithToken> login(Authentication authentication) {
+  public ResponseEntity<ExtendedLoggedUser> login(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
@@ -81,14 +81,14 @@ public class UserResource {
     final String token = jwtIssuanceService.generateJwt(user.getUserName());
 
     // build response
-    LoggedUserWithToken response =
-        LoggedUserWithToken.from(user, token, identityService.listEditorRights(user.getUserName()));
+    ExtendedLoggedUser response =
+        ExtendedLoggedUser.from(user, token, identityService.listEditorRights(user.getUserName()));
 
     return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePrivate()).body(response);
   }
 
   @PostMapping("whoami")
-  public ResponseEntity<LoggedUserWithToken> whoAmI(Authentication authentication) {
+  public ResponseEntity<ExtendedLoggedUser> whoAmI(Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);
@@ -103,7 +103,7 @@ public class UserResource {
     return ResponseEntity.ok()
         .cacheControl(CacheControl.noCache().cachePrivate())
         .body(
-            LoggedUserWithToken.from(
+            ExtendedLoggedUser.from(
                 user, null, identityService.listEditorRights(user.getUserName())));
   }
 

@@ -16,24 +16,24 @@
 package org.gbif.registry.utils.cucumber;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.identity.model.LoggedUserWithToken;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 
 import java.util.Collections;
 import java.util.Map;
 
 import io.cucumber.datatable.TableEntryTransformer;
 
-public class LoggedUserWithTokenTableEntryTransformer
-    implements TableEntryTransformer<LoggedUserWithToken> {
+public class ExtendedLoggedUserTableEntryTransformer
+    implements TableEntryTransformer<ExtendedLoggedUser> {
 
   @Override
-  public LoggedUserWithToken transform(Map<String, String> entry) {
+  public ExtendedLoggedUser transform(Map<String, String> entry) {
     GbifUser user = new GbifUser();
     user.setFirstName(entry.get("firstName"));
     user.setLastName(entry.get("lastName"));
     user.setUserName(entry.get("userName"));
     user.setEmail(entry.get("email"));
 
-    return LoggedUserWithToken.from(user, null, Collections.emptyList());
+    return ExtendedLoggedUser.from(user, null, Collections.emptyList());
   }
 }

@@ -17,7 +17,7 @@ package org.gbif.registry.ws.resources.user;
 
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
-import org.gbif.registry.identity.model.LoggedUserWithToken;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.ws.resources.TestResource;
 import org.gbif.ws.security.GbifAuthServiceImpl;
 import org.gbif.ws.server.DelegatingServletInputStream;
@@ -81,7 +81,7 @@ public class UserTestSteps {
 
   private ResultActions result;
 
-  private LoggedUserWithToken loggedUserWithToken;
+  private ExtendedLoggedUser loggedUser;
 
   private GbifHttpServletRequestWrapper requestWrapper;
 
@@ -152,19 +152,18 @@ public class UserTestSteps {
   }
 
   @Then("user {string} is logged in")
-  public void checkUserLoggedIn(String username, LoggedUserWithToken expectedUser)
-      throws Exception {
+  public void checkUserLoggedIn(String username, ExtendedLoggedUser expectedUser) throws Exception {
     MvcResult mvcResult = result.andReturn();
 
     String contentAsString = mvcResult.getResponse().getContentAsString();
-    loggedUserWithToken = objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
+    loggedUser = objectMapper.readValue(contentAsString, ExtendedLoggedUser.class);
 
-    assertUserLogged(expectedUser, loggedUserWithToken);
+    assertUserLogged(expectedUser, loggedUser);
   }
 
   @Then("JWT is present in the response")
   public void checkJwtInResponse() {
-    assertThat(loggedUserWithToken.getToken(), not(isEmptyOrNullString()));
+    assertThat(loggedUser.getToken(), not(isEmptyOrNullString()));
   }
 
   @When("change password for user {string} from {string} to {string}")
@@ -263,7 +262,7 @@ public class UserTestSteps {
     result.andExpect(jsonPath("$.error").value(errorInformation));
   }
 
-  private void assertUserLogged(LoggedUserWithToken expected, LoggedUserWithToken actual) {
+  private void assertUserLogged(ExtendedLoggedUser expected, ExtendedLoggedUser actual) {
     assertEquals(expected.getUserName(), actual.getUserName());
     assertEquals(expected.getEmail(), actual.getEmail());
     assertEquals(expected.getFirstName(), actual.getFirstName());
