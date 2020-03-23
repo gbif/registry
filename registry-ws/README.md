@@ -23,6 +23,7 @@ Add this to local setting.xml (MacOS: `/Users/youruser/.m2/settings.xml`)
 
                 <appkeys.file>/Users/youruser/dev/appkeys.properties</appkeys.file>
                 <api.url>http://api.gbif.org/v1/</api.url>
+                <portal.url>https://www.gbif-dev.org</portal.url>
 
                 <registry.postalservice.enabled>false</registry.postalservice.enabled>
                 <registry.messaging.hostname>mq.gbif.org</registry.messaging.hostname>
