@@ -16,7 +16,7 @@
 package org.gbif.registry.cli.doiupdater;
 
 import org.gbif.common.messaging.MessageListener;
-import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
@@ -44,16 +44,14 @@ public class DoiUpdaterService extends AbstractIdleService {
     config.ganglia.start();
 
     ApplicationContext ctx =
-        SpringContextBuilder.create().withDbConfiguration(config.registry).build();
+        SpringContextBuilder.create().withDoiUpdaterConfiguration(config).build();
 
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     listener.listen(
         config.queueName,
         1,
         new DoiUpdateListener(
-            CommonBuilder.createRestJsonApiDataCiteService(config.datacite),
-            ctx.getBean(DoiMapper.class),
-            config.timeToRetryInMs));
+            ctx.getBean(DoiService.class), ctx.getBean(DoiMapper.class), config.timeToRetryInMs));
   }
 
   @Override
