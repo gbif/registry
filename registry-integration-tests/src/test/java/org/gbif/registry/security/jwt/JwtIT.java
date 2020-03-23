@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.security.jwt;
 
-import org.gbif.registry.identity.model.LoggedUserWithToken;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -147,8 +147,8 @@ public class JwtIT {
     final MvcResult result = resultActions.andReturn();
     final String contentAsString = result.getResponse().getContentAsString();
 
-    final LoggedUserWithToken loggedUserWithToken =
-        objectMapper.readValue(contentAsString, LoggedUserWithToken.class);
-    return loggedUserWithToken.getToken();
+    final ExtendedLoggedUser loggedUser =
+        objectMapper.readValue(contentAsString, ExtendedLoggedUser.class);
+    return loggedUser.getToken();
   }
 }

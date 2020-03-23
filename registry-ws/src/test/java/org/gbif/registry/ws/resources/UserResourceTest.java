@@ -16,7 +16,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
-import org.gbif.registry.identity.model.LoggedUserWithToken;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
 import org.gbif.ws.security.GbifAuthentication;
@@ -50,7 +50,7 @@ public class UserResourceTest {
     when(mockAuth.getName()).thenReturn("wrong_user");
 
     // WHEN
-    ResponseEntity<LoggedUserWithToken> response = userResource.login(mockAuth);
+    ResponseEntity<ExtendedLoggedUser> response = userResource.login(mockAuth);
 
     // THEN
     assertEquals(400, response.getStatusCode().value());
@@ -65,7 +65,7 @@ public class UserResourceTest {
     when(mockAuth.getName()).thenReturn("wrong_user");
 
     // WHEN
-    ResponseEntity<LoggedUserWithToken> response = userResource.whoAmI(mockAuth);
+    ResponseEntity<ExtendedLoggedUser> response = userResource.whoAmI(mockAuth);
 
     // THEN
     assertEquals(400, response.getStatusCode().value());

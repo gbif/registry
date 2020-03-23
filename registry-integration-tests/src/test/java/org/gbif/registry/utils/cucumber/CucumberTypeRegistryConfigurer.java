@@ -33,7 +33,7 @@ import org.gbif.registry.domain.ws.LegacyEndpoint;
 import org.gbif.registry.domain.ws.LegacyEndpointResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
-import org.gbif.registry.identity.model.LoggedUserWithToken;
+import org.gbif.registry.identity.model.ExtendedLoggedUser;
 
 import java.util.Locale;
 
@@ -57,8 +57,7 @@ public class CucumberTypeRegistryConfigurer implements TypeRegistryConfigurer {
     typeRegistry.defineDataTableType(
         new DataTableType(Endpoint.class, new EndpointTableEntryTransformer()));
     typeRegistry.defineDataTableType(
-        new DataTableType(
-            LoggedUserWithToken.class, new LoggedUserWithTokenTableEntryTransformer()));
+        new DataTableType(ExtendedLoggedUser.class, new ExtendedLoggedUserTableEntryTransformer()));
     typeRegistry.defineDataTableType(
         new DataTableType(Installation.class, new InstallationTableEntryTransformer()));
     typeRegistry.defineDataTableType(

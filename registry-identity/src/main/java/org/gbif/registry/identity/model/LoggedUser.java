@@ -17,13 +17,12 @@ package org.gbif.registry.identity.model;
 
 import org.gbif.api.model.common.GbifUser;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
 /**
- * Immutable user representation returned by the WebService. Contains only what we need to expose
- * via WebService response.
+ * User representation returned by the WebService. Contains only what we need to expose via
+ * WebService response.
  */
 public class LoggedUser {
 
@@ -31,7 +30,7 @@ public class LoggedUser {
   private String firstName;
   private String lastName;
   private String email;
-  private final Map<String, String> settings = Maps.newHashMap();
+  private final Map<String, String> settings = new HashMap<>();
 
   public static LoggedUser from(GbifUser user) {
     if (user == null) {
@@ -43,7 +42,7 @@ public class LoggedUser {
   /** Only used for json deserialization */
   public LoggedUser() {}
 
-  private LoggedUser(GbifUser user) {
+  protected LoggedUser(GbifUser user) {
     userName = user.getUserName();
     firstName = user.getFirstName();
     lastName = user.getLastName();
