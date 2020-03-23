@@ -18,9 +18,13 @@ package org.gbif.registry.cli.common.spring;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
+import org.gbif.doi.service.DoiService;
+import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
+import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.messaging.RegistryRabbitConfiguration;
 import org.gbif.registry.ws.config.MyBatisConfiguration;
@@ -69,6 +73,8 @@ public class SpringContextBuilder {
 
   private DoiSynchronizerConfiguration doiSynchronizerConfiguration;
 
+  private DataCiteConfiguration dataCiteConfiguration;
+
   private SpringContextBuilder() {}
 
   public static SpringContextBuilder create() {
@@ -86,10 +92,18 @@ public class SpringContextBuilder {
     return this;
   }
 
+  public SpringContextBuilder withDoiUpdaterConfiguration(
+      DoiUpdaterConfiguration doiUpdaterConfiguration) {
+    this.dbConfiguration = doiUpdaterConfiguration.registry;
+    this.dataCiteConfiguration = doiUpdaterConfiguration.datacite;
+    return this;
+  }
+
   public SpringContextBuilder withDoiSynchronizerConfiguration(
       DoiSynchronizerConfiguration doiSynchronizerConfiguration) {
     this.doiSynchronizerConfiguration = doiSynchronizerConfiguration;
     this.dbConfiguration = doiSynchronizerConfiguration.registry;
+    this.dataCiteConfiguration = doiSynchronizerConfiguration.datacite;
     return this;
   }
 
@@ -141,6 +155,13 @@ public class SpringContextBuilder {
 
       ctx.registerBean("secretKeySigningService", SigningService.class, () -> signingService);
       ctx.register(Md5EncodeServiceImpl.class);
+    }
+
+    if (dataCiteConfiguration != null) {
+      ctx.registerBean(
+          "doiService",
+          DoiService.class,
+          () -> CommonBuilder.createRestJsonApiDataCiteService(dataCiteConfiguration));
     }
 
     if (doiSynchronizerConfiguration != null) {
