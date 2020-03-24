@@ -264,6 +264,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
+        <artifactId>dwc-api</artifactId>
+        <version>${gbif-dwc-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
       </dependency>
