@@ -12,18 +12,11 @@
   <url>http://sites.gbif.org/registry/registry-metadata</url>
   <description>Support for parsing and writing EML and other metadata formats to our dataset class</description>
 
-
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
   </properties>
 
   <dependencies>
-    <!-- Spring dependencies -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
-    </dependency>
-
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>
@@ -52,13 +45,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
-
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
