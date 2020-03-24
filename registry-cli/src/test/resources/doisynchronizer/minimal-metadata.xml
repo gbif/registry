@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://datacite.org/schema/kernel-4" xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4.0/metadata.xsd">
+  <identifier identifierType="DOI">10.21373/GBIF.1417618682118093000</identifier>
+  <creators>
+    <creator>
+      <creatorName xml:lang="en">Mike</creatorName>
+    </creator>
+  </creators>
+  <titles>
+    <title xml:lang="en">Test metadata</title>
+  </titles>
+  <publisher xml:lang="en">GBIF</publisher>
+  <publicationYear>2020</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset"/>
+</resource>

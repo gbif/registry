@@ -18,6 +18,7 @@ package org.gbif.registry.cli.common.spring;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
+import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.DataCiteConfiguration;
@@ -75,6 +76,8 @@ public class SpringContextBuilder {
 
   private DataCiteConfiguration dataCiteConfiguration;
 
+  private MessagingConfiguration messagingConfiguration;
+
   private SpringContextBuilder() {}
 
   public static SpringContextBuilder create() {
@@ -104,6 +107,7 @@ public class SpringContextBuilder {
     this.doiSynchronizerConfiguration = doiSynchronizerConfiguration;
     this.dbConfiguration = doiSynchronizerConfiguration.registry;
     this.dataCiteConfiguration = doiSynchronizerConfiguration.datacite;
+    this.messagingConfiguration = doiSynchronizerConfiguration.messaging;
     return this;
   }
 
@@ -132,6 +136,22 @@ public class SpringContextBuilder {
       ctx.registerBean(DbConfiguration.class, () -> dbConfiguration);
       ctx.register(MybatisAutoConfiguration.class);
       packages.add("org.gbif.registry.persistence");
+    }
+
+    if (messagingConfiguration != null) {
+      ctx.getEnvironment()
+          .getPropertySources()
+          .addLast(
+              new MapPropertySource(
+                  "rabbitConfigProperties",
+                  ImmutableMap.of(
+                      "spring.rabbitmq.host", messagingConfiguration.host,
+                      "spring.rabbitmq.port", messagingConfiguration.port,
+                      "spring.rabbitmq.username", messagingConfiguration.username,
+                      "spring.rabbitmq.password", messagingConfiguration.password,
+                      "spring.rabbitmq.virtualHost", messagingConfiguration.virtualHost)));
+
+      ctx.registerBean(RegistryRabbitConfiguration.class);
     }
 
     if (!packages.isEmpty()) {
@@ -175,27 +195,8 @@ public class SpringContextBuilder {
                       "portal.url", doiSynchronizerConfiguration.portalurl,
                       "doi.prefix", DOI.GBIF_PREFIX)));
 
-      // configure datacite
       ctx.register(BaseIdentityAccessService.class);
       ctx.register(OccurrenceDownloadResource.class);
-
-      // configure postal service
-      ctx.getEnvironment()
-          .getPropertySources()
-          .addLast(
-              new MapPropertySource(
-                  "rabbitConfigProperties",
-                  ImmutableMap.of(
-                      "spring.rabbitmq.host", doiSynchronizerConfiguration.postalservice.hostname,
-                      "spring.rabbitmq.port", doiSynchronizerConfiguration.postalservice.port,
-                      "spring.rabbitmq.username",
-                          doiSynchronizerConfiguration.postalservice.username,
-                      "spring.rabbitmq.password",
-                          doiSynchronizerConfiguration.postalservice.password,
-                      "spring.rabbitmq.virtualHost",
-                          doiSynchronizerConfiguration.postalservice.virtualhost)));
-
-      ctx.registerBean(RegistryRabbitConfiguration.class);
     }
 
     if (componentClasses != null) {

@@ -23,10 +23,20 @@ import org.kohsuke.MetaInfServices;
 @MetaInfServices(Command.class)
 public class DoiSynchronizerCommand extends BaseCommand {
 
-  private final DoiSynchronizerConfiguration config = new DoiSynchronizerConfiguration();
+  private final DoiSynchronizerConfiguration config;
+  private DoiSynchronizer synchronizer;
 
   public DoiSynchronizerCommand() {
     super("doi-synchronizer");
+    this.config = new DoiSynchronizerConfiguration();
+    synchronizer = new DoiSynchronizer(config);
+  }
+
+  // constructor for tests
+  public DoiSynchronizerCommand(DoiSynchronizerConfiguration config) {
+    super("doi-synchronizer");
+    this.config = config;
+    synchronizer = new DoiSynchronizer(config);
   }
 
   @Override
@@ -36,7 +46,10 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   @Override
   protected void doRun() {
-    DoiSynchronizer synchronizer = new DoiSynchronizer(config);
     synchronizer.doRun();
+  }
+
+  public DoiSynchronizer getSynchronizer() {
+    return synchronizer;
   }
 }
