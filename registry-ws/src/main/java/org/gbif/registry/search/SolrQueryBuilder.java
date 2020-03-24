@@ -25,12 +25,13 @@ import org.gbif.common.search.solr.QueryUtils;
 import org.gbif.common.search.solr.SearchDateUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.FacetParams;
@@ -164,7 +165,7 @@ public class SolrQueryBuilder {
    * @throws IllegalArgumentException if request is bad, e.g. wrongly typed data for given filter parameters
    */
   private static void setFacetFilterQuery(SearchRequest<DatasetSearchParameter> request, SolrQuery solrQuery) throws IllegalArgumentException {
-    Multimap<DatasetSearchParameter, String> params = request.getParameters();
+    Map<DatasetSearchParameter, Set<String>> params = request.getParameters();
     if (params != null) {
       for (DatasetSearchParameter param : params.keySet()) {
         String solrField = FIELDS_MAPPING.get(param);
