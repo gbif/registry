@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.cli.doisynchronizer;
 
+import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 
@@ -44,7 +45,7 @@ public class DoiSynchronizerConfiguration {
   public DataCiteConfiguration datacite = new DataCiteConfiguration();
 
   @ParametersDelegate @Valid @NotNull
-  public PostalServiceConfiguration postalservice = new PostalServiceConfiguration();
+  public MessagingConfiguration messaging = new MessagingConfiguration();
 
   @Parameter(names = "--doi")
   @NotNull
@@ -77,7 +78,7 @@ public class DoiSynchronizerConfiguration {
         .add("apiRoot='" + apiRoot + "'")
         .add("registry=" + registry)
         .add("datacite=" + datacite)
-        .add("postalservice=" + postalservice)
+        .add("messaging=" + messaging)
         .add("doi='" + doi + "'")
         .add("doiList='" + doiList + "'")
         .add("fixDOI=" + fixDOI)

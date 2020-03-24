@@ -23,9 +23,11 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
-import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.doi.util.MetadataUtils;
 import org.gbif.registry.cli.common.SingleColumnFileReader;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
@@ -46,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -60,11 +64,10 @@ public class DoiSynchronizer {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiSynchronizer.class);
 
+  private ApplicationContext context;
   private final DoiSynchronizerConfiguration config;
-
   private final DoiMapper doiMapper;
   private final DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategy;
-
   private final DatasetMapper datasetMapper;
   private final OccurrenceDownloadMapper downloadMapper;
   private final DoiService dataCiteService;
@@ -83,13 +86,13 @@ public class DoiSynchronizer {
 
   public DoiSynchronizer(DoiSynchronizerConfiguration config, ApplicationContext context) {
     this.config = config;
+    this.context = context;
     doiMapper = context.getBean(DoiMapper.class);
     dataCiteDoiHandlerStrategy = context.getBean(DataCiteDoiHandlerStrategy.class);
     datasetMapper = context.getBean(DatasetMapper.class);
     downloadMapper = context.getBean(OccurrenceDownloadMapper.class);
     userMapper = context.getBean(UserMapper.class);
-
-    dataCiteService = CommonBuilder.createRestJsonApiDataCiteService(config.datacite);
+    dataCiteService = context.getBean(DoiService.class);
   }
 
   /** Runs the actual service */
@@ -100,11 +103,8 @@ public class DoiSynchronizer {
         handleDOI(config.doi);
       } // DOI list
       else if (StringUtils.isNotBlank(config.doiList)) {
-        List<DOI> doiList =
-            SingleColumnFileReader.readFile(config.doiList, SingleColumnFileReader::toDoi);
-        for (DOI doi : doiList) {
-          handleDOI(doi);
-        }
+        SingleColumnFileReader.readFile(config.doiList, SingleColumnFileReader::toDoi)
+            .forEach(this::handleDOI);
       } else if (config.listFailedDOI) {
         printFailedDOI();
       }
@@ -117,7 +117,6 @@ public class DoiSynchronizer {
    * messages using System.out.
    */
   private boolean validateDOIParameters() {
-
     if (config.listFailedDOI
         && (StringUtils.isNotBlank(config.doi)
             || StringUtils.isNotBlank(config.doiList)
@@ -202,12 +201,12 @@ public class DoiSynchronizer {
       return false;
     }
 
-    switch (doiType) {
-      case DATASET:
-        return reapplyDatasetDOIStrategy(doi);
-      case DOWNLOAD:
-        return reapplyDownloadDOIStrategy(doi);
+    if (doiType == DoiType.DATASET) {
+      return reapplyDatasetDOIStrategy(doi);
+    } else if (doiType == DoiType.DOWNLOAD) {
+      return reapplyDownloadDOIStrategy(doi);
     }
+
     return false;
   }
 
@@ -310,14 +309,28 @@ public class DoiSynchronizer {
    * Datacite.
    */
   private boolean compareMetadataWithDatacite(DOI doi) {
-    String registryDoiMetadata = doiMapper.getMetadata(doi);
-    String dataciteDoiMetadata = null;
+    String registryDoiMetadataStr = doiMapper.getMetadata(doi);
+    String dataCiteDoiMetadataStr = null;
     try {
-      dataciteDoiMetadata = dataCiteService.getMetadata(doi);
+      dataCiteDoiMetadataStr = dataCiteService.getMetadata(doi);
     } catch (DoiException e) {
       LOG.error("Can't compare DOI metadata", e);
     }
-    return StringUtils.equals(registryDoiMetadata, dataciteDoiMetadata);
+
+    try {
+      DataCiteMetadata registryDoiMetadata =
+          registryDoiMetadataStr != null ? DataCiteValidator.fromXml(registryDoiMetadataStr) : null;
+      DataCiteMetadata dataCiteDoiMetadata =
+          dataCiteDoiMetadataStr != null ? DataCiteValidator.fromXml(dataCiteDoiMetadataStr) : null;
+
+      // Use this method unless it's always false because the DataCite store DOI in uppercase a
+      // nd the registry store in lower case
+      return MetadataUtils.equal(registryDoiMetadata, dataCiteDoiMetadata);
+    } catch (JAXBException e) {
+      LOG.error("Invalid metadata", e);
+    }
+
+    return false;
   }
 
   /** Get the list of failed DOI for a DoiType. */
@@ -348,14 +361,10 @@ public class DoiSynchronizer {
 
     DoiType doiType = doiMapper.getType(doi);
     if (doiType != null) {
-      switch (doiType) {
-        case DATASET:
-          doiGbifDataciteDiagnostic = createGbifDOIDatasetDiagnostic(doi);
-          break;
-        case DOWNLOAD:
-          doiGbifDataciteDiagnostic = createGbifDOIDownloadDiagnostic(doi);
-          break;
-        default:
+      if (doiType == DoiType.DATASET) {
+        doiGbifDataciteDiagnostic = createGbifDOIDatasetDiagnostic(doi);
+      } else if (doiType == DoiType.DOWNLOAD) {
+        doiGbifDataciteDiagnostic = createGbifDOIDownloadDiagnostic(doi);
       }
     }
 
@@ -409,5 +418,9 @@ public class DoiSynchronizer {
     downloadDiagnosticResult.setDownload(download);
 
     return downloadDiagnosticResult;
+  }
+
+  public ApplicationContext getContext() {
+    return context;
   }
 }
