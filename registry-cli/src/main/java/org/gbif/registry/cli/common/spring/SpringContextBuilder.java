@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.cli.common.spring;
 
-import org.gbif.api.model.common.DOI;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.config.MessagingConfiguration;
@@ -193,7 +192,7 @@ public class SpringContextBuilder {
                   ImmutableMap.of(
                       "api.root.url", doiSynchronizerConfiguration.apiRoot,
                       "portal.url", doiSynchronizerConfiguration.portalurl,
-                      "doi.prefix", DOI.GBIF_PREFIX)));
+                      "doi.prefix", doiSynchronizerConfiguration.doiPrefix)));
 
       ctx.register(BaseIdentityAccessService.class);
       ctx.register(OccurrenceDownloadResource.class);
