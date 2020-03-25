@@ -150,6 +150,11 @@ public class SpringContextBuilder {
                       "spring.rabbitmq.password", messagingConfiguration.password,
                       "spring.rabbitmq.virtualHost", messagingConfiguration.virtualHost)));
 
+      ctx.getEnvironment()
+          .getPropertySources()
+          .addLast(
+              new MapPropertySource(
+                  "messagingConfigProperties", ImmutableMap.of("message.enabled", true)));
       ctx.registerBean(RegistryRabbitConfiguration.class);
     }
 
