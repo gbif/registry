@@ -1,5 +1,6 @@
 apiRoot: ${api.url}
 portalurl: ${portal.url}
+doiPrefix: 10.21373
 registry:
   serverName: ${registry-it.db.host}
   databaseName: ${registry-it.db.name}
