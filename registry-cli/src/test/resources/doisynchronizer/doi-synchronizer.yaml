@@ -15,4 +15,4 @@ messaging:
   port: ${registry.messaging.port}
   username: ${registry.messaging.username}
   password: ${registry.messaging.password}
-  virtualHost: ${registry.messaging.virtualhost}
+  virtualHost: /test
