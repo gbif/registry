@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://datacite.org/schema/kernel-4" xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4.0/metadata.xsd">
-  <identifier identifierType="DOI">10.21373/GBIF.1417618682118093000</identifier>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <identifier identifierType="DOI">10.21373/gbif.1584932725458</identifier>
   <creators>
     <creator>
-      <creatorName xml:lang="en">Mike</creatorName>
+      <creatorName>CLI TEST</creatorName>
+      <nameIdentifier nameIdentifierScheme="GBIF" schemeURI="gbif.org">CLI TEST</nameIdentifier>
     </creator>
   </creators>
   <titles>
-    <title xml:lang="en">Test metadata</title>
+    <title>DatasetSynchronizer test dataset</title>
   </titles>
-  <publisher xml:lang="en">GBIF</publisher>
+  <publisher>The BGBM</publisher>
   <publicationYear>2020</publicationYear>
-  <resourceType resourceTypeGeneral="Dataset"/>
+  <resourceType resourceTypeGeneral="Dataset">OCCURRENCE</resourceType>
+  <dates>
+    <date dateType="Created">2020-02-22</date>
+    <date dateType="Updated">2020-02-21</date>
+  </dates>
+  <language>dan</language>
+  <alternateIdentifiers>
+    <alternateIdentifier alternateIdentifierType="UUID">38f06820-08c5-42b2-94f6-47cc3e83a54a</alternateIdentifier>
+  </alternateIdentifiers>
+  <relatedIdentifiers/>
+  <rightsList>
+    <rights rightsURI="http://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract">Test dataset</description>
+  </descriptions>
 </resource>
