@@ -1,4 +1,4 @@
-queueName: doi_updater
+queueName: registry-doi
 registry:
   serverName: ${registry-it-spring.db.host}
   databaseName: ${registry-it-spring.db.name}
@@ -7,4 +7,4 @@ registry:
 datacite:
   username: ${datacite.user}
   password: ${datacite.password}
-  api: https://api.test.datacite.org/
+  api: ${datacite.api.base.url}

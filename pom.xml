@@ -99,11 +99,12 @@
     <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.44.4-jackson2-SNAPSHOT</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
-    <gbif-api.version>0.106-jackson2-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.108-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.16-jackson2-SNAPSHOT</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>
     <commons-io.version>2.5</commons-io.version>
+    <commons-logging.version>1.2</commons-logging.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <jjwt.version>0.9.1</jjwt.version>
     <guava.version>17.0</guava.version>
@@ -426,6 +427,11 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <version>${commons-logging.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
