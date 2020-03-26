@@ -18,7 +18,7 @@
 
   <scm>
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
-    <url>https://github.com/gbif/registryt</url>
+    <url>https://github.com/gbif/registry</url>
     <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
@@ -141,7 +141,7 @@
     <mail.port/>
 
     <!-- Sonar -->
-    <sonar.projectName>GBIF Registry (Spring Boot)</sonar.projectName>
+    <sonar.projectName>GBIF Registry</sonar.projectName>
     <sonar.exclusions>**/*Stub.java</sonar.exclusions>
     <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
     <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
