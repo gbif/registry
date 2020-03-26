@@ -31,7 +31,6 @@ DELETE FROM public.organization_tag;
 DELETE FROM public.organization_identifier;
 DELETE FROM public.organization;
 
-DELETE FROM public.node_contact;
 DELETE FROM public.node_endpoint;
 DELETE FROM public.node_comment;
 DELETE FROM public.node_machine_tag;
