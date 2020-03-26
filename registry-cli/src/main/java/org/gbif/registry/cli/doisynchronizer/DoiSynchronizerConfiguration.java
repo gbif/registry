@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.cli.doisynchronizer;
 
+import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 
@@ -29,14 +30,16 @@ import com.beust.jcommander.ParametersDelegate;
 public class DoiSynchronizerConfiguration {
 
   @Parameter(names = "--portal-url")
-  @Valid
   @NotNull
   public String portalurl;
 
   @Parameter(names = "--api-root")
-  @Valid
   @NotNull
   public String apiRoot;
+
+  @Parameter(names = "--doi-prefix")
+  @NotNull
+  public String doiPrefix;
 
   @Valid @NotNull public DbConfiguration registry = new DbConfiguration();
 
@@ -44,7 +47,7 @@ public class DoiSynchronizerConfiguration {
   public DataCiteConfiguration datacite = new DataCiteConfiguration();
 
   @ParametersDelegate @Valid @NotNull
-  public PostalServiceConfiguration postalservice = new PostalServiceConfiguration();
+  public MessagingConfiguration messaging = new MessagingConfiguration();
 
   @Parameter(names = "--doi")
   @NotNull
@@ -55,29 +58,26 @@ public class DoiSynchronizerConfiguration {
   public String doiList = "";
 
   @Parameter(names = {"--fix-doi"})
-  @Valid
   public boolean fixDOI = false;
 
   @Parameter(names = {"--skip-dia"})
-  @Valid
   public boolean skipDiagnostic = false;
 
   @Parameter(names = {"--export"})
-  @Valid
   public boolean export = false;
 
   @Parameter(names = {"--list-failed-doi"})
-  @Valid
   public boolean listFailedDOI = false;
 
   @Override
   public String toString() {
     return new StringJoiner(", ", DoiSynchronizerConfiguration.class.getSimpleName() + "[", "]")
         .add("portalurl='" + portalurl + "'")
+        .add("doiPrefix='" + doiPrefix + "'")
         .add("apiRoot='" + apiRoot + "'")
         .add("registry=" + registry)
         .add("datacite=" + datacite)
-        .add("postalservice=" + postalservice)
+        .add("messaging=" + messaging)
         .add("doi='" + doi + "'")
         .add("doiList='" + doiList + "'")
         .add("fixDOI=" + fixDOI)

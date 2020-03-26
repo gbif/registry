@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.cli.util;
 
+import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.utils.file.FileUtils;
 
 import java.io.IOException;
@@ -30,6 +31,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public final class RegistryCliUtils {
 
   private RegistryCliUtils() {}
+
+  /** Prepare JDBC Connection. */
+  public static Connection prepareConnection(DbConfiguration dbConfiguration) throws Exception {
+    return prepareConnection(
+        dbConfiguration.serverName,
+        dbConfiguration.databaseName,
+        dbConfiguration.user,
+        dbConfiguration.password);
+  }
 
   /** Prepare JDBC Connection. */
   public static Connection prepareConnection(
