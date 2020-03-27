@@ -44,8 +44,8 @@ import org.gbif.registry.persistence.mapper.UserMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.xml.bind.JAXBException;
@@ -336,23 +336,12 @@ public class DoiSynchronizer {
   /** Get the list of failed DOI for a DoiType. */
   private void printFailedDOI() {
     // get all the DOI with the FAILED status. Note that they are all GBIF assigned DOI.
-
-    // dataset first
-    List<Map<String, Object>> failedDoiList =
-        doiMapper.list(DoiStatus.FAILED, DoiType.DATASET, null);
-    System.out.println("Dateset DOI with status FAILED:");
-    for (Map<String, Object> failedDoi : failedDoiList) {
-      DOI doi = new DOI((String) failedDoi.get("doi"));
-      System.out.println(doi.getDoiName());
-    }
-
-    // Downloads
-    failedDoiList = doiMapper.list(DoiStatus.FAILED, DoiType.DOWNLOAD, null);
-    System.out.println("Download DOI with status FAILED:");
-    for (Map<String, Object> failedDoi : failedDoiList) {
-      DOI doi = new DOI((String) failedDoi.get("doi"));
-      System.out.println(doi.getDoiName());
-    }
+    doiMapper
+        .list(DoiStatus.FAILED, null, null)
+        .forEach(
+            map ->
+                System.out.println(
+                    MessageFormat.format("{0} ({1})", map.get("doi"), map.get("type"))));
   }
 
   /** Check the status of a DOI between GBIF and Datacite. */
