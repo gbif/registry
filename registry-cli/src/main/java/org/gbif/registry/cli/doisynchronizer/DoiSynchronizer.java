@@ -56,6 +56,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import static org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfigurationValidator.isConfigurationValid;
+
 /**
  * This service allows to print a report of DOI and/or try to fix them by synchronizing with
  * Datacite. This service is mainly design to be run manually and uses System.out.
@@ -97,7 +99,7 @@ public class DoiSynchronizer {
 
   /** Runs the actual service */
   public void doRun() {
-    if (validateDOIParameters()) {
+    if (isConfigurationValid(config)) {
       // Single DOI
       if (StringUtils.isNotBlank(config.doi)) {
         handleDOI(config.doi);
@@ -109,45 +111,6 @@ public class DoiSynchronizer {
         printFailedDOI();
       }
     }
-  }
-
-  /**
-   * Check the current status of the DOI related configurations from the instance of {@link
-   * DoiSynchronizerConfiguration}. The method is intended to be used on command line and will print
-   * messages using System.out.
-   */
-  private boolean validateDOIParameters() {
-    if (config.listFailedDOI
-        && (StringUtils.isNotBlank(config.doi)
-            || StringUtils.isNotBlank(config.doiList)
-            || config.export
-            || config.fixDOI)) {
-      System.out.println(" --list-failed-doi must be used alone");
-      return false;
-    }
-
-    if (StringUtils.isNotBlank(config.doi) && StringUtils.isNotBlank(config.doiList)) {
-      System.out.println(" --doi and --doi-list can not be used at the same time");
-      return false;
-    }
-
-    if (config.export && StringUtils.isNotBlank(config.doiList)) {
-      System.out.println(" --export can not be used with --doi-list");
-      return false;
-    }
-
-    if (StringUtils.isNotBlank(config.doi)) {
-      if (!DOI.isParsable(config.doi)) {
-        System.out.println(config.doi + " is not a valid DOI");
-        return false;
-      }
-    } else if (StringUtils.isNotBlank(config.doiList)) {
-      if (!new File(config.doiList).exists()) {
-        System.out.println("DOI list can not be found: " + config.doiList);
-        return false;
-      }
-    }
-    return true;
   }
 
   /** Handle a single DOIm provided as String */
