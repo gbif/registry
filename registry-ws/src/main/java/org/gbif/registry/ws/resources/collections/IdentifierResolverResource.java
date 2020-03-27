@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.Trim;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 
@@ -32,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
@@ -45,14 +47,11 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
 @RequestMapping(GRSCICOLL_PATH + "/resolve")
 public class IdentifierResolverResource {
 
-  // must match the service request mapping parameter
-  private static final String RESOLVE_PARAM = "resolve/";
-
   // resolve only the following ones: grbio.org, biocol.org, grscicoll.org, usfsc.grscicoll.org
   // url may start with an environment string (env or uat)
   private static final Pattern PATTERN =
       Pattern.compile(
-          "(dev\\.|uat\\.)*(grbio\\.org|biocol\\.org.*|grscicoll\\.org.*|usfsc\\.grscicoll\\.org.*)");
+          "(dev\\.|uat\\.)*(.*[grbio\\.org|biocol\\.org|grscicoll\\.org|usfsc\\.grscicoll\\.org].*)");
 
   private final String grscicollPortalUrl;
   private final CollectionMapper collectionMapper;
@@ -67,17 +66,12 @@ public class IdentifierResolverResource {
     this.institutionMapper = institutionMapper;
   }
 
-  @GetMapping(value = "**")
-  public ResponseEntity<Void> resolve(HttpServletRequest request) {
-    final String fullRequestURI = request.getRequestURI();
+  @GetMapping
+  public ResponseEntity<Void> resolve(
+      HttpServletRequest request, @RequestParam("identifier") @Trim String identifier) {
+    final Matcher matcher = PATTERN.matcher(identifier);
 
-    // url can probably begin with 'v1' or other
-    final String requestURI =
-        fullRequestURI.substring(fullRequestURI.indexOf(RESOLVE_PARAM) + RESOLVE_PARAM.length());
-
-    final Matcher matcher = PATTERN.matcher(requestURI);
-
-    if (PATTERN.matcher(requestURI).matches()) {
+    if (matcher.matches()) {
       // we just ignore group(1) env
       return processIdentifier(matcher.group(2));
     }
