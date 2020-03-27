@@ -16,7 +16,7 @@
   </select>
 
   <select id="list" resultType="map" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT doi, target, status, target
+    SELECT doi, target, status, target, type
     FROM gbif_doi
     <where>
       <if test="status != null">

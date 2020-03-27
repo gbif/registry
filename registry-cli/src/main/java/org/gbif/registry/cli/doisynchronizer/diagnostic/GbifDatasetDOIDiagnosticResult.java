@@ -106,7 +106,7 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
 
     if (isLinkedToASingleDataset()) {
       boolean isCurrentDOI = isCurrentDOI();
-      contextInformation.add("Is current DOI in Dataset table?: " + isCurrentDOI);
+      contextInformation.add("Is DOI (" + doi + ") in Dataset table?: " + isCurrentDOI);
       if (!isCurrentDOI) {
         if (getRelatedDataset().getDoi() != null) {
           contextInformation.add("Current DOI: " + getRelatedDataset().getDoi().getDoiName());

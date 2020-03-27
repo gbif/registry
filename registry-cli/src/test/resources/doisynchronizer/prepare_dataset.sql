@@ -38,8 +38,17 @@ DELETE FROM public.node_tag;
 DELETE FROM public.node_identifier;
 DELETE FROM public.node;
 
+DELETE FROM public.contact;
+DELETE FROM public.comment;
+DELETE FROM public.tag;
+DELETE FROM public.machine_tag;
+DELETE FROM public.endpoint;
 DELETE FROM public.identifier;
+
 DELETE FROM public.gbif_doi;
+
+DELETE FROM public.editor_rights;
+
 
 
 INSERT INTO public.node (key, gbif_region, continent, title, country, created_by, modified_by,
@@ -72,20 +81,78 @@ VALUES ('1e9136f0-78fd-40cd-8b25-26c78a376d8d', 'ff593857-44c2-4011-be20-8403e8d
 INSERT INTO public.dataset (key, parent_dataset_key, duplicate_of_dataset_key, installation_key, publishing_organization_key, external, type, sub_type, title, alias, abbreviation, description, language, homepage, logo_url, citation, citation_identifier, rights, locked_for_auto_update, created_by, modified_by, created, modified, deleted, fulltext_search, doi, license, maintenance_update_frequency, version)
 VALUES ('38f06820-08c5-42b2-94f6-47cc3e83a54a', null, null, '1e9136f0-78fd-40cd-8b25-26c78a376d8d', 'ff593857-44c2-4011-be20-8403e8d0bd9a', false, 'OCCURRENCE', null, 'DatasetSynchronizer test dataset', 'BGBM', 'BGBM', 'Test dataset', 'da', 'http://www.example.org', 'http://www.example.org', 'This is a citation text', 'ABC', 'The rights', false, 'CLI TEST', 'CLI TEST', '2020-02-22 09:54:10.223198', '2020-02-21 23:00:00.000000', null, '''255'':5 ''aladaglari'':44 ''berlin'':50 ''bgbm'':47,48 ''bolkar'':42 ''botan'':51 ''charact'':6,28,30 ''checklist'':46 ''citat'':56 ''daglari'':43 ''der'':39,41 ''exact'':33 ''german'':22 ''hochgebirgsregion'':40 ''languag'':23 ''long'':18 ''need'':2 ''pontaurus'':1 ''text'':57 ''titl'':10,19,34 ''turkei'':45 ''untersuchungen'':37 ''vegetationskundlich'':36 ''word'':24,26 ''www.example.org'':52', '10.21373/gbif.1584932725458', 'CC_BY_NC_4_0', null, null);
 
+
+INSERT INTO public.identifier (key, type, identifier, created_by, created)
+VALUES (-1, 'DOI', '10.333/gbif.1584932725999', '2020-02-22 09:54:10.094782', '2020-02-22 09:54:10.094782');
+
+INSERT INTO public.dataset_identifier (dataset_key, identifier_key)
+VALUES ('38f06820-08c5-42b2-94f6-47cc3e83a54a', -1);
+
+
 INSERT INTO public.gbif_doi (doi, type, target, status, metadata, created, modified) VALUES ('10.21373/gbif.1584932725458', 'DATASET', 'https://registry.gbif-dev.org/dataset/38f06820-08c5-42b2-94f6-47cc3e83a54a', 'REGISTERED', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <identifier identifierType="DOI">10.21373/gbif.1584932725458</identifier>
-    <creators>
-        <creator>
-            <creatorName>Mike</creatorName>
-        </creator>
-    </creators>
-    <titles>
-        <title>Test DOI 10.21373/gbif.1584932725458 title</title>
-    </titles>
-    <publisher>Mike Podolskiy</publisher>
-    <publicationYear>2020</publicationYear>
-    <resourceType resourceTypeGeneral="Dataset"/>
+  <identifier identifierType="DOI">10.21373/gbif.1584932725458</identifier>
+  <creators>
+    <creator>
+      <creatorName>CLI TEST</creatorName>
+      <nameIdentifier nameIdentifierScheme="GBIF" schemeURI="gbif.org">CLI TEST</nameIdentifier>
+    </creator>
+  </creators>
+  <titles>
+    <title>DatasetSynchronizer test dataset</title>
+  </titles>
+  <publisher>The BGBM</publisher>
+  <publicationYear>2020</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">OCCURRENCE</resourceType>
+  <dates>
+    <date dateType="Created">2020-02-22</date>
+    <date dateType="Updated">2020-02-21</date>
+  </dates>
+  <language>dan</language>
+  <alternateIdentifiers>
+    <alternateIdentifier alternateIdentifierType="UUID">38f06820-08c5-42b2-94f6-47cc3e83a54a</alternateIdentifier>
+  </alternateIdentifiers>
+  <relatedIdentifiers/>
+  <rightsList>
+    <rights rightsURI="http://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract">Test dataset</description>
+  </descriptions>
+</resource>
+', '2020-03-23 03:05:25.693258', '2020-03-23 03:05:28.526516');
+
+
+INSERT INTO public.gbif_doi (doi, type, target, status, metadata, created, modified) VALUES ('10.333/gbif.1584932725999', 'DATASET', 'https://registry.gbif-dev.org/dataset/38f06820-08c5-42b2-94f6-47cc3e83a54a', 'REGISTERED', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <identifier identifierType="DOI">10.333/gbif.1584932725999</identifier>
+  <creators>
+    <creator>
+      <creatorName>CLI TEST</creatorName>
+      <nameIdentifier nameIdentifierScheme="GBIF" schemeURI="gbif.org">CLI TEST</nameIdentifier>
+    </creator>
+  </creators>
+  <titles>
+    <title>DatasetSynchronizer test dataset</title>
+  </titles>
+  <publisher>The BGBM</publisher>
+  <publicationYear>2020</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">OCCURRENCE</resourceType>
+  <dates>
+    <date dateType="Created">2020-02-22</date>
+    <date dateType="Updated">2020-02-21</date>
+  </dates>
+  <language>dan</language>
+  <alternateIdentifiers>
+    <alternateIdentifier alternateIdentifierType="UUID">38f06820-08c5-42b2-94f6-47cc3e83a54a</alternateIdentifier>
+  </alternateIdentifiers>
+  <relatedIdentifiers/>
+  <rightsList>
+    <rights rightsURI="http://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract">Test dataset</description>
+  </descriptions>
 </resource>
 ', '2020-03-23 03:05:25.693258', '2020-03-23 03:05:28.526516');
 
