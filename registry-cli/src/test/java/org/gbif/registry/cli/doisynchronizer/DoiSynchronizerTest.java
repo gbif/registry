@@ -102,7 +102,7 @@ public class DoiSynchronizerTest {
     DoiSynchronizer doiSynchronizer = new DoiSynchronizer(configuration, contextMock);
 
     // when
-    doiSynchronizer.doRun();
+    doiSynchronizer.printFailedDOI();
 
     // then
     verify(doiMapperMock, atLeastOnce()).list(DoiStatus.FAILED, null, null);

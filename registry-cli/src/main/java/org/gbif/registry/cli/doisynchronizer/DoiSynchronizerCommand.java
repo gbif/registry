@@ -18,7 +18,10 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
 
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.MetaInfServices;
+
+import static org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfigurationValidator.isConfigurationValid;
 
 @MetaInfServices(Command.class)
 public class DoiSynchronizerCommand extends BaseCommand {
@@ -46,7 +49,15 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   @Override
   protected void doRun() {
-    synchronizer.doRun();
+    if (isConfigurationValid(config)) {
+      if (StringUtils.isNotBlank(config.doi)) {
+        synchronizer.handleDOI();
+      } else if (StringUtils.isNotBlank(config.doiList)) {
+        synchronizer.handleListDOI();
+      } else if (config.listFailedDOI) {
+        synchronizer.printFailedDOI();
+      }
+    }
   }
 
   public DoiSynchronizer getSynchronizer() {

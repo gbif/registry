@@ -15,6 +15,10 @@
  */
 package org.gbif.registry.doi.util;
 
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.vocabulary.IdentifierType;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -36,5 +40,14 @@ public final class RegistryDoiUtils {
     Calendar cal = new GregorianCalendar();
     cal.setTime(date);
     return String.valueOf(cal.get(Calendar.YEAR));
+  }
+
+  /** Checks if a DOI can be found in the list of dataset identifiers. */
+  public static boolean isIdentifierDOIFound(DOI doi, Identifiable identifiable) {
+    return identifiable.getIdentifiers().stream()
+        .anyMatch(
+            identifier ->
+                IdentifierType.DOI == identifier.getType()
+                    && identifier.getIdentifier().equals(doi.toString()));
   }
 }

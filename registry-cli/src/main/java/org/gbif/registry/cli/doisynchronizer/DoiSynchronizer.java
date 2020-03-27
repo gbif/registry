@@ -16,24 +16,14 @@
 package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
-import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.doi.util.MetadataUtils;
 import org.gbif.registry.cli.common.SingleColumnFileReader;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
-import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnosticPrinter;
-import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDOIDiagnosticResult;
-import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDatasetDOIDiagnosticResult;
-import org.gbif.registry.cli.doisynchronizer.diagnostic.GbifDownloadDOIDiagnosticResult;
+import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnostician;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -48,15 +38,13 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Objects;
 
-import javax.xml.bind.JAXBException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import static org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfigurationValidator.isConfigurationValid;
+import static org.gbif.registry.doi.util.RegistryDoiUtils.isIdentifierDOIFound;
 
 /**
  * This service allows to print a report of DOI and/or try to fix them by synchronizing with
@@ -72,10 +60,8 @@ public class DoiSynchronizer {
   private final DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategy;
   private final DatasetMapper datasetMapper;
   private final OccurrenceDownloadMapper downloadMapper;
-  private final DoiService dataCiteService;
   private final UserMapper userMapper;
-
-  private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
+  private final DoiDiagnostician diagnostician;
 
   public DoiSynchronizer(DoiSynchronizerConfiguration config) {
     this(
@@ -89,43 +75,35 @@ public class DoiSynchronizer {
   public DoiSynchronizer(DoiSynchronizerConfiguration config, ApplicationContext context) {
     this.config = config;
     this.context = context;
-    doiMapper = context.getBean(DoiMapper.class);
-    dataCiteDoiHandlerStrategy = context.getBean(DataCiteDoiHandlerStrategy.class);
-    datasetMapper = context.getBean(DatasetMapper.class);
-    downloadMapper = context.getBean(OccurrenceDownloadMapper.class);
-    userMapper = context.getBean(UserMapper.class);
-    dataCiteService = context.getBean(DoiService.class);
+    this.doiMapper = context.getBean(DoiMapper.class);
+    this.dataCiteDoiHandlerStrategy = context.getBean(DataCiteDoiHandlerStrategy.class);
+    this.datasetMapper = context.getBean(DatasetMapper.class);
+    this.downloadMapper = context.getBean(OccurrenceDownloadMapper.class);
+    this.userMapper = context.getBean(UserMapper.class);
+    this.diagnostician =
+        new DoiDiagnostician(
+            doiMapper, context.getBean(DoiService.class), datasetMapper, downloadMapper);
   }
 
-  /** Runs the actual service */
-  public void doRun() {
-    if (isConfigurationValid(config)) {
-      // Single DOI
-      if (StringUtils.isNotBlank(config.doi)) {
-        handleDOI(config.doi);
-      } // DOI list
-      else if (StringUtils.isNotBlank(config.doiList)) {
-        SingleColumnFileReader.readFile(config.doiList, SingleColumnFileReader::toDoi)
-            .forEach(this::handleDOI);
-      } else if (config.listFailedDOI) {
-        printFailedDOI();
-      }
-    }
-  }
-
-  /** Handle a single DOIm provided as String */
-  private void handleDOI(String doiAsString) {
+  /** Handle a single DOI provided as String */
+  public void handleDOI() {
     try {
-      handleDOI(new DOI(doiAsString));
+      handleDOI(new DOI(config.doi));
     } catch (IllegalArgumentException iaEx) {
       System.out.println(config.doi + " is not a valid DOI");
     }
   }
 
+  /** Handle a list of DOIs provided as a file name */
+  public void handleListDOI() {
+    SingleColumnFileReader.readFile(config.doiList, SingleColumnFileReader::toDoi)
+        .forEach(this::handleDOI);
+  }
+
   /** Handle a single DOI */
   private void handleDOI(DOI doi) {
     if (!config.skipDiagnostic) {
-      reportDOIStatus(doi);
+      diagnostician.reportDOIStatus(doi);
     }
 
     if (config.export) {
@@ -142,18 +120,9 @@ public class DoiSynchronizer {
     }
 
     if (config.fixDOI) {
-      diagnosticPrinter.printDOIFixAttemptReport(doi, tryFixDOI(doi));
-    }
-  }
-
-  /** Report the current status of a DOI */
-  private void reportDOIStatus(DOI doi) {
-    GbifDOIDiagnosticResult doiDiagnostic = generateGbifDOIDiagnostic(doi);
-
-    if (doiDiagnostic != null) {
-      diagnosticPrinter.printReport(doiDiagnostic);
-    } else {
-      System.out.println("No report can be generated. Nothing found for DOI " + doi);
+      boolean result = tryFixDOI(doi);
+      System.out.println(
+          "Attempt to fix DOI " + doi.getDoiName() + " : " + (result ? "success" : "failed"));
     }
   }
 
@@ -224,15 +193,6 @@ public class DoiSynchronizer {
     return false;
   }
 
-  /** Checks if a DOI can be found in the list of dataset identifiers. */
-  private static boolean isIdentifierDOIFound(DOI doi, Identifiable identifiable) {
-    return identifiable.getIdentifiers().stream()
-        .anyMatch(
-            identifier ->
-                IdentifierType.DOI == identifier.getType()
-                    && identifier.getIdentifier().equals(doi.toString()));
-  }
-
   /**
    * Re-apply the Download DOI strategy from dataCiteDoiHandlerStrategy.
    *
@@ -267,37 +227,8 @@ public class DoiSynchronizer {
     return true;
   }
 
-  /**
-   * Compare the metadata linked to a DOI between what we have in the database and what is stored at
-   * Datacite.
-   */
-  private boolean compareMetadataWithDatacite(DOI doi) {
-    String registryDoiMetadataStr = doiMapper.getMetadata(doi);
-    String dataCiteDoiMetadataStr = null;
-    try {
-      dataCiteDoiMetadataStr = dataCiteService.getMetadata(doi);
-    } catch (DoiException e) {
-      LOG.error("Can't compare DOI metadata", e);
-    }
-
-    try {
-      DataCiteMetadata registryDoiMetadata =
-          registryDoiMetadataStr != null ? DataCiteValidator.fromXml(registryDoiMetadataStr) : null;
-      DataCiteMetadata dataCiteDoiMetadata =
-          dataCiteDoiMetadataStr != null ? DataCiteValidator.fromXml(dataCiteDoiMetadataStr) : null;
-
-      // Use this method unless it's always false because the DataCite store DOI in uppercase a
-      // nd the registry store in lower case
-      return MetadataUtils.equal(registryDoiMetadata, dataCiteDoiMetadata);
-    } catch (JAXBException e) {
-      LOG.error("Invalid metadata", e);
-    }
-
-    return false;
-  }
-
   /** Get the list of failed DOI for a DoiType. */
-  private void printFailedDOI() {
+  public void printFailedDOI() {
     // get all the DOI with the FAILED status. Note that they are all GBIF assigned DOI.
     doiMapper
         .list(DoiStatus.FAILED, null, null)
@@ -305,71 +236,6 @@ public class DoiSynchronizer {
             map ->
                 System.out.println(
                     MessageFormat.format("{0} ({1})", map.get("doi"), map.get("type"))));
-  }
-
-  /** Check the status of a DOI between GBIF and Datacite. */
-  private GbifDOIDiagnosticResult generateGbifDOIDiagnostic(DOI doi) {
-    GbifDOIDiagnosticResult doiGbifDataciteDiagnostic = null;
-
-    DoiType doiType = doiMapper.getType(doi);
-    if (doiType != null) {
-      if (doiType == DoiType.DATASET) {
-        doiGbifDataciteDiagnostic = createGbifDOIDatasetDiagnostic(doi);
-      } else if (doiType == DoiType.DOWNLOAD) {
-        doiGbifDataciteDiagnostic = createGbifDOIDownloadDiagnostic(doi);
-      }
-    }
-
-    if (doiGbifDataciteDiagnostic == null) {
-      return null;
-    }
-
-    DoiData doiData = doiMapper.get(doi);
-    doiGbifDataciteDiagnostic.setDoiData(doiData);
-
-    try {
-      doiGbifDataciteDiagnostic.setDoiExistsAtDatacite(dataCiteService.exists(doi));
-    } catch (DoiException e) {
-      LOG.warn("Can not check existence of DOI " + doi.getDoiName(), e);
-    }
-
-    if (doiGbifDataciteDiagnostic.isDoiExistsAtDatacite()) {
-      doiGbifDataciteDiagnostic.setMetadataEquals(compareMetadataWithDatacite(doi));
-
-      try {
-        DoiData doiStatus = dataCiteService.resolve(doi);
-        doiGbifDataciteDiagnostic.setDataciteDoiStatus(doiStatus.getStatus());
-        doiGbifDataciteDiagnostic.setDataciteTarget(doiStatus.getTarget());
-      } catch (DoiException e) {
-        LOG.error("Failed to resolve DOI {}", doi);
-      }
-    }
-    return doiGbifDataciteDiagnostic;
-  }
-
-  private GbifDOIDiagnosticResult createGbifDOIDatasetDiagnostic(DOI doi) {
-    GbifDatasetDOIDiagnosticResult datasetDiagnosticResult =
-        new GbifDatasetDOIDiagnosticResult(doi);
-
-    // Try to load the Dataset from its DOI and alternate identifier
-    datasetDiagnosticResult.appendRelatedDataset(datasetMapper.listByDOI(doi.getDoiName(), null));
-
-    if (datasetDiagnosticResult.isLinkedToASingleDataset()) {
-      datasetDiagnosticResult.setDoiIsInAlternateIdentifiers(
-          isIdentifierDOIFound(doi, datasetDiagnosticResult.getRelatedDataset()));
-    }
-
-    return datasetDiagnosticResult;
-  }
-
-  private GbifDOIDiagnosticResult createGbifDOIDownloadDiagnostic(DOI doi) {
-    GbifDownloadDOIDiagnosticResult downloadDiagnosticResult =
-        new GbifDownloadDOIDiagnosticResult(doi);
-
-    Download download = downloadMapper.getByDOI(doi);
-    downloadDiagnosticResult.setDownload(download);
-
-    return downloadDiagnosticResult;
   }
 
   public ApplicationContext getContext() {
