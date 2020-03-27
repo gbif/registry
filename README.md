@@ -30,6 +30,12 @@ To configure an automatic pre-commit hook to check the code, add the file [pre-c
 cp pre-commit .git/hooks/
 ```
 
+Also, make sure the file has the right permissions. In Unix and Mac it needs the execution permission:
+
+```
+chmod +x .git/hooks/pre-commit
+```
+
 ### Manual use of Spotless
 
 Check the project follows code style conventions:
