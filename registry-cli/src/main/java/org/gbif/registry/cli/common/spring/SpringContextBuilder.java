@@ -94,6 +94,12 @@ public class SpringContextBuilder {
     return this;
   }
 
+  public SpringContextBuilder withDataCiteConfiguration(
+      DataCiteConfiguration dataCiteConfiguration) {
+    this.dataCiteConfiguration = dataCiteConfiguration;
+    return this;
+  }
+
   public SpringContextBuilder withDoiUpdaterConfiguration(
       DoiUpdaterConfiguration doiUpdaterConfiguration) {
     this.dbConfiguration = doiUpdaterConfiguration.registry;

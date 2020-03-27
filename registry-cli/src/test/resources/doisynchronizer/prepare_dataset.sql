@@ -79,7 +79,7 @@ VALUES ('1e9136f0-78fd-40cd-8b25-26c78a376d8d', 'ff593857-44c2-4011-be20-8403e8d
         '''berlin'':8 ''bgbm'':2 ''biocas'':3 ''botan'':9 ''instal'':4,6 ''ipt'':5', null, false);
 
 INSERT INTO public.dataset (key, parent_dataset_key, duplicate_of_dataset_key, installation_key, publishing_organization_key, external, type, sub_type, title, alias, abbreviation, description, language, homepage, logo_url, citation, citation_identifier, rights, locked_for_auto_update, created_by, modified_by, created, modified, deleted, fulltext_search, doi, license, maintenance_update_frequency, version)
-VALUES ('38f06820-08c5-42b2-94f6-47cc3e83a54a', null, null, '1e9136f0-78fd-40cd-8b25-26c78a376d8d', 'ff593857-44c2-4011-be20-8403e8d0bd9a', false, 'OCCURRENCE', null, 'DatasetSynchronizer test dataset', 'BGBM', 'BGBM', 'Test dataset', 'da', 'http://www.example.org', 'http://www.example.org', 'This is a citation text', 'ABC', 'The rights', false, 'CLI TEST', 'CLI TEST', '2020-02-22 09:54:10.223198', '2020-02-21 23:00:00.000000', null, '''255'':5 ''aladaglari'':44 ''berlin'':50 ''bgbm'':47,48 ''bolkar'':42 ''botan'':51 ''charact'':6,28,30 ''checklist'':46 ''citat'':56 ''daglari'':43 ''der'':39,41 ''exact'':33 ''german'':22 ''hochgebirgsregion'':40 ''languag'':23 ''long'':18 ''need'':2 ''pontaurus'':1 ''text'':57 ''titl'':10,19,34 ''turkei'':45 ''untersuchungen'':37 ''vegetationskundlich'':36 ''word'':24,26 ''www.example.org'':52', '10.21373/gbif.1584932725458', 'CC_BY_NC_4_0', null, null);
+VALUES ('38f06820-08c5-42b2-94f6-47cc3e83a54a', null, null, '1e9136f0-78fd-40cd-8b25-26c78a376d8d', 'ff593857-44c2-4011-be20-8403e8d0bd9a', false, 'OCCURRENCE', null, 'DoiSynchronizer test dataset', 'BGBM', 'BGBM', 'Test dataset', 'da', 'http://www.example.org', 'http://www.example.org', 'This is a citation text', 'ABC', 'The rights', false, 'CLI TEST', 'CLI TEST', '2020-02-22 09:54:10.223198', '2020-02-21 23:00:00.000000', null, '''255'':5 ''aladaglari'':44 ''berlin'':50 ''bgbm'':47,48 ''bolkar'':42 ''botan'':51 ''charact'':6,28,30 ''checklist'':46 ''citat'':56 ''daglari'':43 ''der'':39,41 ''exact'':33 ''german'':22 ''hochgebirgsregion'':40 ''languag'':23 ''long'':18 ''need'':2 ''pontaurus'':1 ''text'':57 ''titl'':10,19,34 ''turkei'':45 ''untersuchungen'':37 ''vegetationskundlich'':36 ''word'':24,26 ''www.example.org'':52', '10.21373/gbif.1584932725458', 'CC_BY_NC_4_0', null, null);
 
 
 INSERT INTO public.identifier (key, type, identifier, created_by, created)
@@ -99,7 +99,7 @@ INSERT INTO public.gbif_doi (doi, type, target, status, metadata, created, modif
     </creator>
   </creators>
   <titles>
-    <title>DatasetSynchronizer test dataset</title>
+    <title>DoiSynchronizer test dataset</title>
   </titles>
   <publisher>The BGBM</publisher>
   <publicationYear>2020</publicationYear>
@@ -133,7 +133,7 @@ INSERT INTO public.gbif_doi (doi, type, target, status, metadata, created, modif
     </creator>
   </creators>
   <titles>
-    <title>DatasetSynchronizer test dataset</title>
+    <title>DoiSynchronizer test dataset</title>
   </titles>
   <publisher>The BGBM</publisher>
   <publicationYear>2020</publicationYear>
