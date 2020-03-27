@@ -103,7 +103,7 @@ public class DoiSynchronizerCommandIT {
   }
 
   @Test
-  public void name() {
+  public void testFixDoi() {
     doiSynchronizerConfig.fixDOI = true;
     doiSynchronizerConfig.doi = DOI1.toString();
 
