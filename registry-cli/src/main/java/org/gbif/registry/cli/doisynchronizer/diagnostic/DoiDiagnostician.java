@@ -95,7 +95,8 @@ public class DoiDiagnostician {
       String dataCiteDoiMetadataXml;
       try {
         dataCiteDoiMetadataXml = dataCiteService.getMetadata(doi);
-        metadataEquals = MetadataUtils.equal(registryDoiMetadataXml, dataCiteDoiMetadataXml);
+        metadataEquals =
+            MetadataUtils.metadataEquals(registryDoiMetadataXml, dataCiteDoiMetadataXml);
       } catch (DoiException e) {
         LOG.error("Can't compare DOI metadata", e);
       }
