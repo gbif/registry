@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.cli.doisynchronizer.diagnostic;
 
-import org.gbif.api.model.common.DOI;
-
 import java.io.PrintStream;
 
 /** Print a report from a {@link GbifDOIDiagnosticResult} to the defined {@link PrintStream}. */
@@ -45,9 +43,5 @@ public class DoiDiagnosticPrinter {
       out.println("Datacite target URI: " + result.getDataciteTarget());
     }
     out.println("------------");
-  }
-
-  public void printDOIFixAttemptReport(DOI doi, boolean success) {
-    out.println("Attempt to fix DOI " + doi.getDoiName() + ":" + (success ? "success" : "failed"));
   }
 }
