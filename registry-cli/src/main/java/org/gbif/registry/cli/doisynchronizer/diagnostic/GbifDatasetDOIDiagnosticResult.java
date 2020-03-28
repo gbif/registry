@@ -115,9 +115,9 @@ public class GbifDatasetDOIDiagnosticResult extends GbifDOIDiagnosticResult {
         }
       }
       contextInformation.add(
-          "DOI ("
+          "Is DOI ("
               + doi.getDoiName()
-              + ") is in dataset alternative identifiers?: "
+              + ") in dataset alternative identifiers?: "
               + isDoiIsInAlternateIdentifiers());
     } else {
       contextInformation.add("WARNING: DOI used by multiple datasets");
