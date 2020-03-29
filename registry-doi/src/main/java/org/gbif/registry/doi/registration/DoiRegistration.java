@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.doi.registration;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.domain.doi.DoiType;
 
@@ -109,17 +110,7 @@ public class DoiRegistration {
     return new Builder();
   }
 
-  @Override
-  public String toString() {
-    return Objects.toStringHelper(this)
-        .add("key", key)
-        .add("doi", doi)
-        .add("metadata", metadata)
-        .add("type", type)
-        .add("user", user)
-        .toString();
-  }
-
+  @Generated
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -137,9 +128,22 @@ public class DoiRegistration {
         && Objects.equal(user, that.user);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hashCode(key, doi, metadata, type, user);
+  }
+
+  @Generated
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+        .add("key", key)
+        .add("doi", doi)
+        .add("metadata", metadata)
+        .add("type", type)
+        .add("user", user)
+        .toString();
   }
 
   /** Builder class to simplify the construction of DoiRegistration instances. */

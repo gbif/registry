@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -269,6 +270,7 @@ public class LegacyOrganizationResponse {
     this.primaryContactDescription = primaryContactDescription;
   }
 
+  @Generated
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -291,6 +293,7 @@ public class LegacyOrganizationResponse {
         && Objects.equal(primaryContactDescription, that.primaryContactDescription);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hashCode(
@@ -311,6 +314,7 @@ public class LegacyOrganizationResponse {
         primaryContactDescription);
   }
 
+  @Generated
   @Override
   public String toString() {
     return Objects.toStringHelper(this)

@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
@@ -783,6 +784,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     return dataset;
   }
 
+  @Generated
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -803,6 +805,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         && Objects.equal(archiveEndpoint, that.archiveEndpoint);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hashCode(
@@ -821,6 +824,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         archiveEndpoint);
   }
 
+  @Generated
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
