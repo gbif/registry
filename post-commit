@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo '[git hook] executing git unstash'
+
+# unstash changes stashed in the pre-commit hook
+git merge --squash --strategy-option=ours stash
+
