@@ -1,18 +1,27 @@
 #!/bin/sh
 
-echo '[git hook] executing spotless check before commit'
+echo '[git hook] executing spotless apply before commit'
 
 # stash any unstaged changes
-git stash -q --keep-index
+git stash --quiet --keep-index
 
-# run the check with the maven
+# run spotless apply maven
+mvn spotless:apply
+
+# add spotless changes
+git add --update
+
+# run spotless check maven
 mvn spotless:check
 
 # store the last exit code in a variable
 RESULT=$?
 
-# unstash the unstashed changes
-git stash pop -q
+# revert if failed, because the post-commit hook won't be executed
+if [ "$RESULT" -ne "0" ]; then
+  git checkout --force
+  git stash pop --quiet
+fi
 
 # return the 'mvn spotless:check' exit code
 exit $RESULT
