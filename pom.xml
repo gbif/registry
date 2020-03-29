@@ -83,7 +83,7 @@
     <commons-validator.version>1.5.1</commons-validator.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.107</gbif-api.version>
+    <gbif-api.version>0.108-SNAPSHOT</gbif-api.version>
     <gbif-dwc-api.version>1.27</gbif-dwc-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
