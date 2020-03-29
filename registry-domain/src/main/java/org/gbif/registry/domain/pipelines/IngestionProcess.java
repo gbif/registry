@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.pipelines;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.pipelines.PipelineExecution;
 
@@ -75,6 +76,7 @@ public class IngestionProcess {
     return this;
   }
 
+  @Generated
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -83,6 +85,7 @@ public class IngestionProcess {
     return attempt == that.attempt && Objects.equals(datasetKey, that.datasetKey);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hash(datasetKey, attempt);

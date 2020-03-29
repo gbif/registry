@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
@@ -171,6 +172,7 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
     return getUrl().toASCIIString();
   }
 
+  @Generated
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -186,11 +188,13 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
     return Objects.equal(datasetKey, that.datasetKey);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hashCode(super.hashCode(), datasetKey);
   }
 
+  @Generated
   @Override
   public String toString() {
     return Objects.toStringHelper(this).add("datasetKey", datasetKey).toString();

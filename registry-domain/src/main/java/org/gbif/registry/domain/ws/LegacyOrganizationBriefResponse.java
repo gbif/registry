@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.annotation.Generated;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import java.io.IOException;
@@ -69,6 +70,7 @@ public class LegacyOrganizationBriefResponse {
     this.name = name;
   }
 
+  @Generated
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -77,11 +79,13 @@ public class LegacyOrganizationBriefResponse {
     return Objects.equal(key, that.key) && Objects.equal(name, that.name);
   }
 
+  @Generated
   @Override
   public int hashCode() {
     return Objects.hashCode(key, name);
   }
 
+  @Generated
   @Override
   public String toString() {
     return Objects.toStringHelper(this).add("key", key).add("name", name).toString();
