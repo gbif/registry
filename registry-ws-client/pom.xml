@@ -10,6 +10,22 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-ws-client</artifactId>
+  <name>GBIF Registry Client</name>
 
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-openfeign</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

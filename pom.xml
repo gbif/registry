@@ -287,6 +287,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
         <artifactId>registry-service</artifactId>
         <version>${project.version}</version>
       </dependency>
