@@ -73,6 +73,7 @@
     <module>registry-oaipmh</module>
     <module>registry-security</module>
     <module>registry-cli</module>
+    <module>registry-ws-client</module>
   </modules>
 
   <properties>
