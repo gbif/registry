@@ -53,12 +53,12 @@ import com.google.common.base.Strings;
  */
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
-public class InstitutionEntityResource extends ExtendedCollectionEntityResource<Institution>
+public class InstitutionResource extends ExtendedCollectionEntityResource<Institution>
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
 
-  public InstitutionEntityResource(
+  public InstitutionResource(
       InstitutionMapper institutionMapper,
       AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
