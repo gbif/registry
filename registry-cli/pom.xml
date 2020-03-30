@@ -22,7 +22,6 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
-    <guice.version>4.0</guice.version>
     <gbif-cli.version>0.14-SNAPSHOT</gbif-cli.version>
     <metainf-services.version>1.5</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
@@ -276,11 +275,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>${guice.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.validation</groupId>
