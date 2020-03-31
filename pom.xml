@@ -118,7 +118,7 @@
     <janino-logback.version>2.5.10</janino-logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
-    <feign-jackson.version>10.7.4</feign-jackson.version>
+    <feign.version>10.4.0</feign.version>
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
 
@@ -451,8 +451,23 @@
       </dependency>
       <dependency>
         <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-core</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-slf4j</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-hystrix</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
         <artifactId>feign-jackson</artifactId>
-        <version>${feign-jackson.version}</version>
+        <version>${feign.version}</version>
       </dependency>
 
       <dependency>
