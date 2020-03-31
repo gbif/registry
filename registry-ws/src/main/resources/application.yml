@@ -10,12 +10,9 @@ api:
 portal:
   url: https://www.gbif-dev.org/
 
-url:
-  api: http://api.gbif-dev.org/v1/
-  portal: https://www.gbif-dev.org/
-  occurrenceApi: http://api.gbif-dev.org/v1/occurrence/
-  directoryApi: http://api.gbif-dev.org/v1/directory/
-  grscicollPortal: https://www.gbif-dev.org/grscicoll/
+occurrence:
+  ws:
+    url: http://api.gbif-dev.org/v1/occurrence/
 
 #Mail Properties
 mail:
