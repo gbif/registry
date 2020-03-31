@@ -27,7 +27,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.metadata.DublinCoreWriter;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.oaipmh.OaipmhSetRepository.SetIdentification;
-import org.gbif.registry.occurrenceclient.OccurrenceMetricsClient;
+import org.gbif.registry.occurrence.client.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;

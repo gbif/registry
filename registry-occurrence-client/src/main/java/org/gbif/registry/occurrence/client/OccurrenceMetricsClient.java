@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.occurrenceclient;
+package org.gbif.registry.occurrence.client;
 
 import java.util.UUID;
 
