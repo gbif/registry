@@ -17,7 +17,7 @@ package org.gbif.registry.oaipmh.config;
 
 import org.gbif.registry.oaipmh.OaipmhItemRepository;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
-import org.gbif.registry.occurrenceclient.OccurrenceMetricsClient;
+import org.gbif.registry.occurrence.client.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
