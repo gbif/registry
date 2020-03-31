@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /** Access to Occurrence metrics. */
-@FeignClient(value = "OccurrenceMetricsClient", url = "${url.occurrenceApi}")
+@FeignClient(value = "OccurrenceMetricsClient", url = "${occurrence.ws.url}")
 public interface OccurrenceMetricsClient {
 
   /**
