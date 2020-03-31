@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.common.base.Function;
@@ -74,6 +75,11 @@ public class OccurrenceDownloadWsClient extends BaseWsGetClient<Download, String
     @NotNull String downloadKey, @Nullable Pageable page
   ) {
     return get(GenericTypes.PAGING_DATASET_OCCURRENCE_DOWNLOAD, page, downloadKey, "datasets");
+  }
+
+  @Override
+  public String getCitation(@NotNull String downloadKey) {
+    return getResource(downloadKey, "citation").type(MediaType.APPLICATION_JSON).get(String.class);
   }
 
   @Override

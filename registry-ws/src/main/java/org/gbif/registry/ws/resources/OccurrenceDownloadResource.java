@@ -109,14 +109,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GET
-  @Path("{key}")
+  @Path("{key : .+}")
   @Nullable
   @NullToNotFound
   @Override
-  public Download get(@NotNull @PathParam("key") String key) {
-    Download download = occurrenceDownloadMapper.get(key);
-    if (download == null && DOI.isParsable(key)) { //maybe it's a DOI?
-     download = occurrenceDownloadMapper.getByDOI(new DOI(key));
+  public Download get(@NotNull @PathParam("key") String keyOrDoi) {
+    Download download = occurrenceDownloadMapper.get(keyOrDoi);
+    if (download == null && DOI.isParsable(keyOrDoi)) { //maybe it's a DOI?
+     download = occurrenceDownloadMapper.getByDOI(new DOI(keyOrDoi));
     }
     if (download != null) { // the user can request a non-existing download
       clearSensitiveData(securityContext, download);
@@ -163,14 +163,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @GET
-  @Path("{key}/datasets")
+  @Path("{key : .+}/datasets")
   @Override
   @NullToNotFound
-  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@NotNull @PathParam("key") String downloadKey,
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(@NotNull @PathParam("key") String keyOrDoi,
                                                                           @Context Pageable page){
-    Download download = get(downloadKey);
+    Download download = get(keyOrDoi);
     if (download != null) {
-      List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
+      List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), page);
       clearSensitiveData(securityContext, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
     }
@@ -186,6 +186,29 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public void createUsages(@NotNull @PathParam("key") String downloadKey, @Valid @NotNull Map<UUID,Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
     .forEachRemaining(batch -> datasetOccurrenceDownloadMapper.createUsages(downloadKey, batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+  }
+
+  @GET
+  @Path("{key : .+}/citation")
+  @Produces(MediaType.TEXT_PLAIN)
+  @Override
+  @NullToNotFound
+  public String getCitation(@NotNull @PathParam("key") String keyOrDoi) {
+    Download download = get(keyOrDoi);
+    if (download != null) {
+      //Citations are incorrect, see https://github.com/gbif/occurrence/issues/156.  For the moment, just use the main citation.
+      //List<DatasetOccurrenceDownloadUsage> usages = datasetOccurrenceDownloadMapper.listByDownload(downloadKey, null);
+
+      StringBuilder sb = new StringBuilder();
+      sb.append("GBIF Occurrence Download ").append(download.getDoi().getUrl().toString()).append('\n');
+
+      //usages.forEach(
+      //  usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); }
+      //);
+
+      return sb.toString();
+    }
+    throw new NotFoundException();
   }
 
   @GET
