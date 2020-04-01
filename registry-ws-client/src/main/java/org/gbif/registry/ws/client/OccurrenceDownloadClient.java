@@ -49,9 +49,9 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   }
 
   @RequestMapping(
-    method = RequestMethod.GET,
-    value = "occurrence/download/{key}",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "occurrence/download/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   Download get(@NotNull @PathVariable("key") String key);
@@ -68,9 +68,9 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   }
 
   @RequestMapping(
-    method = RequestMethod.PUT,
-    value = "occurrence/download",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.PUT,
+      value = "occurrence/download",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   void update(@RequestBody @NotNull Download download);
 
@@ -92,7 +92,8 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   @Override
   default Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
       @Nullable Date date, @Nullable Date date1, @Nullable Country country, @Nullable UUID uuid) {
-    throw new IllegalStateException("Occurrence download get downloaded records by dataset not supported");
+    throw new IllegalStateException(
+        "Occurrence download get downloaded records by dataset not supported");
   }
 
   @RequestMapping(
