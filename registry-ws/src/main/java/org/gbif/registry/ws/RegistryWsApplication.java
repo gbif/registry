@@ -68,8 +68,7 @@ import org.springframework.context.annotation.FilterType;
           type = FilterType.ASSIGNABLE_TYPE,
           classes = DatasetBatchIndexBuilder.class)
     })
-@EnableFeignClients(
-    basePackages = {"org.gbif.registry.occurrence.client"})
+@EnableFeignClients
 public class RegistryWsApplication {
   public static void main(String[] args) {
     SpringApplication.run(RegistryWsApplication.class, args);
