@@ -31,7 +31,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -41,35 +40,39 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@Qualifier("occurrenceDownloadClient")
-@FeignClient(value = "OccurrenceDownloadClient", url = "http://localhost:8080")
+@FeignClient("OccurrenceDownloadClient")
 public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
 
   @Override
   default void create(@NotNull Download download) {
-    throw new IllegalStateException("Method not supported");
+    throw new IllegalStateException("Occurrence download create not supported");
   }
 
+  @RequestMapping(
+    method = RequestMethod.GET,
+    value = "occurrence/download/{key}",
+    produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default Download get(@NotNull String s) {
-    throw new IllegalStateException("Method not supported");
-  }
+  Download get(@NotNull @PathVariable("key") String key);
 
   @Override
   default PagingResponse<Download> list(@Nullable Pageable pageable, @Nullable Set<Status> set) {
-    throw new IllegalStateException("Method not supported");
+    throw new IllegalStateException("Occurrence download list not supported");
   }
 
   @Override
   default PagingResponse<Download> listByUser(
       @NotNull String s, @Nullable Pageable pageable, @Nullable Set<Status> set) {
-    throw new IllegalStateException("Method not supported");
+    throw new IllegalStateException("Occurrence download list by user not supported");
   }
 
+  @RequestMapping(
+    method = RequestMethod.PUT,
+    value = "occurrence/download",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  default void update(@NotNull Download download) {
-    throw new IllegalStateException("Method not supported");
-  }
+  void update(@RequestBody @NotNull Download download);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -83,13 +86,13 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   @Override
   default Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
       @Nullable Date date, @Nullable Date date1, @Nullable Country country) {
-    throw new IllegalStateException("Method not supported");
+    throw new IllegalStateException("Occurrence download get by user country not supported");
   }
 
   @Override
   default Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
       @Nullable Date date, @Nullable Date date1, @Nullable Country country, @Nullable UUID uuid) {
-    throw new IllegalStateException("Method not supported");
+    throw new IllegalStateException("Occurrence download get downloaded records by dataset not supported");
   }
 
   @RequestMapping(
