@@ -172,7 +172,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
         occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = {"", "{key}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Override
   public void update(@RequestBody @NotNull Download download) {

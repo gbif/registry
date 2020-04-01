@@ -273,7 +273,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param key key of entity to update
    * @param entity entity that extends NetworkEntity
    */
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = {"", "{key}"}, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
