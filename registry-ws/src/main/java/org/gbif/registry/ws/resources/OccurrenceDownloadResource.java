@@ -149,7 +149,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @PUT
-  @Path("{key}")
+  @Path("{key : .+}")
   @Transactional
   @Override
   public void update(@NotNull Download download) {
@@ -178,7 +178,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
   
   @POST
-  @Path("{key}/datasets")
+  @Path("{key : .+}/datasets")
   @Transactional
   @Validate(groups = {PrePersist.class, Default.class})
   @RolesAllowed(ADMIN_ROLE)
