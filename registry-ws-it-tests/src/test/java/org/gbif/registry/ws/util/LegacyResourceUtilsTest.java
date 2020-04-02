@@ -13,24 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.security.jwt;
+package org.gbif.registry.ws.util;
 
-/** Exception to handle all the possible JWT error cases. */
-public class GbifJwtException extends Exception {
+import org.gbif.registry.domain.ws.LegacyDataset;
 
-  private final JwtErrorCode errorCode;
+import org.junit.Test;
 
-  public GbifJwtException(JwtErrorCode errorCode) {
-    this.errorCode = errorCode;
-  }
+import static org.junit.Assert.assertEquals;
 
-  public JwtErrorCode getErrorCode() {
-    return errorCode;
-  }
+public class LegacyResourceUtilsTest {
 
-  public enum JwtErrorCode {
-    EXPIRED_TOKEN,
-    INVALID_TOKEN,
-    INVALID_USERNAME
+  @Test
+  public void testValidateField() {
+    LegacyDataset legacyDataset = new LegacyDataset();
+    legacyDataset.setDatasetDescription("desc");
+    legacyDataset.setDatasetName("a");
+    assertEquals(
+        "desc [Field must be at least 10 characters long]", legacyDataset.getDatasetDescription());
+    assertEquals("a [Field must be at least 2 characters long]", legacyDataset.getDatasetName());
   }
 }

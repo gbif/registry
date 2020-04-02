@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.security.jwt;
+package org.gbif.registry.guice;
 
-/** Exception to handle all the possible JWT error cases. */
-public class GbifJwtException extends Exception {
+import org.gbif.common.messaging.api.MessagePublisher;
 
-  private final JwtErrorCode errorCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-  public GbifJwtException(JwtErrorCode errorCode) {
-    this.errorCode = errorCode;
-  }
+import com.google.inject.AbstractModule;
 
-  public JwtErrorCode getErrorCode() {
-    return errorCode;
-  }
+import static org.mockito.Mockito.mock;
 
-  public enum JwtErrorCode {
-    EXPIRED_TOKEN,
-    INVALID_TOKEN,
-    INVALID_USERNAME
+/** Provides a mock doi service */
+public class RabbitMockModule extends AbstractModule {
+  private static final Logger LOG = LoggerFactory.getLogger(RabbitMockModule.class);
+
+  @Override
+  protected void configure() {
+    MessagePublisher mp = mock(MessagePublisher.class);
+    bind(MessagePublisher.class).toInstance(mp);
+    LOG.info("Using a mocked Message Publisher");
   }
 }

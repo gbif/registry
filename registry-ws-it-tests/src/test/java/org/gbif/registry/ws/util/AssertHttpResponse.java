@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.security.jwt;
+package org.gbif.registry.ws.util;
 
-/** Exception to handle all the possible JWT error cases. */
-public class GbifJwtException extends Exception {
+import javax.ws.rs.core.Response;
 
-  private final JwtErrorCode errorCode;
+import com.sun.jersey.api.client.ClientResponse;
 
-  public GbifJwtException(JwtErrorCode errorCode) {
-    this.errorCode = errorCode;
-  }
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-  public JwtErrorCode getErrorCode() {
-    return errorCode;
-  }
+/** Simple assertions on HTTP codes. */
+public class AssertHttpResponse {
 
-  public enum JwtErrorCode {
-    EXPIRED_TOKEN,
-    INVALID_TOKEN,
-    INVALID_USERNAME
+  /**
+   * Assert the response from a {@link ClientResponse}.
+   *
+   * @param expected
+   * @param cr
+   */
+  public static void assertResponse(Response.Status expected, ClientResponse cr) {
+    assertNotNull("ClientResponse is not null", cr);
+    assertEquals(expected.getStatusCode(), cr.getStatus());
   }
 }

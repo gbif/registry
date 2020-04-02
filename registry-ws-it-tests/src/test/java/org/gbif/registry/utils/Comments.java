@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.security.jwt;
+package org.gbif.registry.utils;
 
-/** Exception to handle all the possible JWT error cases. */
-public class GbifJwtException extends Exception {
+import org.gbif.api.model.registry.Comment;
 
-  private final JwtErrorCode errorCode;
+import org.codehaus.jackson.type.TypeReference;
 
-  public GbifJwtException(JwtErrorCode errorCode) {
-    this.errorCode = errorCode;
+public class Comments extends JsonBackedData<Comment> {
+
+  private static final Comments INSTANCE = new Comments();
+
+  public static Comment newInstance() {
+    return INSTANCE.newTypedInstance();
   }
 
-  public JwtErrorCode getErrorCode() {
-    return errorCode;
-  }
-
-  public enum JwtErrorCode {
-    EXPIRED_TOKEN,
-    INVALID_TOKEN,
-    INVALID_USERNAME
+  private Comments() {
+    super("data/comment.json", new TypeReference<Comment>() {});
   }
 }
