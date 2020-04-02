@@ -26,6 +26,7 @@ import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -62,12 +63,40 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
 
   @Override
   public PagingResponse<IngestionProcess> ingestionHistory(UUID datasetKey, Pageable pageable) {
-    List<IngestionProcess> ingestions =
-        datasetProcessStatusMapper.listByDataset(datasetKey, pageable).stream()
-            .map(this::toIngestionProcess)
+    // get datasets process statuses
+    List<DatasetProcessStatus> datasetProcessStatuses =
+        datasetProcessStatusMapper.listByDataset(datasetKey, pageable);
+    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
+
+    if (datasetProcessStatuses.isEmpty()) {
+      return new PagingResponse<>(pageable, count);
+    }
+
+    // get all attempts retrieved from the DB
+    List<Integer> attempts =
+        datasetProcessStatuses.stream()
+            .map(d -> d.getCrawlJob().getAttempt())
             .collect(Collectors.toList());
 
-    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
+    // get the corresponding pipeline processes for this dataset key and attempts
+    Map<Integer, PipelineProcess> pipelineProcessByAttempt =
+        pipelineProcessMapper.getPipelineProcessesByDatasetAndAttempts(datasetKey, attempts)
+            .stream()
+            .collect(Collectors.toMap(PipelineProcess::getAttempt, p -> p));
+
+    // get the dataset title to set it in the final object
+    Dataset dataset = datasetMapper.get(datasetKey);
+
+    // create the IngestionProcess objects merging the information from DatasetProcess and pipelines
+    List<IngestionProcess> ingestions =
+        datasetProcessStatuses.stream()
+            .map(
+                d ->
+                    toIngestionProcess(
+                        d,
+                        pipelineProcessByAttempt.get(d.getCrawlJob().getAttempt()),
+                        dataset != null ? dataset.getTitle() : null))
+            .collect(Collectors.toList());
 
     return new PagingResponse<>(pageable, count, ingestions);
   }
@@ -77,6 +106,30 @@ public class DefaultIngestionHistoryService implements IngestionHistoryService {
     return Optional.ofNullable(datasetProcessStatusMapper.get(datasetKey, attempt))
         .map(this::toIngestionProcess)
         .orElse(null);
+  }
+
+  private IngestionProcess toIngestionProcess(
+      DatasetProcessStatus datasetProcessStatus,
+      PipelineProcess pipelineProcess,
+      String datasetTitle) {
+    UUID datasetKey = datasetProcessStatus.getDatasetKey();
+    int attempt = datasetProcessStatus.getCrawlJob().getAttempt();
+
+    IngestionProcess ingestionProcess =
+        new IngestionProcess()
+            .setDatasetKey(datasetKey)
+            .setAttempt(attempt)
+            .setCrawlInfo(datasetProcessStatus);
+
+    ingestionProcess.setDatasetTitle(datasetTitle);
+
+    // the process may not exist if that attempt never reached pipelines (e.g.: it was aborted
+    // before)
+    if (pipelineProcess != null) {
+      ingestionProcess.setPipelineExecutions(pipelineProcess.getExecutions());
+    }
+
+    return ingestionProcess;
   }
 
   private IngestionProcess toIngestionProcess(DatasetProcessStatus datasetProcessStatus) {
