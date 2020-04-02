@@ -53,12 +53,12 @@ import com.google.common.base.Strings;
  */
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
-public class CollectionEntityResource extends ExtendedCollectionEntityResource<Collection>
+public class CollectionResource extends ExtendedCollectionEntityResource<Collection>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
 
-  public CollectionEntityResource(
+  public CollectionResource(
       CollectionMapper collectionMapper,
       AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
