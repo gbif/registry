@@ -15,22 +15,29 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.DatabaseInitializer;
 import org.gbif.registry.RegistryIntegrationTestsConfiguration;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,6 +51,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,8 +75,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public abstract class BaseTest<
     T extends CollectionEntity & Identifiable & Taggable & MachineTaggable> {
 
-  protected static final String DEFAULT_OFFSET = "0";
-  protected static final String DEFAULT_LIMIT = "5";
+  protected static final int DEFAULT_OFFSET = 0;
+  protected static final int DEFAULT_LIMIT = 5;
   protected static final String OFFSET_PARAM = "offset";
   protected static final String LIMIT_PARAM = "limit";
   protected static final String Q_PARAM = "q";
@@ -79,14 +88,37 @@ public abstract class BaseTest<
       OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, MachineTag.class);
   protected static final JavaType LIST_IDENTIFIER_TYPE =
       OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Identifier.class);
+  protected static final JavaType LIST_PERSON_TYPE =
+      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Person.class);
+
+  protected static final BiFunction<Integer, Integer, Map<String, List<String>>> PAGE_PARAMS =
+      (offset, limit) -> {
+        Map<String, List<String>> params = new HashMap<>();
+        params.put(OFFSET_PARAM, Collections.singletonList(String.valueOf(offset)));
+        params.put(LIMIT_PARAM, Collections.singletonList(String.valueOf(limit)));
+        return params;
+      };
+
+  protected static final Function<String, Map<String, List<String>>> Q_SEARCH_PARAMS =
+      q -> {
+        Map<String, List<String>> params = PAGE_PARAMS.apply(DEFAULT_OFFSET, DEFAULT_LIMIT);
+        params.put(Q_PARAM, Collections.singletonList(q));
+        return params;
+      };
+
+  protected static final Supplier<Map<String, List<String>>> DEFAULT_QUERY_PARAMS =
+      () -> PAGE_PARAMS.apply(DEFAULT_OFFSET, DEFAULT_LIMIT);
 
   @Autowired protected MockMvc mockMvc;
   private final Class<T> clazz;
+  protected final JavaType pagingResponseType;
 
   @Rule public DatabaseInitializer databaseInitializer = new DatabaseInitializer();
 
   public BaseTest(Class<T> clazz) {
     this.clazz = clazz;
+    this.pagingResponseType =
+        OBJECT_MAPPER.getTypeFactory().constructParametricType(PagingResponse.class, clazz);
   }
 
   @Before
@@ -201,16 +233,31 @@ public abstract class BaseTest<
   }
 
   @Test
+  public void listWithoutParametersTest() throws Exception {
+    T entity1 = newEntity();
+    UUID key1 = createEntityCall(entity1);
+
+    T entity2 = newEntity();
+    UUID key2 = createEntityCall(entity2);
+
+    T entity3 = newEntity();
+    UUID key3 = createEntityCall(entity3);
+
+    // list
+    assertEquals(3, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
+
+    // delete and list
+    deleteEntityCall(key3);
+    assertEquals(2, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
+
+    // paging tests
+    assertEquals(1, listEntitiesCall(PAGE_PARAMS.apply(0, 1)).getResults().size());
+    assertEquals(0, listEntitiesCall(PAGE_PARAMS.apply(0, 0)).getResults().size());
+  }
+
+  @Test
   public void createFullEntityTest() throws Exception {
     T entity = newEntity();
-
-    Address address = new Address();
-    address.setAddress("address");
-    address.setCountry(Country.AFGHANISTAN);
-    address.setCity("city");
-
-    Address mailingAddress = new Address();
-    mailingAddress.setAddress("mailing");
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     entity.setMachineTags(Collections.singletonList(machineTag));
@@ -334,6 +381,21 @@ public abstract class BaseTest<
     assertEquals(0, listIdentifiersCall(key).size());
   }
 
+  @Test
+  public void listDeletedTest() throws Exception {
+    UUID key1 = createEntityCall(newEntity());
+    UUID key2 = createEntityCall(newEntity());
+
+    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
+    assertEquals(0, listDeletedCall(params).getResults().size());
+
+    deleteEntityCall(key1);
+    assertEquals(1, listDeletedCall(params).getResults().size());
+
+    deleteEntityCall(key2);
+    assertEquals(2, listDeletedCall(params).getResults().size());
+  }
+
   protected T getEntityCall(UUID key) throws Exception {
     return OBJECT_MAPPER.readValue(
         mockMvc
@@ -408,5 +470,73 @@ public abstract class BaseTest<
             .getResponse()
             .getContentAsString(),
         LIST_IDENTIFIER_TYPE);
+  }
+
+  protected PagingResponse<T> listEntitiesCall(Map<String, List<String>> queryParams)
+      throws Exception {
+    return OBJECT_MAPPER.readValue(
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(getBasePath())
+                    .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString(),
+        pagingResponseType);
+  }
+
+  protected PagingResponse<T> listDeletedCall(Map<String, List<String>> queryParams)
+      throws Exception {
+    return OBJECT_MAPPER.readValue(
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.get(getBasePath() + "deleted")
+                    .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString(),
+        pagingResponseType);
+  }
+
+  protected UUID createInstitutionCall(Institution entity) throws Exception {
+    return OBJECT_MAPPER.readValue(
+        mockMvc
+            .perform(
+                post("/grscicoll/institution")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(OBJECT_MAPPER.writeValueAsString(entity))
+                    .with(httpBasic("grscicoll_admin", TEST_PASSWORD)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString(),
+        UUID.class);
+  }
+
+  protected UUID createCollectionCall(Collection entity) throws Exception {
+    return OBJECT_MAPPER.readValue(
+        mockMvc
+            .perform(
+                post("/grscicoll/collection")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(OBJECT_MAPPER.writeValueAsString(entity))
+                    .with(httpBasic("grscicoll_admin", TEST_PASSWORD)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString(),
+        UUID.class);
+  }
+
+  protected UUID createPersonCall(Person entity) throws Exception {
+    return OBJECT_MAPPER.readValue(
+        mockMvc
+            .perform(
+                post("/grscicoll/person")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(OBJECT_MAPPER.writeValueAsString(entity))
+                    .with(httpBasic("grscicoll_admin", TEST_PASSWORD)))
+            .andReturn()
+            .getResponse()
+            .getContentAsString(),
+        UUID.class);
   }
 }

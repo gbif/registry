@@ -18,38 +18,21 @@ package org.gbif.registry.ws.resources.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import org.junit.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.util.CollectionUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JavaType;
-
-import static org.gbif.registry.ws.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /** Tests the {@link CollectionResource}. */
-public class CollectionIT extends BaseTest<Collection> {
+public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -63,50 +46,9 @@ public class CollectionIT extends BaseTest<Collection> {
   private static final String CODE_PARAM = "code";
   private static final String NAME_PARAM = "name";
   private static final String INSTITUTION_PARAM = "institution";
-  private static final String CONTACT_PARAM = "contact";
-
-  private static final TypeReference<PagingResponse<Collection>> PAGING_RESPONSE_COLLECTIONS_TYPE =
-      new TypeReference<PagingResponse<Collection>>() {};
-  private static final JavaType LIST_KEY_CODE_NAME_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, KeyCodeNameResult.class);
-
-  Supplier<Map<String, List<String>>> DEFAULT_QUERY_PARAMS =
-      () -> {
-        Map<String, List<String>> params = new HashMap<>();
-        params.put(OFFSET_PARAM, Collections.singletonList(DEFAULT_OFFSET));
-        params.put(LIMIT_PARAM, Collections.singletonList(DEFAULT_LIMIT));
-        return params;
-      };
-
-  BiFunction<Integer, Integer, Map<String, List<String>>> PAGE_PARAMS =
-      (offset, limit) -> {
-        Map<String, List<String>> params = new HashMap<>();
-        params.put(OFFSET_PARAM, Collections.singletonList(String.valueOf(offset)));
-        params.put(LIMIT_PARAM, Collections.singletonList(String.valueOf(limit)));
-        return params;
-      };
 
   public CollectionIT() {
     super(Collection.class);
-  }
-
-  @Test
-  public void listWithoutParametersTest() throws Exception {
-    // create some collections
-    createEntityCall(newEntity());
-    createEntityCall(newEntity());
-    UUID key3 = createEntityCall(newEntity());
-
-    // list
-    assertEquals(3, listCollectionsCall(DEFAULT_QUERY_PARAMS.get()).size());
-
-    // delete and list
-    deleteEntityCall(key3);
-    assertEquals(2, listCollectionsCall(DEFAULT_QUERY_PARAMS.get()).size());
-
-    // paging tests
-    assertEquals(1, listCollectionsCall(PAGE_PARAMS.apply(0, 1)).size());
-    assertEquals(0, listCollectionsCall(PAGE_PARAMS.apply(0, 0)).size());
   }
 
   @Test
@@ -130,65 +72,51 @@ public class CollectionIT extends BaseTest<Collection> {
     UUID key2 = createEntityCall(collection2);
 
     // query param
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    assertEquals(2, listCollectionsCall(params).size());
-
-    params.put(Q_PARAM, Collections.singletonList("dummy"));
-    assertEquals(2, listCollectionsCall(params).size());
+    assertEquals(2, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
+    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("dummy")).getResults().size());
 
     // empty queries are ignored and return all elements
-    params.put(Q_PARAM, Collections.singletonList(""));
-    assertEquals(2, listCollectionsCall(params).size());
+    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("")).getResults().size());
 
-    params.put(Q_PARAM, Collections.singletonList("city"));
-    List<Collection> collections = listCollectionsCall(params);
+    List<Collection> collections = listEntitiesCall(Q_SEARCH_PARAMS.apply("city")).getResults();
     assertEquals(1, collections.size());
     assertEquals(key1, collections.get(0).getKey());
 
-    params.put(Q_PARAM, Collections.singletonList("city2"));
-    collections = listCollectionsCall(params);
+    collections = listEntitiesCall(Q_SEARCH_PARAMS.apply("city2")).getResults();
     assertEquals(1, collections.size());
     assertEquals(key2, collections.get(0).getKey());
 
-    params.put(Q_PARAM, Collections.singletonList("c"));
-    assertEquals(2, listCollectionsCall(params).size());
-    params.put(Q_PARAM, Collections.singletonList("dum add"));
-    assertEquals(2, listCollectionsCall(params).size());
-    params.put(Q_PARAM, Collections.singletonList("<"));
-    assertEquals(0, listCollectionsCall(params).size());
-    params.put(Q_PARAM, Collections.singletonList("\"<\""));
-    assertEquals(0, listCollectionsCall(params).size());
-    params.put(Q_PARAM, Collections.singletonList(" "));
-    assertEquals(2, listCollectionsCall(params).size());
+    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("c")).getResults().size());
+    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("dum add")).getResults().size());
+    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("<")).getResults().size());
+    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("\"<\"")).getResults().size());
+    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply(" ")).getResults().size());
 
     // code and name params
-    params = DEFAULT_QUERY_PARAMS.get();
+    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
     params.put(CODE_PARAM, Collections.singletonList("c1"));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params = DEFAULT_QUERY_PARAMS.get();
     params.put(NAME_PARAM, Collections.singletonList("n2"));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params = DEFAULT_QUERY_PARAMS.get();
     params.put(CODE_PARAM, Collections.singletonList("c1"));
     params.put(NAME_PARAM, Collections.singletonList("n1"));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params.put(CODE_PARAM, Collections.singletonList("c2"));
-    assertEquals(0, listCollectionsCall(params).size());
+    assertEquals(0, listEntitiesCall(params).getResults().size());
 
     // update address
     collection2 = getEntityCall(key2);
     collection2.getAddress().setCity("city3");
     updateEntityCall(collection2);
-
-    params = DEFAULT_QUERY_PARAMS.get();
-    params.put(Q_PARAM, Collections.singletonList("city3"));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(Q_SEARCH_PARAMS.apply("city3")).getResults().size());
 
     deleteEntityCall(key2);
-    assertEquals(0, listCollectionsCall(params).size());
+    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("city3")).getResults().size());
   }
 
   @Test
@@ -218,13 +146,13 @@ public class CollectionIT extends BaseTest<Collection> {
 
     Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
     params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey1.toString()));
-    assertEquals(2, listCollectionsCall(params).size());
+    assertEquals(2, listEntitiesCall(params).getResults().size());
 
     params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey2.toString()));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params.put(INSTITUTION_PARAM, Collections.singletonList(UUID.randomUUID().toString()));
-    assertEquals(0, listCollectionsCall(params).size());
+    assertEquals(0, listEntitiesCall(params).getResults().size());
   }
 
   @Test
@@ -257,55 +185,16 @@ public class CollectionIT extends BaseTest<Collection> {
     Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
     params.put(Q_PARAM, Collections.singletonList("code1"));
     params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey1.toString()));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params.put(Q_PARAM, Collections.singletonList("foo"));
-    assertEquals(0, listCollectionsCall(params).size());
+    assertEquals(0, listEntitiesCall(params).getResults().size());
 
     params.put(Q_PARAM, Collections.singletonList("code2"));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey2.toString()));
-    assertEquals(0, listCollectionsCall(params).size());
-  }
-
-  @Test
-  public void listByContactTest() throws Exception {
-    // persons
-    Person person1 = new Person();
-    person1.setFirstName("first name");
-    UUID personKey1 = createPersonCall(person1);
-
-    Person person2 = new Person();
-    person2.setFirstName("first name2");
-    UUID personKey2 = createPersonCall(person2);
-
-    // collections
-    Collection collection1 = newEntity();
-    UUID collectionKey1 = createEntityCall(collection1);
-
-    Collection collection2 = newEntity();
-    UUID collectionKey2 = createEntityCall(collection2);
-
-    // add contacts
-    addContactCall(collectionKey1, personKey1);
-    addContactCall(collectionKey1, personKey1);
-    addContactCall(collectionKey1, personKey2);
-    addContactCall(collectionKey2, personKey2);
-
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    params.put(CONTACT_PARAM, Collections.singletonList(personKey1.toString()));
-    assertEquals(1, listCollectionsCall(params).size());
-    params.put(CONTACT_PARAM, Collections.singletonList(personKey2.toString()));
-    assertEquals(2, listCollectionsCall(params).size());
-    params.put(CONTACT_PARAM, Collections.singletonList(UUID.randomUUID().toString()));
-    assertEquals(0, listCollectionsCall(params).size());
-
-    // remove contact
-    mockMvc.perform(
-        delete(getBasePath() + collectionKey1.toString() + "/contact/" + personKey2.toString()));
-    params.put(CONTACT_PARAM, Collections.singletonList(personKey1.toString()));
-    assertEquals(1, listCollectionsCall(params).size());
+    assertEquals(0, listEntitiesCall(params).getResults().size());
   }
 
   @Test
@@ -324,28 +213,6 @@ public class CollectionIT extends BaseTest<Collection> {
     assertEquals(2, suggestCall("CC").size());
     assertEquals(1, suggestCall("CC2").size());
     assertEquals(1, suggestCall("name2").size());
-  }
-
-  @Test
-  public void listDeletedTest() throws Exception {
-    Collection collection1 = newEntity();
-    collection1.setCode("code1");
-    collection1.setName("Collection name");
-    UUID key1 = createEntityCall(collection1);
-
-    Collection collection2 = newEntity();
-    collection2.setCode("code2");
-    collection2.setName("Collection name2");
-    UUID key2 = createEntityCall(collection2);
-
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    assertEquals(0, listDeletedCall(params).size());
-
-    deleteEntityCall(key1);
-    assertEquals(1, listDeletedCall(params).size());
-
-    deleteEntityCall(key2);
-    assertEquals(2, listDeletedCall(params).size());
   }
 
   @Override
@@ -393,80 +260,5 @@ public class CollectionIT extends BaseTest<Collection> {
   @Override
   protected String getBasePath() {
     return "/grscicoll/collection/";
-  }
-
-  private List<Collection> listCollectionsCall(Map<String, List<String>> queryParams)
-      throws Exception {
-    return OBJECT_MAPPER
-        .readValue(
-            mockMvc
-                .perform(
-                    MockMvcRequestBuilders.get(getBasePath())
-                        .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            PAGING_RESPONSE_COLLECTIONS_TYPE)
-        .getResults();
-  }
-
-  private List<Collection> listDeletedCall(Map<String, List<String>> queryParams) throws Exception {
-    return OBJECT_MAPPER
-        .readValue(
-            mockMvc
-                .perform(
-                    MockMvcRequestBuilders.get(getBasePath() + "deleted")
-                        .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            PAGING_RESPONSE_COLLECTIONS_TYPE)
-        .getResults();
-  }
-
-  private UUID createInstitutionCall(Institution entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post("/grscicoll/institution")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic("grscicoll_admin", TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
-  }
-
-  private UUID createPersonCall(Person entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post("/grscicoll/person")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic("grscicoll_admin", TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
-  }
-
-  private void addContactCall(UUID collectionKey, UUID personKey) throws Exception {
-    mockMvc.perform(
-        post(getBasePath() + collectionKey.toString() + "/contact")
-            .contentType(MediaType.TEXT_PLAIN)
-            .content(personKey.toString())
-            .with(httpBasic("grscicoll_admin", TEST_PASSWORD)));
-  }
-
-  private List<KeyCodeNameResult> suggestCall(String query) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(get(getBasePath() + "suggest").queryParam(Q_PARAM, query))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        LIST_KEY_CODE_NAME_TYPE);
   }
 }
