@@ -88,8 +88,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
 
-  private static final int MINIMUM_PASSWORD_SIZE = 12;
-  private static final int MAXIMUM_PASSWORD_SIZE = 15;
+  public static final int MINIMUM_PASSWORD_SIZE = 12;
+  public static final int MAXIMUM_PASSWORD_SIZE = 15;
   private static final String ALLOWED_CHARACTERS =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
