@@ -25,6 +25,9 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 
 import java.util.Collection;
 import java.util.List;
@@ -76,12 +79,22 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   Map<UUID, String> getTitles(@RequestBody Collection<UUID> collection);
 
+  @Override
+  default PagingResponse<T> search(String query, Pageable page) {
+    throw new IllegalStateException("Network entity search not supported");
+  }
+
   @RequestMapping(
       method = RequestMethod.POST,
       value = "{key}/tag",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   int addTag(@PathVariable("key") UUID key, @RequestBody Tag tag);
+
+  @Override
+  default int addTag(UUID targetEntityKey, String value) {
+    throw new IllegalStateException("Network entity add tag by value not supported");
+  }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/tag/{tagKey}")
   @Override
@@ -141,24 +154,68 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   List<Endpoint> listEndpoints(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.POST, value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/machineTag",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   int addMachineTag(@PathVariable("key") UUID key, @RequestBody MachineTag machineTag);
+
+  @Override
+  default int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
+    throw new IllegalStateException(
+        "Network entity add machine tag by tag name and value not supported");
+  }
+
+  @Override
+  default int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
+    throw new IllegalStateException(
+        "Network entity add machine tag by namespace, name and value not supported");
+  }
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{machineTagKey}")
+  @Override
+  void deleteMachineTag(
+      @PathVariable("key") UUID key, @PathVariable("machineTagKey") int machineTagKey);
+
+  @Override
+  default void deleteMachineTags(UUID targetEntityKey, String namespace) {
+    throw new IllegalStateException(
+        "Network entity delete machine tags by namespace not supported");
+  }
+
+  @Override
+  default void deleteMachineTags(UUID targetEntityKey, TagNamespace tagNamespace) {
+    throw new IllegalStateException(
+        "Network entity delete machine tags by tag namespace not supported");
+  }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/machineTag/{namespace}/{name}")
   @Override
   void deleteMachineTags(
-    @PathVariable("key") UUID key,
-    @PathVariable("namespace") String namespace,
-    @PathVariable("name") String name);
+      @PathVariable("key") UUID key,
+      @PathVariable("namespace") String namespace,
+      @PathVariable("name") String name);
+
+  @Override
+  default void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
+    throw new IllegalStateException(
+        "Network entity delete machine tags by namespace and name not supported");
+  }
 
   @RequestMapping(
-    method = RequestMethod.GET,
-    value = "{key}/machineTag",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "{key}/machineTag",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   List<MachineTag> listMachineTags(@PathVariable("key") UUID key);
+
+  @Override
+  default PagingResponse<T> listByMachineTag(
+      String namespace, String name, String value, Pageable page) {
+    throw new IllegalStateException("Network entity list by machine tag not supported");
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -198,4 +255,15 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @ResponseBody
   @Override
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
+
+  @Override
+  default PagingResponse<T> listByIdentifier(
+      IdentifierType type, String identifier, Pageable page) {
+    throw new IllegalStateException("Network entity list by identifier not supported");
+  }
+
+  @Override
+  default PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
+    throw new IllegalStateException("Network entity list by identifier not supported");
+  }
 }
