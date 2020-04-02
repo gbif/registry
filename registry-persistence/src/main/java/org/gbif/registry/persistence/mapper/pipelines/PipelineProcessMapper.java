@@ -112,4 +112,8 @@ public interface PipelineProcessMapper {
   PipelineStep getPipelineStep(@Param("key") long key);
 
   void updatePipelineStep(@Param("step") PipelineStep step);
+
+  List<PipelineProcess> getPipelineProcessesByDatasetAndAttempts(
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("attempts") List<Integer> attempts);
 }
