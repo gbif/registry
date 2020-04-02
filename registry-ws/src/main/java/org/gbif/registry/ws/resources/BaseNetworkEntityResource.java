@@ -643,18 +643,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param contactKey key of Contact to update
    * @param contact updated Contact
    */
-  @PutMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(
+      value = {"{key}/contact", "{key}/contact/{contactKey}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void updateContact(
       @PathVariable("key") UUID targetEntityKey,
-      @PathVariable int contactKey,
+      @PathVariable(value = "contactKey", required = false) Integer contactKey,
       @RequestBody @NotNull @Trim Contact contact) {
     // for safety, and to match a nice RESTful URL structure
-    Preconditions.checkArgument(
-        Integer.valueOf(contactKey).equals(contact.getKey()),
-        "Provided contact (key) does not match the path provided");
+    if (contactKey != null) {
+      Preconditions.checkArgument(
+          contactKey.equals(contact.getKey()),
+          "Provided contact (key) does not match the path provided");
+    }
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     contact.setModifiedBy(authentication.getName());
     updateContact(targetEntityKey, contact);
