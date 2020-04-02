@@ -136,6 +136,7 @@ public abstract class BaseCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathVariable @NotNull UUID key, Authentication authentication) {
     T entityToDelete = get(key);
+    checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
 
     if (!isAllowedToEditEntity(authentication, entityToDelete)) {
       throw new WebApplicationException(
