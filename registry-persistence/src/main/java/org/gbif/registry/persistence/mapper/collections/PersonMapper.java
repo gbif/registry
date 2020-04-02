@@ -31,19 +31,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PersonMapper extends BaseMapper<Person> {
 
-  // TODO: 2019-07-24 get, create, delete, update inherited explicitly because of exception
-  @Override
-  Person get(@Param("key") UUID key);
-
-  @Override
-  void create(Person entity);
-
-  @Override
-  void delete(@Param("key") UUID key);
-
-  @Override
-  void update(Person entity);
-
   List<Person> list(
       @Nullable @Param("institutionKey") UUID institutionKey,
       @Nullable @Param("collectionKey") UUID collectionKey,
