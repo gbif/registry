@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
-  <!-- Maps a occurrence download  and handles the different types of downloads-->
+  <!-- Maps an occurrence download  and handles the different types of downloads-->
   <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download" autoMapping="false">
     <id property="key" column="key"/>
     <result property="doi" column="doi" />
@@ -30,7 +30,19 @@
         <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
+        <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
         <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="IUCN" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="BLOODHOUND" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
       </discriminator>
