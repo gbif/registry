@@ -252,11 +252,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.createMetasync(metasyncHistory);
   }
 
+  @PostMapping(value = "metasync", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void createMetasync(@Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
+  public void createMetasync(@RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     metasyncHistoryMapper.create(metasyncHistory);
   }
 
