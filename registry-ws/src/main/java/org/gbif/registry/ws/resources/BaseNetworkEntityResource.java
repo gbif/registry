@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -414,8 +413,11 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * the action by looking at the namespace.
    */
   @SuppressWarnings("unchecked")
+  @DeleteMapping(value = "{key}/machineTag/{machineTagKey:[0-9]+}", consumes = MediaType.ALL_VALUE)
   public void deleteMachineTagByMachineTagKey(
-      UUID targetEntityKey, int machineTagKey, Authentication authentication) {
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable("machineTagKey") int machineTagKey,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     List<MachineTag> machineTags = mapper.listMachineTags(targetEntityKey);
@@ -461,8 +463,11 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag in a namespace. Ensures that the caller is
    * authorized to perform the action by looking at the namespace.
    */
+  @DeleteMapping(value = "{key}/machineTag/{namespace:.*[^0-9]+.*}", consumes = MediaType.ALL_VALUE)
   public void deleteMachineTagsByNamespace(
-      UUID targetEntityKey, String namespace, Authentication authentication) {
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable("namespace") String namespace,
+      Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
@@ -472,22 +477,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
           HttpStatus.FORBIDDEN);
     }
     deleteMachineTags(targetEntityKey, namespace);
-  }
-
-  /**
-   * It was added because of an ambiguity problem. (Spring can't distinguish
-   * {key}/machineTag/{namespace} and {key}/machineTag/{machineTagKey:[0-9]+})
-   */
-  @DeleteMapping(value = "{key}/machineTag/{parameter}", consumes = MediaType.ALL_VALUE)
-  public void deleteMachineTags(
-      @PathVariable("key") UUID targetEntityKey,
-      @PathVariable String parameter,
-      Authentication authentication) {
-    if (Pattern.compile("[0-9]+").matcher(parameter).matches()) {
-      deleteMachineTagByMachineTagKey(targetEntityKey, Integer.parseInt(parameter), authentication);
-    } else {
-      deleteMachineTagsByNamespace(targetEntityKey, parameter, authentication);
-    }
   }
 
   @Override
