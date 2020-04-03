@@ -83,6 +83,10 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
       @PathVariable("key") String key, @SpringQueryMap Pageable page);
 
+  @RequestMapping(method = RequestMethod.GET, value = "{key}/citation")
+  @Override
+  String getCitation(@PathVariable("key") String keyOrDoi);
+
   @RequestMapping(
       method = RequestMethod.GET,
       value = "statistics/downloadsByUserCountry",
