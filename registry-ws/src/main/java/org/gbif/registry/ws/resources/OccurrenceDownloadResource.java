@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -76,6 +75,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
+// TODO: 04/04/2020 some methods should accept doi instead of key, see oldMaster
 /** Occurrence download resource/web service. */
 @RestController
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)

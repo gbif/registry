@@ -59,6 +59,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final URI downloadTarget;
   private final URI dataPackageTarget;
   private static final int RANDOM_LENGTH = 6;
+  private static final String DOI_CHARACTERS = "23456789abcdefghjkmnpqrstuvwxyz"; // Exclude 0o 1il
 
   private final String prefix;
 
@@ -115,7 +116,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
    */
   private DOI random(@Nullable String shoulder) {
     String suffix =
-        Strings.nullToEmpty(shoulder) + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH);
+        Strings.nullToEmpty(shoulder) + RandomStringUtils.random(RANDOM_LENGTH, DOI_CHARACTERS);
     return new DOI(prefix, suffix);
   }
 
