@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -216,6 +217,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                 datasetOccurrenceDownloadMapper.createUsages(
                     downloadKey,
                     batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+  }
+
+  // TODO: 04/04/2020 see commit from oldMaster 31/03/2020
+  @GetMapping("{key:.+}/citation")
+  @Override
+  @NullToNotFound
+  public String getCitation(@NotNull @PathVariable("key") String keyOrDoi) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
