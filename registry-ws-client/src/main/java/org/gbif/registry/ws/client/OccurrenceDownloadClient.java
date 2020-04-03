@@ -15,10 +15,10 @@
  */
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.annotation.PartialDate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.Download.Status;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
@@ -28,23 +28,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+@RequestMapping("occurrence/download")
 public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
 
+  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  default void create(@NotNull Download download) {
-    throw new IllegalStateException("Occurrence download create not supported");
-  }
+  void create(@RequestBody Download download);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -52,25 +50,29 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  Download get(@NotNull @PathVariable("key") String key);
+  Download get(@PathVariable("key") String key);
 
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default PagingResponse<Download> list(@Nullable Pageable pageable, @Nullable Set<Status> set) {
-    throw new IllegalStateException("Occurrence download list not supported");
-  }
-
-  @Override
-  default PagingResponse<Download> listByUser(
-      @NotNull String s, @Nullable Pageable pageable, @Nullable Set<Status> set) {
-    throw new IllegalStateException("Occurrence download list by user not supported");
-  }
+  PagingResponse<Download> list(
+      @SpringQueryMap Pageable pageable,
+      @RequestParam(value = "status", required = false) Set<Download.Status> status);
 
   @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "occurrence/download",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "user/{user}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  void update(@RequestBody @NotNull Download download);
+  PagingResponse<Download> listByUser(
+      @PathVariable("user") String user,
+      @SpringQueryMap Pageable pageable,
+      @RequestParam(value = "status", required = false) Set<Download.Status> status);
+
+  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void update(@RequestBody Download download);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -79,20 +81,30 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
   @ResponseBody
   @Override
   PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
-      @NotNull @PathVariable("key") String key, @SpringQueryMap Pageable page);
+      @PathVariable("key") String key, @SpringQueryMap Pageable page);
 
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "statistics/downloadsByUserCountry",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
-      @Nullable Date date, @Nullable Date date1, @Nullable Country country) {
-    throw new IllegalStateException("Occurrence download get by user country not supported");
-  }
+  Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
+      @PartialDate("fromDate") Date fromDate,
+      @PartialDate("toDate") Date toDate,
+      @RequestParam(value = "userCountry", required = false) Country userCountry);
 
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "statistics/downloadedRecordsByDataset",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
-      @Nullable Date date, @Nullable Date date1, @Nullable Country country, @Nullable UUID uuid) {
-    throw new IllegalStateException(
-        "Occurrence download get downloaded records by dataset not supported");
-  }
+  Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
+      @PartialDate("fromDate") Date fromDate,
+      @PartialDate("toDate") Date toDate,
+      @RequestParam(value = "publishingCountry", required = false) Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey);
 
   @RequestMapping(
       method = RequestMethod.POST,
