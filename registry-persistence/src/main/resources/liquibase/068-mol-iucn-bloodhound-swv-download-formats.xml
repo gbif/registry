@@ -1,0 +1,16 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="68" author="mblissett" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      ALTER TYPE enum_download_format ADD VALUE 'MAP_OF_LIFE' AFTER 'SQL';
+      ALTER TYPE enum_download_format ADD VALUE 'SIMPLE_WITH_VERBATIM_AVRO' AFTER 'MAP_OF_LIFE';
+      ALTER TYPE enum_download_format ADD VALUE 'BLOODHOUND' AFTER 'SIMPLE_WITH_VERBATIM_AVRO';
+      ALTER TYPE enum_download_format ADD VALUE 'IUCN' AFTER 'BLOODHOUND';
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
