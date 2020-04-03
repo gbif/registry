@@ -23,8 +23,6 @@ import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
-import org.gbif.ws.security.GbifAuthService;
-import org.gbif.ws.security.GbifAuthServiceImpl;
 
 import java.util.Date;
 
@@ -39,8 +37,15 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableLoadTimeWeaving;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
@@ -83,6 +88,8 @@ import org.springframework.context.annotation.PropertySource;
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
+@EnableLoadTimeWeaving(aspectjWeaving = EnableLoadTimeWeaving.AspectJWeaving.ENABLED)
+@EnableCaching
 public class RegistryIntegrationTestsConfiguration {
 
   private static final Logger LOG =
@@ -134,5 +141,18 @@ public class RegistryIntegrationTestsConfiguration {
     convertUtilsBean.register(dateConverter, Date.class);
 
     return new BeanUtilsBean(convertUtilsBean);
+  }
+
+
+  @Configuration
+  @EnableCaching(mode = AdviceMode.ASPECTJ)
+  public class CachingConfiguration extends CachingConfigurerSupport {
+
+    @Bean
+    @Override
+    public CacheManager cacheManager() {
+      return new ConcurrentMapCacheManager();
+    }
+
   }
 }
