@@ -45,9 +45,9 @@ public class JwtDatabaseInitializer extends DatabaseInitializer {
   }
 
   @Override
-  public void beforeAll(ExtensionContext extensionContext) throws Exception {
+  public void beforeEach(ExtensionContext extensionContext) throws Exception {
     // clean db
-    super.beforeAll(extensionContext);
+    super.beforeEach(extensionContext);
 
     // add users
     createUser(

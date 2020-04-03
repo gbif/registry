@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ import com.google.common.base.Throwables;
  * public DatabaseInitializer = new DatabaseInitializer(getDatasource()); // developer required to provide datasource
  * </pre>
  */
-public class DatabaseInitializer implements BeforeAllCallback {
+public class DatabaseInitializer implements BeforeEachCallback {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatabaseInitializer.class);
   private final DataSource dataSource;
@@ -46,7 +47,7 @@ public class DatabaseInitializer implements BeforeAllCallback {
   }
 
   @Override
-  public void beforeAll(ExtensionContext extensionContext) throws Exception {
+  public void beforeEach(ExtensionContext extensionContext) throws Exception {
     LOG.info("Truncating registry tables");
     Connection connection = dataSource.getConnection();
     try {

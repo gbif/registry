@@ -50,6 +50,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 
+//import de.invesdwin.instrument.DynamicInstrumentationLoader;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -61,6 +62,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -97,6 +99,11 @@ public abstract class NetworkEntityTest<
 
   static class ContexInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+  /*  static {
+
+        DynamicInstrumentationLoader.waitForInitialized(); //dynamically attach java agent to jvm if not already present
+        DynamicInstrumentationLoader.initLoadTimeWeavingContext();
+    }*/
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
@@ -264,7 +271,7 @@ public abstract class NetworkEntityTest<
   public void testUpdateFailingValidation() {
     T n1 = create(newEntity(), 1);
     n1.setTitle("A"); // should fail as it is too short
-    assertThrows(ValidationException.class, () -> service.update(n1));
+    assertThrows(DataIntegrityViolationException.class, () -> service.update(n1));
   }
 
   @Test
