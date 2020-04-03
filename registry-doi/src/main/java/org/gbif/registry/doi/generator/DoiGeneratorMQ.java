@@ -42,6 +42,8 @@ public class DoiGeneratorMQ implements DoiGenerator {
   private final URI dataPackageTarget;
   private final String prefix;
   private static final int RANDOM_LENGTH = 6;
+  private static final String DOI_CHARACTERS = "23456789abcdefghjkmnpqrstuvwxyz"; // Exclude 0o 1il
+
   /**
    * The messagePublisher can be optional, and optional is not supported in constructor injection.
    */
@@ -106,7 +108,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
    * @return a random DOI with the given prefix. It is not guaranteed to be unique and might exist already
    */
   private DOI random(@Nullable String shoulder) {
-    String suffix = Strings.nullToEmpty(shoulder) + RandomStringUtils.randomAlphanumeric(RANDOM_LENGTH);
+    String suffix = Strings.nullToEmpty(shoulder) + RandomStringUtils.random(RANDOM_LENGTH, DOI_CHARACTERS);
     return new DOI(prefix, suffix);
   }
 
