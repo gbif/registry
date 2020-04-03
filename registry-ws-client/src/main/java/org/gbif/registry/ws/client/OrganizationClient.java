@@ -29,11 +29,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+@RequestMapping("organization")
 public interface OrganizationClient extends OrganizationService {
 
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "organization/{key}/publishedDataset",
+      value = "{key}/publishedDataset",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override

@@ -46,7 +46,7 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "occurrence/download/{key}",
+      value = "{key}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
@@ -76,7 +76,7 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "occurrence/download/{key}/datasets",
+      value = "{key}/datasets",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
@@ -108,7 +108,7 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.POST,
-      value = "occurrence/download/{key}/datasets",
+      value = "{key}/datasets",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   void createUsages(@PathVariable("key") String key, @RequestBody Map<UUID, Long> datasetCitations);
