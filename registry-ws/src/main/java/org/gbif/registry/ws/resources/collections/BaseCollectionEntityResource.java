@@ -357,7 +357,7 @@ public abstract class BaseCollectionEntityResource<
    * The webservice method to delete a machine tag. Ensures that the caller is authorized to perform
    * the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{machineTagKey:[0-9]+}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("machineTagKey") int machineTagKey,
@@ -402,7 +402,7 @@ public abstract class BaseCollectionEntityResource<
    * The webservice method to delete all machine tag in a namespace. Ensures that the caller is
    * authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace:.*[^0-9]+.*}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("namespace") String namespace,
@@ -431,7 +431,7 @@ public abstract class BaseCollectionEntityResource<
    * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
    * that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable String namespace,
