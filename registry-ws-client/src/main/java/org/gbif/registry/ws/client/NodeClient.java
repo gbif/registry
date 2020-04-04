@@ -76,8 +76,15 @@ public interface NodeClient extends NetworkEntityClient<Node>, NodeService {
 
   @Override
   default Node getByCountry(Country country) {
-    throw new UnsupportedOperationException("Not implemented in Ws Client");
+    return getByCountry(country.getIso2LetterCode());
   }
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "country/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  Node getByCountry(@PathVariable("key") String isoCode);
 
   @RequestMapping(
       method = RequestMethod.GET,

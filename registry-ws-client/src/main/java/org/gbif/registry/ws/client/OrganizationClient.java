@@ -65,10 +65,11 @@ public interface OrganizationClient extends OrganizationService {
   PagingResponse<Installation> installations(
       @PathVariable("key") UUID key, @SpringQueryMap Pageable pageable);
 
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default PagingResponse<Organization> listByCountry(Country country, Pageable pageable) {
-    throw new UnsupportedOperationException("OrganizationClient list by country not supported");
-  }
+  PagingResponse<Organization> listByCountry(
+      @RequestParam("country") Country country, @SpringQueryMap Pageable pageable);
 
   @RequestMapping(
       method = RequestMethod.GET,
