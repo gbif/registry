@@ -84,7 +84,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -275,13 +274,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, HttpServletRequest request) {
+  public Metadata insertMetadata(
+      @PathVariable("key") UUID datasetKey, @RequestBody byte[] document) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    try {
-      return insertMetadata(datasetKey, request.getInputStream(), authentication.getName());
-    } catch (IOException e) {
-      return null;
-    }
+    return insertMetadata(datasetKey, new ByteArrayInputStream(document), authentication.getName());
   }
 
   private Metadata insertMetadata(UUID datasetKey, InputStream document, String user) {
@@ -349,7 +345,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // check if we should update our registered base information
     if (dataset.isLockedForAutoUpdate()) {
       LOG.info(
-          "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
+          "Dataset {} locked for automatic updates. Uploaded metadata document does not modify registered dataset information",
           datasetKey);
 
     } else {
