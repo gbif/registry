@@ -27,13 +27,16 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.MetadataType;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -103,11 +106,22 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   void deleteMetadata(@PathVariable("key") int key);
 
-  // TODO: 05/04/2020 implement
   @Override
-  default Metadata insertMetadata(UUID uuid, InputStream inputStream) {
-    throw new IllegalStateException("Dataset insert metadata not supported");
+  default Metadata insertMetadata(UUID key, InputStream document) {
+    try {
+      return insertMetadata(key, IOUtils.toByteArray(document));
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unreadable document", e);
+    }
   }
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/document",
+      consumes = MediaType.APPLICATION_XML_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  Metadata insertMetadata(@PathVariable("key") UUID key, @RequestBody byte[] bytes);
 
   @Override
   default InputStream getMetadataDocument(UUID key) {
