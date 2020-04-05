@@ -57,16 +57,19 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   PagingResponse<Dataset> listConstituents(@SpringQueryMap Pageable pageable);
 
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default PagingResponse<Dataset> listByCountry(
-      Country country, DatasetType datasetType, Pageable pageable) {
-    throw new IllegalStateException("Dataset list by country not supported");
-  }
+  PagingResponse<Dataset> listByCountry(
+      @RequestParam("country") Country country,
+      @RequestParam(value = "type", required = false) DatasetType datasetType,
+      @SpringQueryMap Pageable pageable);
 
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default PagingResponse<Dataset> listByType(DatasetType datasetType, Pageable pageable) {
-    throw new IllegalStateException("Dataset list by type not supported");
-  }
+  PagingResponse<Dataset> listByType(
+      @RequestParam("type") DatasetType datasetType, @SpringQueryMap Pageable pageable);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -98,6 +101,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   void deleteMetadata(@PathVariable("key") int key);
 
+  // TODO: 05/04/2020 implement
   @Override
   default Metadata insertMetadata(UUID uuid, InputStream inputStream) {
     throw new IllegalStateException("Dataset insert metadata not supported");
@@ -143,8 +147,10 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   PagingResponse<Dataset> listDatasetsWithNoEndpoint(@SpringQueryMap Pageable pageable);
 
+  // TODO: 05/04/2020 does not work properly (encode slash?)
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   @Override
-  default PagingResponse<Dataset> listByDOI(String doi, Pageable pageable) {
-    throw new IllegalStateException("Dataset list by doi not supported");
-  }
+  PagingResponse<Dataset> listByDOI(
+      @RequestParam("doi") String doi, @SpringQueryMap Pageable pageable);
 }
