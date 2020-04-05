@@ -22,33 +22,49 @@ import org.gbif.api.service.registry.DatasetProcessStatusService;
 
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface DatasetProcessStatusClient extends DatasetProcessStatusService {
 
-  @Override
-  default void createDatasetProcessStatus(@NotNull DatasetProcessStatus datasetProcessStatus) {
-    throw new IllegalStateException("Dataset process status create not supported");
-  }
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "dataset/{datasetKey}/process",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void createDatasetProcessStatus(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @RequestBody DatasetProcessStatus datasetProcessStatus);
 
   @Override
-  default void updateDatasetProcessStatus(@NotNull DatasetProcessStatus datasetProcessStatus) {
-    throw new IllegalStateException("Dataset process status update not supported");
+  default void createDatasetProcessStatus(DatasetProcessStatus datasetProcessStatus) {
+    createDatasetProcessStatus(datasetProcessStatus.getDatasetKey(), datasetProcessStatus);
+  }
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "dataset/{datasetKey}/process/{attempt}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateDatasetProcessStatus(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
+      @RequestBody DatasetProcessStatus datasetProcessStatus);
+
+  default void updateDatasetProcessStatus(DatasetProcessStatus datasetProcessStatus) {
+    updateDatasetProcessStatus(
+        datasetProcessStatus.getDatasetKey(),
+        datasetProcessStatus.getCrawlJob().getAttempt(),
+        datasetProcessStatus);
   }
 
   @RequestMapping(
       method = RequestMethod.GET,
       value = "dataset/{datasetKey}/process/{attempt}",
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @Nullable
   @ResponseBody
   @Override
   DatasetProcessStatus getDatasetProcessStatus(
