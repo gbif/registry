@@ -923,11 +923,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return registryDatasetService.owningEntityKeys(entity);
   }
 
-  @GetMapping("doi/{doi:.+}")
   @Override
-  public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {
+  public PagingResponse<Dataset> listByDOI(String doi, Pageable page) {
     return new PagingResponse<>(
         page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+  }
+
+  @GetMapping("doi/{prefix}/{suffix}")
+  public PagingResponse<Dataset> listByDOI(
+      @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
+    return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
   }
 
   /** Encapsulates the params to pass in the body for the crawAll method. */
