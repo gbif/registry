@@ -245,9 +245,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return registryDatasetService.augmentWithMetadata(super.list(page));
   }
 
-  @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @Override
-  public InputStream getMetadataDocument(@PathVariable("key") UUID datasetKey) {
+  public InputStream getMetadataDocument(UUID datasetKey) {
+    byte[] bytes = getMetadataDocumentAsBytes(datasetKey);
+
+    if (bytes != null) {
+      return new ByteArrayInputStream(bytes);
+    }
+
+    return null;
+  }
+
+  @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
+  public byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID datasetKey) {
     // the fully augmented dataset
     Dataset dataset = get(datasetKey);
     if (dataset != null) {
@@ -255,8 +265,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       try {
         StringWriter eml = new StringWriter();
         EMLWriter.write(dataset, eml);
-        return new ByteArrayInputStream(eml.toString().getBytes(StandardCharsets.UTF_8));
-
+        return eml.toString().getBytes(StandardCharsets.UTF_8);
       } catch (Exception e) {
         throw new ServiceUnavailableException("Failed to serialize dataset " + datasetKey, e);
       }
@@ -664,7 +673,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * more parameters.
    */
   @Override
-  public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, InputStream document) {
+  public Metadata insertMetadata(UUID datasetKey, InputStream document) {
     // this method should never be called but from tests
     return insertMetadata(datasetKey, document, "UNKNOWN USER");
   }
@@ -705,10 +714,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return metadataMapper.get(key);
   }
 
-  @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @Override
+  @NullToNotFound
+  public InputStream getMetadataDocument(int key) {
+    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+  }
+
+  // TODO: 05/04/2020 change API to return byte[]?
+  @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{key}/document")
-  public InputStream getMetadataDocument(@PathVariable int key) {
+  public byte[] getMetadataDocumentAsBytes(@PathVariable int key) {
     return registryDatasetService.getMetadataDocument(key);
   }
 

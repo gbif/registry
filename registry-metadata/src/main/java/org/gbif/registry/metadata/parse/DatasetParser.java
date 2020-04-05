@@ -127,6 +127,20 @@ public class DatasetParser {
     return parse(detectParserType(new ByteArrayInputStream(data)), new ByteArrayInputStream(data));
   }
 
+  // TODO: 05/04/2020 remove another one
+  /**
+   * Analogue of {@link DatasetParser#build(InputStream)}.
+   *
+   * @param data to read
+   * @return The Dataset populated, never null
+   * @throws java.io.IOException If the Stream cannot be read from
+   * @throws IllegalArgumentException If the XML is not well formed or is not understood
+   */
+  public static Dataset build(byte[] data) throws IOException {
+    // detect the parser type
+    return parse(detectParserType(new ByteArrayInputStream(data)), new ByteArrayInputStream(data));
+  }
+
   public static Dataset parse(MetadataType type, InputStream xml) throws IOException {
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
