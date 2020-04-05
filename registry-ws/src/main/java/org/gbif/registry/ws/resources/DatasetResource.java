@@ -716,7 +716,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   @NullToNotFound
-  public InputStream getMetadataDocument(@PathVariable int key) {
+  public InputStream getMetadataDocument(int key) {
     return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
   }
 
