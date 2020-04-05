@@ -26,6 +26,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.MetadataType;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
@@ -108,21 +109,29 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
     throw new IllegalStateException("Dataset insert metadata not supported");
   }
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "{key}/document",
-      produces = MediaType.APPLICATION_XML_VALUE)
-  @ResponseBody
   @Override
-  InputStream getMetadataDocument(@PathVariable("key") UUID key);
+  default InputStream getMetadataDocument(UUID key) {
+    byte[] bytes = getMetadataDocumentAsBytes(key);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "metadata/{key}/document",
-      produces = MediaType.APPLICATION_XML_VALUE)
+    if (bytes != null) {
+      return new ByteArrayInputStream(bytes);
+    }
+
+    return null;
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "{key}/document")
   @ResponseBody
+  byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID key);
+
   @Override
-  InputStream getMetadataDocument(@PathVariable("key") int key);
+  default InputStream getMetadataDocument(int key) {
+    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "metadata/{key}/document")
+  @ResponseBody
+  byte[] getMetadataDocumentAsBytes(@PathVariable("key") int key);
 
   @RequestMapping(
       method = RequestMethod.GET,
