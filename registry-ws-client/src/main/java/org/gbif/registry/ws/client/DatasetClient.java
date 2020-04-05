@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.client;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -147,10 +148,19 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   PagingResponse<Dataset> listDatasetsWithNoEndpoint(@SpringQueryMap Pageable pageable);
 
-  // TODO: 05/04/2020 does not work properly (encode slash?)
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
+  default PagingResponse<Dataset> listByDOI(String doi, Pageable pageable) {
+    DOI doiObject = new DOI(doi);
+    return listByDOI(doiObject.getPrefix(), doiObject.getSuffix(), pageable);
+  }
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "doi/{prefix}/{suffix}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
   PagingResponse<Dataset> listByDOI(
-      @RequestParam("doi") String doi, @SpringQueryMap Pageable pageable);
+      @PathVariable("prefix") String prefix,
+      @PathVariable("suffix") String suffix,
+      @SpringQueryMap Pageable pageable);
 }
