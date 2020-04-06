@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.cli.common.spring;
 
+import org.gbif.api.service.directory.NodeService;
+import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.config.MessagingConfiguration;
@@ -25,10 +27,13 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
+import org.gbif.registry.directory.client.NodeClient;
+import org.gbif.registry.directory.client.ParticipantClient;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.messaging.RegistryRabbitConfiguration;
 import org.gbif.registry.ws.config.MyBatisConfiguration;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
 import org.gbif.ws.security.SigningService;
@@ -47,8 +52,6 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -169,7 +172,6 @@ public class SpringContextBuilder {
     }
 
     if (directoryConfiguration != null) {
-      ctx.register(FeignConfig.class);
       ctx.getEnvironment()
           .getPropertySources()
           .addLast(
@@ -179,12 +181,24 @@ public class SpringContextBuilder {
                       "directory.ws.url", directoryConfiguration.wsUrl,
                       "directory.app.key", directoryConfiguration.appKey,
                       "directory.app.secret", directoryConfiguration.appSecret)));
-      ctx.register(FeignAutoConfiguration.class);
 
       SigningService signingService = new SecretKeySigningService();
 
       ctx.registerBean("secretKeySigningService", SigningService.class, () -> signingService);
       ctx.register(Md5EncodeServiceImpl.class);
+
+      ClientFactory clientFactory =
+          new ClientFactory(
+              directoryConfiguration.appKey,
+              directoryConfiguration.wsUrl,
+              directoryConfiguration.appKey,
+              directoryConfiguration.appSecret);
+
+      ParticipantClient participantClient = clientFactory.newInstance(ParticipantClient.class);
+      NodeClient nodeClient = clientFactory.newInstance(NodeClient.class);
+
+      ctx.registerBean("participantClient", ParticipantService.class, () -> participantClient);
+      ctx.registerBean("nodeClient", NodeService.class, () -> nodeClient);
     }
 
     if (dataCiteConfiguration != null) {
@@ -256,7 +270,4 @@ public class SpringContextBuilder {
             classes = DatasetBatchIndexBuilder.class)
       })
   static class ApplicationConfig {}
-
-  @EnableFeignClients("org.gbif.registry.directory.client")
-  static class FeignConfig {}
 }
