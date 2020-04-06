@@ -23,15 +23,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aspects</artifactId>
-      <version>5.2.2.RELEASE</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-instrument</artifactId>
-      <version>5.2.2.RELEASE</version>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -136,10 +130,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <skipTests>true</skipTests>
-          <argLine>
-            -javaagent:${project.basedir}/aspectjweaver-1.9.5.jar
-            -javaagent:${project.basedir}/spring-instrument-5.2.2.RELEASE.jar
-          </argLine>
         </configuration>
       </plugin>
       <plugin>

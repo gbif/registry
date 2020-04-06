@@ -21,15 +21,14 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Nodes;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,27 +54,31 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
   private final OrganizationService service;
   private final NodeService nodeService;
 
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   @Inject
   public OrganizationIT(
-      OrganizationService service, NodeService nodeService, @Nullable SimplePrincipalProvider pp, ObjectMapper objectMapper) {
-    super(service, pp);
+      OrganizationService service,
+      NodeService nodeService,
+      @Nullable SimplePrincipalProvider pp,
+      Nodes nodes,
+      TestDataFactory testDataFactory) {
+    super(service, pp, testDataFactory);
     this.service = service;
     this.nodeService = nodeService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Test
   public void testSuggest() {
-    Node node = Nodes.newInstance(objectMapper);
+    Node node = testDataFactory.newNode();
     UUID nodeKey = nodeService.create(node);
 
-    Organization o1 = Organizations.newInstance(nodeKey);
+    Organization o1 = testDataFactory.newOrganization(nodeKey);
     o1.setTitle("Tim");
     UUID key1 = this.getService().create(o1);
 
-    Organization o2 = Organizations.newInstance(nodeKey);
+    Organization o2 = testDataFactory.newOrganization(nodeKey);
     o2.setTitle("The Tim");
     UUID key2 = this.getService().create(o2);
 
@@ -86,14 +89,14 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   @Test
   public void testEndorsements() {
-    Node node = Nodes.newInstance(objectMapper);
+    Node node = testDataFactory.newNode();
     nodeService.create(node);
     node = nodeService.list(new PagingRequest()).getResults().get(0);
 
     assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
     assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 0);
 
-    Organization o = Organizations.newInstance(node.getKey());
+    Organization o = testDataFactory.newOrganization(node.getKey());
     UUID key = this.getService().create(o);
     o = getService().get(key);
     assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
@@ -120,7 +123,7 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   @Test
   public void testByCountry() {
-    Node node = Nodes.newInstance(objectMapper);
+    Node node = testDataFactory.newNode();
     nodeService.create(node);
     node = nodeService.list(new PagingRequest()).getResults().get(0);
 
@@ -144,7 +147,7 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   private void createOrgs(UUID nodeKey, Country... countries) {
     for (Country c : countries) {
-      Organization o = Organizations.newInstance(nodeKey);
+      Organization o = testDataFactory.newOrganization(nodeKey);
       o.setCountry(c);
       o.setKey(service.create(o));
     }
@@ -152,9 +155,9 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   @Override
   protected Organization newEntity() {
-    UUID key = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID key = nodeService.create(testDataFactory.newNode());
     Node node = nodeService.get(key);
-    Organization o = Organizations.newInstance(node.getKey());
+    Organization o = testDataFactory.newOrganization(node.getKey());
     return o;
   }
 

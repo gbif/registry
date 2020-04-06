@@ -28,14 +28,10 @@ import org.gbif.api.model.registry.Tag;
 
 import org.apache.commons.beanutils.DynaClass;
 import org.apache.commons.beanutils.WrapDynaBean;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * An interceptor that will set the createdBy and or modifiedBy fields on object being modified in
@@ -44,29 +40,29 @@ import org.springframework.stereotype.Component;
  * service tests, since the tests call the interface service method, not the HTTP resource method
  * where the createdBy and modifiedBy fields are actually set.
  */
-@Aspect
-@Component
-public class TestValidateInterceptor  {
+public class TestValidateInterceptor {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestValidateInterceptor.class);
 
-  @Around(value= "execution(* *(@org.springframework.validation.annotation.Validated (*))) && args(arg) ||"
-                 + "execution(* *(..,@org.springframework.validation.annotation.Validated (*))) && args(..,arg)"
-                 + "execution(* *(..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,arg)"
-                 + "execution(* *(..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,arg)"
-                 + "execution(* *(..,..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,..,arg)"
-                 + "execution(* *(..,..,..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,..,..,arg)")
-  public Object inspect(ProceedingJoinPoint pjp, Object arg) throws Throwable{
+  @Around(
+      value =
+          "execution(* *(@org.springframework.validation.annotation.Validated (*))) && args(arg) ||"
+              + "execution(* *(..,@org.springframework.validation.annotation.Validated (*))) && args(..,arg)"
+              + "execution(* *(..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,arg)"
+              + "execution(* *(..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,arg)"
+              + "execution(* *(..,..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,..,arg)"
+              + "execution(* *(..,..,..,..,..,@org.springframework.validation.annotation.Validated (*))) && args(..,..,..,..,..,arg)")
+  public Object inspect(ProceedingJoinPoint pjp, Object arg) throws Throwable {
     if (arg instanceof NetworkEntity
-         || arg instanceof Comment
-         || arg instanceof Contact
-         || arg instanceof Endpoint
-         || arg instanceof Identifier
-         || arg instanceof MachineTag
-         || arg instanceof Tag
-         || arg instanceof Institution
-         || arg instanceof Collection
-         || arg instanceof Person) {
+        || arg instanceof Comment
+        || arg instanceof Contact
+        || arg instanceof Endpoint
+        || arg instanceof Identifier
+        || arg instanceof MachineTag
+        || arg instanceof Tag
+        || arg instanceof Institution
+        || arg instanceof Collection
+        || arg instanceof Person) {
       addRequiredFields(arg);
     }
     return pjp.proceed();
@@ -90,5 +86,4 @@ public class TestValidateInterceptor  {
       wrapped.set("modifiedBy", "WS TEST");
     }
   }
-
 }

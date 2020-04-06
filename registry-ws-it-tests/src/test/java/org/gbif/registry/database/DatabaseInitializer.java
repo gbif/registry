@@ -20,7 +20,6 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -136,6 +135,4 @@ public class DatabaseInitializer implements BeforeEachCallback {
     }
     LOG.info("Registry tables truncated");
   }
-
-
 }

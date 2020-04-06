@@ -16,7 +16,7 @@
 package org.gbif.registry.ws;
 
 import org.gbif.api.model.registry.Contact;
-import org.gbif.registry.utils.Contacts;
+import org.gbif.registry.test.TestDataFactory;
 
 import org.junit.Test;
 
@@ -24,11 +24,17 @@ import static org.gbif.registry.ws.LenientAssert.assertLenientEquals;
 
 public class LenientAssertTest {
 
+  private final TestDataFactory testDataFactory;
+
+  public LenientAssertTest(TestDataFactory testDataFactory) {
+    this.testDataFactory = testDataFactory;
+  }
+
   @Test
   public void testLenientAssert() {
-    Contact c = Contacts.newInstance();
+    Contact c = testDataFactory.newContact();
     assertLenientEquals("Same object should be the same", c, c);
-    Contact c2 = Contacts.newInstance();
+    Contact c2 = testDataFactory.newContact();
     assertLenientEquals("Equivalent object should be the same", c, c2);
     c2.setKey(1);
     assertLenientEquals("Key should be ignored", c, c2);

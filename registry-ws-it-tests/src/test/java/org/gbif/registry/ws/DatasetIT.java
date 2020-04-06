@@ -38,10 +38,8 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Datasets;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -58,7 +56,6 @@ import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.Ignore;
@@ -71,7 +68,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gbif.registry.utils.Datasets.buildExpectedProcessedProperties;
+import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -96,7 +93,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   @Autowired
   public DatasetIT(
@@ -106,14 +103,14 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       NodeService nodeService,
       InstallationService installationService,
       @Nullable SimplePrincipalProvider pp,
-      ObjectMapper objectMapper) {
-    super(service, pp);
+      TestDataFactory testDataFactory) {
+    super(service, pp, testDataFactory);
     this.service = service;
     this.searchService = searchService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Test
@@ -504,8 +501,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d = create(d, 1);
     assertSearch(d.getTitle(), 1); // 1 result expected
 
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
-    Organization o = Organizations.newInstance(nodeKey);
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
+    Organization o = testDataFactory.newOrganization(nodeKey);
     o.setTitle("ANEWORG");
     UUID organizationKey = organizationService.create(o);
     assertSearch(o.getTitle(), 0); // No datasets hosted by that organization yet
@@ -588,15 +585,15 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
   private Dataset newEntity(@Nullable Country publisherCountry) {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
     // publishing organization (required field)
-    Organization o = Organizations.newInstance(nodeKey);
+    Organization o = testDataFactory.newOrganization(nodeKey);
     if (publisherCountry != null) {
       o.setCountry(publisherCountry);
     }
     UUID organizationKey = organizationService.create(o);
 
-    Installation i = Installations.newInstance(organizationKey);
+    Installation i = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(i);
 
     return newEntity(organizationKey, installationKey);
@@ -609,7 +606,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
   private Dataset newEntity(UUID organizationKey, UUID installationKey) {
     // the dataset
-    Dataset d = Datasets.newInstance(organizationKey, installationKey);
+    Dataset d = testDataFactory.newDataset(organizationKey, installationKey);
     return d;
   }
 

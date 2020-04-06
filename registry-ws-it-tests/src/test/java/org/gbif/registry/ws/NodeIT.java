@@ -31,10 +31,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.List;
@@ -43,9 +40,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import com.google.common.collect.ImmutableMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -70,7 +68,7 @@ public class NodeIT extends NetworkEntityTest<Node> {
   private final InstallationService installationService;
   private final DatasetService datasetService;
   private int count;
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   private static final Map<Country, Integer> TEST_COUNTRIES =
       ImmutableMap.<Country, Integer>builder()
@@ -87,13 +85,13 @@ public class NodeIT extends NetworkEntityTest<Node> {
       InstallationService installationService,
       DatasetService datasetService,
       @Nullable SimplePrincipalProvider pp,
-      ObjectMapper objectMapper) {
-    super(nodeService, pp);
+      TestDataFactory testDataFactory) {
+    super(nodeService, pp, testDataFactory);
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   // @Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
@@ -137,6 +135,7 @@ public class NodeIT extends NetworkEntityTest<Node> {
       Identifier id = new Identifier();
       id.setType(IdentifierType.GBIF_PARTICIPANT);
       id.setIdentifier(TEST_COUNTRIES.get(c).toString());
+      id.setCreatedBy(getSimplePrincipalProvider().get().getName());
       nodeService.addIdentifier(n.getKey(), id);
     }
   }
@@ -187,17 +186,17 @@ public class NodeIT extends NetworkEntityTest<Node> {
     // endorsing node for the organization
     Node node = create(newEntity(), 1);
     // publishing organization (required field)
-    Organization o = Organizations.newInstance(node.getKey());
+    Organization o = testDataFactory.newOrganization(node.getKey());
     o.setEndorsementApproved(true);
     o.setEndorsingNodeKey(node.getKey());
     UUID organizationKey = organizationService.create(o);
     // hosting technical installation (required field)
-    Installation i = Installations.newInstance(organizationKey);
+    Installation i = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(i);
     // 2 datasets
-    Dataset d1 = Datasets.newInstance(organizationKey, installationKey);
+    Dataset d1 = testDataFactory.newDataset(organizationKey, installationKey);
     datasetService.create(d1);
-    Dataset d2 = Datasets.newInstance(organizationKey, installationKey);
+    Dataset d2 = testDataFactory.newDataset(organizationKey, installationKey);
     UUID d2Key = datasetService.create(d2);
 
     // test node service
@@ -215,6 +214,7 @@ public class NodeIT extends NetworkEntityTest<Node> {
    * so we activate this test to make sure IMS connections are working!
    */
   @Test
+  @Disabled("Feing Directory client hast to be mocked")
   public void testIms() {
     initVotingCountryNodes();
     Node es = nodeService.getByCountry(Country.SPAIN);
@@ -265,7 +265,7 @@ public class NodeIT extends NetworkEntityTest<Node> {
 
   @Override
   protected Node newEntity() {
-    return Nodes.newInstance(objectMapper);
+    return testDataFactory.newNode();
   }
 
   @Override
@@ -280,11 +280,11 @@ public class NodeIT extends NetworkEntityTest<Node> {
 
   @Test
   public void testSuggest() {
-    Node node1 = Nodes.newInstance(objectMapper);
+    Node node1 = testDataFactory.newNode();
     node1.setTitle("The Node");
     UUID key1 = nodeService.create(node1);
 
-    Node node2 = Nodes.newInstance(objectMapper);
+    Node node2 = testDataFactory.newNode();
     node2.setTitle("The Great Node");
     UUID key2 = nodeService.create(node2);
 

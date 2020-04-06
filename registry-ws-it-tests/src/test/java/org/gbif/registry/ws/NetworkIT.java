@@ -17,7 +17,7 @@ package org.gbif.registry.ws;
 
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.service.registry.NetworkService;
-import org.gbif.registry.utils.Networks;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -40,14 +40,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RunWith(Parameterized.class)
 public class NetworkIT extends NetworkEntityTest<Network> {
 
+  private final TestDataFactory testDataFactory;
+
   @Autowired
-  public NetworkIT(NetworkService service, @Nullable SimplePrincipalProvider pp) {
-    super(service, pp);
+  public NetworkIT(
+      NetworkService service,
+      @Nullable SimplePrincipalProvider pp,
+      TestDataFactory testDataFactory) {
+    super(service, pp, testDataFactory);
+    this.testDataFactory = testDataFactory;
   }
 
   @Override
   protected Network newEntity() {
-    return Networks.newInstance();
+    return testDataFactory.newNetwork();
   }
 
   /** Test doesn't make sense for a network. */

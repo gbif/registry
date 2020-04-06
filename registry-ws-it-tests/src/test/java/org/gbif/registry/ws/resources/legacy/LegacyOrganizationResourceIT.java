@@ -23,8 +23,8 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.utils.Contacts;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.utils.Requests;
 import org.gbif.utils.HttpUtil;
@@ -64,12 +64,16 @@ public class LegacyOrganizationResourceIT {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final TestDataFactory testDataFactory;
 
   @Autowired
   public LegacyOrganizationResourceIT(
-      OrganizationService organizationService, NodeService nodeService) {
+      OrganizationService organizationService,
+      NodeService nodeService,
+      TestDataFactory testDataFactory) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -79,8 +83,8 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationJSON() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
-    Contact c = Contacts.newInstance();
+    Organization organization = testDataFactory.newOrganization();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     organizationService.addContact(organization.getKey(), c);
 
@@ -130,8 +134,8 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationXML() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
-    Contact c = Contacts.newInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     organizationService.addContact(organization.getKey(), c);
 
@@ -185,7 +189,7 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationCallback() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // construct request uri
     String uri =
@@ -209,7 +213,7 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationLogin() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // construct request uri
     String uri =
@@ -232,7 +236,7 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationsJSON() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // construct request uri
     String uri = Requests.getRequestUri("/registry/organisation.json", localServerPort);
@@ -256,7 +260,7 @@ public class LegacyOrganizationResourceIT {
   @Test
   public void testGetOrganizationsXML() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // construct request uri
     String uri = Requests.getRequestUri("/registry/organisation", localServerPort);
@@ -283,8 +287,8 @@ public class LegacyOrganizationResourceIT {
   public void testGetOrganizationPasswordReminder()
       throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
-    Contact c = Contacts.newInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     organizationService.addContact(organization.getKey(), c);
 
@@ -315,8 +319,8 @@ public class LegacyOrganizationResourceIT {
     // Using mock-javamail to avoid remote connections
     Mailbox.clearAll();
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
-    Contact c = Contacts.newInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     // override email, set to null
     c.setEmail(null);

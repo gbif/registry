@@ -29,9 +29,9 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Datasets;
+import org.gbif.registry.test.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.utils.Requests;
 import org.gbif.utils.HttpUtil;
@@ -82,6 +82,7 @@ public class IptResourceIT {
 
   private final InstallationService installationService;
   private final DatasetService datasetService;
+  private final TestDataFactory testDataFactory;
 
   // set of HTTP form parameters sent in POST request
   private static final String IPT_NAME = "Test IPT Registry2";
@@ -104,10 +105,14 @@ public class IptResourceIT {
       URI.create("http://ipt.gbif.org/archive.do?r=ds123");
 
   @Autowired
-  public IptResourceIT(InstallationService installationService, DatasetService datasetService)
+  public IptResourceIT(
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory)
       throws ParserConfigurationException, SAXException {
     this.installationService = installationService;
     this.datasetService = datasetService;
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -124,7 +129,7 @@ public class IptResourceIT {
   @Test
   public void testRegisterIpt() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // populate params for ws
@@ -174,11 +179,11 @@ public class IptResourceIT {
   @Test
   public void testUpdateIpt() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // validate it
@@ -202,7 +207,8 @@ public class IptResourceIT {
 
     // send POST request with credentials
     HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
+        Requests.http.post(
+            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
     assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
 
     // some information that should have been updated
@@ -223,7 +229,8 @@ public class IptResourceIT {
 
     // send same POST request again, to check that duplicate contact and endpoints don't get
     // persisted
-    Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
+    Requests.http.post(
+        uri, null, null, testDataFactory.installationCredentials(installation), uefe);
 
     // retrieve newly updated installation, and make sure the same number of installations, contacts
     // and endpoints exist
@@ -248,11 +255,11 @@ public class IptResourceIT {
   @Test
   public void testUpdateIptButNotAuthorized() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -270,7 +277,8 @@ public class IptResourceIT {
     installation.setKey(UUID.randomUUID());
     // send POST request with credentials
     HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
+        Requests.http.post(
+            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
 
     // 401 expected
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
@@ -284,11 +292,11 @@ public class IptResourceIT {
   @Test
   public void testUpdateIptWithNoPrimaryContact() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -314,7 +322,8 @@ public class IptResourceIT {
 
     // send POST request with credentials
     HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Installations.credentials(installation), uefe);
+        Requests.http.post(
+            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
 
     // 400 expected
     assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
@@ -328,7 +337,7 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptButNotAuthorized() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // populate params for ws
     List<NameValuePair> data = buildIPTParameters(organization.getKey());
@@ -356,7 +365,7 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptWithNoPrimaryContact() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
 
     // populate params for ws
     List<NameValuePair> data = buildIPTParameters(organization.getKey());
@@ -400,11 +409,11 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptDataset() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -452,11 +461,11 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptEventDataset() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -521,11 +530,11 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptDatasetButNotAuthorized() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -558,11 +567,11 @@ public class IptResourceIT {
   @Test
   public void testRegisterIptDatasetWithNoPrimaryContact() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws
@@ -612,15 +621,15 @@ public class IptResourceIT {
   @Test
   public void testUpdateIptDataset() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // validate it
@@ -699,15 +708,15 @@ public class IptResourceIT {
   @Test
   public void testUpdateIptDatasetButNotAuthorized() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // populate params for ws
@@ -738,15 +747,15 @@ public class IptResourceIT {
   @Test
   public void testUpdateIptDatasetWithNoPrimaryContact() throws Exception {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // populate params for ws
@@ -787,15 +796,15 @@ public class IptResourceIT {
   @Test
   public void testDeleteIptDataset() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // construct update request uri

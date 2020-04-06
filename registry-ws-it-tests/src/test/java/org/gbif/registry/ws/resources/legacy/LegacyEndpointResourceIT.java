@@ -22,10 +22,8 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Endpoints;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.utils.Requests;
 import org.gbif.utils.HttpUtil;
@@ -76,10 +74,12 @@ public class LegacyEndpointResourceIT {
 
   private final DatasetService datasetService;
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final TestDataFactory testDataFactory;
 
   @Autowired
-  public LegacyEndpointResourceIT(DatasetService datasetService) {
+  public LegacyEndpointResourceIT(DatasetService datasetService, TestDataFactory testDataFactory) {
     this.datasetService = datasetService;
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -93,15 +93,15 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testRegisterLegacyEndpoint() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // populate params for ws
@@ -140,15 +140,15 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testRegisterLegacyEndpointButNotAuthorized() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // populate params for ws
@@ -176,15 +176,15 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testRegisterLegacyEndpointWithNoType() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // populate params for ws
@@ -221,19 +221,19 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testDeleteAllDatasetEndpoints() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // add endpooint for Dataset
-    Endpoint endpoint = Endpoints.newInstance();
+    Endpoint endpoint = testDataFactory.newEndpoint();
     datasetService.addEndpoint(datasetKey, endpoint);
 
     // count the number of endpoints
@@ -259,19 +259,19 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testGetLegacyEndpointsForDatasetJSON() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // add endpooint for Dataset
-    Endpoint endpoint = Endpoints.newInstance();
+    Endpoint endpoint = testDataFactory.newEndpoint();
     int endpointKey = datasetService.addEndpoint(datasetKey, endpoint);
 
     // count the number of endpoints
@@ -316,19 +316,19 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testGetLegacyEndpointsForDatasetXML() throws Exception {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // add endpooint for Dataset
-    Endpoint endpoint = Endpoints.newInstance();
+    Endpoint endpoint = testDataFactory.newEndpoint();
     int endpointKey = datasetService.addEndpoint(datasetKey, endpoint);
 
     // count the number of endpoints

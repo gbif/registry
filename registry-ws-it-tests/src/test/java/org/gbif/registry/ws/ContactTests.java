@@ -19,7 +19,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.ContactService;
 import org.gbif.api.service.registry.NetworkEntityService;
-import org.gbif.registry.utils.Contacts;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 public class ContactTests {
 
   public static <T extends NetworkEntity> void testAddDeleteUpdate(
-      ContactService service, T entity) {
+      ContactService service, T entity, TestDataFactory testDataFactory) {
 
     // check there are none on a newly created entity
     List<Contact> contacts = service.listContacts(entity.getKey());
@@ -42,8 +42,8 @@ public class ContactTests {
     assertTrue("Contact should be empty when none added", contacts.isEmpty());
 
     // test additions, both being primary
-    Integer key1 = service.addContact(entity.getKey(), Contacts.newInstance());
-    Integer key2 = service.addContact(entity.getKey(), Contacts.newInstance());
+    Integer key1 = service.addContact(entity.getKey(), testDataFactory.newContact());
+    Integer key2 = service.addContact(entity.getKey(), testDataFactory.newContact());
 
     // ordered by ascending created date (first contact appears first)
     contacts = service.listContacts(entity.getKey());
@@ -62,7 +62,7 @@ public class ContactTests {
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
     assertEquals("1 primary contact should remain after the deletion", 1, contacts.size());
-    Contact expected = Contacts.newInstance();
+    Contact expected = testDataFactory.newContact();
     Contact created = contacts.get(0);
     assertLenientEquals("Created contact does not read as expected", expected, created);
 
@@ -85,12 +85,15 @@ public class ContactTests {
 
   /** Tests that adding a contact means the entity is found in the search. */
   public static <T extends NetworkEntity> void testSimpleSearch(
-      ContactService service, NetworkEntityService<T> networkService, T entity) {
+      ContactService service,
+      NetworkEntityService<T> networkService,
+      T entity,
+      TestDataFactory testDataFactory) {
     assertEquals(
         "There should be no results for this search",
         Long.valueOf(0),
         networkService.search("Frankie", null).getCount());
-    Contact c = Contacts.newInstance();
+    Contact c = testDataFactory.newContact();
     c.setLastName("Frankie");
     service.addContact(entity.getKey(), c);
     assertEquals(

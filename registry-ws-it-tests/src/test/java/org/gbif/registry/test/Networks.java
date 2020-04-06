@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Network;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Networks extends JsonBackedData<Network> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final Networks INSTANCE = new Networks();
+@Component
+public class Networks extends JsonBackedData2<Network> {
 
-  public static Network newInstance() {
-    return INSTANCE.newTypedInstance();
-  }
-
-  private Networks() {
-    super("data/network.json", new TypeReference<Network>() {});
+  @Autowired
+  private Networks(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/network.json",
+        new TypeReference<Network>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }

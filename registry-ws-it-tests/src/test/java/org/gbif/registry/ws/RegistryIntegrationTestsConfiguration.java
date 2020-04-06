@@ -16,6 +16,7 @@
 package org.gbif.registry.ws;
 
 import org.gbif.api.service.registry.DatasetSearchService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
@@ -23,7 +24,9 @@ import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.Date;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
@@ -37,18 +40,15 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachingConfigurerSupport;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableLoadTimeWeaving;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @TestConfiguration
 @EnableAutoConfiguration
@@ -75,7 +75,8 @@ import org.springframework.context.annotation.PropertySource;
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
-      "org.gbif.registry.messaging"
+      "org.gbif.registry.messaging",
+      "org.gbif.registry.test"
     },
     excludeFilters = {
       @ComponentScan.Filter(
@@ -88,8 +89,6 @@ import org.springframework.context.annotation.PropertySource;
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
-@EnableLoadTimeWeaving(aspectjWeaving = EnableLoadTimeWeaving.AspectJWeaving.ENABLED)
-@EnableCaching
 public class RegistryIntegrationTestsConfiguration {
 
   private static final Logger LOG =
@@ -143,16 +142,23 @@ public class RegistryIntegrationTestsConfiguration {
     return new BeanUtilsBean(convertUtilsBean);
   }
 
+  @Bean
+  public SimplePrincipalProvider simplePrincipalProvider() {
+    SimplePrincipalProvider simplePrincipalProvider = new SimplePrincipalProvider();
+    simplePrincipalProvider.setPrincipal("WS TEST");
+    setSecurityPrincipal(simplePrincipalProvider, UserRole.REGISTRY_ADMIN);
+    return simplePrincipalProvider;
+  }
 
-  @Configuration
-  @EnableCaching(mode = AdviceMode.ASPECTJ)
-  public class CachingConfiguration extends CachingConfigurerSupport {
+  public static void setSecurityPrincipal(
+      SimplePrincipalProvider simplePrincipalProvider, UserRole userRole) {
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
 
-    @Bean
-    @Override
-    public CacheManager cacheManager() {
-      return new ConcurrentMapCacheManager();
-    }
-
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            simplePrincipalProvider.get().getName(),
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
   }
 }

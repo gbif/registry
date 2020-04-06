@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
@@ -22,16 +22,21 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.metadata.CitationGenerator;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Datasets extends JsonBackedData<Dataset> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static Datasets INSTANCE;
+@Component
+public class Datasets extends JsonBackedData2<Dataset> {
+
   private static DatasetService datasetService;
 
   public static final String DATASET_ALIAS = "BGBM";
@@ -42,16 +47,21 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC");
 
-  public Datasets(DatasetService datasetService) {
-    super("data/dataset.json", new TypeReference<Dataset>() {});
+  @Autowired
+  public Datasets(
+      DatasetService datasetService,
+      ObjectMapper objectMapper,
+      SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/dataset.json",
+        new TypeReference<Dataset>() {},
+        objectMapper,
+        simplePrincipalProvider);
     this.datasetService = datasetService;
-    if (INSTANCE == null) {
-      INSTANCE = new Datasets(datasetService);
-    }
   }
 
-  public static Dataset newInstance(UUID publishingOrganizationKey, UUID installationKey) {
-    Dataset d = INSTANCE.newTypedInstance();
+  public Dataset newInstance(UUID publishingOrganizationKey, UUID installationKey) {
+    Dataset d = super.newInstance();
     d.setPublishingOrganizationKey(publishingOrganizationKey);
     d.setInstallationKey(installationKey);
     d.setDoi(DATASET_DOI);
@@ -67,8 +77,8 @@ public class Datasets extends JsonBackedData<Dataset> {
    * @param installationKey installation key
    * @return persisted Dataset
    */
-  public static Dataset newPersistedInstance(UUID organizationKey, UUID installationKey) {
-    Dataset dataset = Datasets.newInstance(organizationKey, installationKey);
+  public Dataset newPersistedInstance(UUID organizationKey, UUID installationKey) {
+    Dataset dataset = newInstance(organizationKey, installationKey);
     UUID key = datasetService.create(dataset);
     // some properties like created, modified are only set when the dataset is retrieved anew
     return datasetService.get(key);
