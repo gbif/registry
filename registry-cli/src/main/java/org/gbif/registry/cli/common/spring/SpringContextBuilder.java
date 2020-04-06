@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.cli.common.spring;
 
-import org.gbif.api.service.directory.NodeService;
-import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.config.MessagingConfiguration;
@@ -27,13 +25,11 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
-import org.gbif.registry.directory.client.NodeClient;
-import org.gbif.registry.directory.client.ParticipantClient;
+import org.gbif.registry.directory.client.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
 import org.gbif.registry.messaging.RegistryRabbitConfiguration;
 import org.gbif.registry.ws.config.MyBatisConfiguration;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
-import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
 import org.gbif.ws.security.SigningService;
@@ -186,19 +182,7 @@ public class SpringContextBuilder {
 
       ctx.registerBean("secretKeySigningService", SigningService.class, () -> signingService);
       ctx.register(Md5EncodeServiceImpl.class);
-
-      ClientFactory clientFactory =
-          new ClientFactory(
-              directoryConfiguration.appKey,
-              directoryConfiguration.wsUrl,
-              directoryConfiguration.appKey,
-              directoryConfiguration.appSecret);
-
-      ParticipantClient participantClient = clientFactory.newInstance(ParticipantClient.class);
-      NodeClient nodeClient = clientFactory.newInstance(NodeClient.class);
-
-      ctx.registerBean("participantClient", ParticipantService.class, () -> participantClient);
-      ctx.registerBean("nodeClient", NodeService.class, () -> nodeClient);
+      ctx.register(DirectoryClientConfiguration.class);
     }
 
     if (dataCiteConfiguration != null) {
