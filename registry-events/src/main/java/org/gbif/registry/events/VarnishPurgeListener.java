@@ -308,7 +308,7 @@ public class VarnishPurgeListener {
     Set<UUID> institutionKeys = new UUIDHashSet();
     for (Person p : persons) {
       List<Institution> institutions =
-          institutionService.list(null, p.getKey(), null, null, null).getResults();
+          institutionService.list(null, p.getKey(), null, null, null, null).getResults();
       institutions.forEach(i -> institutionKeys.add(i.getKey()));
     }
 
