@@ -177,7 +177,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
     // ensure the test will run under the expected configuration
     assertTrue(
-        "OaipmhMockModule 'MaxListRecords' should be set to a value less than " + numberOfDataset,
+        "'MaxListRecords' should be set to a value less than " + numberOfDataset,
         numberOfDataset > OaipmhTestConfiguration.MAX_LIST_RECORDS);
 
     Iterator<Record> records =

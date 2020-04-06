@@ -45,6 +45,7 @@ public class InstitutionIT extends ExtendedCollectionEntityTest<Institution> {
   // query params
   private static final String CODE_PARAM = "code";
   private static final String NAME_PARAM = "name";
+  private static final String ALT_CODE_PARAM = "alternativeCode";
 
   public InstitutionIT() {
     super(Institution.class);
@@ -59,6 +60,7 @@ public class InstitutionIT extends ExtendedCollectionEntityTest<Institution> {
     address.setAddress("dummy address");
     address.setCity("city");
     institution1.setAddress(address);
+    institution1.setAlternativeCodes(Collections.singletonMap("alt", "test"));
     UUID key1 = createEntityCall(institution1);
 
     Institution institution2 = newEntity();
@@ -106,6 +108,14 @@ public class InstitutionIT extends ExtendedCollectionEntityTest<Institution> {
     assertEquals(1, listEntitiesCall(params).getResults().size());
 
     params.put(CODE_PARAM, Collections.singletonList("c2"));
+    assertEquals(0, listEntitiesCall(params).getResults().size());
+
+    // alternative code
+    params = DEFAULT_QUERY_PARAMS.get();
+    params.put(ALT_CODE_PARAM, Collections.singletonList("alt"));
+    assertEquals(1, listEntitiesCall(params).getResults().size());
+
+    params.put(ALT_CODE_PARAM, Collections.singletonList("foo"));
     assertEquals(0, listEntitiesCall(params).getResults().size());
 
     // update address

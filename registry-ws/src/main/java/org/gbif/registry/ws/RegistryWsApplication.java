@@ -58,7 +58,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
       "org.gbif.registry.messaging",
-      "org.gbif.registry.occurrenceclient",
+      "org.gbif.registry.occurrence.client",
       "org.gbif.registry.directory.client",
       "org.gbif.registry.oaipmh",
       "org.gbif.registry.service"
@@ -68,8 +68,7 @@ import org.springframework.context.annotation.FilterType;
           type = FilterType.ASSIGNABLE_TYPE,
           classes = DatasetBatchIndexBuilder.class)
     })
-@EnableFeignClients(
-    basePackages = {"org.gbif.registry.occurrenceclient", "org.gbif.registry.directory.client"})
+@EnableFeignClients
 public class RegistryWsApplication {
   public static void main(String[] args) {
     SpringApplication.run(RegistryWsApplication.class, args);

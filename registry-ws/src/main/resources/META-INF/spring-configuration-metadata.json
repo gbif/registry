@@ -11,31 +11,6 @@
     {
       "name": "jwt.issuer",
       "type": "java.lang.String"
-    },
-    {
-      "name": "url.api",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
-    },
-    {
-      "name": "url.portal",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
-    },
-    {
-      "name": "url.occurrenceApi",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
-    },
-    {
-      "name": "url.directoryApi",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
-    },
-    {
-      "name": "url.grscicollPortal",
-      "type": "java.lang.String",
-      "sourceType": "org.gbif.registry.ws.config.UrlConfigurationProperties"
     }
   ]
 }

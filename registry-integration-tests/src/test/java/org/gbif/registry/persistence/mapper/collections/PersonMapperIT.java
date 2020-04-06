@@ -177,4 +177,36 @@ public class PersonMapperIT {
     persons = personMapper.list(null, null, "dummy address f ", pageable);
     assertEquals(1, persons.size());
   }
+
+  @Test
+  public void searchWithWeightsTest() {
+    Person p1 = new Person();
+    p1.setKey(UUID.randomUUID());
+    p1.setFirstName("FN1");
+    p1.setCreatedBy("test");
+    p1.setModifiedBy("test");
+    p1.setPosition("FN2");
+    personMapper.create(p1);
+
+    Person p2 = new Person();
+    p2.setKey(UUID.randomUUID());
+    p2.setFirstName("FN2");
+    p2.setCreatedBy("test");
+    p2.setModifiedBy("test");
+    p2.setPosition("FN1");
+    personMapper.create(p2);
+
+    Pageable pageable = PAGE.apply(2, 0L);
+    List<Person> persons = personMapper.list(null, null, "FN1", pageable);
+    assertEquals(2, persons.size());
+
+    pageable = PAGE.apply(1, 0L);
+    persons = personMapper.list(null, null, "FN1", pageable);
+    assertEquals(1, persons.size());
+    assertEquals(p1.getKey(), persons.get(0).getKey());
+
+    persons = personMapper.list(null, null, "FN2", pageable);
+    assertEquals(1, persons.size());
+    assertEquals(p2.getKey(), persons.get(0).getKey());
+  }
 }

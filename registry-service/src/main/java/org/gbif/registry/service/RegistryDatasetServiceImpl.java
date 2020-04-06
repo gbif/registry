@@ -30,9 +30,7 @@ import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -52,7 +50,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 
 @Service
 public class RegistryDatasetServiceImpl implements RegistryDatasetService {
@@ -237,22 +234,21 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   @Nullable
   @Override
   public Dataset getPreferredMetadataDataset(UUID key) {
+    Dataset result = null;
     List<Metadata> docs = listMetadata(key, null);
     if (!docs.isEmpty()) {
-      InputStream stream = null;
+      // the list is sorted by priority already, just pick the first!
+      Integer metadataKey = docs.get(0).getKey();
+      byte[] metadataDocument = getMetadataDocument(metadataKey);
       try {
-        // the list is sorted by priority already, just pick the first!
-        stream = getMetadataDocument(docs.get(0).getKey());
-        return DatasetParser.build(stream);
+        result = DatasetParser.build(metadataDocument);
       } catch (IOException | IllegalArgumentException e) {
         // Not sure if we should not propagate an Exception to return a 500 instead
-        LOG.error("Stored metadata document {} cannot be read", docs.get(0).getKey(), e);
-      } finally {
-        Closeables.closeQuietly(stream);
+        LOG.error("Stored metadata document {} cannot be read", metadataKey, e);
       }
     }
 
-    return null;
+    return result;
   }
 
   @Override
@@ -262,12 +258,12 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   @NullToNotFound
   @Override
-  public InputStream getMetadataDocument(int metadataKey) {
+  public byte[] getMetadataDocument(int metadataKey) {
     ByteArrayWrapper document = metadataMapper.getDocument(metadataKey);
     if (document == null) {
       return null;
     }
-    return new ByteArrayInputStream(document.getData());
+    return document.getData();
   }
 
   @Override

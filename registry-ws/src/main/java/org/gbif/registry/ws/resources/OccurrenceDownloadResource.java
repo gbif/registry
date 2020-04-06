@@ -75,6 +75,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
+// TODO: 04/04/2020 some methods should accept doi instead of key, see oldMaster
 /** Occurrence download resource/web service. */
 @RestController
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -216,6 +217,14 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                 datasetOccurrenceDownloadMapper.createUsages(
                     downloadKey,
                     batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
+  }
+
+  // TODO: 04/04/2020 see commit from oldMaster 31/03/2020
+  @GetMapping("{key:.+}/citation")
+  @Override
+  @NullToNotFound
+  public String getCitation(@NotNull @PathVariable("key") String keyOrDoi) {
+    throw new UnsupportedOperationException("Not implemented");
   }
 
   @GetMapping("statistics/downloadsByUserCountry")

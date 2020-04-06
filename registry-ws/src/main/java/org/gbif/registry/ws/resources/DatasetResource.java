@@ -84,7 +84,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -245,9 +244,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return registryDatasetService.augmentWithMetadata(super.list(page));
   }
 
-  @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @Override
-  public InputStream getMetadataDocument(@PathVariable("key") UUID datasetKey) {
+  public InputStream getMetadataDocument(UUID datasetKey) {
+    byte[] bytes = getMetadataDocumentAsBytes(datasetKey);
+
+    if (bytes != null) {
+      return new ByteArrayInputStream(bytes);
+    }
+
+    return null;
+  }
+
+  @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
+  public byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID datasetKey) {
     // the fully augmented dataset
     Dataset dataset = get(datasetKey);
     if (dataset != null) {
@@ -255,8 +264,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       try {
         StringWriter eml = new StringWriter();
         EMLWriter.write(dataset, eml);
-        return new ByteArrayInputStream(eml.toString().getBytes(StandardCharsets.UTF_8));
-
+        return eml.toString().getBytes(StandardCharsets.UTF_8);
       } catch (Exception e) {
         throw new ServiceUnavailableException("Failed to serialize dataset " + datasetKey, e);
       }
@@ -266,13 +274,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, HttpServletRequest request) {
+  public Metadata insertMetadata(
+      @PathVariable("key") UUID datasetKey, @RequestBody byte[] document) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    try {
-      return insertMetadata(datasetKey, request.getInputStream(), authentication.getName());
-    } catch (IOException e) {
-      return null;
-    }
+    return insertMetadata(datasetKey, new ByteArrayInputStream(document), authentication.getName());
   }
 
   private Metadata insertMetadata(UUID datasetKey, InputStream document, String user) {
@@ -340,7 +345,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // check if we should update our registered base information
     if (dataset.isLockedForAutoUpdate()) {
       LOG.info(
-          "Dataset {} locked for automatic updates. Uploaded metadata document not does not modify registered dataset information",
+          "Dataset {} locked for automatic updates. Uploaded metadata document does not modify registered dataset information",
           datasetKey);
 
     } else {
@@ -664,7 +669,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * more parameters.
    */
   @Override
-  public Metadata insertMetadata(@PathVariable("key") UUID datasetKey, InputStream document) {
+  public Metadata insertMetadata(UUID datasetKey, InputStream document) {
     // this method should never be called but from tests
     return insertMetadata(datasetKey, document, "UNKNOWN USER");
   }
@@ -705,10 +710,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return metadataMapper.get(key);
   }
 
-  @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @Override
+  @NullToNotFound
+  public InputStream getMetadataDocument(int key) {
+    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+  }
+
+  // TODO: 05/04/2020 change API to return byte[]?
+  @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{key}/document")
-  public InputStream getMetadataDocument(@PathVariable int key) {
+  public byte[] getMetadataDocumentAsBytes(@PathVariable int key) {
     return registryDatasetService.getMetadataDocument(key);
   }
 
@@ -908,11 +919,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return registryDatasetService.owningEntityKeys(entity);
   }
 
-  @GetMapping("doi/{doi:.+}")
   @Override
-  public PagingResponse<Dataset> listByDOI(@PathVariable String doi, Pageable page) {
+  public PagingResponse<Dataset> listByDOI(String doi, Pageable page) {
     return new PagingResponse<>(
         page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+  }
+
+  @GetMapping("doi/{prefix}/{suffix}")
+  public PagingResponse<Dataset> listByDOI(
+      @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
+    return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
   }
 
   /** Encapsulates the params to pass in the body for the crawAll method. */

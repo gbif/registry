@@ -47,7 +47,7 @@ public class DatasetOccurrenceDownloadUsageResource
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
   }
 
-  @GetMapping("/{datasetKey}")
+  @GetMapping("{datasetKey}")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
       @PathVariable UUID datasetKey, Pageable page) {

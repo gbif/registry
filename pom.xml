@@ -73,6 +73,7 @@
     <module>registry-oaipmh</module>
     <module>registry-security</module>
     <module>registry-cli</module>
+    <module>registry-ws-client</module>
     <module>registry-ws-it-tests</module>
   </modules>
 
@@ -97,7 +98,7 @@
     <gbif-common-ws.version>0.49.4-sb-SNAPSHOT</gbif-common-ws.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
-    <gbif-download-query-tools.version>1.27.1-sb</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.27.2-sb-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.44.4-jackson2-SNAPSHOT</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
     <gbif-api.version>0.108-jackson2-SNAPSHOT</gbif-api.version>
@@ -118,7 +119,7 @@
     <janino-logback.version>2.5.10</janino-logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
-    <feign-jackson.version>10.7.4</feign-jackson.version>
+    <feign.version>10.4.0</feign.version>
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
 
@@ -288,6 +289,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-ws-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
         <artifactId>registry-service</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -447,8 +453,23 @@
       </dependency>
       <dependency>
         <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-core</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-slf4j</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-hystrix</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
         <artifactId>feign-jackson</artifactId>
-        <version>${feign-jackson.version}</version>
+        <version>${feign.version}</version>
       </dependency>
 
       <dependency>

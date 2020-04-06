@@ -79,3 +79,4 @@ For more information see [documentation](https://github.com/diffplug/spotless/tr
  - [**registry-service**](registry-service/README.md)
  - [**registry-surety**](registry-surety/README.md)
  - [**registry-ws**](registry-ws/README.md)
+ - [**registry-ws-client**](registry-ws-client/README.md)

@@ -57,6 +57,7 @@ import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
@@ -178,6 +179,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("CollectionSummaryTypeHandler", CollectionSummaryTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("AlternativeCodesTypeHandler", AlternativeCodesTypeHandler.class);
     };
   }
 }

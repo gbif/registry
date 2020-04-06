@@ -13,30 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.occurrenceclient;
+package org.gbif.registry.ws.client.collections;
+
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.service.collections.CrudService;
 
 import java.util.UUID;
 
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-/** Access to Occurrence metrics. */
-@FeignClient(value = "OccurrenceMetricsClient", url = "${url.occurrenceApi}")
-public interface OccurrenceMetricsClient {
+public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
 
-  /**
-   * Get the number of record for a datasetKey.
-   *
-   * @param datasetKey dataset identifier (UUID)
-   * @return number of occurrences
-   */
-  @SuppressWarnings("squid:S4488")
+  @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  UUID create(@RequestBody T entity);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}")
+  @Override
+  void delete(@PathVariable("key") UUID key);
+
   @RequestMapping(
       method = RequestMethod.GET,
-      value = "count",
+      value = "{key}",
       produces = MediaType.APPLICATION_JSON_VALUE)
-  Long getCountForDataset(@RequestParam("datasetKey") UUID datasetKey);
+  @ResponseBody
+  @Override
+  T get(@PathVariable("key") UUID key);
+
+  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  void update(@RequestBody T entity);
 }
