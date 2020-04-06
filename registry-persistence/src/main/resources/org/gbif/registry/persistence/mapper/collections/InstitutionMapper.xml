@@ -9,6 +9,7 @@
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
     <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
+    <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contacts" column="key" select="listContacts"/>
@@ -21,7 +22,7 @@
     key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
-    created_by, modified_by, created, modified
+    created_by, modified_by, created, modified, alternative_codes
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
@@ -29,7 +30,7 @@
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
-    i.created, i.modified, i.deleted
+    i.created, i.modified, i.deleted, i.alternative_codes
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -61,7 +62,8 @@
     #{createdBy,jdbcType=VARCHAR},
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
-    now() <!-- modified -->
+    now(), <!-- modified -->
+    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
   </sql>
 
   <sql id="INSTITUTION_PARAMS_UPDATE">
@@ -91,7 +93,8 @@
     cites_permit_number = #{citesPermitNumber,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
-    deleted = null <!-- if we're updating it can't be deleted -->
+    deleted = null, <!-- if we're updating it can't be deleted -->
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -166,6 +169,9 @@
     <if test="code != null" >
       AND i.code = #{code,jdbcType=VARCHAR}
     </if>
+    <if test="alternativeCode != null" >
+      AND i.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
+    </if>
     <if test="name != null" >
       AND i.name = #{name,jdbcType=VARCHAR}
     </if>
@@ -190,6 +196,9 @@
     </if>
     <if test="code != null" >
       AND i.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="alternativeCode != null" >
+      AND i.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
     </if>
     <if test="name != null" >
       AND i.name = #{name,jdbcType=VARCHAR}

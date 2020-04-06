@@ -88,6 +88,7 @@ public class InstitutionMapperIT {
     institution.setDisciplines(disciplines);
     institution.setEmail(Collections.singletonList("test@test.com"));
     institution.setPhone(Collections.singletonList("1234"));
+    institution.setAlternativeCodes(Collections.singletonMap("CODE2", "another code"));
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -153,11 +154,11 @@ public class InstitutionMapperIT {
     institutionMapper.create(inst2);
 
     Pageable page = PAGE.apply(5, 0L);
-    assertEquals(2, institutionMapper.list(null, null, null, null, page).size());
-    assertEquals(1, institutionMapper.list(null, null, "i1", null, page).size());
-    assertEquals(1, institutionMapper.list(null, null, null, "n2", page).size());
-    assertEquals(1, institutionMapper.list(null, null, "i2", "n2", page).size());
-    assertEquals(0, institutionMapper.list(null, null, "i1", "n2", page).size());
+    assertEquals(2, institutionMapper.list(null, null, null, null, null, page).size());
+    assertEquals(1, institutionMapper.list(null, null, "i1", null, null, page).size());
+    assertEquals(1, institutionMapper.list(null, null, null, "n2", null, page).size());
+    assertEquals(1, institutionMapper.list(null, null, "i2", "n2", null, page).size());
+    assertEquals(0, institutionMapper.list(null, null, "i1", "n2", null, page).size());
   }
 
   @Test
@@ -187,22 +188,57 @@ public class InstitutionMapperIT {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Institution> cols = institutionMapper.list("i1 n1", null, null, null, pageable);
-    assertEquals(1, cols.size());
-    assertEquals("i1", cols.get(0).getCode());
-    assertEquals("n1", cols.get(0).getName());
+    List<Institution> institutions =
+        institutionMapper.list("i1 n1", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+    assertEquals("i1", institutions.get(0).getCode());
+    assertEquals("n1", institutions.get(0).getName());
 
-    cols = institutionMapper.list("i2 i1", null, null, null, pageable);
-    assertEquals(0, cols.size());
+    institutions = institutionMapper.list("i2 i1", null, null, null, null, pageable);
+    assertEquals(0, institutions.size());
 
-    cols = institutionMapper.list("i3", null, null, null, pageable);
-    assertEquals(0, cols.size());
+    institutions = institutionMapper.list("i3", null, null, null, null, pageable);
+    assertEquals(0, institutions.size());
 
-    cols = institutionMapper.list("n1", null, null, null, pageable);
-    assertEquals(2, cols.size());
+    institutions = institutionMapper.list("n1", null, null, null, null, pageable);
+    assertEquals(2, institutions.size());
 
-    cols = institutionMapper.list("dummy address fo ", null, null, null, pageable);
-    assertEquals(1, cols.size());
+    institutions = institutionMapper.list("dummy address fo ", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+  }
+
+  @Test
+  public void alternativeCodesTest() {
+    Institution inst1 = new Institution();
+    inst1.setKey(UUID.randomUUID());
+    inst1.setCode("i1");
+    inst1.setName("n1");
+    inst1.setCreatedBy("test");
+    inst1.setModifiedBy("test");
+    inst1.setAlternativeCodes(Collections.singletonMap("i2", "test"));
+    institutionMapper.create(inst1);
+
+    Institution inst2 = new Institution();
+    inst2.setKey(UUID.randomUUID());
+    inst2.setCode("i2");
+    inst2.setName("n2");
+    inst2.setCreatedBy("test");
+    inst2.setModifiedBy("test");
+    inst2.setAlternativeCodes(Collections.singletonMap("i1", "test"));
+    institutionMapper.create(inst2);
+
+    Pageable pageable = PAGE.apply(1, 0L);
+    List<Institution> institutions = institutionMapper.list("i1", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst1.getKey(), institutions.get(0).getKey());
+
+    institutions = institutionMapper.list("i2", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst2.getKey(), institutions.get(0).getKey());
+
+    institutions = institutionMapper.list(null, null, null, null, "i1", pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst2.getKey(), institutions.get(0).getKey());
   }
 
   @Test
@@ -213,6 +249,7 @@ public class InstitutionMapperIT {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
+    inst1.setAlternativeCodes(Collections.singletonMap("ii1", "test"));
 
     Institution inst2 = new Institution();
     inst2.setKey(UUID.randomUUID());
@@ -224,10 +261,11 @@ public class InstitutionMapperIT {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    assertEquals(2, institutionMapper.count(null, null, null, null));
-    assertEquals(1, institutionMapper.count(null, null, "i1", null));
-    assertEquals(1, institutionMapper.count(null, null, null, "n2"));
-    assertEquals(1, institutionMapper.count(null, null, "i2", "n2"));
-    assertEquals(0, institutionMapper.count(null, null, "i1", "n2"));
+    assertEquals(2, institutionMapper.count(null, null, null, null, null));
+    assertEquals(1, institutionMapper.count(null, null, "i1", null, null));
+    assertEquals(1, institutionMapper.count(null, null, null, "n2", null));
+    assertEquals(1, institutionMapper.count(null, null, "i2", "n2", null));
+    assertEquals(0, institutionMapper.count(null, null, "i1", "n2", null));
+    assertEquals(1, institutionMapper.count(null, null, null, null, "ii1"));
   }
 }

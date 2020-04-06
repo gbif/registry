@@ -95,12 +95,13 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
       @Nullable @RequestParam(value = "code", required = false) String code,
       @Nullable @RequestParam(value = "name", required = false) String name,
+      @Nullable @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
       Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = institutionMapper.count(query, contactKey, code, name);
+    long total = institutionMapper.count(query, contactKey, code, name, alternativeCode);
     return new PagingResponse<>(
-        page, total, institutionMapper.list(query, contactKey, code, name, page));
+        page, total, institutionMapper.list(query, contactKey, code, name, alternativeCode, page));
   }
 
   @GetMapping("deleted")
