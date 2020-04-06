@@ -18,13 +18,13 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.crawler.CrawlJob;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.crawler.FinishReason;
+import org.gbif.api.model.pipelines.IngestionProcess;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.registry.domain.pipelines.IngestionProcess;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -45,14 +45,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @RunWith(MockitoJUnitRunner.class)
-public class IngestionHistoryServiceTest {
+public class RegistryIngestionHistoryServiceTest {
 
   // TODO: add more tests
 
   @Mock private DatasetProcessStatusMapper datasetProcessStatusMapper;
   @Mock private PipelineProcessMapper pipelineProcessMapper;
   @Mock private DatasetMapper datasetMapper;
-  @InjectMocks private DefaultIngestionHistoryService historyService;
+  @InjectMocks private DefaultRegistryIngestionHistoryService historyService;
 
   @Test
   public void notFoundIngestionProcessTest() {

@@ -101,7 +101,7 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
   }
 
   /**
-   * Encodes password using the settings and and salt from the provided encoded password.
+   * Encodes password using the settings and salt from the provided encoded password.
    *
    * @param preEncoded the pre-encoded version storing individual hashing settings in its first 12
    *     chars.

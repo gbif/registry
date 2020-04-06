@@ -155,8 +155,11 @@
       <artifactId>gbif-doi</artifactId>
     </dependency>
 
-
     <!-- Third party dependencies -->
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
