@@ -33,13 +33,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PipelinesHistoryTrackingServiceTest {
+public class RegistryPipelinesHistoryTrackingServiceTest {
 
   @Mock private PipelineProcessMapper pipelineProcessMapperMock;
 
   @Mock private DatasetService datasetServiceMock;
 
-  @InjectMocks private DefaultPipelinesHistoryTrackingService trackingService;
+  @InjectMocks private DefaultRegistryPipelinesHistoryTrackingService trackingService;
 
   @Test
   public void getLatestSuccesfulStepTest() {

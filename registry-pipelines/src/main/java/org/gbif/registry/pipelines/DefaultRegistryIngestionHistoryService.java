@@ -18,9 +18,9 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.pipelines.IngestionProcess;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.domain.pipelines.IngestionProcess;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
@@ -34,13 +34,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
-public class DefaultIngestionHistoryService implements IngestionHistoryService {
+public class DefaultRegistryIngestionHistoryService implements RegistryIngestionHistoryService {
 
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
   private final PipelineProcessMapper pipelineProcessMapper;
   private final DatasetMapper datasetMapper;
 
-  public DefaultIngestionHistoryService(
+  public DefaultRegistryIngestionHistoryService(
       DatasetProcessStatusMapper datasetProcessStatusMapper,
       PipelineProcessMapper pipelineProcessMapper,
       DatasetMapper datasetMapper) {

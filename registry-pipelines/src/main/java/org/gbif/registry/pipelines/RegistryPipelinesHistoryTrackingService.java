@@ -20,15 +20,15 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.registry.domain.pipelines.RunPipelineResponse;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
-public interface PipelinesHistoryTrackingService {
+public interface RegistryPipelinesHistoryTrackingService {
 
   /**
    * Executes the last crawl/pipeline attempt executed on a dataset.
@@ -88,7 +88,7 @@ public interface PipelinesHistoryTrackingService {
   PagingResponse<PipelineProcess> history(UUID datasetKey, Pageable pageable);
 
   /**
-   * Gets the PipelineProcess identified by the the dataset and attempt identifiers.
+   * Gets the PipelineProcess identified by the dataset and attempt identifiers.
    *
    * @param datasetKey dataset identifier
    * @param attempt crawl attempt identifier

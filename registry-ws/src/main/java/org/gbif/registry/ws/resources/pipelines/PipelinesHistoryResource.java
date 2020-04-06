@@ -20,29 +20,31 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
-import org.gbif.registry.domain.pipelines.RunPipelineResponse;
-import org.gbif.registry.pipelines.PipelinesHistoryTrackingService;
+import org.gbif.api.model.pipelines.ws.RunAllParams;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
+import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.ConstraintViolationException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,30 +54,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Preconditions;
-
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 /** Pipelines History service. */
 @RestController
+@Validated
 @RequestMapping(value = "pipelines/history", produces = MediaType.APPLICATION_JSON_VALUE)
-public class PipelinesHistoryResource {
+public class PipelinesHistoryResource implements PipelinesHistoryService {
 
-  private final PipelinesHistoryTrackingService historyTrackingService;
+  private final RegistryPipelinesHistoryTrackingService historyTrackingService;
 
-  public PipelinesHistoryResource(PipelinesHistoryTrackingService historyTrackingService) {
+  public PipelinesHistoryResource(RegistryPipelinesHistoryTrackingService historyTrackingService) {
     this.historyTrackingService = historyTrackingService;
   }
 
   /** Lists the history of all pipelines. */
   @GetMapping
+  @Override
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     return historyTrackingService.history(pageable);
   }
 
   /** Lists the history of a dataset. */
   @GetMapping("{datasetKey}")
+  @Override
   public PagingResponse<PipelineProcess> history(
       @PathVariable("datasetKey") UUID datasetKey, Pageable pageable) {
     return historyTrackingService.history(datasetKey, pageable);
@@ -83,6 +86,7 @@ public class PipelinesHistoryResource {
 
   /** Gets the data of a {@link PipelineProcess}. */
   @GetMapping("{datasetKey}/{attempt}")
+  @Override
   public PipelineProcess getPipelineProcess(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt) {
     return historyTrackingService.get(datasetKey, attempt);
@@ -90,8 +94,9 @@ public class PipelinesHistoryResource {
 
   @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public long createPipelineProcess(
-      @RequestBody @NotNull PipelineProcessParameters params, Authentication authentication) {
+  @Override
+  public long createPipelineProcess(@RequestBody PipelineProcessParameters params) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.createOrGet(
         params.getDatasetKey(), params.getAttempt(), authentication.getName());
   }
@@ -99,10 +104,11 @@ public class PipelinesHistoryResource {
   /** Adds a new pipeline execution. */
   @PostMapping(value = "process/{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
   public long addPipelineExecution(
       @PathVariable("processKey") long processKey,
-      @RequestBody @NotNull PipelineExecution pipelineExecution,
-      Authentication authentication) {
+      @RequestBody PipelineExecution pipelineExecution) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.addPipelineExecution(
         processKey, pipelineExecution, authentication.getName());
   }
@@ -112,16 +118,18 @@ public class PipelinesHistoryResource {
       value = "process/{processKey}/{executionKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
   public long addPipelineStep(
       @PathVariable("processKey") long processKey,
       @PathVariable("executionKey") long executionKey,
-      @RequestBody @NotNull PipelineStep pipelineStep,
-      Authentication authentication) {
+      @RequestBody PipelineStep pipelineStep) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.addPipelineStep(
         processKey, executionKey, pipelineStep, authentication.getName());
   }
 
   @GetMapping("process/{processKey}/{executionKey}/{stepKey}")
+  @Override
   public PipelineStep getPipelineStep(
       @PathVariable("processKey") long processKey,
       @PathVariable("executionKey") long executionKey,
@@ -134,12 +142,13 @@ public class PipelinesHistoryResource {
       value = "process/{processKey}/{executionKey}/{stepKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Override
   public void updatePipelineStepStatusAndMetrics(
       @PathVariable("processKey") long processKey,
       @PathVariable("executionKey") long executionKey,
       @PathVariable("stepKey") long stepKey,
-      @RequestBody @NotNull PipelineStepParameters stepParams,
-      Authentication authentication) {
+      @RequestBody PipelineStepParameters stepParams) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     historyTrackingService.updatePipelineStepStatusAndMetrics(
         processKey,
         executionKey,
@@ -156,22 +165,17 @@ public class PipelinesHistoryResource {
    */
   @PostMapping(value = "run", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runAll(
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      Authentication authentication,
+  @Override
+  public RunPipelineResponse runAll(
+      @RequestParam("steps") String steps,
+      @RequestParam("reason") String reason,
       @RequestBody(required = false) RunAllParams runAllParams) {
-    return checkRunInputParams(steps, reason)
-        .orElseGet(
-            () ->
-                toHttpResponse(
-                    historyTrackingService.runLastAttempt(
-                        parseSteps(steps),
-                        reason,
-                        authentication.getName(),
-                        runAllParams != null
-                            ? runAllParams.datasetsToExclude
-                            : Collections.emptyList())));
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return historyTrackingService.runLastAttempt(
+        parseSteps(steps),
+        reason,
+        authentication.getName(),
+        runAllParams != null ? runAllParams.getDatasetsToExclude() : Collections.emptyList());
   }
 
   /**
@@ -179,19 +183,16 @@ public class PipelinesHistoryResource {
    * but they will be validated in PipelinesHistoryResource#checkRunInputParams so here they are
    * specified as optional fields.
    */
-  @PostMapping(value = "run/{datasetKey}")
+  @PostMapping("run/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      Authentication authentication) {
-    return checkRunInputParams(steps, reason)
-        .orElseGet(
-            () ->
-                toHttpResponse(
-                    historyTrackingService.runLastAttempt(
-                        datasetKey, parseSteps(steps), reason, authentication.getName(), null)));
+      @RequestParam("steps") String steps,
+      @RequestParam("reason") String reason) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return historyTrackingService.runLastAttempt(
+        datasetKey, parseSteps(steps), reason, authentication.getName(), null);
   }
 
   /**
@@ -199,78 +200,36 @@ public class PipelinesHistoryResource {
    * validated in PipelinesHistoryResource#checkRunInputParams so here they are specified as
    * optional fields.
    */
-  @PostMapping(value = "run/{datasetKey}/{attempt}")
+  @PostMapping("run/{datasetKey}/{attempt}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<RunPipelineResponse> runPipelineAttempt(
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
       @PathVariable("attempt") int attempt,
-      @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason,
-      Authentication authentication) {
-    return checkRunInputParams(steps, reason)
-        .orElseGet(
-            () ->
-                toHttpResponse(
-                    historyTrackingService.runPipelineAttempt(
-                        datasetKey,
-                        attempt,
-                        parseSteps(steps),
-                        reason,
-                        authentication.getName(),
-                        null)));
+      @RequestParam("steps") String steps,
+      @RequestParam("reason") String reason) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return historyTrackingService.runPipelineAttempt(
+        datasetKey, attempt, parseSteps(steps), reason, authentication.getName(), null);
   }
 
-  /** Transforms a {@link RunPipelineResponse} into a {@link ResponseEntity}. */
-  private static ResponseEntity<RunPipelineResponse> toHttpResponse(
-      RunPipelineResponse runPipelineResponse) {
-    if (runPipelineResponse.getResponseStatus()
-        == RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(runPipelineResponse);
-    } else if (runPipelineResponse.getResponseStatus()
-        == RunPipelineResponse.ResponseStatus.UNSUPPORTED_STEP) {
-      return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(runPipelineResponse);
-    } else if (runPipelineResponse.getResponseStatus()
-        == RunPipelineResponse.ResponseStatus.ERROR) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(runPipelineResponse);
-    }
-
-    return ResponseEntity.ok().body(runPipelineResponse);
-  }
-
-  private Optional<ResponseEntity<RunPipelineResponse>> checkRunInputParams(
-      String steps, String reason) {
-    if (StringUtils.isAnyEmpty(steps, reason)) {
-      return Optional.of(
-          ResponseEntity.status(HttpStatus.BAD_REQUEST)
-              .body(
-                  RunPipelineResponse.builder()
-                      .setMessage("Steps and reason parameters are required")
-                      .build()));
-    }
-
-    return Optional.empty();
+  @ExceptionHandler({
+    ConstraintViolationException.class,
+    MissingServletRequestParameterException.class
+  })
+  private ResponseEntity<RunPipelineResponse> validationExceptionMapper() {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(
+            RunPipelineResponse.builder()
+                .setMessage("Steps and reason parameters are required")
+                .build());
   }
 
   /** Parse steps argument. */
   private Set<StepType> parseSteps(String steps) {
-    Preconditions.checkArgument(StringUtils.isNotEmpty(steps));
     return Arrays.stream(steps.split(","))
         .map(s -> StepType.valueOf(s.toUpperCase()))
         .collect(Collectors.toSet());
-  }
-
-  /** Encapsulates the params to pass in the body for the runAll method. */
-  private static class RunAllParams {
-    List<UUID> datasetsToExclude = new ArrayList<>();
-
-    // getters and setters needed for jackson
-
-    public List<UUID> getDatasetsToExclude() {
-      return datasetsToExclude;
-    }
-
-    public void setDatasetsToExclude(List<UUID> datasetsToExclude) {
-      this.datasetsToExclude = datasetsToExclude;
-    }
   }
 }
