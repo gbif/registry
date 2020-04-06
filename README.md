@@ -24,11 +24,10 @@ Code style related files. **Please make sure you properly configure required IDE
 
 
 ### Git hooks
-To configure automatic git hooks to check the code, add the files [pre-commit](pre-commit) nad [post-commit](post-commit) to the directory .git/hooks:
+To configure automatic git hook to check the code, add the file [pre-commit](pre-commit) to the directory .git/hooks:
 
 ```
 cp pre-commit .git/hooks/
-cp post-commit .git/hooks/
 ```
 
 Also, make sure the file has the right permissions. In Unix and Mac it needs the execution permission:
