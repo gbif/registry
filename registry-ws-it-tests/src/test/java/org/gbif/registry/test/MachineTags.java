@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class MachineTags extends JsonBackedData<MachineTag> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final MachineTags INSTANCE = new MachineTags();
+@Component
+public class MachineTags extends JsonBackedData2<MachineTag> {
 
-  public static MachineTag newInstance() {
-    return INSTANCE.newTypedInstance();
-  }
-
-  private MachineTags() {
-    super("data/machine_tag.json", new TypeReference<MachineTag>() {});
+  @Autowired
+  private MachineTags(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/machine_tag.json",
+        new TypeReference<MachineTag>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }

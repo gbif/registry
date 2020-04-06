@@ -19,8 +19,8 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.test.TestDataFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Identify;
 import org.hamcrest.Matchers;
@@ -36,13 +36,12 @@ import static org.junit.Assert.assertThat;
 public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   public OaipmhIdentifyIT(
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    ObjectMapper objectMapper
-    ) {
-    super(nodeService, organizationService, installationService, datasetService, objectMapper);
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory) {
+    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
   }
 
   /**

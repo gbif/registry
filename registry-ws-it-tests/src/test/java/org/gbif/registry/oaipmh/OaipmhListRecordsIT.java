@@ -24,6 +24,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.utils.file.FileUtils;
 
@@ -33,7 +34,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
@@ -50,13 +50,12 @@ import static org.junit.Assert.assertTrue;
 public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   public OaipmhListRecordsIT(
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    ObjectMapper objectMapper
-    ) {
-    super(nodeService, organizationService, installationService, datasetService, objectMapper);
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory) {
+    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
   }
 
   /**

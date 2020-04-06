@@ -18,7 +18,7 @@ package org.gbif.registry.ws;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.EndpointService;
-import org.gbif.registry.utils.Endpoints;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.List;
 
@@ -29,7 +29,8 @@ import static org.junit.Assert.assertTrue;
 
 public class EndpointTests {
 
-  public static <T extends NetworkEntity> void testAddDelete(EndpointService service, T entity) {
+  public static <T extends NetworkEntity> void testAddDelete(
+      EndpointService service, T entity, TestDataFactory testDataFactory) {
 
     // check there are none on a newly created entity
     List<Endpoint> endpoints = service.listEndpoints(entity.getKey());
@@ -37,8 +38,8 @@ public class EndpointTests {
     assertTrue("Endpoint should be empty when none added", endpoints.isEmpty());
 
     // test additions
-    service.addEndpoint(entity.getKey(), Endpoints.newInstance());
-    service.addEndpoint(entity.getKey(), Endpoints.newInstance());
+    service.addEndpoint(entity.getKey(), testDataFactory.newEndpoint());
+    service.addEndpoint(entity.getKey(), testDataFactory.newEndpoint());
     endpoints = service.listEndpoints(entity.getKey());
     assertNotNull(endpoints);
     assertEquals("2 endpoints have been added", 2, endpoints.size());
@@ -50,7 +51,7 @@ public class EndpointTests {
     endpoints = service.listEndpoints(entity.getKey());
     assertNotNull(endpoints);
     assertEquals("1 endpoint should remain after the deletion", 1, endpoints.size());
-    Endpoint expected = Endpoints.newInstance();
+    Endpoint expected = testDataFactory.newEndpoint();
     Endpoint created = endpoints.get(0);
     assertLenientEquals("Created entity does not read as expected", expected, created);
   }

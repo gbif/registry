@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Endpoint;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Endpoints extends JsonBackedData<Endpoint> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final Endpoints INSTANCE = new Endpoints();
+@Component
+public class Endpoints extends JsonBackedData2<Endpoint> {
 
-  public static Endpoint newInstance() {
-    Endpoint endpoint = INSTANCE.newTypedInstance();
-    // Endpoint is unique in that nested machine tags will be created
-    endpoint.addMachineTag(MachineTags.newInstance());
-    return endpoint;
-  }
-
-  private Endpoints() {
-    super("data/endpoint.json", new TypeReference<Endpoint>() {});
+  @Autowired
+  private Endpoints(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/endpoint.json",
+        new TypeReference<Endpoint>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }

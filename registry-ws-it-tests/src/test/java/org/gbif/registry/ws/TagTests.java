@@ -30,7 +30,10 @@ public class TagTests {
 
   public static <T extends NetworkEntity> void testTagErroneousDelete(
       TagService service, T entity) {
-    int tagKey = service.addTag(entity.getKey(), "tag1");
+    Tag tag1 = new Tag();
+    tag1.setCreatedBy(entity.getCreatedBy());
+    tag1.setValue("tag1");
+    int tagKey = service.addTag(entity.getKey(), tag1);
     service.deleteTag(UUID.randomUUID(), tagKey); // wrong parent UUID
     // nothing happens - expected?
   }
@@ -39,8 +42,16 @@ public class TagTests {
     List<Tag> tags = service.listTags(entity.getKey(), null);
     assertNotNull("Tag list should be empty, not null when no tags exist", tags);
     assertTrue("Tags should be empty when none added", tags.isEmpty());
-    service.addTag(entity.getKey(), "tag1");
-    service.addTag(entity.getKey(), "tag2");
+    Tag tag1 = new Tag();
+    tag1.setCreatedBy(entity.getCreatedBy());
+    tag1.setValue("tag1");
+
+    Tag tag2 = new Tag();
+    tag2.setCreatedBy(entity.getCreatedBy());
+    tag2.setValue("tag2");
+
+    service.addTag(entity.getKey(), tag1);
+    service.addTag(entity.getKey(), tag2);
     tags = service.listTags(entity.getKey(), null);
     assertNotNull(tags);
     assertEquals("2 tags have been added", 2, tags.size());

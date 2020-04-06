@@ -39,6 +39,10 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>invesdwin-oss-remote</id>
+      <url>https://invesdwin.de/artifactory/invesdwin-oss-remote</url>
+    </repository>
   </repositories>
 
   <distributionManagement>

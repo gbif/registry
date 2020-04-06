@@ -27,11 +27,9 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.utils.Contacts;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Endpoints;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Datasets;
+import org.gbif.registry.test.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.utils.Requests;
 import org.gbif.utils.HttpUtil;
@@ -77,11 +75,13 @@ public class LegacyDatasetResourceIT {
   @LocalServerPort private int localServerPort;
 
   private final DatasetService datasetService;
+  private final TestDataFactory testDataFactory;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Autowired
-  public LegacyDatasetResourceIT(DatasetService datasetService) {
+  public LegacyDatasetResourceIT(DatasetService datasetService, TestDataFactory testDataFactory) {
     this.datasetService = datasetService;
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -98,11 +98,11 @@ public class LegacyDatasetResourceIT {
   @Test
   public void testRegisterLegacyDataset() throws IOException, URISyntaxException, SAXException {
     // persist new organization (Dataset publishing organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // populate params for ws, without installation key
@@ -149,24 +149,24 @@ public class LegacyDatasetResourceIT {
   public void testUpdateLegacyDatasetWithNoContactNoEndpointNoInstallationKey()
       throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation, assigned CC-BY-NC 4.0
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     assertEquals(License.CC_BY_NC_4_0, dataset.getLicense());
 
     UUID datasetKey = dataset.getKey();
     // add primary contact to Dataset
-    Contact c = Contacts.newInstance();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     datasetService.addContact(datasetKey, c);
     // add endpoint to Dataset
-    Endpoint e = Endpoints.newInstance();
+    Endpoint e = testDataFactory.newEndpoint();
     datasetService.addEndpoint(datasetKey, e);
 
     // validate it
@@ -266,15 +266,15 @@ public class LegacyDatasetResourceIT {
   public void testUpdateLegacyDatasetWithExistingPrimaryContact()
       throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
     // add primary contact to Dataset
     Contact c = new Contact();
@@ -285,7 +285,7 @@ public class LegacyDatasetResourceIT {
     c.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
     datasetService.addContact(datasetKey, c);
     // add endpoint to Dataset
-    Endpoint e = Endpoints.newInstance();
+    Endpoint e = testDataFactory.newEndpoint();
     datasetService.addEndpoint(datasetKey, e);
 
     // validate it
@@ -400,15 +400,15 @@ public class LegacyDatasetResourceIT {
   public void testGetLegacyDatasetsForOrganizationJSON()
       throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // construct request uri
@@ -441,15 +441,15 @@ public class LegacyDatasetResourceIT {
   public void testGetLegacyDatasetsForOrganizationXML()
       throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // construct request uri
@@ -481,19 +481,19 @@ public class LegacyDatasetResourceIT {
   @Test
   public void testGetLegacyDatasetJSON() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // add primary contact to Dataset
-    Contact c = Contacts.newInstance();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     datasetService.addContact(dataset.getKey(), c);
 
@@ -560,19 +560,19 @@ public class LegacyDatasetResourceIT {
   @Test
   public void testGetLegacyDatasetXML() throws IOException, URISyntaxException, SAXException {
     // persist new organization (IPT hosting organization)
-    Organization organization = Organizations.newPersistedInstance();
+    Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
 
     // persist new installation of type IPT
-    Installation installation = Installations.newPersistedInstance(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
 
     // persist new Dataset associated to installation
-    Dataset dataset = Datasets.newPersistedInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
 
     // add primary contact to Dataset
-    Contact c = Contacts.newInstance();
+    Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     datasetService.addContact(dataset.getKey(), c);
 

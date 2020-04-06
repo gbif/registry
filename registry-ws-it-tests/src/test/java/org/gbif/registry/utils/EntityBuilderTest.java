@@ -16,6 +16,7 @@
 package org.gbif.registry.utils;
 
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.Set;
 import java.util.UUID;
@@ -27,7 +28,6 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.groups.Default;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,25 +38,24 @@ public class EntityBuilderTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);
 
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
-
-  public EntityBuilderTest(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
+  public EntityBuilderTest(TestDataFactory testDataFactory) {
+    this.testDataFactory = testDataFactory;
   }
 
   @Test
   public void testBuilders() {
-    test(Comments.newInstance());
-    test(Contacts.newInstance());
-    test(Datasets.newInstance(UUID.randomUUID(), UUID.randomUUID()));
-    test(Endpoints.newInstance());
-    test(Identifiers.newInstance());
-    test(Installations.newInstance(UUID.randomUUID()));
-    test(MachineTags.newInstance());
-    test(Networks.newInstance());
-    test(Nodes.newInstance(objectMapper));
-    test(Organizations.newInstance(UUID.randomUUID()));
+    test(testDataFactory.newComment());
+    test(testDataFactory.newContact());
+    test(testDataFactory.newDataset(UUID.randomUUID(), UUID.randomUUID()));
+    test(testDataFactory.newEndpoint());
+    test(testDataFactory.newIdentifier());
+    test(testDataFactory.newInstallation(UUID.randomUUID()));
+    test(testDataFactory.newMachineTag());
+    test(testDataFactory.newNetwork());
+    test(testDataFactory.newNode());
+    test(testDataFactory.newOrganization(UUID.randomUUID()));
   }
 
   private <T> void test(T entity) {

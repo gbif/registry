@@ -26,10 +26,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.io.InputStream;
 import java.sql.Connection;
@@ -37,7 +34,6 @@ import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
@@ -57,7 +53,7 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 @RunWith(Parameterized.class)
 public abstract class AbstractOaipmhEndpointIT {
 
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   // used by OAIClient to access the OAI-PMH web service locally
   private String BASE_URL_FORMAT = "http://localhost:%d/oai-pmh/registry";
@@ -97,12 +93,12 @@ public abstract class AbstractOaipmhEndpointIT {
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
 
     baseUrl = String.format(BASE_URL_FORMAT, 0); // registryServer.getPort() TODO
     OAIClient oaiClient = new HttpOAIClient(baseUrl);
@@ -123,9 +119,9 @@ public abstract class AbstractOaipmhEndpointIT {
    */
   Organization createOrganization(Country publishingCountry) {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
     // publishing organization (required field)
-    Organization o = Organizations.newInstance(nodeKey);
+    Organization o = testDataFactory.newOrganization(nodeKey);
     o.setCountry(publishingCountry);
     organizationService.create(o);
     return o;
@@ -138,7 +134,7 @@ public abstract class AbstractOaipmhEndpointIT {
    * @return
    */
   Installation createInstallation(UUID organizationKey) {
-    Installation i = Installations.newInstance(organizationKey);
+    Installation i = testDataFactory.newInstallation(organizationKey);
     installationService.create(i);
     return i;
   }
@@ -157,7 +153,7 @@ public abstract class AbstractOaipmhEndpointIT {
       UUID organizationKey, UUID installationKey, DatasetType type, Date modifiedDate)
       throws Exception {
 
-    Dataset d = Datasets.newInstance(organizationKey, installationKey);
+    Dataset d = testDataFactory.newDataset(organizationKey, installationKey);
     d.setType(type);
     datasetService.create(d);
 

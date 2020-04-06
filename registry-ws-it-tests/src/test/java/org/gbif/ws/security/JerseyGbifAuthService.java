@@ -33,7 +33,7 @@ import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.gbif.ws.util.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
 
 @Component
-public class JerseyGbifAuthService  {
+public class JerseyGbifAuthService {
 
   private static final Logger LOG = LoggerFactory.getLogger(JerseyGbifAuthService.class);
 

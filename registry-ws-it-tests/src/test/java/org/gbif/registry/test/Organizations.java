@@ -13,38 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Component
 public class Organizations extends JsonBackedData2<Organization> {
 
   private static NodeService nodeService;
   private static OrganizationService organizationService;
 
-  private static  ObjectMapper objectMapper;
+  private static Nodes nodes;
 
   public static final String ORGANIZATION_TITLE = "The BGBM";
 
   @Autowired
-  private Organizations(NodeService nodeService, OrganizationService organizationService, ObjectMapper objectMapper) {
-    super("data/organization.json", new TypeReference<Organization>() {}, objectMapper);
+  private Organizations(
+      NodeService nodeService,
+      OrganizationService organizationService,
+      Nodes nodes,
+      ObjectMapper objectMapper,
+      SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/organization.json",
+        new TypeReference<Organization>() {},
+        objectMapper,
+        simplePrincipalProvider);
     this.nodeService = nodeService;
     this.organizationService = organizationService;
-    this.objectMapper = objectMapper;
+    this.nodes = nodes;
   }
 
-  public static Organization newInstance(UUID endorsingNodeKey) {
-    Organization o = newInstance(endorsingNodeKey);
+  public Organization newInstance(UUID endorsingNodeKey) {
+    Organization o = super.newInstance();
     o.setEndorsingNodeKey(endorsingNodeKey);
     o.setPassword("password");
     return o;
@@ -55,8 +68,8 @@ public class Organizations extends JsonBackedData2<Organization> {
    *
    * @return persisted Organization
    */
-  public static Organization newPersistedInstance() {
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+  public Organization newPersistedInstance() {
+    UUID nodeKey = nodeService.create(nodes.newInstance());
     Organization organization = newInstance(nodeKey);
     // password was not included in organization.json, so set it here
     organization.setPassword("password");

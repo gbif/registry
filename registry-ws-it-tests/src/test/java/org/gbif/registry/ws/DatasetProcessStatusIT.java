@@ -31,17 +31,13 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,7 +74,7 @@ public class DatasetProcessStatusIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   // Tests user
   private static final String TEST_USER = "admin";
@@ -99,14 +95,14 @@ public class DatasetProcessStatusIT {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.datasetProcessStatusService = datasetProcessStatusService;
     this.datasetService = datasetService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.simplePrincipalProvider = simplePrincipalProvider;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Before
@@ -223,15 +219,15 @@ public class DatasetProcessStatusIT {
    */
   private Dataset createTestDataset() {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
 
     // publishing organization (required field)
-    Organization o = Organizations.newInstance(nodeKey);
+    Organization o = testDataFactory.newOrganization(nodeKey);
     UUID organizationKey = organizationService.create(o);
 
-    Installation i = Installations.newInstance(organizationKey);
+    Installation i = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(i);
-    Dataset dataset = Datasets.newInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newDataset(organizationKey, installationKey);
     dataset.setKey(datasetService.create(dataset));
     return dataset;
   }

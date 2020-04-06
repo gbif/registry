@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Comment;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Comments extends JsonBackedData<Comment> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final Comments INSTANCE = new Comments();
+@Component
+public class Comments extends JsonBackedData2<Comment> {
 
-  public static Comment newInstance() {
-    return INSTANCE.newTypedInstance();
-  }
-
-  private Comments() {
-    super("data/comment.json", new TypeReference<Comment>() {});
+  @Autowired
+  private Comments(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/comment.json",
+        new TypeReference<Comment>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }

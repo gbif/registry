@@ -25,14 +25,11 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
-import org.gbif.registry.utils.Contacts;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.security.AccessControlException;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +67,7 @@ public class OrganizationCreationIT {
 
   private ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
 
-  private ObjectMapper objectMapper;
+  private TestDataFactory testDataFactory;
 
   @Autowired
   public OrganizationCreationIT(
@@ -78,19 +75,21 @@ public class OrganizationCreationIT {
       NodeService nodeService,
       ChallengeCodeMapper challengeCodeMapper,
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   /** It is not in the scope of this test to test the email bits. */
   @Test
   public void testEndorsements() {
 
-    Organization organization = prepareOrganization(prepareNode(nodeService, objectMapper), organizationService);
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
 
     assertEquals(
         Long.valueOf(0),
@@ -132,7 +131,9 @@ public class OrganizationCreationIT {
   @Test
   public void testEndorsementsByAdmin() {
 
-    Organization organization = prepareOrganization(prepareNode(nodeService, objectMapper), organizationService);
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
     assertEquals(
         Long.valueOf(0),
         nodeService
@@ -165,7 +166,9 @@ public class OrganizationCreationIT {
   @Test(expected = AccessControlException.class)
   public void testSetEndorsementsByNonAdmin() {
 
-    Organization organization = prepareOrganization(prepareNode(nodeService, objectMapper), organizationService);
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
     organization = organizationService.get(organization.getKey());
     organization.setEndorsementApproved(true);
 
@@ -173,17 +176,17 @@ public class OrganizationCreationIT {
     organizationService.update(organization);
   }
 
-  private static Node prepareNode(NodeService nodeService, ObjectMapper objectMapper) {
+  private static Node prepareNode(NodeService nodeService, TestDataFactory testDataFactory) {
     // first create a Node (we need one for endorsement)
-    Node node = Nodes.newInstance(objectMapper);
+    Node node = testDataFactory.newNode();
     nodeService.create(node);
     return nodeService.list(new PagingRequest()).getResults().get(0);
   }
 
   private static Organization prepareOrganization(
-      Node node, OrganizationService organizationService) {
-    Organization o = Organizations.newInstance(node.getKey());
-    Contact organizationContact = Contacts.newInstance();
+      Node node, OrganizationService organizationService, TestDataFactory testDataFactory) {
+    Organization o = testDataFactory.newOrganization(node.getKey());
+    Contact organizationContact = testDataFactory.newContact();
     o.getContacts().add(organizationContact);
 
     Comment comment = new Comment();

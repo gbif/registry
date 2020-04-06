@@ -23,12 +23,12 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dspace.xoai.model.oaipmh.Set;
 import org.dspace.xoai.serviceprovider.exceptions.NoSetHierarchyException;
 import org.junit.Test;
@@ -56,13 +56,12 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
       };
 
   public OaipmhListSetsIT(
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    ObjectMapper objectMapper
-    ) {
-    super(nodeService, organizationService, installationService, datasetService, objectMapper);
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory) {
+    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
   }
 
   @Test

@@ -35,22 +35,22 @@ import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.MachineTags;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.ValidationException;
 
-//import de.invesdwin.instrument.DynamicInstrumentationLoader;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -63,6 +63,10 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -99,11 +103,6 @@ public abstract class NetworkEntityTest<
 
   static class ContexInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-  /*  static {
-
-        DynamicInstrumentationLoader.waitForInitialized(); //dynamically attach java agent to jvm if not already present
-        DynamicInstrumentationLoader.initLoadTimeWeavingContext();
-    }*/
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
@@ -137,8 +136,12 @@ public abstract class NetworkEntityTest<
   private final CommentService commentService;
   private final IdentifierService identifierService;
   private final SimplePrincipalProvider pp;
+  private final TestDataFactory testDataFactory;
 
-  public NetworkEntityTest(NetworkEntityService<T> service, @Nullable SimplePrincipalProvider pp) {
+  public NetworkEntityTest(
+      NetworkEntityService<T> service,
+      @Nullable SimplePrincipalProvider pp,
+      TestDataFactory testDataFactory) {
     this.service = service;
     // not so nice, but we know what we deal with in the tests
     // and this bundles most basic tests into one base test class without copy paste redundancy
@@ -149,6 +152,15 @@ public abstract class NetworkEntityTest<
     commentService = service;
     identifierService = service;
     this.pp = pp;
+    this.testDataFactory = testDataFactory;
+  }
+
+  public SimplePrincipalProvider getSimplePrincipalProvider() {
+    return pp;
+  }
+
+  public TestDataFactory getTestDataFactory() {
+    return testDataFactory;
   }
 
   @BeforeEach
@@ -156,6 +168,13 @@ public abstract class NetworkEntityTest<
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (pp != null) {
       pp.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              pp.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
     }
   }
 
@@ -163,7 +182,7 @@ public abstract class NetworkEntityTest<
   public void createWithKey() {
     T e = newEntity();
     e.setKey(UUID.randomUUID()); // illegal to provide a key
-    assertThrows(ValidationException.class, () -> service.create(e));
+    assertThrows(IllegalArgumentException.class, () -> service.create(e));
   }
 
   @Test
@@ -442,22 +461,23 @@ public abstract class NetworkEntityTest<
   @Test
   public void testContacts() {
     T entity = create(newEntity(), 1);
-    ContactTests.testAddDeleteUpdate(contactService, entity);
+    ContactTests.testAddDeleteUpdate(contactService, entity, testDataFactory);
   }
 
   @Test
   public void testEndpoints() {
     T entity = create(newEntity(), 1);
-    EndpointTests.testAddDelete(endpointService, entity);
+    EndpointTests.testAddDelete(endpointService, entity, testDataFactory);
   }
 
   @Test
   public void testMachineTags() {
     T entity = create(newEntity(), 1);
-    MachineTagTests.testAddDelete(machineTagService, entity);
+    MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory);
   }
 
   @Test
+  @Disabled("Only for clients")
   public void testMachineTagsNotAllowedToCreateClient() {
     // only for client tests
     if (pp != null) {
@@ -465,13 +485,14 @@ public abstract class NetworkEntityTest<
       T entity = create(newEntity(), 1);
       assertThrows(
           AccessControlException.class,
-          () -> MachineTagTests.testAddDelete(machineTagService, entity));
+          () -> MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory));
     } else {
       throw new AccessControlException("");
     }
   }
 
   @Test
+  @Disabled("only for cliets")
   public void testMachineTagsMissingNamespaceRights() {
     // only for client tests
     if (pp != null) {
@@ -479,26 +500,28 @@ public abstract class NetworkEntityTest<
       T entity = create(newEntity(), 1);
       assertThrows(
           AccessControlException.class,
-          () -> MachineTagTests.testAddDelete(machineTagService, entity));
+          () -> MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory));
     } else {
       throw new AccessControlException("");
     }
   }
 
   @Test
+  @Disabled("Only for clients")
   public void testMachineTagsNotAllowedToDeleteClient() {
     // only for client tests
     if (pp != null) {
       T entity = create(newEntity(), 1);
       // add machine tags
-      service.addMachineTag(entity.getKey(), MachineTags.newInstance());
-      service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+      service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
+      service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
       List<MachineTag> machineTags = service.listMachineTags(entity.getKey());
       assertNotNull(machineTags);
       assertEquals(2, machineTags.size(), "2 machine tags have been added");
 
       // test forbidden deletion
       pp.setPrincipal("editor");
+      setSecurityPrincipal(pp, UserRole.EDITOR);
       assertThrows(
           AccessControlException.class,
           () -> service.deleteMachineTag(entity.getKey(), machineTags.get(0).getKey()));
@@ -507,19 +530,25 @@ public abstract class NetworkEntityTest<
     }
   }
 
+  private MachineTag newMachineTag(T owner, String namespace, String name, String value) {
+    MachineTag machineTag = new MachineTag(namespace, name, value);
+    machineTag.setCreatedBy(owner.getCreatedBy());
+    return machineTag;
+  }
+
   @Test
   public void testMachineTagSearch() {
     T entity1 = create(newEntity(), 1);
     T entity2 = create(newEntity(), 2);
 
     machineTagService.addMachineTag(
-        entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "one"));
+        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "one"));
     machineTagService.addMachineTag(
-        entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "two"));
+        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "two"));
     machineTagService.addMachineTag(
-        entity1.getKey(), new MachineTag("test.gbif.org", "network-entity", "three"));
+        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "three"));
     machineTagService.addMachineTag(
-        entity2.getKey(), new MachineTag("test.gbif.org", "network-entity", "four"));
+        entity2.getKey(), newMachineTag(entity2, "test.gbif.org", "network-entity", "four"));
 
     PagingResponse<T> res;
 
@@ -568,19 +597,25 @@ public abstract class NetworkEntityTest<
   @Test
   public void testComments() {
     T entity = create(newEntity(), 1);
-    CommentTests.testAddDelete(commentService, entity);
+    CommentTests.testAddDelete(commentService, entity, testDataFactory);
   }
 
   // Check that simple search covers contacts which throws IllegalStateException for Nodes
   @Test
   public void testSimpleSearchContact() {
-    ContactTests.testSimpleSearch(contactService, service, create(newEntity(), 1));
+    ContactTests.testSimpleSearch(contactService, service, create(newEntity(), 1), testDataFactory);
   }
 
   @Test
   public void testIdentifierCRUD() {
     T entity = create(newEntity(), 1);
-    IdentifierTests.testAddDelete(identifierService, service, entity);
+    IdentifierTests.testAddDelete(identifierService, service, entity, testDataFactory);
+  }
+
+  private Identifier newTestIdentifier(T owner, IdentifierType type, String identifierValue) {
+    Identifier identifier = new Identifier(type, identifierValue);
+    identifier.setCreatedBy(owner.getCreatedBy());
+    return identifier;
   }
 
   @Test
@@ -588,10 +623,14 @@ public abstract class NetworkEntityTest<
     T entity1 = create(newEntity(), 1);
     T entity2 = create(newEntity(), 2);
 
-    identifierService.addIdentifier(entity1.getKey(), new Identifier(IdentifierType.DOI, "doi:1"));
-    identifierService.addIdentifier(entity1.getKey(), new Identifier(IdentifierType.DOI, "doi:1"));
-    identifierService.addIdentifier(entity1.getKey(), new Identifier(IdentifierType.DOI, "doi:2"));
-    identifierService.addIdentifier(entity2.getKey(), new Identifier(IdentifierType.DOI, "doi:2"));
+    identifierService.addIdentifier(
+        entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
+    identifierService.addIdentifier(
+        entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
+    identifierService.addIdentifier(
+        entity1.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
+    identifierService.addIdentifier(
+        entity2.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
 
     PagingResponse<T> res = service.listByIdentifier(IdentifierType.DOI, "doi:2", null);
     assertEquals(Long.valueOf(2), res.getCount());
@@ -679,5 +718,17 @@ public abstract class NetworkEntityTest<
     assertNotNull(results.getResults(), "PagingResponse results are null");
     assertEquals(
         size, results.getResults().size(), "Unexpected result size for current test state");
+  }
+
+  public static void setSecurityPrincipal(
+      SimplePrincipalProvider simplePrincipalProvider, UserRole userRole) {
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            simplePrincipalProvider.get().getName(),
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
   }
 }

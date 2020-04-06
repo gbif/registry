@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Contact;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Contacts extends JsonBackedData<Contact> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final Contacts INSTANCE = new Contacts();
+@Component
+public class Contacts extends JsonBackedData2<Contact> {
 
-  public static Contact newInstance() {
-    return INSTANCE.newTypedInstance();
-  }
-
-  private Contacts() {
-    super("data/contact.json", new TypeReference<Contact>() {});
+  @Autowired
+  private Contacts(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/contact.json",
+        new TypeReference<Contact>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }

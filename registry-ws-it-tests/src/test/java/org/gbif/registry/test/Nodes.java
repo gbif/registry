@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Node;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Set;
 
@@ -24,33 +25,22 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.Assert.assertTrue;
 
 @Component
 public class Nodes extends JsonBackedData2<Node> {
 
-  private final ObjectMapper objectMapper;
-
-  private static Nodes INSTANCE;
-
-  public static Node newInstance(ObjectMapper objectMapper) {
-    if (INSTANCE == null) {
-      INSTANCE = new Nodes(objectMapper);
-    }
-    return INSTANCE.newTypedInstance();
-  }
-
   @Autowired
-  public Nodes(ObjectMapper objectMapper) {
-    super("data/node.json", new TypeReference<Node>() {}, objectMapper);
-    this.objectMapper = objectMapper;
+  public Nodes(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super("data/node.json", new TypeReference<Node>() {}, objectMapper, simplePrincipalProvider);
   }
 
   @Test
@@ -59,7 +49,7 @@ public class Nodes extends JsonBackedData2<Node> {
         Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory();
     Validator validator = validatorFactory.getValidator();
 
-    Set<ConstraintViolation<Node>> violations = validator.validate(Nodes.newInstance(objectMapper));
+    Set<ConstraintViolation<Node>> violations = validator.validate(newInstance());
     assertTrue(violations.isEmpty());
   }
 }

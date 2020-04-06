@@ -13,33 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
 
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.codehaus.jackson.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Installations extends JsonBackedData<Installation> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static Installations INSTANCE;
-  private static InstallationService installationService;
+@Component
+public class Installations extends JsonBackedData2<Installation> {
+
+  private InstallationService installationService;
 
   @Autowired
-  public Installations(InstallationService installationService) {
-    super("data/installation.json", new TypeReference<Installation>() {});
+  public Installations(
+      InstallationService installationService,
+      ObjectMapper objectMapper,
+      SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/installation.json",
+        new TypeReference<Installation>() {},
+        objectMapper,
+        simplePrincipalProvider);
     this.installationService = installationService;
-    if (INSTANCE == null) {
-      INSTANCE = new Installations(installationService);
-    }
   }
 
-  public static Installation newInstance(UUID organizationKey) {
-    Installation i = INSTANCE.newTypedInstance();
+  public Installation newInstance(UUID organizationKey) {
+    Installation i = super.newInstance();
     i.setOrganizationKey(organizationKey);
     return i;
   }
@@ -50,8 +58,8 @@ public class Installations extends JsonBackedData<Installation> {
    * @param organizationKey hosting organization key
    * @return persisted Installation
    */
-  public static Installation newPersistedInstance(UUID organizationKey) {
-    Installation i = Installations.newInstance(organizationKey);
+  public Installation newPersistedInstance(UUID organizationKey) {
+    Installation i = newInstance(organizationKey);
     // password was not included in installation.json, so set it here
     i.setPassword("password");
     UUID key = installationService.create(i);
@@ -65,7 +73,7 @@ public class Installations extends JsonBackedData<Installation> {
    * @param installation Installation
    * @return credentials
    */
-  public static UsernamePasswordCredentials credentials(Installation installation) {
+  public UsernamePasswordCredentials credentials(Installation installation) {
     return new UsernamePasswordCredentials(
         installation.getKey().toString(), installation.getPassword());
   }

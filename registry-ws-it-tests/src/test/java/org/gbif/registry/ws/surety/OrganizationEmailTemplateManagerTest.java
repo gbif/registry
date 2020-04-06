@@ -30,16 +30,13 @@ import org.gbif.registry.mail.identity.IdentityEmailTemplateProcessor;
 import org.gbif.registry.mail.organization.OrganizationEmailDataProvider;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
-import org.gbif.registry.utils.Contacts;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +65,7 @@ public class OrganizationEmailTemplateManagerTest {
 
   private IdentityEmailDataProvider identityEmailDataProvider;
 
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   @Autowired
   public OrganizationEmailTemplateManagerTest(
@@ -77,14 +74,14 @@ public class OrganizationEmailTemplateManagerTest {
       IdentitySuretyMailConfigurationProperties identitySuretyMailConfigurationProperties,
       OrganizationEmailDataProvider organizationEmailDataProvider,
       IdentityEmailDataProvider identityEmailDataProvider,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;
     this.identitySuretyMailConfigurationProperties = identitySuretyMailConfigurationProperties;
     this.organizationEmailDataProvider = organizationEmailDataProvider;
     this.identityEmailDataProvider = identityEmailDataProvider;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Before
@@ -105,9 +102,9 @@ public class OrganizationEmailTemplateManagerTest {
 
   @Test
   public void testGenerateOrganizationEndorsementEmailModel() throws IOException {
-    Node endorsingNode = Nodes.newInstance(objectMapper);
+    Node endorsingNode = testDataFactory.newNode();
     endorsingNode.setKey(UUID.randomUUID());
-    Organization org = Organizations.newInstance(endorsingNode.getKey());
+    Organization org = testDataFactory.newOrganization();
     org.setKey(UUID.randomUUID());
 
     org.getComments()
@@ -126,7 +123,7 @@ public class OrganizationEmailTemplateManagerTest {
     nodeManager.setEmail(TEST_NODE_MANAGER_EMAIL);
     nodeManager.setFirstName("Lars");
     nodeManager.setSurname("Eller");
-    org.getContacts().add(Contacts.newInstance());
+    org.getContacts().add(testDataFactory.newContact());
     baseEmail =
         organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, nodeManager, UUID.randomUUID(), endorsingNode);
@@ -146,10 +143,10 @@ public class OrganizationEmailTemplateManagerTest {
   @Test
   public void testGenerateOrganizationEndorsedEmailModel() {
     final String pocEmail = "point_of_contact@b.com";
-    final Node endorsingNode = Nodes.newInstance(objectMapper);
+    final Node endorsingNode = testDataFactory.newNode();
     endorsingNode.setKey(UUID.randomUUID());
-    Organization org = Organizations.newInstance(endorsingNode.getKey());
-    Contact pointOfContact = Contacts.newInstance();
+    Organization org = testDataFactory.newOrganization(endorsingNode.getKey());
+    Contact pointOfContact = testDataFactory.newContact();
     pointOfContact.setFirstName("First");
     pointOfContact.setLastName("Last");
     pointOfContact.setEmail(Collections.singletonList(pocEmail));

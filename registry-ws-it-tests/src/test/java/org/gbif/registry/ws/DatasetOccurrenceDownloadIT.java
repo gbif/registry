@@ -27,17 +27,14 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.Datasets;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.Nodes;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -73,7 +70,7 @@ public class DatasetOccurrenceDownloadIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private ObjectMapper objectMapper;
+  private TestDataFactory testDataFactory;
 
   // Tests user
   private static String TEST_USER = "admin";
@@ -89,6 +86,8 @@ public class DatasetOccurrenceDownloadIT {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
+
+  private Nodes nodes;
 
   @Before
   public void setup() {
@@ -107,7 +106,7 @@ public class DatasetOccurrenceDownloadIT {
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.occurrenceDownloadService = occurrenceDownloadService;
     this.datasetService = datasetService;
     this.organizationService = organizationService;
@@ -115,7 +114,7 @@ public class DatasetOccurrenceDownloadIT {
     this.installationService = installationService;
     this.simplePrincipalProvider = simplePrincipalProvider;
     this.datasetOccurrenceDownloadUsageService = datasetOccurrenceDownloadUsageService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -124,15 +123,15 @@ public class DatasetOccurrenceDownloadIT {
    */
   private Dataset createTestDataset() {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID nodeKey = nodeService.create(nodes.newInstance());
 
     // publishing organization (required field)
-    Organization o = Organizations.newInstance(nodeKey);
+    Organization o = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organizationService.create(o);
 
-    Installation i = Installations.newInstance(organizationKey);
+    Installation i = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(i);
-    Dataset dataset = Datasets.newInstance(organizationKey, installationKey);
+    Dataset dataset = testDataFactory.newDataset(organizationKey, installationKey);
     dataset.setKey(datasetService.create(dataset));
     return dataset;
   }

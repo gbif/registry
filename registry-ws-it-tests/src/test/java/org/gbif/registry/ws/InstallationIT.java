@@ -24,16 +24,13 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +53,7 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;
-  private final ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   @Autowired
   public InstallationIT(
@@ -64,20 +61,20 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
       OrganizationService organizationService,
       NodeService nodeService,
       @Nullable SimplePrincipalProvider pp,
-      ObjectMapper objectMapper) {
-    super(service, pp);
+      TestDataFactory testDataFactory) {
+    super(service, pp, testDataFactory);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Override
   protected Installation newEntity() {
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
-    Organization o = Organizations.newInstance(nodeKey);
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
+    Organization o = testDataFactory.newOrganization(nodeKey);
     UUID key = organizationService.create(o);
     Organization organization = organizationService.get(key);
-    Installation i = Installations.newInstance(organization.getKey());
+    Installation i = testDataFactory.newInstallation(organization.getKey());
     return i;
   }
 

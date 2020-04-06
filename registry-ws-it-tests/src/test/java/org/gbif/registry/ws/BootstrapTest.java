@@ -20,10 +20,8 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,30 +47,33 @@ public class BootstrapTest {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private ObjectMapper objectMapper;
+  private final TestDataFactory testDataFactory;
 
   private final NodeService nodeService;
   private final OrganizationService organizationService;
 
   @Autowired
-  public BootstrapTest(NodeService nodeService, OrganizationService organizationService, ObjectMapper objectMapper) {
+  public BootstrapTest(
+      NodeService nodeService,
+      OrganizationService organizationService,
+      TestDataFactory testDataFactory) {
     this.nodeService = nodeService;
     this.organizationService = organizationService;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Test
   @Ignore
   public void run() {
-    Node n1 = Nodes.newInstance(objectMapper);
+    Node n1 = testDataFactory.newNode();
     n1.setKey(nodeService.create(n1));
-    Organization o1 = Organizations.newInstance(n1.getKey());
+    Organization o1 = testDataFactory.newOrganization(n1.getKey());
     organizationService.create(o1);
 
-    Node n2 = Nodes.newInstance(objectMapper);
+    Node n2 = testDataFactory.newNode();
     n2.setTitle("The US Node");
     n2.setKey(nodeService.create(n2));
-    Organization o2 = Organizations.newInstance(n2.getKey());
+    Organization o2 = testDataFactory.newOrganization(n2.getKey());
     o2.setEndorsementApproved(true);
     organizationService.create(o2);
 
@@ -87,10 +88,10 @@ public class BootstrapTest {
   @Ignore
   public void lots() {
     for (int n = 0; n < 100; n++) {
-      Node n1 = Nodes.newInstance(objectMapper);
+      Node n1 = testDataFactory.newNode();
       n1.setTitle((n + 1) + ": " + n1.getTitle());
       n1.setKey(nodeService.create(n1));
-      Organization o1 = Organizations.newInstance(n1.getKey());
+      Organization o1 = testDataFactory.newOrganization(n1.getKey());
       organizationService.create(o1);
       String[] tags = {"Abies", "Georeferenced", "Images", "Dubious", "DataPaper"};
       for (String tag : tags) {

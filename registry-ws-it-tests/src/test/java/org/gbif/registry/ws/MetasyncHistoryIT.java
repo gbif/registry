@@ -26,15 +26,12 @@ import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.utils.Installations;
-import org.gbif.registry.utils.Nodes;
-import org.gbif.registry.utils.Organizations;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Date;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,8 +65,6 @@ public class MetasyncHistoryIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private final ObjectMapper objectMapper;
-
   // Tests user
   private static String TEST_USER = "admin";
 
@@ -81,6 +76,8 @@ public class MetasyncHistoryIT {
   private final NodeService nodeService;
   private final InstallationService installationService;
 
+  private final TestDataFactory testDataFactory;
+
   @Autowired
   public MetasyncHistoryIT(
       MetasyncHistoryService metasyncHistoryService,
@@ -88,13 +85,13 @@ public class MetasyncHistoryIT {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      ObjectMapper objectMapper) {
+      TestDataFactory testDataFactory) {
     this.metasyncHistoryService = metasyncHistoryService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.simplePrincipalProvider = simplePrincipalProvider;
-    this.objectMapper = objectMapper;
+    this.testDataFactory = testDataFactory;
   }
 
   @Before
@@ -137,13 +134,13 @@ public class MetasyncHistoryIT {
    */
   private Installation createTestInstallation() {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(Nodes.newInstance(objectMapper));
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
 
     // publishing organization (required field)
-    Organization org = Organizations.newInstance(nodeKey);
+    Organization org = testDataFactory.newOrganization(nodeKey);
     UUID organizationKey = organizationService.create(org);
 
-    Installation inst = Installations.newInstance(organizationKey);
+    Installation inst = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(inst);
     inst.setKey(installationKey);
     return inst;

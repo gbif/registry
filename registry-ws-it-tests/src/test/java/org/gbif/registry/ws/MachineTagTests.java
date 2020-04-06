@@ -18,7 +18,7 @@ package org.gbif.registry.ws;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.registry.utils.MachineTags;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.List;
 
@@ -29,7 +29,8 @@ import static org.junit.Assert.assertTrue;
 
 public class MachineTagTests {
 
-  public static <T extends NetworkEntity> void testAddDelete(MachineTagService service, T entity) {
+  public static <T extends NetworkEntity> void testAddDelete(
+      MachineTagService service, T entity, TestDataFactory testDataFactory) {
 
     // check there are none on a newly created entity
     List<MachineTag> machineTags = service.listMachineTags(entity.getKey());
@@ -38,9 +39,9 @@ public class MachineTagTests {
     assertTrue("Machine Tag should be empty when none added", machineTags.isEmpty());
 
     // test additions
-    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
-    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
-    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+    service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
+    service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
+    service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
     assertEquals("3 machine tags have been added", 3, machineTags.size());
@@ -50,7 +51,7 @@ public class MachineTagTests {
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
     assertEquals("2 machine tags should remain after the deletion", 2, machineTags.size());
-    MachineTag expected = MachineTags.newInstance();
+    MachineTag expected = testDataFactory.newMachineTag();
     MachineTag created = machineTags.get(0);
     assertLenientEquals("Created machine tag does not read as expected", expected, created);
 
@@ -60,8 +61,8 @@ public class MachineTagTests {
     assertNotNull(machineTags);
     assertEquals("0 machine tags should remain after the deletion", 0, machineTags.size());
 
-    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
-    service.addMachineTag(entity.getKey(), MachineTags.newInstance());
+    service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
+    service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
     machineTags = service.listMachineTags(entity.getKey());
     assertNotNull(machineTags);
     assertEquals("2 machine tags have been added", 2, machineTags.size());

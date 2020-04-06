@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.utils;
+package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.codehaus.jackson.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class Identifiers extends JsonBackedData<Identifier> {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-  private static final Identifiers INSTANCE = new Identifiers();
+@Component
+public class Identifiers extends JsonBackedData2<Identifier> {
 
-  public static Identifier newInstance() {
-    return INSTANCE.newTypedInstance();
-  }
-
-  private Identifiers() {
-    super("data/identifier.json", new TypeReference<Identifier>() {});
+  @Autowired
+  private Identifiers(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+    super(
+        "data/identifier.json",
+        new TypeReference<Identifier>() {},
+        objectMapper,
+        simplePrincipalProvider);
   }
 }
