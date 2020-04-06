@@ -7,6 +7,6 @@ Consider moving `OccurrenceMetricsClient` out of the project.
 
 # Configuration
 
- * `url.occurrenceApi` occurrence API URL (e.g. http://api.gbif-dev.org/v1/occurrence/)
+ * `occurrence.ws.url` occurrence API URL (e.g. http://api.gbif-dev.org/v1/occurrence/)
 
 [Parent](../README.md)

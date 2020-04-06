@@ -19,12 +19,10 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.directory.Node;
 import org.gbif.api.service.directory.NodeService;
-import org.gbif.registry.directory.client.config.FeignClientConfiguration;
 import org.gbif.ws.WebApplicationException;
 
 import javax.validation.constraints.NotNull;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.HttpStatus;
@@ -35,11 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@Qualifier("nodeClient")
-@FeignClient(
-    value = "NodeClient",
-    url = "${directory.ws.url}",
-    configuration = FeignClientConfiguration.class)
+@FeignClient("NodeClient")
 public interface NodeClient extends NodeService {
 
   @RequestMapping(

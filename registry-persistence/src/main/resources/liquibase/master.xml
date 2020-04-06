@@ -73,4 +73,6 @@
   <include file="liquibase/065-ih-sync.xml" />
   <include file="liquibase/066-ih-new-fields.xml" />
   <include file="liquibase/067-pipelines-process_idx.xml" />
+  <include file="liquibase/068-mol-iucn-bloodhound-swv-download-formats.xml" />
+  <include file="liquibase/069-idigbio-fields.xml" />
 </databaseChangeLog>

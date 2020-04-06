@@ -244,7 +244,7 @@ public class UserManagementResource {
 
   /** For admin console only. Relax content-type to wildcard to allow angularjs. */
   @Secured(ADMIN_ROLE)
-  @DeleteMapping(value = "/{userKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{userKey}")
   public ResponseEntity<Void> delete(@PathVariable int userKey) {
     identityService.delete(userKey);
     return ResponseEntity.noContent().build();

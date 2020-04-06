@@ -20,7 +20,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.vocabulary.MetadataType;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +37,7 @@ public interface RegistryDatasetService {
 
   List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type);
 
-  InputStream getMetadataDocument(int metadataKey);
+  byte[] getMetadataDocument(int metadataKey);
 
   List<UUID> owningEntityKeys(@NotNull Dataset entity);
 }

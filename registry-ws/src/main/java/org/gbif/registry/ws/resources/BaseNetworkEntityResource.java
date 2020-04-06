@@ -198,7 +198,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param key key of entity to delete
    */
-  @DeleteMapping(value = "{key}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Transactional
   public void delete(@NotNull @PathVariable UUID key, Authentication authentication) {
@@ -335,7 +335,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete comment from
    * @param commentKey key of Comment to delete
    */
-  @DeleteMapping(value = "{key}/comment/{commentKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/comment/{commentKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(
@@ -413,7 +413,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * the action by looking at the namespace.
    */
   @SuppressWarnings("unchecked")
-  @DeleteMapping(value = "{key}/machineTag/{machineTagKey:[0-9]+}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("machineTagKey") int machineTagKey,
@@ -463,7 +463,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag in a namespace. Ensures that the caller is
    * authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace:.*[^0-9]+.*}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("namespace") String namespace,
@@ -493,7 +493,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
    * that the caller is authorized to perform the action by looking at the namespace.
    */
-  @DeleteMapping(value = "{key}/machineTag/{namespace}/{name}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable String namespace,
@@ -574,7 +574,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Tag from
    * @param tagKey key of Tag to delete
    */
-  @DeleteMapping(value = "{key}/tag/{tagKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/tag/{tagKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
@@ -667,7 +667,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Contact from
    * @param contactKey key of Contact to delete
    */
-  @DeleteMapping(value = "{key}/contact/{contactKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/contact/{contactKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
@@ -726,7 +726,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Endpoint from
    * @param endpointKey key of Endpoint to delete
    */
-  @DeleteMapping(value = "{key}/endpoint/{endpointKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/endpoint/{endpointKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void deleteEndpoint(
       @PathVariable("key") UUID targetEntityKey,
@@ -785,7 +785,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param targetEntityKey key of target entity to delete Identifier from
    * @param identifierKey key of Identifier to delete
    */
-  @DeleteMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.ALL_VALUE)
+  @DeleteMapping("{key}/identifier/{identifierKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteIdentifier(
