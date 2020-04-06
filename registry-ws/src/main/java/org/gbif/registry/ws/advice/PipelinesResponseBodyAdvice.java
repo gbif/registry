@@ -35,7 +35,8 @@ public class PipelinesResponseBodyAdvice implements ResponseBodyAdvice<RunPipeli
   public boolean supports(
       MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
     return returnType.getMethod() != null
-        && returnType.getMethod().getReturnType() != RunPipelineResponse.class
+        // only for RunPipelineResponse return type
+        && returnType.getMethod().getReturnType() == RunPipelineResponse.class
         // exclude case when StringHttpMessageConverter is involved, that's an exception
         && !StringHttpMessageConverter.class.equals(converterType);
   }
