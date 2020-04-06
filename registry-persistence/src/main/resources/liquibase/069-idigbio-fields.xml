@@ -1,0 +1,123 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="68" author="mlopez" >
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE institution ADD COLUMN alternative_codes hstore;
+
+        CREATE OR REPLACE FUNCTION institution_change_trigger()
+        RETURNS TRIGGER AS
+        $instchange$
+          DECLARE
+            addr RECORD;
+            mailing_addr RECORD;
+          BEGIN
+            SELECT * INTO addr FROM address a WHERE a.key = NEW.address_key;
+            SELECT * INTO mailing_addr FROM address a WHERE a.key = NEW.mailing_address_key;
+
+            NEW.fulltext_search :=
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.code,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.name,''))),'B') ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.description,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(CAST(NEW.type AS TEXT),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.email, ' '),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.phone, ' '),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.homepage,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.catalog_url,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.api_url,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(CAST(NEW.institutional_governance AS   TEXT),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.discipline, ' '),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.additional_names, '   '),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.geographic_description,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.taxonomic_description,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.logo_url,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.cites_permit_number,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(akeys(NEW.alternative_codes), ' '),''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.address,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.city,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.province,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.postal_code,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.country,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.address,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.city,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.province,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.postal_code,''))) ||
+              TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.country,'')));
+            RETURN NEW;
+          END;
+        $instchange$
+        LANGUAGE plpgsql;
+
+         CREATE OR REPLACE FUNCTION collection_change_trigger()
+          RETURNS TRIGGER AS
+          $colchange$
+            DECLARE
+              addr RECORD;
+              mailing_addr RECORD;
+            BEGIN
+              SELECT * INTO addr FROM address a WHERE a.key = NEW.address_key;
+              SELECT * INTO mailing_addr FROM address a WHERE a.key = NEW.mailing_address_key;
+
+              NEW.fulltext_search :=
+                SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.code,''))),'B') ||
+                SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.name,''))),'B') ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.description,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.content_type, ' '),''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.doi,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.email, ' '),''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.phone, ' '),''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.homepage,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.catalog_url,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.api_url,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.preservation_type, ' '),''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(CAST(NEW.accession_status AS TEXT),''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.taxonomic_coverage,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.geography,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.address,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.city,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.province,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.postal_code,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.country,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.address,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.city,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.province,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.postal_code,''))) ||
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.country,'')));
+              RETURN NEW;
+            END;
+          $colchange$
+          LANGUAGE plpgsql;
+
+          CREATE OR REPLACE FUNCTION colperson_change_trigger()
+          RETURNS TRIGGER AS
+          $colpersonchange$
+              DECLARE
+                mailing_addr RECORD;
+              BEGIN
+                SELECT * INTO mailing_addr FROM address a WHERE a.key = NEW.mailing_address_key;
+
+                NEW.fulltext_search :=
+                  SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.first_name,''))),'B') ||
+                  SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.last_name,''))),'B') ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.position,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.area_responsibility,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.research_pursuits,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.phone,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.fax,''))) ||
+                  SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.email,''))),'B') ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.address,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.city,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.province,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.postal_code,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.country,'')));
+                RETURN NEW;
+              END;
+          $colpersonchange$
+        LANGUAGE plpgsql;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

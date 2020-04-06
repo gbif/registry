@@ -222,6 +222,41 @@ public class CollectionMapperIT {
   }
 
   @Test
+  public void searchWithWeightsTest() {
+    Collection col1 = new Collection();
+    col1.setKey(UUID.randomUUID());
+    col1.setCode("longcodetotest1");
+    col1.setName("n1");
+    col1.setCreatedBy("test");
+    col1.setModifiedBy("test");
+    col1.setDescription("longcodetotest2");
+    collectionMapper.create(col1);
+
+    Collection col2 = new Collection();
+    col2.setKey(UUID.randomUUID());
+    col2.setCode("longcodetotest2");
+    col2.setName("n2");
+    col2.setCreatedBy("test");
+    col2.setModifiedBy("test");
+    col2.setDescription("longcodetotest1");
+    collectionMapper.create(col2);
+
+    Pageable pageable = PAGE.apply(2, 0L);
+    List<Collection> cols =
+        collectionMapper.list(null, null, "longcodetotest1", null, null, pageable);
+    assertEquals(2, cols.size());
+
+    pageable = PAGE.apply(1, 0L);
+    cols = collectionMapper.list(null, null, "longcodetotest1", null, null, pageable);
+    assertEquals(1, cols.size());
+    assertEquals(col1.getKey(), cols.get(0).getKey());
+
+    cols = collectionMapper.list(null, null, "longcodetotest2", null, null, pageable);
+    assertEquals(1, cols.size());
+    assertEquals(col2.getKey(), cols.get(0).getKey());
+  }
+
+  @Test
   public void countTest() {
     Collection col1 = new Collection();
     col1.setKey(UUID.randomUUID());
