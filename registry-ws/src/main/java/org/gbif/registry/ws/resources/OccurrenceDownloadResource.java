@@ -221,6 +221,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   // TODO: 04/04/2020 see commit from oldMaster 31/03/2020
   @GetMapping("{key:.+}/citation")
+  @Override
   @NullToNotFound
   public String getCitation(@NotNull @PathVariable("key") String keyOrDoi) {
     throw new UnsupportedOperationException("Not implemented");
