@@ -54,6 +54,7 @@ public interface DatasetProcessStatusClient extends DatasetProcessStatusService 
       @PathVariable("attempt") int attempt,
       @RequestBody DatasetProcessStatus datasetProcessStatus);
 
+  @Override
   default void updateDatasetProcessStatus(DatasetProcessStatus datasetProcessStatus) {
     updateDatasetProcessStatus(
         datasetProcessStatus.getDatasetKey(),
