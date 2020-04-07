@@ -2,25 +2,40 @@
 
 echo '[git hook] executing spotless apply before commit'
 
-# stash any unstaged changes
-git stash --quiet --keep-index
+# store all staged files
+files=$(git diff --name-only --staged)
 
-# run spotless apply maven
-mvn spotless:apply
+# get project basedir
+BASEDIR=$(git rev-parse --show-toplevel)
 
-# add spotless changes
-git add --update
+# concatenate staged files
+for i in $files
+do
+  STAGED_FILES=$STAGED_FILES$BASEDIR/$i,
+  STAGED_FILES_SPACE_SEPARATED="$STAGED_FILES_SPACE_SEPARATED $i"
+done
+
+echo "Files space separated: $STAGED_FILES_SPACE_SEPARATED"
+echo "Files comma separated: $STAGED_FILES"
+
+# run spotless only for staged files
+mvn spotless:apply "-DspotlessFiles=$STAGED_FILES" --quiet
+
+# add updates after spotless
+git add --update $STAGED_FILES_SPACE_SEPARATED
 
 # run spotless check maven
-mvn spotless:check
+mvn spotless:check "-DspotlessFiles=$STAGED_FILES" --quiet
 
 # store the last exit code in a variable
 RESULT=$?
 
-# revert if failed, because the post-commit hook won't be executed
+# run one more time if failed
 if [ "$RESULT" -ne "0" ]; then
-  git checkout --force
-  git stash pop --quiet
+  mvn spotless:apply "-DspotlessFiles=$STAGED_FILES" --quiet
+  git add --update $STAGED_FILES_SPACE_SEPARATED
+  mvn spotless:check "-DspotlessFiles=$STAGED_FILES" --quiet
+  RESULT=$?
 fi
 
 # return the 'mvn spotless:check' exit code

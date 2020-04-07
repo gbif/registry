@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -36,7 +37,6 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.registry.domain.pipelines.RunPipelineResponse;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.pipelines.util.PredicateUtils;
 
@@ -77,10 +77,11 @@ import com.google.common.collect.Ordering;
 
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 @Service
-public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryTrackingService {
+public class DefaultRegistryPipelinesHistoryTrackingService
+    implements RegistryPipelinesHistoryTrackingService {
 
   private static final Logger LOG =
-      LoggerFactory.getLogger(DefaultPipelinesHistoryTrackingService.class);
+      LoggerFactory.getLogger(DefaultRegistryPipelinesHistoryTrackingService.class);
 
   // Used to iterate over all datasets
   private static final int PAGE_SIZE = 200;
@@ -99,7 +100,7 @@ public class DefaultPipelinesHistoryTrackingService implements PipelinesHistoryT
   private final DatasetService datasetService;
   private final ExecutorService executorService;
 
-  public DefaultPipelinesHistoryTrackingService(
+  public DefaultRegistryPipelinesHistoryTrackingService(
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       @Autowired(required = false) MessagePublisher publisher,
       PipelineProcessMapper mapper,

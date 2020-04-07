@@ -75,7 +75,6 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
-// TODO: 04/04/2020 some methods should accept doi instead of key, see oldMaster
 /** Occurrence download resource/web service. */
 @RestController
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -116,28 +115,33 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     occurrenceDownloadMapper.create(occurrenceDownload);
   }
 
+  @Override
+  public Download get(String keyOrDoi) {
+    Download download = getByKey(keyOrDoi);
+
+    if (download == null && DOI.isParsable(keyOrDoi)) { // maybe it's a DOI?
+      DOI doi = new DOI(keyOrDoi);
+      download = getByDoi(doi.getPrefix(), doi.getSuffix());
+    }
+
+    return download;
+  }
+
   @GetMapping("{key}")
   @NullToNotFound("/occurrence/download/{key}")
-  @Override
-  public Download get(@NotNull @PathVariable("key") String key) {
+  public Download getByKey(@NotNull @PathVariable("key") String key) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Download download = occurrenceDownloadMapper.get(key);
-
-    if (download != null) { // the user can request a non-existing download
-      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      clearSensitiveData(authentication, download);
-    }
+    clearSensitiveData(authentication, download);
     return download;
   }
 
   @GetMapping("{prefix}/{suffix}")
   @NullToNotFound("/occurrence/download/{prefix}/{suffix}")
   public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
-
-    if (download != null) { // the user can request a non-existing download
-      final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      clearSensitiveData(authentication, download);
-    }
+    clearSensitiveData(authentication, download);
     return download;
   }
 
@@ -173,8 +177,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
         occurrenceDownloadMapper.listByUser(user, page, status));
   }
 
+  @SuppressWarnings("MVCPathVariableInspection")
   @PutMapping(
-      value = {"", "{key}"},
+      value = {"", "{key}, {prefix}/{suffix}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Override
@@ -189,14 +194,32 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     occurrenceDownloadMapper.update(download);
   }
 
-  @GetMapping("{key}/datasets")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
-      @NotNull @PathVariable("key") String downloadKey, Pageable page) {
-    Download download = get(downloadKey);
+      String keyOrDoi, Pageable page) {
+    Download download = get(keyOrDoi);
+    return listDatasetUsagesInternal(download.getKey(), page, download);
+  }
+
+  @GetMapping("{prefix}/{suffix}/datasets")
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByDoi(
+      @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
+    Download download = getByDoi(prefix, suffix);
+    return listDatasetUsagesInternal(download.getKey(), page, download);
+  }
+
+  @GetMapping("{key}/datasets")
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByKey(
+      @PathVariable("key") String key, Pageable page) {
+    Download download = get(key);
+    return listDatasetUsagesInternal(key, page, download);
+  }
+
+  private PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesInternal(
+      String key, Pageable page, Download download) {
     if (download != null) {
       List<DatasetOccurrenceDownloadUsage> usages =
-          datasetOccurrenceDownloadMapper.listByDownload(downloadKey, page);
+          datasetOccurrenceDownloadMapper.listByDownload(key, page);
       final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       clearSensitiveData(authentication, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
@@ -219,12 +242,45 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                     batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
 
-  // TODO: 04/04/2020 see commit from oldMaster 31/03/2020
-  @GetMapping("{key:.+}/citation")
   @Override
   @NullToNotFound
-  public String getCitation(@NotNull @PathVariable("key") String keyOrDoi) {
-    throw new UnsupportedOperationException("Not implemented");
+  public String getCitation(@NotNull String keyOrDoi) {
+    Download download = get(keyOrDoi);
+    return getCitationInternal(download);
+  }
+
+  @GetMapping("{key}/citation")
+  @NullToNotFound("/occurrence/download/{key}/citation")
+  public String getCitationByKey(@NotNull @PathVariable("key") String key) {
+    Download download = getByKey(key);
+    return getCitationInternal(download);
+  }
+
+  @GetMapping("{prefix}/{suffix}/citation")
+  @NullToNotFound("/occurrence/download/{prefix}/{suffix}/citation")
+  public String getCitationByDoi(
+      @NotNull @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
+    Download download = getByDoi(prefix, suffix);
+    return getCitationInternal(download);
+  }
+
+  private String getCitationInternal(Download download) {
+    if (download != null) {
+      // Citations are incorrect, see https://github.com/gbif/occurrence/issues/156.
+      // For the moment, just use the main citation.
+      // List<DatasetOccurrenceDownloadUsage> usages =
+      // datasetOccurrenceDownloadMapper.listByDownload(downloadKey, null);
+
+      // usages.forEach(
+      //  usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); }
+      // );
+
+      return "GBIF Occurrence Download " + download.getDoi().getUrl().toString() + '\n';
+
+      // usages.forEach(
+      //   usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); });
+    }
+    return null;
   }
 
   @GetMapping("statistics/downloadsByUserCountry")
