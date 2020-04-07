@@ -38,6 +38,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.search.test.EsServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -48,9 +49,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
@@ -58,23 +61,27 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -85,8 +92,41 @@ import static org.junit.Assert.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
+@ContextConfiguration(initializers = {DatasetIT.ContexInitializer.class})
 public class DatasetIT extends NetworkEntityTest<Dataset> {
+
+  @RegisterExtension
+  static EsServer esServer =
+      new EsServer(
+          Paths.get(
+              DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
+          "dataset",
+          "dataset");
+
+  static class ContexInitializer extends NetworkEntityTest.ContexInitializer {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      withSearchEnabled(true, configurableApplicationContext.getEnvironment());
+      TestPropertyValues.of(
+              Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
+                  .flatMap(Stream::of)
+                  .toArray(String[]::new))
+          .applyTo(configurableApplicationContext.getEnvironment());
+    }
+
+    public String[] elasticTestPropertiesPairs() {
+
+      return new String[] {
+        "elasticsearch.registry.hosts=" + esServer.getServerAddress(),
+        "elasticsearch.registry.index=dataset",
+        "elasticsearch.registry.connectionTimeOut=60000",
+        "elasticsearch.registry.socketTimeOut=60000",
+        "elasticsearch.registry.connectionRequestTimeOut=120000",
+        "elasticsearch.registry.maxRetryTimeOut=120000"
+      };
+    }
+  }
 
   private final DatasetService service;
   private final DatasetSearchService searchService;
@@ -98,7 +138,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   @Autowired
   public DatasetIT(
       DatasetService service,
-      DatasetSearchService searchService,
+      @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
       OrganizationService organizationService,
       NodeService nodeService,
       InstallationService installationService,
@@ -170,15 +210,15 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   public void testHostedByList() {
     Dataset dataset = newAndCreate(1);
     Installation i = installationService.get(dataset.getInstallationKey());
-    assertNotNull("Dataset should have an installation", i);
+    assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> published =
         organizationService.publishedDatasets(i.getOrganizationKey(), new PagingRequest());
     PagingResponse<Dataset> hosted =
         organizationService.hostedDatasets(i.getOrganizationKey(), new PagingRequest());
     assertEquals(
-        "This installation should have only 1 published dataset", 1, published.getResults().size());
+        1, published.getResults().size(), "This installation should have only 1 published dataset");
     assertTrue(
-        "This organization should not have any hosted datasets", hosted.getResults().isEmpty());
+        hosted.getResults().isEmpty(), "This organization should not have any hosted datasets");
   }
 
   // Easier to test this here than OrganizationIT due to our utility dataset factory
@@ -188,16 +228,16 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     PagingResponse<Dataset> published =
         organizationService.publishedDatasets(
             dataset.getPublishingOrganizationKey(), new PagingRequest());
-    assertEquals("The organization should have only 1 dataset", 1, published.getResults().size());
+    assertEquals(1, published.getResults().size(), "The organization should have only 1 dataset");
     assertEquals(
-        "The organization should publish the dataset created",
         published.getResults().get(0).getKey(),
-        dataset.getKey());
+        dataset.getKey(),
+        "The organization should publish the dataset created");
 
     assertEquals(
-        "The organization should have 1 dataset count",
         1,
-        organizationService.get(dataset.getPublishingOrganizationKey()).getNumPublishedDatasets());
+        organizationService.get(dataset.getPublishingOrganizationKey()).getNumPublishedDatasets(),
+        "The organization should have 1 dataset count");
   }
 
   // Easier to test this here than InstallationIT due to our utility dataset factory
@@ -205,16 +245,16 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   public void testHostedByInstallationList() {
     Dataset dataset = newAndCreate(1);
     Installation i = installationService.get(dataset.getInstallationKey());
-    assertNotNull("Dataset should have an installation", i);
+    assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> hosted =
         installationService.getHostedDatasets(dataset.getInstallationKey(), new PagingRequest());
     assertEquals(
-        "This installation should have only 1 hosted dataset", 1, hosted.getResults().size());
-    assertEquals("Paging response counts are not being set", Long.valueOf(1), hosted.getCount());
+        1, hosted.getResults().size(), "This installation should have only 1 hosted dataset");
+    assertEquals(Long.valueOf(1), hosted.getCount(), "Paging response counts are not being set");
     assertEquals(
-        "The hosted installation should serve the dataset created",
         hosted.getResults().get(0).getKey(),
-        dataset.getKey());
+        dataset.getKey(),
+        "The hosted installation should serve the dataset created");
   }
 
   @Test
@@ -229,9 +269,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(1),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
   @Test
@@ -257,17 +297,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(0),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
     assertEquals(
-        "SOLR does not have the expected number of facets for query[" + req + "]",
         1,
-        resp.getFacets().size());
+        resp.getFacets().size(),
+        "Elasticsearch does not have the expected number of facets for query[" + req + "]");
     assertEquals(
-        "SOLR does not have the expected number of facet values for query[" + req + "]",
         0,
-        resp.getFacets().get(0).getCounts().size());
+        resp.getFacets().get(0).getCounts().size(),
+        "Elasticsearch does not have the expected number of facet values for query[" + req + "]");
 
     req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.ALGERIA);
@@ -275,13 +315,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     req.addFacets(DatasetSearchParameter.LICENSE);
     resp = searchService.search(req);
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(1),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
     assertEquals(
-        "SOLR does not have the expected number of facets for query[" + req + "]",
         2,
-        resp.getFacets().size());
+        resp.getFacets().size(),
+        "Elasticsearch does not have the expected number of facets for query[" + req + "]");
 
     req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.GERMANY);
@@ -290,13 +330,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     resp = searchService.search(req);
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(1),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
     assertEquals(
-        "SOLR does not have the expected number of facet values for query[" + req + "]",
         4,
-        resp.getFacets().get(0).getCounts().size());
+        resp.getFacets().get(0).getCounts().size(),
+        "Elasticsearch does not have the expected number of facet values for query[" + req + "]");
   }
 
   @Test
@@ -313,17 +353,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     req.addPublishingCountryFilter(Country.GERMANY);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(0),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
 
     req.addPublishingCountryFilter(Country.SOUTH_AFRICA);
     req.addTypeFilter(DatasetType.CHECKLIST);
     resp = searchService.search(req);
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(1),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
   @Test
@@ -357,13 +397,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + req + "]",
         Long.valueOf(1),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
   @Test
-  @Ignore("See https://github.com/gbif/registry/issues/22")
+  @Disabled("See https://github.com/gbif/registry/issues/22")
   public void testDismaxSearch() throws InterruptedException {
 
     Dataset d = newAndCreate(1);
@@ -448,7 +488,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  @Ignore("See https://github.com/gbif/registry/issues/22")
+  @Disabled("See https://github.com/gbif/registry/issues/22")
   public void testSearchListener() throws InterruptedException {
     Dataset d = newEntity();
     d = create(d, 1);
@@ -478,7 +518,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     // update hosting organization title should be captured
     Installation installation = installationService.get(d.getInstallationKey());
-    assertNotNull("Installation should be present", installation);
+    assertNotNull(installation, "Installation should be present");
     Organization host = organizationService.get(installation.getOrganizationKey());
     assertSearch(host.getTitle(), 1);
     host.setTitle("HOSTTITLE");
@@ -517,29 +557,31 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   /**
-   * Utility to verify that after waiting for SOLR to update, the given query returns the expected
-   * count of results.
+   * Utility to verify that after waiting for Elasticsearch to update, the given query returns the
+   * expected count of results.
    */
   private List<DatasetSearchResult> assertSearch(String query, int expected) {
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
+    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
+    // asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ(query);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     assertEquals(
-        "SOLR does not have the expected number of results for query[" + query + "]",
         Long.valueOf(expected),
-        resp.getCount());
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for query[" + query + "]");
     return resp.getResults();
   }
 
   /**
-   * Utility to verify that after waiting for SOLR to update, the given query returns the expected
-   * count of results.
+   * Utility to verify that after waiting for Elasticsearch to update, the given query returns the
+   * expected count of results.
    */
   private void testSearch(String query) {
     System.out.println("\n*****\n" + query);
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
+    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
+    // asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ(query);
 
@@ -547,22 +589,24 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   private void assertAll(Long expected) {
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are asynchronous
+    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
+    // asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ("*");
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     System.out.println(resp.getCount());
     System.out.println(resp);
-    assertEquals("SOLR docs not as expected", expected, resp.getCount());
+    assertEquals(expected, resp.getCount(), "Elasticsearch docs not as expected");
   }
 
   /**
-   * Utility to verify that after waiting for SOLR to update, the given query returns the expected
-   * count of results.
+   * Utility to verify that after waiting for Elasticsearch to update, the given query returns the
+   * expected count of results.
    */
   private void assertSearch(Country publishingCountry, Country country, int expected) {
-    // TODO: DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // SOLR updates are
+    // TODO: DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates
+    // are
     // asynchronous
     DatasetSearchRequest req = new DatasetSearchRequest();
     if (country != null) {
@@ -574,13 +618,13 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
     assertNotNull(resp.getCount());
     assertEquals(
-        "SOLR does not have the expected number of results for country["
+        Long.valueOf(expected),
+        resp.getCount(),
+        "Elasticsearch does not have the expected number of results for country["
             + country
             + "] and publishingCountry["
             + publishingCountry
-            + "]",
-        Long.valueOf(expected),
-        resp.getCount());
+            + "]");
   }
 
   private Dataset newEntity(@Nullable Country publisherCountry) {
@@ -633,7 +677,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Dataset dataset = newEntity();
     dataset = create(dataset, 1);
     dataset = service.get(dataset.getKey());
-    assertNotNull("Citation should never be null", dataset.getCitation());
+    assertNotNull(dataset.getCitation(), "Citation should never be null");
 
     assertEquals("ABC", dataset.getCitation().getIdentifier());
     // original citation not preserved, we generate one
@@ -678,7 +722,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     dataset.setDoi(null);
     service.update(dataset);
     dataset = service.get(key);
-    assertNotNull("DOI should never be null", dataset.getDoi());
+    assertNotNull(dataset.getDoi(), "DOI should never be null");
     assertFalse(dataset.getDoi().equals(external1));
     final DOI originalGBIF = dataset.getDoi();
     assertThat(service.listIdentifiers(key))
@@ -889,18 +933,18 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Dataset d1 = create(newEntity(), 1);
     assertEquals(License.CC_BY_NC_4_0, d1.getLicense());
     List<Metadata> metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
-    assertEquals("No EML uploaded yes", 0, metadata.size());
+    assertEquals(0, metadata.size(), "No EML uploaded yes");
 
     // upload a valid EML document (without a machine readable license)
     service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
 
     // verify dataset was updated from parsed document
     Dataset d2 = service.get(d1.getKey());
-    assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);
+    assertNotEquals(d1, d2, "Dataset should have changed after metadata was uploaded");
     assertEquals("Tanzanian Entomological Collection", d2.getTitle());
-    assertEquals("Created data should not change", d1.getCreated(), d2.getCreated());
+    assertEquals(d1.getCreated(), d2.getCreated(), "Created data should not change");
     assertTrue(
-        "Dataset modification date should change", d1.getModified().before(d2.getModified()));
+        d1.getModified().before(d2.getModified()), "Dataset modification date should change");
 
     // verify license stayed the same, because no machine readable license was detected in EML
     // document
@@ -908,12 +952,12 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     // verify EML document was stored successfully
     metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
-    assertEquals("Exactly one EML uploaded", 1, metadata.size());
-    assertEquals("Wrong metadata type", MetadataType.EML, metadata.get(0).getType());
+    assertEquals(1, metadata.size(), "Exactly one EML uploaded");
+    assertEquals(MetadataType.EML, metadata.get(0).getType(), "Wrong metadata type");
 
     // check number of stored DC documents
     metadata = service.listMetadata(d1.getKey(), MetadataType.DC);
-    assertTrue("No Dublin Core uplaoded yet", metadata.isEmpty());
+    assertTrue(metadata.isEmpty(), "No Dublin Core uplaoded yet");
 
     // upload subsequent DC document which has less priority than the previous EML document
     service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/worms_dc.xml"));
@@ -921,12 +965,12 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // verify dataset has NOT changed
     Dataset d3 = service.get(d1.getKey());
     assertEquals("Tanzanian Entomological Collection", d3.getTitle());
-    assertEquals("Created data should not change", d1.getCreated(), d3.getCreated());
+    assertEquals(d1.getCreated(), d3.getCreated(), "Created data should not change");
 
     // verify DC document was stored successfully
     metadata = service.listMetadata(d1.getKey(), MetadataType.DC);
-    assertEquals("Exactly one DC uploaded", 1, metadata.size());
-    assertEquals("Wrong metadata type", MetadataType.DC, metadata.get(0).getType());
+    assertEquals(1, metadata.size(), "Exactly one DC uploaded");
+    assertEquals(MetadataType.DC, metadata.get(0).getType(), "Wrong metadata type");
 
     // upload 2nd EML doc (with a machine readable license), which has higher priority than the
     // previous EML doc
@@ -941,7 +985,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     // verify EML document replaced EML docuemnt of less priority
     metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
-    assertEquals("Exactly one EML uploaded", 1, metadata.size());
+    assertEquals(1, metadata.size(), "Exactly one EML uploaded");
 
     // upload 3rd EML doc (with a machine readable UNSUPPORTED license), which has higher priority
     // than the previous EML doc
@@ -959,7 +1003,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     // verify EML document replaced EML document of less priority
     metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
-    assertEquals("Exactly one EML uploaded", 1, metadata.size());
+    assertEquals(1, metadata.size(), "Exactly one EML uploaded");
     int lastEmlMetadataDocKey = metadata.get(0).getKey();
 
     // upload exact same EML doc again, but make sure it does NOT update dataset!
@@ -998,17 +1042,17 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
 
     // verify our dataset has changed
     Dataset d2 = service.get(d1.getKey());
-    assertNotEquals("Dataset should have changed after metadata was uploaded", d1, d2);
+    assertNotEquals(d1, d2, "Dataset should have changed after metadata was uploaded");
     List<Metadata> m2 = service.listMetadata(d1.getKey(), MetadataType.EML);
-    assertNotEquals("Dataset metadata should have changed after metadata was uploaded", m1, m2);
+    assertNotEquals(m1, m2, "Dataset metadata should have changed after metadata was uploaded");
 
     // upload the doc a second time - it should not update the metadata
     service.insertMetadata(d1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
     List<Metadata> m3 = service.listMetadata(d1.getKey(), MetadataType.EML);
     assertEquals(
-        "Dataset metadata should not have changed after same metadata document was uploaded",
         m2,
-        m3);
+        m3,
+        "Dataset metadata should not have changed after same metadata document was uploaded");
   }
 
   @Test
@@ -1048,7 +1092,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  @Ignore("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
+  @Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
   public void testCountrySearch() {
     createCountryDatasets(Country.ANDORRA, 3);
     createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1, Country.DJIBOUTI);
@@ -1072,11 +1116,11 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertSearch(null, Country.DJIBOUTI, 3);
   }
 
-  @Test(expected = ValidationException.class)
+  @Test
   public void createDatasetsWithInvalidUri() {
     Dataset d = newEntity();
     d.setHomepage(URI.create("file:/test.txt"));
-    service.create(d);
+    assertThrows(ValidationException.class, () -> service.create(d));
   }
 
   private void createCountryDatasets(Country publishingCountry, int number) {

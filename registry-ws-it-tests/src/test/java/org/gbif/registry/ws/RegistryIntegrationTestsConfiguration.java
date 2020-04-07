@@ -43,7 +43,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -62,6 +61,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
       "org.gbif.ws.security",
       "org.gbif.registry.search.dataset.service",
       "org.gbif.registry.search.dataset.indexing",
+      "org.gbif.registry.search",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
@@ -113,8 +113,7 @@ public class RegistryIntegrationTestsConfiguration {
   }
 
   // use stub instead dataset search
-  @Bean
-  @Primary
+  // @Bean TODO: Ignore this injector, the realtime indexer has to be refactored
   public DatasetSearchService datasetSearchService() {
     return new DatasetSearchServiceStub();
   }
