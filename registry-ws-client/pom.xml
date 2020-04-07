@@ -5,11 +5,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.152-SNAPSHOT</version>
+    <version>2.152</version>
   </parent>
 
   <artifactId>registry-ws-client</artifactId>
-  <version>2.152-SNAPSHOT</version>
+  <version>2.152</version>
   <packaging>jar</packaging>
 
   <name>Registry Web service client</name>

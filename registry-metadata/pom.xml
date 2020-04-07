@@ -4,11 +4,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.152-SNAPSHOT</version>
+    <version>2.152</version>
   </parent>
 
   <artifactId>registry-metadata</artifactId>
-  <version>2.152-SNAPSHOT</version>
+  <version>2.152</version>
   <packaging>jar</packaging>
 
   <name>Registry EML Metadata</name>
