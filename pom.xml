@@ -83,7 +83,7 @@
     <commons-validator.version>1.5.1</commons-validator.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <freemarker.version>2.3.25-incubating</freemarker.version>
-    <gbif-api.version>0.108-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.108</gbif-api.version>
     <gbif-dwc-api.version>1.27</gbif-dwc-api.version>
     <gbif-cli.version>0.10</gbif-cli.version>
     <gbif-common-mybatis.version>0.30</gbif-common-mybatis.version>
@@ -93,7 +93,7 @@
     <gbif-common-ws.version>0.48</gbif-common-ws.version>
     <gbif-common.version>0.40</gbif-common.version>
     <gbif-doi.version>2.7</gbif-doi.version>
-    <gbif-download-query-tools.version>1.27-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.27</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-microservice.version>0.7</gbif-microservice.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
