@@ -27,10 +27,27 @@
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>pl.allegro.tech</groupId>
+      <artifactId>embedded-elasticsearch</artifactId>
+      <version>2.10.0</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif.datacite</groupId>
+          <artifactId>datacite-rest-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-search</artifactId>
     </dependency>
 
     <dependency>
@@ -55,14 +72,6 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
-      <version>2.147</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.gbif</groupId>
-          <artifactId>gbif-api</artifactId>
-        </exclusion>
-      </exclusions>
-
     </dependency>
 
     <dependency>

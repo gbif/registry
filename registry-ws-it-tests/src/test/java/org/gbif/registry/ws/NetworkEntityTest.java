@@ -62,6 +62,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -106,15 +107,25 @@ public abstract class NetworkEntityTest<
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-
-      TestPropertyValues.of(
-              "registry.datasource.url=jdbc:postgresql://localhost:"
-                  + database.getConnectionInfo().getPort()
-                  + "/"
-                  + database.getConnectionInfo().getDbName(),
-              "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-              "registry.datasource.password=")
+      TestPropertyValues.of(dbTestPropertyPairs())
           .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
     }
   }
 

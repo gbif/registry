@@ -32,7 +32,7 @@ import com.google.common.base.Throwables;
  * test by using the following:
  *
  * <pre>
- * @Rule
+ * @RegisterExtension
  * public DatabaseInitializer = new DatabaseInitializer(getDatasource()); // developer required to provide datasource
  * </pre>
  */

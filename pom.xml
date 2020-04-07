@@ -111,7 +111,7 @@
     <jjwt.version>0.9.1</jjwt.version>
     <guava.version>17.0</guava.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
-    <retrofit.version>2.5.0</retrofit.version>
+    <retrofit.version>2.8.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
     <okio.version>2.0.0</okio.version>
     <mybatis.version>3.5.0</mybatis.version>
