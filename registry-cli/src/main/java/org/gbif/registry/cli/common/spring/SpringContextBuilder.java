@@ -17,17 +17,18 @@ package org.gbif.registry.cli.common.spring;
 
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
+import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
 import org.gbif.registry.directory.client.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
-import org.gbif.registry.messaging.RegistryRabbitConfiguration;
 import org.gbif.registry.ws.config.MyBatisConfiguration;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
@@ -143,24 +144,7 @@ public class SpringContextBuilder {
     }
 
     if (messagingConfiguration != null) {
-      ctx.getEnvironment()
-          .getPropertySources()
-          .addLast(
-              new MapPropertySource(
-                  "rabbitConfigProperties",
-                  ImmutableMap.of(
-                      "spring.rabbitmq.host", messagingConfiguration.host,
-                      "spring.rabbitmq.port", messagingConfiguration.port,
-                      "spring.rabbitmq.username", messagingConfiguration.username,
-                      "spring.rabbitmq.password", messagingConfiguration.password,
-                      "spring.rabbitmq.virtualHost", messagingConfiguration.virtualHost)));
-
-      ctx.getEnvironment()
-          .getPropertySources()
-          .addLast(
-              new MapPropertySource(
-                  "messagingConfigProperties", ImmutableMap.of("message.enabled", true)));
-      ctx.registerBean(RegistryRabbitConfiguration.class);
+      ctx.registerBean("messagePublisher", MessagePublisher.class, MessagePublisherStub::new);
     }
 
     if (!packages.isEmpty()) {
@@ -178,9 +162,8 @@ public class SpringContextBuilder {
                       "directory.app.key", directoryConfiguration.appKey,
                       "directory.app.secret", directoryConfiguration.appSecret)));
 
-      SigningService signingService = new SecretKeySigningService();
-
-      ctx.registerBean("secretKeySigningService", SigningService.class, () -> signingService);
+      ctx.registerBean(
+          "secretKeySigningService", SigningService.class, SecretKeySigningService::new);
       ctx.register(Md5EncodeServiceImpl.class);
       ctx.register(DirectoryClientConfiguration.class);
     }
