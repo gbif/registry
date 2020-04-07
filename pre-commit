@@ -6,7 +6,7 @@ echo '[git hook] executing spotless apply before commit'
 files=$(git diff --name-only --staged)
 
 # get project basedir
-BASEDIR=$(dirname "$0")
+BASEDIR=$(git rev-parse --show-toplevel)
 
 # concatenate staged files
 for i in $files
