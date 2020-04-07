@@ -17,8 +17,14 @@ package org.gbif.registry.ws;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.ObjectFactory;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
@@ -26,19 +32,29 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
-import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.registry.ws.fixtures.TestConstants;
 
-import org.junit.Test;
+import java.util.Collections;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * This is parameterized to run the same test routines for the following DOI Registration elements:
@@ -49,16 +65,16 @@ import static org.junit.Assert.assertNotNull;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class DoiRegistrationServiceIT {
 
   @RegisterExtension
   static PreparedDbExtension database =
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  // Tests user
-  private static String TEST_ADMIN_USER = "admin";
 
   @RegisterExtension
   public final DatabaseInitializer databaseRule =
@@ -67,10 +83,19 @@ public class DoiRegistrationServiceIT {
   private final DoiRegistrationService doiRegistrationService;
 
   @Autowired
-  public DoiRegistrationServiceIT(
-      DoiRegistrationService doiRegistrationService,
-      SimplePrincipalProvider simplePrincipalProvider) {
+  public DoiRegistrationServiceIT(DoiRegistrationService doiRegistrationService) {
     this.doiRegistrationService = doiRegistrationService;
+  }
+
+  @BeforeEach
+  public void setup() {
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            TestConstants.TEST_ADMIN,
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
   }
 
   /** Generates a new DOI. */
@@ -80,7 +105,7 @@ public class DoiRegistrationServiceIT {
     assertNotNull(doi);
   }
 
-  /** Tests the generate and get DOI methods. */
+  /** Tests generate and get DOI methods. */
   @Test
   public void testCreateAndGet() {
     DOI doi = doiRegistrationService.generate(DoiType.DATA_PACKAGE);
@@ -95,7 +120,7 @@ public class DoiRegistrationServiceIT {
     DoiRegistration.Builder builder =
         DoiRegistration.builder()
             .withType(DoiType.DATA_PACKAGE)
-            .withUser(TEST_ADMIN_USER)
+            .withUser(TestConstants.TEST_ADMIN)
             .withMetadata(testMetadata());
     DOI doi = doiRegistrationService.register(builder.build());
     assertNotNull(doi);
@@ -104,32 +129,27 @@ public class DoiRegistrationServiceIT {
   /** Create a test DataCiteMetadata instance. */
   public String testMetadata() {
     try {
-      ObjectFactory of = new ObjectFactory();
-      DataCiteMetadata res = of.createDataCiteMetadata();
+      DataCiteMetadata metadata =
+          DataCiteMetadata.builder()
+              .withCreators(
+                  Creators.builder()
+                      .addCreator(
+                          Creator.builder()
+                              .withCreatorName(
+                                  CreatorName.builder().withValue(TestConstants.TEST_ADMIN).build())
+                              .build())
+                      .build())
+              .withTitles(
+                  Titles.builder().addTitle(Title.builder().withValue("TEST Tile").build()).build())
+              .withPublicationYear("2017")
+              .withPublisher(Publisher.builder().withValue(TestConstants.TEST_ADMIN).build())
+              .withResourceType(
+                  DataCiteMetadata.ResourceType.builder()
+                      .withResourceTypeGeneral(ResourceType.DATASET)
+                      .build())
+              .build();
 
-      DataCiteMetadata.Creators creators = of.createDataCiteMetadataCreators();
-      DataCiteMetadata.Creators.Creator creator = of.createDataCiteMetadataCreatorsCreator();
-      DataCiteMetadata.Creators.Creator.CreatorName name =
-          of.createDataCiteMetadataCreatorsCreatorCreatorName();
-      name.setValue(TEST_ADMIN_USER);
-      creator.setCreatorName(name);
-      creators.getCreator().add(creator);
-      res.setCreators(creators);
-
-      DataCiteMetadata.Titles titles = of.createDataCiteMetadataTitles();
-      DataCiteMetadata.Titles.Title title = of.createDataCiteMetadataTitlesTitle();
-      title.setValue("TEST Tile");
-      titles.getTitle().add(title);
-      res.setTitles(titles);
-
-      res.setPublicationYear("2017");
-      DataCiteMetadata.Publisher publisher = of.createDataCiteMetadataPublisher();
-      publisher.setValue(TEST_ADMIN_USER);
-      res.setPublisher(publisher);
-      DataCiteMetadata.ResourceType resourceType = of.createDataCiteMetadataResourceType();
-      resourceType.setResourceTypeGeneral(ResourceType.DATASET);
-      res.setResourceType(resourceType);
-      return DataCiteValidator.toXml(new DOI(DOI.TEST_PREFIX, "1"), res);
+      return DataCiteValidator.toXml(new DOI(DOI.TEST_PREFIX, "1"), metadata);
     } catch (InvalidMetadataException ex) {
       throw new RuntimeException(ex);
     }
