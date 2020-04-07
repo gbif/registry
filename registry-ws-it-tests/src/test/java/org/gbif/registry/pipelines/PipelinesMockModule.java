@@ -26,11 +26,11 @@ public class PipelinesMockModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(ExecutorService.class).toInstance(Executors.newSingleThreadExecutor());
-    bind(PipelinesHistoryTrackingService.class)
-        .to(DefaultPipelinesHistoryTrackingService.class)
+    bind(RegistryPipelinesHistoryTrackingService.class)
+        .to(DefaultRegistryPipelinesHistoryTrackingService.class)
         .in(Scopes.SINGLETON);
-    bind(IngestionHistoryService.class)
-        .to(DefaultIngestionHistoryService.class)
+    bind(RegistryIngestionHistoryService.class)
+        .to(DefaultRegistryIngestionHistoryService.class)
         .in(Scopes.SINGLETON);
   }
 }

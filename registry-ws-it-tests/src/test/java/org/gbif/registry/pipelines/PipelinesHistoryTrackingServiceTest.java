@@ -45,8 +45,8 @@ public class PipelinesHistoryTrackingServiceTest {
 
   @Test
   public void getLatestSuccesfulStepTest() {
-    DefaultPipelinesHistoryTrackingService trackingService =
-        new DefaultPipelinesHistoryTrackingService(
+    DefaultRegistryPipelinesHistoryTrackingService trackingService =
+        new DefaultRegistryPipelinesHistoryTrackingService(
             new ObjectMapper(), messagePublisher, pipelineProcessMapper, datasetService, 1);
 
     PipelineProcess process = new PipelineProcess();
