@@ -40,7 +40,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -214,7 +213,6 @@ public class NodeIT extends NetworkEntityTest<Node> {
    * so we activate this test to make sure IMS connections are working!
    */
   @Test
-  @Disabled("Feing Directory client hast to be mocked")
   public void testIms() {
     initVotingCountryNodes();
     Node es = nodeService.getByCountry(Country.SPAIN);

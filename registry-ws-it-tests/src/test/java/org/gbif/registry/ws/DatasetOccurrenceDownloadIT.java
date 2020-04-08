@@ -26,27 +26,36 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.test.Nodes;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} implementations. This is parameterized to
@@ -58,7 +67,10 @@ import static org.junit.Assert.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class DatasetOccurrenceDownloadIT {
 
   @RegisterExtension
@@ -71,14 +83,8 @@ public class DatasetOccurrenceDownloadIT {
       new DatabaseInitializer(database.getTestDatabase());
 
   private TestDataFactory testDataFactory;
-
-  // Tests user
-  private static String TEST_USER = "admin";
-
   private final OccurrenceDownloadService occurrenceDownloadService;
-
   private final DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService;
-
   private final SimplePrincipalProvider simplePrincipalProvider;
 
   // The following services are required to create dataset instances
@@ -87,34 +93,39 @@ public class DatasetOccurrenceDownloadIT {
   private final NodeService nodeService;
   private final InstallationService installationService;
 
-  private Nodes nodes;
-
-  @Before
-  public void setup() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
-    if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(TEST_USER);
-    }
-  }
-
   @Autowired
   public DatasetOccurrenceDownloadIT(
       OccurrenceDownloadService occurrenceDownloadService,
-      DatasetService datasetService,
       OrganizationService organizationService,
+      DatasetService datasetService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService,
       TestDataFactory testDataFactory) {
     this.occurrenceDownloadService = occurrenceDownloadService;
-    this.datasetService = datasetService;
     this.organizationService = organizationService;
+    this.datasetService = datasetService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.simplePrincipalProvider = simplePrincipalProvider;
     this.datasetOccurrenceDownloadUsageService = datasetOccurrenceDownloadUsageService;
     this.testDataFactory = testDataFactory;
+  }
+
+  @BeforeEach
+  public void setup() {
+    // reset SimplePrincipleProvider, configured for web service client tests only
+    if (simplePrincipalProvider != null) {
+      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              simplePrincipalProvider.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /**
@@ -123,10 +134,10 @@ public class DatasetOccurrenceDownloadIT {
    */
   private Dataset createTestDataset() {
     // endorsing node for the organization
-    UUID nodeKey = nodeService.create(nodes.newInstance());
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
 
     // publishing organization (required field)
-    Organization o = testDataFactory.newPersistedOrganization();
+    Organization o = testDataFactory.newOrganization(nodeKey);
     UUID organizationKey = organizationService.create(o);
 
     Installation i = testDataFactory.newInstallation(organizationKey);
@@ -137,8 +148,8 @@ public class DatasetOccurrenceDownloadIT {
   }
 
   /**
-   * Tests the process of persist a {@link DatasetOccurrenceDownload} and list the downloads by
-   * dataset key.
+   * Tests the process of persist a dataset occurrence download and list the downloads by dataset
+   * key.
    */
   @Test
   public void testAddAndGetOccurrenceDatasetOne() {
@@ -151,19 +162,19 @@ public class DatasetOccurrenceDownloadIT {
     occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
 
     assertEquals(
-        "List operation should return 1 record",
         1,
         datasetOccurrenceDownloadUsageService
             .listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
             .getResults()
-            .size());
+            .size(),
+        "List operation should return 1 record");
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertEquals(1, occDownload2.getNumberDatasets());
   }
 
   /**
-   * Tests the process of persist a list of {@link DatasetOccurrenceDownload} and list the downloads
-   * by dataset key.
+   * Tests the process of persist a list of dataset occurrence download and list the downloads by
+   * dataset key.
    */
   @Test
   public void testAddAndGetOccurrenceDatasetMany() {
@@ -181,26 +192,26 @@ public class DatasetOccurrenceDownloadIT {
     occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
 
     assertEquals(
-        "List operation should return 1 record",
         1,
         datasetOccurrenceDownloadUsageService
             .listByDataset(testDataset1.getKey(), new PagingRequest(0, 3))
             .getResults()
-            .size());
+            .size(),
+        "List operation should return 1 record");
     assertEquals(
-        "List operation should return 1 record",
         1,
         datasetOccurrenceDownloadUsageService
             .listByDataset(testDataset2.getKey(), new PagingRequest(0, 3))
             .getResults()
-            .size());
+            .size(),
+        "List operation should return 1 record");
     assertEquals(
-        "List operation should return 1 record",
         1,
         datasetOccurrenceDownloadUsageService
             .listByDataset(testDataset3.getKey(), new PagingRequest(0, 3))
             .getResults()
-            .size());
+            .size(),
+        "List operation should return 1 record");
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertEquals(3, occDownload2.getNumberDatasets());
   }
