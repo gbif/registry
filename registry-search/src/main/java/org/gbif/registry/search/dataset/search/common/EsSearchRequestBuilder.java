@@ -375,15 +375,21 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   /**
    * Mapping parameter values into know values for Enums. Non-enum parameter values are passed using
-   * its raw value.
+   * its raw value. Country can be enum value or iso code.
    */
   private String parseParamValue(String value, P parameter) {
-    if (Enum.class.isAssignableFrom(parameter.type())
-        && !Country.class.isAssignableFrom(parameter.type())) {
-      return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
-          .map(Enum::name)
-          .orElse(null);
+    if (Enum.class.isAssignableFrom(parameter.type())) {
+      if (!Country.class.isAssignableFrom(parameter.type())) {
+        return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
+            .map(Enum::name)
+            .orElse(null);
+      } else {
+        return VocabularyUtils.lookup(value, Country.class)
+            .map(Country::getIso2LetterCode)
+            .orElse(value);
+      }
     }
+
     if (Boolean.class.isAssignableFrom(parameter.type())) {
       return value.toLowerCase();
     }
