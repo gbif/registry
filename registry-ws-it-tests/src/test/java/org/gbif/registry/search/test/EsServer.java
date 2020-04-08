@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -105,6 +107,25 @@ public class EsServer implements BeforeAllCallback, AfterAllCallback {
         .create(
             new CreateIndexRequest().index(indexName).mapping(typeName, mapping, XContentType.JSON),
             RequestOptions.DEFAULT);
+  }
+
+  public void reCreateIndex() {
+    try {
+      restClient
+          .indices()
+          .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
+      createIndex();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  public void refresh() {
+    try {
+      restClient.indices().refresh(new RefreshRequest().indices(indexName), RequestOptions.DEFAULT);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   private static int getAvailablePort() throws IOException {

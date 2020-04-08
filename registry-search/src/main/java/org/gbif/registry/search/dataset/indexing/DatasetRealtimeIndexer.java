@@ -22,6 +22,8 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -48,6 +50,8 @@ public class DatasetRealtimeIndexer {
 
   private final GbifWsClient gbifWsClient;
 
+  private final AtomicInteger pendingUpdates;
+
   @Autowired
   public DatasetRealtimeIndexer(
       RestHighLevelClient restHighLevelClient,
@@ -56,6 +60,7 @@ public class DatasetRealtimeIndexer {
     this.restHighLevelClient = restHighLevelClient;
     this.datasetJsonConverter = datasetJsonConverter;
     this.gbifWsClient = gbifWsClient;
+    pendingUpdates = new AtomicInteger();
   }
 
   private IndexRequest toIndexRequest(Dataset dataset) {
@@ -68,44 +73,65 @@ public class DatasetRealtimeIndexer {
   }
 
   public void index(Dataset dataset) {
-    restHighLevelClient.indexAsync(
-        toIndexRequest(dataset),
-        RequestOptions.DEFAULT,
-        new ActionListener<IndexResponse>() {
-          @Override
-          public void onResponse(IndexResponse indexResponse) {
-            log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
-          }
+    pendingUpdates.incrementAndGet();
+    try {
+      restHighLevelClient.indexAsync(
+          toIndexRequest(dataset),
+          RequestOptions.DEFAULT,
+          new ActionListener<IndexResponse>() {
+            @Override
+            public void onResponse(IndexResponse indexResponse) {
+              log.info("Dataset indexed {}, result {}", dataset.getKey(), indexResponse);
+              pendingUpdates.decrementAndGet();
+            }
 
-          @Override
-          public void onFailure(Exception ex) {
-            log.error("Error indexing dataset {}", dataset, ex);
-          }
-        });
+            @Override
+            public void onFailure(Exception ex) {
+              log.error("Error indexing dataset {}", dataset, ex);
+              pendingUpdates.decrementAndGet();
+            }
+          });
+    } catch (Exception ex) {
+      log.error("Error indexing dataset {}", dataset, ex);
+      pendingUpdates.decrementAndGet();
+    }
   }
 
   public void index(Iterable<Dataset> datasets) {
+    final AtomicInteger updatesCount = new AtomicInteger();
     BulkRequest bulkRequest = new BulkRequest();
-    datasets.forEach(dataset -> bulkRequest.add(toIndexRequest(dataset)));
-    restHighLevelClient.bulkAsync(
-        bulkRequest,
-        RequestOptions.DEFAULT,
-        new ActionListener<BulkResponse>() {
-          @Override
-          public void onResponse(BulkResponse bulkItemResponses) {
-            if (bulkItemResponses.hasFailures()) {
-              log.error(
-                  "Eror indexing datasets indexed {}", bulkItemResponses.buildFailureMessage());
-            } else {
-              log.info("Datasets indexed");
-            }
-          }
 
-          @Override
-          public void onFailure(Exception e) {
-            log.error("Error indexing datasets", e);
-          }
+    datasets.forEach(
+        dataset -> {
+          bulkRequest.add(toIndexRequest(dataset));
+          updatesCount.incrementAndGet();
         });
+    pendingUpdates.getAndAdd(updatesCount.get());
+    try {
+      restHighLevelClient.bulkAsync(
+          bulkRequest,
+          RequestOptions.DEFAULT,
+          new ActionListener<BulkResponse>() {
+            @Override
+            public void onResponse(BulkResponse bulkItemResponses) {
+              if (bulkItemResponses.hasFailures()) {
+                log.error(
+                    "Eror indexing datasets indexed {}", bulkItemResponses.buildFailureMessage());
+              } else {
+                log.info("Datasets indexed");
+              }
+              pendingUpdates.addAndGet(-updatesCount.get());
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+              log.error("Error indexing datasets", e);
+            }
+          });
+    } catch (Exception ex) {
+      log.error("Error indexing datasets", ex);
+      pendingUpdates.addAndGet(-updatesCount.get());
+    }
   }
 
   public void index(Organization organization) {
@@ -167,25 +193,36 @@ public class DatasetRealtimeIndexer {
   }
 
   public void delete(Dataset dataset) {
+    pendingUpdates.incrementAndGet();
     DeleteRequest deleteRequest =
         new DeleteRequest()
             .id(dataset.getKey().toString())
             .index(IndexingConstants.ALIAS)
             .type(IndexingConstants.DATASET_RECORD_TYPE);
+    try {
+      restHighLevelClient.deleteAsync(
+          deleteRequest,
+          RequestOptions.DEFAULT,
+          new ActionListener<DeleteResponse>() {
+            @Override
+            public void onResponse(DeleteResponse deleteResponse) {
+              log.info("Dataset deleted {}, result {}", dataset.getKey(), deleteResponse);
+              pendingUpdates.decrementAndGet();
+            }
 
-    restHighLevelClient.deleteAsync(
-        deleteRequest,
-        RequestOptions.DEFAULT,
-        new ActionListener<DeleteResponse>() {
-          @Override
-          public void onResponse(DeleteResponse deleteResponse) {
-            log.info("Dataset deleted {}, result {}", dataset.getKey(), deleteResponse);
-          }
+            @Override
+            public void onFailure(Exception ex) {
+              log.error("Error deleting dataset {}", dataset, ex);
+              pendingUpdates.decrementAndGet();
+            }
+          });
+    } catch (Exception ex) {
+      log.error("Error deleting dataset {}", dataset, ex);
+      pendingUpdates.decrementAndGet();
+    }
+  }
 
-          @Override
-          public void onFailure(Exception ex) {
-            log.error("Error deleting dataset {}", dataset, ex);
-          }
-        });
+  public int getPendingUpdates() {
+    return pendingUpdates.get();
   }
 }
