@@ -38,11 +38,15 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
+import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
+import org.gbif.registry.search.test.ElasticsearchInitializer;
 import org.gbif.registry.search.test.EsServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
+import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
@@ -56,7 +60,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -68,6 +71,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Charsets;
@@ -103,6 +107,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
           "dataset",
           "dataset");
 
+  @RegisterExtension
+  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
+
   static class ContexInitializer extends NetworkEntityTest.ContexInitializer {
 
     @Override
@@ -133,6 +140,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
+  private final DatasetRealtimeIndexer datasetRealtimeIndexer;
   private final TestDataFactory testDataFactory;
 
   @Autowired
@@ -142,6 +150,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
       OrganizationService organizationService,
       NodeService nodeService,
       InstallationService installationService,
+      DatasetRealtimeIndexer datasetRealtimeIndexer,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory) {
     super(service, pp, testDataFactory);
@@ -150,6 +159,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
+    this.datasetRealtimeIndexer = datasetRealtimeIndexer;
     this.testDataFactory = testDataFactory;
   }
 
@@ -292,6 +302,8 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setType(DatasetType.OCCURRENCE);
     d = create(d, 4);
 
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.ANGOLA);
     req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
@@ -347,7 +359,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setLanguage(Language.AFRIKAANS);
     create(d, 1);
 
-    Thread.sleep(100);
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
 
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.addPublishingCountryFilter(Country.GERMANY);
@@ -561,8 +573,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    * expected count of results.
    */
   private List<DatasetSearchResult> assertSearch(String query, int expected) {
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
-    // asynchronous
+    // Elasticsearch updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ(query);
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
@@ -580,8 +593,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    */
   private void testSearch(String query) {
     System.out.println("\n*****\n" + query);
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
-    // asynchronous
+    // Elasticsearch updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ(query);
 
@@ -589,8 +603,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   private void assertAll(Long expected) {
-    // DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates are
-    // asynchronous
+    // Elasticsearch updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     DatasetSearchRequest req = new DatasetSearchRequest();
     req.setQ("*");
     SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
@@ -605,9 +620,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
    * expected count of results.
    */
   private void assertSearch(Country publishingCountry, Country country, int expected) {
-    // TODO: DatasetSearchUpdateUtils.awaitUpdates(datasetIndexService); // Elasticsearch updates
-    // are
-    // asynchronous
+    // Elasticsearch updates are asynchronous
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     DatasetSearchRequest req = new DatasetSearchRequest();
     if (country != null) {
       req.addCountryFilter(country);
@@ -890,10 +905,10 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     dataset.setCitation(c);
 
     // update dataset...
-    ConstraintViolationException exception = null;
+    DataIntegrityViolationException exception = null;
     try {
       service.update(dataset);
-    } catch (ConstraintViolationException e) {
+    } catch (DataIntegrityViolationException e) {
       exception = e;
     }
     // /...and check it fails, however, constraint violation can only be thrown by web service
@@ -924,8 +939,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  public void test404() throws IOException {
-    assertNull(service.get(UUID.randomUUID()));
+  public void test404() {
+    // TODO: is throws the right assertion here
+    assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
   }
 
   @Test

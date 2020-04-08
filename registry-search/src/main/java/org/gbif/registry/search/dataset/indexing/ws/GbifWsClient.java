@@ -29,191 +29,40 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import org.cache2k.Cache;
-import org.cache2k.Cache2kBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
+public interface GbifWsClient {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
+  void purge(Installation installation);
 
-import lombok.SneakyThrows;
-import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+  void purge(Organization organization);
 
-import static org.gbif.registry.search.dataset.indexing.ws.SearchParameterProvider.getParameterFromFacetedRequest;
+  PagingResponse<Dataset> listDatasets(PagingRequest pagingRequest);
 
-/** Retrofit {@link GbifApiService} client. */
-@Component
-@Lazy
-public class GbifWsClient {
+  Installation getInstallation(String installationKey);
 
-  // Uses a cache for installations to avoid too many external calls
-  Cache<String, Installation> installationCache =
-      Cache2kBuilder.of(String.class, Installation.class)
-          .eternal(true)
-          .disableStatistics(true)
-          .permitNullValues(true)
-          .loader(this::loadInstallation)
-          .build();
+  PagingResponse<Dataset> getInstallationDatasets(String installationKey);
 
-  // Uses a cache for organizations to avoid too many external calls
-  Cache<String, Organization> organizationCache =
-      Cache2kBuilder.of(String.class, Organization.class)
-          .eternal(true)
-          .disableStatistics(true)
-          .permitNullValues(true)
-          .loader(this::loadOrganization)
-          .build();
+  Organization getOrganization(String organizationKey);
 
-  private final GbifApiService gbifApiService;
+  PagingResponse<Dataset> getOrganizationHostedDatasets(
+      String organizationKey, PagingRequest pagingRequest);
 
-  /**
-   * Factory method, only need the api base url.
-   *
-   * @param apiBaseUrl GBIF Api base url, for example: https://api.gbif-dev.orf/v1/ .
-   */
-  @Autowired
-  public GbifWsClient(
-      @Value("${api.root.url}") String apiBaseUrl,
-      @Qualifier("apiMapper") ObjectMapper objectMapper) {
+  PagingResponse<Dataset> getOrganizationPublishedDataset(
+      String organizationKey, PagingRequest pagingRequest);
 
-    OkHttpClient okHttpClient =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(2, TimeUnit.MINUTES)
-            .readTimeout(5, TimeUnit.MINUTES)
-            .writeTimeout(1, TimeUnit.MINUTES)
-            .build();
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(apiBaseUrl)
-            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-            .client(okHttpClient)
-            .build();
-    gbifApiService = retrofit.create(GbifApiService.class);
-  }
+  InputStream getMetadataDocument(UUID datasetKey);
 
-  private Map<String, String> toQueryMap(PagingRequest pagingRequest) {
-    Map<String, String> params = new HashMap<>();
-    params.put("offset", Long.toString(pagingRequest.getOffset()));
-    params.put("limit", Long.toString(pagingRequest.getLimit()));
-    return params;
-  }
+  Long getDatasetRecordCount(String datasetKey);
 
-  public void purge(Installation installation) {
-    installationCache.remove(installation.getKey().toString());
-  }
+  Long getOccurrenceRecordCount();
 
-  public void purge(Organization organization) {
-    installationCache.remove(organization.getKey().toString());
-  }
+  DatasetMetrics getDatasetSpeciesMetrics(String datasetKey);
 
-  public PagingResponse<Dataset> listDatasets(PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(gbifApiService.listDatasets(params)).body();
-  }
+  SearchResponse<NameUsage, NameUsageSearchParameter> speciesSearch(
+      NameUsageSearchRequest searchRequest);
 
-  public Installation getInstallation(String installationKey) {
-    return installationCache.get(installationKey);
-  }
-
-  private Installation loadInstallation(String installationKey) {
-    return syncCallWithResponse(gbifApiService.getInstallation(installationKey)).body();
-  }
-
-  public PagingResponse<Dataset> getInstallationDatasets(String installationKey) {
-    return syncCallWithResponse(gbifApiService.getInstallationDatasets(installationKey)).body();
-  }
-
-  public Organization getOrganization(String organizationKey) {
-    return organizationCache.get(organizationKey);
-  }
-
-  private Organization loadOrganization(String organizationKey) {
-    return syncCallWithResponse(gbifApiService.getOrganization(organizationKey)).body();
-  }
-
-  public PagingResponse<Dataset> getOrganizationHostedDatasets(
-      String organizationKey, PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(
-            gbifApiService.getOrganizationHostedDatasets(organizationKey, params))
-        .body();
-  }
-
-  public PagingResponse<Dataset> getOrganizationPublishedDataset(
-      String organizationKey, PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(
-            gbifApiService.getOrganizationPublishedDatasets(organizationKey, params))
-        .body();
-  }
-
-  public InputStream getMetadataDocument(UUID datasetKey) {
-    try {
-      Response<ResponseBody> response =
-          syncCallWithResponse(gbifApiService.getMetadataDocument(datasetKey.toString()));
-      if (response.isSuccessful() && response.body().contentLength() > 0) {
-        return new ByteArrayInputStream(ByteStreams.toByteArray(response.body().byteStream()));
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
-    return null;
-  }
-
-  public Long getDatasetRecordCount(String datasetKey) {
-    return syncCallWithResponse(gbifApiService.getDatasetRecordCount(datasetKey)).body();
-  }
-
-  public Long getOccurrenceRecordCount() {
-    return syncCallWithResponse(gbifApiService.getOccurrenceRecordCount()).body();
-  }
-
-  public DatasetMetrics getDatasetSpeciesMetrics(String datasetKey) {
-    return syncCallWithResponse(gbifApiService.getDatasetSpeciesMetrics(datasetKey)).body();
-  }
-
-  public SearchResponse<NameUsage, NameUsageSearchParameter> speciesSearch(
-      NameUsageSearchRequest searchRequest) {
-    return syncCallWithResponse(
-            gbifApiService.speciesSearch(getParameterFromFacetedRequest(searchRequest)))
-        .body();
-  }
-
-  public SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
-      OccurrenceSearchRequest searchRequest) {
-    return syncCallWithResponse(
-            gbifApiService.occurrenceSearch(getParameterFromFacetedRequest(searchRequest)))
-        .body();
-  }
-
-  /**
-   * Performs a synchronous call to {@link Call} instance.
-   *
-   * @param call to be executed
-   * @param <T> content of the response object
-   * @return {@link Response} with content, throws a {@link RuntimeException} when IOException was
-   *     thrown from execute method
-   */
-  @SneakyThrows
-  private static <T> Response<T> syncCallWithResponse(Call<T> call) {
-    return call.execute();
-  }
+  SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
+      OccurrenceSearchRequest searchRequest);
 }
