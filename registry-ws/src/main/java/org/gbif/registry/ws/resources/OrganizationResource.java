@@ -81,6 +81,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrganizationResource extends BaseNetworkEntityResource<Organization>
@@ -122,7 +123,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GetMapping(value = "{key}")
   @NullToNotFound("/organization/{key}")
   @Override
-  public Organization get(@NotNull @PathVariable UUID key) {
+  public Organization get(@PathVariable UUID key) {
     return super.get(key);
   }
 
@@ -133,14 +134,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @param organization organization
    * @return key of entity created
    */
-  @Override
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
   public UUID create(
-      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class})
-          Organization organization,
-      Authentication authentication) {
+      @RequestBody @NotNull @Trim @Valid Organization organization, Authentication authentication) {
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization, authentication);
 
@@ -181,14 +181,14 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void update(
       @PathVariable UUID key,
-      @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class})
-          Organization organization,
+      @RequestBody @NotNull @Trim @Valid Organization organization,
       Authentication authentication) {
     checkArgument(
         key.equals(organization.getKey()),
@@ -356,8 +356,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(
-      @Nullable @RequestParam(value = "q", required = false) String label) {
+  public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
     return organizationMapper.suggest(label);
   }
 
@@ -383,7 +382,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @PostMapping(value = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
-      @PathVariable("key") UUID organizationKey,
+      @NotNull @PathVariable("key") UUID organizationKey,
       @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey())
             ? ResponseEntity.noContent()
