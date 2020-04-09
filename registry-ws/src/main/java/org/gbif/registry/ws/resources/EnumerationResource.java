@@ -51,6 +51,7 @@ import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.http.MediaType;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.SystemPropertyUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,7 +68,7 @@ import static java.util.stream.Collectors.toList;
  * building Javascript based clients. This has no Java client, since Java clients have access to the
  * Enums directly. Reflection can be used to generate the inventory of enumerations.
  */
-@SuppressWarnings("UnstableApiUsage")
+@Validated
 @RestController
 @RequestMapping(value = "enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnumerationResource {

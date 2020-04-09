@@ -16,7 +16,6 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
-import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
@@ -44,10 +43,10 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +58,7 @@ import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "node", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NodeResource extends BaseNetworkEntityResource<Node> implements NodeService {
@@ -228,8 +228,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Override
-  public int addContact(
-      @PathVariable("key") UUID targetEntityKey, @NotNull @Valid @Trim Contact contact) {
+  public int addContact(UUID targetEntityKey, Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
@@ -245,8 +244,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(
-      @Nullable @RequestParam(value = "q", required = false) String label) {
+  public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
     return nodeMapper.suggest(label);
   }
 }

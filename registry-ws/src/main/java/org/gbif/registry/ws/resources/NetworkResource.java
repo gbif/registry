@@ -32,10 +32,10 @@ import org.gbif.registry.security.EditorAuthorizationService;
 import java.util.UUID;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +47,7 @@ import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "network", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NetworkResource extends BaseNetworkEntityResource<Network> implements NetworkService {
@@ -73,7 +74,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @GetMapping(value = "{key}")
   @NullToNotFound("/network/{key}")
   @Override
-  public Network get(@NotNull @PathVariable UUID key) {
+  public Network get(@PathVariable UUID key) {
     return super.get(key);
   }
 
