@@ -96,7 +96,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {NetworkEntityTest.ContexInitializer.class})
+@ContextConfiguration(initializers = {NetworkEntityTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public abstract class NetworkEntityTest<
@@ -104,7 +104,7 @@ public abstract class NetworkEntityTest<
         NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
             & Identifiable & LenientEquals<T>> {
 
-  static class ContexInitializer
+  static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
