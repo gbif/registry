@@ -55,6 +55,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -92,6 +93,7 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
  * Application itself (APP_ROLE). All applications with a valid appKey that is also present in the
  * appKey whitelist. See {@link AppIdentityFilter}.
  */
+@Validated
 @RestController
 @RequestMapping(value = "/admin/user", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserManagementResource {
