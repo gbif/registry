@@ -36,7 +36,7 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {EmptyDatabaseIntegrationTest.ContexInitializer.class})
+@ContextConfiguration(initializers = {EmptyDatabaseIntegrationTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class EmptyDatabaseIntegrationTest {
@@ -53,7 +53,7 @@ public class EmptyDatabaseIntegrationTest {
     Assertions.assertNotNull(database.getTestDatabase());
   }
 
-  public static class ContexInitializer
+  public static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {

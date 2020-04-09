@@ -96,7 +96,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@ContextConfiguration(initializers = {DatasetIT.ContexInitializer.class})
+@ContextConfiguration(initializers = {DatasetIT.ContextInitializer.class})
 public class DatasetIT extends NetworkEntityTest<Dataset> {
 
   @RegisterExtension
@@ -110,7 +110,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   @RegisterExtension
   ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
 
-  static class ContexInitializer extends NetworkEntityTest.ContexInitializer {
+  static class ContextInitializer extends NetworkEntityTest.ContextInitializer {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
