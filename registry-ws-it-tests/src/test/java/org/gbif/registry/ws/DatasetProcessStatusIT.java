@@ -30,27 +30,43 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Runs tests for the {@link DatasetProcessStatusService} implementations. This is parameterized to
@@ -62,7 +78,11 @@ import static org.junit.Assert.assertNotNull;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {DatasetProcessStatusIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class DatasetProcessStatusIT {
 
   @RegisterExtension
@@ -74,10 +94,34 @@ public class DatasetProcessStatusIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private final TestDataFactory testDataFactory;
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-  // Tests user
-  private static final String TEST_USER = "admin";
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
+
+  private final TestDataFactory testDataFactory;
 
   private final DatasetProcessStatusService datasetProcessStatusService;
   private final SimplePrincipalProvider simplePrincipalProvider;
@@ -105,11 +149,18 @@ public class DatasetProcessStatusIT {
     this.testDataFactory = testDataFactory;
   }
 
-  @Before
+  @BeforeEach
   public void setup() {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(TEST_USER);
+      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              simplePrincipalProvider.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
     }
   }
 
@@ -175,17 +226,17 @@ public class DatasetProcessStatusIT {
 
     PagingResponse<DatasetProcessStatus> statuses =
         datasetProcessStatusService.listDatasetProcessStatus(new PagingRequest(0, 10));
-    assertEquals("There have been 3 crawl attempts", Long.valueOf(3), statuses.getCount());
-    assertEquals("There have been 3 crawl attempts", 3, statuses.getResults().size());
+    assertEquals(Long.valueOf(3), statuses.getCount(), "There have been 3 crawl attempts");
+    assertEquals(3, statuses.getResults().size(), "There have been 3 crawl attempts");
 
     PagingResponse<DatasetProcessStatus> statusesByDataset =
         datasetProcessStatusService.listDatasetProcessStatus(dataset.getKey(), new PagingRequest());
     assertEquals(
-        "The dataset has had 2 crawl attempts", Long.valueOf(2), statusesByDataset.getCount());
-    assertEquals("The dataset has had 2 crawl attempts", 2, statusesByDataset.getResults().size());
+        Long.valueOf(2), statusesByDataset.getCount(), "The dataset has had 2 crawl attempts");
+    assertEquals(2, statusesByDataset.getResults().size(), "The dataset has had 2 crawl attempts");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testIllegalCreate() {
     Dataset dataset = createTestDataset();
 
@@ -195,7 +246,10 @@ public class DatasetProcessStatusIT {
     status.setFragmentsEmitted(1000);
     datasetProcessStatusService.updateDatasetProcessStatus(status);
     // illegal to create the same attempt ID
-    datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset, 1)));
   }
 
   /** Tests a create, get, update */
