@@ -117,6 +117,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetResource extends BaseNetworkEntityResource<Dataset>

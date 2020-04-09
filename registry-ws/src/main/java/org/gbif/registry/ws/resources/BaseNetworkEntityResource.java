@@ -60,6 +60,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -106,6 +107,7 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
  *
  * @param <T> The type of resource that is under CRUD
  */
+@Validated
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
 
@@ -151,12 +153,11 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of entity created
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID create(
-      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class}) T entity,
-      Authentication authentication) {
+  public UUID create(@RequestBody @Trim @Valid @NotNull T entity, Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     // if not admin or app, verify rights
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
@@ -185,8 +186,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return create(entity);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public UUID create(@Validated({PrePersist.class, Default.class}) T entity) {
+  public UUID create(T entity) {
     withMyBatis.create(mapper, entity);
     eventManager.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
@@ -224,7 +226,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Nullable
   @Override
-  public T get(@NotNull @PathVariable UUID key) {
+  public T get(@PathVariable UUID key) {
     return mapper.get(key);
   }
 
@@ -275,12 +277,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @PutMapping(
       value = {"", "{key}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void update(
       @PathVariable UUID key,
-      @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class}) T entity,
+      @RequestBody @NotNull @Trim @Valid T entity,
       Authentication authentication) {
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
@@ -288,8 +291,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     update(entity);
   }
 
+  @Validated({PostPersist.class, Default.class})
   @Override
-  public void update(@Validated({PostPersist.class, Default.class}) T entity) {
+  public void update(T entity) {
     T oldEntity = get(entity.getKey());
     withMyBatis.update(mapper, entity);
     // get complete entity with components populated, so subscribers of UpdateEvent can compare new
@@ -307,21 +311,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Comment created
    */
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addComment(
       @NotNull @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim Comment comment,
+      @RequestBody @NotNull @Trim @Valid Comment comment,
       Authentication authentication) {
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
     return addComment(targetEntityKey, comment);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addComment(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Comment comment) {
+  public int addComment(UUID targetEntityKey, Comment comment) {
     int key = withMyBatis.addComment(commentMapper, mapper, targetEntityKey, comment);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
@@ -339,7 +344,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(
-      @NotNull @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
     mapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
@@ -347,7 +352,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @GetMapping(value = "{key}/comment")
   @Override
-  public List<Comment> listComments(@NotNull @PathVariable("key") UUID targetEntityKey) {
+  public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return mapper.listComments(targetEntityKey);
   }
 
@@ -360,11 +365,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of MachineTag created
    */
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   public int addMachineTag(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim MachineTag machineTag,
+      @RequestBody @NotNull @Trim @Valid MachineTag machineTag,
       Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
@@ -382,18 +388,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addMachineTag(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
+  public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
   @Override
-  public int addMachineTag(
-      @NotNull UUID targetEntityKey,
-      @NotNull String namespace,
-      @NotNull String name,
-      @NotNull String value) {
+  public int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -402,8 +404,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public int addMachineTag(
-      @NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
+  public int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
@@ -480,12 +481,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
+  public void deleteMachineTags(UUID targetEntityKey, TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
+  public void deleteMachineTags(UUID targetEntityKey, String namespace) {
     mapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
@@ -511,13 +512,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
+  public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
   @Override
-  public void deleteMachineTags(
-      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
+  public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -530,7 +530,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Override
   public PagingResponse<T> listByMachineTag(
-      String namespace, @Nullable String name, @Nullable String value, Pageable page) {
+      String namespace, String name, String value, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(mapper, namespace, name, value, page);
   }
@@ -544,24 +544,26 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Tag created
    */
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addTag(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull Tag tag,
+      @RequestBody @NotNull @Valid Tag tag,
       Authentication authentication) {
     tag.setCreatedBy(authentication.getName());
     return addTag(targetEntityKey, tag);
   }
 
   @Override
-  public int addTag(@NotNull UUID targetEntityKey, @NotNull String value) {
+  public int addTag(UUID targetEntityKey, String value) {
     Tag tag = new Tag();
     tag.setValue(value);
     return addTag(targetEntityKey, tag);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addTag(UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Tag tag) {
+  public int addTag(UUID targetEntityKey, Tag tag) {
     int key = withMyBatis.addTag(tagMapper, mapper, targetEntityKey, tag);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
     return key;
@@ -603,21 +605,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Contact created
    */
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   public int addContact(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim Contact contact,
+      @RequestBody @NotNull @Trim @Valid Contact contact,
       Authentication authentication) {
     contact.setCreatedBy(authentication.getName());
     contact.setModifiedBy(authentication.getName());
     return addContact(targetEntityKey, contact);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addContact(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Contact contact) {
+  public int addContact(UUID targetEntityKey, Contact contact) {
     int key = withMyBatis.addContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
@@ -635,13 +638,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @PutMapping(
       value = {"{key}/contact", "{key}/contact/{contactKey}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void updateContact(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable(value = "contactKey", required = false) Integer contactKey,
-      @RequestBody @NotNull @Trim Contact contact) {
+      @RequestBody @NotNull @Trim @Valid Contact contact) {
     // for safety, and to match a nice RESTful URL structure
     if (contactKey != null) {
       Preconditions.checkArgument(
@@ -653,9 +657,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     updateContact(targetEntityKey, contact);
   }
 
+  @Validated({PostPersist.class, Default.class})
   @Override
-  public void updateContact(
-      UUID targetEntityKey, @Validated({PostPersist.class, Default.class}) Contact contact) {
+  public void updateContact(UUID targetEntityKey, Contact contact) {
     withMyBatis.updateContact(contactMapper, mapper, targetEntityKey, contact);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
@@ -692,21 +696,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Endpoint created
    */
   @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addEndpoint(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim Endpoint endpoint,
+      @RequestBody @NotNull @Trim @Valid Endpoint endpoint,
       Authentication authentication) {
     endpoint.setCreatedBy(authentication.getName());
     endpoint.setModifiedBy(authentication.getName());
     return addEndpoint(targetEntityKey, endpoint);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addEndpoint(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Endpoint endpoint) {
+  public int addEndpoint(UUID targetEntityKey, Endpoint endpoint) {
     T oldEntity = get(targetEntityKey);
     int key =
         withMyBatis.addEndpoint(
@@ -758,20 +763,21 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Identifier created
    */
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public int addIdentifier(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim Identifier identifier,
+      @RequestBody @NotNull @Trim @Valid Identifier identifier,
       Authentication authentication) {
     identifier.setCreatedBy(authentication.getName());
     return addIdentifier(targetEntityKey, identifier);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) Identifier identifier) {
+  public int addIdentifier(UUID targetEntityKey, Identifier identifier) {
     int key = withMyBatis.addIdentifier(identifierMapper, mapper, targetEntityKey, identifier);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Identifier.class));
