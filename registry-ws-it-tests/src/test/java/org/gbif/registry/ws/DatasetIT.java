@@ -60,6 +60,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -71,7 +72,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Charsets;
@@ -905,10 +905,10 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     dataset.setCitation(c);
 
     // update dataset...
-    DataIntegrityViolationException exception = null;
+    ConstraintViolationException exception = null;
     try {
       service.update(dataset);
-    } catch (DataIntegrityViolationException e) {
+    } catch (ConstraintViolationException e) {
       exception = e;
     }
     // /...and check it fails, however, constraint violation can only be thrown by web service

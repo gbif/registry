@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +64,6 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -195,7 +195,7 @@ public abstract class NetworkEntityTest<
   public void createWithKey() {
     T e = newEntity();
     e.setKey(UUID.randomUUID()); // illegal to provide a key
-    assertThrows(IllegalArgumentException.class, () -> service.create(e));
+    assertThrows(ValidationException.class, () -> service.create(e));
   }
 
   @Test
@@ -303,7 +303,7 @@ public abstract class NetworkEntityTest<
   public void testUpdateFailingValidation() {
     T n1 = create(newEntity(), 1);
     n1.setTitle("A"); // should fail as it is too short
-    assertThrows(DataIntegrityViolationException.class, () -> service.update(n1));
+    assertThrows(ValidationException.class, () -> service.update(n1));
   }
 
   @Test
