@@ -179,7 +179,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @SuppressWarnings("MVCPathVariableInspection")
   @PutMapping(
-      value = {"", "{key}, {prefix}/{suffix}"},
+      value = {"", "{key}", "{prefix}/{suffix}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Override
