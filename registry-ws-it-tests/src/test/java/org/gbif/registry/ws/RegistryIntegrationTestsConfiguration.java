@@ -23,6 +23,8 @@ import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
+import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -36,18 +38,25 @@ import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 
 @TestConfiguration
 @EnableAutoConfiguration
@@ -85,7 +94,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
             EsConfiguration.class,
             DataSourcesConfiguration.class,
             FlywayAutoConfiguration.FlywayConfiguration.class,
-            FlywayAutoConfiguration.class
+            FlywayAutoConfiguration.class,
+            RegistryWsApplication.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
@@ -116,6 +126,11 @@ public class RegistryIntegrationTestsConfiguration {
   // @Bean TODO: Ignore this injector, the realtime indexer has to be refactored
   public DatasetSearchService datasetSearchService() {
     return new DatasetSearchServiceStub();
+  }
+
+  public GbifWsClient gbifWsClient(
+    GenericWebApplicationContext genericWebApplicationContext, @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new GbifWsRetrofitClient("http://localhost:" + ((AnnotationConfigServletWebServerApplicationContext) genericWebApplicationContext).getWebServer().getPort(), objectMapper);
   }
 
   @Bean

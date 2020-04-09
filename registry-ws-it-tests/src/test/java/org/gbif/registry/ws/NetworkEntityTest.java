@@ -93,7 +93,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * BaseNetworkEntityResource.
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@SpringBootTest(
+    classes = RegistryIntegrationTestsConfiguration.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = {NetworkEntityTest.ContexInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
