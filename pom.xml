@@ -79,8 +79,7 @@
   <properties>
     <main.basedir>${project.basedir}</main.basedir>
     <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
-    <gbif-spring-bom.version>1.0.0-SNAPSHOT</gbif-spring-bom.version>
-    <spring-boot.version>2.2.2.RELEASE</spring-boot.version>
+    <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
     <spotless.check.skip>false</spotless.check.skip>
 
     <release.tagNameBase>${project.artifactId}</release.tagNameBase>
