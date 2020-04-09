@@ -19,8 +19,11 @@ import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
+import org.gbif.api.model.registry.search.DatasetSuggestRequest;
+import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetSearchService;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -81,5 +84,55 @@ public interface DatasetSearchClient extends DatasetSearchService {
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.DATASET_TITLE),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.COLLECTION_KEY),
         datasetSearchRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY));
+  }
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "dataset/suggest",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  List<DatasetSuggestResult> suggest(
+      @SpringQueryMap DatasetSuggestRequest datasetSuggestRequest,
+      @RequestParam(value = "type", required = false) Set<String> type,
+      @RequestParam(value = "subtype", required = false) Set<String> subtype,
+      @RequestParam(value = "publishingOrg", required = false) Set<String> publishingOrg,
+      @RequestParam(value = "hostingOrg", required = false) Set<String> hostingOrg,
+      @RequestParam(value = "keyword", required = false) Set<String> keyword,
+      @RequestParam(value = "decade", required = false) Set<String> decade,
+      @RequestParam(value = "publishingCountry", required = false) Set<String> publishingCountry,
+      @RequestParam(value = "country", required = false) Set<String> country,
+      @RequestParam(value = "continent", required = false) Set<String> continent,
+      @RequestParam(value = "license", required = false) Set<String> license,
+      @RequestParam(value = "projectId", required = false) Set<String> projectId,
+      @RequestParam(value = "taxonKey", required = false) Set<String> taxonKey,
+      @RequestParam(value = "recordCount", required = false) Set<String> recordCount,
+      @RequestParam(value = "year", required = false) Set<String> year,
+      @RequestParam(value = "modifiedDate", required = false) Set<String> modifiedDate,
+      @RequestParam(value = "datasetTitle", required = false) Set<String> datasetTitle,
+      @RequestParam(value = "collectionKey", required = false) Set<String> collectionKey,
+      @RequestParam(value = "institutionKey", required = false) Set<String> institutionKey);
+
+  @Override
+  default List<DatasetSuggestResult> suggest(DatasetSuggestRequest datasetSuggestRequest) {
+    return suggest(
+        datasetSuggestRequest,
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.TYPE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.SUBTYPE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.PUBLISHING_ORG),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.HOSTING_ORG),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.KEYWORD),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.DECADE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.PUBLISHING_COUNTRY),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.COUNTRY),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.CONTINENT),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.LICENSE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.PROJECT_ID),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.TAXON_KEY),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.RECORD_COUNT),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.YEAR),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.MODIFIED_DATE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.DATASET_TITLE),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.COLLECTION_KEY),
+        datasetSuggestRequest.getParameters().get(DatasetSearchParameter.INSTITUTION_KEY));
   }
 }
