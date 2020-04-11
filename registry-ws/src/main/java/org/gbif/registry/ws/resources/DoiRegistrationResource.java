@@ -35,7 +35,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
@@ -73,7 +72,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /** Generates a new DOI based on the DoiType. */
   @PostMapping("gen/{type}")
   @Override
-  public DOI generate(@NotNull @PathVariable DoiType type) {
+  public DOI generate(@PathVariable DoiType type) {
     checkIsUserAuthenticated();
     return genDoiByType(type);
   }
@@ -99,7 +98,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI register(@RequestBody @NotNull DoiRegistration doiRegistration) {
+  public DOI register(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(
         doiRegistration,
         doiRegistrationToRegister ->
@@ -125,7 +124,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI update(@RequestBody @NotNull DoiRegistration doiRegistration) {
+  public DOI update(@RequestBody DoiRegistration doiRegistration) {
     return createOrUpdate(
         doiRegistration,
         existingDoiRegistration ->
