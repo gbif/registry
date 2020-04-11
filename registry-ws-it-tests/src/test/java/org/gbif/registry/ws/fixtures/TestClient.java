@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import static org.gbif.registry.ws.fixtures.UserTestFixture.USER_RESOURCE_PATH;
 
+// TODO: 11/04/2020 remove
 /** Generates and offer utilities related to authenticated client in the context of testing. */
 public class TestClient {
 

@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.identity.mybatis;
+package org.gbif.registry.identity.mybatis;
 
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 
 import java.util.UUID;
 
+import org.springframework.stereotype.Component;
+
 /** Helper class that offers direct access to challenge codes for testing purpose (only). */
+@Component
 public class IdentitySuretyTestHelper {
 
   private ChallengeCodeMapper challengeCodeMapper;

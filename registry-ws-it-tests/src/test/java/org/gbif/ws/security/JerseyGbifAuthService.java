@@ -32,6 +32,7 @@ import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.gbif.ws.util.SecurityConstants.HEADER_ORIGINAL_REQUEST_URL;
 
+// TODO: 11/04/2020 remove
 @Component
 public class JerseyGbifAuthService {
 
@@ -65,13 +66,13 @@ public class JerseyGbifAuthService {
     // custom header set by varnish overrides real URI
     // see http://dev.gbif.org/issues/browse/GBIFCOM-137
     if (headers.containsKey(HEADER_ORIGINAL_REQUEST_URL)) {
-      dataToSign.setUrl((String) headers.getFirst(HEADER_ORIGINAL_REQUEST_URL));
+      dataToSign.setUrl(headers.getFirst(HEADER_ORIGINAL_REQUEST_URL).toString());
     } else {
       dataToSign.setUrl(getCanonicalizedPath(request.getURI().toString()));
     }
-    dataToSign.setContentType((String) headers.getFirst(HttpHeaders.CONTENT_TYPE));
-    dataToSign.setContentTypeMd5((String) headers.getFirst(HEADER_CONTENT_MD5));
-    dataToSign.setUser((String) headers.getFirst(HEADER_GBIF_USER));
+    dataToSign.setContentType(headers.getFirst(HttpHeaders.CONTENT_TYPE).toString());
+    dataToSign.setContentTypeMd5(headers.getFirst(HEADER_CONTENT_MD5).toString());
+    dataToSign.setUser(headers.getFirst(HEADER_GBIF_USER).toString());
 
     return dataToSign;
   }
