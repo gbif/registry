@@ -17,366 +17,362 @@ package org.gbif.registry.ws;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
-import org.gbif.api.vocabulary.UserRole;
-import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
+import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserAdminView;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
+import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.UserMapper;
-import org.gbif.registry.ws.fixtures.TestClient;
-import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
-import org.gbif.ws.security.JerseyGbifAuthService;
+import org.gbif.ws.security.Md5EncodeService;
+import org.gbif.ws.security.SigningService;
 
+import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
-import javax.ws.rs.core.Response;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.api.client.ClientResponse;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
+import static org.gbif.registry.ws.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.fixtures.TestConstants.IT_APP_KEY2;
+import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.fixtures.UserTestFixture.ALTERNATE_USERNAME;
-import static org.gbif.registry.ws.util.AssertHttpResponse.assertResponse;
-import static org.junit.Assert.assertNull;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.PASSWORD;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.USERNAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests related to the User Manager resource (the service itself is tested in the
  * registry-identity module). Due to the fact that all user management operations are not available
  * in the Java ws client, the tests use a direct HTTP client.
  */
-public class UserManagementIT extends PlainAPIBaseIT {
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {UserManagementIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
+public class UserManagementIT {
 
   private static final String CHANGED_PASSWORD = "123456";
-  private static final String RESET_PASSWORD_PATH = "resetPassword";
-  private static final String UPDATE_PASSWORD_PATH = "updatePassword";
-  private static final String WRONG_PASSWORD = "WRONGPassword";
 
-  private static final String RESOURCE_PATH = "admin/user";
-  private JerseyGbifAuthService gbifAuthService;
-
-  private TestClient testClient;
-  private UserMapper userMapper;
   private IdentitySuretyTestHelper identitySuretyTestHelper;
-
   private UserTestFixture userTestFixture;
+  private RequestTestFixture requestTestFixture;
+
+  @RegisterExtension
+  static PreparedDbExtension database =
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
+
+  @RegisterExtension
+  public final DatabaseInitializer databaseRule =
+      new DatabaseInitializer(database.getTestDatabase());
+
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   @Autowired
   public UserManagementIT(
+      MockMvc mvc,
+      SigningService signingService,
+      Md5EncodeService md5EncodeService,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       IdentityService identityService,
       UserMapper userMapper,
-      IdentitySuretyTestHelper identitySuretyTestHelper,
-      JerseyGbifAuthService gbifAuthService) {
-    this.userMapper = userMapper;
+      IdentitySuretyTestHelper identitySuretyTestHelper) {
     this.identitySuretyTestHelper = identitySuretyTestHelper;
-    this.gbifAuthService = gbifAuthService;
-
-    testClient = new TestClient(wsBaseUrl);
-    userTestFixture = new UserTestFixture(identityService, identitySuretyTestHelper);
+    this.userTestFixture =
+        new UserTestFixture(identityService, identitySuretyTestHelper, userMapper);
+    this.requestTestFixture =
+        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper);
   }
 
   @Test
-  public void testCreateUser() {
-    String newUserName = ALTERNATE_USERNAME;
+  public void testCreateUser() throws Exception {
+    // create a new user
+    UserCreation userCreation = UserTestFixture.generateUser(ALTERNATE_USERNAME);
 
-    ClientResponse cr =
-        postSignedRequest(
-            TestConstants.IT_APP_KEY,
-            UserTestFixture.generateUser(newUserName),
-            Function.identity());
-    assertResponse(Response.Status.CREATED, cr);
+    requestTestFixture
+        .postSignedRequest(IT_APP_KEY, userCreation, "/admin/user")
+        .andExpect(status().isCreated());
 
-    // test we can't login (challengeCode not confirmed)
-    cr = testClient.login(newUserName, WRONG_PASSWORD);
-    assertResponse(Response.Status.UNAUTHORIZED, cr);
-
-    GbifUser newUser = userMapper.get(newUserName);
-    UUID challengeCode = identitySuretyTestHelper.getChallengeCode(newUser.getKey());
+    // test we can't log in (challengeCode not confirmed)
+    requestTestFixture
+        .getRequest(ALTERNATE_USERNAME, PASSWORD, "/user/login")
+        .andExpect(status().isUnauthorized());
 
     // generate a new request to confirm challengeCode
     ConfirmationKeyParameter params = new ConfirmationKeyParameter();
-    params.setConfirmationKey(challengeCode);
-    cr = postSignedRequest(newUserName, params, uri -> uri.path("confirm"));
-    assertResponse(Response.Status.CREATED, cr);
+    params.setConfirmationKey(userTestFixture.getUserChallengeCode(ALTERNATE_USERNAME));
 
-    cr = testClient.login(newUserName, "password");
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture
+        .postSignedRequest(ALTERNATE_USERNAME, params, "/admin/user/confirm")
+        .andExpect(status().isCreated());
+
+    // test we can log in afterwards
+    requestTestFixture
+        .getRequest(ALTERNATE_USERNAME, PASSWORD, "/user/login")
+        .andExpect(status().isOk());
   }
 
   @Test
-  public void testCreateUserNonWhiteListAppKey() {
-    String newUserName = ALTERNATE_USERNAME;
+  public void testCreateUserNonWhiteListAppKey() throws Exception {
+    // create a new user using an app key which is not present in the white list
+    UserCreation userCreation = UserTestFixture.generateUser(ALTERNATE_USERNAME);
 
-    // TODO
-    /*   GbifAuthServiceImpl authService = new GbifAuthServiceImpl(new AppKeySigningService(KeyStore))
-    GbifAuthService gbifAuthServiceKey2 = GbifAuthService.singleKeyAuthService(
-            TestConstants.IT_APP_KEY2, TestConstants.IT_APP_SECRET2);*/
-    ClientResponse cr =
-        postSignedRequest(
-            gbifAuthService,
-            TestConstants.IT_APP_KEY2,
-            UserTestFixture.generateUser(newUserName),
-            Function.identity());
-    // it will authenticate since the appKey is valid but it won't get the APP role
-    assertResponse(Response.Status.FORBIDDEN, cr);
+    // it will authenticate since the appKey is valid, but it won't get the APP role
+    requestTestFixture
+        .postSignedRequest(IT_APP_KEY2, IT_APP_KEY2, userCreation, "/admin/user")
+        .andExpect(status().isForbidden());
   }
 
   @Test
-  public void testResetPassword() {
+  public void testResetPassword() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
-    GbifUser createdUser = userMapper.get(testUser.getUserName());
+    GbifUser createdUser = userTestFixture.getUser(testUser.getUserName());
 
     // ensure there is no challengeCode
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
-    assertNull("challengeCode shall be null" + challengeCode, challengeCode);
+    assertNull(challengeCode, "challengeCode shall be null");
 
-    ClientResponse cr =
-        postSignedRequest(testUser.getUserName(), uri -> uri.path(RESET_PASSWORD_PATH));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    // reset password
+    requestTestFixture
+        .postSignedRequest(USERNAME, "/admin/user/resetPassword")
+        .andExpect(status().isNoContent());
 
     challengeCode = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
-    assertNotNull("challengeCode shall exist" + challengeCode);
+    assertNotNull(challengeCode, "challengeCode shall exist");
 
     // we should still be able to login with username/password
-    cr = testClient.login(getUsername(), getPassword());
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture.getRequest(USERNAME, PASSWORD, "/user/login").andExpect(status().isOk());
   }
 
   @Test
-  public void testUpdatePassword() {
+  public void testUpdatePassword() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
 
-    GbifUser createdUser = userMapper.get(testUser.getUserName());
+    GbifUser createdUser = userTestFixture.getUser(testUser.getUserName());
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(UUID.randomUUID());
-    ClientResponse cr =
-        postSignedRequest(
-            testUser.getUserName(), params, uriBldr -> uriBldr.path(UPDATE_PASSWORD_PATH));
-    assertResponse(Response.Status.UNAUTHORIZED, cr);
+
+    requestTestFixture
+        .postSignedRequest(USERNAME, params, "/admin/user/updatePassword")
+        .andExpect(status().isUnauthorized());
 
     // ask to reset password
-    cr = postSignedRequest(testUser.getUserName(), uri -> uri.path(RESET_PASSWORD_PATH));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    requestTestFixture
+        .postSignedRequest(USERNAME, "/admin/user/resetPassword")
+        .andExpect(status().isNoContent());
 
     UUID confirmationKey = identitySuretyTestHelper.getChallengeCode(createdUser.getKey());
-    assertNotNull("challengeCode shall exist" + confirmationKey);
+    assertNotNull(confirmationKey, "challengeCode shall exist");
 
     // ensure we can check if the challengeCode is valid for the user
-    cr =
-        getWithSignedRequest(
-            testUser.getUserName(),
-            uri -> uri.path("confirmationKeyValid").queryParam("confirmationKey", confirmationKey));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    Map<String, String> queryParams =
+        ImmutableMap.of("confirmationKey", confirmationKey.toString());
+    requestTestFixture
+        .getSignedRequest(USERNAME, "/admin/user/confirmationKeyValid", queryParams)
+        .andExpect(status().isNoContent());
 
     // change password using that code
     params = new AuthenticationDataParameters();
     params.setPassword(CHANGED_PASSWORD);
     params.setChallengeCode(confirmationKey);
 
-    cr = postSignedRequest(testUser.getUserName(), params, uri -> uri.path(UPDATE_PASSWORD_PATH));
-    assertResponse(Response.Status.CREATED, cr);
+    requestTestFixture
+        .postSignedRequest(USERNAME, params, "/admin/user/updatePassword")
+        .andExpect(status().isCreated());
 
-    // ensure we can login with the new password
-    cr = testClient.login(testUser.getUserName(), CHANGED_PASSWORD);
-    assertResponse(Response.Status.OK, cr);
+    // ensure we can log in with the new password
+    requestTestFixture
+        .getRequest(USERNAME, CHANGED_PASSWORD, "/user/login")
+        .andExpect(status().isOk());
   }
 
   @Test
-  public void getUserFromAdmin() {
+  public void getUserFromAdmin() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
-    GbifUser createdUser = userMapper.get(testUser.getUserName());
+    GbifUser createdUser = userTestFixture.getUser(testUser.getUserName());
 
-    ClientResponse cr =
-        getWithSignedRequest(
-            TestConstants.IT_APP_KEY, uriBldr -> uriBldr.path(testUser.getUserName()));
-    assertResponse(Response.Status.OK, cr);
+    ResultActions actions =
+        requestTestFixture
+            .getSignedRequest(IT_APP_KEY, "/admin/user/" + USERNAME)
+            .andExpect(status().isOk());
 
-    assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
+    UserAdminView actualUserAdminView =
+        requestTestFixture.extractResponseEntity(actions, UserAdminView.class);
+
+    assertEquals(createdUser.getKey(), actualUserAdminView.getUser().getKey());
   }
 
   @Test
-  public void getUserBySystemSettings() {
-    GbifUser testUser = userTestFixture.prepareUser();
-    GbifUser createdUser = userMapper.get(testUser.getUserName());
-    createdUser.setSystemSettings(ImmutableMap.of("my.settings.key", "100_tacos=100$"));
-    userMapper.update(createdUser);
+  public void getUserBySystemSettings() throws Exception {
+    userTestFixture.prepareUser();
+    Map<String, String> params = ImmutableMap.of("my.settings.key", "100_tacos=100$");
+    GbifUser createdUser = userTestFixture.addSystemSettingsToUser(USERNAME, params);
 
-    ClientResponse cr =
-        getWithSignedRequest(
-            TestConstants.IT_APP_KEY,
-            uriBldr -> uriBldr.path("find"),
-            ImmutableMap.of("my.settings.key", "100_tacos=100$"));
-    assertResponse(Response.Status.OK, cr);
-    assertEquals(createdUser.getKey(), cr.getEntity(UserAdminView.class).getUser().getKey());
+    ResultActions actions =
+        requestTestFixture
+            .getSignedRequest(IT_APP_KEY, "/admin/user/find", params)
+            .andExpect(status().isOk());
+
+    UserAdminView actualUserAdminView =
+        requestTestFixture.extractResponseEntity(actions, UserAdminView.class);
+
+    assertEquals(createdUser.getKey(), actualUserAdminView.getUser().getKey());
   }
 
   @Test
-  public void testUpdateUser() {
+  public void testUpdateUser() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
     final String newUserFirstName = "My new first name";
 
-    ClientResponse cr = testClient.login(getUsername(), getPassword());
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture.getRequest(USERNAME, PASSWORD, "/user/login").andExpect(status().isOk());
 
     testUser.setFirstName(newUserFirstName);
-    cr =
-        putWithSignedRequest(
-            TestConstants.IT_APP_KEY, testUser, uriBldr -> uriBldr.path(testUser.getUserName()));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    requestTestFixture
+        .putSignedRequest(IT_APP_KEY, testUser, "/admin/user/" + USERNAME)
+        .andExpect(status().isNoContent());
 
     // load user directly from the database
-    GbifUser updatedUser = userMapper.get(testUser.getUserName());
+    GbifUser updatedUser = userTestFixture.getUser(testUser.getUserName());
     assertEquals(newUserFirstName, updatedUser.getFirstName());
 
     // create a new user
     GbifUser testUser2 =
         userTestFixture.prepareUser(UserTestFixture.generateUser(ALTERNATE_USERNAME));
-    cr = testClient.login(ALTERNATE_USERNAME, "password");
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture
+        .getRequest(ALTERNATE_USERNAME, PASSWORD, "/user/login")
+        .andExpect(status().isOk());
 
     // update user2 using email from user1
     testUser2.setEmail(testUser.getEmail());
-    cr =
-        putWithSignedRequest(
-            TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
+    ResultActions actions =
+        requestTestFixture
+            .putSignedRequest(IT_APP_KEY, testUser2, "/admin/user/" + ALTERNATE_USERNAME)
+            .andExpect(status().isUnprocessableEntity());
 
-    // TODO: remove GbifResponseStatus
-    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, cr.getStatus());
-    assertEquals(
-        ModelMutationError.EMAIL_ALREADY_IN_USE,
-        cr.getEntity(UserModelMutationResult.class).getError());
+    UserModelMutationResult actualUserModelMutationResult =
+        requestTestFixture.extractResponseEntity(actions, UserModelMutationResult.class);
+
+    assertEquals(ModelMutationError.EMAIL_ALREADY_IN_USE, actualUserModelMutationResult.getError());
 
     testUser2.setEmail("12345@mail.com");
-    cr =
-        putWithSignedRequest(
-            TestConstants.IT_APP_KEY, testUser2, uriBldr -> uriBldr.path(ALTERNATE_USERNAME));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    requestTestFixture
+        .putSignedRequest(IT_APP_KEY, testUser2, "/admin/user/" + ALTERNATE_USERNAME)
+        .andExpect(status().isNoContent());
   }
 
   @Test
-  public void testUserEditorRights() {
-    /* Create a first admin user; this can't be done through the API. */
-    UserCreation adminUserCreation = UserTestFixture.generateUser(TestConstants.TEST_ADMIN);
-    GbifUser adminUser = userTestFixture.prepareUser(adminUserCreation);
-    adminUser.addRole(UserRole.REGISTRY_ADMIN);
-    userMapper.update(adminUser);
-
-    GbifUser testUser = userTestFixture.prepareUser();
+  public void testUserEditorRights() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
     UUID key = UUID.randomUUID();
 
     // Admin add right
-    ClientResponse cr =
-        postSignedRequest(
-            TestConstants.TEST_ADMIN,
-            key,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.CREATED, cr);
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, key, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isCreated());
 
     // Admin see rights
-    cr =
-        getWithSignedRequest(
-            TestConstants.TEST_ADMIN,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isOk());
 
     // See own rights
-    cr =
-        getWithSignedRequest(
-            testUser.getUserName(),
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.OK, cr);
+    requestTestFixture
+        .getSignedRequest(USERNAME, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isOk());
 
     // Admin delete right
-    cr =
-        deleteWithSignedRequest(
-            TestConstants.TEST_ADMIN,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight/" + key));
-    assertResponse(Response.Status.NO_CONTENT, cr);
+    requestTestFixture
+        .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight/" + key)
+        .andExpect(status().isNoContent());
   }
 
   @Test
-  public void testUserEditorRightsErrors() {
-    /* Create a first admin user; this can't be done through the API. */
-    UserCreation adminUserCreation = UserTestFixture.generateUser(TestConstants.TEST_ADMIN);
-    GbifUser adminUser = userTestFixture.prepareUser(adminUserCreation);
-    adminUser.addRole(UserRole.REGISTRY_ADMIN);
-    userMapper.update(adminUser);
-
-    GbifUser testUser = userTestFixture.prepareUser();
+  public void testUserEditorRightsErrors() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
     UUID key = UUID.randomUUID();
 
     // User doesn't exist
-    ClientResponse cr =
-        postSignedRequest(
-            TestConstants.TEST_ADMIN,
-            key,
-            uriBldr -> uriBldr.path("someOtherUser" + "/editorRight"));
-    assertResponse(Response.Status.NOT_FOUND, cr);
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, key, "/admin/user/someOtherUser/editorRight")
+        .andExpect(status().isNotFound());
 
     // Not an admin user
-    cr =
-        postSignedRequest(
-            testUser.getUserName(),
-            key,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.FORBIDDEN, cr);
-    System.err.println(cr);
+    requestTestFixture
+        .postSignedRequestPlainText(USERNAME, key, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isForbidden());
 
     // Right already exists
-    cr =
-        postSignedRequest(
-            TestConstants.TEST_ADMIN,
-            key,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.CREATED, cr);
-    cr =
-        postSignedRequest(
-            TestConstants.TEST_ADMIN,
-            key,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight"));
-    assertResponse(Response.Status.CONFLICT, cr);
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, key, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isCreated());
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, key, "/admin/user/" + USERNAME + "/editorRight")
+        .andExpect(status().isConflict());
 
     // Right doesn't exist
-    cr =
-        deleteWithSignedRequest(
-            TestConstants.TEST_ADMIN,
-            uriBldr -> uriBldr.path(testUser.getUserName() + "/editorRight/" + UUID.randomUUID()));
-    assertResponse(Response.Status.NOT_FOUND, cr);
-    System.err.println(cr);
-  }
-
-  @Override
-  protected JerseyGbifAuthService getAuthService() {
-    return gbifAuthService;
-  }
-
-  @Override
-  protected String getResourcePath() {
-    return RESOURCE_PATH;
-  }
-
-  @Override
-  protected String getUsername() {
-    return UserTestFixture.USERNAME;
-  }
-
-  @Override
-  protected String getPassword() {
-    return UserTestFixture.PASSWORD;
-  }
-
-  @Override
-  protected void onSetup() {
-    // no-op
+    UUID randomKey = UUID.randomUUID();
+    requestTestFixture
+        .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight/" + randomKey)
+        .andExpect(status().isNotFound());
   }
 }
