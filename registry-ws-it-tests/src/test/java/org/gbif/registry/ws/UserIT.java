@@ -22,8 +22,10 @@ import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.UserMapper;
+import org.gbif.registry.ws.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
-import org.gbif.ws.security.RequestDataToSign;
+import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.SigningService;
 
 import java.util.stream.Collectors;
@@ -39,14 +41,11 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,17 +53,12 @@ import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.gbif.registry.ws.fixtures.UserTestFixture.APP_KEY;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.EMAIL;
+import static org.gbif.registry.ws.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.fixtures.UserTestFixture.USERNAME;
-import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
-import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -81,14 +75,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class UserIT {
 
-  private SigningService signingService;
   private UserTestFixture userTestFixture;
-
-  @Autowired private MockMvc mvc;
-
-  @Autowired
-  @Qualifier("registryObjectMapper")
-  private ObjectMapper objectMapper;
+  private RequestTestFixture requestTestFixture;
 
   @RegisterExtension
   static PreparedDbExtension database =
@@ -128,20 +116,26 @@ public class UserIT {
 
   @Autowired
   public UserIT(
+      MockMvc mvc,
       SigningService signingService,
+      Md5EncodeService md5EncodeService,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       IdentityService identityService,
-      IdentitySuretyTestHelper identitySuretyTestHelper) {
-    this.signingService = signingService;
-    this.userTestFixture = new UserTestFixture(identityService, identitySuretyTestHelper);
+      IdentitySuretyTestHelper identitySuretyTestHelper,
+      UserMapper userMapper) {
+    this.userTestFixture =
+        new UserTestFixture(identityService, identitySuretyTestHelper, userMapper);
+    this.requestTestFixture =
+        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper);
   }
 
   @Test
   public void testLoginNoCredentials() throws Exception {
     // GET login
-    mvc.perform(get("/user/login")).andExpect(status().isUnauthorized());
+    requestTestFixture.getRequest("/user/login").andExpect(status().isUnauthorized());
 
     // POST login
-    mvc.perform(post("/user/login")).andExpect(status().isUnauthorized());
+    requestTestFixture.postRequest("/user/login").andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -149,20 +143,17 @@ public class UserIT {
     GbifUser user = userTestFixture.prepareUser();
 
     ResultActions actions =
-        mvc.perform(get("/user/login").with(httpBasic("user_12", "password")))
-            .andExpect(status().isOk());
+        requestTestFixture.getRequest(USERNAME, PASSWORD, "/user/login").andExpect(status().isOk());
 
     // check jwt token
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
     ExtendedLoggedUser loggedUser =
-        objectMapper.readValue(contentAsString, ExtendedLoggedUser.class);
+        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
     assertNotNull(loggedUser.getToken());
 
     // try to login using the email instead of the username
-    mvc.perform(get("/user/login").with(httpBasic("user_12@gbif.org", "password")))
-        .andExpect(status().isOk());
+    requestTestFixture.getRequest(EMAIL, PASSWORD, "/user/login").andExpect(status().isOk());
   }
 
   @Test
@@ -170,20 +161,19 @@ public class UserIT {
     GbifUser user = userTestFixture.prepareUser();
 
     ResultActions actions =
-        mvc.perform(post("/user/login").with(httpBasic("user_12", "password")))
+        requestTestFixture
+            .postRequest(USERNAME, PASSWORD, "/user/login")
             .andExpect(status().isCreated());
 
     // check jwt token
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
     ExtendedLoggedUser loggedUser =
-        objectMapper.readValue(contentAsString, ExtendedLoggedUser.class);
+        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
     assertNotNull(loggedUser.getToken());
 
     // try to login using the email instead of the username
-    mvc.perform(post("/user/login").with(httpBasic("user_12@gbif.org", "password")))
-        .andExpect(status().isCreated());
+    requestTestFixture.postRequest(EMAIL, PASSWORD, "/user/login").andExpect(status().isCreated());
   }
 
   @Test
@@ -193,19 +183,18 @@ public class UserIT {
     final String newPassword = "123456";
     AuthenticationDataParameters params = new AuthenticationDataParameters();
     params.setPassword(newPassword);
-    mvc.perform(
-            put("/user/changePassword")
-                .content(objectMapper.writeValueAsString(params))
-                .contentType(MediaType.APPLICATION_JSON)
-                .with(httpBasic("user_12", "password")))
+
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, params, "/user/changePassword")
         .andExpect(status().isNoContent());
 
     // try to login using the previous password
-    mvc.perform(get("/user/login").with(httpBasic("user_12", "password")))
+    requestTestFixture
+        .getRequest(USERNAME, PASSWORD, "/user/login")
         .andExpect(status().isUnauthorized());
 
     // try with the new password
-    mvc.perform(get("/user/login").with(httpBasic("user_12", "123456"))).andExpect(status().isOk());
+    requestTestFixture.getRequest(USERNAME, newPassword, "/user/login").andExpect(status().isOk());
   }
 
   /**
@@ -215,18 +204,7 @@ public class UserIT {
   public void testLoginWithAppKeys() throws Exception {
     userTestFixture.prepareUser();
 
-    RequestDataToSign requestDataToSign = new RequestDataToSign();
-    requestDataToSign.setMethod(RequestMethod.GET.name());
-    requestDataToSign.setUser(USERNAME);
-    requestDataToSign.setUrl("/user/login");
-
-    String signature = signingService.buildSignature(requestDataToSign, APP_KEY);
-
-    mvc.perform(
-            get("/user/login")
-                .header(HttpHeaders.AUTHORIZATION, GBIF_SCHEME + " " + APP_KEY + ":" + signature)
-                .header(HEADER_GBIF_USER, USERNAME))
-        .andExpect(status().isForbidden());
+    requestTestFixture.getSignedRequest(USERNAME, "/user/login").andExpect(status().isForbidden());
   }
 
   @Test
@@ -236,12 +214,12 @@ public class UserIT {
     GbifUser user = userTestFixture.prepareUser(userCreation);
 
     ResultActions actions =
-        mvc.perform(post("/user/whoami").with(httpBasic("user_12", "password")))
+        requestTestFixture
+            .postRequest(USERNAME, PASSWORD, "/user/whoami")
             .andExpect(status().isCreated());
 
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
     ExtendedLoggedUser loggedUser =
-        objectMapper.readValue(contentAsString, ExtendedLoggedUser.class);
+        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
   }

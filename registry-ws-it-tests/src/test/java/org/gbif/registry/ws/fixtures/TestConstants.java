@@ -35,11 +35,12 @@ public class TestConstants {
   public static final String IT_APP_KEY2 = "gbif.app.it2";
   public static final String IT_APP_SECRET2 =
       "6a55ca16c053e269a9602c02922b30ce49c49be3a68bb2d8908b24d7c2";
-  private static final Map<String, String> appKeys = new HashMap<>();
+
+  private static final Map<String, String> APP_KEYS = new HashMap<>();
 
   static {
-    appKeys.put(IT_APP_KEY, IT_APP_SECRET);
-    appKeys.put(IT_APP_KEY2, IT_APP_SECRET2);
+    APP_KEYS.put(IT_APP_KEY, IT_APP_SECRET);
+    APP_KEYS.put(IT_APP_KEY2, IT_APP_SECRET2);
   }
 
   public static final String TEST_ADMIN = "admin";
@@ -56,20 +57,7 @@ public class TestConstants {
     TEST_USERS_ROLE.put(TEST_GRSCICOLL_ADMIN, UserRole.GRSCICOLL_ADMIN);
   }
 
-  public static String getRegistryServerURL(int port) {
-    return "http://localhost:" + port;
-  }
-
-  public static Map<String, String> getIntegrationTestAppKeys() {
-    return appKeys;
-  }
-
-  /**
-   * Return the {@link UserRole} of a test user as defined by {@link #TEST_USERS_ROLE}.
-   *
-   * @param testUsername
-   * @return
-   */
+  /** Return the {@link UserRole} of a test user as defined by {@link #TEST_USERS_ROLE}. */
   public static UserRole getTestUserRole(String testUsername) {
     return TEST_USERS_ROLE.get(testUsername);
   }

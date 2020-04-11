@@ -47,16 +47,14 @@ import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebSe
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.context.support.GenericWebApplicationContext;
 
 @TestConfiguration
 @EnableAutoConfiguration
@@ -129,8 +127,14 @@ public class RegistryIntegrationTestsConfiguration {
   }
 
   public GbifWsClient gbifWsClient(
-    GenericWebApplicationContext genericWebApplicationContext, @Qualifier("apiMapper") ObjectMapper objectMapper) {
-    return new GbifWsRetrofitClient("http://localhost:" + ((AnnotationConfigServletWebServerApplicationContext) genericWebApplicationContext).getWebServer().getPort(), objectMapper);
+      GenericWebApplicationContext genericWebApplicationContext,
+      @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new GbifWsRetrofitClient(
+        "http://localhost:"
+            + ((AnnotationConfigServletWebServerApplicationContext) genericWebApplicationContext)
+                .getWebServer()
+                .getPort(),
+        objectMapper);
   }
 
   @Bean
