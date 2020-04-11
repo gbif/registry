@@ -16,9 +16,9 @@
 package org.gbif.registry.ws.fixtures;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.UserModelMutationResult;
+import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.UserUpdateRulesManager;
 
@@ -38,6 +38,7 @@ public class UserTestFixture {
 
   public static final String USERNAME = "user_12";
   public static final String ALTERNATE_USERNAME = "user_13";
+  public static final String APP_KEY = "gbif.app.it";
   public static final String PASSWORD = "password";
 
   private IdentityService identityService;
@@ -49,21 +50,12 @@ public class UserTestFixture {
     this.identitySuretyTestHelper = identitySuretyTestHelper;
   }
 
-  /**
-   * Prepare a pre-defined user {@link #USERNAME}
-   *
-   * @return
-   */
+  /** Prepare a pre-defined user {@link #USERNAME} */
   public GbifUser prepareUser() {
     return prepareUser(generateUser());
   }
 
-  /**
-   * Utility method to prepare a user in the database.
-   *
-   * @param newTestUser
-   * @return
-   */
+  /** Utility method to prepare a user in the database. */
   public GbifUser prepareUser(UserCreation newTestUser) {
     GbifUser userToCreate = UserUpdateRulesManager.applyCreate(newTestUser);
     UserModelMutationResult userCreated =
@@ -82,20 +74,12 @@ public class UserTestFixture {
     return userToCreate;
   }
 
-  /**
-   * Generates a test user with username {@link #USERNAME}
-   *
-   * @return
-   */
+  /** Generates a test user with username {@link #USERNAME} */
   private static UserCreation generateUser() {
     return generateUser(USERNAME);
   }
 
-  /**
-   * Generates a different user on each call. Thread-Safe
-   *
-   * @return
-   */
+  /** Generates a different user on each call. Thread-Safe */
   public static UserCreation generateUser(String username) {
     UserCreation user = new UserCreation();
     user.setUserName(username);

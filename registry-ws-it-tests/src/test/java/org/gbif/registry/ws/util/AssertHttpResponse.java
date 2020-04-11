@@ -15,24 +15,20 @@
  */
 package org.gbif.registry.ws.util;
 
-import javax.ws.rs.core.Response;
+import org.springframework.http.HttpStatus;
 
 import com.sun.jersey.api.client.ClientResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+// TODO: 11/04/2020 remove
 /** Simple assertions on HTTP codes. */
 public class AssertHttpResponse {
 
-  /**
-   * Assert the response from a {@link ClientResponse}.
-   *
-   * @param expected
-   * @param cr
-   */
-  public static void assertResponse(Response.Status expected, ClientResponse cr) {
+  /** Assert the response from a {@link ClientResponse}. */
+  public static void assertResponse(HttpStatus expected, ClientResponse cr) {
     assertNotNull("ClientResponse is not null", cr);
-    assertEquals(expected.getStatusCode(), cr.getStatus());
+    assertEquals(expected.value(), cr.getStatus());
   }
 }
