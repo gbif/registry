@@ -77,6 +77,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -915,9 +916,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         datasetProcessStatusMapper.listByDataset(datasetKey, page));
   }
 
+  // TODO: 13/04/2020 add endorsingKey (it used to be taken from cache)
   @Override
-  protected List<UUID> owningEntityKeys(@NotNull Dataset entity) {
-    return registryDatasetService.owningEntityKeys(entity);
+  public List<UUID> owningEntityKeys(@NotNull Dataset entity) {
+    return Collections.singletonList(entity.getPublishingOrganizationKey());
   }
 
   @Override
