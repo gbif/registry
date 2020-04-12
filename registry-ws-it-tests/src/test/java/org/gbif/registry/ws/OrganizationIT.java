@@ -30,14 +30,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import com.google.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -48,7 +44,6 @@ import static org.junit.Assert.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
 public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   private final OrganizationService service;
@@ -56,7 +51,7 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
   private final TestDataFactory testDataFactory;
 
-  @Inject
+  @Autowired
   public OrganizationIT(
       OrganizationService service,
       NodeService nodeService,
@@ -83,8 +78,8 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
     UUID key2 = this.getService().create(o2);
 
     OrganizationService service = (OrganizationService) this.getService();
-    assertTrue("Should find only The Tim", service.suggest("The").size() == 1);
-    assertTrue("Should find both organizations", service.suggest("Tim").size() == 2);
+    assertEquals(1, service.suggest("The").size(), "Should find only The Tim");
+    assertEquals(2, service.suggest("Tim").size(), "Should find both organizations");
   }
 
   @Test
@@ -103,22 +98,22 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
     assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 1);
     assertResultsOfSize(nodeService.pendingEndorsements(node.getKey(), new PagingRequest()), 1);
     assertEquals(
-        "Paging is not returning the correct count",
         Long.valueOf(1),
-        nodeService.pendingEndorsements(new PagingRequest()).getCount());
+        nodeService.pendingEndorsements(new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
 
     o.setEndorsementApproved(true);
     this.getService().update(o);
     assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 0);
     assertEquals(
-        "Paging is not returning the correct count",
         Long.valueOf(0),
-        nodeService.pendingEndorsements(new PagingRequest()).getCount());
+        nodeService.pendingEndorsements(new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
     assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 1);
     assertEquals(
-        "Paging is not returning the correct count",
         Long.valueOf(1),
-        nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount());
+        nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
   }
 
   @Test
@@ -138,9 +133,9 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
 
     assertResultsOfSize(service.listByCountry(Country.ANGOLA, new PagingRequest()), 2);
     assertEquals(
-        "Paging is not returning the correct count",
         Long.valueOf(2),
-        service.listByCountry(Country.ANGOLA, new PagingRequest()).getCount());
+        service.listByCountry(Country.ANGOLA, new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
     assertResultsOfSize(service.listByCountry(Country.FRANCE, new PagingRequest()), 2);
     assertResultsOfSize(service.listByCountry(Country.GERMANY, new PagingRequest()), 0);
   }
@@ -157,8 +152,7 @@ public class OrganizationIT extends NetworkEntityTest<Organization> {
   protected Organization newEntity() {
     UUID key = nodeService.create(testDataFactory.newNode());
     Node node = nodeService.get(key);
-    Organization o = testDataFactory.newOrganization(node.getKey());
-    return o;
+    return testDataFactory.newOrganization(node.getKey());
   }
 
   @Override
