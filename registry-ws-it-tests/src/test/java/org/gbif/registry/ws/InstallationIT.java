@@ -32,12 +32,12 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -48,7 +48,6 @@ import static org.junit.Assert.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
 public class InstallationIT extends NetworkEntityTest<Installation> {
 
   private final OrganizationService organizationService;
@@ -74,8 +73,7 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     Organization o = testDataFactory.newOrganization(nodeKey);
     UUID key = organizationService.create(o);
     Organization organization = organizationService.get(key);
-    Installation i = testDataFactory.newInstallation(organization.getKey());
-    return i;
+    return testDataFactory.newInstallation(organization.getKey());
   }
 
   /** Tests that we can successfully disable and undisable an installation. */
@@ -84,15 +82,17 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     Installation e = newEntity();
     UUID key = getService().create(e);
     e = getService().get(key);
-    assertEquals("Should not be disabled to start", false, e.isDisabled());
+    assertFalse(e.isDisabled(), "Should not be disabled to start");
+
     e.setDisabled(true);
     getService().update(e);
     e = getService().get(e.getKey());
-    assertEquals("We just disabled it", true, e.isDisabled());
+    assertTrue(e.isDisabled(), "We just disabled it");
+
     e.setDisabled(false);
     getService().update(e);
     e = getService().get(e.getKey());
-    assertEquals("We just un-disabled it", false, e.isDisabled());
+    assertFalse(e.isDisabled(), "We just un-disabled it");
   }
 
   // Easier to test this here than other places due to our utility factory
@@ -104,10 +104,10 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
 
     PagingResponse<Installation> resp =
         nodeService.installations(node.getKey(), new PagingRequest());
-    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());
+    assertEquals(Long.valueOf(1), resp.getCount(), "Paging counts are not being set");
 
     resp = organizationService.installations(organization.getKey(), new PagingRequest());
-    assertEquals("Paging counts are not being set", Long.valueOf(1), resp.getCount());
+    assertEquals(Long.valueOf(1), resp.getCount(), "Paging counts are not being set");
   }
 
   @Override
@@ -126,15 +126,15 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
   public void testSuggest() {
     Installation installation1 = newEntity();
     installation1.setTitle("The installation");
-    UUID key1 = getService().create(installation1);
+    getService().create(installation1);
 
     Installation installation2 = newEntity();
     installation2.setTitle("The Great installation");
-    UUID key2 = getService().create(installation2);
+    getService().create(installation2);
 
     InstallationService service = (InstallationService) this.getService();
-    assertEquals("Should find only The Great installation", 1, service.suggest("Great").size());
-    assertEquals("Should find both installations", 2, service.suggest("the").size());
+    assertEquals(1, service.suggest("Great").size(), "Should find only The Great installation");
+    assertEquals(2, service.suggest("the").size(), "Should find both installations");
   }
 
   @Test
@@ -142,17 +142,17 @@ public class InstallationIT extends NetworkEntityTest<Installation> {
     Installation installation1 = newEntity();
     installation1.setTitle("The installation");
     installation1.setType(InstallationType.HTTP_INSTALLATION);
-    UUID key1 = getService().create(installation1);
+    getService().create(installation1);
 
     Installation installation2 = newEntity();
     installation2.setTitle("The Great installation");
     installation2.setType(InstallationType.EARTHCAPE_INSTALLATION);
-    UUID key2 = getService().create(installation2);
+    getService().create(installation2);
 
     InstallationService service = (InstallationService) this.getService();
     assertEquals(
-        "Should find only The Great installation",
         1,
-        service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null).getResults().size());
+        service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null).getResults().size(),
+        "Should find only The Great installation");
   }
 }
