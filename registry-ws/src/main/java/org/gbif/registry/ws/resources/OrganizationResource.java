@@ -42,6 +42,7 @@ import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 import org.gbif.ws.WebApplicationException;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -73,7 +74,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -396,7 +396,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Override
-  protected List<UUID> owningEntityKeys(@NotNull Organization entity) {
-    return Lists.newArrayList(entity.getEndorsingNodeKey());
+  public List<UUID> owningEntityKeys(Organization entity) {
+    return Collections.singletonList(entity.getEndorsingNodeKey());
   }
 }
