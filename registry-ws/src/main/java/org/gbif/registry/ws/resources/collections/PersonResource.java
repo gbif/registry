@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.springframework.http.MediaType;
@@ -61,6 +60,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> implements PersonService {
@@ -101,14 +101,15 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/person/{key}")
   @Override
-  public Person get(@PathVariable @NotNull UUID key) {
+  public Person get(@PathVariable UUID key) {
     return super.get(key);
   }
 
-  @Override
+  @Validated({PrePersist.class, Default.class})
   @Transactional
   @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
-  public UUID create(@NotNull @Validated({PrePersist.class, Default.class}) Person person) {
+  @Override
+  public UUID create(Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
 
     if (person.getMailingAddress() != null) {
@@ -156,7 +157,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
   @Transactional
   @Override
-  public void update(@NotNull @Validated Person person) {
+  public void update(Person person) {
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
 
@@ -211,15 +212,14 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Person> listDeleted(@Nullable Pageable page) {
+  public PagingResponse<Person> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(page, personMapper.countDeleted(), personMapper.deleted(page));
   }
 
   @GetMapping("suggest")
   @Override
-  public List<PersonSuggestResult> suggest(
-      @Nullable @RequestParam(value = "q", required = false) String q) {
+  public List<PersonSuggestResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return personMapper.suggest(q);
   }
 }

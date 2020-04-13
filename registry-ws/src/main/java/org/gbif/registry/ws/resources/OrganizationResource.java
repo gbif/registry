@@ -59,6 +59,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,7 +74,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -139,10 +139,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @Override
-  public UUID create(
-      @RequestBody @NotNull @Trim @Valid Organization organization, Authentication authentication) {
+  public UUID create(@RequestBody @Trim Organization organization) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     organization.setPassword(generatePassword());
-    UUID newOrganization = super.create(organization, authentication);
+    UUID newOrganization = super.create(organization);
 
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
@@ -393,10 +393,5 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
-  }
-
-  @Override
-  protected List<UUID> owningEntityKeys(@NotNull Organization entity) {
-    return Lists.newArrayList(entity.getEndorsingNodeKey());
   }
 }

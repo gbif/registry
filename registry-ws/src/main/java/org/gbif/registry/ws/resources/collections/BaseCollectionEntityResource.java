@@ -53,6 +53,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -79,6 +80,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 /** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
+@Validated
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class BaseCollectionEntityResource<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
@@ -118,7 +120,7 @@ public abstract class BaseCollectionEntityResource<
   @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Validated T entity, Authentication authentication) {
+  public UUID create(@RequestBody @NotNull @Valid T entity, Authentication authentication) {
     if (!isAllowedToEditEntity(authentication, entity)) {
       throw new WebApplicationException(
           "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
@@ -150,7 +152,7 @@ public abstract class BaseCollectionEntityResource<
 
   @Transactional
   @Override
-  public void delete(@NotNull UUID key) {
+  public void delete(UUID key) {
     T objectToDelete = get(key);
     baseMapper.delete(key);
     eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
@@ -158,15 +160,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Nullable
   @Override
-  public T get(@PathVariable @NotNull UUID key) {
+  public T get(@PathVariable UUID key) {
     return baseMapper.get(key);
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(
-      @PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Validated T entity) {
+  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Valid T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkArgument(
         key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
@@ -185,7 +186,7 @@ public abstract class BaseCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addIdentifier(
       @PathVariable("key") @NotNull UUID entityKey,
-      @RequestBody @NotNull Identifier identifier,
+      @RequestBody @NotNull @Valid Identifier identifier,
       Authentication authentication) {
     // only admins can add IH identifiers
     if (identifier.getType() == IdentifierType.IH_IRN
@@ -198,10 +199,9 @@ public abstract class BaseCollectionEntityResource<
     return addIdentifier(entityKey, identifier);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addIdentifier(
-      @NotNull UUID entityKey,
-      @Validated({PrePersist.class, Default.class}) @NotNull Identifier identifier) {
+  public int addIdentifier(UUID entityKey, Identifier identifier) {
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(
@@ -234,8 +234,7 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Override
-  public void deleteIdentifier(
-      @PathVariable("key") @NotNull UUID entityKey, @PathVariable int identifierKey) {
+  public void deleteIdentifier(UUID entityKey, int identifierKey) {
     baseMapper.deleteIdentifier(entityKey, identifierKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(
@@ -245,7 +244,7 @@ public abstract class BaseCollectionEntityResource<
   @GetMapping("{key}/identifier")
   @Nullable
   @Override
-  public List<Identifier> listIdentifiers(@PathVariable @NotNull UUID key) {
+  public List<Identifier> listIdentifiers(@PathVariable UUID key) {
     return baseMapper.listIdentifiers(key);
   }
 
@@ -261,15 +260,15 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Override
-  public int addTag(@NotNull UUID key, @NotNull String value) {
+  public int addTag(UUID key, String value) {
     Tag tag = new Tag();
     tag.setValue(value);
     return addTag(key, tag);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addTag(
-      @NotNull UUID entityKey, @NotNull @Validated({PrePersist.class, Default.class}) Tag tag) {
+  public int addTag(UUID entityKey, Tag tag) {
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
@@ -280,7 +279,7 @@ public abstract class BaseCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
-  public void deleteTag(@PathVariable("key") @NotNull UUID entityKey, @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
     baseMapper.deleteTag(entityKey, tagKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
@@ -290,8 +289,8 @@ public abstract class BaseCollectionEntityResource<
   @Nullable
   @Override
   public List<Tag> listTags(
-      @PathVariable("key") @NotNull UUID key,
-      @RequestParam(value = "owner", required = false) @Nullable String owner) {
+      @PathVariable("key") UUID key,
+      @RequestParam(value = "owner", required = false) String owner) {
     if (owner != null) {
       LOG.warn("Owner is not supported. Passed value: {}", owner);
     }
@@ -311,7 +310,7 @@ public abstract class BaseCollectionEntityResource<
   @Transactional
   public int addMachineTag(
       @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim MachineTag machineTag,
+      @RequestBody @NotNull @Trim @Valid MachineTag machineTag,
       Authentication authentication) {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
@@ -327,18 +326,14 @@ public abstract class BaseCollectionEntityResource<
     }
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Override
-  public int addMachineTag(
-      UUID targetEntityKey, @Validated({PrePersist.class, Default.class}) MachineTag machineTag) {
+  public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
     return withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
   }
 
   @Override
-  public int addMachineTag(
-      @NotNull UUID targetEntityKey,
-      @NotNull String namespace,
-      @NotNull String name,
-      @NotNull String value) {
+  public int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
     MachineTag machineTag = new MachineTag();
     machineTag.setNamespace(namespace);
     machineTag.setName(name);
@@ -347,8 +342,7 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Override
-  public int addMachineTag(
-      @NotNull UUID targetEntityKey, @NotNull TagName tagName, @NotNull String value) {
+  public int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
     return addMachineTag(targetEntityKey, machineTag);
   }
@@ -418,12 +412,12 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagNamespace tagNamespace) {
+  public void deleteMachineTags(UUID targetEntityKey, TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull String namespace) {
+  public void deleteMachineTags(UUID targetEntityKey, String namespace) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
@@ -448,13 +442,12 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Override
-  public void deleteMachineTags(@NotNull UUID targetEntityKey, @NotNull TagName tagName) {
+  public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
   }
 
   @Override
-  public void deleteMachineTags(
-      @NotNull UUID targetEntityKey, @NotNull String namespace, @NotNull String name) {
+  public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
