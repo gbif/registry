@@ -279,11 +279,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         metasyncHistoryMapper.listByInstallation(installationKey, page));
   }
 
-  @Override
-  protected List<UUID> owningEntityKeys(@NotNull Installation entity) {
-    return Lists.newArrayList(entity.getOrganizationKey());
-  }
-
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {

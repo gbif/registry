@@ -43,17 +43,26 @@ public class SecurityContextCheck {
   private SecurityContextCheck() {}
 
   /**
-   * Check that a user is present in the getUserPrincipal of the SecurityContext otherwise throw
-   * WebApplicationException UNAUTHORIZED.
+   * Ensure that a user is present in the security context otherwise throw WebApplicationException
+   * UNAUTHORIZED.
    *
    * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link
-   *     Authentication}
+   *     Authentication}.
    */
   public static void ensureUserSetInSecurityContext(final Authentication authentication) {
+    ensureUserSetInSecurityContext(authentication, HttpStatus.UNAUTHORIZED);
+  }
+
+  /**
+   * Ensure that a user is present in the security context otherwise throw provided status.
+   *
+   * @throws WebApplicationException if the user is not present in the {@link Authentication}.
+   */
+  public static void ensureUserSetInSecurityContext(
+      final Authentication authentication, final HttpStatus status) {
     if (authentication == null || StringUtils.isBlank(authentication.getName())) {
-      LOG.debug("Unauthenticated or incomplete request.");
-      throw new WebApplicationException(
-          "Unauthenticated or incomplete request", HttpStatus.UNAUTHORIZED);
+      LOG.debug("Unauthenticated or incomplete request");
+      throw new WebApplicationException("Unauthenticated or incomplete request", status);
     }
   }
 
@@ -142,5 +151,10 @@ public class SecurityContextCheck {
   /** Check if the user represented by the {@link Authentication} does NOT have the editor role. */
   public static boolean checkIsNotEditor(Authentication authentication) {
     return !checkUserInRole(authentication, UserRoles.EDITOR_ROLE);
+  }
+
+  /** Check if the user represented by the {@link Authentication} does NOT have the APP role. */
+  public static boolean checkIsNotApp(Authentication authentication) {
+    return !checkUserInRole(authentication, UserRoles.APP_ROLE);
   }
 }

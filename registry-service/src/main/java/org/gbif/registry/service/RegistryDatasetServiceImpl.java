@@ -31,13 +31,11 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -264,16 +262,5 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       return null;
     }
     return document.getData();
-  }
-
-  @Override
-  public List<UUID> owningEntityKeys(@NotNull Dataset entity) {
-    List<UUID> keys = new ArrayList<>();
-    keys.add(entity.getPublishingOrganizationKey());
-    keys.add(
-        organizationCache
-            .getUnchecked(entity.getPublishingOrganizationKey())
-            .getEndorsingNodeKey());
-    return keys;
   }
 }

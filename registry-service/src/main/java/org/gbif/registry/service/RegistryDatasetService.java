@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 public interface RegistryDatasetService {
 
@@ -38,6 +37,4 @@ public interface RegistryDatasetService {
   List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type);
 
   byte[] getMetadataDocument(int metadataKey);
-
-  List<UUID> owningEntityKeys(@NotNull Dataset entity);
 }

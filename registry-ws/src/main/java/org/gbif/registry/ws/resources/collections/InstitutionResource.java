@@ -35,9 +35,9 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +51,7 @@ import com.google.common.base.Strings;
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
  */
+@Validated
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource extends ExtendedCollectionEntityResource<Institution>
@@ -84,7 +85,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
   @Override
-  public Institution get(@PathVariable @NotNull UUID key) {
+  public Institution get(@PathVariable UUID key) {
     return super.get(key);
   }
 
