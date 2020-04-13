@@ -116,6 +116,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @Validated
 @RestController
@@ -518,9 +519,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public UUID create(Dataset dataset) {
+  public UUID create(@RequestBody @Trim Dataset dataset) {
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
@@ -543,9 +544,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return key;
   }
 
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
+  @Trim
+  @Transactional
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void update(Dataset dataset) {
+  public void update(@RequestBody @Trim Dataset dataset) {
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
