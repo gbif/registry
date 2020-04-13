@@ -811,7 +811,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * Override this method to extract the entity key that governs security rights for creating. If
    * empty list is returned only admins are allowed to create new entities which is the default.
    */
-  @Override
   public List<UUID> owningEntityKeys(T entity) {
     LOG.debug(
         "Entity {} with key {} has no owning entity keys", entity.getClass(), entity.getKey());
