@@ -77,7 +77,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -515,8 +514,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License
    * business rules</a>
    */
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
+  @Trim
+  @Transactional
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public UUID create(@Validated({PrePersist.class, Default.class}) Dataset dataset) {
+  public UUID create(Dataset dataset) {
     if (dataset.getDoi() == null) {
       dataset.setDoi(doiGenerator.newDatasetDOI());
     }
@@ -539,8 +543,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return key;
   }
 
+  @Validated({PostPersist.class, Default.class})
   @Override
-  public void update(@Validated({PostPersist.class, Default.class}) Dataset dataset) {
+  public void update(Dataset dataset) {
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
@@ -914,12 +919,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         page,
         (long) datasetProcessStatusMapper.countByDataset(datasetKey),
         datasetProcessStatusMapper.listByDataset(datasetKey, page));
-  }
-
-  // TODO: 13/04/2020 add endorsingKey (it used to be taken from cache)
-  @Override
-  public List<UUID> owningEntityKeys(@NotNull Dataset entity) {
-    return Collections.singletonList(entity.getPublishingOrganizationKey());
   }
 
   @Override

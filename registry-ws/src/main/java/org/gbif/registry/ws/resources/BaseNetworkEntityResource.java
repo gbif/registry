@@ -53,7 +53,6 @@ import org.gbif.ws.WebApplicationException;
 
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -157,38 +156,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public UUID create(@RequestBody @Trim @Valid @NotNull T entity, Authentication authentication) {
+  @Override
+  public UUID create(@RequestBody @Trim T entity) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
-    // if not admin or app, verify rights
-    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE, APP_ROLE)) {
-      boolean allowed = false;
-      List<UUID> entityKeys = owningEntityKeys(entity);
-      for (UUID entityKeyToBeAssessed : entityKeys) {
-        if (entityKeyToBeAssessed == null) {
-          throw new WebApplicationException(
-              MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-              HttpStatus.FORBIDDEN);
-        }
-        if (userAuthService.allowedToModifyEntity(nameFromContext, entityKeyToBeAssessed)) {
-          allowed = true;
-          break;
-        }
-      }
-      if (!allowed) {
-        throw new WebApplicationException(
-            MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-            HttpStatus.FORBIDDEN);
-      }
-    }
     entity.setCreatedBy(nameFromContext);
     entity.setModifiedBy(nameFromContext);
 
-    return create(entity);
-  }
-
-  @Validated({PrePersist.class, Default.class})
-  @Override
-  public UUID create(T entity) {
     withMyBatis.create(mapper, entity);
     eventManager.post(CreateEvent.newInstance(entity, objectClass));
     return entity.getKey();
@@ -805,16 +779,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Override
   public List<Identifier> listIdentifiers(@PathVariable("key") UUID targetEntityKey) {
     return mapper.listIdentifiers(targetEntityKey);
-  }
-
-  /**
-   * Override this method to extract the entity key that governs security rights for creating. If
-   * empty list is returned only admins are allowed to create new entities which is the default.
-   */
-  public List<UUID> owningEntityKeys(T entity) {
-    LOG.debug(
-        "Entity {} with key {} has no owning entity keys", entity.getClass(), entity.getKey());
-    return Collections.emptyList();
   }
 
   /**
