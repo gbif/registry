@@ -42,7 +42,6 @@ import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 import org.gbif.ws.WebApplicationException;
 
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -60,6 +59,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -139,10 +139,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
   @Override
-  public UUID create(
-      @RequestBody @NotNull @Trim @Valid Organization organization, Authentication authentication) {
+  public UUID create(@RequestBody @Trim Organization organization) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     organization.setPassword(generatePassword());
-    UUID newOrganization = super.create(organization, authentication);
+    UUID newOrganization = super.create(organization);
 
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
@@ -393,10 +393,5 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
-  }
-
-  @Override
-  public List<UUID> owningEntityKeys(Organization entity) {
-    return Collections.singletonList(entity.getEndorsingNodeKey());
   }
 }

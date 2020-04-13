@@ -41,7 +41,6 @@ import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -278,11 +277,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         page,
         (long) metasyncHistoryMapper.countByInstallation(installationKey),
         metasyncHistoryMapper.listByInstallation(installationKey, page));
-  }
-
-  @Override
-  public List<UUID> owningEntityKeys(Installation entity) {
-    return Collections.singletonList(entity.getOrganizationKey());
   }
 
   @GetMapping("suggest")
