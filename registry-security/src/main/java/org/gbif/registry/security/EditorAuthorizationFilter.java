@@ -137,7 +137,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private void ensureCreateRequest(String username, HttpServletRequest request) {
-    if (DATASET_PATTERN_CREATE.matcher(request.getRequestURI().toLowerCase()).matches()) {
+    String path = request.getRequestURI().toLowerCase();
+    if (DATASET_PATTERN_CREATE.matcher(path).matches()) {
       Dataset entity = null;
       try {
         entity =
@@ -147,9 +148,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         LOG.error("Error processing json", e);
       }
       ensureNetworkEntity("dataset", entity, username, userAuthService::allowedToModifyDataset);
-    } else if (INSTALLATION_PATTERN_CREATE
-        .matcher(request.getRequestURI().toLowerCase())
-        .matches()) {
+    } else if (INSTALLATION_PATTERN_CREATE.matcher(path).matches()) {
       Installation entity = null;
       try {
         entity =
@@ -160,9 +159,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       }
       ensureNetworkEntity(
           "installation", entity, username, userAuthService::allowedToModifyInstallation);
-    } else if (ORGANIZATION_PATTERN_CREATE
-        .matcher(request.getRequestURI().toLowerCase())
-        .matches()) {
+    } else if (ORGANIZATION_PATTERN_CREATE.matcher(path).matches()) {
       Organization entity = null;
       try {
         entity =
@@ -173,12 +170,12 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       }
       ensureNetworkEntity(
           "organization", entity, username, userAuthService::allowedToModifyOrganization);
-    } else if (NODE_PATTERN_CREATE.matcher(request.getRequestURI().toLowerCase()).matches()) {
+    } else if (NODE_PATTERN_CREATE.matcher(path).matches()) {
       LOG.warn("User {} is not allowed to create nodes", username);
       throw new WebApplicationException(
           MessageFormat.format("User {0} is not allowed to create nodes", username),
           HttpStatus.FORBIDDEN);
-    } else if (NETWORK_PATTERN_CREATE.matcher(request.getRequestURI().toLowerCase()).matches()) {
+    } else if (NETWORK_PATTERN_CREATE.matcher(path).matches()) {
       LOG.warn("User {} is not allowed to create networks", username);
       throw new WebApplicationException(
           MessageFormat.format("User {0} is not allowed to create networks", username),
