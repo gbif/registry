@@ -37,6 +37,7 @@ import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentRes
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +55,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -127,15 +127,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   @Bean
   public XmlMapper xmlMapper() {
     XmlMapper xmlMapper = new XmlMapper();
-
-    ArrayList<Module> modules = new ArrayList<>();
-
-    SimpleModule module = new SimpleModule();
-    modules.add(module);
-    modules.add(new JaxbAnnotationModule());
-
-    xmlMapper.registerModules(modules);
-
+    xmlMapper.registerModules(Arrays.asList(new SimpleModule(), new JaxbAnnotationModule()));
     return xmlMapper;
   }
 
