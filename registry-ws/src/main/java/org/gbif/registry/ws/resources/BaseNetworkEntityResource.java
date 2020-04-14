@@ -86,10 +86,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 /**
  * Provides a skeleton implementation of the following.
@@ -155,7 +155,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public UUID create(@RequestBody @Trim T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -175,27 +175,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param key key of entity to delete
    */
   @DeleteMapping("{key}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
-  public void delete(@NotNull @PathVariable UUID key, Authentication authentication) {
+  @Override
+  public void delete(@PathVariable UUID key) {
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the
     // entity.
     // the api delete(UUID) should be changed eventually
     T objectToDelete = get(key);
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (objectToDelete != null) {
       objectToDelete.setModifiedBy(authentication.getName());
       withMyBatis.update(mapper, objectToDelete);
-      delete(key);
+      mapper.delete(key);
+      eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
     }
-  }
-
-  @Transactional
-  @Override
-  public void delete(UUID key) {
-    T objectToDelete = get(key);
-    mapper.delete(key);
-    eventManager.post(DeleteEvent.newInstance(objectToDelete, objectClass));
   }
 
   @Nullable
@@ -245,7 +240,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * the caller is authorized to perform the action and then adds the server controlled field
    * modifiedBy.
    *
-   * @param key key of entity to update
    * @param entity entity that extends NetworkEntity
    */
   @PutMapping(
@@ -254,20 +248,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public void update(
-      @PathVariable UUID key,
-      @RequestBody @NotNull @Trim @Valid T entity,
-      Authentication authentication) {
-    checkArgument(
-        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
-    entity.setModifiedBy(authentication.getName());
-    update(entity);
-  }
-
-  @Validated({PostPersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void update(T entity) {
+  public void update(@RequestBody @Trim T entity) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null) {
+      entity.setModifiedBy(authentication.getName());
+    }
+
     T oldEntity = get(entity.getKey());
     withMyBatis.update(mapper, entity);
     // get complete entity with components populated, so subscribers of UpdateEvent can compare new
