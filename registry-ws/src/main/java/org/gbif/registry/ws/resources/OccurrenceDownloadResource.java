@@ -24,6 +24,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
@@ -46,7 +47,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -76,6 +76,7 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsI
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
 /** Occurrence download resource/web service. */
+@Validated
 @RestController
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
@@ -103,13 +104,12 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void create(
-      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class})
-          Download occurrenceDownload) {
+  public void create(@RequestBody @Trim Download occurrenceDownload) {
     occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
     occurrenceDownload.setLicense(License.UNSPECIFIED);
     occurrenceDownloadMapper.create(occurrenceDownload);
@@ -138,7 +138,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @GetMapping("{prefix}/{suffix}")
   @NullToNotFound("/occurrence/download/{prefix}/{suffix}")
-  public Download getByDoi(@PathVariable String prefix, @PathVariable String suffix) {
+  public Download getByDoi(
+      @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
     clearSensitiveData(authentication, download);
@@ -151,7 +152,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public PagingResponse<Download> list(
       Pageable page,
-      @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+      @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     if (status == null || status.isEmpty()) {
       return new PagingResponse<>(
           page, (long) occurrenceDownloadMapper.count(), occurrenceDownloadMapper.list(page));
@@ -166,9 +167,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
-      @NotNull @PathVariable String user,
+      @PathVariable String user,
       Pageable page,
-      @Nullable @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+      @RequestParam(value = "status", required = false) Set<Download.Status> status) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
     return new PagingResponse<>(
@@ -179,11 +180,12 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @SuppressWarnings("MVCPathVariableInspection")
   @PutMapping(
-      value = {"", "{key}, {prefix}/{suffix}"},
+      value = {"", "{key}", "{prefix}/{suffix}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Transactional
   @Override
-  public void update(@RequestBody @NotNull Download download) {
+  public void update(@RequestBody Download download) {
     // The current download is retrieved because its user could be modified during the update
     Download currentDownload = get(download.getKey());
     Preconditions.checkNotNull(currentDownload);
@@ -232,8 +234,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Secured(ADMIN_ROLE)
   @Override
   public void createUsages(
-      @NotNull @PathVariable("key") String downloadKey,
-      @RequestBody @NotNull Map<UUID, Long> datasetCitations) {
+      @PathVariable("key") String downloadKey, @RequestBody Map<UUID, Long> datasetCitations) {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
         .forEachRemaining(
             batch ->
@@ -244,7 +245,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @Override
   @NullToNotFound
-  public String getCitation(@NotNull String keyOrDoi) {
+  public String getCitation(String keyOrDoi) {
     Download download = get(keyOrDoi);
     return getCitationInternal(download);
   }
@@ -259,7 +260,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("{prefix}/{suffix}/citation")
   @NullToNotFound("/occurrence/download/{prefix}/{suffix}/citation")
   public String getCitationByDoi(
-      @NotNull @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix) {
+      @NotNull @PathVariable("prefix") String prefix,
+      @NotNull @PathVariable("suffix") String suffix) {
     Download download = getByDoi(prefix, suffix);
     return getCitationInternal(download);
   }
@@ -286,9 +288,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadsByUserCountry")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
-      @Nullable @PartialDate Date fromDate,
-      @Nullable @PartialDate Date toDate,
-      @Nullable Country userCountry) {
+      @PartialDate Date fromDate, @PartialDate Date toDate, Country userCountry) {
     return groupByYear(
         occurrenceDownloadMapper.getDownloadsByUserCountry(
             fromDate,
@@ -299,9 +299,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
-      @Nullable @PartialDate Date fromDate,
-      @Nullable @PartialDate Date toDate,
-      @Nullable Country publishingCountry,
+      @PartialDate Date fromDate,
+      @PartialDate Date toDate,
+      Country publishingCountry,
       @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
     return groupByYear(
         occurrenceDownloadMapper.getDownloadedRecordsByDataset(

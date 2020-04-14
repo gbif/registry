@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
 /** Occurrence download resource/web service. */
+@Validated
 @RestController
 @RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetOccurrenceDownloadUsageResource

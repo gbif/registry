@@ -15,11 +15,17 @@
  */
 package org.gbif.registry.security;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,13 +36,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
+import static org.gbif.registry.security.SecurityContextCheck.checkIsNotApp;
 import static org.gbif.registry.security.SecurityContextCheck.checkIsNotEditor;
+import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be
@@ -49,28 +61,43 @@ import static org.gbif.registry.security.SecurityContextCheck.checkIsNotEditor;
  * An exception to this is the create method for those main entities themselves. This is covered by
  * the BaseNetworkEntityResource.create() method directly.
  */
+@SuppressWarnings("NullableProblems")
 @Component
 public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
+  // for POST requests which does not contain key
+  private static final Pattern NODE_PATTERN_CREATE = Pattern.compile("^/node$");
+  private static final Pattern NETWORK_PATTERN_CREATE = Pattern.compile("^/network$");
+  private static final Pattern ORGANIZATION_PATTERN_CREATE = Pattern.compile("^/organization$");
+  private static final Pattern INSTALLATION_PATTERN_CREATE = Pattern.compile("^/installation$");
+  private static final Pattern DATASET_PATTERN_CREATE = Pattern.compile("^/dataset$");
+
+  // for PUT and DELETE requests which contains key
   private static final String ENTITY_KEY = "^/?%s/([a-f0-9-]+).*";
-  private static final Pattern NODE_NETWORK_PATTERN =
-      Pattern.compile(String.format(ENTITY_KEY, "(?:network|node)"));
-  private static final Pattern ORGANIZATION_PATTERN =
+  private static final Pattern NODE_PATTERN_UPDATE_DELETE =
+      Pattern.compile(String.format(ENTITY_KEY, "node"));
+  private static final Pattern NETWORK_PATTERN_UPDATE_DELETE =
+      Pattern.compile(String.format(ENTITY_KEY, "network"));
+  private static final Pattern ORGANIZATION_PATTERN_UPDATE_DELETE =
       Pattern.compile(String.format(ENTITY_KEY, "organization"));
-  private static final Pattern DATASET_PATTERN =
-      Pattern.compile(String.format(ENTITY_KEY, "dataset"));
-  private static final Pattern INSTALLATION_PATTERN =
+  private static final Pattern INSTALLATION_PATTERN_UPDATE_DELETE =
       Pattern.compile(String.format(ENTITY_KEY, "installation"));
+  private static final Pattern DATASET_PATTERN_UPDATE_DELETE =
+      Pattern.compile(String.format(ENTITY_KEY, "dataset"));
 
   private final EditorAuthorizationService userAuthService;
   private final AuthenticationFacade authenticationFacade;
+  private final ObjectMapper objectMapper;
 
   public EditorAuthorizationFilter(
-      EditorAuthorizationService userAuthService, AuthenticationFacade authenticationFacade) {
+      EditorAuthorizationService userAuthService,
+      AuthenticationFacade authenticationFacade,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.userAuthService = userAuthService;
     this.authenticationFacade = authenticationFacade;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -81,112 +108,162 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     // all other roles are taken care by simple 'Secured' or JSR250 annotations on the resource
     // methods
     final Authentication authentication = authenticationFacade.getAuthentication();
-
-    final String name = authentication.getName();
-
-    String path = request.getRequestURI().toLowerCase();
+    final String path = request.getRequestURI().toLowerCase();
 
     // skip GET and OPTIONS requests
     if (isNotGetOrOptionsRequest(request) && checkRequestRequiresEditorValidation(path)) {
       // user must NOT be null if the resource requires editor rights restrictions
-      if (name == null) {
-        throw new WebApplicationException("Username is null", HttpStatus.FORBIDDEN);
-      }
+      ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
+      final String username = authentication.getName();
 
-      // validate only if user not admin
-      if (checkIsNotAdmin(authentication)) {
+      // validate only if user not admin and not app
+      if (checkIsNotAdmin(authentication) && checkIsNotApp(authentication)) {
         // only editors allowed to modify, because admins already excluded
         if (checkIsNotEditor(authentication)) {
           throw new WebApplicationException("User has no editor rights", HttpStatus.FORBIDDEN);
         }
         try {
-          checkOrganization(name, path);
-          checkDataset(name, path);
-          checkInstallation(name, path);
-          checkNodeNetwork(name, path);
+          if ("POST".equals(request.getMethod())) { // POST
+            ensureCreateRequest(username, request);
+          } else { // PUT or DELETE
+            ensureUpdateDeleteRequest(username, path);
+          }
         } catch (IllegalArgumentException e) {
-          // no valid UUID, do nothing as it should not be a valid request anyway
+          LOG.warn("Invalid request: {}", e.getMessage());
         }
       }
     }
     filterChain.doFilter(request, response);
   }
 
+  private void ensureCreateRequest(String username, HttpServletRequest request) {
+    String path = request.getRequestURI().toLowerCase();
+    if (DATASET_PATTERN_CREATE.matcher(path).matches()) {
+      Dataset entity = null;
+      try {
+        entity =
+            objectMapper.readValue(
+                ((GbifHttpServletRequestWrapper) request).getContent(), Dataset.class);
+      } catch (JsonProcessingException e) {
+        LOG.error("Error processing json", e);
+      }
+      ensureNetworkEntity("dataset", entity, username, userAuthService::allowedToModifyDataset);
+    } else if (INSTALLATION_PATTERN_CREATE.matcher(path).matches()) {
+      Installation entity = null;
+      try {
+        entity =
+            objectMapper.readValue(
+                ((GbifHttpServletRequestWrapper) request).getContent(), Installation.class);
+      } catch (JsonProcessingException e) {
+        LOG.error("Error processing json", e);
+      }
+      ensureNetworkEntity(
+          "installation", entity, username, userAuthService::allowedToModifyInstallation);
+    } else if (ORGANIZATION_PATTERN_CREATE.matcher(path).matches()) {
+      Organization entity = null;
+      try {
+        entity =
+            objectMapper.readValue(
+                ((GbifHttpServletRequestWrapper) request).getContent(), Organization.class);
+      } catch (JsonProcessingException e) {
+        LOG.error("Error processing json", e);
+      }
+      ensureNetworkEntity(
+          "organization", entity, username, userAuthService::allowedToModifyOrganization);
+    } else if (NODE_PATTERN_CREATE.matcher(path).matches()) {
+      LOG.warn("User {} is not allowed to create nodes", username);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to create nodes", username),
+          HttpStatus.FORBIDDEN);
+    } else if (NETWORK_PATTERN_CREATE.matcher(path).matches()) {
+      LOG.warn("User {} is not allowed to create networks", username);
+      throw new WebApplicationException(
+          MessageFormat.format("User {0} is not allowed to create networks", username),
+          HttpStatus.FORBIDDEN);
+    }
+  }
+
+  private void ensureUpdateDeleteRequest(String username, String path) {
+    Matcher matcher;
+    if ((matcher = DATASET_PATTERN_UPDATE_DELETE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "dataset",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyDataset);
+    } else if ((matcher = INSTALLATION_PATTERN_UPDATE_DELETE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "installation",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyInstallation);
+    } else if ((matcher = ORGANIZATION_PATTERN_UPDATE_DELETE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "organization",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyOrganization);
+    } else if ((matcher = NODE_PATTERN_UPDATE_DELETE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "node",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyEntity);
+    } else if ((matcher = NETWORK_PATTERN_UPDATE_DELETE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "network",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyEntity);
+    }
+  }
+
+  private void ensureNetworkEntity(
+      String entityName,
+      UUID entityKey,
+      String username,
+      BiFunction<String, UUID, Boolean> checkAllowedToModifyEntity) {
+    if (!checkAllowedToModifyEntity.apply(username, entityKey)) {
+      LOG.warn("User {} is not allowed to modify {} {}", username, entityName, entityKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to modify {1} {2}", username, entityName, entityKey),
+          HttpStatus.FORBIDDEN);
+    } else {
+      LOG.debug("User {} is allowed to modify {} {}", username, entityName, entityKey);
+    }
+  }
+
+  private <T extends NetworkEntity> void ensureNetworkEntity(
+      String entityName,
+      T entity,
+      String username,
+      BiFunction<String, T, Boolean> checkAllowedToModifyEntity) {
+    if (!checkAllowedToModifyEntity.apply(username, entity)) {
+      LOG.warn("User {} is not allowed to modify {} {}", username, entityName, entity.getKey());
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to modify {1} {2}", username, entityName, entity.getKey()),
+          HttpStatus.FORBIDDEN);
+    } else {
+      LOG.debug("User {} is allowed to modify {} {}", username, entityName, entity.getKey());
+    }
+  }
+
   private boolean checkRequestRequiresEditorValidation(String path) {
     boolean isBaseNetworkEntityResource =
-        ORGANIZATION_PATTERN.matcher(path).matches()
-            || DATASET_PATTERN.matcher(path).matches()
-            || INSTALLATION_PATTERN.matcher(path).matches()
-            || NODE_NETWORK_PATTERN.matcher(path).matches();
+        path.startsWith("/node")
+            || path.startsWith("/network")
+            || path.startsWith("/organization")
+            || path.startsWith("/installation")
+            || path.startsWith("/dataset");
 
     // exclude endorsement and machine tag from validation
     boolean isNotEndorsement = !path.contains("endorsement");
     boolean isNotMachineTag = !path.contains("machineTag");
+    boolean isNoTitles = !path.contains("titles");
 
-    return isBaseNetworkEntityResource && isNotEndorsement && isNotMachineTag;
-  }
-
-  private void checkNodeNetwork(String name, String path) {
-    Matcher m = NODE_NETWORK_PATTERN.matcher(path);
-    if (m.find()) {
-      final String nodeOrNetwork = m.group(1);
-      if (!userAuthService.allowedToModifyEntity(name, UUID.fromString(nodeOrNetwork))) {
-        LOG.warn("User {} is not allowed to modify node/network {}", name, nodeOrNetwork);
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to modify node/network {1}", name, nodeOrNetwork),
-            HttpStatus.FORBIDDEN);
-      } else {
-        LOG.debug("User {} is allowed to modify node/network {}", name, nodeOrNetwork);
-      }
-    }
-  }
-
-  private void checkInstallation(String name, String path) {
-    Matcher m = INSTALLATION_PATTERN.matcher(path);
-    if (m.find()) {
-      final String installation = m.group(1);
-      if (!userAuthService.allowedToModifyInstallation(name, UUID.fromString(installation))) {
-        LOG.warn("User {} is not allowed to modify installation {}", name, installation);
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to modify installation {1}", name, installation),
-            HttpStatus.FORBIDDEN);
-      } else {
-        LOG.debug("User {} is allowed to modify installation {}", name, installation);
-      }
-    }
-  }
-
-  private void checkDataset(String name, String path) {
-    Matcher m = DATASET_PATTERN.matcher(path);
-    if (m.find()) {
-      final String dataset = m.group(1);
-      if (!userAuthService.allowedToModifyDataset(name, UUID.fromString(dataset))) {
-        LOG.warn("User {} is not allowed to modify dataset {}", name, dataset);
-        throw new WebApplicationException(
-            MessageFormat.format("User {0} is not allowed to modify dataset {1}", name, dataset),
-            HttpStatus.FORBIDDEN);
-      } else {
-        LOG.debug("User {} is allowed to modify dataset {}", name, dataset);
-      }
-    }
-  }
-
-  private void checkOrganization(String name, String path) {
-    Matcher m = ORGANIZATION_PATTERN.matcher(path);
-    if (m.find()) {
-      final String organization = m.group(1);
-      if (!userAuthService.allowedToModifyOrganization(name, UUID.fromString(organization))) {
-        LOG.warn("User {} is not allowed to modify organization {}", name, organization);
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to modify organization {1}", name, organization),
-            HttpStatus.FORBIDDEN);
-      } else {
-        LOG.debug("User {} is allowed to modify organization {}", name, organization);
-      }
-    }
+    return isBaseNetworkEntityResource && isNotEndorsement && isNotMachineTag && isNoTitles;
   }
 
   private boolean isNotGetOrOptionsRequest(HttpServletRequest httpRequest) {

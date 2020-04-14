@@ -19,23 +19,26 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.registry.domain.doi.DoiType;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /** Specifies the contract of a service that manages DOI registrations. */
 public interface DoiRegistrationService {
 
   /** Generates a new DOI based on the DoiType. */
-  DOI generate(DoiType doiType);
+  DOI generate(@NotNull DoiType doiType);
 
   /** Retrieves the DOI information. */
-  DoiData get(String prefix, String suffix);
+  DoiData get(@NotNull String prefix, @NotNull String suffix);
 
   /**
    * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
    */
-  DOI register(DoiRegistration doiRegistration);
+  DOI register(@NotNull @Valid DoiRegistration doiRegistration);
 
   /** Update a DOI registration data. */
-  DOI update(DoiRegistration doiRegistration);
+  DOI update(@NotNull @Valid DoiRegistration doiRegistration);
 
   /** Deletes a DOI. */
-  void delete(String prefix, String suffix);
+  void delete(@NotNull String prefix, @NotNull String suffix);
 }

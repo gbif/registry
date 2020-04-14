@@ -15,7 +15,10 @@
  */
 package org.gbif.registry.security;
 
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.ws.WebApplicationException;
+import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,20 +26,24 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,34 +63,39 @@ public class EditorAuthorizationFilterTest {
           new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE));
   private static final List<GrantedAuthority> ROLES_EMPTY = Collections.emptyList();
 
-  @Mock private HttpServletRequest mockRequest;
+  @Mock private GbifHttpServletRequestWrapper mockRequest;
   @Mock private HttpServletResponse mockResponse;
   @Mock private FilterChain mockFilterChain;
   @Mock private AuthenticationFacade mockAuthenticationFacade;
   @Mock private EditorAuthorizationService mockEditorAuthService;
   @Mock private Authentication mockAuthentication;
+  @Spy private ObjectMapper objectMapper = new ObjectMapper();
   @InjectMocks private EditorAuthorizationFilter filter;
 
   @Test
   public void testOrganizationPostNotNullEditorUserSuccess() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
+    when(mockRequest.getRequestURI()).thenReturn("/organization");
     when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(true);
+    when(mockEditorAuthService.allowedToModifyOrganization(
+            any(String.class), any(Organization.class)))
+        .thenReturn(true);
 
     // WHEN
     filter.doFilter(mockRequest, mockResponse, mockFilterChain);
 
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
-    verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
-    verify(mockAuthentication, Mockito.times(2)).getAuthorities();
-    verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
+    verify(mockRequest, atLeastOnce()).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService)
+        .allowedToModifyOrganization(any(String.class), any(Organization.class));
   }
 
   @Test
@@ -102,9 +114,9 @@ public class EditorAuthorizationFilterTest {
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
-    verify(mockAuthentication, Mockito.times(2)).getAuthorities();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
     verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
   }
 
@@ -112,22 +124,26 @@ public class EditorAuthorizationFilterTest {
   public void testInstallationPostNotNullEditorUserSuccess() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/installation/" + KEY);
+    when(mockRequest.getRequestURI()).thenReturn("/installation");
     when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(true);
+    when(mockEditorAuthService.allowedToModifyInstallation(
+            any(String.class), any(Installation.class)))
+        .thenReturn(true);
 
     // WHEN
     filter.doFilter(mockRequest, mockResponse, mockFilterChain);
 
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
-    verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
-    verify(mockAuthentication, Mockito.times(2)).getAuthorities();
-    verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
+    verify(mockRequest, atLeastOnce()).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService)
+        .allowedToModifyInstallation(any(String.class), any(Installation.class));
   }
 
   @Test
@@ -135,7 +151,7 @@ public class EditorAuthorizationFilterTest {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/node/" + KEY);
-    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getMethod()).thenReturn("PUT");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
     when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(true);
@@ -145,10 +161,10 @@ public class EditorAuthorizationFilterTest {
 
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
-    verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
-    verify(mockAuthentication, Mockito.times(2)).getAuthorities();
+    verify(mockRequest, atLeastOnce()).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
     verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
   }
 
@@ -181,7 +197,7 @@ public class EditorAuthorizationFilterTest {
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
+    verify(mockRequest, atLeast(2)).getMethod();
   }
 
   @Test
@@ -200,7 +216,7 @@ public class EditorAuthorizationFilterTest {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
       verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
+      verify(mockRequest, atLeast(2)).getMethod();
       verify(mockAuthentication).getName();
     }
   }
@@ -222,9 +238,9 @@ public class EditorAuthorizationFilterTest {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
       verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
-      verify(mockAuthentication).getName();
-      verify(mockAuthentication, Mockito.times(2)).getAuthorities();
+      verify(mockRequest, atLeast(2)).getMethod();
+      verify(mockAuthentication, atLeastOnce()).getName();
+      verify(mockAuthentication, atLeast(2)).getAuthorities();
     }
   }
 
@@ -247,9 +263,9 @@ public class EditorAuthorizationFilterTest {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
       verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
-      verify(mockAuthentication).getName();
-      verify(mockAuthentication, Mockito.times(2)).getAuthorities();
+      verify(mockRequest, atLeast(2)).getMethod();
+      verify(mockAuthentication, atLeastOnce()).getName();
+      verify(mockAuthentication, atLeast(2)).getAuthorities();
       verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
     }
   }
@@ -272,9 +288,9 @@ public class EditorAuthorizationFilterTest {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
       verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
-      verify(mockAuthentication).getName();
-      verify(mockAuthentication, Mockito.times(2)).getAuthorities();
+      verify(mockRequest, atLeast(2)).getMethod();
+      verify(mockAuthentication, atLeastOnce()).getName();
+      verify(mockAuthentication, atLeast(2)).getAuthorities();
       verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
     }
   }
@@ -284,11 +300,14 @@ public class EditorAuthorizationFilterTest {
       throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/installation/" + KEY);
+    when(mockRequest.getRequestURI()).thenReturn("/installation");
     when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(false);
+    when(mockEditorAuthService.allowedToModifyInstallation(
+            any(String.class), any(Installation.class)))
+        .thenReturn(false);
 
     try {
       // WHEN
@@ -297,11 +316,12 @@ public class EditorAuthorizationFilterTest {
     } catch (WebApplicationException e) {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
-      verify(mockAuthentication).getName();
-      verify(mockAuthentication, Mockito.times(2)).getAuthorities();
-      verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
+      verify(mockRequest, atLeastOnce()).getRequestURI();
+      verify(mockRequest, atLeast(2)).getMethod();
+      verify(mockAuthentication, atLeastOnce()).getName();
+      verify(mockAuthentication, atLeast(2)).getAuthorities();
+      verify(mockEditorAuthService)
+          .allowedToModifyInstallation(any(String.class), any(Installation.class));
     }
   }
 
@@ -309,11 +329,10 @@ public class EditorAuthorizationFilterTest {
   public void testNetworkPostNotNullEditorUserButWithoutRightsOnThisEntityFail() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/network/" + KEY);
+    when(mockRequest.getRequestURI()).thenReturn("/network");
     when(mockRequest.getMethod()).thenReturn("POST");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(false);
 
     try {
       // WHEN
@@ -322,11 +341,10 @@ public class EditorAuthorizationFilterTest {
     } catch (WebApplicationException e) {
       // THEN
       verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, Mockito.times(2)).getMethod();
-      verify(mockAuthentication).getName();
-      verify(mockAuthentication, Mockito.times(2)).getAuthorities();
-      verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
+      verify(mockRequest, atLeastOnce()).getRequestURI();
+      verify(mockRequest, atLeast(2)).getMethod();
+      verify(mockAuthentication, atLeastOnce()).getName();
+      verify(mockAuthentication, atLeast(2)).getAuthorities();
     }
   }
 
@@ -345,8 +363,8 @@ public class EditorAuthorizationFilterTest {
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
     verify(mockAuthentication).getAuthorities();
   }
 
@@ -356,7 +374,6 @@ public class EditorAuthorizationFilterTest {
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endorsement");
     when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
 
     // WHEN
     filter.doFilter(mockRequest, mockResponse, mockFilterChain);
@@ -364,7 +381,6 @@ public class EditorAuthorizationFilterTest {
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
-    verify(mockRequest, Mockito.times(2)).getMethod();
-    verify(mockAuthentication).getName();
+    verify(mockRequest, atLeast(2)).getMethod();
   }
 }
