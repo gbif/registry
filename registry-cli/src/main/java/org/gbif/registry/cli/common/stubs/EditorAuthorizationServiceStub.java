@@ -15,6 +15,10 @@
  */
 package org.gbif.registry.cli.common.stubs;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.UUID;
@@ -40,7 +44,17 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
   }
 
   @Override
+  public boolean allowedToModifyEntity(String name, NetworkEntity entity) {
+    return false;
+  }
+
+  @Override
   public boolean allowedToModifyDataset(String user, UUID datasetKey) {
+    return false;
+  }
+
+  @Override
+  public boolean allowedToModifyDataset(String name, Dataset dataset) {
     return false;
   }
 
@@ -50,7 +64,17 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
   }
 
   @Override
+  public boolean allowedToModifyOrganization(String name, Organization organization) {
+    return false;
+  }
+
+  @Override
   public boolean allowedToModifyInstallation(String user, UUID installationKey) {
+    return false;
+  }
+
+  @Override
+  public boolean allowedToModifyInstallation(String name, Installation installation) {
     return false;
   }
 }

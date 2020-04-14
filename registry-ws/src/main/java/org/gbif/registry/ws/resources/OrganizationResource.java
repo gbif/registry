@@ -75,7 +75,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
@@ -180,20 +179,17 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return password.toString();
   }
 
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void update(
-      @PathVariable UUID key,
-      @RequestBody @NotNull @Trim @Valid Organization organization,
-      Authentication authentication) {
-    checkArgument(
-        key.equals(organization.getKey()),
-        "Provided organization must have the same key as the resource URL");
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
+  public void update(@RequestBody @Trim Organization organization) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Organization previousOrg = super.get(organization.getKey());
     checkNotNull(previousOrg, "Organization not found");
@@ -212,11 +208,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
             || userAuthService.allowedToModifyEntity(
                 nameFromContext, previousOrg.getEndorsingNodeKey()))) {
       LOG.warn(
-          "Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
+          "Endorsement status or node changed, edit forbidden for {} on {}",
+          nameFromContext,
+          organization.getKey());
       throw new WebApplicationException(
           MessageFormat.format(
               "Endorsement status or node changed, edit forbidden for {0} on {1}",
-              nameFromContext, key),
+              nameFromContext, organization.getKey()),
           HttpStatus.FORBIDDEN);
     }
 
@@ -226,7 +224,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     // let the parent class set the modifiedBy
-    super.update(key, organization, authentication);
+    super.update(organization);
   }
 
   @Override
