@@ -30,9 +30,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
@@ -40,9 +42,11 @@ import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -62,16 +66,19 @@ public class RequestTestFixture {
   private SigningService signingService;
   private Md5EncodeService md5EncodeService;
   private ObjectMapper objectMapper;
+  private XmlMapper xmlMapper;
 
   public RequestTestFixture(
       MockMvc mvc,
       SigningService signingService,
       Md5EncodeService md5EncodeService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      XmlMapper xmlMapper) {
     this.mvc = mvc;
     this.signingService = signingService;
     this.md5EncodeService = md5EncodeService;
     this.objectMapper = objectMapper;
+    this.xmlMapper = xmlMapper;
   }
 
   public ResultActions getRequest(String path) throws Exception {
@@ -97,6 +104,35 @@ public class RequestTestFixture {
             .content(objectMapper.writeValueAsString(entity))
             .contentType(APPLICATION_JSON)
             .with(httpBasic(username, password)));
+  }
+
+  public ResultActions postRequestUrlEncoded(
+      MultiValueMap<String, String> params, Object username, String password, String path)
+      throws Exception {
+    return postRequestUrlEncoded(params, APPLICATION_XML, username, password, path);
+  }
+
+  public ResultActions postRequestUrlEncoded(
+      MultiValueMap<String, String> params,
+      MediaType responseType,
+      Object username,
+      String password,
+      String path)
+      throws Exception {
+    return mvc.perform(
+        post(path)
+            .params(params)
+            .contentType(APPLICATION_FORM_URLENCODED)
+            .accept(responseType)
+            .with(httpBasic(username.toString(), password)));
+  }
+
+  public ResultActions deleteRequestUrlEncoded(Object username, String password, String path)
+      throws Exception {
+    return mvc.perform(
+        delete(path)
+            .contentType(APPLICATION_FORM_URLENCODED)
+            .with(httpBasic(username.toString(), password)));
   }
 
   public ResultActions putRequest(String username, String password, Object entity, String path)
@@ -190,9 +226,14 @@ public class RequestTestFixture {
     return mvc.perform(delete(path).headers(authHeaders));
   }
 
-  public <T> T extractResponseEntity(ResultActions actions, Class<T> entityClass) throws Exception {
+  public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
     String contentAsString = actions.andReturn().getResponse().getContentAsString();
     return objectMapper.readValue(contentAsString, entityClass);
+  }
+
+  public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
+    String contentAsString = actions.andReturn().getResponse().getContentAsString();
+    return xmlMapper.readValue(contentAsString, entityClass);
   }
 
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(

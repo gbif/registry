@@ -52,6 +52,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
@@ -129,6 +130,7 @@ public class UserManagementIT {
       SigningService signingService,
       Md5EncodeService md5EncodeService,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
+      XmlMapper xmlMapper,
       IdentityService identityService,
       UserMapper userMapper,
       IdentitySuretyTestHelper identitySuretyTestHelper) {
@@ -136,7 +138,7 @@ public class UserManagementIT {
     this.userTestFixture =
         new UserTestFixture(identityService, identitySuretyTestHelper, userMapper);
     this.requestTestFixture =
-        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper);
+        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper, xmlMapper);
   }
 
   @Test
@@ -253,7 +255,7 @@ public class UserManagementIT {
             .andExpect(status().isOk());
 
     UserAdminView actualUserAdminView =
-        requestTestFixture.extractResponseEntity(actions, UserAdminView.class);
+        requestTestFixture.extractJsonResponse(actions, UserAdminView.class);
 
     assertEquals(createdUser.getKey(), actualUserAdminView.getUser().getKey());
   }
@@ -270,7 +272,7 @@ public class UserManagementIT {
             .andExpect(status().isOk());
 
     UserAdminView actualUserAdminView =
-        requestTestFixture.extractResponseEntity(actions, UserAdminView.class);
+        requestTestFixture.extractJsonResponse(actions, UserAdminView.class);
 
     assertEquals(createdUser.getKey(), actualUserAdminView.getUser().getKey());
   }
@@ -306,7 +308,7 @@ public class UserManagementIT {
             .andExpect(status().isUnprocessableEntity());
 
     UserModelMutationResult actualUserModelMutationResult =
-        requestTestFixture.extractResponseEntity(actions, UserModelMutationResult.class);
+        requestTestFixture.extractJsonResponse(actions, UserModelMutationResult.class);
 
     assertEquals(ModelMutationError.EMAIL_ALREADY_IN_USE, actualUserModelMutationResult.getError());
 
