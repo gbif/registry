@@ -38,8 +38,6 @@ import org.gbif.registry.ws.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.Md5EncodeService;
-import org.gbif.ws.security.SigningService;
 
 import java.net.URI;
 import java.util.Collections;
@@ -52,7 +50,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -66,13 +63,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Lists;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
@@ -170,11 +164,7 @@ public class IptResourceIT {
 
   @Autowired
   public IptResourceIT(
-      MockMvc mvc,
-      SigningService signingService,
-      Md5EncodeService md5EncodeService,
-      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      XmlMapper xmlMapper,
+      RequestTestFixture requestTestFixture,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
@@ -182,8 +172,7 @@ public class IptResourceIT {
     this.installationService = installationService;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
-    this.requestTestFixture =
-        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper, xmlMapper);
+    this.requestTestFixture = requestTestFixture;
     this.pp = pp;
   }
 

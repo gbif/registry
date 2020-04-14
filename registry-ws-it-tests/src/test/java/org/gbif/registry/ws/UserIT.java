@@ -20,13 +20,8 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
-import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.ws.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.fixtures.UserTestFixture;
-import org.gbif.ws.security.Md5EncodeService;
-import org.gbif.ws.security.SigningService;
 
 import java.util.stream.Collectors;
 
@@ -34,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -44,11 +38,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
@@ -116,19 +106,9 @@ public class UserIT {
   }
 
   @Autowired
-  public UserIT(
-      MockMvc mvc,
-      SigningService signingService,
-      Md5EncodeService md5EncodeService,
-      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      XmlMapper xmlMapper,
-      IdentityService identityService,
-      IdentitySuretyTestHelper identitySuretyTestHelper,
-      UserMapper userMapper) {
-    this.userTestFixture =
-        new UserTestFixture(identityService, identitySuretyTestHelper, userMapper);
-    this.requestTestFixture =
-        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper, xmlMapper);
+  public UserIT(UserTestFixture userTestFixture, RequestTestFixture requestTestFixture) {
+    this.userTestFixture = userTestFixture;
+    this.requestTestFixture = requestTestFixture;
   }
 
   @Test

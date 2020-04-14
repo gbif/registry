@@ -72,6 +72,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
+      "org.gbif.registry.ws.fixtures",
       "org.gbif.registry.security",
       "org.gbif.registry.ws.surety",
       "org.gbif.registry.persistence",

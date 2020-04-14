@@ -27,6 +27,9 @@ import org.gbif.registry.security.UserUpdateRulesManager;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.google.common.collect.ImmutableMap;
 
 import static org.gbif.registry.ws.fixtures.TestConstants.TEST_ADMIN;
@@ -34,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /** Fixtures related to users used for testing. */
+@Component
 public class UserTestFixture {
 
   public static final String USERNAME = "test_user";
@@ -45,6 +49,7 @@ public class UserTestFixture {
   private IdentitySuretyTestHelper identitySuretyTestHelper;
   private UserMapper userMapper;
 
+  @Autowired
   public UserTestFixture(
       IdentityService identityService,
       IdentitySuretyTestHelper identitySuretyTestHelper,
