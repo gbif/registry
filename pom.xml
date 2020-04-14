@@ -97,7 +97,7 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-microservice.version>0.7</gbif-microservice.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
-    <gbif-postal-service.version>0.43</gbif-postal-service.version>
+    <gbif-postal-service.version>0.44-SNAPSHOT</gbif-postal-service.version>
     <gbif-directory.version>0.11</gbif-directory.version>
     <grizzly-servlet-webserver.version>1.9.60</grizzly-servlet-webserver.version>
     <guava.version>18.0</guava.version>
