@@ -25,8 +25,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
@@ -60,6 +63,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @SuppressWarnings("unused")
+@Component
 public class RequestTestFixture {
 
   private MockMvc mvc;
@@ -68,11 +72,12 @@ public class RequestTestFixture {
   private ObjectMapper objectMapper;
   private XmlMapper xmlMapper;
 
+  @Autowired
   public RequestTestFixture(
       MockMvc mvc,
       SigningService signingService,
       Md5EncodeService md5EncodeService,
-      ObjectMapper objectMapper,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       XmlMapper xmlMapper) {
     this.mvc = mvc;
     this.signingService = signingService;
