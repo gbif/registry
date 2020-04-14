@@ -48,6 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
@@ -120,13 +121,14 @@ public class UserIT {
       SigningService signingService,
       Md5EncodeService md5EncodeService,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
+      XmlMapper xmlMapper,
       IdentityService identityService,
       IdentitySuretyTestHelper identitySuretyTestHelper,
       UserMapper userMapper) {
     this.userTestFixture =
         new UserTestFixture(identityService, identitySuretyTestHelper, userMapper);
     this.requestTestFixture =
-        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper);
+        new RequestTestFixture(mvc, signingService, md5EncodeService, objectMapper, xmlMapper);
   }
 
   @Test
@@ -147,7 +149,7 @@ public class UserIT {
 
     // check jwt token
     ExtendedLoggedUser loggedUser =
-        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
+        requestTestFixture.extractJsonResponse(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
     assertNotNull(loggedUser.getToken());
@@ -167,7 +169,7 @@ public class UserIT {
 
     // check jwt token
     ExtendedLoggedUser loggedUser =
-        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
+        requestTestFixture.extractJsonResponse(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
     assertNotNull(loggedUser.getToken());
@@ -219,7 +221,7 @@ public class UserIT {
             .andExpect(status().isCreated());
 
     ExtendedLoggedUser loggedUser =
-        requestTestFixture.extractResponseEntity(actions, ExtendedLoggedUser.class);
+        requestTestFixture.extractJsonResponse(actions, ExtendedLoggedUser.class);
 
     assertUserLogged(user, loggedUser);
   }
