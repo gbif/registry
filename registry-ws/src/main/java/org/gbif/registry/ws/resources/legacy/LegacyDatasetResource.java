@@ -91,6 +91,7 @@ public class LegacyDatasetResource {
    * @see IptResource#registerDataset(LegacyDataset, Authentication)
    */
   @PostMapping(
+      value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity registerDataset(
