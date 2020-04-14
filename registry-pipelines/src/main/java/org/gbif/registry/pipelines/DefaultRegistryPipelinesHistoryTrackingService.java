@@ -182,12 +182,16 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
       newSteps.add(StepType.VERBATIM_TO_INTERPRETED);
     } else if (steps.contains(StepType.INTERPRETED_TO_INDEX)
-        || steps.contains(StepType.HDFS_VIEW)) {
+        || steps.contains(StepType.HDFS_VIEW)
+        || steps.contains(StepType.FRAGMENTER)) {
       if (steps.contains(StepType.INTERPRETED_TO_INDEX)) {
         newSteps.add(StepType.INTERPRETED_TO_INDEX);
       }
       if (steps.contains(StepType.HDFS_VIEW)) {
         newSteps.add(StepType.HDFS_VIEW);
+      }
+      if (steps.contains(StepType.FRAGMENTER)) {
+        newSteps.add(StepType.FRAGMENTER);
       }
     }
     return newSteps;
@@ -334,7 +338,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       try {
         PipelineBasedMessage message = null;
 
-        if (stepName == StepType.INTERPRETED_TO_INDEX || stepName == StepType.HDFS_VIEW) {
+        if (stepName == StepType.INTERPRETED_TO_INDEX
+            || stepName == StepType.HDFS_VIEW
+            || stepName == StepType.FRAGMENTER) {
           message = createInterpretedMessage(prefix, step.getMessage(), stepName);
         } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
           message = createVerbatimMessage(prefix, step.getMessage());
