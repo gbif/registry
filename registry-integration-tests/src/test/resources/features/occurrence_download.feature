@@ -64,16 +64,28 @@ Feature: Occurrence Download functionality
     When create download using user "registry_user"
     Then response status should be 403
 
-  Scenario: create occurrence download with invalid parameters is not allowed
+  Scenario: create occurrence download with invalid default parameters is not allowed
     Given equals predicate download
     And download with invalid parameters
-      | key  | request | status | created    | modified   |
-      | null | null    | null   | 13-12-2019 | 13-12-2019 |
+      | key  | request | status |
+      | null | null    | null   |
     When create download using admin "registry_admin"
     Then response status should be 422
     And download creation error response is
-      | created                                      | key                                          | modified                                      | request                                          | status                                          |
-      | Validation of [created] failed: must be null | Validation of [key] failed: must not be null | Validation of [modified] failed: must be null | Validation of [request] failed: must not be null | Validation of [status] failed: must not be null |
+      | key                                          | request                                          | status                                          |
+      | Validation of [key] failed: must not be null | Validation of [request] failed: must not be null | Validation of [status] failed: must not be null |
+
+  Scenario: create occurrence download with invalid pre-persist parameters is not allowed
+    Given equals predicate download
+    And download with invalid parameters
+      | created    | modified   |
+      | 13-12-2019 | 13-12-2019 |
+    When create download using admin "registry_admin"
+    Then response status should be 422
+    And download creation error response is
+      | created                                      | modified                                      |
+      | Validation of [created] failed: must be null | Validation of [modified] failed: must be null |
+
 
   Scenario: list occurrence downloads
     When list downloads using admin "registry_admin"

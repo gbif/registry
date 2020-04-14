@@ -71,6 +71,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
  *
  * <p>It inherits from {@link BaseCollectionEntityResource} to test the CRUD operations.
  */
+@Validated
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class ExtendedCollectionEntityResource<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
@@ -115,9 +116,10 @@ public abstract class ExtendedCollectionEntityResource<
     this.objectClass = objectClass;
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Transactional
   @Override
-  public UUID create(@Validated({PrePersist.class, Default.class}) @NotNull T entity) {
+  public UUID create(T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
 
     if (entity.getAddress() != null) {
@@ -172,7 +174,7 @@ public abstract class ExtendedCollectionEntityResource<
 
   @Transactional
   @Override
-  public void update(@Validated @NotNull T entity) {
+  public void update(T entity) {
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
 
@@ -241,8 +243,7 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @Override
-  public void addContact(
-      @PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull UUID personKey) {
+  public void addContact(UUID entityKey, UUID personKey) {
     // check if the contact exists
     List<Person> contacts = contactableMapper.listContacts(entityKey);
 
@@ -273,8 +274,7 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @Override
-  public void removeContact(
-      @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
+  public void removeContact(UUID entityKey, UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
@@ -283,7 +283,7 @@ public abstract class ExtendedCollectionEntityResource<
   @GetMapping("{key}/contact")
   @Nullable
   @Override
-  public List<Person> listContacts(@PathVariable @NotNull UUID key) {
+  public List<Person> listContacts(@PathVariable UUID key) {
     return contactableMapper.listContacts(key);
   }
 }

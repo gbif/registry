@@ -59,6 +59,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,14 +74,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrganizationResource extends BaseNetworkEntityResource<Organization>
@@ -122,7 +122,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GetMapping(value = "{key}")
   @NullToNotFound("/organization/{key}")
   @Override
-  public Organization get(@NotNull @PathVariable UUID key) {
+  public Organization get(@PathVariable UUID key) {
     return super.get(key);
   }
 
@@ -133,16 +133,15 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @param organization organization
    * @return key of entity created
    */
-  @Override
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Trim
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public UUID create(
-      @RequestBody @NotNull @Trim @Validated({PrePersist.class, Default.class})
-          Organization organization,
-      Authentication authentication) {
+  @Override
+  public UUID create(@RequestBody @Trim Organization organization) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     organization.setPassword(generatePassword());
-    UUID newOrganization = super.create(organization, authentication);
+    UUID newOrganization = super.create(organization);
 
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
@@ -180,20 +179,17 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return password.toString();
   }
 
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void update(
-      @PathVariable UUID key,
-      @RequestBody @NotNull @Trim @Validated({PostPersist.class, Default.class})
-          Organization organization,
-      Authentication authentication) {
-    checkArgument(
-        key.equals(organization.getKey()),
-        "Provided organization must have the same key as the resource URL");
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
+  public void update(@RequestBody @Trim Organization organization) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String nameFromContext = authentication != null ? authentication.getName() : null;
 
     Organization previousOrg = super.get(organization.getKey());
     checkNotNull(previousOrg, "Organization not found");
@@ -212,11 +208,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
             || userAuthService.allowedToModifyEntity(
                 nameFromContext, previousOrg.getEndorsingNodeKey()))) {
       LOG.warn(
-          "Endorsement status or node changed, edit forbidden for {} on {}", nameFromContext, key);
+          "Endorsement status or node changed, edit forbidden for {} on {}",
+          nameFromContext,
+          organization.getKey());
       throw new WebApplicationException(
           MessageFormat.format(
               "Endorsement status or node changed, edit forbidden for {0} on {1}",
-              nameFromContext, key),
+              nameFromContext, organization.getKey()),
           HttpStatus.FORBIDDEN);
     }
 
@@ -226,7 +224,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     // let the parent class set the modifiedBy
-    super.update(key, organization, authentication);
+    super.update(organization);
   }
 
   @Override
@@ -356,8 +354,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(
-      @Nullable @RequestParam(value = "q", required = false) String label) {
+  public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
     return organizationMapper.suggest(label);
   }
 
@@ -383,7 +380,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @PostMapping(value = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
-      @PathVariable("key") UUID organizationKey,
+      @NotNull @PathVariable("key") UUID organizationKey,
       @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey())
             ? ResponseEntity.noContent()
@@ -394,10 +391,5 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
-  }
-
-  @Override
-  protected List<UUID> owningEntityKeys(@NotNull Organization entity) {
-    return Lists.newArrayList(entity.getEndorsingNodeKey());
   }
 }

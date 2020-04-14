@@ -17,6 +17,7 @@ package org.gbif.registry.security;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
@@ -24,8 +25,6 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyNamespace(@Nullable String name, String ns) {
+  public boolean allowedToModifyNamespace(String name, String ns) {
     if (name == null) {
       return false;
     }
@@ -63,7 +62,7 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey) {
+  public boolean allowedToDeleteMachineTag(String name, int machineTagKey) {
     if (name == null) {
       return false;
     }
@@ -71,8 +70,8 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyEntity(@Nullable String name, UUID key) {
-    if (name == null) {
+  public boolean allowedToModifyEntity(String name, UUID key) {
+    if (name == null || key == null) {
       return false;
     }
     boolean allowed = userRightsMapper.keyExistsForUser(name, key);
@@ -81,7 +80,18 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyDataset(@Nullable String name, UUID datasetKey) {
+  public boolean allowedToModifyEntity(String name, NetworkEntity entity) {
+    if (name == null || entity == null) {
+      return false;
+    }
+    UUID key = entity.getKey();
+    boolean allowed = key != null && userRightsMapper.keyExistsForUser(name, key);
+    LOG.debug("User {} {} allowed to edit entity {}", name, allowed ? "is" : "is not", key);
+    return allowed;
+  }
+
+  @Override
+  public boolean allowedToModifyDataset(String name, UUID datasetKey) {
     if (name == null) {
       return false;
     }
@@ -98,7 +108,24 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyOrganization(@Nullable String name, UUID orgKey) {
+  public boolean allowedToModifyDataset(String name, Dataset dataset) {
+    if (name == null || dataset == null) {
+      return false;
+    }
+    UUID key = dataset.getKey();
+    if (key != null && allowedToModifyEntity(name, key)) {
+      return true;
+    }
+    // try installation rights
+    if (allowedToModifyInstallation(name, dataset.getInstallationKey())) {
+      return true;
+    }
+    // try higher organization or node rights
+    return allowedToModifyOrganization(name, dataset.getPublishingOrganizationKey());
+  }
+
+  @Override
+  public boolean allowedToModifyOrganization(String name, UUID orgKey) {
     if (name == null) {
       return false;
     }
@@ -111,7 +138,20 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   }
 
   @Override
-  public boolean allowedToModifyInstallation(@Nullable String name, UUID installationKey) {
+  public boolean allowedToModifyOrganization(String name, Organization organization) {
+    if (name == null || organization == null) {
+      return false;
+    }
+    UUID key = organization.getKey();
+    if (key != null && allowedToModifyEntity(name, key)) {
+      return true;
+    }
+    // try endorsing node
+    return allowedToModifyEntity(name, organization.getEndorsingNodeKey());
+  }
+
+  @Override
+  public boolean allowedToModifyInstallation(String name, UUID installationKey) {
     if (name == null) {
       return false;
     }
@@ -121,5 +161,18 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     // try higher organization or node rights
     Installation inst = installationMapper.get(installationKey);
     return inst != null && allowedToModifyOrganization(name, inst.getOrganizationKey());
+  }
+
+  @Override
+  public boolean allowedToModifyInstallation(String name, Installation installation) {
+    if (name == null || installation == null) {
+      return false;
+    }
+    UUID key = installation.getKey();
+    if (key != null && allowedToModifyEntity(name, key)) {
+      return true;
+    }
+    // try higher organization or node rights
+    return allowedToModifyOrganization(name, installation.getOrganizationKey());
   }
 }

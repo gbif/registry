@@ -15,7 +15,14 @@
  */
 package org.gbif.registry.security;
 
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
+
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 public interface EditorAuthorizationService {
 
@@ -24,25 +31,98 @@ public interface EditorAuthorizationService {
    *
    * @param name name from the security context
    * @param ns the namespace in question
-   * @return true if the user is allowed to modify the namespace
+   * @return true if the user is allowed to modify the namespace.
    */
-  boolean allowedToModifyNamespace(String name, String ns);
+  boolean allowedToModifyNamespace(@Nullable String name, String ns);
 
-  /** @return true if rights exist for this user to delete the tag */
-  boolean allowedToDeleteMachineTag(String name, int machineTagKey);
+  /**
+   * Checks whether a given user is allowed to delete the machine tag.
+   *
+   * @param name name from the security context
+   * @param machineTagKey the machine tag in question
+   * @return true if rights exist for this user to delete the tag.
+   */
+  boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey);
+
   /**
    * Checks whether a given registry entity is explicitly part of the list of entities for an editor
    * user.
    *
    * @param name name from the security context
-   * @param key the entity in question
-   * @return true if the passed entity is allowed to be modified
+   * @param key key of the entity in question
+   * @return true if the passed entity is allowed to be modified by the user.
    */
-  boolean allowedToModifyEntity(String name, UUID key);
+  boolean allowedToModifyEntity(@Nullable String name, @Nullable UUID key);
 
-  boolean allowedToModifyDataset(String name, UUID datasetKey);
+  /**
+   * Checks whether a given registry entity is explicitly part of the list of entities for an editor
+   * user.
+   *
+   * @param name name from the security context
+   * @param entity the entity in question
+   * @return true if the passed entity is allowed to be modified by the user.
+   */
+  boolean allowedToModifyEntity(@Nullable String name, @Nullable NetworkEntity entity);
 
-  boolean allowedToModifyOrganization(String name, UUID orgKey);
+  /**
+   * Checks whether a given registry dataset is part of the list of entities for an editor user. If
+   * not it checks parent entities fot the rights (e.g. publishing organization key or endorsing
+   * node key).
+   *
+   * @param name name from the security context
+   * @param datasetKey key of the dataset in question
+   * @return true if the passed dataset is allowed to be modified by the user.
+   */
+  boolean allowedToModifyDataset(@Nullable String name, @Nullable UUID datasetKey);
 
-  boolean allowedToModifyInstallation(String name, UUID installationKey);
+  /**
+   * Checks whether a given registry dataset is part of the list of entities for an editor user. If
+   * not it checks parent entities fot the rights (e.g. publishing organization key or endorsing
+   * node key).
+   *
+   * @param name name from the security context
+   * @param dataset the dataset in question
+   * @return true if the passed dataset is allowed to be modified by the user.
+   */
+  boolean allowedToModifyDataset(@Nullable String name, @Nullable Dataset dataset);
+
+  /**
+   * Checks whether a given registry organization is part of the list of entities for an editor
+   * user. If not it checks parent entities fot the rights (e.g. endorsing node key).
+   *
+   * @param name name from the security context
+   * @param orgKey key of the organization in question
+   * @return true if the passed organization is allowed to be modified by the user.
+   */
+  boolean allowedToModifyOrganization(@Nullable String name, @Nullable UUID orgKey);
+
+  /**
+   * Checks whether a given registry organization is part of the list of entities for an editor
+   * user. If not it checks parent entities fot the rights (e.g. endorsing node key).
+   *
+   * @param name name from the security context
+   * @param organization the organization in question
+   * @return true if the passed organization is allowed to be modified by the user.
+   */
+  boolean allowedToModifyOrganization(@Nullable String name, @Nullable Organization organization);
+
+  /**
+   * Checks whether a given registry installation is part of the list of entities for an editor
+   * user. If not it checks parent entities fot the rights (e.g. organization key).
+   *
+   * @param name name from the security context
+   * @param installationKey key of the installation in question
+   * @return true if the passed installation is allowed to be modified by the user.
+   */
+  boolean allowedToModifyInstallation(@Nullable String name, @Nullable UUID installationKey);
+
+  /**
+   * Checks whether a given registry installation is part of the list of entities for an editor
+   * user. If not it checks parent entities fot the rights (e.g. organization key).
+   *
+   * @param name name from the security context
+   * @param installation the installation in question
+   * @return true if the passed installation is allowed to be modified by the user.
+   */
+  boolean allowedToModifyInstallation(@Nullable String name, @Nullable Installation installation);
 }

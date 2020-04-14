@@ -31,6 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,7 @@ import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifSchem
 import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
+@Validated
 @RequestMapping(value = "user", produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController
 public class UserResource {

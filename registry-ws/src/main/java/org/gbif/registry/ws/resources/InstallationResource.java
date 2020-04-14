@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -58,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,6 +75,7 @@ import com.google.common.collect.Maps;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
+@Validated
 @RestController
 @RequestMapping(value = "installation", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstallationResource extends BaseNetworkEntityResource<Installation>
@@ -113,7 +114,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @GetMapping(value = "{key}")
   @NullToNotFound("/installation/{key}")
   @Override
-  public Installation get(@NotNull @PathVariable UUID key) {
+  public Installation get(@PathVariable UUID key) {
     return super.get(key);
   }
 
@@ -257,7 +258,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Transactional
   @Secured(ADMIN_ROLE)
   @Override
-  public void createMetasync(@RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
+  public void createMetasync(@RequestBody @Trim MetasyncHistory metasyncHistory) {
     metasyncHistoryMapper.create(metasyncHistory);
   }
 
@@ -278,15 +279,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         metasyncHistoryMapper.listByInstallation(installationKey, page));
   }
 
-  @Override
-  protected List<UUID> owningEntityKeys(@NotNull Installation entity) {
-    return Lists.newArrayList(entity.getOrganizationKey());
-  }
-
   @GetMapping("suggest")
   @Override
-  public List<KeyTitleResult> suggest(
-      @Nullable @RequestParam(value = "q", required = false) String q) {
+  public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return installationMapper.suggest(q);
   }
 
