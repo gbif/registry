@@ -27,34 +27,45 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.utils.Parsers;
 import org.gbif.registry.utils.Requests;
-import org.gbif.utils.HttpUtil;
+import org.gbif.registry.ws.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import javax.ws.rs.core.Response;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.xml.sax.SAXException;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.google.common.collect.Lists;
 
@@ -62,11 +73,31 @@ import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.HOMEPAGE_URL_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.IPT_KEY_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.LOGO_URL_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.NAME_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.ORGANIZATION_KEY_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.SERVICE_TYPES_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.SERVICE_URLS_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.WS_PASSWORD_PARAM;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {IptResourceIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class IptResourceIT {
 
   @RegisterExtension
@@ -78,11 +109,38 @@ public class IptResourceIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  @LocalServerPort private int localServerPort;
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   private final InstallationService installationService;
   private final DatasetService datasetService;
   private final TestDataFactory testDataFactory;
+  private final RequestTestFixture requestTestFixture;
+  private final SimplePrincipalProvider pp;
 
   // set of HTTP form parameters sent in POST request
   private static final String IPT_NAME = "Test IPT Registry2";
@@ -106,57 +164,70 @@ public class IptResourceIT {
 
   @Autowired
   public IptResourceIT(
+      RequestTestFixture requestTestFixture,
       InstallationService installationService,
       DatasetService datasetService,
-      TestDataFactory testDataFactory)
-      throws ParserConfigurationException, SAXException {
+      TestDataFactory testDataFactory,
+      SimplePrincipalProvider pp) {
     this.installationService = installationService;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
+    this.requestTestFixture = requestTestFixture;
+    this.pp = pp;
+  }
+
+  @BeforeEach
+  public void setup() {
+    if (pp != null) {
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              pp.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /**
    * The test begins by persisting a new Organization. </br> Then, it sends a register IPT (POST)
-   * request to create a new Installation associated to this organization. The request is issued
-   * against the web services running on the local Grizzly test server. The request is sent in
+   * request to create a new Installation associated to this organization. The request is sent in
    * exactly the same way as the IPT would send it, using the URL path (/ipt/register), URL encoded
    * form parameters, and basic authentication. The web service authorizes the request, and then
    * persists the Installation, associated to the Organization. </br> Upon receiving an HTTP
    * Response, the test parses its XML content in order to extract the registered IPT UUID for
-   * example. The content is parsed exactly the same way as the IPT would do it. </br> Last, the
-   * test validates that the installation was persisted correctly.
+   * example. </br> Last, the test validates that the installation was persisted correctly.
    */
   @Test
   public void testRegisterIpt() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organizationKey);
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptParameters(organizationKey);
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/register", localServerPort);
+    String uri = "/registry/ipt/register";
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // correct response code?
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and check response code
+    ResultActions actions =
+        requestTestFixture
+            .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+            .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
-    assertNotNull(
-        "Registered IPT key should be in response",
-        UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
+
+    assertNotNull(iptEntityResponse.getKey(), "Registered IPT key should be in response");
 
     // some information that should have been updated
     Installation installation =
         validatePersistedIptInstallation(
-            UUID.fromString(Parsers.legacyIptEntityHandler.key), organizationKey);
+            UUID.fromString(iptEntityResponse.getKey()), organizationKey);
 
     // some additional information to check
     assertNotNull(installation.getCreatedBy());
@@ -166,25 +237,25 @@ public class IptResourceIT {
   /**
    * The test begins by persisting a new Organization, and Installation associated to the
    * Organization. </br> Then, it sends an update IPT (POST) request to update the same
-   * Installation. The request is issued against the web services running on the local Grizzly test
-   * server. The request is sent in exactly the same way as the IPT would send it, using the URL
-   * path (/ipt/update/{key}), URL encoded form parameters, and basic authentication. The web
+   * Installation. The request is sent in exactly the same way as the IPT would send it, using the
+   * URL path (/ipt/update/{key}), URL encoded form parameters, and basic authentication. The web
    * service authorizes the request, and then persists the Installation, updating its information.
    * </br> Upon receiving an HTTP Response, the test parses its XML content in order to extract the
-   * registered IPT UUID for example. The content is parsed exactly the same way as the IPT would do
-   * it. </br> Next, the test validates that the Installation's information was updated correctly.
-   * The same request is then resent once more, and the test validates that no duplicate
-   * installation, contact, or endpoint was created.
+   * registered IPT UUID for example. </br> Next, the test validates that the Installation's
+   * information was updated correctly. The same request is then resent once more, and the test
+   * validates that no duplicate installation, contact, or endpoint was created.
    */
   @Test
   public void testUpdateIpt() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // validate it
     validateExistingIptInstallation(installation, organizationKey);
@@ -196,20 +267,15 @@ public class IptResourceIT {
     assertNotNull(createdBy);
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organizationKey);
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptParameters(organizationKey);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/ipt/update/" + installationKey.toString(), localServerPort);
+    String uri = "/registry/ipt/update/" + installationKey;
 
     // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(
-            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
+    requestTestFixture
+        .postRequestUrlEncoded(data, installationKey, installation.getPassword(), uri)
+        .andExpect(status().isNoContent());
 
     // some information that should have been updated
     installation = validatePersistedIptInstallation(installationKey, organizationKey);
@@ -229,8 +295,9 @@ public class IptResourceIT {
 
     // send same POST request again, to check that duplicate contact and endpoints don't get
     // persisted
-    Requests.http.post(
-        uri, null, null, testDataFactory.installationCredentials(installation), uefe);
+    requestTestFixture
+        .postRequestUrlEncoded(data, installationKey, installation.getPassword(), uri)
+        .andExpect(status().isNoContent());
 
     // retrieve newly updated installation, and make sure the same number of installations, contacts
     // and endpoints exist
@@ -257,31 +324,25 @@ public class IptResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organizationKey);
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptParameters(organizationKey);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/ipt/update/" + installationKey.toString(), localServerPort);
+    String uri = "/registry/ipt/update/" + installationKey;
 
     // send POST request with WRONG credentials
-    // assign the installation the random generated key, to provoke authorization failure
-    installation.setKey(UUID.randomUUID());
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(
-            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
-
-    // 401 expected
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
+    // use the random generated key, to provoke authorization failure
+    // send POST request with credentials and expect 401
+    requestTestFixture
+        .postRequestUrlEncoded(data, UUID.randomUUID(), installation.getPassword(), uri)
+        .andExpect(status().isUnauthorized());
   }
 
   /**
@@ -294,39 +355,28 @@ public class IptResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organizationKey);
+    MultiValueMap<String, String> data = buildIptParameters(organizationKey);
 
     assertEquals(9, data.size());
     // remove mandatory key/value before sending
-    Iterator<NameValuePair> iter = data.iterator();
-    while (iter.hasNext()) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals("primaryContactEmail")) {
-        iter.remove();
-      }
-    }
+    data.remove(PRIMARY_CONTACT_EMAIL_PARAM);
     assertEquals(8, data.size());
 
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
-
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/ipt/update/" + installationKey.toString(), localServerPort);
+    String uri = "/registry/ipt/update/" + installationKey;
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(
-            uri, null, null, testDataFactory.installationCredentials(installation), uefe);
-
-    // 400 expected
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and expect 400
+    requestTestFixture
+        .postRequestUrlEncoded(data, installationKey, installation.getPassword(), uri)
+        .andExpect(status().isBadRequest());
   }
 
   /**
@@ -338,23 +388,19 @@ public class IptResourceIT {
   public void testRegisterIptButNotAuthorized() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    assertNotNull(organization.getKey());
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organization.getKey());
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptParameters(organization.getKey());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/register", localServerPort);
+    String uri = "/registry/ipt/register";
 
     // send POST request with WRONG credentials
-    // assign the organization the random generated key, to provoke authorization failure
-    organization.setKey(UUID.randomUUID());
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 401 expected
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
+    // use the random generated key, to provoke authorization failure and expect 401
+    requestTestFixture
+        .postRequestUrlEncoded(data, UUID.randomUUID(), organization.getPassword(), uri)
+        .andExpect(status().isUnauthorized());
   }
 
   /**
@@ -366,85 +412,71 @@ public class IptResourceIT {
   public void testRegisterIptWithNoPrimaryContact() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIPTParameters(organization.getKey());
+    MultiValueMap<String, String> data = buildIptParameters(organizationKey);
 
     assertEquals(9, data.size());
     // remove mandatory key/value before sending
-    Iterator<NameValuePair> iter = data.iterator();
-    while (iter.hasNext()) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals("primaryContactEmail")) {
-        iter.remove();
-      }
-    }
+    data.remove(PRIMARY_CONTACT_EMAIL_PARAM);
     assertEquals(8, data.size());
 
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
-
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/register", localServerPort);
+    String uri = "/registry/ipt/register";
 
-    // send POST request with credentials so that it passes authorization
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 400 expected
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and expect 400
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isBadRequest());
   }
 
   /**
    * The test begins by persisting a new Organization and IPT Installation. </br> Then, it sends a
    * register Dataset (POST) request to create a new Dataset owned by this organization and
-   * associated to this IPT installation. The request is issued against the web services running on
-   * the local Grizzly test server. The request is sent in exactly the same way as the IPT would
-   * send it, using the URL path (/ipt/resource), URL encoded form parameters, and basic
+   * associated to this IPT installation. The request is sent in exactly the same way as the IPT
+   * would send it, using the URL path (/ipt/resource), URL encoded form parameters, and basic
    * authentication. The web service authorizes the request, and then persists the Installation,
    * associated to the Organization/Installation. </br> Upon receiving an HTTP Response, the test
-   * parses its XML content in order to extract the registered Dataset UUID for example. The content
-   * is parsed exactly the same way as the IPT would do it. </br> Last, the test validates that the
-   * dataset was persisted correctly.
+   * parses its XML content in order to extract the registered Dataset UUID for example. </br> Last,
+   * the test validates that the dataset was persisted correctly.
    */
   @Test
   public void testRegisterIptDataset() throws Exception {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
     // organisationKey param included on register, not on update
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/resource", localServerPort);
+    String uri = "/registry/ipt/resource";
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // correct response code?
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and check response code
+    ResultActions actions =
+        requestTestFixture
+            .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+            .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
-    assertNotNull(
-        "Registered Dataset key should be in response",
-        UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
+    assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
     // some information that should have been updated
     Dataset dataset =
         validatePersistedIptDataset(
-            UUID.fromString(Parsers.legacyIptEntityHandler.key),
+            UUID.fromString(iptEntityResponse.getKey()),
             organizationKey,
             installationKey,
             DatasetType.OCCURRENCE);
@@ -463,56 +495,44 @@ public class IptResourceIT {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
 
     // replace service type and url params in order to reflect that this is a dataset of type
     // SAMPLING_EVENT
-    for (Iterator<NameValuePair> iter = data.listIterator(); iter.hasNext(); ) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals(LegacyResourceConstants.SERVICE_TYPES_PARAM)
-          || pair.getName().equals(LegacyResourceConstants.SERVICE_URLS_PARAM)) {
-        iter.remove();
-      }
-    }
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.SERVICE_TYPES_PARAM, DATASET_EVENT_SERVICE_TYPES));
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.SERVICE_URLS_PARAM, DATASET_SERVICE_URLS));
+    data.remove(SERVICE_TYPES_PARAM);
+    data.remove(SERVICE_URLS_PARAM);
+    data.add(SERVICE_TYPES_PARAM, DATASET_EVENT_SERVICE_TYPES);
+    data.add(SERVICE_URLS_PARAM, DATASET_SERVICE_URLS);
 
     // organisationKey param included on register, not on update
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/resource", localServerPort);
+    String uri = "/registry/ipt/resource";
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // correct response code?
-    assertEquals(Response.Status.CREATED.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and check response code
+    ResultActions actions =
+        requestTestFixture
+            .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+            .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    Parsers.saxParser.parse(Parsers.getUtf8Stream(result.content), Parsers.legacyIptEntityHandler);
-    assertNotNull(
-        "Registered Dataset key should be in response",
-        UUID.fromString(Parsers.legacyIptEntityHandler.key));
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
+    assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
     // some information that should have been updated
     Dataset dataset =
         validatePersistedIptDataset(
-            UUID.fromString(Parsers.legacyIptEntityHandler.key),
+            UUID.fromString(iptEntityResponse.getKey()),
             organizationKey,
             installationKey,
             DatasetType.SAMPLING_EVENT);
@@ -532,31 +552,27 @@ public class IptResourceIT {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
-    // organisationKey param included on register, not on update
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
 
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    // organisationKey param included on register, not on update
+    data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/resource", localServerPort);
+    String uri = "/registry/ipt/resource";
 
     // send POST request with WRONG credentials
-    // assign the organization the random generated key, to provoke authorization failure
-    organization.setKey(UUID.randomUUID());
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 401 expected
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
+    // use the random generated key, to provoke authorization failure
+    requestTestFixture
+        .postRequestUrlEncoded(data, UUID.randomUUID(), organization.getPassword(), uri)
+        .andExpect(status().isUnauthorized());
   }
 
   /**
@@ -569,68 +585,59 @@ public class IptResourceIT {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
     // organisationKey param included on register, not on update
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
+    data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
     assertEquals(13, data.size());
     // remove mandatory key/value before sending
-    Iterator<NameValuePair> iter = data.iterator();
-    while (iter.hasNext()) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals("primaryContactType")) {
-        iter.remove();
-      }
-    }
+    data.remove(PRIMARY_CONTACT_TYPE_PARAM);
     assertEquals(12, data.size());
 
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
-
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/ipt/resource", localServerPort);
+    String uri = "/registry/ipt/resource";
 
-    // send POST request with credentials so that it passes authorization
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 400 expected
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials so that it passes authorization, 400 expected
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isBadRequest());
   }
 
   /**
    * The test begins by persisting a new Organization, Installation associated to the Organization,
    * and Dataset associated to the Organization. </br> Then, it sends an update Dataset (POST)
-   * request to update the same Dataset. The request is issued against the web services running on
-   * the local Grizzly test server. The request is sent in exactly the same way as the IPT would
-   * send it, using the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
+   * request to update the same Dataset. The request is sent in exactly the same way as the IPT
+   * would send it, using the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
    * authentication. The web service authorizes the request, and then persists the Dataset, updating
    * its information. </br> Upon receiving an HTTP Response, the test parses its XML content in
-   * order to extract the registered Dataset UUID for example. The content is parsed exactly the
-   * same way as the IPT would do it. </br> Next, the test validates that the Dataset's information
-   * was updated correctly. The same request is then resent once more, and the test validates that
-   * no duplicate Dataset, contact, or endpoint was created.
+   * order to extract the registered Dataset UUID for example. </br> Next, the test validates that
+   * the Dataset's information was updated correctly. The same request is then resent once more, and
+   * the test validates that no duplicate Dataset, contact, or endpoint was created.
    */
   @Test
   public void testUpdateIptDataset() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // validate it
     validateExistingIptDataset(dataset, organizationKey, installationKey);
@@ -642,20 +649,15 @@ public class IptResourceIT {
     assertNotNull(createdBy);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri("/registry/ipt/resource/" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/ipt/resource/" + datasetKey;
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // correct response code?
-    assertEquals(Response.Status.NO_CONTENT.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials and check response code
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isNoContent());
 
     // some information that should have been updated
     dataset =
@@ -667,6 +669,7 @@ public class IptResourceIT {
     assertEquals(createdBy, dataset.getCreatedBy());
     assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());
     assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());
+    assertNotNull(dataset.getCitation());
     assertEquals(Datasets.DATASET_CITATION.getIdentifier(), dataset.getCitation().getIdentifier());
     assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());
     assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());
@@ -682,7 +685,9 @@ public class IptResourceIT {
 
     // send same POST request again, to check that duplicate contact and endpoints don't get
     // persisted
-    Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isNoContent());
 
     // retrieve newly updated dataset, and make sure the same number of datasets, contacts and
     // endpoints exist
@@ -710,33 +715,30 @@ public class IptResourceIT {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
-
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri("/registry/ipt/resource/" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/ipt/resource/" + datasetKey;
 
     // send POST request with WRONG credentials
-    // assign the organization the random generated key, to provoke authorization failure
-    organization.setKey(UUID.randomUUID());
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 401 expected
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
+    // use the random generated key, to provoke authorization failure
+    // send POST request with credentials, 401 expected
+    requestTestFixture
+        .postRequestUrlEncoded(data, UUID.randomUUID(), organization.getPassword(), uri)
+        .andExpect(status().isUnauthorized());
   }
 
   /**
@@ -749,41 +751,33 @@ public class IptResourceIT {
     // persist new organization (Dataset publishing organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildIptDatasetParameters(installationKey);
+    MultiValueMap<String, String> data = buildIptDatasetParameters(installationKey);
 
     assertEquals(12, data.size());
     // remove mandatory key/value before sending
-    Iterator<NameValuePair> iter = data.iterator();
-    while (iter.hasNext()) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals("primaryContactEmail")) {
-        iter.remove();
-      }
-    }
+    data.remove(PRIMARY_CONTACT_EMAIL_PARAM);
     assertEquals(11, data.size());
 
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
-
     // construct request uri
-    String uri =
-        Requests.getRequestUri("/registry/ipt/resource/" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/ipt/resource/" + datasetKey;
 
-    // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
-    // 400 expected
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
+    // send POST request with credentials, 400 expected
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isBadRequest());
   }
 
   /**
@@ -798,27 +792,30 @@ public class IptResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // construct update request uri
-    String uri =
-        Requests.getRequestUri("/registry/ipt/resource/" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/ipt/resource/" + datasetKey;
 
     // before sending the delete POST request, count the number of datasets, contacts and endpoints
     assertEquals(1, datasetService.list(new PagingRequest(0, 10)).getResults().size());
 
-    // send delete POST request (using same URL)
-    HttpUtil.Response result = Requests.http.delete(uri, Organizations.credentials(organization));
+    // send delete POST request (using same URL), 200 expected
+    requestTestFixture
+        .deleteRequestUrlEncoded(organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isOk());
 
     // check that the dataset was deleted
-    assertEquals(200, result.getStatusCode());
     assertEquals(0, datasetService.list(new PagingRequest(0, 10)).getResults().size());
   }
 
@@ -830,7 +827,7 @@ public class IptResourceIT {
    * @param organizationKey hosting organization key
    */
   private void validateExistingIptInstallation(Installation installation, UUID organizationKey) {
-    assertNotNull("Installation should be present", installation);
+    assertNotNull(installation, "Installation should be present");
     assertEquals(organizationKey, installation.getOrganizationKey());
     assertEquals(InstallationType.IPT_INSTALLATION, installation.getType());
     assertNotEquals(IPT_NAME, installation.getTitle());
@@ -853,7 +850,7 @@ public class IptResourceIT {
    */
   private void validateExistingIptDataset(
       Dataset dataset, UUID organizationKey, UUID installationKey) {
-    assertNotNull("Dataset should be present", dataset);
+    assertNotNull(dataset, "Dataset should be present");
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
@@ -872,6 +869,7 @@ public class IptResourceIT {
     assertEquals(Datasets.DATASET_LANGUAGE, dataset.getLanguage());
     assertEquals(Datasets.DATASET_RIGHTS, dataset.getRights());
     // per https://github.com/gbif/registry/issues/4, Citation is now generated
+    assertNotNull(dataset.getCitation());
     assertEquals(
         Datasets.buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE),
         dataset.getCitation().getText());
@@ -892,7 +890,7 @@ public class IptResourceIT {
     // retrieve installation anew
     Installation installation = installationService.get(installationKey);
 
-    assertNotNull("Installation should be present", installation);
+    assertNotNull(installation, "Installation should be present");
     assertEquals(organizationKey, installation.getOrganizationKey());
     assertEquals(InstallationType.IPT_INSTALLATION, installation.getType());
     assertEquals(IPT_NAME, installation.getTitle());
@@ -902,7 +900,7 @@ public class IptResourceIT {
 
     // check installation's primary contact was properly persisted
     Contact contact = installation.getContacts().get(0);
-    assertNotNull("Installation primary contact should be present", contact);
+    assertNotNull(contact, "Installation primary contact should be present");
     assertNotNull(contact.getKey());
     assertTrue(contact.isPrimary());
     assertEquals(IPT_PRIMARY_CONTACT_NAME, contact.getFirstName());
@@ -915,7 +913,7 @@ public class IptResourceIT {
 
     // check installation's RSS/FEED endpoint was properly persisted
     Endpoint endpoint = installation.getEndpoints().get(0);
-    assertNotNull("Installation FEED endpoint should be present", endpoint);
+    assertNotNull(endpoint, "Installation FEED endpoint should be present");
     assertNotNull(endpoint.getKey());
     assertEquals(IPT_SERVICE_URL, endpoint.getUrl());
     assertEquals(EndpointType.FEED, endpoint.getType());
@@ -940,7 +938,7 @@ public class IptResourceIT {
     // retrieve installation anew
     Dataset dataset = datasetService.get(datasetKey);
 
-    assertNotNull("Dataset should be present", dataset);
+    assertNotNull(dataset, "Dataset should be present");
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(datasetType, dataset.getType());
@@ -951,7 +949,7 @@ public class IptResourceIT {
 
     // check dataset's primary contact was properly persisted
     Contact contact = dataset.getContacts().get(0);
-    assertNotNull("Dataset primary contact should be present", contact);
+    assertNotNull(contact, "Dataset primary contact should be present");
     assertNotNull(contact.getKey());
     assertTrue(contact.isPrimary());
     assertEquals(Requests.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());
@@ -966,7 +964,7 @@ public class IptResourceIT {
 
     // check dataset's EML & DWC_ARCHIVE endpoints were properly persisted
     Endpoint endpoint = dataset.getEndpoints().get(0);
-    assertNotNull("Dataset ARCHIVE endpoint should be present", endpoint);
+    assertNotNull(endpoint, "Dataset ARCHIVE endpoint should be present");
     assertNotNull(endpoint.getKey());
     assertEquals(DATASET_OCCURRENCE_SERVICE_URL, endpoint.getUrl());
     assertTrue(
@@ -978,7 +976,7 @@ public class IptResourceIT {
     assertNotNull(endpoint.getModifiedBy());
 
     endpoint = dataset.getEndpoints().get(1);
-    assertNotNull("Dataset EML endpoint should be present", endpoint);
+    assertNotNull(endpoint, "Dataset EML endpoint should be present");
     assertNotNull(endpoint.getKey());
     assertEquals(DATASET_EML_SERVICE_URL, endpoint.getUrl());
     assertTrue(
@@ -1000,35 +998,26 @@ public class IptResourceIT {
    * @param organizationKey organization key (UUID)
    * @return list of name value pairs, or an empty list if the IPT or organisation key were null
    */
-  private List<NameValuePair> buildIPTParameters(UUID organizationKey) {
-    List<NameValuePair> data = new ArrayList<NameValuePair>();
+  private MultiValueMap<String, String> buildIptParameters(UUID organizationKey) {
+    MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
+
     // main
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ORGANIZATION_KEY_PARAM, organizationKey.toString()));
-    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, IPT_NAME));
-    data.add(new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, IPT_DESCRIPTION));
+    data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
+    data.add(NAME_PARAM, IPT_NAME);
+    data.add(DESCRIPTION_PARAM, IPT_DESCRIPTION);
 
     // primary contact
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM, IPT_PRIMARY_CONTACT_TYPE));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM, IPT_PRIMARY_CONTACT_NAME));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM, IPT_PRIMARY_CONTACT_EMAIL.get(0)));
+    data.add(PRIMARY_CONTACT_TYPE_PARAM, IPT_PRIMARY_CONTACT_TYPE);
+    data.add(PRIMARY_CONTACT_NAME_PARAM, IPT_PRIMARY_CONTACT_NAME);
+    data.add(PRIMARY_CONTACT_EMAIL_PARAM, IPT_PRIMARY_CONTACT_EMAIL.get(0));
 
     // service/endpoint
-    data.add(new BasicNameValuePair(LegacyResourceConstants.SERVICE_TYPES_PARAM, IPT_SERVICE_TYPE));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.SERVICE_URLS_PARAM, IPT_SERVICE_URL.toASCIIString()));
+    data.add(SERVICE_TYPES_PARAM, IPT_SERVICE_TYPE);
+    data.add(SERVICE_URLS_PARAM, IPT_SERVICE_URL.toASCIIString());
 
     // add IPT password used for updating the IPT's own metadata & issuing atomic updateURL
     // operations
-    data.add(new BasicNameValuePair(LegacyResourceConstants.WS_PASSWORD_PARAM, IPT_WS_PASSWORD));
+    data.add(WS_PASSWORD_PARAM, IPT_WS_PASSWORD);
 
     return data;
   }
@@ -1041,50 +1030,27 @@ public class IptResourceIT {
    * @param installationKey installation key
    * @return list of name value pairs, or an empty list if the dataset or organisation key were null
    */
-  private List<NameValuePair> buildIptDatasetParameters(UUID installationKey) {
-    List<NameValuePair> data = new ArrayList<NameValuePair>();
+  private MultiValueMap<String, String> buildIptDatasetParameters(UUID installationKey) {
+    MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
     // main
-    data.add(new BasicNameValuePair(LegacyResourceConstants.NAME_PARAM, Requests.DATASET_NAME));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL));
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.LOGO_URL_PARAM, Requests.DATASET_LOGO_URL));
+    data.add(NAME_PARAM, Requests.DATASET_NAME);
+    data.add(DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION);
+    data.add(HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL);
+    data.add(LOGO_URL_PARAM, Requests.DATASET_LOGO_URL);
 
     // primary contact
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM,
-            Requests.DATASET_PRIMARY_CONTACT_TYPE));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM,
-            Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0)));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM,
-            Requests.DATASET_PRIMARY_CONTACT_NAME));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM,
-            Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0)));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM,
-            Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0)));
+    data.add(PRIMARY_CONTACT_TYPE_PARAM, Requests.DATASET_PRIMARY_CONTACT_TYPE);
+    data.add(PRIMARY_CONTACT_EMAIL_PARAM, Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
+    data.add(PRIMARY_CONTACT_NAME_PARAM, Requests.DATASET_PRIMARY_CONTACT_NAME);
+    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
+    data.add(PRIMARY_CONTACT_PHONE_PARAM, Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0));
 
     // endpoint(s)
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.SERVICE_TYPES_PARAM, DATASET_SERVICE_TYPES));
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.SERVICE_URLS_PARAM, DATASET_SERVICE_URLS));
+    data.add(SERVICE_TYPES_PARAM, DATASET_SERVICE_TYPES);
+    data.add(SERVICE_URLS_PARAM, DATASET_SERVICE_URLS);
 
     // add additional ipt and organisation parameters
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.IPT_KEY_PARAM, installationKey.toString()));
+    data.add(IPT_KEY_PARAM, installationKey.toString());
 
     return data;
   }

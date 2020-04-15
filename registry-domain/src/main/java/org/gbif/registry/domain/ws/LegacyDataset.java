@@ -113,12 +113,12 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
    * Get the dataset Doi. This method is not used but it is needed otherwise this Object can't be
    * converted into an XML document via JAXB.
    *
-   * @return key of the dataset
+   * @return DOI of the dataset
    */
   @XmlElement(name = LegacyResourceConstants.DOI_PARAM)
   @Nullable
   public String getDatasetDoi() {
-    return getDoi() == null ? null : getDoi().toString();
+    return datasetDoi == null ? null : datasetDoi.toString();
   }
 
   /**
@@ -173,7 +173,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
    * @param doi The DOI
    */
   @ParamName(LegacyResourceConstants.DOI_PARAM)
-  public void setDoi(String doi) {
+  public void setDatasetDoi(String doi) {
     try {
       if (doi != null) {
         this.datasetDoi = new DOI(doi);
