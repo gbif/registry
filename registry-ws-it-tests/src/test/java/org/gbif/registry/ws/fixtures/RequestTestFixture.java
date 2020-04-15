@@ -19,6 +19,7 @@ import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -232,12 +233,14 @@ public class RequestTestFixture {
   }
 
   public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
+    String contentAsString =
+        actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     return objectMapper.readValue(contentAsString, entityClass);
   }
 
   public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
+    String contentAsString =
+        actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     return xmlMapper.readValue(contentAsString, entityClass);
   }
 

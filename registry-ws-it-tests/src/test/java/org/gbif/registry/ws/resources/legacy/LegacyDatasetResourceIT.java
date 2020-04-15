@@ -39,6 +39,7 @@ import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.legacy.LegacyDatasetResourceIT.ContextInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
@@ -311,7 +312,7 @@ public class LegacyDatasetResourceIT {
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
-    //    assertEquals(Requests.DATASET_NAME, dataset.getTitle());
+    assertEquals(Requests.DATASET_NAME, dataset.getTitle());
     assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
     assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getHomepage());
@@ -459,7 +460,7 @@ public class LegacyDatasetResourceIT {
     ResultActions actions =
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    String content = actions.andReturn().getResponse().getContentAsString();
+    String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     ObjectMapper objectMapper = new ObjectMapper();
     // JSON array expected, with single resource
     ArrayNode rootNode = objectMapper.readValue(content, ArrayNode.class);
@@ -469,7 +470,7 @@ public class LegacyDatasetResourceIT {
     assertEquals(
         dataset.getPublishingOrganizationKey().toString(),
         rootNode.get(0).get("organisationKey").textValue());
-    //    assertEquals(dataset.getTitle(), rootNode.get(0).get("name").textValue());
+    assertEquals(dataset.getTitle(), rootNode.get(0).get("name").textValue());
   }
 
   //  /**
@@ -517,7 +518,6 @@ public class LegacyDatasetResourceIT {
   //    assertEquals(dataset.getTitle(), actualResponse.getName());
   //  }
 
-  // TODO: 15/04/2020 fix issues with encoding (e.g. getTitle)
   /**
    * The test sends a get dataset (GET) request, the JSON response having all of: key,
    * organisationKey, name, description, nameLanguage, descriptionLanguage, homepageURL,
@@ -559,7 +559,7 @@ public class LegacyDatasetResourceIT {
     // keys "key" and "name" expected
     assertEquals(datasetKey.toString(), response.getKey());
     assertEquals(dataset.getPublishingOrganizationKey().toString(), response.getOrganisationKey());
-    //    assertEquals(dataset.getTitle(), response.getName());
+    assertEquals(dataset.getTitle(), response.getName());
     assertEquals(dataset.getDescription(), response.getDescription());
     assertEquals(dataset.getLanguage().getIso2LetterCode(), response.getNameLanguage());
     assertEquals(dataset.getLanguage().getIso2LetterCode(), response.getDescriptionLanguage());
@@ -631,7 +631,7 @@ public class LegacyDatasetResourceIT {
         requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponse.class);
 
     assertEquals(dataset.getKey().toString(), response.getKey());
-    //    assertEquals(dataset.getTitle(), response.getName());
+    assertEquals(dataset.getTitle(), response.getName());
     assertEquals(dataset.getLanguage().getIso2LetterCode(), response.getNameLanguage());
     assertEquals(dataset.getDescription(), response.getDescription());
     assertEquals(dataset.getLanguage().getIso2LetterCode(), response.getDescriptionLanguage());
