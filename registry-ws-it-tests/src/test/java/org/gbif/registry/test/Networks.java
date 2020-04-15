@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Networks extends JsonBackedData2<Network> {
+public class Networks extends JsonBackedData<Network> {
 
   @Autowired
   private Networks(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {

@@ -28,33 +28,24 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.OrganizationService;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.cache2k.Cache;
 import org.cache2k.Cache2kBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
-
 import lombok.SneakyThrows;
-import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import static org.gbif.registry.search.dataset.indexing.ws.SearchParameterProvider.getParameterFromFacetedRequest;
 
@@ -83,6 +74,10 @@ public class GbifWsRetrofitClient implements GbifWsClient {
 
   private final GbifApiService gbifApiService;
 
+  private final InstallationService installationService;
+  private final OrganizationService organizationService;
+  private final DatasetService datasetService;
+
   /**
    * Factory method, only need the api base url.
    *
@@ -90,23 +85,14 @@ public class GbifWsRetrofitClient implements GbifWsClient {
    */
   @Autowired
   public GbifWsRetrofitClient(
-      @Value("${api.root.url}") String apiBaseUrl,
-      @Qualifier("apiMapper") ObjectMapper objectMapper) {
-
-    OkHttpClient okHttpClient =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(2, TimeUnit.MINUTES)
-            .readTimeout(5, TimeUnit.MINUTES)
-            .writeTimeout(1, TimeUnit.MINUTES)
-            .build();
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(apiBaseUrl)
-            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-            .client(okHttpClient)
-            .build();
-    gbifApiService = retrofit.create(GbifApiService.class);
+      GbifApiService gbifApiService,
+      InstallationService installationService,
+      OrganizationService organizationService,
+      DatasetService datasetService) {
+    this.gbifApiService = gbifApiService;
+    this.installationService = installationService;
+    this.organizationService = organizationService;
+    this.datasetService = datasetService;
   }
 
   private Map<String, String> toQueryMap(PagingRequest pagingRequest) {
@@ -128,8 +114,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
 
   @Override
   public PagingResponse<Dataset> listDatasets(PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(gbifApiService.listDatasets(params)).body();
+    return datasetService.list(pagingRequest);
   }
 
   @Override
@@ -138,12 +123,12 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   }
 
   private Installation loadInstallation(String installationKey) {
-    return syncCallWithResponse(gbifApiService.getInstallation(installationKey)).body();
+    return installationService.get(UUID.fromString(installationKey));
   }
 
   @Override
   public PagingResponse<Dataset> getInstallationDatasets(String installationKey) {
-    return syncCallWithResponse(gbifApiService.getInstallationDatasets(installationKey)).body();
+    return installationService.getHostedDatasets(UUID.fromString(installationKey), null);
   }
 
   @Override
@@ -152,39 +137,24 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   }
 
   private Organization loadOrganization(String organizationKey) {
-    return syncCallWithResponse(gbifApiService.getOrganization(organizationKey)).body();
+    return organizationService.get(UUID.fromString(organizationKey));
   }
 
   @Override
   public PagingResponse<Dataset> getOrganizationHostedDatasets(
       String organizationKey, PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(
-            gbifApiService.getOrganizationHostedDatasets(organizationKey, params))
-        .body();
+    return organizationService.hostedDatasets(UUID.fromString(organizationKey), pagingRequest);
   }
 
   @Override
   public PagingResponse<Dataset> getOrganizationPublishedDataset(
       String organizationKey, PagingRequest pagingRequest) {
-    Map<String, String> params = toQueryMap(pagingRequest);
-    return syncCallWithResponse(
-            gbifApiService.getOrganizationPublishedDatasets(organizationKey, params))
-        .body();
+    return organizationService.publishedDatasets(UUID.fromString(organizationKey), pagingRequest);
   }
 
   @Override
   public InputStream getMetadataDocument(UUID datasetKey) {
-    try {
-      Response<ResponseBody> response =
-          syncCallWithResponse(gbifApiService.getMetadataDocument(datasetKey.toString()));
-      if (response.isSuccessful() && response.body().contentLength() > 0) {
-        return new ByteArrayInputStream(ByteStreams.toByteArray(response.body().byteStream()));
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
-    return null;
+    return datasetService.getMetadataDocument(datasetKey);
   }
 
   @Override
