@@ -72,6 +72,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -102,6 +103,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatasetIT extends NetworkEntityTest<Dataset> {
+
+  @LocalServerPort
+  int localServerPort;
 
   @RegisterExtension
   static EsServer esServer =

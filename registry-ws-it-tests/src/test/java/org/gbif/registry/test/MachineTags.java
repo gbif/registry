@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class MachineTags extends JsonBackedData2<MachineTag> {
+public class MachineTags extends JsonBackedData<MachineTag> {
 
   @Autowired
   private MachineTags(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {

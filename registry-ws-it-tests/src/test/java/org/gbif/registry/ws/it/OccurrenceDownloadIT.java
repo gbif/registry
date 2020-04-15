@@ -25,6 +25,7 @@ import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -38,21 +39,34 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Runs tests for the {@link OccurrenceDownloadService} implementations. This is parameterized to
@@ -64,7 +78,11 @@ import static org.junit.Assert.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {OccurrenceDownloadIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class OccurrenceDownloadIT {
 
   @RegisterExtension
@@ -75,6 +93,33 @@ public class OccurrenceDownloadIT {
   @RegisterExtension
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
+
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   private final OccurrenceDownloadService occurrenceDownloadService;
 
@@ -138,9 +183,19 @@ public class OccurrenceDownloadIT {
     return download;
   }
 
-  @Before
+  @BeforeEach
   public void setup() {
-    setPrincipal();
+    // reset SimplePrincipleProvider, configured for web service client tests only
+    if (simplePrincipalProvider != null) {
+      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              simplePrincipalProvider.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /** Persists a valid {@link Download} instance. */
@@ -185,11 +240,12 @@ public class OccurrenceDownloadIT {
   }
 
   /** Creates a {@link Download} with a null status which should trigger a validation exception. */
-  @Test(expected = ValidationException.class)
+  @Test
   public void testCreateWithNullStatus() {
     Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownload.setStatus(null);
-    occurrenceDownloadService.create(occurrenceDownload);
+    assertThrows(
+        ValidationException.class, () -> occurrenceDownloadService.create(occurrenceDownload));
   }
 
   /**
@@ -212,16 +268,16 @@ public class OccurrenceDownloadIT {
             .count();
     // All numbers are compare to 2 different values because this each run twice: one for the WS and
     // once for the MyBatis layer
-    assertEquals("A total of 3 records must be returned", 3, resultSize);
+    assertEquals(3, resultSize, "A total of 3 records must be returned");
     assertEquals(
-        "A total of 3 PredicateDownloads must be returned", 3L, numberOfPredicateDownloads);
+        3L, numberOfPredicateDownloads, "A total of 3 PredicateDownloads must be returned");
   }
 
   /**
    * Creates several occurrence download with the same user name and attempts to get them with a
    * different user name.
    */
-  @Test(expected = AccessControlException.class)
+  @Test
   public void testListByUnauthorizedUser() {
     // This test applies to web service calls only, requires a security context.
     if (simplePrincipalProvider != null) {
@@ -230,12 +286,12 @@ public class OccurrenceDownloadIT {
       }
       // TODO: change to use the client
       assertTrue(
-          "List by user operation should return 5 records",
           occurrenceDownloadService
                   .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null)
                   .getResults()
                   .size()
-              > 0);
+              > 0,
+          "List by user operation should return 5 records");
 
     } else {
       // Just to make the test pass for the webservice version
@@ -253,12 +309,12 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue(
-        "List by user operation should return 5 records",
         occurrenceDownloadService
                 .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null)
                 .getResults()
                 .size()
-            > 0);
+            > 0,
+        "List by user operation should return 5 records");
   }
 
   /**
@@ -271,12 +327,12 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue(
-        "List by user operation should return 5 records",
         occurrenceDownloadService
                 .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES)
                 .getResults()
                 .size()
-            > 0);
+            > 0,
+        "List by user operation should return 5 records");
   }
 
   /**
@@ -289,7 +345,6 @@ public class OccurrenceDownloadIT {
       occurrenceDownloadService.create(getTestInstancePredicateDownload());
     }
     assertTrue(
-        "List by user and status operation should return 5 records",
         occurrenceDownloadService
                 .listByUser(
                     TestConstants.TEST_ADMIN,
@@ -297,7 +352,8 @@ public class OccurrenceDownloadIT {
                     Download.Status.EXECUTING_STATUSES)
                 .getResults()
                 .size()
-            > 0);
+            > 0,
+        "List by user and status operation should return 5 records");
   }
 
   /** Tests the status update of {@link Download}. */
@@ -310,6 +366,8 @@ public class OccurrenceDownloadIT {
     occurrenceDownload.setTotalRecords(600L);
     occurrenceDownload.setDoi(new DOI("doi:10.1234/1ASCDU"));
     occurrenceDownload.setLicense(License.CC0_1_0);
+    occurrenceDownload.setCreated(new Date());
+    occurrenceDownload.setModified(new Date());
     occurrenceDownloadService.update(occurrenceDownload);
     Download occurrenceDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertSame(Download.Status.RUNNING, occurrenceDownload2.getStatus());
@@ -335,12 +393,5 @@ public class OccurrenceDownloadIT {
     assertNotNull(occurrenceDownload2.getModified());
     assertEquals(200L, occurrenceDownload2.getSize());
     assertEquals(600L, occurrenceDownload2.getTotalRecords());
-  }
-
-  private void setPrincipal() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
-    if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
-    }
   }
 }
