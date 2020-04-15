@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.search.dataset.search.common;
+package org.gbif.registry.search.dataset.common;
 
 import org.elasticsearch.search.SearchHit;
 

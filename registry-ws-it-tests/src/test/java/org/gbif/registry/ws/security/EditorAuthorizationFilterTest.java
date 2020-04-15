@@ -37,6 +37,9 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Matchers.eq;
@@ -61,16 +64,18 @@ public class EditorAuthorizationFilterTest {
 
   private EditorAuthorizationFilter filter;
 
+  @Autowired private ObjectMapper objectMapper;
+
   @Before
   public void setupMocks() throws Exception {
     // setup filter with mocks
-    filter = new EditorAuthorizationFilter(authService, authenticationFacade);
+    filter = new EditorAuthorizationFilter(authService, authenticationFacade, objectMapper);
     filter.setServletContext(secContext);
     when(mockRequest.isUserInRole(not(eq(UserRoles.EDITOR_ROLE)))).thenReturn(false);
     when(mockRequest.isUserInRole(eq(UserRoles.EDITOR_ROLE))).thenReturn(true);
 
     // setup mocks to authorize only based on user
-    when(authService.allowedToModifyEntity(Matchers.any(), Matchers.any()))
+    when(authService.allowedToModifyEntity(Matchers.any(), Matchers.any(UUID.class)))
         .thenAnswer(
             new Answer<Boolean>() {
               @Override
@@ -79,7 +84,7 @@ public class EditorAuthorizationFilterTest {
                 return ((Principal) args[0]).getName().equals(userWithRights);
               }
             });
-    when(authService.allowedToModifyInstallation(Matchers.any(), Matchers.any()))
+    when(authService.allowedToModifyInstallation(Matchers.any(), Matchers.any(UUID.class)))
         .thenAnswer(
             new Answer<Boolean>() {
               @Override
@@ -88,7 +93,7 @@ public class EditorAuthorizationFilterTest {
                 return ((Principal) args[0]).getName().equals(userWithRights);
               }
             });
-    when(authService.allowedToModifyOrganization(Matchers.any(), Matchers.any()))
+    when(authService.allowedToModifyOrganization(Matchers.any(), Matchers.any(UUID.class)))
         .thenAnswer(
             new Answer<Boolean>() {
               @Override
@@ -97,7 +102,7 @@ public class EditorAuthorizationFilterTest {
                 return ((Principal) args[0]).getName().equals(userWithRights);
               }
             });
-    when(authService.allowedToModifyDataset(Matchers.any(), Matchers.any()))
+    when(authService.allowedToModifyDataset(Matchers.any(), Matchers.any(UUID.class)))
         .thenAnswer(
             new Answer<Boolean>() {
               @Override

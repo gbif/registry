@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.search.dataset.search;
+package org.gbif.registry.search.dataset;
 
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.vocabulary.Continent;
@@ -21,7 +21,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.search.dataset.search.common.EsFieldMapper;
+import org.gbif.registry.search.dataset.common.EsFieldMapper;
 
 import java.util.List;
 import java.util.Map;
