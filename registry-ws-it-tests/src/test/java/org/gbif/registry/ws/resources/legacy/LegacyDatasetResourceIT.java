@@ -33,9 +33,9 @@ import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.Requests;
-import org.gbif.registry.ws.fixtures.RequestTestFixture;
-import org.gbif.registry.ws.fixtures.TestConstants;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.legacy.LegacyDatasetResourceIT.ContextInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 

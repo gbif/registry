@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.fixtures;
+package org.gbif.registry.ws.it.fixtures;
 
 import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.RequestDataToSign;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import static org.gbif.registry.ws.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
