@@ -39,31 +39,6 @@ import retrofit2.http.Streaming;
 /** Retrofit client to all the GBIF service call needed for dataset indexing. */
 public interface GbifApiService {
 
-  @GET("dataset")
-  Call<PagingResponse<Dataset>> listDatasets(@QueryMap Map<String, String> options);
-
-  @Streaming
-  @GET("dataset/{datasetKey}/document")
-  Call<ResponseBody> getMetadataDocument(@Path("datasetKey") String datasetKey);
-
-  @GET("installation/{installationKey}")
-  Call<Installation> getInstallation(@Path("installationKey") String installationKey);
-
-  @GET("installation/{installationKey}/dataset")
-  Call<PagingResponse<Dataset>> getInstallationDatasets(
-      @Path("installationKey") String installationKey);
-
-  @GET("organization/{organizationKey}/hostedDataset")
-  Call<PagingResponse<Dataset>> getOrganizationHostedDatasets(
-      @Path("organizationKey") String organizationKey, @QueryMap Map<String, String> options);
-
-  @GET("organization/{organizationKey}/publishedDataset")
-  Call<PagingResponse<Dataset>> getOrganizationPublishedDatasets(
-      @Path("organizationKey") String organizationKey, @QueryMap Map<String, String> options);
-
-  @GET("organization/{organizationKey}")
-  Call<Organization> getOrganization(@Path("organizationKey") String organizationKey);
-
   @GET("occurrence/count")
   Call<Long> getDatasetRecordCount(@Query("datasetKey") String datasetKey);
 

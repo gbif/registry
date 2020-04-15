@@ -22,9 +22,9 @@ import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestRequest;
 import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetSearchService;
-import org.gbif.registry.search.dataset.search.DatasetEsFieldMapper;
-import org.gbif.registry.search.dataset.search.DatasetEsResponseParser;
-import org.gbif.registry.search.dataset.search.common.EsSearchRequestBuilder;
+import org.gbif.registry.search.dataset.DatasetEsFieldMapper;
+import org.gbif.registry.search.dataset.DatasetEsResponseParser;
+import org.gbif.registry.search.dataset.common.EsSearchRequestBuilder;
 
 import java.io.IOException;
 import java.util.List;

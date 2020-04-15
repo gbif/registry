@@ -44,6 +44,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.ws.security",
       "org.gbif.registry.search.dataset.indexing",
       "org.gbif.registry.search.dataset.service",
+      "org.gbif.registry.search",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",

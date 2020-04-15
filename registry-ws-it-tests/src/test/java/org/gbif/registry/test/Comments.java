@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Comments extends JsonBackedData2<Comment> {
+public class Comments extends JsonBackedData<Comment> {
 
   @Autowired
   private Comments(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
