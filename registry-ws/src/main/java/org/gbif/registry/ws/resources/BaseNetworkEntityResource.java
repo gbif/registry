@@ -59,7 +59,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
@@ -277,7 +276,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
   @Override
   public int addComment(
-      @NotNull @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
+      @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     comment.setCreatedBy(authentication.getName());
     comment.setModifiedBy(authentication.getName());
@@ -529,7 +528,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE, IPT_ROLE})
   @Override
   public int addContact(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Contact contact) {
@@ -555,7 +554,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void updateContact(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Contact contact) {
@@ -600,7 +599,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public int addEndpoint(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Endpoint endpoint) {
@@ -627,7 +626,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param endpointKey key of Endpoint to delete
    */
   @DeleteMapping("{key}/endpoint/{endpointKey}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void deleteEndpoint(
       @PathVariable("key") UUID targetEntityKey, @PathVariable int endpointKey) {
