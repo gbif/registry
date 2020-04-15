@@ -111,7 +111,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.messagePublisher = messagePublisher;
   }
 
-  @GetMapping(value = "{key}")
+  @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
   public Installation get(@PathVariable UUID key) {
