@@ -71,7 +71,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
   }
 
-  @GetMapping(value = "{key}")
+  @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
   public Network get(@PathVariable UUID key) {
