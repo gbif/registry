@@ -49,6 +49,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -91,6 +93,8 @@ public class EditorAuthorizationFilterImplTest {
 
   @Autowired private AuthenticationFacade authenticationFacade;
 
+  @Autowired private ObjectMapper objectMapper;
+
   @Before
   public void setupMocks() {
     denmarkDataset.setKey(UUID.randomUUID());
@@ -117,7 +121,9 @@ public class EditorAuthorizationFilterImplTest {
             organizationMapper, datasetMapper, installationMapper, userRightsMapper);
 
     // setup filter with mocks
-    filter = new EditorAuthorizationFilter(editorAuthorizationService, authenticationFacade);
+    filter =
+        new EditorAuthorizationFilter(
+            editorAuthorizationService, authenticationFacade, objectMapper);
     filter.setServletContext(mockContext);
     when(mockRequest.isUserInRole(not(eq(UserRoles.EDITOR_ROLE)))).thenReturn(false);
     when(mockRequest.isUserInRole(eq(UserRoles.EDITOR_ROLE))).thenReturn(true);

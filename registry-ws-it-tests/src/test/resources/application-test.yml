@@ -92,29 +92,6 @@ elasticsearch:
     socketTimeOut: 60000
     connectionRequestTimeOut: 120000
     maxRetryTimeOut: 120000
-indexing:
-  datasource:
-    checklistbank:
-      url: @checklistbank-it-spring.db.url@
-      username: @checklistbank-it-spring.db.username@
-      password: @checklistbank-it-spring.db.password@
-      hikari:
-        maximumPoolSize: 10
-        minimumIdle: 1
-        idleTimeout: 60000
-        connectionTimeout: 5000
-
-# Database
-registry:
-  datasource:
-    url: @registry-it-spring.db.url@
-    password: @registry-it-spring.db.password@
-    username: @registry-it-spring.db.username@
-    hikari:
-      idleTimeout: 60000
-      maximumPoolSize: 10
-      minimumIdle: 1
-
 # GBIF Directory configuration
 directory:
   app:

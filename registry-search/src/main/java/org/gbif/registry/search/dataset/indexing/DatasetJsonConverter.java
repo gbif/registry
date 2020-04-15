@@ -110,15 +110,29 @@ public class DatasetJsonConverter {
 
   private final GbifWsClient gbifWsClient;
 
-  private final Long occurrenceCount;
-
-  private final Long nameUsagesCount;
-
   private final ObjectMapper mapper;
 
   private final RestHighLevelClient occurrenceEsClient;
 
   private final String occurrenceIndex;
+
+  private Long occurrenceCount;
+
+  private Long nameUsagesCount;
+
+  private Long getOccurrenceCount() {
+    if (occurrenceCount == null) {
+      occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
+    }
+    return occurrenceCount;
+  }
+
+  private Long getNameUsagesCount() {
+    if (nameUsagesCount == null) {
+      nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
+    }
+    return nameUsagesCount;
+  }
 
   @Autowired
   private DatasetJsonConverter(
@@ -136,8 +150,6 @@ public class DatasetJsonConverter {
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
     // consumers.add(this::addFacetsData);
-    occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
-    nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
   }
 
   public static DatasetJsonConverter create(
@@ -224,7 +236,7 @@ public class DatasetJsonConverter {
     String datasetKey = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
-    double occurrencePercentage = (double) datasetOccurrenceCount / occurrenceCount;
+    double occurrencePercentage = (double) datasetOccurrenceCount / getOccurrenceCount();
     double nameUsagesPercentage = 0D;
 
     // Contribution of occurrence records
@@ -232,7 +244,7 @@ public class DatasetJsonConverter {
     DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
     if (Objects.nonNull(datasetMetrics)) {
-      nameUsagesPercentage = (double) datasetMetrics.getUsagesCount() / nameUsagesCount;
+      nameUsagesPercentage = (double) datasetMetrics.getUsagesCount() / getNameUsagesCount();
       dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
     } else {
       dataset.put("nameUsagesCount", 0);

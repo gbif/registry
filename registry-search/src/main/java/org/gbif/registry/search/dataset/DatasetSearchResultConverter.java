@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.search.dataset.search;
+package org.gbif.registry.search.dataset;
 
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestResult;
@@ -22,7 +22,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.search.dataset.search.common.SearchResultConverter;
+import org.gbif.registry.search.dataset.common.SearchResultConverter;
 
 import java.util.Date;
 import java.util.List;
