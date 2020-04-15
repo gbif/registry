@@ -435,14 +435,12 @@ public class IptResourceIT {
   /**
    * The test begins by persisting a new Organization and IPT Installation. </br> Then, it sends a
    * register Dataset (POST) request to create a new Dataset owned by this organization and
-   * associated to this IPT installation. The request is issued against the web services running on
-   * the local Grizzly test server. The request is sent in exactly the same way as the IPT would
-   * send it, using the URL path (/ipt/resource), URL encoded form parameters, and basic
+   * associated to this IPT installation. The request is sent in exactly the same way as the IPT
+   * would send it, using the URL path (/ipt/resource), URL encoded form parameters, and basic
    * authentication. The web service authorizes the request, and then persists the Installation,
    * associated to the Organization/Installation. </br> Upon receiving an HTTP Response, the test
-   * parses its XML content in order to extract the registered Dataset UUID for example. The content
-   * is parsed exactly the same way as the IPT would do it. </br> Last, the test validates that the
-   * dataset was persisted correctly.
+   * parses its XML content in order to extract the registered Dataset UUID for example. </br> Last,
+   * the test validates that the dataset was persisted correctly.
    */
   @Test
   public void testRegisterIptDataset() throws Exception {
@@ -616,15 +614,13 @@ public class IptResourceIT {
   /**
    * The test begins by persisting a new Organization, Installation associated to the Organization,
    * and Dataset associated to the Organization. </br> Then, it sends an update Dataset (POST)
-   * request to update the same Dataset. The request is issued against the web services running on
-   * the local Grizzly test server. The request is sent in exactly the same way as the IPT would
-   * send it, using the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
+   * request to update the same Dataset. The request is sent in exactly the same way as the IPT
+   * would send it, using the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
    * authentication. The web service authorizes the request, and then persists the Dataset, updating
    * its information. </br> Upon receiving an HTTP Response, the test parses its XML content in
-   * order to extract the registered Dataset UUID for example. The content is parsed exactly the
-   * same way as the IPT would do it. </br> Next, the test validates that the Dataset's information
-   * was updated correctly. The same request is then resent once more, and the test validates that
-   * no duplicate Dataset, contact, or endpoint was created.
+   * order to extract the registered Dataset UUID for example. </br> Next, the test validates that
+   * the Dataset's information was updated correctly. The same request is then resent once more, and
+   * the test validates that no duplicate Dataset, contact, or endpoint was created.
    */
   @Test
   public void testUpdateIptDataset() throws Exception {
