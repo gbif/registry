@@ -35,7 +35,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Datasets extends JsonBackedData2<Dataset> {
+public class Datasets extends JsonBackedData<Dataset> {
 
   private static DatasetService datasetService;
 

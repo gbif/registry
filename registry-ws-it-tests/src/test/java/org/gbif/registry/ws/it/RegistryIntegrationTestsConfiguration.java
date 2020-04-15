@@ -19,13 +19,13 @@ import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.registry.events.VarnishPurgeConfiguration;
+import org.gbif.registry.events.VarnishPurgeListener;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
-import org.gbif.registry.ws.RegistryWsApplication;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -37,31 +37,28 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
-import org.mybatis.spring.boot.test.autoconfigure.AutoConfigureMybatis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Lazy
 @TestConfiguration
 @SpringBootApplication
 @MapperScan("org.gbif.registry.persistence.mapper")
-@AutoConfigureMybatis
 @ComponentScan(
     basePackages = {
       "org.gbif.ws.server.interceptor",
@@ -72,6 +69,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
       "org.gbif.ws.security",
       "org.gbif.registry.search.dataset.indexing",
       "org.gbif.registry.search.dataset.service",
+      "org.gbif.registry.search",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
@@ -85,7 +83,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
       "org.gbif.registry.pipelines",
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
-      "org.gbif.registry.messaging",
       "org.gbif.registry.occurrence.client",
       "org.gbif.registry.directory.client",
       "org.gbif.registry.oaipmh",
@@ -98,9 +95,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
           classes = {
             FlywayAutoConfiguration.FlywayConfiguration.class,
             FlywayAutoConfiguration.class,
-            RegistryWsApplication.class,
             DatasetBatchIndexBuilder.class,
-            GbifWsClient.class
+            GbifWsClient.class, VarnishPurgeConfiguration.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
@@ -134,9 +130,8 @@ public class RegistryIntegrationTestsConfiguration {
   }
 
   @Bean
-  public GbifWsClient gbifWsClient(
-      TestRestTemplate testRestTemplate, @Qualifier("apiMapper") ObjectMapper objectMapper) {
-    return new GbifWsRetrofitClient(testRestTemplate.getRootUri(), objectMapper);
+  public InMemoryEmailSender inMemoryEmailSender() {
+    return new InMemoryEmailSender();
   }
 
   @Bean

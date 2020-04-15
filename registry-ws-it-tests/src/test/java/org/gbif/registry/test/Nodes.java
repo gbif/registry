@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static org.junit.Assert.assertTrue;
 
 @Component
-public class Nodes extends JsonBackedData2<Node> {
+public class Nodes extends JsonBackedData<Node> {
 
   @Autowired
   public Nodes(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {

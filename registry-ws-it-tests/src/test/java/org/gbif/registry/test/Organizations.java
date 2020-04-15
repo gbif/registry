@@ -30,7 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Organizations extends JsonBackedData2<Organization> {
+public class Organizations extends JsonBackedData<Organization> {
 
   private static NodeService nodeService;
   private static OrganizationService organizationService;

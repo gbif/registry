@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Identifiers extends JsonBackedData2<Identifier> {
+public class Identifiers extends JsonBackedData<Identifier> {
 
   @Autowired
   private Identifiers(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
