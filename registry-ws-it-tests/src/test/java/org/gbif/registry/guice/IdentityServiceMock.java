@@ -21,7 +21,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 
 import java.util.Date;
 import java.util.List;

@@ -20,8 +20,8 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.ws.fixtures.RequestTestFixture;
-import org.gbif.registry.ws.fixtures.UserTestFixture;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 
 import java.util.stream.Collectors;
 
@@ -44,9 +44,9 @@ import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.gbif.registry.ws.fixtures.UserTestFixture.EMAIL;
-import static org.gbif.registry.ws.fixtures.UserTestFixture.PASSWORD;
-import static org.gbif.registry.ws.fixtures.UserTestFixture.USERNAME;
+import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
+import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
+import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
