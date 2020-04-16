@@ -188,7 +188,8 @@ public class LegacyEndpointResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse newly registered endpoint key (id)
-    LegacyEndpointResponse response = requestTestFixture.extractXmlResponse(actions);
+    LegacyEndpointResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyEndpointResponse.class);
     assertNotNull(response.getKey(), "Registered Endpoint key should be in response");
     assertEquals(datasetKey.toString(), response.getResourceKey());
     assertEquals(ENDPOINT_ACCESS_POINT_URL, response.getAccessPointURL());
@@ -405,7 +406,7 @@ public class LegacyEndpointResourceIT {
 
     // parse returned list of services
     LegacyEndpointResponseListWrapper responseWrapper =
-        requestTestFixture.extractXmlResponse(actions);
+        requestTestFixture.extractXmlResponse(actions, LegacyEndpointResponseListWrapper.class);
     LegacyEndpointResponse response = responseWrapper.getLegacyEndpointResponses().get(0);
 
     assertEquals(String.valueOf(endpointKey), response.getKey());
