@@ -109,7 +109,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
 
   @Override
   public void purge(Organization organization) {
-    installationCache.remove(organization.getKey().toString());
+    organizationCache.remove(organization.getKey().toString());
   }
 
   @Override
@@ -127,8 +127,9 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   }
 
   @Override
-  public PagingResponse<Dataset> getInstallationDatasets(String installationKey) {
-    return installationService.getHostedDatasets(UUID.fromString(installationKey), null);
+  public PagingResponse<Dataset> getInstallationDatasets(
+      String installationKey, PagingRequest pagingRequest) {
+    return installationService.getHostedDatasets(UUID.fromString(installationKey), pagingRequest);
   }
 
   @Override
