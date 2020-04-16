@@ -65,7 +65,6 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,8 +103,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatasetIT extends NetworkEntityTest<Dataset> {
 
-  @LocalServerPort
-  int localServerPort;
+  @LocalServerPort int localServerPort;
 
   @RegisterExtension
   static EsServer esServer =
@@ -423,7 +421,6 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  @Disabled("See https://github.com/gbif/registry/issues/22")
   public void testDismaxSearch() throws InterruptedException {
 
     Dataset d = newAndCreate(1);
@@ -498,17 +495,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertEquals(gpsKey, docs.get(0).getKey());
   }
 
-  private void update(Organization publisher) throws InterruptedException {
-    organizationService.update(publisher);
-    // jenkins sometimes fails to update solr in time for the query to include the modified index.
-    // allow for some extra time (it should have no bad impact on the real time index)
-
-    // TODO: https://github.com/gbif/registry/issues/22
-    Thread.sleep(100);
-  }
-
   @Test
-  @Disabled("See https://github.com/gbif/registry/issues/22")
   public void testSearchListener() throws InterruptedException {
     Dataset d = newEntity();
     d = create(d, 1);
@@ -520,6 +507,9 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // update
     d.setTitle("NEW-DATASET-TITLE");
     service.update(d);
+
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     assertAll(1l);
     assertSearch("Pontaurus", 0);
     assertSearch(d.getTitle(), 1);
@@ -527,12 +517,14 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     // update publishing organization title should be captured
     Organization publisher = organizationService.get(d.getPublishingOrganizationKey());
     assertSearch(publisher.getTitle(), 1);
+
     publisher.setTitle("OWNERTITLE");
-    update(publisher);
+    organizationService.update(publisher);
     assertSearch(publisher.getTitle(), 1);
 
     publisher.setTitle("BGBM");
-    update(publisher);
+    organizationService.update(publisher);
+
     assertSearch(publisher.getTitle(), 1);
     assertSearch("OWNERTITLE", 0);
 
@@ -542,16 +534,18 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     Organization host = organizationService.get(installation.getOrganizationKey());
     assertSearch(host.getTitle(), 1);
     host.setTitle("HOSTTITLE");
-    update(host);
+
+    organizationService.update(host);
     assertSearch(host.getTitle(), 1);
 
     host.setTitle("BGBM");
-    update(host);
+    organizationService.update(host);
     assertSearch(host.getTitle(), 1);
     assertSearch("HOSTTITLE", 0);
 
     // check a deletion removes the dataset for search
     service.delete(d.getKey());
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
     assertSearch(host.getTitle(), 0);
   }
 
@@ -1116,7 +1110,6 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
   }
 
   @Test
-  @Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
   public void testCountrySearch() {
     createCountryDatasets(Country.ANDORRA, 3);
     createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1, Country.DJIBOUTI);
@@ -1125,19 +1118,23 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     createCountryDatasets(DatasetType.CHECKLIST, Country.HAITI, 4, Country.GABON, Country.FIJI);
     createCountryDatasets(DatasetType.OCCURRENCE, Country.DOMINICA, 2, Country.DJIBOUTI);
 
+    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
+
     assertSearch(Country.ALBANIA, null, 0);
     assertSearch(Country.ANDORRA, null, 3);
     assertSearch(Country.DJIBOUTI, null, 1);
     assertSearch(Country.HAITI, null, 7);
     assertSearch(Country.UNKNOWN, null, 0);
 
+    // @Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
+    /*
     assertSearch(Country.HAITI, Country.GABON, 4);
     assertSearch(Country.HAITI, Country.FIJI, 4);
     assertSearch(Country.HAITI, Country.DENMARK, 3);
     assertSearch(Country.DJIBOUTI, Country.DENMARK, 0);
     assertSearch(Country.DJIBOUTI, Country.DJIBOUTI, 1);
     assertSearch(Country.DJIBOUTI, Country.GERMANY, 0);
-    assertSearch(null, Country.DJIBOUTI, 3);
+    assertSearch(null, Country.DJIBOUTI, 3);*/
   }
 
   @Test
