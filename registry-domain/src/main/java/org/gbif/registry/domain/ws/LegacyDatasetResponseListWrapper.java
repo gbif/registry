@@ -22,12 +22,21 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(
     using = LegacyDatasetResponseListWrapper.LegacyDatasetResponseListWrapperJsonSerializer.class)
+@JsonDeserialize(
+    using = LegacyDatasetResponseListWrapper.LegacyDatasetResponseListWrapperJsonDeserializer.class)
 @XmlRootElement(name = "legacyDatasetResponses")
 public class LegacyDatasetResponseListWrapper {
 
@@ -67,6 +76,23 @@ public class LegacyDatasetResponseListWrapper {
         }
       }
       jgen.writeEndArray();
+    }
+  }
+
+  public static class LegacyDatasetResponseListWrapperJsonDeserializer
+      extends JsonDeserializer<LegacyDatasetResponseListWrapper> {
+
+    @Override
+    public LegacyDatasetResponseListWrapper deserialize(JsonParser p, DeserializationContext ctxt)
+        throws IOException {
+      if (p.getCurrentToken() != JsonToken.START_ARRAY) {
+        throw new JsonParseException(p, "Start array expected");
+      }
+
+      List<LegacyDatasetResponse> legacyDatasetResponses =
+          p.readValueAs(new TypeReference<List<LegacyDatasetResponse>>() {});
+
+      return new LegacyDatasetResponseListWrapper(legacyDatasetResponses);
     }
   }
 }
