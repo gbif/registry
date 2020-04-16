@@ -66,6 +66,7 @@ import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.RESOURCE_
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.TYPE_PARAM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
@@ -467,7 +468,7 @@ public class LegacyEndpointResourceIT {
     ResultActions actions =
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    // JSON object expected, with array of services [{},{},..]
-    // TODO: 16/04/2020 assert content
+    String response = requestTestFixture.extractResponse(actions);
+    assertTrue(response.contains("EML"));
   }
 }
