@@ -132,8 +132,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     GroupedParams<P> groupedParams = groupParameters(searchRequest);
 
     // add query
-    buildQuery(groupedParams.queryParams, searchRequest.getQ())
-        .ifPresent(searchSourceBuilder::query);
+    if (SearchConstants.QUERY_WILDCARD.equals(searchRequest.getQ())) { // Is a search all
+      searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+    } else {
+      buildQuery(groupedParams.queryParams, searchRequest.getQ())
+          .ifPresent(searchSourceBuilder::query);
+    }
 
     // add aggs
     buildAggs(searchRequest, groupedParams.postFilterParams, facetsEnabled)

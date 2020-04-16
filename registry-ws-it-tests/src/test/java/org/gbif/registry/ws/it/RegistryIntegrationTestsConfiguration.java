@@ -20,7 +20,6 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
-import org.gbif.registry.events.VarnishPurgeListener;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
@@ -53,7 +52,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 
 @Lazy
 @TestConfiguration
@@ -96,7 +94,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
             FlywayAutoConfiguration.FlywayConfiguration.class,
             FlywayAutoConfiguration.class,
             DatasetBatchIndexBuilder.class,
-            GbifWsClient.class, VarnishPurgeConfiguration.class
+            GbifWsClient.class,
+            VarnishPurgeConfiguration.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)

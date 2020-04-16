@@ -27,15 +27,16 @@
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>com.squareup.retrofit2</groupId>
       <artifactId>retrofit-mock</artifactId>
-      <version>${retrofit.version}</version>
+      <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>pl.allegro.tech</groupId>
       <artifactId>embedded-elasticsearch</artifactId>
-      <version>2.10.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -86,9 +87,9 @@
     <dependency>
       <groupId>org.jvnet.mock-javamail</groupId>
       <artifactId>mock-javamail</artifactId>
-      <version>1.9</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt</artifactId>
@@ -105,17 +106,14 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>3.8.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.bval</groupId>
       <artifactId>org.apache.bval.bundle</artifactId>
-      <version>0.5</version>
     </dependency>
     <dependency>
       <groupId>io.zonky.test</groupId>
       <artifactId>embedded-database-spring-test</artifactId>
-      <version>1.5.3</version>
       <scope>test</scope>
     </dependency>
 
@@ -133,7 +131,6 @@
     <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
       <artifactId>mybatis-spring-boot-starter-test</artifactId>
-      <version>2.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
