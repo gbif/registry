@@ -27,8 +27,11 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
+import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
@@ -39,7 +42,6 @@ import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.resources.legacy.LegacyDatasetResourceIT.ContextInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
@@ -49,7 +51,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -67,9 +68,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Lists;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
@@ -109,6 +107,10 @@ public class LegacyDatasetResourceIT {
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
 
+  @RegisterExtension
+  public final DatabaseInitializer databaseRule =
+      new DatabaseInitializer(database.getTestDatabase());
+
   static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
@@ -140,20 +142,17 @@ public class LegacyDatasetResourceIT {
   private final TestDataFactory testDataFactory;
   private final RequestTestFixture requestTestFixture;
   private final SimplePrincipalProvider pp;
-  private final ObjectMapper objectMapper;
 
   @Autowired
   public LegacyDatasetResourceIT(
       DatasetService datasetService,
       TestDataFactory testDataFactory,
       RequestTestFixture requestTestFixture,
-      SimplePrincipalProvider pp,
-      @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
+      SimplePrincipalProvider pp) {
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
     this.requestTestFixture = requestTestFixture;
     this.pp = pp;
-    this.objectMapper = objectMapper;
   }
 
   @BeforeEach
@@ -206,8 +205,7 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse newly registered IPT key (UUID)
-    IptEntityResponse iptEntityResponse =
-        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
+    IptEntityResponse iptEntityResponse = requestTestFixture.extractXmlResponse(actions);
 
     assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
@@ -295,8 +293,7 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse updated registered Dataset key (UUID)
-    IptSimplifiedResponse response =
-        requestTestFixture.extractXmlResponse(actions, IptSimplifiedResponse.class);
+    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
 
     assertNotNull(response.getKey(), "Updated Dataset key should be in response");
     assertEquals(datasetKey.toString(), response.getKey());
@@ -408,8 +405,7 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse updated registered Dataset key (UUID)
-    IptSimplifiedResponse response =
-        requestTestFixture.extractXmlResponse(actions, IptSimplifiedResponse.class);
+    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
 
     assertNotNull(response.getKey(), "Updated Dataset key should be in response");
     assertEquals(datasetKey.toString(), response.getKey());
@@ -460,63 +456,55 @@ public class LegacyDatasetResourceIT {
     ResultActions actions =
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-    ObjectMapper objectMapper = new ObjectMapper();
-    // JSON array expected, with single resource
-    ArrayNode rootNode = objectMapper.readValue(content, ArrayNode.class);
-    assertEquals(1, rootNode.size());
-    // keys "key" and "name" expected
-    assertEquals(datasetKey.toString(), rootNode.get(0).get("key").textValue());
-    assertEquals(
-        dataset.getPublishingOrganizationKey().toString(),
-        rootNode.get(0).get("organisationKey").textValue());
-    assertEquals(dataset.getTitle(), rootNode.get(0).get("name").textValue());
+    LegacyDatasetResponseListWrapper responseWrapper =
+        requestTestFixture.extractJsonResponse(actions, LegacyDatasetResponseListWrapper.class);
+
+    LegacyDatasetResponse response = responseWrapper.getLegacyDatasetResponses().get(0);
+    assertEquals(1, responseWrapper.getLegacyDatasetResponses().size());
+    // "key" and "name" expected
+    assertEquals(datasetKey.toString(), response.getKey());
+    assertEquals(dataset.getPublishingOrganizationKey().toString(), response.getOrganisationKey());
+    assertEquals(dataset.getTitle(), response.getName());
   }
 
-  //  /**
-  //   * The test sends a get all datasets owned by organization (GET) request, the XML response
-  // having
-  //   * at the very least the dataset key, publishing organization key, dataset title, and dataset
-  //   * description.
-  //   */
-  //  @Test
-  //  public void testGetLegacyDatasetsForOrganizationXML() throws Exception {
-  //    // persist new organization (IPT hosting organization)
-  //    Organization organization = testDataFactory.newPersistedOrganization();
-  //    UUID organizationKey = organization.getKey();
-  //    assertNotNull(organizationKey);
-  //
-  //    // persist new installation of type IPT
-  //    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
-  //    UUID installationKey = installation.getKey();
-  //    assertNotNull(installationKey);
-  //
-  //    // persist new Dataset associated to installation
-  //    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
-  //    UUID datasetKey = dataset.getKey();
-  //    assertNotNull(datasetKey);
-  //
-  //    // construct request uri
-  //    String uri = "/registry/resource?organisationKey=" + organizationKey;
-  //
-  //    // send GET request with no credentials
-  //    ResultActions actions = requestTestFixture.getRequest(uri)
-  //      .andExpect(status().is2xxSuccessful());
-  //
-  //    // parse newly registered list of datasets
-  //    LegacyDatasetResponseListWrapper response = requestTestFixture
-  //      .extractXmlResponse(actions, LegacyDatasetResponseListWrapper.class);
-  //
-  //    // TODO: Response must be wrapped with root <resources>, not <legacyDatasetResponses>
-  ////    assertTrue(result.content.contains("<legacyDatasetResponses><resource>"));
-  ////    // verify character encoding here already, known to cause issue on some systems
-  ////    assertTrue(result.content.contains("Türkei"));
-  //
-  //    LegacyDatasetResponse actualResponse = response.getLegacyDatasetResponses().get(0);
-  //    assertEquals(datasetKey.toString(), actualResponse.getKey());
-  //    assertEquals(organizationKey.toString(), actualResponse.getOrganisationKey());
-  //    assertEquals(dataset.getTitle(), actualResponse.getName());
-  //  }
+  /**
+   * The test sends a get all datasets owned by organization (GET) request, the XML response having
+   * at the very least the dataset key, publishing organization key, dataset title, and dataset
+   * description.
+   */
+  @Test
+  public void testGetLegacyDatasetsForOrganizationXML() throws Exception {
+    // persist new organization (IPT hosting organization)
+    Organization organization = testDataFactory.newPersistedOrganization();
+    UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
+
+    // persist new installation of type IPT
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
+    UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
+
+    // persist new Dataset associated to installation
+    Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
+    UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
+
+    // construct request uri
+    String uri = "/registry/resource?organisationKey=" + organizationKey;
+
+    // send GET request with no credentials
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
+
+    // parse newly registered list of datasets
+    LegacyDatasetResponseListWrapper responseWrapper =
+        requestTestFixture.extractXmlResponse(actions);
+
+    LegacyDatasetResponse response = responseWrapper.getLegacyDatasetResponses().get(0);
+    assertEquals(datasetKey.toString(), response.getKey());
+    assertEquals(organizationKey.toString(), response.getOrganisationKey());
+    assertEquals(dataset.getTitle(), response.getName());
+  }
 
   /**
    * The test sends a get dataset (GET) request, the JSON response having all of: key,
@@ -586,10 +574,9 @@ public class LegacyDatasetResourceIT {
     ResultActions actions =
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    String content = actions.andReturn().getResponse().getContentAsString();
+    ErrorResponse response = requestTestFixture.extractJsonResponse(actions, ErrorResponse.class);
 
-    // JSON object expected, representing single dataset
-    assertEquals("{\"error\":\"No resource matches the key provided\"}", content);
+    assertEquals("No resource matches the key provided", response.getError());
   }
 
   /**
@@ -627,8 +614,7 @@ public class LegacyDatasetResourceIT {
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // XML expected, parse Dataset
-    LegacyDatasetResponse response =
-        requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponse.class);
+    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
 
     assertEquals(dataset.getKey().toString(), response.getKey());
     assertEquals(dataset.getTitle(), response.getName());
@@ -659,13 +645,8 @@ public class LegacyDatasetResourceIT {
     ResultActions actions =
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    String content = actions.andReturn().getResponse().getContentAsString();
-    JsonNode rootNode = objectMapper.readTree(content);
-
-    // JSON object expected, with single entry
-    assertEquals(1, rootNode.size());
-    String error = rootNode.toString();
-    assertEquals("{\"error\":\"No organisation matches the key provided\"}", error);
+    ErrorResponse response = requestTestFixture.extractJsonResponse(actions, ErrorResponse.class);
+    assertEquals("No organisation matches the key provided", response.getError());
   }
 
   /**

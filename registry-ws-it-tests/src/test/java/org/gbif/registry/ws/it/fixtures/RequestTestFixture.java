@@ -19,6 +19,7 @@ import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -26,10 +27,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.xml.transform.stream.StreamSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -38,7 +42,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
@@ -71,7 +74,7 @@ public class RequestTestFixture {
   private SigningService signingService;
   private Md5EncodeService md5EncodeService;
   private ObjectMapper objectMapper;
-  private XmlMapper xmlMapper;
+  private Jaxb2Marshaller marshaller;
 
   @Autowired
   public RequestTestFixture(
@@ -79,12 +82,12 @@ public class RequestTestFixture {
       SigningService signingService,
       Md5EncodeService md5EncodeService,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      XmlMapper xmlMapper) {
+      Jaxb2Marshaller marshaller) {
     this.mvc = mvc;
     this.signingService = signingService;
     this.md5EncodeService = md5EncodeService;
     this.objectMapper = objectMapper;
-    this.xmlMapper = xmlMapper;
+    this.marshaller = marshaller;
   }
 
   public ResultActions getRequest(String path) throws Exception {
@@ -233,15 +236,14 @@ public class RequestTestFixture {
   }
 
   public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString =
-        actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-    return objectMapper.readValue(contentAsString, entityClass);
+    String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+    return objectMapper.readValue(content, entityClass);
   }
 
-  public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString =
-        actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-    return xmlMapper.readValue(contentAsString, entityClass);
+  @SuppressWarnings("unchecked")
+  public <T> T extractXmlResponse(ResultActions actions) {
+    byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
+    return (T) marshaller.unmarshal(new StreamSource(new ByteArrayInputStream(content)));
   }
 
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(
