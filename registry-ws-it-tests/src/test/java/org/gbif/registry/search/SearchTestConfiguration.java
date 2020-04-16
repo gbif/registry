@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.test;
+package org.gbif.registry.search;
 
 import org.gbif.api.model.checklistbank.DatasetMetrics;
 import org.gbif.api.model.checklistbank.NameUsage;
@@ -38,7 +38,7 @@ import retrofit2.Call;
 import retrofit2.mock.Calls;
 
 @Configuration(proxyBeanMethods = false)
-public class TestConfiguration {
+public class SearchTestConfiguration {
 
   @Bean
   @Primary
@@ -80,10 +80,4 @@ public class TestConfiguration {
       }
     };
   }
-
-  //  @Bean
-  //  @Primary
-  //  VarnishPurgeListener varnishPurgeListener() {
-  //    return Mockito.mock(VarnishPurgeListener.class);
-  //  }
 }
