@@ -19,12 +19,15 @@ import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.occurrence.query.TitleLookupService;
+import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.InMemoryEmailSender;
 import org.gbif.registry.message.MessagePublisherStub;
 import org.gbif.registry.search.DatasetSearchServiceStub;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.test.mocks.TitleLookupServiceMock;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -96,7 +99,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
             FlywayAutoConfiguration.class,
             DatasetBatchIndexBuilder.class,
             GbifWsClient.class,
-            VarnishPurgeConfiguration.class
+            VarnishPurgeConfiguration.class,
+            TitleLookupConfiguration.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
@@ -163,6 +167,11 @@ public class RegistryIntegrationTestsConfiguration {
     simplePrincipalProvider.setPrincipal("WS TEST");
     setSecurityPrincipal(simplePrincipalProvider, UserRole.REGISTRY_ADMIN);
     return simplePrincipalProvider;
+  }
+
+  @Bean
+  public TitleLookupService titleLookupServiceMock() {
+    return new TitleLookupServiceMock();
   }
 
   public static void setSecurityPrincipal(
