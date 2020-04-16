@@ -13,22 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.fixtures;
+package org.gbif.registry.ws.it.fixtures;
 
 import org.gbif.ws.security.Md5EncodeService;
 import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.transform.stream.StreamSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -37,9 +43,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import static org.gbif.registry.ws.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
@@ -70,7 +75,7 @@ public class RequestTestFixture {
   private SigningService signingService;
   private Md5EncodeService md5EncodeService;
   private ObjectMapper objectMapper;
-  private XmlMapper xmlMapper;
+  private Jaxb2Marshaller marshaller;
 
   @Autowired
   public RequestTestFixture(
@@ -78,12 +83,12 @@ public class RequestTestFixture {
       SigningService signingService,
       Md5EncodeService md5EncodeService,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      XmlMapper xmlMapper) {
+      Jaxb2Marshaller marshaller) {
     this.mvc = mvc;
     this.signingService = signingService;
     this.md5EncodeService = md5EncodeService;
     this.objectMapper = objectMapper;
-    this.xmlMapper = xmlMapper;
+    this.marshaller = marshaller;
   }
 
   public ResultActions getRequest(String path) throws Exception {
@@ -231,14 +236,23 @@ public class RequestTestFixture {
     return mvc.perform(delete(path).headers(authHeaders));
   }
 
+  public String extractResponse(ResultActions actions) throws Exception {
+    return actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+  }
+
   public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
-    return objectMapper.readValue(contentAsString, entityClass);
+    String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+    return objectMapper.readValue(content, entityClass);
   }
 
   public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
-    String contentAsString = actions.andReturn().getResponse().getContentAsString();
-    return xmlMapper.readValue(contentAsString, entityClass);
+    byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
+    JAXBElement<T> jaxbElement =
+        marshaller
+            .createUnmarshaller()
+            .unmarshal(new StreamSource(new ByteArrayInputStream(content)), entityClass);
+
+    return jaxbElement.getValue();
   }
 
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(

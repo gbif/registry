@@ -32,7 +32,7 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
-import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 
 import java.util.Collections;
 

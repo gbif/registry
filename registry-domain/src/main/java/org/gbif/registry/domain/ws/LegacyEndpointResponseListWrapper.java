@@ -22,12 +22,22 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(
     using = LegacyEndpointResponseListWrapper.LegacyEndpointResponseListWrapperJsonSerializer.class)
+@JsonDeserialize(
+    using =
+        LegacyEndpointResponseListWrapper.LegacyEndpointResponseListWrapperJsonDeserializer.class)
 @XmlRootElement(name = "legacyEndpointResponses")
 public class LegacyEndpointResponseListWrapper {
 
@@ -67,6 +77,23 @@ public class LegacyEndpointResponseListWrapper {
         }
       }
       jgen.writeEndArray();
+    }
+  }
+
+  public static class LegacyEndpointResponseListWrapperJsonDeserializer
+      extends JsonDeserializer<LegacyEndpointResponseListWrapper> {
+
+    @Override
+    public LegacyEndpointResponseListWrapper deserialize(JsonParser p, DeserializationContext ctxt)
+        throws IOException {
+      if (p.getCurrentToken() != JsonToken.START_ARRAY) {
+        throw new JsonParseException(p, "Start array expected");
+      }
+
+      List<LegacyEndpointResponse> legacyEndpointResponses =
+          p.readValueAs(new TypeReference<List<LegacyEndpointResponse>>() {});
+
+      return new LegacyEndpointResponseListWrapper(legacyEndpointResponses);
     }
   }
 }

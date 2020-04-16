@@ -50,6 +50,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -90,7 +92,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @GetMapping("{key}")
-  @Nullable
   @NullToNotFound("/node/{key}")
   @Override
   public Node get(@PathVariable UUID key) {
@@ -227,8 +228,9 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 
+  @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public int addContact(UUID targetEntityKey, Contact contact) {
+  public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 

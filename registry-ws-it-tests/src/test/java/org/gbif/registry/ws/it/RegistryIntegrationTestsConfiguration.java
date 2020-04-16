@@ -72,6 +72,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
       "org.gbif.registry.ws.surety",
+      "org.gbif.registry.ws.it.fixtures",
       "org.gbif.registry.security",
       "org.gbif.registry.persistence",
       "org.gbif.registry.identity",

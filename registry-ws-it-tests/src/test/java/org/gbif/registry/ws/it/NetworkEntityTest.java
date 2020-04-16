@@ -38,7 +38,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.security.AccessControlException;

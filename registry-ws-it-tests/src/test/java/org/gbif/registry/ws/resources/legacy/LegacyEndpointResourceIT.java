@@ -20,40 +20,60 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.test.Organizations;
+import org.gbif.registry.domain.ws.ErrorResponse;
+import org.gbif.registry.domain.ws.LegacyEndpointResponse;
+import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.utils.Parsers;
-import org.gbif.registry.utils.Requests;
-import org.gbif.utils.HttpUtil;
+import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collections;
 import java.util.UUID;
 
-import javax.ws.rs.core.Response;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.ACCESS_POINT_URL_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.RESOURCE_KEY_PARAM;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.TYPE_PARAM;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {LegacyEndpointResourceIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class LegacyEndpointResourceIT {
 
   @RegisterExtension
@@ -65,21 +85,67 @@ public class LegacyEndpointResourceIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  @LocalServerPort private int localServerPort;
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   public static final String ENDPOINT_DESCRIPTION = "Description of Test Endpoint";
   public static final String ENDPOINT_TYPE = "EML";
   public static final String ENDPOINT_ACCESS_POINT_URL =
       "http://ipt.gbif.org/eml.do?r=bigdbtest&v=18";
 
+  private final RequestTestFixture requestTestFixture;
   private final DatasetService datasetService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
   private final TestDataFactory testDataFactory;
+  private final SimplePrincipalProvider pp;
 
   @Autowired
-  public LegacyEndpointResourceIT(DatasetService datasetService, TestDataFactory testDataFactory) {
+  public LegacyEndpointResourceIT(
+      RequestTestFixture requestTestFixture,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory,
+      SimplePrincipalProvider pp) {
+    this.requestTestFixture = requestTestFixture;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
+    this.pp = pp;
+  }
+
+  @BeforeEach
+  public void setup() {
+    if (pp != null) {
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              pp.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /**
@@ -95,38 +161,41 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation
-    Installation installation = testDataFactory.newInstallation(organizationKey);
+    Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildLegacyEndpointParameters(datasetKey);
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildLegacyEndpointParameters(datasetKey);
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/service", localServerPort);
+    String uri = "/registry/service";
 
     // before sending the update POST request, count the number of endpoints
     assertEquals(0, datasetService.listEndpoints(datasetKey).size());
 
     // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
+    ResultActions actions =
+        requestTestFixture
+            .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+            .andExpect(status().is2xxSuccessful());
 
     // parse newly registered endpoint key (id)
-    Parsers.saxParser.parse(
-        Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);
-    assertNotNull(
-        "Registered Endpoint key should be in response", Parsers.legacyEndpointResponseHandler.key);
-    assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);
-    assertEquals(ENDPOINT_ACCESS_POINT_URL, Parsers.legacyEndpointResponseHandler.accessPointURL);
-    assertEquals(ENDPOINT_TYPE, Parsers.legacyEndpointResponseHandler.type);
-    assertEquals(ENDPOINT_DESCRIPTION, Parsers.legacyEndpointResponseHandler.description);
+    LegacyEndpointResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyEndpointResponse.class);
+    assertNotNull(response.getKey(), "Registered Endpoint key should be in response");
+    assertEquals(datasetKey.toString(), response.getResourceKey());
+    assertEquals(ENDPOINT_ACCESS_POINT_URL, response.getAccessPointURL());
+    assertEquals(ENDPOINT_TYPE, response.getType());
+    assertEquals(ENDPOINT_DESCRIPTION, response.getDescription());
 
     // count the number of endpoints
     assertEquals(1, datasetService.listEndpoints(datasetKey).size());
@@ -142,30 +211,30 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildLegacyEndpointParameters(datasetKey);
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
+    MultiValueMap<String, String> data = buildLegacyEndpointParameters(datasetKey);
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/service", localServerPort);
+    String uri = "/registry/service";
 
     // send POST request with credentials
     // assign the organization the random generated key, to provoke authorization failure
-    organization.setKey(UUID.randomUUID());
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
     // 401 expected
-    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.getStatusCode());
+    requestTestFixture
+        .postRequestUrlEncoded(data, UUID.randomUUID(), organization.getPassword(), uri)
+        .andExpect(status().isUnauthorized());
   }
 
   /**
@@ -178,38 +247,33 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // populate params for ws
-    List<NameValuePair> data = buildLegacyEndpointParameters(datasetKey);
+    MultiValueMap<String, String> data = buildLegacyEndpointParameters(datasetKey);
     assertEquals(4, data.size());
     // remove mandatory key/value before sending
-    Iterator<NameValuePair> iter = data.iterator();
-    while (iter.hasNext()) {
-      NameValuePair pair = iter.next();
-      if (pair.getName().equals("type")) {
-        iter.remove();
-      }
-    }
+    data.remove(TYPE_PARAM);
     assertEquals(3, data.size());
-    UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(data, Charset.forName("UTF-8"));
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/service", localServerPort);
+    String uri = "/registry/service";
 
     // send POST request with credentials
-    HttpUtil.Response result =
-        Requests.http.post(uri, null, null, Organizations.credentials(organization), uefe);
-
     // 400 expected
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatusCode());
+    requestTestFixture
+        .postRequestUrlEncoded(data, organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isBadRequest());
   }
 
   /**
@@ -223,14 +287,17 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // add endpooint for Dataset
     Endpoint endpoint = testDataFactory.newEndpoint();
@@ -240,15 +307,14 @@ public class LegacyEndpointResourceIT {
     assertEquals(1, datasetService.listEndpoints(datasetKey).size());
 
     // construct update request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/service?resourceKey=" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/service?resourceKey=" + datasetKey;
 
     // send delete POST request
-    HttpUtil.Response result = Requests.http.delete(uri, Organizations.credentials(organization));
+    requestTestFixture
+        .deleteRequestUrlEncoded(organizationKey, organization.getPassword(), uri)
+        .andExpect(status().isOk());
 
     // check that the dataset was deleted
-    assertEquals(200, result.getStatusCode());
     assertEquals(0, datasetService.listEndpoints(datasetKey).size());
   }
 
@@ -261,14 +327,17 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // add endpooint for Dataset
     Endpoint endpoint = testDataFactory.newEndpoint();
@@ -278,35 +347,27 @@ public class LegacyEndpointResourceIT {
     assertEquals(1, datasetService.listEndpoints(datasetKey).size());
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/service.json?resourceKey=" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/service.json?resourceKey=" + datasetKey;
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
+
+    LegacyEndpointResponseListWrapper responseWrapper =
+        requestTestFixture.extractJsonResponse(actions, LegacyEndpointResponseListWrapper.class);
 
     // JSON array expected, with single endpoint
-    assertTrue(result.content.startsWith("[") && result.content.endsWith("]"));
-    JsonNode rootNode = objectMapper.readTree(result.content);
-    assertEquals(1, rootNode.size());
+    LegacyEndpointResponse response = responseWrapper.getLegacyEndpointResponses().get(0);
+    assertEquals(1, responseWrapper.getLegacyEndpointResponses().size());
     // all the expected keys in response?
-    assertEquals(
-        String.valueOf(endpointKey),
-        rootNode.get(0).get(LegacyResourceConstants.KEY_PARAM).getTextValue());
-    assertEquals(
-        datasetKey.toString(),
-        rootNode.get(0).get(LegacyResourceConstants.RESOURCE_KEY_PARAM).getTextValue());
-    assertEquals(
-        endpoint.getType().toString(),
-        rootNode.get(0).get(LegacyResourceConstants.TYPE_PARAM).getTextValue());
-    assertEquals(
-        endpoint.getUrl().toASCIIString(),
-        rootNode.get(0).get(LegacyResourceConstants.ACCESS_POINT_URL_PARAM).getTextValue());
+    assertEquals(String.valueOf(endpointKey), response.getKey());
+    assertEquals(datasetKey.toString(), response.getResourceKey());
+    assertEquals(endpoint.getType().toString(), response.getType());
+    assertNotNull(endpoint.getUrl());
+    assertEquals(endpoint.getUrl().toASCIIString(), response.getAccessPointURL());
     // simply empty values, but expected nonetheless
-    assertNotNull(
-        rootNode.get(0).get(LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM).getTextValue());
-    assertNotNull(
-        rootNode.get(0).get(LegacyResourceConstants.TYPE_DESCRIPTION_PARAM).getTextValue());
+    assertNotNull(response.getDescriptionLanguage());
+    assertNotNull(response.getTypeDescription());
   }
 
   /**
@@ -318,14 +379,17 @@ public class LegacyEndpointResourceIT {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     UUID organizationKey = organization.getKey();
+    assertNotNull(organizationKey);
 
     // persist new installation of type IPT
     Installation installation = testDataFactory.newPersistedInstallation(organizationKey);
     UUID installationKey = installation.getKey();
+    assertNotNull(installationKey);
 
     // persist new Dataset associated to installation
     Dataset dataset = testDataFactory.newPersistedDataset(organizationKey, installationKey);
     UUID datasetKey = dataset.getKey();
+    assertNotNull(datasetKey);
 
     // add endpooint for Dataset
     Endpoint endpoint = testDataFactory.newEndpoint();
@@ -335,28 +399,26 @@ public class LegacyEndpointResourceIT {
     assertEquals(1, datasetService.listEndpoints(datasetKey).size());
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/service?resourceKey=" + datasetKey.toString(), localServerPort);
+    String uri = "/registry/service?resourceKey=" + datasetKey;
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
-
-    // TODO: Response must be wrapped with root <services>, not <legacyEndpointResponses>
-    assertTrue(result.content.contains("<legacyEndpointResponses><service>"));
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // parse returned list of services
-    Parsers.saxParser.parse(
-        Parsers.getUtf8Stream(result.content), Parsers.legacyEndpointResponseHandler);
-    assertEquals(String.valueOf(endpointKey), Parsers.legacyEndpointResponseHandler.key);
-    assertEquals(datasetKey.toString(), Parsers.legacyEndpointResponseHandler.resourceKey);
-    assertEquals(endpoint.getType().name(), Parsers.legacyEndpointResponseHandler.type);
-    assertEquals(
-        endpoint.getUrl().toASCIIString(), Parsers.legacyEndpointResponseHandler.accessPointURL);
-    assertEquals(endpoint.getDescription(), Parsers.legacyEndpointResponseHandler.description);
-    assertEquals("", Parsers.legacyEndpointResponseHandler.organisationKey);
-    assertEquals("", Parsers.legacyEndpointResponseHandler.typeDescription);
-    assertEquals("", Parsers.legacyEndpointResponseHandler.descriptionLanguage);
+    LegacyEndpointResponseListWrapper responseWrapper =
+        requestTestFixture.extractXmlResponse(actions, LegacyEndpointResponseListWrapper.class);
+    LegacyEndpointResponse response = responseWrapper.getLegacyEndpointResponses().get(0);
+
+    assertEquals(String.valueOf(endpointKey), response.getKey());
+    assertEquals(datasetKey.toString(), response.getResourceKey());
+    assertEquals(endpoint.getType().toString(), response.getType());
+    assertNotNull(endpoint.getUrl());
+    assertEquals(endpoint.getUrl().toASCIIString(), response.getAccessPointURL());
+    assertEquals(endpoint.getDescription(), response.getDescription());
+    assertEquals("", response.getOrganisationKey());
+    assertEquals("", response.getTypeDescription());
+    assertEquals("", response.getDescriptionLanguage());
   }
 
   /**
@@ -366,16 +428,15 @@ public class LegacyEndpointResourceIT {
   @Test
   public void testGetLegacyEndpointsForDatasetNotFoundJSON() throws Exception {
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/service.json?resourceKey=" + UUID.randomUUID().toString(), localServerPort);
+    String uri = "/registry/service.json?resourceKey=" + UUID.randomUUID();
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
+    ErrorResponse response = requestTestFixture.extractJsonResponse(actions, ErrorResponse.class);
     // JSON object expected, representing single dataset
-    assertTrue(
-        result.content.equalsIgnoreCase("{\"error\":\"No dataset matches the key provided\"}"));
+    assertEquals("No dataset matches the key provided", response.getError());
   }
 
   /**
@@ -384,16 +445,12 @@ public class LegacyEndpointResourceIT {
    * @param datasetKey dataset key
    * @return list of name value pairs
    */
-  private List<NameValuePair> buildLegacyEndpointParameters(UUID datasetKey) {
-    List<NameValuePair> data = new ArrayList<NameValuePair>();
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.RESOURCE_KEY_PARAM, datasetKey.toString()));
-    data.add(
-        new BasicNameValuePair(LegacyResourceConstants.DESCRIPTION_PARAM, ENDPOINT_DESCRIPTION));
-    data.add(new BasicNameValuePair(LegacyResourceConstants.TYPE_PARAM, ENDPOINT_TYPE));
-    data.add(
-        new BasicNameValuePair(
-            LegacyResourceConstants.ACCESS_POINT_URL_PARAM, ENDPOINT_ACCESS_POINT_URL));
+  private MultiValueMap<String, String> buildLegacyEndpointParameters(UUID datasetKey) {
+    MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
+    data.add(RESOURCE_KEY_PARAM, datasetKey.toString());
+    data.add(DESCRIPTION_PARAM, ENDPOINT_DESCRIPTION);
+    data.add(TYPE_PARAM, ENDPOINT_TYPE);
+    data.add(ACCESS_POINT_URL_PARAM, ENDPOINT_ACCESS_POINT_URL);
     return data;
   }
 
@@ -405,16 +462,13 @@ public class LegacyEndpointResourceIT {
   public void testGetServiceTypes() throws Exception {
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/service.json?op=types", localServerPort);
+    String uri = "/registry/service.json?op=types";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
-    JsonNode rootNode = objectMapper.readTree(result.content);
-
-    // JSON object expected, with array of services [{},{},..]
-    assertTrue(result.content.startsWith("[") && result.content.endsWith("]"));
-    JsonNode node0 = rootNode.get(0);
-    assertEquals("EML", node0.get("name").asText());
+    String response = requestTestFixture.extractResponse(actions);
+    assertTrue(response.contains("EML"));
   }
 }
