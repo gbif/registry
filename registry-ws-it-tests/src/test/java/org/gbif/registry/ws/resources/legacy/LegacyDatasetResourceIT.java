@@ -204,7 +204,8 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse newly registered IPT key (UUID)
-    IptEntityResponse iptEntityResponse = requestTestFixture.extractXmlResponse(actions);
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
 
     assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
@@ -292,7 +293,8 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse updated registered Dataset key (UUID)
-    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
+    LegacyDatasetResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponse.class);
 
     assertNotNull(response.getKey(), "Updated Dataset key should be in response");
     assertEquals(datasetKey.toString(), response.getKey());
@@ -404,7 +406,8 @@ public class LegacyDatasetResourceIT {
             .andExpect(status().is2xxSuccessful());
 
     // parse updated registered Dataset key (UUID)
-    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
+    LegacyDatasetResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponse.class);
 
     assertNotNull(response.getKey(), "Updated Dataset key should be in response");
     assertEquals(datasetKey.toString(), response.getKey());
@@ -497,7 +500,7 @@ public class LegacyDatasetResourceIT {
 
     // parse newly registered list of datasets
     LegacyDatasetResponseListWrapper responseWrapper =
-        requestTestFixture.extractXmlResponse(actions);
+        requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponseListWrapper.class);
 
     LegacyDatasetResponse response = responseWrapper.getLegacyDatasetResponses().get(0);
     assertEquals(datasetKey.toString(), response.getKey());
@@ -613,7 +616,8 @@ public class LegacyDatasetResourceIT {
         requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // XML expected, parse Dataset
-    LegacyDatasetResponse response = requestTestFixture.extractXmlResponse(actions);
+    LegacyDatasetResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyDatasetResponse.class);
 
     assertEquals(dataset.getKey().toString(), response.getKey());
     assertEquals(dataset.getTitle(), response.getName());

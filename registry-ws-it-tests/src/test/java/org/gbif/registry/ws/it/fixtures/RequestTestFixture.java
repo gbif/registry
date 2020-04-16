@@ -245,12 +245,6 @@ public class RequestTestFixture {
     return objectMapper.readValue(content, entityClass);
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> T extractXmlResponse(ResultActions actions) {
-    byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
-    return (T) marshaller.unmarshal(new StreamSource(new ByteArrayInputStream(content)));
-  }
-
   public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
     byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
     JAXBElement<T> jaxbElement =

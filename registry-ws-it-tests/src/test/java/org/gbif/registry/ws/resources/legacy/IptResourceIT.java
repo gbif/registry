@@ -219,7 +219,8 @@ public class IptResourceIT {
             .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    IptEntityResponse iptEntityResponse = requestTestFixture.extractXmlResponse(actions);
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
 
     assertNotNull(iptEntityResponse.getKey(), "Registered IPT key should be in response");
 
@@ -468,7 +469,8 @@ public class IptResourceIT {
             .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    IptEntityResponse iptEntityResponse = requestTestFixture.extractXmlResponse(actions);
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
     assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
     // some information that should have been updated
@@ -523,7 +525,8 @@ public class IptResourceIT {
             .andExpect(status().isCreated());
 
     // parse newly registered IPT key (UUID)
-    IptEntityResponse iptEntityResponse = requestTestFixture.extractXmlResponse(actions);
+    IptEntityResponse iptEntityResponse =
+        requestTestFixture.extractXmlResponse(actions, IptEntityResponse.class);
     assertNotNull(iptEntityResponse.getKey(), "Registered Dataset key should be in response");
 
     // some information that should have been updated

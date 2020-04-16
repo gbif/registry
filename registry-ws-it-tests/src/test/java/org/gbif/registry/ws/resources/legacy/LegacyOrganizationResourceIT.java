@@ -320,7 +320,8 @@ public class LegacyOrganizationResourceIT {
 
     // parse newly registered list of datasets
     LegacyOrganizationBriefResponseListWrapper responseWrapper =
-        requestTestFixture.extractXmlResponse(actions);
+        requestTestFixture.extractXmlResponse(
+            actions, LegacyOrganizationBriefResponseListWrapper.class);
     LegacyOrganizationBriefResponse response =
         responseWrapper.getLegacyOrganizationBriefResponses().get(0);
     assertEquals(organization.getKey().toString(), response.getKey());
