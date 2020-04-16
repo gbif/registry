@@ -119,7 +119,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     this.userAuthService = userAuthService;
   }
 
-  @GetMapping(value = "{key}")
+  @GetMapping("{key}")
   @NullToNotFound("/organization/{key}")
   @Override
   public Organization get(@PathVariable UUID key) {

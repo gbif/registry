@@ -65,7 +65,6 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1127,7 +1126,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertSearch(Country.HAITI, null, 7);
     assertSearch(Country.UNKNOWN, null, 0);
 
-    //@Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
+    // @Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
     /*
     assertSearch(Country.HAITI, Country.GABON, 4);
     assertSearch(Country.HAITI, Country.FIJI, 4);

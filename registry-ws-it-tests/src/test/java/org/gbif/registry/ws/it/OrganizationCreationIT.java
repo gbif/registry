@@ -28,7 +28,7 @@ import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.ws.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;

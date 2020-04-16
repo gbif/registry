@@ -24,14 +24,12 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.events.VarnishPurgeListener;
 import org.gbif.registry.search.dataset.indexing.ws.GbifApiService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
 
 import java.util.Map;
 
-import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -83,9 +81,9 @@ public class TestConfiguration {
     };
   }
 
-  @Bean
-  @Primary
-  VarnishPurgeListener varnishPurgeListener() {
-    return Mockito.mock(VarnishPurgeListener.class);
-  }
+  //  @Bean
+  //  @Primary
+  //  VarnishPurgeListener varnishPurgeListener() {
+  //    return Mockito.mock(VarnishPurgeListener.class);
+  //  }
 }

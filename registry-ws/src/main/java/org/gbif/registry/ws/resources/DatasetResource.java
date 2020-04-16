@@ -190,6 +190,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @GetMapping("{key}")
+  @NullToNotFound("/dataset/{key}")
   @Override
   public Dataset get(@PathVariable UUID key) {
     return registryDatasetService.get(key);
