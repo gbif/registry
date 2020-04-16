@@ -21,33 +21,54 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-import org.gbif.registry.test.Organizations;
+import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
+import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
+import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.utils.Parsers;
-import org.gbif.registry.utils.Requests;
-import org.gbif.utils.HttpUtil;
+import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import java.util.Collections;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.jvnet.mock_javamail.Mailbox;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.xml.sax.SAXException;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.ResultActions;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.TECHNICAL_CONTACT_TYPE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {LegacyOrganizationResourceIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class LegacyOrganizationResourceIT {
 
   @RegisterExtension
@@ -59,21 +80,65 @@ public class LegacyOrganizationResourceIT {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  @LocalServerPort private int localServerPort;
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
   private final TestDataFactory testDataFactory;
+  private final RequestTestFixture requestTestFixture;
+  private final SimplePrincipalProvider pp;
 
   @Autowired
   public LegacyOrganizationResourceIT(
       OrganizationService organizationService,
       NodeService nodeService,
-      TestDataFactory testDataFactory) {
+      TestDataFactory testDataFactory,
+      RequestTestFixture requestTestFixture,
+      SimplePrincipalProvider pp) {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;
+    this.requestTestFixture = requestTestFixture;
+    this.pp = pp;
+  }
+
+  @BeforeEach
+  public void setup() {
+    if (pp != null) {
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              pp.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /**
@@ -81,58 +146,7 @@ public class LegacyOrganizationResourceIT {
    * the response must be JSON.
    */
   @Test
-  public void testGetOrganizationJSON() throws IOException, URISyntaxException, SAXException {
-    // persist new organization (IPT hosting organization)
-    Organization organization = testDataFactory.newOrganization();
-    Contact c = testDataFactory.newContact();
-    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
-    organizationService.addContact(organization.getKey(), c);
-
-    // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/" + organization.getKey().toString() + ".json",
-            localServerPort);
-
-    // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
-
-    // JSON expected
-    assertTrue(result.content.startsWith("{"));
-    JsonNode rootNode = objectMapper.readTree(result.content);
-
-    // JSON object expected
-    assertEquals(15, rootNode.size());
-
-    assertEquals(organization.getKey().toString(), rootNode.get("key").getTextValue());
-    assertEquals(organization.getTitle(), rootNode.get("name").getTextValue());
-    assertEquals(
-        organization.getLanguage().getIso2LetterCode(),
-        rootNode.get("nameLanguage").getTextValue());
-    assertEquals(organization.getDescription(), rootNode.get("description").getTextValue());
-    assertEquals(
-        organization.getLanguage().getIso2LetterCode(),
-        rootNode.get("descriptionLanguage").getTextValue());
-    assertEquals(organization.getHomepage().toString(), rootNode.get("homepageURL").getTextValue());
-    assertEquals(
-        LegacyResourceConstants.TECHNICAL_CONTACT_TYPE,
-        rootNode.get("primaryContactType").getTextValue());
-    assertEquals("Tim Robertson", rootNode.get("primaryContactName").getTextValue());
-    assertEquals("trobertson@gbif.org", rootNode.get("primaryContactEmail").getTextValue());
-    assertEquals("Universitetsparken 15", rootNode.get("primaryContactAddress").getTextValue());
-    assertEquals("+45 28261487", rootNode.get("primaryContactPhone").getTextValue());
-    assertEquals(
-        organization.getEndorsingNodeKey().toString(), rootNode.get("nodeKey").getTextValue());
-    assertEquals("The UK National Node", rootNode.get("nodeName").getTextValue());
-    assertEquals("", rootNode.get("nodeContactEmail").getTextValue());
-  }
-
-  /**
-   * The test sends a get Organization (GET) request with no parameters and .json, signifying that
-   * the response must be JSON.
-   */
-  @Test
-  public void testGetOrganizationXML() throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationJSON() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     Contact c = testDataFactory.newContact();
@@ -140,46 +154,75 @@ public class LegacyOrganizationResourceIT {
     organizationService.addContact(organization.getKey(), c);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/" + organization.getKey().toString(), localServerPort);
+    String uri = "/registry/organisation/" + organization.getKey() + ".json";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
+
+    // JSON expected
+    LegacyOrganizationResponse response =
+        requestTestFixture.extractJsonResponse(actions, LegacyOrganizationResponse.class);
+
+    assertNotNull(organization.getKey());
+    assertEquals(organization.getKey().toString(), response.getKey());
+    assertEquals(organization.getTitle(), response.getName());
+    assertEquals(organization.getLanguage().getIso2LetterCode(), response.getNameLanguage());
+    assertEquals(organization.getDescription(), response.getDescription());
+    assertEquals(organization.getLanguage().getIso2LetterCode(), response.getDescriptionLanguage());
+    assertNotNull(organization.getHomepage());
+    assertEquals(organization.getHomepage().toString(), response.getHomepageURL());
+    assertEquals(TECHNICAL_CONTACT_TYPE, response.getPrimaryContactType());
+    assertEquals("Tim Robertson", response.getPrimaryContactName());
+    assertEquals("trobertson@gbif.org", response.getPrimaryContactEmail());
+    assertEquals("Universitetsparken 15", response.getPrimaryContactAddress());
+    assertEquals("+45 28261487", response.getPrimaryContactPhone());
+    assertEquals(organization.getEndorsingNodeKey().toString(), response.getNodeKey());
+    assertEquals("The UK National Node", response.getNodeName());
+    assertEquals("", response.getNodeContactEmail());
+  }
+
+  /**
+   * The test sends a get Organization (GET) request with no parameters and .json, signifying that
+   * the response must be JSON.
+   */
+  @Test
+  public void testGetOrganizationXML() throws Exception {
+    // persist new organization (IPT hosting organization)
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Contact c = testDataFactory.newContact();
+    c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
+    organizationService.addContact(organization.getKey(), c);
+
+    // construct request uri
+    String uri = "/registry/organisation/" + organization.getKey();
+
+    // send GET request with no credentials
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // XML expected, parse Organization
-    Parsers.saxParser.parse(
-        Parsers.getUtf8Stream(result.content), Parsers.legacyOrganizationResponseHandler);
+    LegacyOrganizationResponse response =
+        requestTestFixture.extractXmlResponse(actions, LegacyOrganizationResponse.class);
 
-    assertEquals(organization.getKey().toString(), Parsers.legacyOrganizationResponseHandler.key);
-    assertEquals(organization.getTitle(), Parsers.legacyOrganizationResponseHandler.name);
-    assertEquals(
-        organization.getLanguage().getIso2LetterCode(),
-        Parsers.legacyOrganizationResponseHandler.nameLanguage);
-    assertEquals(
-        organization.getDescription(), Parsers.legacyOrganizationResponseHandler.description);
-    assertEquals(
-        organization.getLanguage().getIso2LetterCode(),
-        Parsers.legacyOrganizationResponseHandler.descriptionLanguage);
-    assertEquals(
-        organization.getHomepage().toString(),
-        Parsers.legacyOrganizationResponseHandler.homepageURL);
-    assertEquals(
-        LegacyResourceConstants.TECHNICAL_CONTACT_TYPE,
-        Parsers.legacyOrganizationResponseHandler.primaryContactType);
-    assertEquals("Tim Robertson", Parsers.legacyOrganizationResponseHandler.primaryContactName);
-    assertEquals(
-        "trobertson@gbif.org", Parsers.legacyOrganizationResponseHandler.primaryContactEmail);
-    assertEquals(
-        "Universitetsparken 15", Parsers.legacyOrganizationResponseHandler.primaryContactAddress);
-    assertEquals("+45 28261487", Parsers.legacyOrganizationResponseHandler.primaryContactPhone);
+    assertNotNull(organization.getKey());
+    assertEquals(organization.getKey().toString(), response.getKey());
+    assertEquals(organization.getTitle(), response.getName());
+    assertEquals(organization.getLanguage().getIso2LetterCode(), response.getNameLanguage());
+    assertEquals(organization.getDescription(), response.getDescription());
+    assertEquals(organization.getLanguage().getIso2LetterCode(), response.getDescriptionLanguage());
+    assertNotNull(organization.getHomepage());
+    assertEquals(organization.getHomepage().toString(), response.getHomepageURL());
+    assertEquals(TECHNICAL_CONTACT_TYPE, response.getPrimaryContactType());
+    assertEquals("Tim Robertson", response.getPrimaryContactName());
+    assertEquals("trobertson@gbif.org", response.getPrimaryContactEmail());
+    assertEquals("Universitetsparken 15", response.getPrimaryContactAddress());
+    assertEquals("+45 28261487", response.getPrimaryContactPhone());
 
     Node node = nodeService.get(organization.getEndorsingNodeKey());
-    assertEquals(node.getTitle(), Parsers.legacyOrganizationResponseHandler.nodeName);
-    assertEquals("", Parsers.legacyOrganizationResponseHandler.nodeContactEmail);
-    assertEquals(
-        organization.getEndorsingNodeKey().toString(),
-        Parsers.legacyOrganizationResponseHandler.nodeKey);
+    assertEquals(node.getTitle(), response.getNodeName());
+    assertEquals("", response.getNodeContactEmail());
+    assertEquals(organization.getEndorsingNodeKey().toString(), response.getNodeKey());
   }
 
   /**
@@ -187,23 +230,24 @@ public class LegacyOrganizationResourceIT {
    * response must be JSONP.
    */
   @Test
-  public void testGetOrganizationCallback() throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationCallback() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
 
     // construct request uri
     String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/"
-                + organization.getKey().toString()
-                + ".json?callback=jQuery15106997501577716321_1384974875868&_=1384974903371",
-            localServerPort);
+        "/registry/organisation/"
+            + organization.getKey()
+            + ".json?callback=jQuery15106997501577716321_1384974875868&_=1384974903371";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
+
+    String content = requestTestFixture.extractResponse(actions);
 
     // JSONP expected
-    assertTrue(result.content.startsWith("jQuery15106997501577716321_1384974875868({"));
+    assertTrue(content.startsWith("jQuery15106997501577716321_1384974875868({"));
   }
 
   /**
@@ -211,22 +255,19 @@ public class LegacyOrganizationResourceIT {
    * check if the organization credentials (key/password) supplied are correct.
    */
   @Test
-  public void testGetOrganizationLogin() throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationLogin() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    assertNotNull(organization.getKey());
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/" + organization.getKey().toString() + ".json?op=login",
-            localServerPort);
+    String uri = "/registry/organisation/" + organization.getKey() + ".json?op=login";
 
     // send GET request with credentials, but no form encoded parameters
-    HttpUtil.Response result =
-        Requests.http.get(uri, null, Organizations.credentials(organization));
-
-    // OK 201 response expected
-    assertEquals(200, result.getStatusCode());
+    // OK 200 response expected
+    requestTestFixture
+        .getRequest(organization.getKey().toString(), organization.getPassword(), uri)
+        .andExpect(status().isOk());
   }
 
   /**
@@ -234,23 +275,30 @@ public class LegacyOrganizationResourceIT {
    * for each organisation in the list.
    */
   @Test
-  public void testGetOrganizationsJSON() throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationsJSON() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    assertNotNull(organization.getKey());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/organisation.json", localServerPort);
+    String uri = "/registry/organisation.json";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // JSON array expected, with single entry
-    assertTrue(result.content.startsWith("[") && result.content.endsWith("]"));
-    JsonNode rootNode = objectMapper.readTree(result.content);
-    assertEquals(1, rootNode.size());
+    LegacyOrganizationBriefResponseListWrapper responseWrapper =
+        requestTestFixture.extractJsonResponse(
+            actions, LegacyOrganizationBriefResponseListWrapper.class);
+
+    LegacyOrganizationBriefResponse response =
+        responseWrapper.getLegacyOrganizationBriefResponses().get(0);
+
+    assertEquals(1, responseWrapper.getLegacyOrganizationBriefResponses().size());
     // keys "key" and "name" expected
-    assertEquals(organization.getKey().toString(), rootNode.get(0).get("key").getTextValue());
-    assertEquals(organization.getTitle(), rootNode.get(0).get("name").getTextValue());
+    assertEquals(organization.getKey().toString(), response.getKey());
+    assertEquals(organization.getTitle(), response.getName());
   }
 
   /**
@@ -258,25 +306,25 @@ public class LegacyOrganizationResourceIT {
    * for each organisation in the list.
    */
   @Test
-  public void testGetOrganizationsXML() throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationsXML() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    assertNotNull(organization.getKey());
 
     // construct request uri
-    String uri = Requests.getRequestUri("/registry/organisation", localServerPort);
+    String uri = "/registry/organisation";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
-
-    // TODO: Response should be wrapped with root <organisations>, not
-    // <legacyOrganizationBriefResponses>
-    assertTrue(result.content.contains("<legacyOrganizationBriefResponses><organisation>"));
+    ResultActions actions =
+        requestTestFixture.getRequest(uri).andExpect(status().is2xxSuccessful());
 
     // parse newly registered list of datasets
-    Parsers.saxParser.parse(
-        Parsers.getUtf8Stream(result.content), Parsers.legacyOrganizationResponseHandler);
-    assertEquals(organization.getKey().toString(), Parsers.legacyOrganizationResponseHandler.key);
-    assertEquals(organization.getTitle(), Parsers.legacyOrganizationResponseHandler.name);
+    LegacyOrganizationBriefResponseListWrapper responseWrapper =
+        requestTestFixture.extractXmlResponse(actions);
+    LegacyOrganizationBriefResponse response =
+        responseWrapper.getLegacyOrganizationBriefResponses().get(0);
+    assertEquals(organization.getKey().toString(), response.getKey());
+    assertEquals(organization.getTitle(), response.getName());
   }
 
   /**
@@ -284,8 +332,7 @@ public class LegacyOrganizationResourceIT {
    * email to the primary contact of the organization with the password included.
    */
   @Test
-  public void testGetOrganizationPasswordReminder()
-      throws IOException, URISyntaxException, SAXException {
+  public void testGetOrganizationPasswordReminder() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
     Contact c = testDataFactory.newContact();
@@ -293,19 +340,15 @@ public class LegacyOrganizationResourceIT {
     organizationService.addContact(organization.getKey(), c);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/" + organization.getKey().toString() + ".json?op=password",
-            localServerPort);
+    String uri = "/registry/organisation/" + organization.getKey() + ".json?op=password";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
+    ResultActions actions = requestTestFixture.getRequest(uri).andExpect(status().isOk());
 
-    // OK 201 response expected
-    assertEquals(200, result.getStatusCode());
+    String content = requestTestFixture.extractResponse(actions);
     assertEquals(
         "<html><body><b>The password reminder was sent successfully to the email: </b>trobertson@gbif.org</body></html>",
-        result.content);
+        content);
   }
 
   /**
@@ -314,12 +357,10 @@ public class LegacyOrganizationResourceIT {
    * response is expected.
    */
   @Test
-  public void testGetOrganizationPasswordReminderServerError()
-      throws IOException, URISyntaxException, SAXException {
-    // Using mock-javamail to avoid remote connections
-    Mailbox.clearAll();
+  public void testGetOrganizationPasswordReminderServerError() throws Exception {
     // persist new organization (IPT hosting organization)
     Organization organization = testDataFactory.newPersistedOrganization();
+    assertNotNull(organization.getKey());
     Contact c = testDataFactory.newContact();
     c.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
     // override email, set to null
@@ -327,15 +368,10 @@ public class LegacyOrganizationResourceIT {
     organizationService.addContact(organization.getKey(), c);
 
     // construct request uri
-    String uri =
-        Requests.getRequestUri(
-            "/registry/organisation/" + organization.getKey().toString() + ".json?op=password",
-            localServerPort);
+    String uri = "/registry/organisation/" + organization.getKey() + ".json?op=password";
 
     // send GET request with no credentials
-    HttpUtil.Response result = Requests.http.get(uri);
-
     // 500 Internal Server Error expected
-    assertEquals(500, result.getStatusCode());
+    requestTestFixture.getRequest(uri).andExpect(status().isInternalServerError());
   }
 }
