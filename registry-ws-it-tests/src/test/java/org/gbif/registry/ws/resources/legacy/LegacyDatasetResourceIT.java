@@ -39,7 +39,6 @@ import org.gbif.registry.utils.Requests;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
-import org.gbif.registry.ws.resources.legacy.LegacyDatasetResourceIT.ContextInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -97,7 +96,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {ContextInitializer.class})
+@ContextConfiguration(initializers = {LegacyDatasetResourceIT.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class LegacyDatasetResourceIT {
