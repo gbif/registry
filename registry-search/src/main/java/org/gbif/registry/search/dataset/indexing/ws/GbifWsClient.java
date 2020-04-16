@@ -42,7 +42,8 @@ public interface GbifWsClient {
 
   Installation getInstallation(String installationKey);
 
-  PagingResponse<Dataset> getInstallationDatasets(String installationKey);
+  PagingResponse<Dataset> getInstallationDatasets(
+      String installationKey, PagingRequest pagingRequest);
 
   Organization getOrganization(String organizationKey);
 

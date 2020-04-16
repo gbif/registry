@@ -119,8 +119,14 @@
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <xoai.version>4.1.0-gbif-1</xoai.version>
     <feign.version>10.4.0</feign.version>
+    <mock-javamail.version>1.9</mock-javamail.version>
+    <org.apache.bval.bundle.version>0.5</org.apache.bval.bundle.version>
+    <embedded-database-spring-test.version>1.5.3</embedded-database-spring-test.version>
+    <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
+
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
+    <embedded-elasticsearch.version>2.10.0</embedded-elasticsearch.version>
 
     <!-- Caching -->
     <cache2k.version>1.2.0.Final</cache2k.version>
@@ -610,6 +616,17 @@
 
       <!-- Test dependencies -->
       <dependency>
+        <groupId>org.mybatis.spring.boot</groupId>
+        <artifactId>mybatis-spring-boot-starter-test</artifactId>
+        <version>${mybatis-spring-boot-starter-test.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.bval</groupId>
+        <artifactId>org.apache.bval.bundle</artifactId>
+        <version>${org.apache.bval.bundle.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.xmlunit</groupId>
         <artifactId>xmlunit-core</artifactId>
         <version>${xmlunit.version}</version>
@@ -643,6 +660,30 @@
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit-jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jvnet.mock-javamail</groupId>
+        <artifactId>mock-javamail</artifactId>
+        <version>${mock-javamail.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>retrofit-mock</artifactId>
+        <version>${retrofit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>pl.allegro.tech</groupId>
+        <artifactId>embedded-elasticsearch</artifactId>
+        <version>${embedded-elasticsearch.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.zonky.test</groupId>
+        <artifactId>embedded-database-spring-test</artifactId>
+        <version>${embedded-database-spring-test.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

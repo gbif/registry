@@ -182,7 +182,7 @@ public class DatasetRealtimeIndexer {
       log.debug("Updating hosted datasets for installation {}", installation.getKey());
       Iterable<Dataset> datasets =
           Iterables.datasetsIterable(
-              page -> gbifWsClient.getInstallationDatasets(installation.getKey().toString()));
+              page -> gbifWsClient.getInstallationDatasets(installation.getKey().toString(), page));
       index(datasets);
     } catch (Exception e) {
       log.error(
