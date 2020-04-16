@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.transform.stream.StreamSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -235,6 +236,10 @@ public class RequestTestFixture {
     return mvc.perform(delete(path).headers(authHeaders));
   }
 
+  public String extractResponse(ResultActions actions) throws Exception {
+    return actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+  }
+
   public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
     String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     return objectMapper.readValue(content, entityClass);
@@ -244,6 +249,16 @@ public class RequestTestFixture {
   public <T> T extractXmlResponse(ResultActions actions) {
     byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
     return (T) marshaller.unmarshal(new StreamSource(new ByteArrayInputStream(content)));
+  }
+
+  public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {
+    byte[] content = actions.andReturn().getResponse().getContentAsByteArray();
+    JAXBElement<T> jaxbElement =
+        marshaller
+            .createUnmarshaller()
+            .unmarshal(new StreamSource(new ByteArrayInputStream(content)), entityClass);
+
+    return jaxbElement.getValue();
   }
 
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(
