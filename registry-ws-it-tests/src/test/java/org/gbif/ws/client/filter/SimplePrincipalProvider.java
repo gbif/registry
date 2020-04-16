@@ -19,9 +19,9 @@ import org.gbif.api.model.common.User;
 import org.gbif.api.model.common.UserPrincipal;
 
 import java.security.Principal;
+import java.util.function.Supplier;
 
 import com.google.common.base.Strings;
-import com.google.inject.Provider;
 
 /**
  * A Principal provider providing the same principal every time. The principal to be provided can be
@@ -29,7 +29,7 @@ import com.google.inject.Provider;
  *
  * <p>Useful for testing ws-clients.
  */
-public class SimplePrincipalProvider implements Provider<Principal> {
+public class SimplePrincipalProvider implements Supplier<Principal> {
 
   private UserPrincipal current;
 
