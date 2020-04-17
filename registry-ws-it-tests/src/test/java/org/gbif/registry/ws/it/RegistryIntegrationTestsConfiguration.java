@@ -15,19 +15,15 @@
  */
 package org.gbif.registry.ws.it;
 
-import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
-import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
-import org.gbif.registry.mail.EmailSender;
-import org.gbif.registry.mail.InMemoryEmailSender;
-import org.gbif.registry.message.MessagePublisherStub;
-import org.gbif.registry.search.DatasetSearchServiceStub;
+import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
+import org.gbif.registry.mail.organization.OrganizationEmailManager;
+import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.test.mocks.TitleLookupServiceMock;
+import org.gbif.registry.ws.surety.OrganizationEmailEndorsementService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -43,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -55,6 +49,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 
 @Lazy
 @TestConfiguration
@@ -95,48 +90,24 @@ import org.springframework.security.core.context.SecurityContextHolder;
       @ComponentScan.Filter(
           type = FilterType.ASSIGNABLE_TYPE,
           classes = {
-            FlywayAutoConfiguration.FlywayConfiguration.class,
-            FlywayAutoConfiguration.class,
             DatasetBatchIndexBuilder.class,
             GbifWsClient.class,
             VarnishPurgeConfiguration.class,
-            TitleLookupConfiguration.class
+            TitleLookupConfiguration.class,
+            OrganizationSuretyMailConfigurationProperties.class,
+            OrganizationEmailManager.class,
+            OrganizationEmailEndorsementService.class,
+            ChecklistbankPersistenceServiceImpl.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
+@ActiveProfiles("test")
 public class RegistryIntegrationTestsConfiguration {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(RegistryIntegrationTestsConfiguration.class);
 
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
-
-  // use InMemoryEmailSender if devemail is disabled
-  @Bean
-  @ConditionalOnProperty(value = "mail.devemail.enabled", havingValue = "false")
-  public EmailSender emailSender() {
-    LOG.info("ImMemoryEmailSender (stub) activated");
-    return new InMemoryEmailSender();
-  }
-
-  // use stub instead of rabbit MQ if message is disabled
-  @Bean
-  @ConditionalOnProperty(value = "message.enabled", havingValue = "false")
-  public MessagePublisher testMessagePublisher() {
-    LOG.info("MessagePublisherStub activated");
-    return new MessagePublisherStub();
-  }
-
-  // use stub instead dataset search
-  // @Bean TODO: Ignore this injector, the realtime indexer has to be refactored
-  public DatasetSearchService datasetSearchService() {
-    return new DatasetSearchServiceStub();
-  }
-
-  @Bean
-  public InMemoryEmailSender inMemoryEmailSender() {
-    return new InMemoryEmailSender();
-  }
 
   @Bean
   public BeanUtilsBean beanUtilsBean() {
@@ -167,11 +138,6 @@ public class RegistryIntegrationTestsConfiguration {
     simplePrincipalProvider.setPrincipal("WS TEST");
     setSecurityPrincipal(simplePrincipalProvider, UserRole.REGISTRY_ADMIN);
     return simplePrincipalProvider;
-  }
-
-  @Bean
-  public TitleLookupService titleLookupServiceMock() {
-    return new TitleLookupServiceMock();
   }
 
   public static void setSecurityPrincipal(

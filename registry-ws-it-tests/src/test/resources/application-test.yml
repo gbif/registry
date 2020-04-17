@@ -1,31 +1,11 @@
-# application.yml
-
-api:
-  root:
-    url: http://api.gbif-dev.org/v1/
-  cache:
-    purge:
-      url: http://api.gbif-dev.org/v1
-      threads: 1
-
-portal:
-  url: https://www.gbif-dev.org/
-
+# application-test.yml
 url:
-  api: http://api.gbif-dev.org/v1/
-  portal: https://www.gbif-dev.org/
-  occurrenceApi: http://api.gbif-dev.org/v1/occurrence/
-  directoryApi: http://api.gbif-dev.org/v1/directory/
   grscicollPortal: https://www.gbif-dev.org/grscicoll/
 
 # Mail Properties
 mail:
-  cc: @mail.cc@
-  bcc: @mail.bcc@
   enabled: false
-  devemail:
-    address: gbifregistry@mailinator.com
-    enabled: @mail.devemail.enabled@
+
 message:
   enabled: false
 
@@ -34,16 +14,8 @@ identity:
   surety:
     mail:
       urlTemplate:
-        confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-        resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-
-organization:
-  surety:
-    mail:
-      helpdesk: @mail.helpdesk@
-      urlTemplate:
-        organization: https://www.demo.gbif-dev.org/publisher/{0}
-        confirmOrganization: https://demo.gbif-dev.org/organization/confirm?key={0}&code={1}
+        confirmUser: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
+        resetPassword: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
 
 application:
   key: gbif.app.it
@@ -77,29 +49,6 @@ doi:
   prefix: 10.21373
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
-elasticsearch:
-  registry:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: dataset
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
-  occurrence:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: occurrence
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
-# GBIF Directory configuration
-directory:
-  app:
-    key: @directory.app.key@
-    secret: @directory.app.secret@
-  ws:
-    url: @directory.ws.url@
-
 # OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
 # this value will be used as the baseURL element in the Identify response
 oaipmh:
@@ -107,14 +56,6 @@ oaipmh:
   adminEmail: gbifregistry@mailinator.com
 
 spring:
-  # DOI messaging properties
-  # queue 'registry-doi' should be used
-  rabbitmq:
-    host: @registry.messaging.hostname@
-    port: @registry.messaging.port@
-    username: @registry.messaging.username@
-    password: @registry.messaging.password@
-    virtual-host: @registry.messaging.virtualhost@
   # Liquibase
   liquibase:
     default-schema: public
@@ -123,17 +64,3 @@ spring:
   #flyway
   flyway:
     enabled: false
-  # Mail
-  mail:
-    default-encoding: UTF-8
-    host: @mail.smtp.host@
-    username: @mail.username@
-    password: @mail.password@
-    port: @mail.smtp.port@
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-    test-connection: false

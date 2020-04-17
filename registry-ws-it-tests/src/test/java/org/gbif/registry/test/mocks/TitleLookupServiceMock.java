@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 package org.gbif.registry.test.mocks;
-import org.gbif.occurrence.query.TitleLookupService;
 
+import org.gbif.occurrence.query.TitleLookupService;
 
 /** Mock service, returns always the keys as titles. */
 public class TitleLookupServiceMock implements TitleLookupService {
 
   @Override
   public String getDatasetTitle(String datasetKey) {
-     return datasetKey;
+    return datasetKey;
   }
 
   @Override
