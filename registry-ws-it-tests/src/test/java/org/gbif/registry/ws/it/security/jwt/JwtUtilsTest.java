@@ -22,8 +22,9 @@ import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 
 import com.google.common.hash.Hashing;
@@ -31,9 +32,13 @@ import com.google.common.hash.Hashing;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class JwtUtilsTest {
 
   @Test
@@ -53,46 +58,46 @@ public class JwtUtilsTest {
             .parseClaimsJws(token)
             .getBody();
 
-    // TODO: move userName to constants
     assertEquals("user", claims.get("userName"));
     assertEquals(config.getIssuer(), claims.getIssuer());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void generateUnsignedTokenTest() {
     JwtConfiguration config = new JwtConfiguration();
     config.setExpiryTimeInMs(60 * 1000L);
     config.setIssuer("issuer");
 
-    JwtUtils.generateJwt("user", config);
+    assertThrows(IllegalArgumentException.class, () -> JwtUtils.generateJwt("user", config));
   }
 
   @Test
   public void findTokenInRequestTest() {
     final String token = "abctoken";
     // mock request
-    HttpServletRequestWrapper request = Mockito.mock(HttpServletRequestWrapper.class);
+    HttpServletRequestWrapper request = mock(HttpServletRequestWrapper.class);
 
     // no token present in request
     assertFalse(JwtUtils.findTokenInRequest(request).isPresent());
 
     // token in header
-    Mockito.when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + token);
     assertEquals(token, JwtUtils.findTokenInRequest(request).get());
 
     // empty bearer
-    Mockito.when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer");
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer");
     assertEquals("", JwtUtils.findTokenInRequest(request).get());
 
     // empty header
-    Mockito.when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("");
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("");
     assertFalse(JwtUtils.findTokenInRequest(request).isPresent());
 
     // null header
-    Mockito.when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
+    when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(null);
     assertFalse(JwtUtils.findTokenInRequest(request).isPresent());
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   private String generateTestSigningKey(String string) {
     return Hashing.sha256().hashString(string, StandardCharsets.UTF_8).toString();
   }
