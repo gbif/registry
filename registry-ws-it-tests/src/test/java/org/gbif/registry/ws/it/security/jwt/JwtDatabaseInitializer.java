@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.security.jwt;
+package org.gbif.registry.ws.it.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
@@ -25,7 +25,6 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;
 
@@ -38,7 +37,6 @@ public class JwtDatabaseInitializer extends DatabaseInitializer {
 
   private final IdentityService identityService;
 
-  @Autowired
   public JwtDatabaseInitializer(DataSource dataSource, IdentityService identityService) {
     super(dataSource);
     this.identityService = identityService;
