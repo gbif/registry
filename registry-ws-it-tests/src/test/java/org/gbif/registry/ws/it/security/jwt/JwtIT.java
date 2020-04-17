@@ -45,7 +45,9 @@ import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
+import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.ADMIN_USER;
 import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.GRSCICOLL_ADMIN;
+import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.TEST_USER;
 import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -62,33 +64,32 @@ public class JwtIT {
 
   @RegisterExtension
   static PreparedDbExtension database =
-    EmbeddedPostgresExtension.preparedDatabase(
-      LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
 
-  @RegisterExtension
-  public JwtDatabaseInitializer databaseRule;
+  @RegisterExtension public JwtDatabaseInitializer databaseRule;
 
   static class ContextInitializer
-    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(dbTestPropertyPairs())
-        .applyTo(configurableApplicationContext.getEnvironment());
+          .applyTo(configurableApplicationContext.getEnvironment());
       withSearchEnabled(false, configurableApplicationContext.getEnvironment());
     }
 
     protected static void withSearchEnabled(
-      boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
       TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
     }
 
     protected String[] dbTestPropertyPairs() {
-      return new String[]{
+      return new String[] {
         "registry.datasource.url=jdbc:postgresql://localhost:"
-          + database.getConnectionInfo().getPort()
-          + "/"
-          + database.getConnectionInfo().getDbName(),
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
         "registry.datasource.username=" + database.getConnectionInfo().getUser(),
         "registry.datasource.password="
       };
@@ -96,10 +97,10 @@ public class JwtIT {
   }
 
   private static final Function<String, String> BASIC_AUTH_HEADER =
-    username ->
-      "Basic "
-        + java.util.Base64.getEncoder()
-        .encodeToString(String.format("%s:%s", username, username).getBytes());
+      username ->
+          "Basic "
+              + java.util.Base64.getEncoder()
+                  .encodeToString(String.format("%s:%s", username, username).getBytes());
 
   private static final String PATH = "/grscicoll/person";
 
@@ -108,21 +109,23 @@ public class JwtIT {
 
   @Autowired
   public JwtIT(
-    JwtConfiguration jwtConfiguration,
-    RequestTestFixture requestTestFixture,
-    IdentityService identityService) {
+      JwtConfiguration jwtConfiguration,
+      RequestTestFixture requestTestFixture,
+      IdentityService identityService) {
     this.jwtConfiguration = jwtConfiguration;
     this.requestTestFixture = requestTestFixture;
     databaseRule = new JwtDatabaseInitializer(database.getTestDatabase(), identityService);
   }
 
-  // TODO: 17/04/2020 tokens must not match
   @Test
   public void validTokenTest() throws Exception {
     String token = login(GRSCICOLL_ADMIN);
 
-    ResultActions actions = requestTestFixture.postRequest(token, createPerson(), PATH)
-      .andExpect(status().isCreated());
+    // otherwise the service may issue the same token because of the same time (seconds)
+    Thread.sleep(1000);
+
+    ResultActions actions =
+        requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isCreated());
 
     String newToken = requestTestFixture.getHeader(actions, HEADER_TOKEN);
 
@@ -132,23 +135,23 @@ public class JwtIT {
 
   @Test
   public void invalidHeaderTest() throws Exception {
-    String token = login(JwtDatabaseInitializer.ADMIN_USER);
+    String token = login(ADMIN_USER);
     HttpHeaders headers = new HttpHeaders();
-    headers.add("beare", token);
+    headers.add("beare ", token);
 
-    ResultActions actions = requestTestFixture.postRequest(headers, createPerson(), PATH)
-      .andExpect(status().isForbidden());
+    requestTestFixture.postRequest(headers, createPerson(), PATH).andExpect(status().isForbidden());
   }
 
-  // TODO: 17/04/2020 401 expected, got 403
   @Test
   public void invalidTokenTest() throws Exception {
     JwtConfiguration config = new JwtConfiguration();
     config.setSigningKey("fake");
-    String token = JwtUtils.generateJwt(JwtDatabaseInitializer.ADMIN_USER, config);
+    String token = JwtUtils.generateJwt(ADMIN_USER, config);
 
-    ResultActions actions = requestTestFixture.postRequest(token, createPerson(), PATH)
-      .andExpect(status().isUnauthorized());
+    ResultActions actions =
+        requestTestFixture
+            .postRequest(token, createPerson(), PATH)
+            .andExpect(status().isForbidden());
 
     String newToken = requestTestFixture.getHeader(actions, HEADER_TOKEN);
 
@@ -157,44 +160,37 @@ public class JwtIT {
 
   @Test
   public void insufficientRolesTest() throws Exception {
-    String token = login(JwtDatabaseInitializer.TEST_USER);
+    String token = login(TEST_USER);
 
-    requestTestFixture.postRequest(token, createPerson(), PATH)
-      .andExpect(status().isForbidden());
+    requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isForbidden());
   }
 
-  // TODO: 17/04/2020 401 expected, got 403
   @Test
   public void fakeUserTest() throws Exception {
     String token = JwtUtils.generateJwt("fake", jwtConfiguration);
 
-    requestTestFixture.postRequest(token, createPerson(), PATH)
-      .andExpect(status().isUnauthorized());
+    requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isForbidden());
   }
 
   @Test
   public void noJwtAndNoBasicAuthTest() throws Exception {
-    requestTestFixture.postRequest(createPerson(), PATH)
-      .andExpect(status().isForbidden());
+    requestTestFixture.postRequest(createPerson(), PATH).andExpect(status().isForbidden());
   }
 
   @Test
   public void noJwtWithBasicAuthTest() throws Exception {
-    requestTestFixture.postRequest(GRSCICOLL_ADMIN, GRSCICOLL_ADMIN, createPerson(), PATH)
-      .andExpect(status().isCreated());
+    requestTestFixture
+        .postRequest(GRSCICOLL_ADMIN, GRSCICOLL_ADMIN, createPerson(), PATH)
+        .andExpect(status().isCreated());
   }
 
-  // TODO: 17/04/2020 expected 201, got 200
-  /**
-   * Logs in a user and returns the JWT token.
-   */
+  /** Logs in a user and returns the JWT token. */
   private String login(String user) throws Exception {
-    ResultActions actions = requestTestFixture
-      .getRequest(user, user, "/user/login");
-//      .andExpect(status().isCreated());
+    ResultActions actions =
+        requestTestFixture.postRequest(user, user, "/user/login").andExpect(status().isCreated());
 
-    ExtendedLoggedUser response = requestTestFixture
-      .extractJsonResponse(actions, ExtendedLoggedUser.class);
+    ExtendedLoggedUser response =
+        requestTestFixture.extractJsonResponse(actions, ExtendedLoggedUser.class);
 
     assertNotNull(response.getToken());
     assertFalse(response.getToken().isEmpty());
