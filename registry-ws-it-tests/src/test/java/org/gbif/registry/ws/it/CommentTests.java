@@ -23,9 +23,9 @@ import org.gbif.registry.test.TestDataFactory;
 import java.util.List;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CommentTests {
 
@@ -34,21 +34,21 @@ public class CommentTests {
 
     // check there are none on a newly created entity
     List<Comment> comments = service.listComments(entity.getKey());
-    assertNotNull("Comment list should be empty, not null when no comments exist", comments);
-    assertTrue("Comment should be empty when none added", comments.isEmpty());
+    assertNotNull(comments, "Comment list should be empty, not null when no comments exist");
+    assertTrue(comments.isEmpty(), "Comment should be empty when none added");
 
     // test additions
     service.addComment(entity.getKey(), testDataFactory.newComment());
     service.addComment(entity.getKey(), testDataFactory.newComment());
     comments = service.listComments(entity.getKey());
     assertNotNull(comments);
-    assertEquals("2 comments have been added", 2, comments.size());
+    assertEquals(2, comments.size(), "2 comments have been added");
 
     // test deletion, ensuring correct one is deleted
     service.deleteComment(entity.getKey(), comments.get(0).getKey());
     comments = service.listComments(entity.getKey());
     assertNotNull(comments);
-    assertEquals("1 comment should remain after the deletion", 1, comments.size());
+    assertEquals(1, comments.size(), "1 comment should remain after the deletion");
     Comment expected = testDataFactory.newComment();
     Comment created = comments.get(0);
     assertLenientEquals("Created entity does not read as expected", expected, created);
