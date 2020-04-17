@@ -107,6 +107,28 @@ public class RequestTestFixture {
     return mvc.perform(post(path).with(httpBasic(username, password)));
   }
 
+  public ResultActions postRequest(Object entity, String path) throws Exception {
+    return mvc.perform(
+        post(path).content(objectMapper.writeValueAsString(entity)).contentType(APPLICATION_JSON));
+  }
+
+  public ResultActions postRequest(String bearer, Object entity, String path) throws Exception {
+    return mvc.perform(
+        post(path)
+            .content(objectMapper.writeValueAsString(entity))
+            .contentType(APPLICATION_JSON)
+            .header(AUTHORIZATION, "Bearer " + bearer));
+  }
+
+  public ResultActions postRequest(HttpHeaders headers, Object entity, String path)
+      throws Exception {
+    return mvc.perform(
+        post(path)
+            .content(objectMapper.writeValueAsString(entity))
+            .contentType(APPLICATION_JSON)
+            .headers(headers));
+  }
+
   public ResultActions postRequest(String username, String password, Object entity, String path)
       throws Exception {
     return mvc.perform(
@@ -253,6 +275,10 @@ public class RequestTestFixture {
             .unmarshal(new StreamSource(new ByteArrayInputStream(content)), entityClass);
 
     return jaxbElement.getValue();
+  }
+
+  public String getHeader(ResultActions actions, String header) {
+    return actions.andReturn().getResponse().getHeader(header);
   }
 
   public HttpHeaders prepareGbifAuthorizationHeadersWithContent(
