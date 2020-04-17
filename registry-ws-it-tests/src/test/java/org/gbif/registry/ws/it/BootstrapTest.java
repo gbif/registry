@@ -26,10 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -40,6 +36,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 /**
  * A test that will populate a sample registry database. This class should be removed when
@@ -47,34 +46,34 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-  classes = RegistryIntegrationTestsConfiguration.class,
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    classes = RegistryIntegrationTestsConfiguration.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = {BootstrapTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class BootstrapTest {
 
   static class ContextInitializer
-    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(dbTestPropertyPairs())
-        .applyTo(configurableApplicationContext.getEnvironment());
+          .applyTo(configurableApplicationContext.getEnvironment());
       withSearchEnabled(false, configurableApplicationContext.getEnvironment());
     }
 
     protected static void withSearchEnabled(
-      boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
       TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
     }
 
     protected String[] dbTestPropertyPairs() {
       return new String[] {
         "registry.datasource.url=jdbc:postgresql://localhost:"
-        + database.getConnectionInfo().getPort()
-        + "/"
-        + database.getConnectionInfo().getDbName(),
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
         "registry.datasource.username=" + database.getConnectionInfo().getUser(),
         "registry.datasource.password="
       };
@@ -90,14 +89,11 @@ public class BootstrapTest {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  @Autowired
-  private TestDataFactory testDataFactory;
+  @Autowired private TestDataFactory testDataFactory;
 
-  @Autowired
-  private NodeService nodeService;
+  @Autowired private NodeService nodeService;
 
-  @Autowired
-  private OrganizationService organizationService;
+  @Autowired private OrganizationService organizationService;
 
   @Test
   public void run() {
