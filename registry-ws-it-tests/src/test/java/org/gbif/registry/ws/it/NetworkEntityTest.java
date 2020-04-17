@@ -104,7 +104,7 @@ public abstract class NetworkEntityTest<
         NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
             & Identifiable & LenientEquals<T>> {
 
-  static class ContextInitializer
+  public static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
