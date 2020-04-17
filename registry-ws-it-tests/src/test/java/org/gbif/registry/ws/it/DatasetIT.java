@@ -477,9 +477,6 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     d.setLicense(License.CC0_1_0);
     service.create(d);
 
-    // Give some time to Solr to update
-    Thread.sleep(100);
-
     assertAll(6l);
     assertSearch("Hund", 1);
     assertSearch("bli bla blub", 2);
@@ -492,7 +489,7 @@ public class DatasetIT extends NetworkEntityTest<Dataset> {
     assertSearch("Kátia", 1);
     assertSearch("10.11646/zootaxa.3847.1.7", 1);
     List<DatasetSearchResult> docs = assertSearch("GPS", 2);
-    assertEquals(gpsKey, docs.get(0).getKey());
+    assertTrue(docs.stream().anyMatch(dataset -> dataset.getKey().equals(gpsKey)));
   }
 
   @Test

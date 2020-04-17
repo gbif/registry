@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.mail;
+package org.gbif.registry.test.mocks;
 
 import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailSender;
 
 import java.util.HashMap;
 import java.util.Map;

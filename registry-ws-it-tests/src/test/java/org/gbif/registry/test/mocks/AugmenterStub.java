@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.directory;
+package org.gbif.registry.test.mocks;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.registry.directory.Augmenter;
 
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
-@Primary
-@Component
 public class AugmenterStub implements Augmenter {
 
   @Override

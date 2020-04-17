@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,7 @@ public class DataSourcesConfiguration {
 
   @Bean
   @ConfigurationProperties("indexing.datasource.checklistbank")
+  @ConditionalOnProperty(value = "indexing.datasource.checklistbank")
   public DataSourceProperties clbDataSourceProperties() {
     return new DataSourceProperties();
   }
@@ -55,6 +57,7 @@ public class DataSourcesConfiguration {
   /** Datasource required for dataset indexing. */
   @Bean(name = "clb_datasource")
   @ConfigurationProperties("indexing.datasource.checklistbank.hikari")
+  @ConditionalOnProperty(value = "indexing.datasource.checklistbank")
   public HikariDataSource clbDataSource() {
     return clbDataSourceProperties()
         .initializeDataSourceBuilder()
