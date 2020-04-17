@@ -17,7 +17,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.LenientEquals;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /** Provides a lenient equals assertion, borrowing shamelessly from {@link org.junit.Assert}. */
 public class LenientAssert {

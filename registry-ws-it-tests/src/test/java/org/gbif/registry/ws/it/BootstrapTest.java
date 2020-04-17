@@ -22,48 +22,84 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 
 /**
  * A test that will populate a sample registry database. This class should be removed when
  * development progresses. This is only used to help those developing the web console.
  */
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(
+  classes = RegistryIntegrationTestsConfiguration.class,
+  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(initializers = {BootstrapTest.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public class BootstrapTest {
+
+  static class ContextInitializer
+    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+        .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+      boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+        + database.getConnectionInfo().getPort()
+        + "/"
+        + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
 
   @RegisterExtension
   static PreparedDbExtension database =
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
 
-  @Rule
+  @RegisterExtension
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  private final TestDataFactory testDataFactory;
-
-  private final NodeService nodeService;
-  private final OrganizationService organizationService;
+  @Autowired
+  private TestDataFactory testDataFactory;
 
   @Autowired
-  public BootstrapTest(
-      NodeService nodeService,
-      OrganizationService organizationService,
-      TestDataFactory testDataFactory) {
-    this.nodeService = nodeService;
-    this.organizationService = organizationService;
-    this.testDataFactory = testDataFactory;
-  }
+  private NodeService nodeService;
+
+  @Autowired
+  private OrganizationService organizationService;
 
   @Test
-  @Ignore
   public void run() {
     Node n1 = testDataFactory.newNode();
     n1.setKey(nodeService.create(n1));
@@ -85,7 +121,6 @@ public class BootstrapTest {
   }
 
   @Test
-  @Ignore
   public void lots() {
     for (int n = 0; n < 100; n++) {
       Node n1 = testDataFactory.newNode();
