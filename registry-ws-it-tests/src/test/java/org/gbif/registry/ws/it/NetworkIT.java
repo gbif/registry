@@ -24,8 +24,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -37,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  *   <li>The WS service client layer
  * </ol>
  */
-@RunWith(Parameterized.class)
 public class NetworkIT extends NetworkEntityTest<Network> {
 
   private final TestDataFactory testDataFactory;

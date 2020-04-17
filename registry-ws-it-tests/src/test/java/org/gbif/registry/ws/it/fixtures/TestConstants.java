@@ -25,7 +25,7 @@ import com.google.common.collect.Maps;
 /** Constants related to unit and integration testing of the registry. */
 public class TestConstants {
 
-  public static final String APPLICATION_PROPERTIES = "registry-test.properties";
+  public static final String LIQUIBASE_MASTER_FILE = "liquibase/master.xml";
 
   // static appkeys used for testing
   public static final String IT_APP_KEY = "gbif.app.it";
