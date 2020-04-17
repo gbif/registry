@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.security.jwt;
+package org.gbif.registry.ws.it.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.identity.service.IdentityService;
