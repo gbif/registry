@@ -19,11 +19,12 @@ import org.gbif.api.vocabulary.AppRole;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.security.UserRoles;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserRolesTest {
+
   @Test
   public void assertRoleNamesAreIdentical() {
     assertEquals(UserRoles.ADMIN_ROLE, UserRole.REGISTRY_ADMIN.name());
