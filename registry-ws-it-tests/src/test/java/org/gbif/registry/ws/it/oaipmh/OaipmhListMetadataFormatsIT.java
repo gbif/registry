@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.ws.it.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -35,6 +35,7 @@ import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.springframework.core.env.Environment;
 
 import com.google.common.collect.Lists;
 
@@ -47,12 +48,19 @@ import static org.junit.Assert.assertThat;
 public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 
   public OaipmhListMetadataFormatsIT(
+      Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
-    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
+    super(
+        environment,
+        nodeService,
+        organizationService,
+        installationService,
+        datasetService,
+        testDataFactory);
   }
 
   @Test(expected = IdDoesNotExistException.class)

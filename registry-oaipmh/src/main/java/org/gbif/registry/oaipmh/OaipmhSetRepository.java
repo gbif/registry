@@ -41,7 +41,7 @@ public class OaipmhSetRepository implements SetRepository {
   private static final String SUB_SET_SEPARATOR = ":";
 
   /** Enum of the type of Set supported by the OaipmhSetRepository. */
-  enum SetType {
+  public enum SetType {
     COUNTRY("country"),
     INSTALLATION("installation"),
     DATASET_TYPE("dataset_type");
