@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.ws.it.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -24,6 +24,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.oaipmh.OaipmhSetRepository;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.utils.file.FileUtils;
@@ -39,6 +40,7 @@ import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
 import org.junit.Test;
+import org.springframework.core.env.Environment;
 
 import com.google.common.collect.Lists;
 
@@ -50,12 +52,19 @@ import static org.junit.Assert.assertTrue;
 public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   public OaipmhListRecordsIT(
+      Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
-    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
+    super(
+        environment,
+        nodeService,
+        organizationService,
+        installationService,
+        datasetService,
+        testDataFactory);
   }
 
   /**

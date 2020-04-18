@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.ws.it.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
@@ -27,6 +26,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 
 import java.io.InputStream;
 import java.sql.Connection;
@@ -39,24 +39,35 @@ import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
 import org.dspace.xoai.serviceprovider.model.Context;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 /** Tests for the OaipmhEndpoint implementation. */
-@RunWith(Parameterized.class)
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(
+    classes = RegistryIntegrationTestsConfiguration.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(initializers = {AbstractOaipmhEndpointIT.ContextInitializer.class})
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
 public abstract class AbstractOaipmhEndpointIT {
 
   private final TestDataFactory testDataFactory;
-
-  // used by OAIClient to access the OAI-PMH web service locally
-  private String BASE_URL_FORMAT = "http://localhost:%d/oai-pmh/registry";
 
   protected MetadataFormat OAIDC_FORMAT =
       new MetadataFormat()
@@ -70,12 +81,39 @@ public abstract class AbstractOaipmhEndpointIT {
           .withMetadataNamespace("eml://ecoinformatics.org/eml-2.1.1")
           .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
 
+  static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(dbTestPropertyPairs())
+          .applyTo(configurableApplicationContext.getEnvironment());
+      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
+    }
+
+    protected static void withSearchEnabled(
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
+
   @RegisterExtension
   static PreparedDbExtension database =
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
 
-  @Rule
+  @RegisterExtension
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
@@ -85,10 +123,11 @@ public abstract class AbstractOaipmhEndpointIT {
   private final DatasetService datasetService;
 
   protected final String baseUrl;
-  final ServiceProvider serviceProvider;
+  protected final ServiceProvider serviceProvider;
 
   @Autowired
   public AbstractOaipmhEndpointIT(
+      Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
@@ -100,7 +139,8 @@ public abstract class AbstractOaipmhEndpointIT {
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
 
-    baseUrl = String.format(BASE_URL_FORMAT, 0); // registryServer.getPort() TODO
+    String port = environment.getProperty("local.server.port");
+    baseUrl = String.format("http://localhost:%s/oai-pmh/registry", port);
     OAIClient oaiClient = new HttpOAIClient(baseUrl);
     Context context =
         new Context()
@@ -111,13 +151,8 @@ public abstract class AbstractOaipmhEndpointIT {
     serviceProvider = new ServiceProvider(context);
   }
 
-  /**
-   * Creates an Organization in the test database.
-   *
-   * @param publishingCountry
-   * @return
-   */
-  Organization createOrganization(Country publishingCountry) {
+  /** Creates an Organization in the test database. */
+  protected Organization createOrganization(Country publishingCountry) {
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(testDataFactory.newNode());
     // publishing organization (required field)
@@ -127,29 +162,15 @@ public abstract class AbstractOaipmhEndpointIT {
     return o;
   }
 
-  /**
-   * Creates an Installation in the test database.
-   *
-   * @param organizationKey
-   * @return
-   */
-  Installation createInstallation(UUID organizationKey) {
+  /** Creates an Installation in the test database. */
+  protected Installation createInstallation(UUID organizationKey) {
     Installation i = testDataFactory.newInstallation(organizationKey);
     installationService.create(i);
     return i;
   }
 
-  /**
-   * Creates a Dataset in the test database.
-   *
-   * @param organizationKey
-   * @param installationKey
-   * @param type
-   * @param modifiedDate
-   * @return the newly created Dataset
-   * @throws Throwable
-   */
-  Dataset createDataset(
+  /** Creates a Dataset in the test database. */
+  protected Dataset createDataset(
       UUID organizationKey, UUID installationKey, DatasetType type, Date modifiedDate)
       throws Exception {
 
@@ -164,58 +185,29 @@ public abstract class AbstractOaipmhEndpointIT {
     return d;
   }
 
-  /**
-   * Get the specified Dataset
-   *
-   * @param datasetKey
-   * @return
-   * @throws Exception
-   */
-  Dataset getDataset(UUID datasetKey) throws Exception {
+  /** Get the specified Dataset */
+  protected Dataset getDataset(UUID datasetKey) {
     return datasetService.get(datasetKey);
   }
 
-  /**
-   * Delete the specified Dataset.
-   *
-   * @param datasetKey
-   * @throws Exception
-   */
-  void deleteDataset(UUID datasetKey) throws Exception {
+  /** Delete the specified Dataset. */
+  protected void deleteDataset(UUID datasetKey) {
     datasetService.delete(datasetKey);
   }
 
-  /**
-   * Update the provided Dataset.
-   *
-   * @param dataset
-   * @throws Exception
-   */
-  void updateDataset(Dataset dataset) throws Exception {
+  /** Update the provided Dataset. */
+  protected void updateDataset(Dataset dataset) {
     datasetService.update(dataset);
   }
 
-  /**
-   * Insert metadata associated to the provided Dataset.
-   *
-   * @param key dataset key
-   * @param document
-   * @throws Exception
-   */
-  Metadata insertMetadata(UUID key, InputStream document) throws Exception {
-    return datasetService.insertMetadata(key, document);
+  /** Insert metadata associated to the provided Dataset. */
+  protected void insertMetadata(UUID key, InputStream document) {
+    datasetService.insertMetadata(key, document);
   }
 
-  /**
-   * This method is used to change the modified date of a dataset in order to test date queries.
-   *
-   * @param key
-   * @param modifiedDate new modified date to set
-   */
-  void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
-    Connection connection = null;
-    try {
-      connection = database.getTestDatabase().getConnection();
+  /** This method is used to change the modified date of a dataset in order to test date queries. */
+  protected void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
+    try (Connection connection = database.getTestDatabase().getConnection()) {
       connection.setAutoCommit(false);
 
       PreparedStatement p =
@@ -226,10 +218,6 @@ public abstract class AbstractOaipmhEndpointIT {
 
       p.execute();
       connection.commit();
-    } finally {
-      if (connection != null) {
-        connection.close();
-      }
     }
   }
 }
