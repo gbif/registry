@@ -17,10 +17,10 @@ package org.gbif.registry.ws.it.fixtures;
 
 import org.gbif.api.vocabulary.UserRole;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 /** Constants related to unit and integration testing of the registry. */
 public class TestConstants {
@@ -36,19 +36,30 @@ public class TestConstants {
   public static final String IT_APP_SECRET2 =
       "6a55ca16c053e269a9602c02922b30ce49c49be3a68bb2d8908b24d7c2";
 
-  private static final Map<String, String> APP_KEYS = new HashMap<>();
-
-  static {
-    APP_KEYS.put(IT_APP_KEY, IT_APP_SECRET);
-    APP_KEYS.put(IT_APP_KEY2, IT_APP_SECRET2);
-  }
-
   public static final String TEST_ADMIN = "admin";
   public static final String TEST_EDITOR = "editor";
   public static final String TEST_USER = "user";
   public static final String TEST_GRSCICOLL_ADMIN = "grscicollAdmin";
 
-  public static final Map<String, UserRole> TEST_USERS_ROLE = Maps.newHashMap();
+  public static final String DATASET_NAME = "Test Dataset Registry2 Sjælland";
+  public static final String DOI = "http://dx.doi.org/10.1234/timbo";
+  public static final String DATASET_DESCRIPTION = "Description of Test Dataset";
+  public static final String DATASET_HOMEPAGE_URL = "http://www.homepage.com";
+  public static final String DATASET_LOGO_URL = "http://www.logo.com/1";
+  public static final String DATASET_PRIMARY_CONTACT_TYPE = "administrative";
+  public static final String DATASET_PRIMARY_CONTACT_NAME = "Jan Legind";
+  public static final List<String> DATASET_PRIMARY_CONTACT_EMAIL =
+      Collections.singletonList("elyk-kaarb@euskadi.eus");
+  public static final List<String> DATASET_PRIMARY_CONTACT_PHONE =
+      Collections.singletonList("90909090");
+  public static final List<String> DATASET_PRIMARY_CONTACT_ADDRESS =
+      Collections.singletonList("Universitetsparken 15, 2100, Denmark");
+  // GBRDS Datasets only
+  public static final String DATASET_PRIMARY_CONTACT_DESCRIPTION = "Data manager";
+  public static final String DATASET_NAME_LANGUAGE = "fr";
+  public static final String DATASET_DESCRIPTION_LANGUAGE = "es";
+
+  public static final Map<String, UserRole> TEST_USERS_ROLE = new HashMap<>();
 
   static {
     TEST_USERS_ROLE.put(TEST_ADMIN, UserRole.REGISTRY_ADMIN);
