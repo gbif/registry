@@ -33,7 +33,6 @@ import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.utils.Requests;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -855,10 +854,10 @@ public class IptResourceIT {
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     // expected to change on update
-    assertNotEquals(Requests.DATASET_NAME, dataset.getTitle());
-    assertNotEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
-    assertNotEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage());
-    assertNotEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl());
+    assertNotEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertNotEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
+    assertNotEquals(TestConstants.DATASET_HOMEPAGE_URL, dataset.getHomepage());
+    assertNotEquals(TestConstants.DATASET_LOGO_URL, dataset.getLogoUrl());
     Date modified = dataset.getModified();
     assertNotNull(modified);
     String modifiedBy = dataset.getModifiedBy();
@@ -942,8 +941,8 @@ public class IptResourceIT {
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(datasetType, dataset.getType());
-    assertEquals(Requests.DATASET_NAME, dataset.getTitle());
-    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
+    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getCreated());
     assertNotNull(dataset.getModified());
 
@@ -952,10 +951,10 @@ public class IptResourceIT {
     assertNotNull(contact, "Dataset primary contact should be present");
     assertNotNull(contact.getKey());
     assertTrue(contact.isPrimary());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());
     assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
     assertNotNull(contact.getCreated());
     assertNotNull(contact.getCreatedBy());
@@ -1033,17 +1032,17 @@ public class IptResourceIT {
   private MultiValueMap<String, String> buildIptDatasetParameters(UUID installationKey) {
     MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
     // main
-    data.add(NAME_PARAM, Requests.DATASET_NAME);
-    data.add(DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION);
-    data.add(HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL);
-    data.add(LOGO_URL_PARAM, Requests.DATASET_LOGO_URL);
+    data.add(NAME_PARAM, TestConstants.DATASET_NAME);
+    data.add(DESCRIPTION_PARAM, TestConstants.DATASET_DESCRIPTION);
+    data.add(HOMEPAGE_URL_PARAM, TestConstants.DATASET_HOMEPAGE_URL);
+    data.add(LOGO_URL_PARAM, TestConstants.DATASET_LOGO_URL);
 
     // primary contact
-    data.add(PRIMARY_CONTACT_TYPE_PARAM, Requests.DATASET_PRIMARY_CONTACT_TYPE);
-    data.add(PRIMARY_CONTACT_EMAIL_PARAM, Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
-    data.add(PRIMARY_CONTACT_NAME_PARAM, Requests.DATASET_PRIMARY_CONTACT_NAME);
-    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
-    data.add(PRIMARY_CONTACT_PHONE_PARAM, Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0));
+    data.add(PRIMARY_CONTACT_TYPE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_TYPE);
+    data.add(PRIMARY_CONTACT_EMAIL_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
+    data.add(PRIMARY_CONTACT_NAME_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_NAME);
+    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
+    data.add(PRIMARY_CONTACT_PHONE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_PHONE.get(0));
 
     // endpoint(s)
     data.add(SERVICE_TYPES_PARAM, DATASET_SERVICE_TYPES);

@@ -35,7 +35,6 @@ import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.utils.Requests;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -273,13 +272,13 @@ public class LegacyDatasetResourceIT {
     // populate params for ws
     MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
     // main
-    data.add(NAME_PARAM, Requests.DATASET_NAME);
-    data.add(NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE);
-    data.add(DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION);
-    data.add(DOI_PARAM, Requests.DOI);
-    data.add(DESCRIPTION_LANGUAGE_PARAM, Requests.DATASET_DESCRIPTION_LANGUAGE);
-    data.add(HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL);
-    data.add(LOGO_URL_PARAM, Requests.DATASET_LOGO_URL);
+    data.add(NAME_PARAM, TestConstants.DATASET_NAME);
+    data.add(NAME_LANGUAGE_PARAM, TestConstants.DATASET_NAME_LANGUAGE);
+    data.add(DESCRIPTION_PARAM, TestConstants.DATASET_DESCRIPTION);
+    data.add(DOI_PARAM, TestConstants.DOI);
+    data.add(DESCRIPTION_LANGUAGE_PARAM, TestConstants.DATASET_DESCRIPTION_LANGUAGE);
+    data.add(HOMEPAGE_URL_PARAM, TestConstants.DATASET_HOMEPAGE_URL);
+    data.add(LOGO_URL_PARAM, TestConstants.DATASET_LOGO_URL);
     // add additional ipt and organisation parameters
     data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
@@ -310,13 +309,13 @@ public class LegacyDatasetResourceIT {
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
-    assertEquals(Requests.DATASET_NAME, dataset.getTitle());
-    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
-    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
+    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertEquals(TestConstants.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
+    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getHomepage());
-    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());
+    assertEquals(TestConstants.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());
     assertNotNull(dataset.getLogoUrl());
-    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
+    assertEquals(TestConstants.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
     assertNotNull(dataset.getCreated());
     assertEquals(created.toString(), dataset.getCreated().toString());
     assertEquals(createdBy, dataset.getCreatedBy());
@@ -378,23 +377,23 @@ public class LegacyDatasetResourceIT {
     // populate params for ws
     MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
     // main fields
-    data.add(NAME_PARAM, Requests.DATASET_NAME);
-    data.add(NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE);
-    data.add(DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION);
-    data.add(DOI_PARAM, Requests.DOI);
-    data.add(DESCRIPTION_LANGUAGE_PARAM, Requests.DATASET_DESCRIPTION_LANGUAGE);
-    data.add(HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL);
-    data.add(LOGO_URL_PARAM, Requests.DATASET_LOGO_URL);
+    data.add(NAME_PARAM, TestConstants.DATASET_NAME);
+    data.add(NAME_LANGUAGE_PARAM, TestConstants.DATASET_NAME_LANGUAGE);
+    data.add(DESCRIPTION_PARAM, TestConstants.DATASET_DESCRIPTION);
+    data.add(DOI_PARAM, TestConstants.DOI);
+    data.add(DESCRIPTION_LANGUAGE_PARAM, TestConstants.DATASET_DESCRIPTION_LANGUAGE);
+    data.add(HOMEPAGE_URL_PARAM, TestConstants.DATASET_HOMEPAGE_URL);
+    data.add(LOGO_URL_PARAM, TestConstants.DATASET_LOGO_URL);
     // add additional ipt and organisation parameters
     data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
 
     // primary contact with name "Jan Legind" and type "administrative"
-    data.add(PRIMARY_CONTACT_TYPE_PARAM, Requests.DATASET_PRIMARY_CONTACT_TYPE);
-    data.add(PRIMARY_CONTACT_EMAIL_PARAM, Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
-    data.add(PRIMARY_CONTACT_NAME_PARAM, Requests.DATASET_PRIMARY_CONTACT_NAME); // Jan Legind
-    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
-    data.add(PRIMARY_CONTACT_PHONE_PARAM, Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0));
-    data.add(PRIMARY_CONTACT_DESCRIPTION_PARAM, Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION);
+    data.add(PRIMARY_CONTACT_TYPE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_TYPE);
+    data.add(PRIMARY_CONTACT_EMAIL_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
+    data.add(PRIMARY_CONTACT_NAME_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_NAME); // Jan Legind
+    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
+    data.add(PRIMARY_CONTACT_PHONE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_PHONE.get(0));
+    data.add(PRIMARY_CONTACT_DESCRIPTION_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_DESCRIPTION);
 
     // construct request uri
     String uri = "/registry/resource/" + datasetKey;
@@ -662,21 +661,21 @@ public class LegacyDatasetResourceIT {
   private MultiValueMap<String, String> buildLegacyDatasetParameters(UUID organizationKey) {
     MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
     // main
-    data.add(NAME_PARAM, Requests.DATASET_NAME);
-    data.add(DOI_PARAM, Requests.DOI);
-    data.add(NAME_LANGUAGE_PARAM, Requests.DATASET_NAME_LANGUAGE);
-    data.add(DESCRIPTION_PARAM, Requests.DATASET_DESCRIPTION);
-    data.add(DESCRIPTION_LANGUAGE_PARAM, Requests.DATASET_DESCRIPTION_LANGUAGE);
-    data.add(HOMEPAGE_URL_PARAM, Requests.DATASET_HOMEPAGE_URL);
-    data.add(LOGO_URL_PARAM, Requests.DATASET_LOGO_URL);
+    data.add(NAME_PARAM, TestConstants.DATASET_NAME);
+    data.add(DOI_PARAM, TestConstants.DOI);
+    data.add(NAME_LANGUAGE_PARAM, TestConstants.DATASET_NAME_LANGUAGE);
+    data.add(DESCRIPTION_PARAM, TestConstants.DATASET_DESCRIPTION);
+    data.add(DESCRIPTION_LANGUAGE_PARAM, TestConstants.DATASET_DESCRIPTION_LANGUAGE);
+    data.add(HOMEPAGE_URL_PARAM, TestConstants.DATASET_HOMEPAGE_URL);
+    data.add(LOGO_URL_PARAM, TestConstants.DATASET_LOGO_URL);
 
     // primary contact
-    data.add(PRIMARY_CONTACT_TYPE_PARAM, Requests.DATASET_PRIMARY_CONTACT_TYPE);
-    data.add(PRIMARY_CONTACT_EMAIL_PARAM, Requests.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
-    data.add(PRIMARY_CONTACT_NAME_PARAM, Requests.DATASET_PRIMARY_CONTACT_NAME);
-    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, Requests.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
-    data.add(PRIMARY_CONTACT_PHONE_PARAM, Requests.DATASET_PRIMARY_CONTACT_PHONE.get(0));
-    data.add(PRIMARY_CONTACT_DESCRIPTION_PARAM, Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION);
+    data.add(PRIMARY_CONTACT_TYPE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_TYPE);
+    data.add(PRIMARY_CONTACT_EMAIL_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_EMAIL.get(0));
+    data.add(PRIMARY_CONTACT_NAME_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_NAME);
+    data.add(PRIMARY_CONTACT_ADDRESS_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_ADDRESS.get(0));
+    data.add(PRIMARY_CONTACT_PHONE_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_PHONE.get(0));
+    data.add(PRIMARY_CONTACT_DESCRIPTION_PARAM, TestConstants.DATASET_PRIMARY_CONTACT_DESCRIPTION);
 
     // add additional ipt and organisation parameters
     data.add(ORGANIZATION_KEY_PARAM, organizationKey.toString());
@@ -700,14 +699,14 @@ public class LegacyDatasetResourceIT {
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.METADATA, dataset.getType());
-    assertEquals(Requests.DATASET_NAME, dataset.getTitle());
-    assertEquals(new DOI(Requests.DOI), dataset.getDoi()); // ensure that we handle the parsing
-    assertEquals(Requests.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
-    assertEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
+    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertEquals(new DOI(TestConstants.DOI), dataset.getDoi()); // ensure that we handle the parsing
+    assertEquals(TestConstants.DATASET_NAME_LANGUAGE, dataset.getLanguage().getIso2LetterCode());
+    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getHomepage());
     assertNotNull(dataset.getLogoUrl());
-    assertEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());
-    assertEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
+    assertEquals(TestConstants.DATASET_HOMEPAGE_URL, dataset.getHomepage().toString());
+    assertEquals(TestConstants.DATASET_LOGO_URL, dataset.getLogoUrl().toString());
     assertNotNull(dataset.getCreated());
     assertNotNull(dataset.getModified());
     assertEquals(License.UNSPECIFIED, dataset.getLicense());
@@ -717,11 +716,11 @@ public class LegacyDatasetResourceIT {
     assertNotNull(contact, "Dataset primary contact should be present");
     assertNotNull(contact.getKey());
     assertTrue(contact.isPrimary());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());
-    assertEquals(Requests.DATASET_PRIMARY_CONTACT_DESCRIPTION, contact.getDescription());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_NAME, contact.getFirstName());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_EMAIL, contact.getEmail());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_PHONE, contact.getPhone());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_ADDRESS, contact.getAddress());
+    assertEquals(TestConstants.DATASET_PRIMARY_CONTACT_DESCRIPTION, contact.getDescription());
     assertEquals(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT, contact.getType());
     assertNotNull(contact.getCreated());
     assertNotNull(contact.getCreatedBy());
@@ -746,10 +745,10 @@ public class LegacyDatasetResourceIT {
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(DatasetType.OCCURRENCE, dataset.getType());
     // expected to change on update
-    assertNotEquals(Requests.DATASET_NAME, dataset.getTitle());
-    assertNotEquals(Requests.DATASET_DESCRIPTION, dataset.getDescription());
-    assertNotEquals(Requests.DATASET_HOMEPAGE_URL, dataset.getHomepage());
-    assertNotEquals(Requests.DATASET_LOGO_URL, dataset.getLogoUrl());
+    assertNotEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertNotEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
+    assertNotEquals(TestConstants.DATASET_HOMEPAGE_URL, dataset.getHomepage());
+    assertNotEquals(TestConstants.DATASET_LOGO_URL, dataset.getLogoUrl());
     Date modified = dataset.getModified();
     assertNotNull(modified);
     String modifiedBy = dataset.getModifiedBy();
