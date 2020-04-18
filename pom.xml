@@ -120,7 +120,6 @@
     <xoai.version>4.1.0-gbif-1</xoai.version>
     <feign.version>10.4.0</feign.version>
     <mock-javamail.version>1.9</mock-javamail.version>
-    <org.apache.bval.bundle.version>0.5</org.apache.bval.bundle.version>
     <embedded-database-spring-test.version>1.5.3</embedded-database-spring-test.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
 
@@ -620,11 +619,6 @@
         <artifactId>mybatis-spring-boot-starter-test</artifactId>
         <version>${mybatis-spring-boot-starter-test.version}</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.bval</groupId>
-        <artifactId>org.apache.bval.bundle</artifactId>
-        <version>${org.apache.bval.bundle.version}</version>
       </dependency>
       <dependency>
         <groupId>org.xmlunit</groupId>

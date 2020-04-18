@@ -103,8 +103,9 @@
       <artifactId>liquibase-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.bval</groupId>
-      <artifactId>org.apache.bval.bundle</artifactId>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.zonky.test</groupId>
