@@ -25,15 +25,14 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import org.apache.bval.jsr303.ApacheValidationProvider;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Component
 public class Nodes extends JsonBackedData<Node> {
@@ -45,8 +44,7 @@ public class Nodes extends JsonBackedData<Node> {
 
   @Test
   public void testConstraints() {
-    ValidatorFactory validatorFactory =
-        Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory();
+    ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     Validator validator = validatorFactory.getValidator();
 
     Set<ConstraintViolation<Node>> violations = validator.validate(newInstance());

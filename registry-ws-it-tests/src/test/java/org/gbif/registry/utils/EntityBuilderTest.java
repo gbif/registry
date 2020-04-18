@@ -28,8 +28,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import javax.validation.groups.Default;
 
-import org.apache.bval.jsr303.ApacheValidationProvider;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +58,7 @@ public class EntityBuilderTest {
   }
 
   private <T> void test(T entity) {
-    ValidatorFactory validatorFactory =
-        Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory();
+    ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     Validator validator = validatorFactory.getValidator();
 
     Set<ConstraintViolation<T>> violations =
@@ -69,7 +67,7 @@ public class EntityBuilderTest {
       LOG.info(
           "Class[{}] property[{}] failed validation with[{}]",
           entity.getClass().getSimpleName(),
-          String.valueOf(cv.getPropertyPath()),
+          cv.getPropertyPath(),
           cv.getMessage());
     }
     if (!violations.isEmpty()) {
