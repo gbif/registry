@@ -24,13 +24,17 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
@@ -39,6 +43,7 @@ import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
 import org.dspace.xoai.serviceprovider.client.OAIClient;
 import org.dspace.xoai.serviceprovider.model.Context;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +54,10 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -121,18 +130,21 @@ public abstract class AbstractOaipmhEndpointIT {
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
+  private final SimplePrincipalProvider pp;
 
   protected final String baseUrl;
   protected final ServiceProvider serviceProvider;
 
   @Autowired
   public AbstractOaipmhEndpointIT(
+      SimplePrincipalProvider pp,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
+    this.pp = pp;
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
@@ -149,6 +161,20 @@ public abstract class AbstractOaipmhEndpointIT {
                 EML_FORMAT.getMetadataPrefix(),
                 org.dspace.xoai.dataprovider.model.MetadataFormat.identity());
     serviceProvider = new ServiceProvider(context);
+  }
+
+  @BeforeEach
+  public void setup() {
+    if (pp != null) {
+      pp.setPrincipal(TestConstants.TEST_ADMIN);
+      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+      SecurityContextHolder.setContext(ctx);
+      ctx.setAuthentication(
+          new UsernamePasswordAuthenticationToken(
+              pp.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+    }
   }
 
   /** Creates an Organization in the test database. */

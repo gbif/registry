@@ -20,6 +20,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Identify;
@@ -36,6 +37,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhIdentifyIT(
+      SimplePrincipalProvider pp,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -43,6 +45,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
+        pp,
         environment,
         nodeService,
         organizationService,

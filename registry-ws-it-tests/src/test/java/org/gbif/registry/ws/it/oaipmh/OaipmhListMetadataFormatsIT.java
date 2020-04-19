@@ -25,6 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Date;
 import java.util.List;
@@ -32,9 +33,8 @@ import java.util.List;
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 import com.google.common.collect.Lists;
@@ -42,12 +42,16 @@ import com.google.common.collect.Lists;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Test the ListMetadataFormats verb of the OAI-PMH endpoint. */
-@RunWith(Parameterized.class)
+@SuppressWarnings("unchecked")
 public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 
+  @Autowired
   public OaipmhListMetadataFormatsIT(
+      SimplePrincipalProvider pp,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -55,6 +59,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
+        pp,
         environment,
         nodeService,
         organizationService,
@@ -63,10 +68,13 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
         testDataFactory);
   }
 
-  @Test(expected = IdDoesNotExistException.class)
-  public void listMetadataFormats_notFound() throws IdDoesNotExistException {
-    serviceProvider.listMetadataFormats(
-        ListMetadataParameters.request().withIdentifier("non-existent-record-identifier"));
+  @Test
+  public void listMetadataFormats_notFound() {
+    assertThrows(
+        IdDoesNotExistException.class,
+        () ->
+            serviceProvider.listMetadataFormats(
+                ListMetadataParameters.request().withIdentifier("non-existent-record-identifier")));
   }
 
   @Test
@@ -76,6 +84,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
     Dataset org1Installation1Dataset1 =
         createDataset(
             org1.getKey(), org1Installation1.getKey(), DatasetType.OCCURRENCE, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     String key = org1Installation1Dataset1.getKey().toString();
 

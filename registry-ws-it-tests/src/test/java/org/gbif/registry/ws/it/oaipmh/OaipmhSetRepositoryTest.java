@@ -25,11 +25,11 @@ import org.gbif.registry.persistence.mapper.MockDatasetMapper;
 import java.util.UUID;
 
 import org.dspace.xoai.dataprovider.handlers.results.ListSetsResult;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test class for OaipmhSetRepository
@@ -41,11 +41,7 @@ public class OaipmhSetRepositoryTest {
   private static UUID installationUUIDRepitle = UUID.randomUUID();
   private static UUID installationUUIDGulo = UUID.randomUUID();
 
-  /**
-   * Prepare the MockDatasetMapper with controlled mock data.
-   *
-   * @return
-   */
+  /** Prepare the MockDatasetMapper with controlled mock data. */
   private static DatasetMapper prepareDatasetMapperMock() {
     MockDatasetMapper datasetMapper = new MockDatasetMapper();
     datasetMapper.mockDatasetForCountry(Country.DENMARK);
@@ -95,25 +91,25 @@ public class OaipmhSetRepositoryTest {
     DatasetMapper mockDatasetMapper = prepareDatasetMapperMock();
     OaipmhSetRepository setRepository = new OaipmhSetRepository(mockDatasetMapper);
     assertTrue(
-        "Should find Set provided in test data:" + installationUUIDRepitle.toString(),
         setRepository.exists(
             OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
-                + installationUUIDRepitle.toString()));
+                + installationUUIDRepitle.toString()),
+        "Should find Set provided in test data:" + installationUUIDRepitle.toString());
     assertFalse(
-        "Should not find a Set for random Installation key",
         setRepository.exists(
             OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
-                + UUID.randomUUID().toString()));
+                + UUID.randomUUID().toString()),
+        "Should not find a Set for random Installation key");
 
     assertTrue(
-        "Should find Set provided in test data:" + Country.DENMARK.getIso2LetterCode(),
         setRepository.exists(
             OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
-                + Country.DENMARK.getIso2LetterCode()));
+                + Country.DENMARK.getIso2LetterCode()),
+        "Should find Set provided in test data:" + Country.DENMARK.getIso2LetterCode());
     assertFalse(
-        "Should not find Set not provided in test data:" + Country.AUSTRALIA.getIso2LetterCode(),
         setRepository.exists(
             OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
-                + Country.AUSTRALIA.getIso2LetterCode()));
+                + Country.AUSTRALIA.getIso2LetterCode()),
+        "Should not find Set not provided in test data:" + Country.AUSTRALIA.getIso2LetterCode());
   }
 }
