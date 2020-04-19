@@ -34,6 +34,7 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+// TODO: 18/04/2020 doubt it's useful
 public class DoiGeneratorMQIT {
   private DoiGenerator generator;
 
