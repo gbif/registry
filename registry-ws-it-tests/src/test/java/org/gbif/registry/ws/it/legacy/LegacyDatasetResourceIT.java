@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.resources.legacy;
+package org.gbif.registry.ws.it.legacy;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -26,8 +26,6 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
@@ -35,42 +33,21 @@ import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.google.common.collect.Lists;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM;
 import static org.gbif.registry.domain.ws.util.LegacyResourceConstants.DESCRIPTION_PARAM;
@@ -93,78 +70,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {LegacyDatasetResourceIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class LegacyDatasetResourceIT {
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
+public class LegacyDatasetResourceIT extends BaseItTest {
 
   private final DatasetService datasetService;
   private final TestDataFactory testDataFactory;
   private final RequestTestFixture requestTestFixture;
-  private final SimplePrincipalProvider pp;
 
   @Autowired
   public LegacyDatasetResourceIT(
       DatasetService datasetService,
       TestDataFactory testDataFactory,
       RequestTestFixture requestTestFixture,
-      SimplePrincipalProvider pp) {
+      SimplePrincipalProvider principalProvider) {
+    super(principalProvider);
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
     this.requestTestFixture = requestTestFixture;
-    this.pp = pp;
-  }
-
-  @BeforeEach
-  public void setup() {
-    if (pp != null) {
-      pp.setPrincipal(TestConstants.TEST_ADMIN);
-      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-      SecurityContextHolder.setContext(ctx);
-      ctx.setAuthentication(
-          new UsernamePasswordAuthenticationToken(
-              pp.get().getName(),
-              "",
-              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
-    }
   }
 
   /**
