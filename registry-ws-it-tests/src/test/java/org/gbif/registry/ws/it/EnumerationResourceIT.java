@@ -18,7 +18,7 @@ package org.gbif.registry.ws.it;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.server.LocalServerPort;
 
@@ -28,8 +28,8 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Simple test to make sure we can produce the Enumeration response. We use a simple Jersey Client
@@ -41,7 +41,7 @@ public class EnumerationResourceIT {
 
   private Client publicClient;
 
-  @BeforeAll
+  @BeforeEach
   public void setupBase() {
     publicClient = buildPublicClient();
   }

@@ -24,7 +24,6 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.AppRole;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.test.TestDataFactory;
@@ -34,34 +33,18 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
-
-import static junit.framework.TestCase.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,55 +54,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * behavior is different based on the credentials, the injectors are created inside the specific
  * tests.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {OrganizationCreationIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class OrganizationCreationIT {
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
+public class OrganizationCreationIT extends BaseItTest {
 
   private OrganizationService organizationService;
   private NodeService nodeService;
   private ChallengeCodeMapper challengeCodeMapper;
   private ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
   private TestDataFactory testDataFactory;
-  private SimplePrincipalProvider pp;
 
   @Autowired
   public OrganizationCreationIT(
@@ -128,13 +69,13 @@ public class OrganizationCreationIT {
       ChallengeCodeMapper challengeCodeMapper,
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
       TestDataFactory testDataFactory,
-      SimplePrincipalProvider pp) {
+      SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
     this.testDataFactory = testDataFactory;
-    this.pp = pp;
   }
 
   @BeforeEach
@@ -145,13 +86,13 @@ public class OrganizationCreationIT {
 
   private void setupPrincipal(String name, String... roles) {
     // reset SimplePrincipleProvider, configured for web service client tests only
-    if (pp != null) {
-      pp.setPrincipal(name);
+    if (getSimplePrincipalProvider() != null) {
+      getSimplePrincipalProvider().setPrincipal(name);
       SecurityContext ctx = SecurityContextHolder.createEmptyContext();
       SecurityContextHolder.setContext(ctx);
       ctx.setAuthentication(
           new UsernamePasswordAuthenticationToken(
-              pp.get().getName(),
+              getSimplePrincipalProvider().get().getName(),
               "",
               Arrays.stream(roles).map(SimpleGrantedAuthority::new).collect(Collectors.toList())));
     }
@@ -276,7 +217,7 @@ public class OrganizationCreationIT {
 
     UUID newOrganizationKey = organizationService.create(o);
     o.setKey(newOrganizationKey);
-    assertNotNull("The new organization should be created", newOrganizationKey);
+    assertNotNull(newOrganizationKey, "The new organization should be created");
     return o;
   }
 }

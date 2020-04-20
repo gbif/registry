@@ -17,16 +17,23 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import org.junit.Test;
+import javax.annotation.Nullable;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 
-public class LenientAssertTest {
+
+public class LenientAssertTest extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
 
-  public LenientAssertTest(TestDataFactory testDataFactory) {
+  @Autowired
+  public LenientAssertTest(TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;
   }
 

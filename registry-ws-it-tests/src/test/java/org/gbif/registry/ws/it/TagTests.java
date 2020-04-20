@@ -22,9 +22,9 @@ import org.gbif.api.service.registry.TagService;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TagTests {
 
@@ -40,8 +40,8 @@ public class TagTests {
 
   public static <T extends NetworkEntity> void testAddDelete(TagService service, T entity) {
     List<Tag> tags = service.listTags(entity.getKey(), null);
-    assertNotNull("Tag list should be empty, not null when no tags exist", tags);
-    assertTrue("Tags should be empty when none added", tags.isEmpty());
+    assertNotNull(tags, "Tag list should be empty, not null when no tags exist");
+    assertTrue(tags.isEmpty(), "Tags should be empty when none added");
     Tag tag1 = new Tag();
     tag1.setCreatedBy(entity.getCreatedBy());
     tag1.setValue("tag1");
@@ -54,10 +54,10 @@ public class TagTests {
     service.addTag(entity.getKey(), tag2);
     tags = service.listTags(entity.getKey(), null);
     assertNotNull(tags);
-    assertEquals("2 tags have been added", 2, tags.size());
+    assertEquals(2, tags.size(), "2 tags have been added");
     service.deleteTag(entity.getKey(), tags.get(0).getKey());
     tags = service.listTags(entity.getKey(), null);
     assertNotNull(tags);
-    assertEquals("1 tag should remain after the deletion", 1, tags.size());
+    assertEquals(1, tags.size(), "1 tag should remain after the deletion");
   }
 }
