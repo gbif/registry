@@ -17,10 +17,14 @@ package org.gbif.registry.utils;
 
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
@@ -31,15 +35,21 @@ import javax.validation.groups.Default;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /** Tests that the builders in this package provide valid objects. */
-public class EntityBuilderTest {
+@SpringBootTest(
+  classes = RegistryIntegrationTestsConfiguration.class)
+public class EntityBuilderTest extends BaseItTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);
 
   private final TestDataFactory testDataFactory;
 
-  public EntityBuilderTest(TestDataFactory testDataFactory) {
+  @Autowired
+  public EntityBuilderTest(TestDataFactory testDataFactory, @Nullable  SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;
   }
 

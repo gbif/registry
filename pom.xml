@@ -122,6 +122,7 @@
     <mock-javamail.version>1.9</mock-javamail.version>
     <embedded-database-spring-test.version>1.5.3</embedded-database-spring-test.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
+    <woodstox.version>4.4.1</woodstox.version>
 
     <!-- es version -->
     <elasticsearch.version>6.5.4</elasticsearch.version>
@@ -386,6 +387,11 @@
       </dependency>
 
       <!-- Third party dependencies -->
+      <dependency>
+        <groupId>org.codehaus.woodstox</groupId>
+        <artifactId>woodstox-core-asl</artifactId>
+        <version>${woodstox.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
