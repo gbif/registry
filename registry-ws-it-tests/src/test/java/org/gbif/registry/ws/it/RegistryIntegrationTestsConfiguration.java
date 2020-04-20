@@ -20,10 +20,8 @@ import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.ws.surety.OrganizationEmailEndorsementService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -35,8 +33,6 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -95,17 +91,12 @@ import org.springframework.test.context.ActiveProfiles;
             VarnishPurgeConfiguration.class,
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
-            OrganizationEmailManager.class,
-            OrganizationEmailEndorsementService.class,
             ChecklistbankPersistenceServiceImpl.class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 @ActiveProfiles("test")
 public class RegistryIntegrationTestsConfiguration {
-
-  private static final Logger LOG =
-      LoggerFactory.getLogger(RegistryIntegrationTestsConfiguration.class);
 
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
 

@@ -25,9 +25,9 @@ import org.gbif.registry.test.TestDataFactory;
 import java.util.List;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IdentifierTests {
 
@@ -40,15 +40,15 @@ public class IdentifierTests {
     // check there are none on a newly created entity
     List<Identifier> identifiers = service.listIdentifiers(entity.getKey());
     assertNotNull(
-        "Identifier list should be empty, not null when no identifiers exist", identifiers);
-    assertTrue("Identifiers should be empty when none added", identifiers.isEmpty());
+        identifiers, "Identifier list should be empty, not null when no identifiers exist");
+    assertTrue(identifiers.isEmpty(), "Identifiers should be empty when none added");
 
     // test additions
     service.addIdentifier(entity.getKey(), testDataFactory.newIdentifier());
     service.addIdentifier(entity.getKey(), testDataFactory.newIdentifier());
     identifiers = service.listIdentifiers(entity.getKey());
     assertNotNull(identifiers);
-    assertEquals("2 identifiers have been added", 2, identifiers.size());
+    assertEquals(2, identifiers.size(), "2 identifiers have been added");
 
     // ensure the search works for this test. One entity with 2 duplicate identifiers is still one
     // entity
@@ -56,15 +56,15 @@ public class IdentifierTests {
     PagingResponse<T> entities =
         networkEntityService.listByIdentifier(
             identifier.getType(), identifier.getIdentifier(), null);
-    assertEquals("Only one entity should have the identifier", (Long) 1L, entities.getCount());
+    assertEquals((Long) 1L, entities.getCount(), "Only one entity should have the identifier");
     entities = networkEntityService.listByIdentifier(identifier.getIdentifier(), null);
-    assertEquals("Only one entity should have the identifier", (Long) 1L, entities.getCount());
+    assertEquals((Long) 1L, entities.getCount(), "Only one entity should have the identifier");
 
     // test deletion, ensuring correct one is deleted
     service.deleteIdentifier(entity.getKey(), identifiers.get(0).getKey());
     identifiers = service.listIdentifiers(entity.getKey());
     assertNotNull(identifiers);
-    assertEquals("1 identifier should remain after the deletion", 1, identifiers.size());
+    assertEquals(1, identifiers.size(), "1 identifier should remain after the deletion");
     Identifier expected = testDataFactory.newIdentifier();
     Identifier created = identifiers.get(0);
     assertLenientEquals("Created identifier does not read as expected", expected, created);

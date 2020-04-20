@@ -36,7 +36,6 @@ import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -53,33 +52,17 @@ import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,53 +75,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A generic test for all network entities that implement all interfaces required by the
  * BaseNetworkEntityResource.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    classes = RegistryIntegrationTestsConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {NetworkEntityTest.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
 public abstract class NetworkEntityTest<
-    T extends
-        NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
-            & Identifiable & LenientEquals<T>> {
-
-  public static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
+        T extends
+            NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
+                & Identifiable & LenientEquals<T>>
+    extends BaseItTest {
 
   private final NetworkEntityService<T> service; // under test
 
@@ -148,13 +89,13 @@ public abstract class NetworkEntityTest<
   private final TagService tagService;
   private final CommentService commentService;
   private final IdentifierService identifierService;
-  private final SimplePrincipalProvider pp;
   private final TestDataFactory testDataFactory;
 
   public NetworkEntityTest(
       NetworkEntityService<T> service,
-      @Nullable SimplePrincipalProvider pp,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory) {
+    super(simplePrincipalProvider);
     this.service = service;
     // not so nice, but we know what we deal with in the tests
     // and this bundles most basic tests into one base test class without copy paste redundancy
@@ -164,31 +105,11 @@ public abstract class NetworkEntityTest<
     tagService = service;
     commentService = service;
     identifierService = service;
-    this.pp = pp;
     this.testDataFactory = testDataFactory;
-  }
-
-  public SimplePrincipalProvider getSimplePrincipalProvider() {
-    return pp;
   }
 
   public TestDataFactory getTestDataFactory() {
     return testDataFactory;
-  }
-
-  @BeforeEach
-  public void setup() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
-    if (pp != null) {
-      pp.setPrincipal(TestConstants.TEST_ADMIN);
-      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-      SecurityContextHolder.setContext(ctx);
-      ctx.setAuthentication(
-          new UsernamePasswordAuthenticationToken(
-              pp.get().getName(),
-              "",
-              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
-    }
   }
 
   @Test
@@ -210,10 +131,10 @@ public abstract class NetworkEntityTest<
     // Create as admin.
     T entity = create(newEntity(), 1);
 
-    if (pp == null) {
+    if (getSimplePrincipalProvider() == null) {
       return;
     } else {
-      this.pp.setPrincipal(TestConstants.TEST_EDITOR);
+      this.getSimplePrincipalProvider().setPrincipal(TestConstants.TEST_EDITOR);
     }
 
     // Grant appropriate rights to the normal user.
@@ -269,8 +190,8 @@ public abstract class NetworkEntityTest<
   @Test
   public void testCreateBadRole() {
     // SimplePrincipalProvider configured for web service client tests only
-    if (pp != null) {
-      pp.setPrincipal("heinz");
+    if (getSimplePrincipalProvider() != null) {
+      getSimplePrincipalProvider().setPrincipal("heinz");
       try {
         create(newEntity(), 1);
       } catch (Exception e) {
@@ -493,8 +414,8 @@ public abstract class NetworkEntityTest<
   @Disabled("Only for clients")
   public void testMachineTagsNotAllowedToCreateClient() {
     // only for client tests
-    if (pp != null) {
-      pp.setPrincipal("notExisting");
+    if (getSimplePrincipalProvider() != null) {
+      getSimplePrincipalProvider().setPrincipal("notExisting");
       T entity = create(newEntity(), 1);
       assertThrows(
           AccessControlException.class,
@@ -508,8 +429,8 @@ public abstract class NetworkEntityTest<
   @Disabled("only for cliets")
   public void testMachineTagsMissingNamespaceRights() {
     // only for client tests
-    if (pp != null) {
-      pp.setPrincipal("editor");
+    if (getSimplePrincipalProvider() != null) {
+      getSimplePrincipalProvider().setPrincipal("editor");
       T entity = create(newEntity(), 1);
       assertThrows(
           AccessControlException.class,
@@ -523,7 +444,7 @@ public abstract class NetworkEntityTest<
   @Disabled("Only for clients")
   public void testMachineTagsNotAllowedToDeleteClient() {
     // only for client tests
-    if (pp != null) {
+    if (getSimplePrincipalProvider() != null) {
       T entity = create(newEntity(), 1);
       // add machine tags
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
@@ -533,8 +454,8 @@ public abstract class NetworkEntityTest<
       assertEquals(2, machineTags.size(), "2 machine tags have been added");
 
       // test forbidden deletion
-      pp.setPrincipal("editor");
-      setSecurityPrincipal(pp, UserRole.EDITOR);
+      getSimplePrincipalProvider().setPrincipal("editor");
+      setSecurityPrincipal(getSimplePrincipalProvider(), UserRole.EDITOR);
       assertThrows(
           AccessControlException.class,
           () -> service.deleteMachineTag(entity.getKey(), machineTags.get(0).getKey()));
